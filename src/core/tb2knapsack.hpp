@@ -19,11 +19,10 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<Long> conflictWeights; // used by weighted degree heuristics
     StoreLong  MaxWeight;
     Long Original_capacity;
-    vector<Long> CostforKnapsack; // temporary data structure for propagate
+    vector<Cost> CostforKnapsack; // temporary data structure for propagate
     vector<int> arrvar; // temporary data structure for propagate
     vector<Double> Weightedtprofit; // temporary data structure for propagate
     StoreLong NegCapacity;
-    const Double epsilon = 1e-10;
 
     void projectLB(Cost c)
     {
@@ -35,17 +34,15 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     }
 
     Double Ceil(Double v){
+        const Double epsilon = 1e-7;
+
         if(floorl(v)+epsilon>v)
             return floorl(v);
         else
             return ceill(v);
     }
-
-    Double Floor(Double v){
-        if(v>0)
-            return floorl(v);
-        else
-            return ceill(v);
+    Double Trunc(Double v){
+        return truncl(v);
     }
 
 public:
@@ -65,7 +62,7 @@ public:
         for (int i = 0; i < arity_in; i++) {
             assert(scope_in[i]->getDomainInitSize() == 2 && scope_in[i]->toValue(0) == 0 && scope_in[i]->toValue(1) == 1);
             conflictWeights.push_back(0);
-            CostforKnapsack.push_back(0);
+            CostforKnapsack.push_back(MIN_COST);
             arrvar.push_back(i);
             Weightedtprofit.push_back(0.);
         }
@@ -307,12 +304,12 @@ public:
                                     if (ToulBar2::verbose >= 2)
                                         cout << scope[i]->getName() << " : " << CostforKnapsack[i] << " / "
                                              << weights[i] << endl;
-                                    if ((weights[i] > 0 && CostforKnapsack[i] >= 0) ||
-                                        (weights[i] > 0 && CostforKnapsack[i] < 0)) {
+                                    if ((weights[i] > 0 && CostforKnapsack[i] >= MIN_COST) ||
+                                        (weights[i] > 0 && CostforKnapsack[i] < MIN_COST)) {
                                         Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
-                                    } else if (weights[i] < 0 && CostforKnapsack[i] >= 0) {
+                                    } else if (weights[i] < 0 && CostforKnapsack[i] >= MIN_COST) {
                                         Weightedtprofit[i] = MAX_COST;
-                                    } else if (weights[i] < 0 && CostforKnapsack[i] < 0) {
+                                    } else if (weights[i] < 0 && CostforKnapsack[i] < MIN_COST) {
                                         Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
                                         NegweightNegprofit -= weights[i];
                                     }
@@ -327,15 +324,15 @@ public:
                                     if (ToulBar2::verbose >= 2)
                                         cout << scope[i]->getName() << " : " << CostforKnapsack[i] << " / "
                                              << weights[i] << endl;
-                                    if (weights[i] < 0 && CostforKnapsack[i] < 0) {
+                                    if (weights[i] < 0 && CostforKnapsack[i] < MIN_COST) {
                                         Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
-                                    } else if (weights[i] < 0 && CostforKnapsack[i] >= 0) {
+                                    } else if (weights[i] < 0 && CostforKnapsack[i] >= MIN_COST) {
                                         Weightedtprofit[i] = MIN_COST;
                                         nbmincost++;
-                                    } else if (weights[i] > 0 && CostforKnapsack[i] > 0) {
+                                    } else if (weights[i] > 0 && CostforKnapsack[i] > MIN_COST) {
                                         Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
                                         PosweightPosprofit += weights[i];
-                                    } else if (weights[i] > 0 && CostforKnapsack[i] <= 0){
+                                    } else if (weights[i] > 0 && CostforKnapsack[i] <= MIN_COST){
                                         Weightedtprofit[i] = MAX_COST;
                                     }
                                 } else {
@@ -379,7 +376,7 @@ public:
                                     W += weights[arrvar[splitvar]];
                                 else
                                     W -= weights[arrvar[splitvar]];
-                                if (CostforKnapsack[arrvar[splitvar]] > 0)
+                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
                                     c += CostforKnapsack[arrvar[splitvar]];
                                 else if (weights[arrvar[splitvar]] < 0)
                                     c -= CostforKnapsack[arrvar[splitvar]];
@@ -390,15 +387,15 @@ public:
                                 splitvar = splitvar + 1;
                                 if (weights[arrvar[splitvar]] < 0)
                                     W += weights[arrvar[splitvar]];
-                                else if (CostforKnapsack[arrvar[splitvar]] > 0)
+                                else if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
                                     W -= weights[arrvar[splitvar]];
                                 else
                                     W += weights[arrvar[splitvar]];
                             }
                             for (int i=splitvar+1; i < arity_-nbmincost-1; i++) {
-                                if(CostforKnapsack[arrvar[i]]>0 && weights[arrvar[i]]>0)
+                                if(CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]]>0)
                                     c+=CostforKnapsack[arrvar[i]];
-                                else if(CostforKnapsack[arrvar[i]]< 0 && weights[arrvar[i]]<0)
+                                else if(CostforKnapsack[arrvar[i]] < MIN_COST && weights[arrvar[i]]<0)
                                     c-=CostforKnapsack[arrvar[i]];
                             }
                         }
@@ -429,7 +426,7 @@ public:
                             assert(xk <= 1);
                             assert(xk >= 0);
                             if (capacity>=0) {
-                                if (CostforKnapsack[arrvar[splitvar]] > 0)
+                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
                                     c = c - CostforKnapsack[arrvar[splitvar]] +
                                         Ceil(CostforKnapsack[arrvar[splitvar]] * xk);
                                 else if (weights[arrvar[splitvar]] < 0)
@@ -437,7 +434,7 @@ public:
                                         Ceil(-CostforKnapsack[arrvar[splitvar]] * xk);
                             }
                             else if(W <= capacity - PosweightPosprofit){
-                                if (CostforKnapsack[arrvar[splitvar]] > 0)
+                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
                                     c = c + Ceil(CostforKnapsack[arrvar[splitvar]] * (1-xk));
                                 else if (weights[arrvar[splitvar]] < 0)
                                     c = c + Ceil(-CostforKnapsack[arrvar[splitvar]] * (1-xk));
@@ -446,53 +443,53 @@ public:
                         //If c<= 0 it means that we use only negative cost, it means we use only variables with cost on value 0
                         if (c > 0) {
                             //New value for p_k to obtain integer cost (p_k' might be decimal)
-                            Double Newkcost = 0;
-                            Double epsi = 1e-7;
+                            Double Newkcost = 0.;
+                            Double epsi = 1e-5;
                             if(splitvar != 0) {
                                 if (capacity >= 0)
                                     Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]),
                                                    max(Double(CostforKnapsack[arrvar[splitvar - 1]]) /
                                                        weights[arrvar[splitvar - 1]] * weights[arrvar[splitvar]],
-                                                       Double((Floor(xk * CostforKnapsack[arrvar[splitvar]]) + epsi) /
+                                                       Double((Trunc(xk * CostforKnapsack[arrvar[splitvar]]) + epsi) /
                                                               xk)));
                                 else
                                     Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]),
                                                    max(Double(CostforKnapsack[arrvar[splitvar - 1]]) /
                                                        weights[arrvar[splitvar - 1]] * weights[arrvar[splitvar]],
-                                                       Double((Floor((1 - xk) * CostforKnapsack[arrvar[splitvar]]) +
+                                                       Double((Trunc((1 - xk) * CostforKnapsack[arrvar[splitvar]]) +
                                                                epsi) / (1 - xk))));
 
                             }
                             else {
                                     if(capacity>=0)
-                                        Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]), Double((Floor(xk * CostforKnapsack[arrvar[splitvar]]) + epsi) / xk));
+                                        Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]), Double((Trunc(xk * CostforKnapsack[arrvar[splitvar]]) + epsi) / xk));
                                     else
-                                        Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]), Double((Floor((1-xk) * CostforKnapsack[arrvar[splitvar]]) + epsi) / (1-xk)));
+                                        Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]), Double((Trunc((1-xk) * CostforKnapsack[arrvar[splitvar]]) + epsi) / (1-xk)));
                            }
                             //--------------Test-------------
 #ifndef NDEBUG
                             Double Testprofit = 0;
                             if(capacity>=0) {
                                 for (int i = 0; i < splitvar; i++) {
-                                    if (CostforKnapsack[arrvar[i]] > 0)
+                                    if (CostforKnapsack[arrvar[i]] > MIN_COST)
                                         Testprofit += CostforKnapsack[arrvar[i]];
                                     else if (weights[arrvar[i]] < 0)
                                         Testprofit -= CostforKnapsack[arrvar[i]];
                                 }
-                                if (CostforKnapsack[arrvar[splitvar]] > 0)
+                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
                                     Testprofit += xk * Newkcost;
                                 else
                                     Testprofit -= xk * Newkcost;
                             }
                             else{
                                 for (int i = splitvar+1; i < arity_-nbmincost-1; i++) {
-                                    if (CostforKnapsack[arrvar[i]] > 0 && weights[arrvar[i]]>0)
+                                    if (CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]]>0)
                                         Testprofit += CostforKnapsack[arrvar[i]];
                                     else if (weights[arrvar[i]] < 0 && weights[arrvar[i]]<0)
                                         Testprofit -= CostforKnapsack[arrvar[i]];
                                 }
                                 if(W <= capacity - PosweightPosprofit){
-                                    if (CostforKnapsack[arrvar[splitvar]] > 0)
+                                    if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
                                         Testprofit += (1-xk) * Newkcost;
                                     else
                                         Testprofit -= (1-xk) * Newkcost;
@@ -508,20 +505,20 @@ public:
                                 for (int i = 0; i < arity_; i++) {
                                     if (scope[arrvar[i]]->unassigned()) {
                                         if (i < splitvar) {
-                                            if (CostforKnapsack[arrvar[i]] > 0) {
+                                            if (CostforKnapsack[arrvar[i]] > MIN_COST) {
                                                 deltaCosts1[arrvar[i]] += CostforKnapsack[arrvar[i]];
                                                 assert(CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(1));
                                                 scope[arrvar[i]]->extend(1, CostforKnapsack[arrvar[i]]);
-                                            } else if (CostforKnapsack[arrvar[i]] < 0) {
+                                            } else if (CostforKnapsack[arrvar[i]] < MIN_COST) {
                                                 deltaCosts0[arrvar[i]] -= CostforKnapsack[arrvar[i]];
                                                 assert(-CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(0));
                                                 scope[arrvar[i]]->extend(0, -CostforKnapsack[arrvar[i]]);
                                             }
-                                        } else if (CostforKnapsack[arrvar[i]] > 0 && weights[arrvar[i]] > 0) {
+                                        } else if (CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]] > 0) {
                                             deltaCosts1[arrvar[i]] += min( Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c));
                                             assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * weights[arrvar[i]]), Double(c)) <= scope[arrvar[i]]->getCost(1));
                                             scope[arrvar[i]]->extend(1, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c)));
-                                        } else if (CostforKnapsack[arrvar[i]] < 0 && weights[arrvar[i]] < 0) {
+                                        } else if (CostforKnapsack[arrvar[i]] < MIN_COST && weights[arrvar[i]] < 0) {
                                             deltaCosts0[arrvar[i]] += min( Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c));
                                             assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * -weights[arrvar[i]]), Double(c)) <= scope[arrvar[i]]->getCost(0));
                                             scope[arrvar[i]]->extend(0, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c)));
@@ -533,20 +530,20 @@ public:
                                 for (int i = 0; i < arity_; i++) {
                                     if (scope[arrvar[i]]->unassigned()) {
                                         if (i > splitvar) {
-                                            if (CostforKnapsack[arrvar[i]] > 0) {
+                                            if (CostforKnapsack[arrvar[i]] > MIN_COST) {
                                                 deltaCosts1[arrvar[i]] += CostforKnapsack[arrvar[i]];
                                                 assert(CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(1));
                                                 scope[arrvar[i]]->extend(1, CostforKnapsack[arrvar[i]]);
-                                            } else if (CostforKnapsack[arrvar[i]] < 0) {
+                                            } else if (CostforKnapsack[arrvar[i]] < MIN_COST) {
                                                 deltaCosts0[arrvar[i]] -= CostforKnapsack[arrvar[i]];
                                                 assert(-CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(0));
                                                 scope[arrvar[i]]->extend(0, -CostforKnapsack[arrvar[i]]);
                                             }
-                                        } else if (CostforKnapsack[arrvar[i]] > 0 && weights[arrvar[i]] > 0) {
+                                        } else if (CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]] > 0) {
                                             deltaCosts1[arrvar[i]] += min( Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c));
                                             assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * weights[arrvar[i]]), Double(c)) <=scope[arrvar[i]]->getCost(1));
                                             scope[arrvar[i]]->extend(1, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c)));
-                                        } else if (CostforKnapsack[arrvar[i]] < 0 && weights[arrvar[i]] < 0) {
+                                        } else if (CostforKnapsack[arrvar[i]] < MIN_COST && weights[arrvar[i]] < 0) {
                                             deltaCosts0[arrvar[i]] += min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c));
                                             assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * -weights[arrvar[i]]), Double(c)) <=scope[arrvar[i]]->getCost(0));
                                             scope[arrvar[i]]->extend(0, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c)));

@@ -2021,7 +2021,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     free(Nfile2);
 
     // Done internally by the CFN reader
-    if (!ToulBar2::cfn && !ToulBar2::opb) {
+    if (!ToulBar2::cfn) {
         if (ToulBar2::deltaUbS.length() != 0) {
             ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
             ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
@@ -3710,6 +3710,40 @@ void WCSP::read_qpbo(const char* fileName)
 }
 
 bool isInteger(string &s) {return string("0123456789+-").find(s[0]) != string::npos;}
+/// \param file: input file
+/// \param token: in: previous token, out: new token (read from file or from the end of the previous token)
+/// \param keep: in: relative position to start reading from the previous token (if positive and greater or equal to previous token size then reads from file else if negative subtracts from the end), out: size of the new token
+/// \warning if new token is + or - then replace to +1 or -1
+/// \warning if new token is +varname or -varname then split into +1 varname or -1 varname
+void readToken(istream &file, string &token, int *keep = NULL)
+{
+    if (keep==NULL || *keep >= (int)token.size()) {
+        file >> token;
+    } else if (*keep>=0) {
+        token = token.substr(*keep);
+    }  else {
+        assert(-(*keep) <= (int)token.size());
+        token = token.substr(token.size()+(*keep));
+    }
+    bool twotokens = false;
+    if (token=="+" || token=="-") {
+        token = token + "1";
+    } else if (token.size()>=2 && (token[0]=='+' || token[0]=='-') && string("0123456789").find(token[1]) == string::npos) {
+        twotokens = true;
+        token = to_string(token[0]) + "1" + token.substr(1);
+    }
+    if (keep) {
+        if (twotokens) {
+            *keep = 2;
+        } else {
+            *keep = token.size();
+        }
+    }
+    if (ToulBar2::verbose >= 8) {
+        cout << "##" << token << "##" << endl;
+    }
+}
+
 void WCSP::read_opb(const char* fileName)
 {
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
@@ -3758,10 +3792,10 @@ void WCSP::read_opb(const char* fileName)
     streampos prev;
 
     // skip initial comments
-    file >> token;
+    readToken(file, token);
     while (token[0] == '*') {
         getline(file, dummy);
-        file >> token;
+        readToken(file, token);
     }
 
     // read linear objective function
@@ -3775,40 +3809,84 @@ void WCSP::read_opb(const char* fileName)
     } else {
         opt = false;
         opsize = 0;
+        updateUb(UNIT_COST * multiplier);
     }
 
     if (opt) {
         do {
             Cost cost; // cost can be negative or decimal
-            file >> token; // read cost or varname
+            readToken(file, token, &opsize); // read cost or varname
             if (!file) break;
             if (isInteger(token)) {
                 cost = string2Cost((const char *)token.c_str());
-                if (token.back() != ';') {
-                    file >> token; // read varname
+                if (opsize!=(int)token.size() || token.back() != ';') {
+                    readToken(file, token, &opsize); // read varname
+                    assert(!isInteger(token));
                 }
             } else {
                 cost = UNIT_COST;
             }
-            if ((cost >= MIN_COST && multiplier * cost >= (Double)MAX_COST) ||
-                (cost < MIN_COST && multiplier * -cost >= (Double)MAX_COST)) {
+            if ((cost >= MIN_COST && multiplier * cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) ||
+                (cost < MIN_COST && multiplier * -cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST)) {
                 cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
                 exit(EXIT_FAILURE);
             }
             cost *= ToulBar2::costMultiplier;
             if (token != ";") {
-                if (!isInteger(token)) {
+                vector<int> scopeIndex;
+                while (!isInteger(token)) {
+                    string varname = token.substr(0,token.size()-((token.back()==';')?1:0));
                     int var = 0;
-                    if (varnames.find(token) != varnames.end()) {
-                        var = varnames[token];
+                    if (varnames.find(varname) != varnames.end()) {
+                        var = varnames[varname];
                     } else {
-                        var = makeEnumeratedVariable(token, 0, 1);
+                        var = makeEnumeratedVariable(varname, 0, 1);
                         addValueName(var, "v0");
                         addValueName(var, "v1");
-                        varnames[token] = var;
+                        varnames[varname] = var;
                         nbvar++;
                     }
-                    EnumeratedVariable* x = (EnumeratedVariable*)vars[var];
+                    if (find(scopeIndex.begin(), scopeIndex.end(), var) == scopeIndex.end()) {
+                        scopeIndex.push_back(var);
+                    }
+                    if (token.back() == ';') break;
+                    readToken(file, token, &opsize);
+                    if (isInteger(token) || token == ";") {
+                        opsize = 0;
+                        break;
+                    }
+                }
+                if (scopeIndex.size() > 3) {
+                    Cost defval = max(MIN_COST, -cost);
+                    int ctr = postNaryConstraintBegin(scopeIndex, defval, 1);
+                    vector<Value> tuple(scopeIndex.size(), 1);
+                    if (cost < MIN_COST) {
+                        postNaryConstraintTuple(ctr, tuple, MIN_COST);
+                        negCost -= cost;
+                    } else {
+                        postNaryConstraintTuple(ctr, tuple, cost);
+                    }
+                    postNaryConstraintEnd(ctr);
+                } else if (scopeIndex.size() == 3) {
+                    vector<Cost> costs(2*2*2, max(MIN_COST, -cost));
+                    if (cost < MIN_COST) {
+                        costs[7] = MIN_COST;
+                        negCost -= cost;
+                    } else {
+                        costs[7] = cost;
+                    }
+                    postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
+                } else if (scopeIndex.size() == 2) {
+                    vector<Cost> costs(2*2, max(MIN_COST, -cost));
+                    if (cost < MIN_COST) {
+                        costs[3] = MIN_COST;
+                        negCost -= cost;
+                    } else {
+                        costs[3] = cost;
+                    }
+                    postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
+                } else if (scopeIndex.size() == 1) {
+                    EnumeratedVariable* x = (EnumeratedVariable*)vars[scopeIndex[0]];
                     TemporaryUnaryConstraint unaryconstr;
                     unaryconstr.var = x;
                     if (cost < MIN_COST) {
@@ -3820,8 +3898,11 @@ void WCSP::read_opb(const char* fileName)
                         unaryconstr.costs.push_back(cost);
                     }
                     unaryconstrs.push_back(unaryconstr);
-                } else {
+                } else if (scopeIndex.size() == 0) {
                     inclowerbound += cost;
+                } else {
+                    cerr << "Sorry! Cannot read objective function with non linear term of arity " << scopeIndex.size() << endl;
+                    exit(EXIT_FAILURE);
                 }
             }
         } while (token.back() != ';');
@@ -3834,18 +3915,17 @@ void WCSP::read_opb(const char* fileName)
         string params;
         Cost coef; // allows long long coefficients inside linear constraints
         do {
-            if (opt) file >> token; // read coefficient or operator or comments
-            opt = true;
+            readToken(file, token, &opsize); // read coefficient or operator or comments
             // skip comments
             while (file && token[0] == '*') {
                 getline(file, dummy);
-                file >> token;
+                readToken(file, token, &opsize);
             }
             if (!file || token == ";") break;
             if (token.substr(0,2) == "<=" || token.substr(0,1) == "=" || token.substr(0,2) == ">=") {
-                int opsize = (token.substr(0,1) == "=")?1:2;
+                opsize = (token[0] == '=')?1:2;
                 string op = token.substr(0,opsize);
-                file >> token; // read right coef
+                readToken(file, token, &opsize); // read right coef
                 assert(isInteger(token));
                 coef = string2Cost((char*)token.c_str());
                 maxarity = max(maxarity, (int)scopeIndex.size());
@@ -3866,27 +3946,34 @@ void WCSP::read_opb(const char* fileName)
                 }
             } else {
                 assert(token.back() != ';');
-                assert(isInteger(token));
-                coef = string2Cost((char*)token.c_str());
-                file >> token; // read varname
+                if (isInteger(token)) {
+                    coef = string2Cost((char*)token.c_str());
+                    readToken(file, token, &opsize); // read varname
+                } else {
+                    coef = 1;
+                }
                 assert(token.back() != ';');
                 assert(!isInteger(token));
                 if (token.back() == '=') {
-                    int opsize = (token[token.size()-2] == '<' || token[token.size()-2] == '>')?2:1;
-                    token = token.substr(0, token.size() - opsize);
+                    opsize = (token[token.size()-2] == '<' || token[token.size()-2] == '>')?-2:-1;
                 }
+                string varname = token.substr(0, token.size() + opsize);
                 int var = 0;
-                if (varnames.find(token) != varnames.end()) {
-                    var = varnames[token];
+                if (varnames.find(varname) != varnames.end()) {
+                    var = varnames[varname];
                 } else {
-                    var = makeEnumeratedVariable(token, 0, 1);
+                    var = makeEnumeratedVariable(varname, 0, 1);
                     addValueName(var, "v0");
                     addValueName(var, "v1");
-                    varnames[token] = var;
+                    varnames[varname] = var;
                     nbvar++;
                 }
-                scopeIndex.push_back(var);
-                coefs.push_back(coef);
+                if (find(scopeIndex.begin(), scopeIndex.end(), var) == scopeIndex.end()) {
+                    scopeIndex.push_back(var);
+                    coefs.push_back(coef);
+                } else {
+                    coefs[find(scopeIndex.begin(), scopeIndex.end(), var) - scopeIndex.begin()] += coef;
+                }
             }
         } while (token.back() != ';');
     }
@@ -3899,7 +3986,7 @@ void WCSP::read_opb(const char* fileName)
     }
     sortConstraints();
     if (ToulBar2::verbose >= 0)
-        cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << "." << endl;
+        cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
 }
 
 /* Local Variables: */

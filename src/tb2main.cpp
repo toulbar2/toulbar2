@@ -700,7 +700,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
-    cout << "   *.opb : linear pseudo-Boolean optimization format" << endl;
+    cout << "   *.opb : pseudo-Boolean optimization format" << endl;
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
 #ifdef XMLFLAG
@@ -2350,17 +2350,17 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::xz = true;
             }
 
-            // linear pseudo-Boolean optimization file
+            // pseudo-Boolean optimization file
             if (check_file_ext(problem, file_extension_map["opb_ext"]) || ToulBar2::stdin_format.compare("opb") == 0) {
                 if (ToulBar2::verbose >= 0)
-                    cout << "loading linear pseudo-Boolean optimization file:" << problem << endl;
+                    cout << "loading pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::opb = true;
                 strext.insert(".opb");
                 strfile.push_back(problem);
             }
             if (check_file_ext(problem, file_extension_map["opbgz_ext"])) {
                 if (ToulBar2::verbose >= 0)
-                    cout << "loading gzip'd linear pseudo-Boolean optimization file:" << problem << endl;
+                    cout << "loading gzip'd pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::opb = true;
                 strext.insert(".opb.gz");
                 strfile.push_back(problem);
@@ -2368,7 +2368,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
             if (check_file_ext(problem, file_extension_map["opbxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
-                    cout << "loading xz compressed linear pseudo-Boolean optimization file:" << problem << endl;
+                    cout << "loading xz compressed pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::opb = true;
                 strext.insert(".opb.xz");
                 strfile.push_back(problem);
