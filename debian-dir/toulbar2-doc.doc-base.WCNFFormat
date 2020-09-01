@@ -1,0 +1,8 @@
+Document: toulbar2-doc-wcnfformat
+Title: WCNF file format definition
+Author: Toulbar2 dev team
+Abstract: This manual describes the DIMACS Weighted SAT format for expressing Weighted CNF (Conjunctive Normal Form) models for toulbar2.
+Section: Science/Mathematics
+
+Format: text
+Files: /usr/share/doc/toulbar2-doc/WcnfFormats.txt

@@ -1,0 +1,8 @@
+Document: toulbar2-doc-wcspformat
+Title: WCSP file format definition
+Author: Toulbar2 dev team
+Abstract: This manual describes the WCSP (Weighted Constraint Satisfaction Problem) format for expressing discrete graphical models with non negative integer costs for toulbar2.
+Section: Science/Mathematics
+
+Format: PDF
+Files: /usr/share/doc/toulbar2-doc/wcspformat.pdf.gz

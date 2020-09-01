@@ -3,13 +3,19 @@ Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.
 Uploaders: Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>
 Section: science
 Priority: optional
-Build-Depends: debhelper (>= 10),
-               cmake, bc,
+Build-Depends: debhelper (>= 12~),
+               cmake,
+               bc,
+               doxygen,
+               doxygen-latex,
                libgmp-dev,
+               graphviz,
                libboost-graph-dev,
                libboost-iostreams-dev,
-               libjemalloc-dev
-Standards-Version: 4.1.4
+               zlib1g-dev,
+               libopenmpi-dev,
+               pkg-config
+Standards-Version: 4.3.0
 Vcs-Browser: https://salsa.debian.org/science-team/toulbar2
 Vcs-Git: https://salsa.debian.org/science-team/toulbar2.git
 Homepage: http://www.inra.fr/mia/T/toulbar2
@@ -18,7 +24,20 @@ Package: toulbar2
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends}
+Recommends: toulbar2-doc
 Description: Exact combinatorial optimization for Graphical Models
  Toulbar2 is  an exact discrete optimization tool for Graphical Models
  such as Cost Function Networks, Markov Random Fields, Weighted Constraint
  Satisfaction Problems and Bayesian Nets.
+
+Package: toulbar2-doc
+Architecture: all
+Section: doc
+Depends: ${misc:Depends}
+Description: Exact combinatorial optimization for Graphical Models - documentation
+ Toulbar2 is  an exact discrete optimization tool for Graphical Models
+ such as Cost Function Networks, Markov Random Fields, Weighted Constraint
+ Satisfaction Problems and Bayesian Nets.
+ .
+ This package contains the API reference and user documentation, descriptions
+ of the various file formats that toulbar2 can read as well as examples.

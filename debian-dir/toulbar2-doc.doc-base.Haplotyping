@@ -1,0 +1,8 @@
+Document: toulbar2-doc-haplotyping
+Title: Haplotype inference in half-sib families 
+Author: Toulbar2 dev team
+Abstract: This manual describes how toulbar2 can be used to perform haplotype inference in half-sib families, often occurring in cattle.
+Section: Science/Mathematics
+
+Format: text
+Files: /usr/share/doc/toulbar2-doc/HaplotypeHalfSib.txt.gz

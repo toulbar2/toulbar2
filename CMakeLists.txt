@@ -408,14 +408,22 @@ ADD_CUSTOM_COMMAND(
 ##########################################
 # Doc installation
 ##########################################
-install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar2_NAME} PATTERN ".svn" EXCLUDE)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
+file(GLOB pdf_doc_files "doc/*.pdf*")
+file(GLOB txt_doc_files "doc/*.txt*")
+file(GLOB html_doc_files "doc/*.html*")
+install(FILES ${pdf_doc_files} DESTINATION ${doc_destination}/${Toulbar_NAME}-doc)
+install(FILES ${txt_doc_files} DESTINATION ${doc_destination}/${Toulbar_NAME}-doc)
+install(FILES ${html_doc_files} DESTINATION ${doc_destination}/${Toulbar_NAME}-doc)
 
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 ##########################################
 # Examples installation
 ##########################################
-install(DIRECTORY ${Default_validation_dir} DESTINATION ${doc_destination}/${Toulbar2_NAME}/examples/ PATTERN ".svn" EXCLUDE)
-install(DIRECTORY ${Default_cover_dir} DESTINATION ${doc_destination}/${Toulbar2_NAME}/examples/ PATTERN ".svn" EXCLUDE)
+add_custom_target(create_validation_tar ALL COMMAND
+  ${CMAKE_COMMAND} -E tar "cfvJ" "validation.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_validation_dir}")
+add_custom_target(create_cover_tar ALL COMMAND
+  ${CMAKE_COMMAND} -E tar "cfvJ" "cover.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_cover_dir}")
+
 
 ##########################################
 #  PACKAGING 

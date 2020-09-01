@@ -1,3 +1,11 @@
+toulbar2 (1.1.0) unstable; urgency=medium
+
+  * New major release. Includes a Python3 API, incremental search and guaranteed
+    diverse solution generation, VAC-based heuristics, Pseudo-Boolean constraints 
+    and a .opb file format reader. 
+
+ -- Thomas Schiex <Thomas.Schiex@toulouse.inra.fr>  Tue, 01 Sep 2020 18:55:36 +0200
+
 toulbar2 (1.0.0+dfsg-1) unstable; urgency=medium
 
   * New major release. Includes DGVNS parallelized search method,
