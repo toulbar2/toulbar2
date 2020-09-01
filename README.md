@@ -38,7 +38,7 @@ associated
 and [video](https://www.youtube.com/watch?v=IpUr6KIEjMs) where it is
 shown how it can learn user preferences or how to play the Sudoku
 without knowing the rules). The current CFN learning code is available
-at https://forgemia.inra.fr/thomas.schiex/cfn-learn.
+on [GitHub](https://github.com/toulbar2/CFN-learn).
 
 ## Installation from binaries
 
