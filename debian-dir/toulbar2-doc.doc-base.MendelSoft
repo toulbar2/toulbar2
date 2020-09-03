@@ -1,8 +1,0 @@
-Document: toulbar2-doc-mendelsoft
-Title: MendelSoft - genotype correction in complex pedigrees
-Author: Toulbar2 dev team
-Abstract: This manual describes how toulbar2 can be used to  detect Mendelian marker genotyping incompatibilities and possibly correct them using either parcimonious or maximum likelihood approaches.
-Section: Science/Mathematics
-
-Format: text
-Files: /usr/share/doc/toulbar2-doc/MendelSoft.txt.gz
