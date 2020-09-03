@@ -301,7 +301,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     for (arity = maxa; arity > 1; arity--) {
         long nogoods = (long)(((double)p[0] / 100.) * pow((double)m, arity) + 0.5);
         //long totalarraysize = (long) pow( (double)n, arity);
-        long long tCtrs = n*(n-1);
+        long long tCtrs = static_cast<long long>(n)*static_cast<long long>(n-1);
         set<long long> scopes;
         for (i = 2; i < arity; i++) {
             tCtrs *= (n - i);

@@ -212,7 +212,7 @@ public:
     bool enumerated(int varIndex) const { return vars[varIndex]->enumerated(); } ///< \brief true if the variable has an enumerated domain
 
     string getName(int varIndex) const { return vars[varIndex]->getName(); } ///< \note by default, variables names are integers, starting at zero
-    int getVarIndex(const string& s) const { vector<Variable *>::const_iterator iter = find_if(vars.begin(), vars.end(), [&s](const Variable *var){return (var->getName()==s);}); return std::distance(vars.begin(), iter); }
+    unsigned int getVarIndex(const string& s) const { int i = std::distance(vars.begin(), find_if(vars.begin(), vars.end(), [&s](const Variable *var){return (var->getName()==s);})); assert (i >= 0); return static_cast<unsigned>(i); }
     Value getInf(int varIndex) const { return vars[varIndex]->getInf(); } ///< \brief minimum current domain value
     Value getSup(int varIndex) const { return vars[varIndex]->getSup(); } ///< \brief maximum current domain value
     Value getValue(int varIndex) const { return vars[varIndex]->getValue(); } ///< \brief current assigned value \warning undefined if not assigned yet
@@ -520,15 +520,15 @@ public:
     void solution_UAI(Cost res); ///< \brief output solution in UAI 2008 output format
 
     const vector<Value> getSolution() { return solution; }
-    const Double getSolutionValue() { return Cost2ADCost(solutionCost); }
-    const Cost getSolutionCost() { return solutionCost; }
+    Double getSolutionValue() const { return Cost2ADCost(solutionCost); }
+    Cost getSolutionCost() const { return solutionCost; }
     const vector<Value> getSolution(Cost* cost_ptr)
     {
         if (cost_ptr != NULL)
             *cost_ptr = solutionCost;
         return solution;
     }
-    const vector<pair<Double, vector<Value>>> getSolutions() { return solutions; }
+    vector<pair<Double, vector<Value>>> getSolutions() const { return solutions; }
     void initSolutionCost() { solutionCost = MAX_COST; }
     void setSolution(Cost cost, TAssign* sol = NULL)
     {

@@ -289,15 +289,15 @@ public:
 
     virtual void newSolution();
     const vector<Value> getSolution() { return wcsp->getSolution(); }
-    const Double getSolutionValue() { return wcsp->getSolutionValue(); }
-    const Cost getSolutionCost() { return wcsp->getSolutionCost(); }
-    const Cost getSolution(vector<Value>& solution)
+    Double getSolutionValue() const { return wcsp->getSolutionValue(); }
+    Cost getSolutionCost() const { return wcsp->getSolutionCost(); }
+    Cost getSolution(vector<Value>& solution) const
     {
         Cost cost = MAX_COST;
         solution = wcsp->getSolution(&cost);
         return cost;
     }
-    const vector<pair<Double, vector<Value>>> getSolutions() { return wcsp->getSolutions(); }
+    vector<pair<Double, vector<Value>>> getSolutions() const { return wcsp->getSolutions(); }
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);
 

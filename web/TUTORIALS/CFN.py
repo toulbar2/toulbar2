@@ -58,13 +58,13 @@ class CFN:
     def AddFunction(self, scope, costs):
         sscope = set(scope)
         if len(scope) != len(sscope):
-            raise("Error: duplicate variable in scope")
+            raise RuntimeError("Duplicate variable in scope:"+str(scope))
         arity = len(scope)
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices[v]
             if (v < 0 or v >= len(self.VariableNames)):
-                raise("Error: out of range variable index") 
+                raise RuntimeError("Out of range variable index:"+str(v)) 
             scope[i] = v
         if (len(scope) == 1):
             self.CFN.wcsp.postUnaryConstraint(scope[0], costs, False)

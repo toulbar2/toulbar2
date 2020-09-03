@@ -110,7 +110,7 @@ public:
     virtual bool enumerated(int varIndex) const = 0; ///< \brief true if the variable has an enumerated domain
 
     virtual string getName(int varIndex) const = 0; ///< \note by default, variables names are integers, starting at zero
-    virtual int getVarIndex(const string& s) const = 0; ///< return variable index from its name, or numberOfVariables() if not found
+    virtual unsigned int getVarIndex(const string& s) const = 0; ///< return variable index from its name, or numberOfVariables() if not found
     virtual Value getInf(int varIndex) const = 0; ///< \brief minimum current domain value
     virtual Value getSup(int varIndex) const = 0; ///< \brief maximum current domain value
     virtual Value getValue(int varIndex) const = 0; ///< \brief current assigned value \warning undefined if not assigned yet
@@ -384,10 +384,10 @@ public:
     virtual void read_opb(const char* fileName) = 0; ///< \brief load pseudo-Boolean optimization problem
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const Double getSolutionValue() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
-    virtual const Cost getSolutionCost() = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
+    virtual Double getSolutionValue() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
+    virtual Cost getSolutionCost() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const vector<Value> getSolution(Cost* cost_ptr) = 0; ///< \deprecated \brief returns current best solution and its cost
-    virtual const vector<pair<Double, vector<Value>>> getSolutions() = 0; ///\brief returns all solutions found
+    virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///\brief returns all solutions found
     virtual void initSolutionCost() = 0; ///< \brief invalidate best solution by changing its cost to MAX_COST
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
     virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
@@ -561,10 +561,10 @@ public:
     virtual void parse_solution(const char* certificate, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const Double getSolutionValue() = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const Cost getSolutionCost() = 0; ///< \brief after solving the problem, return the optimal solution nonnegative integer cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const Cost getSolution(vector<Value>& solution) = 0; ///< \deprecated \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
-    virtual const vector<pair<Double, vector<Value>>> getSolutions() = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
+    virtual Double getSolutionValue() const = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual Cost getSolutionCost() const = 0; ///< \brief after solving the problem, return the optimal solution nonnegative integer cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual Cost getSolution(vector<Value>& solution) const = 0; ///< \deprecated \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
 
     // -----------------------------------------------------------
     // Internal Solver functions DO NOT USE THEM

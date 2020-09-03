@@ -72,7 +72,7 @@ public:
     virtual const zone getNeighborhood(size_t neighborhood_size) = 0;
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const = 0;
     virtual ~NeighborhoodStructure() {}
-    virtual const bool incrementK() { return true; }
+    virtual bool incrementK() { return true; }
 };
 
 // for vns/lds-cp
@@ -119,7 +119,7 @@ public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
-    virtual const bool incrementK();
+    virtual bool incrementK();
 };
 
 // for rpdgvns
@@ -131,7 +131,7 @@ public:
     // Master / Slave
     virtual const zone SlaveGetNeighborhood(uint CurrentCluster, size_t neighborhood_size);
     virtual const zone SlaveGetNeighborhood(uint CurrentCluster, uint number, size_t NeighborhoodSize);
-    virtual const bool incrementK(); // for master process
+    virtual bool incrementK(); // for master process
     virtual vector<int> getClustersIndex();
     virtual uint getClustersSize(uint c, uint number);
 };
