@@ -279,7 +279,7 @@ New solution: 523 (0 backtracks, 0 nodes, depth 2)
 Optimum: 523 in 0 backtracks and 0 nodes ( 1 removals by DEE) and 2.378 seconds.
 ```
 
-You can analyze your solution by the ROADEF'2001 checker [fappeval.c](https://miat.inrae.fr/toulbar2/TUTORIALS/fappeval.c). You need also this awk script [sol2fapp.awk](https://miat.inrae.fr/toulbar2/TUTORIALS/sol2fapp.awk).
+You can analyze your solution by the ROADEF'2001 checker [fappeval.c](https://miat.inrae.fr/toulbar2/TUTORIALS/fappeval.c). You need also this AWK script [sol2fapp.awk](https://miat.inrae.fr/toulbar2/TUTORIALS/sol2fapp.awk).
 
 ```
 gcc -o fappeval fappeval.c
@@ -507,3 +507,88 @@ The following table gives the best [results](https://uma.ensta-paris.fr/conf/roa
 | fapp04_0300 | 1 | 24648190 | **24616970** | (3.282s) *(optimality proof in 27 seconds!)* |
 | fapp05_0350 | 11 | **521348004** | 521348429 | (53.496) *(521348004 in 89.788 seconds)*|
 | test01_0150 | 4 | 18292591 | **18292585** | (1.691s) |
+
+## Block modeling problem
+
+See a description of the problem [here](https://miat.inrae.fr/toulbar2/tutorial.html#block).
+
+Download the Python3 file [blockmodel.py](https://miat.inrae.fr/toulbar2/TUTORIALS/blockmodel.py) to generate a Cost Function Network model in [cfn](https://github.com/toulbar2/toulbar2/raw/master/doc/CFNformat.pdf) format.
+
+Download [simple.mat](https://miat.inrae.fr/toulbar2/TUTORIALS/simple.mat) and generate and solve the cfn model for a small graph with 5 nodes into 3 clusters. Pretty print the results using AWK script [sol2block.awk](https://miat.inrae.fr/toulbar2/TUTORIALS/sol2block.awk)
+
+```
+python3 blockmodel.py simple.mat 3 | toulbar2 --stdin=cfn -s=3 | awk -f ./sol2block.awk
+```
+
+*output:*
+
+```
+Read 14 variables, with 3 values at most, and 197 cost functions, with maximum arity 3.
+Cost function decomposition time : 0.000206 seconds.
+Preprocessing time: 0.006811 seconds.
+13 unassigned variables, 29 values in all current domains (med. size:2, max size:3) and 67 non-unary cost functions (med. arity:3, med. degree:4)
+Initial lower and upper bounds: [0, 26] 100.000%
+New solution: 0 (0 backtracks, 2 nodes, depth 4)
+ M_0_0=0 M_0_1=1 M_0_2=0 M_1_0=0 M_1_1=1 M_1_2=1 M_2_0=0 M_2_1=0 M_2_2=0 A=0 B=0 C=1 D=1 E=2
+M3*3 = 
+ 0 1 0
+ 0 1 1
+ 0 0 0
+ { A B } { C D } { E }
+Node redundancy during HBFS: 0.000 %
+Optimum: 0 in 0 backtracks and 2 nodes ( 3 removals by DEE) and 0.007 seconds.
+```
+
+Try other datasets available [here](https://miat.inrae.fr/toulbar2/TUTORIALS/). E.g.,
+
+```
+python3 blockmodel.py politicalactor.mat 5 | toulbar2 --stdin=cfn -s=3 | awk -f ./sol2block.awk
+```
+
+*partial output:*
+
+```
+Read 39 variables, with 5 values at most, and 4624 cost functions, with maximum arity 3.
+38 unassigned variables, 109 values in all current domains (med. size:2, max size:5) and 1917 non-unary cost functions (med. arity:3, med. degree:13)
+...
+New solution: 26 (798 backtracks, 1772 nodes, depth 8)
+ M_0_0=0 M_0_1=0 M_0_2=1 M_0_3=0 M_0_4=0 M_1_0=0 M_1_1=0 M_1_2=0 M_1_3=1 M_1_4=1 M_2_0=1 M_2_1=0 M_2_2=1 M_2_3=0 M_2_4=0 M_3_0=0 M_3_1=1 M_3_2=0 M_3_3=0 M_3_4=1 M_4_0=0 M_4_1=1 M_4_2=0 M_4_3=1 M_4_4=0 A=0 B=1 C=2 D=2 E=0 F=0 G=0 H=3 I=4 J=4 K=1 L=4 M=1 N=0
+M5*5 = 
+ 0 0 1 0 0
+ 0 0 0 1 1
+ 1 0 1 0 0
+ 0 1 0 0 1
+ 0 1 0 1 0
+ { A E F G N } { B K M } { C D } { H } { I J L }
+...
+Optimum: 26 in 6894 backtracks and 15688 nodes ( 6914 removals by DEE) and 12.985 seconds.
+```
+
+Download the Python3 file [blockmodel2.py](https://miat.inrae.fr/toulbar2/TUTORIALS/blockmodel2.py) to generate a better model for undirected graphs (symmetric adjacency matrix input), by removing `M[i,j]` variables for `i>j`, and also sorting node variables in decreasing out degree.  
+
+```
+python3 blockmodel2.py politicalactor.mat 5 | toulbar2 --stdin=cfn -s=3 | awk -f ./sol2block.awk
+```
+
+*partial output:*
+
+```
+Read 29 variables, with 5 values at most, and 2804 cost functions, with maximum arity 3.
+28 unassigned variables, 89 values in all current domains (med. size:2, max size:5) and 1147 non-unary cost functions (med. arity:3, med. degree:13)
+...
+New solution: 26 (501 backtracks, 1099 nodes, depth 8)
+ M_0_0=1 M_1_1=0 M_2_2=0 M_3_3=0 M_4_4=0 M_0_1=0 M_1_2=0 M_2_3=0 M_3_4=0 M_0_2=0 M_1_3=0 M_2_4=0 M_0_3=1 M_1_4=1 M_0_4=0 D=0 L=1 C=0 F=3 H=4 M=4 A=3 B=4 I=1 J=1 G=3 E=2 N=2 K=2
+M5*5 = 
+ 1 0 0 1 0
+ 0 0 0 0 1
+ 0 0 0 0 0
+ 1 0 0 0 0
+ 0 1 0 0 0
+ { D C } { L I J } { E N K } { F A G } { H M B }
+...
+Optimum: 26 in 4261 backtracks and 9767 nodes ( 3494 removals by DEE) and 5.150 seconds.
+```
+
+See a comparison with [[Mattenet et al, CP 2019]](https://doi.org/10.1007/978-3-030-30048-7_38)
+
+![blockmodelres.png](http://genoweb.toulouse.inra.fr/~degivry/evalgm/blockmodelres.png)

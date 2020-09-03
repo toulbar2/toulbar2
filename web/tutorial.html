@@ -373,6 +373,9 @@ if __name__ == '__main__':
 </ul>
 <p>Constraints (I) to (III) are mandatory constraints, while constraints (IV) can be relaxed. The goal is to find a feasible assignment with the smallest relaxation level l and which minimizes the number of violations of (IV) at lower levels. See <a href="https://www.roadef.org/challenge/2001/en">ROADEF Challenge 2001</a>.
 </p>
+<figure><figcaption><a href="https://www.roadef.org/challenge/2001/files/fapp_roadef01_rev2_msword_en.ps.gz">Physical description and mathematical formulation</a></figcaption>
+<img alt="fapp.png" src="IMAGES/fapp.png" height="250px"/>
+</figure>
 <h5>CFN model</h5>
 <p>In order to benefit from soft local consistencies on binary cost functions, we create a single variable to represent a pair (frequency,polarization) for every radio link.</p>
 <h5>Data</h5>
@@ -552,12 +555,12 @@ if __name__ == '__main__':
 <figure><figcaption>Perfect solution for the small example with k=3 (Mattenet et al, CP 2019)</figcaption>
 <img alt="simple.png" src="IMAGES/simple.png" height="250px"/>
 </figure>
-<figure><figcaption>More examples (Stochastic Block Models <a href="https://doi.org/10.1371/journal.pone.0215296>">[Funke and Becker, Plos One 2019]</a>)</figcaption>
+<figure><figcaption>More examples with 3 clusters (Stochastic Block Models <a href="https://doi.org/10.1371/journal.pone.0215296>">[Funke and Becker, Plos One 2019]</a>)</figcaption>
 <img alt="SBM.png" src="IMAGES/SBM.png" height="250px"/>
 </figure>
 <p>See other examples (*.mat) such as <a href="https://www.ifip.com/Partitioning_Political_Actor.html">PoliticalActor</a> in <a href="TUTORIALS">TUTORIALS</a>.</p>
 <h5>Python model generator</h5>
-<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 simple.mat 3").</p>
+<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 blockmodel.py simple.mat 3"). Download the AWK script  <a href="TUTORIALS/sol2block.awk">sol2block.awk</a> to pretty print the results (e.g., "python3 blockmodel.py simple.mat 3 | toulbar2 --stdin=cfn -s=3 | awk -f ./sol2block.awk").</p>
 <figure><figcaption><a href="TUTORIALS/blockmodel.py">blockmodel.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 class Data:
@@ -609,7 +612,7 @@ if __name__ == '__main__':
     cfn(model(data, K), True, data.top)
 </code></pre>
 </figure>
-<p>We improve the previous model by sorting node variables by decreasing out degree and removing the lower triangular matrix of M if the input graph is symmetric.</p>
+<p>We improve the previous model by sorting node variables by decreasing out degree and removing the lower triangular matrix of M if the input graph is undirected (symmetric adjacency matrix).</p>
 <figure><figcaption><a href="TUTORIALS/blockmodel2.py">blockmodel2.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 def model(data, K):
