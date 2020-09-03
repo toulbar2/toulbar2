@@ -39,6 +39,8 @@
   </ul>
 </div>
 
+<h5>NEWS: tutorial (<a href="https://github.com/toulbar2/toulbar2/blob/master/web/TUTORIALS/tutorialCP2020.md">script</a>) on cost function networks at CP2020</h5>
+
 <h3>Tutorials</h3>
 
   <ul>
@@ -546,8 +548,14 @@ if __name__ == '__main__':
 <h5>CFN model</h5>
 <p>We create N variables for every node of the graph with domain size k. We add k*k Boolean variables for representing M. For all triplets of two nodes u, v, and one matrix cell M[i,j], we have a ternary cost function which returns a cost of 1 if node u is assigned to cluster i, v to j, and M[i,j]=1 but (u,v) is not in G, or M[i,j]=0 and (u,v) in G. In order to break symmetries, we constrain the first k-1 node variables to be assigned to cluster index less than or equal to their index </p>
 <h5>Data</h5>
-<p>You can try a small example simple.mat (<a href="TUTORIALS/simple.mat">simple.mat</a>) with optimum value equal to 0 for 3 clusters. See other examples (*.mat) such as <a href="https://www.ifip.com/Partitioning_Political_Actor.html">PoliticalActor</a> in <a href="TUTORIALS">TUTORIALS</a>.
-</p>
+<p>You can try a small example <a href="TUTORIALS/simple.mat">simple.mat</a> with optimum value equal to 0 for 3 clusters.</p>
+<figure><figcaption>Perfect solution for the small example with k=3 (Mattenet et al, CP 2019)</figcaption>
+<img alt="simple.png" src="IMAGES/simple.png" height="250px"/>
+</figure>
+<figure><figcaption>More examples (Stochastic Block Models <a href="https://doi.org/10.1371/journal.pone.0215296>">[Funke and Becker, Plos One 2019]</a>)</figcaption>
+<img alt="SBM.png" src="IMAGES/SBM.png" height="250px"/>
+</figure>
+<p>See other examples (*.mat) such as <a href="https://www.ifip.com/Partitioning_Political_Actor.html">PoliticalActor</a> in <a href="TUTORIALS">TUTORIALS</a>.</p>
 <h5>Python model generator</h5>
 <p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 simple.mat 3").</p>
 <figure><figcaption><a href="TUTORIALS/blockmodel.py">blockmodel.py</a></figcaption>
@@ -653,7 +661,6 @@ def model(data, K):
     return BlockModeling
 </code></pre>
 </figure>
-
 
 <h2></h2>
 <h2 id="airland">Airplane landing problem</h2>
