@@ -13,6 +13,8 @@ list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
 set (MAINTAINER "David Allouche <david.allouche@inrae.fr>") #used in packaging 
 set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
+# default name for packaging
+SET(Toulbar2_NAME "toulbar2")
 
 ##########################################
 # PROJECT NAME
@@ -149,7 +151,7 @@ IF(MENDELSOFT)
   SET(MPI OFF)
   
   #basename for packaging and versioning
-  set (Toulbar2_NAME "mendelsoft")
+  set(Toulbar2_NAME "mendelsoft")
   #description used in the package building
   SET (Toulbar2_PACKAGE_DESCRIPTION 
     "MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.") 
@@ -160,11 +162,9 @@ ELSE(MENDELSOFT)
   MESSAGE(STATUS "###############################################")
 
   SET(TOULBAR2 ON)
-  #basename for packaging and versionning
-  SET(Toulbar2_NAME "toulbar2")
   #description used in the package building
   SET(Toulbar2_PACKAGE_DESCRIPTION "${Toulbar2_NAME} is an open source C++ exact solver and library for discrete graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSPs/Weighted MaxSAT or Quadratic Pseudo-Boolean Optimization.")
-  SET(Toulbar2_PACKAGE_SUMMARY "${Toulbar2_NAME} exact solver for discrete graphical models.")
+  SET(Toulbar2_PACKAGE_SUMMARY "${Toulbar2_NAME} is an exact solver for discrete graphical models.")
 ENDIF(MENDELSOFT)
 
 IF(ILOG)
@@ -411,9 +411,9 @@ ADD_CUSTOM_COMMAND(
 file(GLOB pdf_doc_files "doc/*.pdf*")
 file(GLOB txt_doc_files "doc/*.txt*")
 file(GLOB html_doc_files "doc/*.html*")
-install(FILES ${pdf_doc_files} DESTINATION ${doc_destination}/${Toulbar_NAME}-doc)
-install(FILES ${txt_doc_files} DESTINATION ${doc_destination}/${Toulbar_NAME}-doc)
-install(FILES ${html_doc_files} DESTINATION ${doc_destination}/${Toulbar_NAME}-doc)
+install(FILES ${pdf_doc_files} DESTINATION ${doc_destination}/${Toulbar2_NAME}-doc)
+install(FILES ${txt_doc_files} DESTINATION ${doc_destination}/${Toulbar2_NAME}-doc)
+install(FILES ${html_doc_files} DESTINATION ${doc_destination}/${Toulbar2_NAME}-doc)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 ##########################################

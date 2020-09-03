@@ -3,24 +3,27 @@
 # specialized git repo from the master branch and push -f it to
 # git@salsa.debian.org:science-team/toulbar2.git set as the remote.
 
-echo -n "Version:"
+echo -n "Toulbar2 version:"
 read ver
 
-echo -n "Message:"
+echo -n "Release Message:"
 read mes
 git pull --rebase
-# tag for correct version
-git tag -a $ver -m"$mes"
 
-# Create version files. Quilt patches will prevent Cmake doing it.
-# instead genDebianVersionFile.sh will copy it from debian dir.
-./cmake-script/genVersionFile.sh
-mv src/ToulbarVersion.hpp debian
+if output=$(git status --porcelain) && [ -z "$output" ]; then
+    ./cmake-script/genVersionFile.sh
+    git add /src/ToulbarVersion.hpp
+    git commit -m "[release] Added version file for release $ver"
+    git tag -a $ver -m"$mes"
+    git push --no-verify
+    git push --tags --no-verify
+else 
+    echo "Git status is not clean. Will not tag!"
+    exit 1
+fi
 
-git add debian /src/ToulbarVersion.hpp
-git commit -m "[debian] Added version ifile for debian.
-# move tag for github releasing.
-git tag -a $ver -m"$mes" -f
-git push
-git push --tags
-echo "Now, prepare your gitHub relase with tag $ver"
+echo "Now, GitHub will build a release for the tag $ver"
+echo "Go to your docker debian image, pull, use uscan"
+echo "and then gbp import-orig the  packed/filtered tarball"
+echo "check it works using debuild -S and debuild -B"
+echo "push to salsa and send a mesage"
