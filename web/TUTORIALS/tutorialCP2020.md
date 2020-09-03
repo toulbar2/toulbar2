@@ -5,7 +5,6 @@
 You can install toulbar2 directly using the package manager in Debian and Debian derived Linux distributions (Ubuntu,..):
 
 ```
-echo "deb http://ftp.fr.debian.org/debian sid main" | sudo tee -a /etc/apt/sources.list
 sudo apt-get update
 sudo apt-get install toulbar2
 ```
