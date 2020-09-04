@@ -45,9 +45,8 @@ on [GitHub](https://github.com/toulbar2/CFN-learn).
 You can install toulbar2 directly using the package manager in Debian
 and Debian derived Linux distributions (Ubuntu, Mint,...). E.g.:
 
-    echo "deb http://ftp.fr.debian.org/debian sid main" | sudo tee -a /etc/apt/sources.list
     sudo apt-get update
-    sudo apt-get install toulbar2
+    sudo apt-get install toulbar2 toulbar2-doc
 
 For the most recent version, compile from source.
 
