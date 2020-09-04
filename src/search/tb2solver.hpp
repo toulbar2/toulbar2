@@ -310,7 +310,7 @@ public:
     {
         ToulBar2::limited = true;
         if (ToulBar2::verbose >= 2)
-            cout << what() << endl;
+            cout << SolverOut::what() << endl;
     }
     virtual const char* what() const throw() { return "... some solver limit was reached!"; }
 };
