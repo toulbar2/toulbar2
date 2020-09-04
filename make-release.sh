@@ -14,7 +14,8 @@ if output=$(git status --porcelain) && [ -z "$output" ]; then
     ./cmake-script/genVersionFile.sh
     git add /src/ToulbarVersion.hpp
     git commit -m "[release] Added version file for release $ver"
-    git tag -a $ver -m"$mes"
+    git tag -a $ver -m"$mes"  # debian likes numerical tags
+    git tag -a v$ver -m"$mes" # github want non numerical tags
     git push --no-verify
     git push --tags --no-verify
 else 
