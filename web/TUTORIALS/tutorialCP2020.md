@@ -361,7 +361,7 @@ Larger instances from the ROADEF'2001 Challenge require much more time and memor
 ```
 python3 fapp.py test01_0150.in 4 > test01_0150_4.cfn
 xz test01_0150_4.cfn
-toulbar2 test01_0150_4.cfn -z=test01_0150_4.wcsp
+toulbar2 test01_0150_4.cfn.xz -z=test01_0150_4.wcsp
 xz test01_0150_4.wcsp
 ```
 
