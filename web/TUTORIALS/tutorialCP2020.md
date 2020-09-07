@@ -514,7 +514,7 @@ See a description of the problem [here](https://miat.inrae.fr/toulbar2/tutorial.
 
 Download the Python3 file [blockmodel.py](https://miat.inrae.fr/toulbar2/TUTORIALS/blockmodel.py) to generate a Cost Function Network model in [cfn](https://github.com/toulbar2/toulbar2/raw/master/doc/CFNformat.pdf) format.
 
-Download [simple.mat](https://miat.inrae.fr/toulbar2/TUTORIALS/simple.mat) and generate and solve the cfn model for a small graph with 5 nodes into 3 clusters. Pretty print the results using AWK script [sol2block.awk](https://miat.inrae.fr/toulbar2/TUTORIALS/sol2block.awk)
+Download [simple.mat](https://miat.inrae.fr/toulbar2/TUTORIALS/simple.mat) and generate and solve the cfn model for a small graph with 5 nodes in 3 clusters. Pretty print the results using AWK script [sol2block.awk](https://miat.inrae.fr/toulbar2/TUTORIALS/sol2block.awk)
 
 ```
 python3 blockmodel.py simple.mat 3 | toulbar2 --stdin=cfn -s=3 | awk -f ./sol2block.awk
