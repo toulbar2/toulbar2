@@ -591,4 +591,4 @@ Optimum: 26 in 4261 backtracks and 9767 nodes ( 3494 removals by DEE) and 5.150 
 
 See a comparison with [[Mattenet et al, CP 2019]](https://doi.org/10.1007/978-3-030-30048-7_38)
 
-![blockmodelres.png](http://genoweb.toulouse.inra.fr/~degivry/evalgm/blockmodelres.png)
+![blockmodel.png](http://genoweb.toulouse.inra.fr/~degivry/evalgm/blockmodel.png)
