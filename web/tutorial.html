@@ -39,7 +39,7 @@
   </ul>
 </div>
 
-<h5>NEWS: tutorial (<a href="https://github.com/toulbar2/toulbar2/blob/master/web/TUTORIALS/tutorialCP2020.md">script</a>) on cost function networks at CP2020 (<a href="https://www.youtube.com/watch?v=HHsqdVSJL8g">part1</a>, <a href="https://youtu.be/BYhhyiPFPGw">part2</a>)</h5>
+<h5>NEWS: tutorial <a href="https://github.com/toulbar2/toulbar2/blob/master/web/TUTORIALS/tutorialCP2020.md">script</a> on cost function networks at CP2020 with associated <a href="https://youtu.be/BYhhyiPFPGw">part2</a> video.</h5>
 
 <h3>Tutorials</h3>
 
@@ -51,6 +51,7 @@
 	<li><a href="#mendel">Mendelian error detection problem</a></li>
 	<li><a href="#block">Block modeling problem</a></li>
 	<li><a href="#airland">Airplane landing problem</a></li>
+	<li><a href="#warehouse">Warehouse location problem</a></li>
 	<li><a href="https://github.com/toulbar2/CFN-learn/tree/master/Sudoku">Learning to play the Sudoku</a></li>
 	<li><a href="https://github.com/toulbar2/CFN-learn/tree/master/renault">Renault car configuration system: learning user preferences</a></li>
   </ul>
@@ -276,7 +277,6 @@ if __name__ == '__main__':
     cfn(model(N, k), True, k)
 </code></pre>
 </figure>
-
 
 <h2></h2>
 <h2 id="rlfap">Radio link frequency assignment problem</h2>
@@ -739,6 +739,92 @@ Problem.Solve()
 </code></pre>
 </figure>
 
-<p id="footer"><br/><br/>Last modification : August 31, 2020</p>
+<h2></h2>
+<h2 id="warehouse">Warehouse location problem</h2>
+<h5>Brief description</h5>
+<p>See a problem description in <a href="http://csplib.org/Problems/prob034/">CSPLib-034</a>. We are dealing with the uncapacitated case only for the moment.
+</p>
+<h5>CFN model</h5>
+<p>We create Boolean variables for the warehouses (i.e., open or not) and integer variables for the stores (with domain size the number of warehouses). Channeling constraints link both of them. The objective function is linear and decomposed into one unary cost function per variable (maintenance and supply costs).</p>
+<h5>Data</h5>
+<p>Original data files can be download from the cost function library <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/data/txt">warehouses</a>. Their format is described <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/readme.txt">here</a>.
+</p>
+<h5>Python model and solve</h5>
+<p>The following code uses the python3 module of toulbar2 and its <a href="TUTORIALS/CFN.py">CFN.py</a> interface to generate the cost function network and solve it (e.g. "python3 warehouse.py cap44.txt 1" found optimum value equal to 10349757). Other instances are available <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/instances/cfn">here</a> in cfn format. Compile toulbar2 with "cmake -DPYTB2=ON . ; make" an copy the module in your current directory "cp lib/Linux/pytoulbar2.cpython* ." before running the example.</p>
+<figure><figcaption><a href="TUTORIALS/warehouse.py">warehouse.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+import sys
+import CFN
+
+f = open(sys.argv[1], 'r').readlines()
+
+precision = int(sys.argv[2])  # used to convert cost values from float to integer
+
+tokens = []
+for l in f:
+    tokens += l.split()
+
+pos = 0
+
+
+def token():
+    global pos, tokens
+    if pos == len(tokens):
+        return None
+    s = tokens[pos]
+    pos += 1
+    return s
+
+
+N = int(token())  # number of warehouses
+M = int(token())  # number of stores
+
+top = 1  # sum of all costs plus one
+
+CostW = []  # maintenance cost of warehouses
+Capacity = []  # capacity limit of warehouses (not used)
+
+for i in range(N):  
+    Capacity.append(token())
+    CostW.append(int(float(token()) * 10.**precision))
+
+top += sum(CostW)
+
+Demand = []  # demand for each store
+CostS = [[] for i in range(M)]  # supply cost matrix
+
+for j in range(M):
+    Demand.append(int(token()))
+    for i in range(N):
+        CostS[j].append(int(float(token()) * 10.**precision))
+    top += sum(CostS[-1])
+
+# create a new empty cost function network
+Problem = CFN.CFN(top)
+# add warehouse variables
+for i in range(N):
+    Problem.AddVariable('w' + str(i), range(2))
+# add store variables
+for j in range(M):
+    Problem.AddVariable('s' + str(j), range(N))
+# add maintenance costs
+for i in range(N):
+    Problem.AddFunction([i], [0, CostW[i]])
+# add supply costs for each store
+for j in range(M):
+    Problem.AddFunction([N+j], CostS[j])
+# add channeling constraints between warehouses and stores
+for i in range(N):
+    for j in range(M):
+        Problem.AddFunction([i, N+j], [(top if (a == 0 and b == i) else 0) for a in range(2) for b in range(N)])
+
+Problem.Dump('warehouse.cfn')
+Problem.Option.FullEAC = False
+Problem.Option.showSolutions = False
+Problem.Solve()
+</code></pre>
+</figure>
+
+<p id="footer"><br/><br/>Last modification : September 9, 2020</p>
 </body>
 </html>
