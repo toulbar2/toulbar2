@@ -749,9 +749,75 @@ Problem.Solve()
 <h5>Data</h5>
 <p>Original data files can be download from the cost function library <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/data/txt">warehouses</a>. Their format is described <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/readme.txt">here</a>.
 </p>
-<h5>Python model and solve</h5>
-<p>The following code uses the python3 module of toulbar2 and its <a href="TUTORIALS/CFN.py">CFN.py</a> interface to generate the cost function network and solve it (e.g. "python3 warehouse.py cap44.txt 1" found optimum value equal to 10349757). Other instances are available <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/instances/cfn">here</a> in cfn format. Compile toulbar2 with "cmake -DPYTB2=ON . ; make" an copy the module in your current directory "cp lib/Linux/pytoulbar2.cpython* ." before running the example.</p>
+<h5>Python model generator</h5>
+<p>The following code using python3 interpreter will generate the corresponding cost function network with a user given floating-point precision (e.g. "python3 warehouse.py cap44.txt 5").</p>
 <figure><figcaption><a href="TUTORIALS/warehouse.py">warehouse.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+class Data:
+    def __init__(self, filename):
+        lines = open(filename).readlines()
+        tokens = flatten([[e for e in l.split()] for l in lines])
+        p = 0
+        self.n = int(tokens[p])
+        p += 1
+        self.m = int(tokens[p])
+        p += 1
+        self.top = 1.  # sum of all costs plus one
+        self.CostW = []  # maintenance cost of warehouses
+        self.Capacity = []  # capacity limit of warehouses (not used)
+        for i in range(self.n):  
+            self.Capacity.append(int(tokens[p]))
+            p += 1
+            self.CostW.append(float(tokens[p]))
+            p += 1
+        self.top += sum(self.CostW)
+        self.Demand = []  # demand for each store (not used)
+        self.CostS = []  # supply cost matrix
+        for j in range(self.m):
+            self.Demand.append(int(tokens[p]))
+            p += 1
+            self.CostS.append([])
+            for i in range(self.n):
+                self.CostS[j].append(float(tokens[p]))
+                p += 1
+            self.top += sum(self.CostS[-1])
+
+def model(data):
+    Warehouse = ["w" + str(i) for i in range(data.n)]
+    Store = ["s" + str(i) for i in range(data.m)]
+    Model = {
+        "name": "Warehouse_" + str(data.n) + "_" + str(data.m),
+        "variables": [[(e, 2) for e in Warehouse],
+                      [(e, data.n)  for e in Store]],
+        "functions":
+            [
+                # maintenance costs
+                [{"scope": [Warehouse[i]],
+                  "costs": [0, data.CostW[i]]}
+                 for i in range(data.n)],
+                # supply costs
+                [{"scope": [Store[i]],
+                  "costs": data.CostS[i]}
+                 for i in range(data.m)],
+                # channeling constraints between warehouses and stores
+                [{"scope": [Warehouse[i], Store[j]],
+                  "costs": [(data.top if (a == 0 and b == i) else 0) for a in range(2) for b in range(data.n)]}
+                 for i in range(data.n) for j in range(data.m)]
+            ]
+    }
+    return Model
+
+if __name__ == '__main__':
+    # read parameters
+    if len(sys.argv) < 2: exit('Command line argument is problem data filename and number of precision digits after the floating point')
+    data = Data(sys.argv[1])
+    # dump problem into JSON .cfn format for minimization
+    cfn(model(data), True, data.top, int(sys.argv[2]))
+</code></pre>
+</figure>
+<h5>Python model and solve using pytoulbar2</h5>
+<p>The following code uses the python3 module of toulbar2 and its <a href="TUTORIALS/CFN.py">CFN.py</a> interface to generate the cost function network and solve it (e.g. "python3 warehouse2.py cap44.txt 1" found optimum value equal to 10349757). Other instances are available <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/instances/cfn">here</a> in cfn format. Compile toulbar2 with "cmake -DPYTB2=ON . ; make" an copy the module in your current directory "cp lib/Linux/pytoulbar2.cpython* ." before running the example.</p>
+<figure><figcaption><a href="TUTORIALS/warehouse2.py">warehouse2.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 import sys
 import CFN
