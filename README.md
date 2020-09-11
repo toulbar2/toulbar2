@@ -102,7 +102,7 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.0.0"' > ToulbarVersion.hpp
+    echo '#define Toulbar_VERSION "1.1.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
      -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DOPENMPI -DWCSPFORMATONLY -lboost_graph -lboost_iostreams -lgmp -lz -llzma
 
