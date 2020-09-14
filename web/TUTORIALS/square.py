@@ -77,13 +77,11 @@ def model(N, S, top):
     Var = ["sq" + str(i+1) for i in range(N)]
     Model = {
         "name": "SquarePacking" + str(N) + "_" + str(S),
-        "variables": [(Var[i], S*S) for i in range(N)],
+        "variables": [(Var[i], (S-i)*(S-i)) for i in range(N)],
         "functions":
             [
              # no overlapping constraint
-             [{"scope": [Var[i], Var[j]], "costs": [(0 if ((a%S) + i + 1 <= (b%S)) or ((b%S) + j + 1 <= (a%S)) or (int(a/S) + i + 1 <= int(b/S)) or (int(b/S) + j + 1 <= int(a/S)) else top) for a in range(S*S) for b in range(S*S)]} for i in range(N) for j in range(N) if (i < j)],
-             # unary constraint on the borders
-             [{"scope": [Var[i]], "costs": [(0 if ((a%S) + i + 1 <= S) and (int(a/S) + i + 1 <= S) else top) for a in range(S*S)]} for i in range(N)]
+             [{"scope": [Var[i], Var[j]], "costs": [(0 if ((a%(S-i)) + i + 1 <= (b%(S-j))) or ((b%(S-j)) + j + 1 <= (a%(S-i))) or (int(a/(S-i)) + i + 1 <= int(b/(S-j))) or (int(b/(S-j)) + j + 1 <= int(a/(S-i))) else top) for a in range((S-i)*(S-i)) for b in range((S-j)*(S-j))]} for i in range(N) for j in range(N) if (i < j)]
             ]
          }
     return Model

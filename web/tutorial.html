@@ -901,7 +901,7 @@ Problem.Solve()
 <img alt="optimal solution of 15-square problem" src="IMAGES/square.png" height="250px"/>
 </figure>
 <h5>CFN model</h5>
-<p>We create an integer variable of domain size SxS for each square representing its top-left position in the container. Its value modulo S gives the x-coordinate, whereas its value divided by S gives the y-coordinate. We have binary constraints to forbid any overlapping pair of squares. We add unary constraints to forbid squares to overcome the borders. We make the problem a pure satisfaction problem by fixing S. The initial upper bound is 1.
+<p>We create an integer variable of domain size (S-i)x(S-i) for each square i in [0,N-1] of size i+1 representing its top-left position in the container. Its value modulo (S-i) gives the x-coordinate, whereas its value divided by (S-i) gives the y-coordinate. We have binary constraints to forbid any overlapping pair of squares. We make the problem a pure satisfaction problem by fixing S. The initial upper bound is 1.
 </p>
 <h5>Python model generator</h5>
 <p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 3 5").</p>
@@ -911,13 +911,11 @@ def model(N, S, top):
     Var = ["sq" + str(i+1) for i in range(N)]
     Model = {
         "name": "SquarePacking" + str(N) + "_" + str(S),
-        "variables": [(Var[i], S*S) for i in range(N)],
+        "variables": [(Var[i], (S-i)*(S-i)) for i in range(N)],
         "functions":
             [
              # no overlapping constraint
-             [{"scope": [Var[i], Var[j]], "costs": [(0 if ((a%S) + i + 1 <= (b%S)) or ((b%S) + j + 1 <= (a%S)) or (int(a/S) + i + 1 <= int(b/S)) or (int(b/S) + j + 1 <= int(a/S)) else top) for a in range(S*S) for b in range(S*S)]} for i in range(N) for j in range(N) if (i < j)],
-             # unary constraint on the borders
-             [{"scope": [Var[i]], "costs": [(0 if ((a%S) + i + 1 <= S) and (int(a/S) + i + 1 <= S) else top) for a in range(S*S)]} for i in range(N)]
+             [{"scope": [Var[i], Var[j]], "costs": [(0 if ((a%(S-i)) + i + 1 <= (b%(S-j))) or ((b%(S-j)) + j + 1 <= (a%(S-i))) or (int(a/(S-i)) + i + 1 <= int(b/(S-j))) or (int(b/(S-j)) + j + 1 <= int(a/(S-i))) else top) for a in range((S-i)*(S-i)) for b in range((S-j)*(S-j))]} for i in range(N) for j in range(N) if (i < j)]
             ]
          }
     return Model
@@ -950,14 +948,11 @@ top = 1
 Problem = CFN.CFN(top)
 
 for i in range(N):
-    Problem.AddVariable('sq' + str(i+1), range(S*S))
+    Problem.AddVariable('sq' + str(i+1), range((S-i)*(S-i)))
 
 for i in range(N):
     for j in range(i+1,N):
-        Problem.AddFunction([i, j], [0 if ((a%S) + i + 1 <= (b%S)) or ((b%S) + j + 1 <= (a%S)) or (int(a/S) + i + 1 <= int(b/S)) or (int(b/S) + j + 1 <= int(a/S)) else top for a in range(S*S) for b in range(S*S)])
-
-for i in range(N):
-    Problem.AddFunction([i], [0 if ((a%S) + i + 1 <= S) and (int(a/S) + i + 1 <= S) else top for a in range(S*S)])
+        Problem.AddFunction([i, j], [0 if ((a%(S-i)) + i + 1 <= (b%(S-j))) or ((b%(S-j)) + j + 1 <= (a%(S-i))) or (int(a/(S-i)) + i + 1 <= int(b/(S-j))) or (int(b/(S-j)) + j + 1 <= int(a/(S-i))) else top for a in range((S-i)*(S-i)) for b in range((S-j)*(S-j))])
 
 #Problem.Dump('square.cfn')
 Problem.Option.FullEAC = False
@@ -986,23 +981,15 @@ int main(int argc, char* argv[])
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
 
     for (int i=0; i<N; i++) {
-        solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, S*S - 1);
+        solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, (S-i)*(S-i) - 1);
     }
 
-    vector<Cost> costs(S*S, MIN_COST);
-    for (int i=0; i<N; i++) {
-    	for (int a=0; a<S*S; a++) {
-            costs[a] = ((((a % S) + i + 1 <= S) && ((a / S) + i + 1 <= S))?MIN_COST:top);
-        }
-        solver->getWCSP()->postUnary(i, costs);
-    }
-
-    costs.resize(S*S*S*S, MIN_COST);
+    vector<Cost> costs(S*S*S*S, MIN_COST);
     for (int i=0; i<N; i++) {
         for (int j=i+1; j<N; j++) {
-    	    for (int a=0; a<S*S; a++) {
-    	        for (int b=0; b<S*S; b++) {
-                    costs[a*S*S+b] = ((((a%S) + i + 1 <= (b%S)) || ((b%S) + j + 1 <= (a%S)) || ((a/S) + i + 1 <= (b/S)) || ((b/S) + j + 1 <= (a/S)))?MIN_COST:top);
+    	    for (int a=0; a<(S-i)*(S-i); a++) {
+    	        for (int b=0; b<(S-j)*(S-j); b++) {
+                    costs[a*(S-j)*(S-j)+b] = ((((a%(S-i)) + i + 1 <= (b%(S-j))) || ((b%(S-j)) + j + 1 <= (a%(S-i))) || ((a/(S-i)) + i + 1 <= (b/(S-j))) || ((b/(S-j)) + j + 1 <= (a/(S-i))))?MIN_COST:top);
                 }
             }
             solver->getWCSP()->postBinaryConstraint(i, j, costs);
@@ -1019,7 +1006,7 @@ int main(int argc, char* argv[])
                 for (int x=0; x<S; x++) {
                     char c = ' ';
                     for (int i=0; i<N; i++) {
-                        if (x >= (sol[i]%S) && x < (sol[i]%S ) + i + 1 && y >= (sol[i]/S) && y < (sol[i]/S) + i + 1) {
+                        if (x >= (sol[i]%(S-i)) && x < (sol[i]%(S-i) ) + i + 1 && y >= (sol[i]/(S-i)) && y < (sol[i]/(S-i)) + i + 1) {
                             c = 65+i;
                             break;
                         }
@@ -1037,6 +1024,6 @@ int main(int argc, char* argv[])
 </code></pre>
 </figure>
 
-<p id="footer"><br/><br/>Last modification : September 11, 2020</p>
+<p id="footer"><br/><br/>Last modification : September 14, 2020</p>
 </body>
 </html>

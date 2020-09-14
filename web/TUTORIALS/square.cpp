@@ -29,23 +29,15 @@ int main(int argc, char* argv[])
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
 
     for (int i=0; i<N; i++) {
-        solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, S*S - 1);
+        solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, (S-i)*(S-i) - 1);
     }
 
-    vector<Cost> costs(S*S, MIN_COST);
-    for (int i=0; i<N; i++) {
-    	for (int a=0; a<S*S; a++) {
-            costs[a] = ((((a % S) + i + 1 <= S) && ((a / S) + i + 1 <= S))?MIN_COST:top);
-        }
-        solver->getWCSP()->postUnary(i, costs);
-    }
-
-    costs.resize(S*S*S*S, MIN_COST);
+    vector<Cost> costs(S*S*S*S, MIN_COST);
     for (int i=0; i<N; i++) {
         for (int j=i+1; j<N; j++) {
-    	    for (int a=0; a<S*S; a++) {
-    	        for (int b=0; b<S*S; b++) {
-                    costs[a*S*S+b] = ((((a%S) + i + 1 <= (b%S)) || ((b%S) + j + 1 <= (a%S)) || ((a/S) + i + 1 <= (b/S)) || ((b/S) + j + 1 <= (a/S)))?MIN_COST:top);
+    	    for (int a=0; a<(S-i)*(S-i); a++) {
+    	        for (int b=0; b<(S-j)*(S-j); b++) {
+                    costs[a*(S-j)*(S-j)+b] = ((((a%(S-i)) + i + 1 <= (b%(S-j))) || ((b%(S-j)) + j + 1 <= (a%(S-i))) || ((a/(S-i)) + i + 1 <= (b/(S-j))) || ((b/(S-j)) + j + 1 <= (a/(S-i))))?MIN_COST:top);
                 }
             }
             solver->getWCSP()->postBinaryConstraint(i, j, costs);
@@ -62,7 +54,7 @@ int main(int argc, char* argv[])
                 for (int x=0; x<S; x++) {
                     char c = ' ';
                     for (int i=0; i<N; i++) {
-                        if (x >= (sol[i]%S) && x < (sol[i]%S ) + i + 1 && y >= (sol[i]/S) && y < (sol[i]/S) + i + 1) {
+                        if (x >= (sol[i]%(S-i)) && x < (sol[i]%(S-i) ) + i + 1 && y >= (sol[i]/(S-i)) && y < (sol[i]/(S-i)) + i + 1) {
                             c = 65+i;
                             break;
                         }
