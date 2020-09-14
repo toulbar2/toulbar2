@@ -53,6 +53,7 @@
 	<li><a href="#airland">Airplane landing problem</a></li>
 	<li><a href="#warehouse">Warehouse location problem</a></li>
 	<li><a href="#square">Square packing problem</a></li>
+	<li><a href="#squaresoft">Square soft packing problem</a></li>
 	<li><a href="https://github.com/toulbar2/CFN-learn/tree/master/Sudoku">Learning to play the Sudoku</a></li>
 	<li><a href="https://github.com/toulbar2/CFN-learn/tree/master/renault">Renault car configuration system: learning user preferences</a></li>
   </ul>
@@ -904,7 +905,7 @@ Problem.Solve()
 <p>We create an integer variable of domain size (S-i)x(S-i) for each square i in [0,N-1] of size i+1 representing its top-left position in the container. Its value modulo (S-i) gives the x-coordinate, whereas its value divided by (S-i) gives the y-coordinate. We have binary constraints to forbid any overlapping pair of squares. We make the problem a pure satisfaction problem by fixing S. The initial upper bound is 1.
 </p>
 <h5>Python model generator</h5>
-<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 3 5").</p>
+<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 square.py 3 5").</p>
 <figure><figcaption><a href="TUTORIALS/square.py">square.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 def model(N, S, top):
@@ -980,15 +981,15 @@ int main(int argc, char* argv[])
     Cost top = UNIT_COST;
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
 
-    for (int i=0; i<N; i++) {
+    for (int i=0; i < N; i++) {
         solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, (S-i)*(S-i) - 1);
     }
 
     vector<Cost> costs(S*S*S*S, MIN_COST);
-    for (int i=0; i<N; i++) {
-        for (int j=i+1; j<N; j++) {
-    	    for (int a=0; a<(S-i)*(S-i); a++) {
-    	        for (int b=0; b<(S-j)*(S-j); b++) {
+    for (int i=0; i < N; i++) {
+        for (int j=i+1; j < N; j++) {
+    	    for (int a=0; a < (S-i)*(S-i); a++) {
+    	        for (int b=0; b < (S-j)*(S-j); b++) {
                     costs[a*(S-j)*(S-j)+b] = ((((a%(S-i)) + i + 1 <= (b%(S-j))) || ((b%(S-j)) + j + 1 <= (a%(S-i))) || ((a/(S-i)) + i + 1 <= (b/(S-j))) || ((b/(S-j)) + j + 1 <= (a/(S-i))))?MIN_COST:top);
                 }
             }
@@ -1002,13 +1003,116 @@ int main(int argc, char* argv[])
     if (solver->solve()) {
             vector<Value> sol;
             solver->getSolution(sol);
-    	    for (int y=0; y<S; y++) {
-                for (int x=0; x<S; x++) {
+    	    for (int y=0; y < S; y++) {
+                for (int x=0; x < S; x++) {
                     char c = ' ';
-                    for (int i=0; i<N; i++) {
+                    for (int i=0; i < N; i++) {
                         if (x >= (sol[i]%(S-i)) && x < (sol[i]%(S-i) ) + i + 1 && y >= (sol[i]/(S-i)) && y < (sol[i]/(S-i)) + i + 1) {
                             c = 65+i;
                             break;
+                        }
+                     }
+                     cout << c;
+                }
+                cout << endl;
+            }
+    } else {
+            cout << "No solution found!" << endl;
+    }
+
+    return 0;
+}
+</code></pre>
+</figure>
+
+
+<h2></h2>
+<h2 id="squaresoft">Square soft packing problem</h2>
+<h5>Brief description</h5>
+<p>Find a packing of squares of size 1×1, 2×2,..., NxN into a given container square SxS minimizing total sum of overlaps.
+</p>
+<h5>CFN model</h5>
+<p>We reuse the <a href="#square">square</a> model except that binary constraints are replaced by cost functions returning the overlapping size or zero if no overlaps. The initial upper bound is a worst-case upper estimation of total sum of overlaps.
+</p>
+<h5>Python model generator</h5>
+<p>The following code using python3 interpreter will generate the corresponding cost function network (e.g. "python3 squaresoft 10 20").</p>
+<figure><figcaption><a href="TUTORIALS/squaresoft.py">squaresoft.py</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+def model(N, S, top):
+    Var = ["sq" + str(i+1) for i in range(N)]
+    Model = {
+        "name": "SquarePacking" + str(N) + "_" + str(S),
+        "variables": [(Var[i], (S-i)*(S-i)) for i in range(N)],
+        "functions":
+            [
+             # no overlapping constraint
+             [{"scope": [Var[i], Var[j]], "costs": [(0 if ((a%(S-i)) + i + 1 <= (b%(S-j))) or ((b%(S-j)) + j + 1 <= (a%(S-i))) or (int(a/(S-i)) + i + 1 <= int(b/(S-j))) or (int(b/(S-j)) + j + 1 <= int(a/(S-i))) else min((a%(S-i)) + i + 1 - (b%(S-j)), (b%(S-j)) + j + 1 - (a%(S-i))) * min(int(a/(S-i)) + i + 1 - int(b/(S-j)), int(b/(S-j)) + j + 1 - int(a/(S-i)))) for a in range((S-i)*(S-i)) for b in range((S-j)*(S-j))]} for i in range(N) for j in range(N) if (i < j)]
+            ]
+         }
+    return Model
+
+if __name__ == '__main__':
+    # read parameters
+    N = int(sys.argv[1])
+    S = int(sys.argv[2])
+    # infinite cost
+    top = int((N*N*(N-1)*(2*N-1))/6 + 1)
+    # dump problem into JSON .cfn format for minimization
+    cfn(model(N, S, top), True, top)
+</code></pre>
+</figure>
+<h5>C++ program using libtb2.so</h5>
+<p>The following code uses the C++ toulbar2 library libtb2.so. Compile toulbar2 with "cmake -DLIBTB2=ON -DPYTB2=ON . ; make" and copy the library in your current directory "cp lib/Linux/libtb2.so ." before compiling "g++ -o squaresoft squaresoft.cpp -Isrc -Llib/Linux -std=c++11 -O3 -DNDEBUG -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY libtb2.so" and running the example (e.g. "./squaresoft 10 20").</p>
+<figure><figcaption><a href="TUTORIALS/squaresoft.cpp">squaresoft.cpp</a></figcaption>
+<pre><code contenteditable spellcheck="false">
+#include "toulbar2lib.hpp"
+
+int main(int argc, char* argv[])
+{
+    int N = atoi(argv[1]);
+    int S = atoi(argv[2]);
+
+    tb2init(); // must be call before setting specific ToulBar2 options and creating a model
+
+    ToulBar2::verbose = 0; // change to 0 or higher values to see more trace information
+
+    initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
+
+    Cost top = N*(N*(N-1)*(2*N-1))/6 + 1;
+    WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
+
+    for (int i=0; i < N; i++) {
+        solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, (S-i)*(S-i) - 1);
+    }
+
+    vector<Cost> costs(S*S*S*S, MIN_COST);
+    for (int i=0; i < N; i++) {
+        for (int j=i+1; j < N; j++) {
+    	    for (int a=0; a < (S-i)*(S-i); a++) {
+    	        for (int b=0; b < (S-j)*(S-j); b++) {
+                    costs[a*(S-j)*(S-j)+b] = ((((a%(S-i)) + i + 1 <= (b%(S-j))) || ((b%(S-j)) + j + 1 <= (a%(S-i))) || ((a/(S-i)) + i + 1 <= (b/(S-j))) || ((b/(S-j)) + j + 1 <= (a/(S-i))))?MIN_COST:(min((a%(S-i)) + i + 1 - (b%(S-j)), (b%(S-j)) + j + 1 - (a%(S-i))) * min((a/(S-i)) + i + 1 - (b/(S-j)), (b/(S-j)) + j + 1 - (a/(S-i)))));
+                }
+            }
+            solver->getWCSP()->postBinaryConstraint(i, j, costs);
+        }
+    }
+
+    solver->getWCSP()->sortConstraints(); // must be done at the end of the modeling
+
+    tb2checkOptions();
+    if (solver->solve()) {
+            vector<Value> sol;
+            solver->getSolution(sol);
+    	    for (int y=0; y < S; y++) {
+                for (int x=0; x < S; x++) {
+                    char c = ' ';
+                    for (int i=N-1; i >= 0; i--) {
+                        if (x >= (sol[i]%(S-i)) && x < (sol[i]%(S-i) ) + i + 1 && y >= (sol[i]/(S-i)) && y < (sol[i]/(S-i)) + i + 1) {
+                            if (c != ' ') {
+                                c = 97+i;
+                            } else {
+                                c = 65+i;
+                            }
                         }
                      }
                      cout << c;
