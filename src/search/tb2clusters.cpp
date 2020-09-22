@@ -102,6 +102,7 @@ void Separator::assign(int varIndex)
         nonassigned = nonassigned - 1;
         assert(nonassigned >= 0);
         if (nonassigned == 0) {
+            if (ToulBar2::bilevel) return; //TODO: how to reuse Problem2 nogood if it exists? (it should deactivate NegProblem2)
             assert(!cluster || cluster->isActive());
             queueSep();
         }

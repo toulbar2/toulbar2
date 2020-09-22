@@ -548,7 +548,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         wcsp->setUb(MAX_COST);
                         wcsp->setLb(MIN_COST);
                         ubSon = MAX_COST;
-                        lbSon = MIN_COST;
+                        lbSon = clb - cluster->getLb(); // must deduce NegProblem2 lower bound from clb later
                     }
                     try {
                         Store::store();
@@ -571,7 +571,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         }
                         wcsp->propagate();
                         Cost bestlb = MAX(wcsp->getLb(), lbSon);
-                        if (csol < MAX_COST && iter == cluster->endSortedEdges())
+                        if (!ToulBar2::bilevel && csol < MAX_COST && iter == cluster->endSortedEdges())
                             bestlb = MAX(bestlb, lbgood - csol + lbSon); // simple trick to provide a better initial lower bound for the last son
                         if (ToulBar2::btdMode >= 2) {
                             Cost rds = td->getLbRecRDS();
@@ -588,6 +588,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             assert(c->getCurrentDelta() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
                             // Compute new global upper bound for Problem1 + NegProblem2
                             csol = td->getRoot()->getLb() - res.first + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                            clb = csol;
                             Store::restore();
                             break;
                         }

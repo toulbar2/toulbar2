@@ -1030,7 +1030,7 @@ void WCSP::postNaryConstraintEnd(int ctrindex)
 // Add a temporary (backtrackable) binary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 {
-    assert(getTreeDec() == NULL);
+    assert(getTreeDec() == NULL || ToulBar2::bilevel);
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
     BinaryConstraint* xy = x->getConstr(y);
