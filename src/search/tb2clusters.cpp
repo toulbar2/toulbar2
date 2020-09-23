@@ -759,6 +759,7 @@ void Cluster::getSolution(TAssign& sol)
         }
     }
     for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
+        if (ToulBar2::bilevel && iter != beginEdges()) break;
         Cluster* cluster = *iter;
         cluster->getSolution(sol);
     }

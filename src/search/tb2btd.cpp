@@ -523,6 +523,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                 c->nogoodGet(lbSon, ubSon, &c->open);
                 good = true;
             } else {
+                assert(!ToulBar2::bilevel);
                 lbSon = c->getLbRec();
                 ubSon = c->getUb();
 #ifndef NDEBUG
@@ -535,7 +536,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             if (ToulBar2::verbose >= 2)
                 cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << " cluster->lb: " << c->getLbRec() << endl;
             if (lbSon < ubSon) { // we do not have an optimality proof
-                if (clb <= lbgood || (csol < MAX_COST && ubSon >= cub - csol + lbSon)) { // we do not know a good enough son's solution or the currently reconstructed father's solution is not working or the currently reconstructed father's lower bound is not increasing
+                if (ToulBar2::bilevel || clb <= lbgood || (csol < MAX_COST && ubSon >= cub - csol + lbSon)) { // we do not know a good enough son's solution or the currently reconstructed father's solution is not working or the currently reconstructed father's lower bound is not increasing
                     bool csolution = (csol < MAX_COST && ubSon < cub - csol + lbSon);
                     assert(!csolution || ubSon < cub - clb + lbSon);
                     ubSon = MIN(ubSon, cub - clb + lbSon);
@@ -548,7 +549,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         wcsp->setUb(MAX_COST);
                         wcsp->setLb(MIN_COST);
                         ubSon = MAX_COST;
-                        lbSon = clb - cluster->getLb(); // must deduce NegProblem2 lower bound from clb later
+                        lbSon = MIN_COST; //??? clb - cluster->getLb(); // must deduce NegProblem2 lower bound from clb later
                     }
                     try {
                         Store::store();
@@ -587,8 +588,10 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             assert(res.first == res.second); // Problem2 must be solved to optimality
                             assert(c->getCurrentDelta() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
                             // Compute new global upper bound for Problem1 + NegProblem2
-                            csol = td->getRoot()->getLb() - res.first + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                            csol = cluster->getLb() - ToulBar2::initialLbP2 - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDelta() - res.first + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
                             clb = csol;
+                            if (CUT(clb, cub))
+                                csol = MAX_COST;
                             Store::restore();
                             break;
                         }
@@ -601,6 +604,8 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         }
                     } catch (const Contradiction&) {
                         wcsp->whenContradiction();
+                        //BILEVEL
+                        assert(!ToulBar2::bilevel); //FIXME ????
                         c->nogoodRec(ubSon, MAX_COST, &c->open);
                         clb += ubSon - lbSon;
                         if (csolution)
@@ -618,7 +623,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             } else {
                 if (ToulBar2::bilevel) {
                     // Problem2 has been already solved
-                    csol = td->getRoot()->getLb() - lbSon + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                    csol = cluster->getLb() - ToulBar2::initialLbP2 - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDelta() - lbSon + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
                 }
             }
         }
@@ -658,7 +663,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         Cost bestlb = MAX(lbgood, clb);
         if (ToulBar2::verbose >= 1)
             cout << "[" << Store::getDepth() << "] C" << cluster->getId() << " return " << bestlb << " " << cub << endl;
-        assert(bestlb <= cub);
+//        assert(bestlb <= cub);
         if (ToulBar2::hbfs && bestlb < cub) { // keep current node in open list instead of closing it!
             if (cluster->getNbVars() > 0) {
                 int varid = *cluster->getVars().begin();

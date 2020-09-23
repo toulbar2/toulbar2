@@ -289,6 +289,8 @@ public:
     TCtrs::iterator endCtrs() { return ctrs.end(); }
     TClusters::iterator beginEdges() const { return edges.begin(); }
     TClusters::iterator endEdges() const { return edges.end(); }
+    TClusters::reverse_iterator rbeginEdges() const { return edges.rbegin(); }
+    TClusters::reverse_iterator rendEdges() const { return edges.rend(); }
     TClusters::iterator beginDescendants() { return descendants.begin(); }
     TClusters::iterator endDescendants() { return descendants.end(); }
 
