@@ -31,7 +31,8 @@ AminoMRF::AminoMRF(const char* filename)
     ifstream file;
     file.open(filename);
 
-    if (debug) cout << std::scientific << std::setprecision(8); 
+    if (debug)
+        cout << std::scientific << std::setprecision(8);
     if (!file.is_open()) {
         cerr << "Could not open alignment MRF file, aborting." << endl;
         exit(EXIT_FAILURE);
@@ -49,7 +50,8 @@ AminoMRF::AminoMRF(const char* filename)
     // We don't normalize unaries as they will receive projections from binaries
     while (!binariesReached) {
         getline(file, s);
-        if (debug) cout << s << endl;
+        if (debug)
+            cout << s << endl;
 
         if (s[0] == '#') {
             binariesReached = true;
@@ -61,7 +63,8 @@ AminoMRF::AminoMRF(const char* filename)
             ss >> LP;
             unaries[nv].push_back(-LP);
         }
-        if (debug) std::cout << "Read var " << nv << endl;
+        if (debug)
+            std::cout << "Read var " << nv << endl;
         nv++;
     }
 
@@ -83,7 +86,8 @@ AminoMRF::AminoMRF(const char* filename)
         ss >> n;
         ss >> m;
 
-        if (debug) cout << n << ", " << m << " ";
+        if (debug)
+            cout << n << ", " << m << " ";
         // we just ignore the gap
         TLogProb minscore = std::numeric_limits<TLogProb>::max();
         TLogProb maxscore = std::numeric_limits<TLogProb>::min();
@@ -111,7 +115,8 @@ AminoMRF::AminoMRF(const char* filename)
 
         if (maxscore > 1e-1)
             nPot++;
-        if (debug) cout << "Maxscore " << maxscore << endl;
+        if (debug)
+            cout << "Maxscore " << maxscore << endl;
     } while (!file.eof());
     cout << "Loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
@@ -166,7 +171,7 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
         file.read((char*)&idx2, sizeof(size_t));
         if (debug)
             cout << "Edge " << idx1 << " - " << idx2 << endl;
-        if (idx1 < 0 || idx1 >= n || idx2 < 0 || idx2 >= n) {
+        if (idx1 >= n || idx2 >= n) {
             cerr << "Error: eMRF edge list contains an out-of-range position." << endl;
             exit(EXIT_FAILURE);
         }
@@ -185,7 +190,8 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
             // We need to convert the PMRF idx to a CCMpred idx
             assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
             unaries[i][AminoMRFIdx.find(AminoPMRFs[j])->second] = -tmpUnary[j];
-            if (debug) cout << AminoPMRFs[j] << " " <<  -tmpUnary[j] << " ";
+            if (debug)
+                cout << AminoPMRFs[j] << " " << -tmpUnary[j] << " ";
         }
         if (debug)
             cout << "\nRead unary on variable " << i << endl;
@@ -206,7 +212,8 @@ AminoMRF::AminoMRF(const char* filename, size_t fmt)
         for (int i = 0; i < NumNatAA; i++) {
             for (int j = 0; j < NumNatAA; j++) {
                 float LP = -tmpBinary[j * (NumNatAA + 1) + i];
-                if (debug) cout << AminoPMRFs[i] << " " << AminoPMRFs[j] << " " << LP << endl;
+                if (debug)
+                    cout << AminoPMRFs[i] << " " << AminoPMRFs[j] << " " << LP << endl;
                 assert(AminoMRFIdx.find(AminoPMRFs[i]) != AminoMRFIdx.end());
                 assert(AminoMRFIdx.find(AminoPMRFs[j]) != AminoMRFIdx.end());
 
