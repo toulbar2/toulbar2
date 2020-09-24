@@ -161,23 +161,23 @@ void Solver::mutate(char* mutationString)
 void Solver::mutate(std::string mutationString)
 {
     for (size_t i = 0; i < mutationString.size(); i++)
-        if (((size_t)ToulBar2::cpd->getRight(i,0))!=ToulBar2::cpd->rot2aaSize(i)-1 && i <= wcsp->numberOfVariables()) // find out if current residue is mutable
-            {
-                bool present = false;
+        if (((size_t)ToulBar2::cpd->getRight(i, 0)) != ToulBar2::cpd->rot2aaSize(i) - 1 && i <= wcsp->numberOfVariables()) // find out if current residue is mutable
+        {
+            bool present = false;
+            for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
+                if (ToulBar2::cpd->getAA(i, v) == mutationString[i] && wcsp->canbe(i, v)) {
+                    present = true;
+                }
+            }
+            if (present)
                 for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
-                    if (ToulBar2::cpd->getAA(i, v) == mutationString[i] && wcsp->canbe(i, v)) {
-                        present = true;
+                    if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
+                        wcsp->remove(i, v);
                     }
                 }
-                if (present)
-                    for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
-                        if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
-                            wcsp->remove(i, v);
-                        }
-                    }
-                else
-                    cout << "WARNING: Couldn't mutate position " << i+1 << "  to " << mutationString[i] << " as it would wipe out a domain" << endl;
-            }
+            else
+                cout << "WARNING: Couldn't mutate position " << i + 1 << "  to " << mutationString[i] << " as it would wipe out a domain" << endl;
+        }
     wcsp->propagate();
 }
 
@@ -894,18 +894,23 @@ int cmpValueCost(const void* p1, const void* p2)
 
 // Trial to shift to an HBFS friendly SCP ChoicePoint method. The idea is
 // to avoid moving values and split around the selected amino-acid possibly
-// with 2 choice poibts (one on the lft and another on the right).
+// with 2 choice points (one on the left and another on the right).
 enum SCPType { inc,
     dec,
     scp };
+
 void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
 {
+    int depth = Store::getDepth();
+
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex, value));
     if (ToulBar2::interrupted)
         throw TimeOut();
-    int left, right;
+
+    unsigned left, right;
     std::tie(left, right) = ToulBar2::scpbranch->getBounds(varIndex, value);
+
     enum SCPType branching;
     // there is room on the left, branch on the right side first and left later (decreasing)
     if (left > wcsp->getInf(varIndex))
@@ -919,6 +924,7 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
     try {
         Store::store();
         lastConflictVar = varIndex;
+
         switch (branching) {
         case SCPType::scp:
             assign(varIndex, value);
@@ -931,43 +937,46 @@ void Solver::scpChoicePoint(int varIndex, Value value, Cost lb)
         }
         lastConflictVar = -1;
         recursiveSolve(lb);
+
     } catch (FindNewSequence) {
-        if (branching == SCPType::scp) { // not a SCP split, we backtrack
-            Store::restore();
-            enforceUb();
-            nbBacktracks++;
+        if (branching == SCPType::scp) { // not a split, we backtrack
             throw FindNewSequence();
         }
     } catch (Contradiction) {
         wcsp->whenContradiction();
     }
 
-    Store::restore();
-    if (ToulBar2::bestconf && branching != SCPType::scp) // SCP split
+    Store::restore(depth);
+
+    if (ToulBar2::bestconf && branching != SCPType::scp) // split
         wcsp->setUb(ToulBar2::enumUB);
     enforceUb();
     nbBacktracks++;
 
     if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
+
     switch (branching) {
     case SCPType::scp:
         remove(varIndex, value, nbBacktracks >= hbfsLimit);
         break;
     case SCPType::dec:
+        assert(left - 1 >= 0);
         decrease(varIndex, left - 1, nbBacktracks >= hbfsLimit);
         break;
     case SCPType::inc:
+        assert((unsigned)(right + 1) < wcsp->getDomainInitSize(varIndex));
         increase(varIndex, right + 1, nbBacktracks >= hbfsLimit);
+    }
+
+    if (nbBacktracks >= hbfsLimit) {
+        addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
     }
 
     try {
         recursiveSolve(lb);
     } catch (FindNewSequence) {
         if (branching == SCPType::scp) {
-            Store::restore();
-            enforceUb();
-            nbBacktracks++;
             throw FindNewSequence();
         }
     }
