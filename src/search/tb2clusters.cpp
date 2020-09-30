@@ -255,7 +255,7 @@ void Separator::setSg(Cost c, BigInteger nb)
     sgoods[t] = TPairSG(MAX(MIN_COST, c + deltares), nb);
 }
 
-Cost Separator::getCurrentDelta()
+Cost Separator::getCurrentDeltaUb()
 {
     int i = 0;
     WCSP* wcsp = cluster->getWCSP();
@@ -277,6 +277,37 @@ Cost Separator::getCurrentDelta()
                         del = delta[i][val];
                 }
                 assert(del > -MAX_COST);
+                sumdelta += del;
+            }
+        }
+        ++it;
+        i++;
+    }
+    return sumdelta;
+}
+
+Cost Separator::getCurrentDeltaLb()
+{
+    int i = 0;
+    WCSP* wcsp = cluster->getWCSP();
+    Cost sumdelta = MIN_COST;
+    TVars::iterator it = vars.begin();
+    while (it != vars.end()) {
+        if (wcsp->assigned(*it)) {
+            tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+            sumdelta += delta[i][val];
+        } else {
+            EnumeratedVariable* x = (EnumeratedVariable*)wcsp->getVar(*it);
+            if (wcsp->td->isDeltaModified(x->wcspIndex)) {
+                Cost del = MAX_COST;
+                for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
+                    tValue val = x->toIndex(*itx);
+                    // Cost unaryc = x->getCost(val);
+                    // Could use delta[i][val]-unaryc for pure RDS with only one separator per variable
+                    if (del > delta[i][val])
+                        del = delta[i][val];
+                }
+                assert(del < MAX_COST);
                 sumdelta += del;
             }
         }

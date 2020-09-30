@@ -835,7 +835,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
         cout << Store::getDepth();
         if (ToulBar2::hbfs) {
             if (wcsp->getTreeDec()) {
-                Cost delta = wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta();
+                Cost delta = wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb();
                 if (wcsp->getTreeDec()->getCurrentCluster()->open->size() > 0)
                     cout << " [" << wcsp->getTreeDec()->getCurrentCluster()->open->getLb(delta) << "," << wcsp->getUb() << "]/" << wcsp->getTreeDec()->getCurrentCluster()->open->size() << "/" << wcsp->getTreeDec()->getCurrentCluster()->cp->size() << " " << (100. * (wcsp->getUb() - wcsp->getTreeDec()->getCurrentCluster()->open->getLb(delta)) / wcsp->getUb()) << "%";
             } else {
@@ -1534,7 +1534,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                     cluster->open = new OpenList();
                 cluster->setUb(cub); // global problem upper bound
             } else {
-                delta = cluster->getCurrentDelta();
+                delta = cluster->getCurrentDeltaUb();
                 if (!cluster->open) {
                     cluster->nogoodRec(clb, MAX_COST, &cluster->open); // create an initial empty open list
                     cluster->setUb(MAX_COST); // no initial solution found for this cluster
@@ -1859,34 +1859,34 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             ToulBar2::approximateCountingBTD = 0;
         ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
         wcsp->buildTreeDecomposition();
-        //BILEVEL
         if (ToulBar2::bilevel) {
-            auto iter = wcsp->getTreeDec()->getRoot()->beginEdges();
-            Cluster *leftson = *iter;
+            Cluster *problem1 = wcsp->getTreeDec()->getRoot();
+            auto iter = problem1->beginEdges();
+            Cluster *problem2 = *iter;
             ++iter;
-            Cluster *rightson = *iter;
-            // avoid future propagation (NC*) in left child Problem2 when branching in Problem1
-            //leftson->getSep()->unqueueSep();
-            //leftson.isused = false???
-            leftson->deactivate();
+            Cluster *negproblem2 = *iter;
+            //problem2->getSep()->unqueueSep();
+            //problem2.isused = false //FIXME???
+            problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching in Problem1
             // propagate channeling constraints between Problem1 and NegProblem2 only
             for (unsigned int i=0; i < ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
                 BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
                 if (ctr->getVar(0)->getName().back() == '2' || ctr->getVar(1)->getName().back() == '2') {
                     ctr->reconnect();
                     ctr->assignCluster();
-                    ctr->propagate();
+                    ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP bounds
                 }
             }
-//            wcsp->propagate();
-            if (ToulBar2::verbose >= 0) {
-                Cost lbP2 = ToulBar2::initialLbP2 + leftson->getLb() + leftson->getCurrentDelta();
-                Cost lbNegP2 = ToulBar2::initialLbNegP2 + rightson->getLb() + rightson->getCurrentDelta();
-                cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(wcsp->getLb() - lbP2 - lbNegP2 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftP2 - ToulBar2::bilevelShiftNegP2)) << endl;
-                cout << "Initial lower bound for Problem2: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::bilevelShiftP2) << endl;
-                cout << "Initial lower bound for NegProblem2: " << wcsp->Cost2RDCost(lbNegP2 - ToulBar2::bilevelShiftNegP2) << endl;
-                cout << "Initial lower bound for bilevel Problem1 - min(Problem2) = Problem1 + NegProblem2: " << wcsp->Cost2RDCost(wcsp->getLb() - lbP2 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftP2)) << endl;
-            }
+            wcsp->increaseLb(ToulBar2::bilevelShiftP2); // compensate Problem2 shift not done in NegProblem2 nor Problem1
+            assert(wcsp->getLb() >= ToulBar2::initialLbP2);
+            //FIXME: what if NC prune values and not after this lb decreasing???
+            wcsp->setLb(wcsp->getLb() - ToulBar2::initialLbP2); // subtract initialLbP2 which should not be added to Problem1 + NegProblem2 lower bounds
+            assert(problem1->getLb() == MIN_COST);
+            assert(problem1->getCurrentDeltaUb() == MIN_COST);
+            assert(problem2->getLb() == MIN_COST);
+            assert(problem2->getCurrentDeltaUb() == MIN_COST);
+            assert(negproblem2->getLb() == MIN_COST);
+            assert(negproblem2->getCurrentDeltaUb() == MIN_COST);
         }
     } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)ToulBar2::weightedDegree))) {
         if (ToulBar2::verbose >= 0)
@@ -2030,7 +2030,7 @@ bool Solver::solve(bool first)
                                 start = td->getCluster(ToulBar2::btdSubTree);
                             td->setCurrentCluster(start);
                             if (start == td->getRoot())
-                                start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decompostion root cluster
+                                start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decomposition root cluster
                             switch (ToulBar2::btdMode) {
                             case 0:
                             case 1: {
@@ -2056,6 +2056,26 @@ bool Solver::solve(bool first)
                                             enforceUb();
                                             wcsp->propagate();
                                             initialDepth = Store::getDepth();
+                                            if (ToulBar2::bilevel && ToulBar2::verbose >= 0) {
+                                                Cluster *problem1 = td->getRoot();
+                                                auto iter = problem1->beginEdges();
+                                                Cluster *problem2 = *iter;
+                                                ++iter;
+                                                Cluster *negproblem2 = *iter;
+                                                assert(problem2->getLb() == MIN_COST);
+                                                assert(problem2->getCurrentDeltaUb() == MIN_COST);
+                                                Cost lbP1 = problem1->getLb() - ToulBar2::initialLbNegP2 - negproblem2->getCurrentDeltaLb();
+                                                Cost lbP2 = ToulBar2::initialLbP2;
+                                                Cost lbNegP2 = negproblem2->getLb() + ToulBar2::initialLbNegP2 + negproblem2->getCurrentDeltaLb();
+//                                                cout << "Current lb: " << wcsp->getLb() << endl;
+//                                                cout << "Problem1 lb: " << problem1->getLb() << endl;
+//                                                cout << "NegProblem2 lb: " << negproblem2->getLb() << endl;
+//                                                cout << "NegProblem2 delta lb: " << negproblem2->getCurrentDeltaLb() << endl;
+                                                cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(lbP1 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftNegP2)) << endl;
+                                                cout << "Initial lower bound for Problem2: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::bilevelShiftP2) << endl;
+                                                cout << "Initial lower bound for NegProblem2: " << wcsp->Cost2RDCost(lbNegP2 - ToulBar2::bilevelShiftNegP2) << endl;
+                                                cout << "Initial lower bound for bilevel Problem1 - min(Problem2) = Problem1 + NegProblem2: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
+                                            }
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
                                         } catch (const Contradiction&) {
@@ -2527,7 +2547,7 @@ void Solver::addOpenNode(CPStore& cp, OpenList& open, Cost lb, Cost delta)
 //{
 //    if (ToulBar2::verbose >= 1) {
 //        if (wcsp->getTreeDec()) cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
-//        cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
+//        cout << "restore open node " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST)) << " (" << nd.first << ", " << nd.last << ")" << endl;
 //    }
 //    for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
 //        assert(idx < cp.size());
@@ -2562,7 +2582,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
 {
     if (ToulBar2::verbose >= 1) {
         if (wcsp->getTreeDec()) {
-            cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] restore open node " << nd.getCost(wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta()) << " (" << nd.first << ", " << nd.last << ")" << endl;
+            cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] restore open node " << nd.getCost(wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb()) << " (" << nd.first << ", " << nd.last << ")" << endl;
         } else {
             cout << "restore open node " << nd.getCost(MIN_COST) << " (" << nd.first << ", " << nd.last << ")" << endl;
         }
@@ -2637,7 +2657,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
         }
     }
     wcsp->propagate();
-    //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDelta():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
+    //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
 }
 
 Solver::SolutionTrie::TrieNode::TrieNode(size_t w)

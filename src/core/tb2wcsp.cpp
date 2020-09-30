@@ -601,8 +601,16 @@ void tb2checkOptions()
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
     }
+    if (ToulBar2::bilevel && ToulBar2::DEE >= 1) {
+        cout << "Warning! Cannot perform dead-end elimination in bi-level optimization." << endl;
+        ToulBar2::DEE = 0;
+    }
     if (ToulBar2::bilevel && ToulBar2::btdMode != 1) {
         cerr << "Error: BTD search mode required for bi-level optimization (use '-B=1')." << endl;
+        exit(1);
+    }
+    if (ToulBar2::hbfs && ToulBar2::bilevel) {
+        cout << "Warning! Hybrid best-first search not compatible with bi-level optimization (use '-hbfs:')." << endl;
         exit(1);
     }
 }

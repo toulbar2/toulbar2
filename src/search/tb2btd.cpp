@@ -386,7 +386,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
             showGap(bestlb, cub);
         };
         if (cluster->nbBacktracks >= cluster->hbfsLimit || nbBacktracks >= cluster->hbfsGlobalLimit) {
-            addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta());
+            addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDeltaUb());
         } else {
             pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
             clb = MIN(res.first, clb);
@@ -513,14 +513,14 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             // Solves each cluster son with local lower and upper bounds
             Cluster* c = *iter;
             ++iter;
-            //BILEVEL
-            if (ToulBar2::bilevel && c != *cluster->beginEdges()) continue; // skip the right cluster NegProblem2
+            if (ToulBar2::bilevel && c != *cluster->beginEdges()) continue; // skip the right cluster NegProblem2, keep only left cluster Problem2
             Cost lbSon = MIN_COST;
             Cost ubSon = MAX_COST;
             bool good = false;
             if (!c->isActive()) {
                 c->reactivate();
                 c->nogoodGet(lbSon, ubSon, &c->open);
+                assert(!ToulBar2::bilevel || (lbSon == MIN_COST && ubSon == MAX_COST) || lbSon == ubSon);
                 good = true;
             } else {
                 assert(!ToulBar2::bilevel);
@@ -543,18 +543,19 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     td->setCurrentCluster(c);
                     wcsp->setUb(ubSon);
                     wcsp->setLb((good) ? c->getLbRec() : lbSon);
-                    //BILEVEL
                     // TODO: compute better initial bounds for Problem2
                     if (ToulBar2::bilevel) {
-                        wcsp->setUb(MAX_COST);
+                        Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
+                        Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
+                        Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
+                        ubSon = MAX_COST; //ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
+                        lbSon = MIN_COST; //FIXME: clb - cluster->getLb(); ??? cub - lpP1 ???
+                        wcsp->setUb(ubSon);
                         wcsp->setLb(MIN_COST);
-                        ubSon = MAX_COST;
-                        lbSon = MIN_COST; //??? clb - cluster->getLb(); // must deduce NegProblem2 lower bound from clb later
                     }
                     try {
                         Store::store();
                         wcsp->enforceUb();
-                        //BILEVEL
                         if (ToulBar2::bilevel) {
                             // add channeling constraints between Problem1 and Problem2
                             for (unsigned int i=0; i< ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
@@ -583,15 +584,12 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
                         assert(res.first >= bestlb && res.second <= ubSon);
                         c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
-                        //BILEVEL
                         if (ToulBar2::bilevel) {
                             assert(res.first == res.second); // Problem2 must be solved to optimality
-                            assert(c->getCurrentDelta() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
+                            assert(c->getCurrentDeltaUb() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
                             // Compute new global upper bound for Problem1 + NegProblem2
-                            csol = cluster->getLb() - ToulBar2::initialLbP2 - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDelta() - res.first + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                            csol = cluster->getLb() - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDeltaLb() - res.first - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
                             clb = csol;
-                            if (CUT(clb, cub))
-                                csol = MAX_COST;
                             Store::restore();
                             break;
                         }
@@ -604,7 +602,6 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         }
                     } catch (const Contradiction&) {
                         wcsp->whenContradiction();
-                        //BILEVEL
                         assert(!ToulBar2::bilevel); //FIXME ????
                         c->nogoodRec(ubSon, MAX_COST, &c->open);
                         clb += ubSon - lbSon;
@@ -623,7 +620,8 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             } else {
                 if (ToulBar2::bilevel) {
                     // Problem2 has been already solved
-                    csol = cluster->getLb() - ToulBar2::initialLbP2 - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDelta() - lbSon + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                    csol = (cluster->getLb() - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDeltaLb()) - lbSon  - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                    clb = csol;
                 }
             }
         }
@@ -679,7 +677,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             cluster->setUb(tmpclusterub);
             assert(prevopen == cluster->open);
 #endif
-            addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDelta()); // reinsert as a new open node
+            addOpenNode(*(cluster->cp), *(cluster->open), bestlb, cluster->getCurrentDeltaUb()); // reinsert as a new open node
             cluster->hbfsLimit = cluster->nbBacktracks; // and stop current visited node
             bestlb = cub;
         }

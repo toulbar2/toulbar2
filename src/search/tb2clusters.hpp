@@ -88,7 +88,8 @@ public:
         assert(posvar < vars.size());
         delta[posvar][wcsp->toIndex(posvar, value)] += cost;
     }
-    Cost getCurrentDelta(); // separator variables may be unassigned
+    Cost getCurrentDeltaUb(); // separator variables may be unassigned, returns sum of maximum delta per variable
+    Cost getCurrentDeltaLb(); // separator variables may be unassigned, returns sum of minimum delta per variable
 
     bool used() { return isUsed; }
 
@@ -222,12 +223,12 @@ public:
     void setUb(Cost c) { ub = c; }
     Cost getLbRDS()
     {
-        Cost delta = getCurrentDelta();
+        Cost delta = getCurrentDeltaUb();
         return MAX(lbRDS - delta, MIN_COST);
     }
     void setLbRDS(Cost c)
     {
-        assert(!sep || sep->getCurrentDelta() == MIN_COST);
+        assert(!sep || sep->getCurrentDeltaUb() == MIN_COST);
         lbRDS = c;
     }
     Cost getLbRec() const;
@@ -238,7 +239,8 @@ public:
         assert(sep);
         sep->addDelta(posvar, value, cost);
     }
-    Cost getCurrentDelta() { return (sep) ? sep->getCurrentDelta() : MIN_COST; }
+    Cost getCurrentDeltaUb() { return (sep) ? sep->getCurrentDeltaUb() : MIN_COST; }
+    Cost getCurrentDeltaLb() { return (sep) ? sep->getCurrentDeltaLb() : MIN_COST; }
 
     void nogoodRec(Cost clb, Cost cub, Solver::OpenList** open = NULL)
     {
