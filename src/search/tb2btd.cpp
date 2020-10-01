@@ -544,12 +544,15 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     wcsp->setUb(ubSon);
                     wcsp->setLb((good) ? c->getLbRec() : lbSon);
                     // TODO: compute better initial bounds for Problem2
+                    Cost bestP2 = MIN_COST;
                     if (ToulBar2::bilevel) {
                         Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
                         Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
                         Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
-                        ubSon = MAX_COST; //ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
-                        lbSon = MIN_COST; //FIXME: clb - cluster->getLb(); ??? cub - lpP1 ???
+                        ubSon = ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
+                        lbSon = MIN_COST;
+                        bestP2 = max(MIN_COST, lbP1 + ToulBar2::bilevelShiftNegP2 - cub);
+                        if (ToulBar2::verbose>=2 && bestP2>MIN_COST) cout << "bestP2: " << bestP2 << endl;
                         wcsp->setUb(ubSon);
                         wcsp->setLb(MIN_COST);
                     }
@@ -581,8 +584,11 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             if (CUT(bestlb, ubSon))
                                 THROWCONTRADICTION;
                         }
+                        Long nbBtBefore = nbBacktracks;
                         pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
+                        Long nbBtAfter = nbBacktracks;
                         assert(res.first >= bestlb && res.second <= ubSon);
+                        if (ToulBar2::verbose && res.second<bestP2 && nbBtAfter > nbBtBefore) cout << "Find better solution " << res.second << " than needed " << bestP2 << " for Problem2!" << endl;
                         c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
                         if (ToulBar2::bilevel) {
                             assert(res.first == res.second); // Problem2 must be solved to optimality
