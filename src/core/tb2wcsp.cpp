@@ -763,7 +763,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     BinaryConstraint* ctr = x->getConstr(y);
     if (ctr) {
-        assert(!ToulBar2::bilevel);
+        assert(!ToulBar2::bilevel); // do not allow multiple cost functions with the same scope
         ctr->reconnect();
         ctr->addCosts(x, y, costs);
         ctr->propagate();

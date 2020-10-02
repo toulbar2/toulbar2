@@ -223,6 +223,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
             if (ToulBar2::verbose >= 1)
                 cout << " Learn nogood " << nogoods[t].first << ", cub= " << nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         } else {
+            if (ToulBar2::bilevel && ToulBar2::verbose >=0) cout << "warning! nogood already solved!! " << endl;
             itng->second.first = MAX(itng->second.first, clb + deltares);
             itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST) ? deltares : MIN_COST)));
             if (ToulBar2::verbose >= 1)
@@ -790,7 +791,7 @@ void Cluster::getSolution(TAssign& sol)
         }
     }
     for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
-        if (ToulBar2::bilevel && iter != beginEdges()) break;
+        if (ToulBar2::bilevel && iter != beginEdges()) break; // do not reconstruct solution for NegProblem2
         Cluster* cluster = *iter;
         cluster->getSolution(sol);
     }

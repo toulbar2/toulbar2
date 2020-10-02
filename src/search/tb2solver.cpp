@@ -1865,22 +1865,22 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             Cluster *problem2 = *iter;
             ++iter;
             Cluster *negproblem2 = *iter;
-            //problem2->getSep()->unqueueSep();
+            //negproblem2->getSep()->unqueueSep(); // never learn a nogood on NegProblem2 (do not propagate its separator)
             //problem2.isused = false //FIXME???
             problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching in Problem1
-            // propagate channeling constraints between Problem1 and NegProblem2 only
+            // propagate (partially) channeling constraints between Problem1 and NegProblem2 only
             for (unsigned int i=0; i < ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
                 BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
                 if (ctr->getVar(0)->getName().back() == '2' || ctr->getVar(1)->getName().back() == '2') {
                     ctr->reconnect();
                     ctr->assignCluster();
-                    ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP bounds
+                    ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds
                 }
             }
             wcsp->increaseLb(ToulBar2::bilevelShiftP2); // compensate Problem2 shift not done in NegProblem2 nor Problem1
             assert(wcsp->getLb() >= ToulBar2::initialLbP2);
             //FIXME: what if NC prune values and not after this lb decreasing???
-            wcsp->setLb(wcsp->getLb() - ToulBar2::initialLbP2); // subtract initialLbP2 which should not be added to Problem1 + NegProblem2 lower bounds
+            wcsp->setLb(wcsp->getLb() - ToulBar2::initialLbP2); // subtract initialLbP2 because it should not be added to Problem1 + NegProblem2 lower bounds
             assert(problem1->getLb() == MIN_COST);
             assert(problem1->getCurrentDeltaUb() == MIN_COST);
             assert(problem2->getLb() == MIN_COST);
@@ -2073,8 +2073,8 @@ bool Solver::solve(bool first)
 //                                                cout << "NegProblem2 delta lb: " << negproblem2->getCurrentDeltaLb() << endl;
                                                 cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(lbP1 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftNegP2)) << endl;
                                                 cout << "Initial lower bound for Problem2: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::bilevelShiftP2) << endl;
-                                                cout << "Initial lower bound for NegProblem2: " << wcsp->Cost2RDCost(lbNegP2 - ToulBar2::bilevelShiftNegP2) << endl;
-                                                cout << "Initial lower bound for bilevel Problem1 - min(Problem2) = Problem1 + NegProblem2: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
+                                                cout << "Initial upper bound for Problem2: " << wcsp->Cost2RDCost(ToulBar2::bilevelShiftNegP2 - lbNegP2) << endl;
+                                                cout << "Initial lower bound for Problem1-Problem2: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
                                             }
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;

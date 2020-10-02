@@ -485,6 +485,22 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
 
 // Maintains the best (monotonically increasing) lower bound of the cluster in parameter lbgood
 
+/// \defgroup bilevel Bi-level optimization
+/// Our goal is to minimize Problem1 - Problem2
+/// We assume a tree decomposition with three clusters: root cluster 0 is Problem1, left child cluster 1 is Problem2, and right child cluster 2 is NegProblem2 (i.e., -Problem2)
+/// For each child cluster, we have:
+/// - an initial lower bound computed in preprocessing (see \ref Toulbar2::initialLbP2 and \ref Toulbar2::initialLbNegP2)
+/// - a shifting cost value in order to deal with non negative costs only (see \ref ToulBar2::bilevelShiftP2 and \ref ToulBar2::bilevelShiftNegP2)
+///
+/// We maintain the following properties during search:
+/// - bilevelShiftP1 = wcsp->getNegativeLb() - Toulbar2::initialLbP2 - \ref Toulbar2::initialLbNegP2
+/// - deltaNegP2 = lower bound on costs that has been moved from NegProblem2 to Problem1 by soft local consistencies
+/// - cluster0.lb <= Problem1 + initialLbNegP2 + deltaNegP2 + bilevelShiftP1 + bilevelShiftP2
+/// - cluster1.lb <= Problem2 + bilevelShiftP2 - initialLbP2
+/// - cluster2.lb <= -Problem2 + bilevelShiftNegP2 - initialLbNegP2 - deltaNegP2
+/// Thus, during search in root cluster, we always have:
+/// - wcsp->getLb() = cluster0.lb + cluster2.lb <= Problem1 - Problem2  + bilevelShiftP1 + bilevelShiftP2 + bilevelShiftNegP2 <= wcsp->getUb()
+/// - wcsp->getLb() = cluster0.lb + cluster2.lb <= Problem1 - Problem2  + wcsp->getNegativeLb() <= wcsp->getUb()
 pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
 {
     if (ToulBar2::verbose >= 1)
@@ -546,6 +562,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     // TODO: compute better initial bounds for Problem2
                     Cost bestP2 = MIN_COST;
                     if (ToulBar2::bilevel) {
+                        // initialize current bounds for Problem2
                         Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
                         Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
                         Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
