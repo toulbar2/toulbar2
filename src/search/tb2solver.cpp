@@ -1865,7 +1865,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             Cluster *problem2 = *iter;
             ++iter;
             Cluster *negproblem2 = *iter;
-            //negproblem2->getSep()->unqueueSep(); // never learn a nogood on NegProblem2 (do not propagate its separator)
             //problem2.isused = false //FIXME???
             problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching in Problem1
             // propagate (partially) channeling constraints between Problem1 and NegProblem2 only
