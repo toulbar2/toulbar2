@@ -58,7 +58,7 @@ inline void mysrand(int seed)
 inline int myrand() { return rand(); }
 inline Long myrandl() { return (Long)((Long)rand() /**LONGLONG_MAX*/); }
 inline Long myrandln() { return (Long)((Long)rand() * ((myrand() % 2)?-1:1) /**LONGLONG_MAX*/); }
-inline double mydrand() { return drand(); } //If compiler warning, replace by (double(rand()) / RAND_MAX);
+inline double mydrand() { return (double(rand()) / RAND_MAX); } //return drand(); //If compiler warning, replace by (double(rand()) / RAND_MAX);
 #endif
 
 #ifdef DOUBLE_PROB
