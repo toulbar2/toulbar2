@@ -100,7 +100,7 @@ endif(verbose)
 ##########################################
 IF(APPLE)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
-  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64" )
+  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64 -undefined dynamic_lookup" )
   SET(STATIC OFF)
   SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
