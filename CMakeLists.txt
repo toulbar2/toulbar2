@@ -23,8 +23,8 @@ SET(Toulbar2_NAME "toulbar2")
 project("toulbar2")
 
 MESSAGE(STATUS "##########################################")
-MESSAGE(STATUS "project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
-MESSAGE(STATUS "source:${CMAKE_CURRENT_SOURCE_DIR} ")
+MESSAGE(STATUS "project: ${PROJECT_NAME} toolkit compilation cmake file version 0.99")
+MESSAGE(STATUS "source: ${CMAKE_CURRENT_SOURCE_DIR} ")
 MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
@@ -62,6 +62,10 @@ MARK_AS_ADVANCED(FORCE BENCH)
 ##########################################
 #Default profile for compilation
 ##########################################
+IF(APPLE) # Find homebrew libraries first
+  set(CMAKE_PREFIX_PATH /usr/local)
+ENDIF(APPLE)
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
@@ -96,7 +100,7 @@ endif(verbose)
 ##########################################
 IF(APPLE)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
-  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64" )
+  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64 -undefined dynamic_lookup" )
   SET(STATIC OFF)
   SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
@@ -228,7 +232,7 @@ ENDIF(WITH_MEM_JEMALLOC)
 MESSAGE(STATUS "Search for GMP library")
 INCLUDE(FindPkgConfig)
 INCLUDE(${My_cmake_script}/FindGmp.cmake)
-SET(all_depends  ${all_depends} "gmp") 
+SET(all_depends  ${all_depends} ${GMP_LIBRARY}) 
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
 INCLUDE(FindPkgConfig)
