@@ -48,7 +48,7 @@ and Debian derived Linux distributions (Ubuntu, Mint,...). E.g.:
     sudo apt-get update
     sudo apt-get install toulbar2 toulbar2-doc
 
-For the most recent version, compile from source.
+For the most recent binary or the Python API, compile from source.
 
 
 ## Download
@@ -62,7 +62,7 @@ e.g.:
 
 ## Installation from sources
 
-Compilation requires git, cmake and a C++-11 capable compiler. 
+Compilation requires git, cmake and a C++-11 capable compiler (in C++11 mode). 
 
 Required library:
 * libgmp-dev
@@ -78,15 +78,22 @@ Optional libraries:
 * libopenmpi-dev
 * libjemalloc-dev
 
-GNU C++ Symbols to be defined if using Linux Eclipse/CDT IDE (no value needed):
-* BOOST
-* LINUX
-* LONGDOUBLE_PROB
-* LONGLONG_COST
-* OPENMPI
-* WCSPFORMATONLY
+Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/*/toulbar2):
 
-Also C++11 should be set as the language standard.
+   mkdir build
+   cd build
+   cmake ..
+   make
+
+Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/*/pytoulbar2.cpython*.so):
+
+   mkdir build
+   cd build
+   cmake -DPYTB2=ON ..
+   make
+
+An experimental CFN.py python class wrapper is available in ./web/TUTORIALS/CFN.py.
+Move this file and the cpython library in the folder of the python script that does "import pytoulbar2, CFN".
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
@@ -96,8 +103,6 @@ Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake
     g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
      -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -lboost_graph -lboost_iostreams -lgmp -lz -llzma -static
 
-Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
-
 Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
     bash
@@ -106,6 +111,7 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
     mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
      -DBOOST -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DOPENMPI -DWCSPFORMATONLY -lboost_graph -lboost_iostreams -lgmp -lz -llzma
 
+Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
 
 ## Authors
 
