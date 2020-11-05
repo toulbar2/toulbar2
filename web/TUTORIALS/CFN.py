@@ -49,10 +49,19 @@ class CFN:
             raise RuntimeError(name+" already defined")
         cardinality = len(values)
         self.Variables[name] = values
-        vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, min(values), max(values))
+
+        if all(isinstance(value, int) for value in values):
+            vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, min(values), max(values))
+            for vn in values:
+                self.CFN.wcsp.addValueName(vIdx, 'v' + str(vn))
+        elif all(isinstance(value, str) for value in values):
+            vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, 0, len(values)-1)
+            for vn in values:
+                self.CFN.wcsp.addValueName(vIdx, vn)
+        else:
+                raise RuntimeError("Incorrect domain:"+str(values))
+
         self.VariableIndices[name] = vIdx
-        for vn in values:
-            self.CFN.wcsp.addValueName(vIdx, 'v' + str(vn))
         self.VariableNames.append(name)
 
     def AddFunction(self, scope, costs):
