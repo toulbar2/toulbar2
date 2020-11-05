@@ -78,14 +78,14 @@ Optional libraries:
 * libopenmpi-dev
 * libjemalloc-dev
 
-Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/*/toulbar2):
+Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\*/toulbar2):
 
     mkdir build
     cd build
     cmake ..
     make
 
-Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/*/pytoulbar2.cpython*.so):
+Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytoulbar2.cpython\*.so):
 
     mkdir build
     cd build
