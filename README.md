@@ -80,17 +80,17 @@ Optional libraries:
 
 Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/*/toulbar2):
 
-   mkdir build
-   cd build
-   cmake ..
-   make
+    mkdir build
+    cd build
+    cmake ..
+    make
 
 Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/*/pytoulbar2.cpython*.so):
 
-   mkdir build
-   cd build
-   cmake -DPYTB2=ON ..
-   make
+    mkdir build
+    cd build
+    cmake -DPYTB2=ON ..
+    make
 
 An experimental CFN.py python class wrapper is available in ./web/TUTORIALS/CFN.py.
 Move this file and the cpython library in the folder of the python script that does "import pytoulbar2, CFN".
