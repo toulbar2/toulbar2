@@ -51,14 +51,21 @@ inline Long myrandln() { return (Long)((Long)mrand48() /**LONGLONG_MAX*/); }
 inline double mydrand() { return drand48(); }
 #endif
 #ifdef WINDOWS
-inline void mysrand(int seed)
-{
-    return srand(seed);
+#include <random>
+inline void mysrand(long) {};
+inline double mydrand() {
+    static std::ranlux48 source(std::random_device{}());
+    return std::uniform_real_distribution<double>(0,1)(source);
 }
-inline int myrand() { return rand(); }
-inline Long myrandl() { return (Long)((Long)rand() /**LONGLONG_MAX*/); }
-inline Long myrandln() { return (Long)((Long)rand() * ((myrand() % 2)?-1:1) /**LONGLONG_MAX*/); }
-inline double mydrand() { return (double(rand()) / RAND_MAX); } //return drand(); //If compiler warning, replace by (double(rand()) / RAND_MAX);
+inline int myrand() {
+    return INT_MAX * mydrand();
+}
+inline Long myrandl() {
+    return LONG_MAX * mydrand();
+}
+inline Long myrandln() {
+    return LONG_MAX * 2. * (mydrand() - 0.5);
+}
 #endif
 
 #ifdef DOUBLE_PROB

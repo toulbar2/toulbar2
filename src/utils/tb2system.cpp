@@ -88,6 +88,7 @@ void timerStop()
 }
 
 #else
+void timeOut(int sig) {}
 double cpuTime()
 {
     return (double)(clock() / CLOCKS_PER_SEC);
