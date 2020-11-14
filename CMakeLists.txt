@@ -34,7 +34,7 @@ include(CMakeDependentOption)
 # cmake option definition
 ##########################################
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
-OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF) 
+OPTION(WIN64 "toulbar2 cross compilation flag [default: off]" OFF) 
 OPTION(MENDELSOFT "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 OPTION(PYTB2 "Python3 toulbar2 module compilation (MPI off) [default: off]" OFF)
@@ -74,6 +74,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11" )
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
+#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1271")
@@ -132,9 +133,10 @@ IF(STATIC)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++") 
+  set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")   # -flto 
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
+  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall")   # -flto
 ENDIF(STATIC)
 
 ##########################################
@@ -181,12 +183,11 @@ SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 ##########################################
 # Windows options
 ##########################################
-IF(WIN32)
+IF(WIN64)
   # option used for cross compilation 
   set (EXE ".exe")
-  set(COST INT_COST)
-  set(LIBTB2 OFF)
-  set(XML OFF)
+  #set(LIBTB2 OFF)
+  #set(XML OFF)
   set(CPLEX OFF)
   set(Boost OFF)
   set(MPI OFF)
@@ -194,11 +195,9 @@ IF(WIN32)
 
   # mingW32 env setup
   include(${My_cmake_script}/mingw32-config.cmake) 
-  
-  MESSAGE(STATUS "WIN32 ON")
-ELSE(WIN32)
+ELSE(WIN64)
   SET(COST LONGLONG_COST)
-ENDIF(WIN32)
+ENDIF(WIN64)
 
 ##########################################
 # Find optional libs 
@@ -304,17 +303,13 @@ ENDIF(MENDELSOFT)
 ##########################################
 
 IF(LIBTB2)
-  IF(WIN32 AND LONG_COSTS)
-    MESSAGE(STATUS "LIBTB2 not compliant with win32 if using LONG_COSTS!")
-  ENDIF(WIN32 AND LONG_COSTS)
-  IF(WIN32 AND LONG_PROBABILITY)
-    MESSAGE(STATUS "LIBTB2  not compliant with win32 if using LONG_PROBABILITY!")
-  ENDIF(WIN32 AND LONG_PROBABILITY)
-  
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
   ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
-  SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
+  IF(WIN64)
+  ELSE(WIN64)
+    SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
+  ENDIF(WIN64)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)

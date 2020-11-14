@@ -5,9 +5,9 @@
 # GMP_INCLUDE_DIR - the GMP include directory
 # GMP_LIBRARIES - what to link against to use GMP
 
-if(WIN32)
-  set(GMP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/win32/gmp/include)
-  set(GMP_LIBRARY  ${CMAKE_CURRENT_SOURCE_DIR}/lib/win32/gmp/lib/)
+if(WIN64)
+  set(GMP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/win64/gmp/include)
+  set(GMP_LIBRARY  ${CMAKE_CURRENT_SOURCE_DIR}/lib/win64/gmp/lib/libgmp.a)
 
 #FIND_PATH(GMP_INCLUDE_DIR gmp.h paths ${CMAKE_CURRENT_SOURCE_DIR}/win32/gmp/include/ ${CMAKE_CURRENT_SOURCE_DIR})
 #FIND_LIBRARY(GMP_LIBRARY gmp paths ${CMAKE_CURRENT_SOURCE_DIR}/gmp/gmp-4.3.2/lib/ ${CMAKE_CURRENT_SOURCE_DIR}/win32/gmp/lib/ ${CMAKE_CURRENT_SOURCE_DIR} /cross)

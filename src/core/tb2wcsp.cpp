@@ -2441,7 +2441,7 @@ void WCSP::sortConstraints()
         setDACOrder(revdac);
     }
     // postpone costly variable elimination heuristics if too many variables
-    if (ToulBar2::varOrder && (numberOfVariables() < LARGE_NB_VARS || ((long)((void*)ToulBar2::varOrder)) == MAX_CARD || ((long)((void*)ToulBar2::varOrder)) >= ELIM_MAX)) {
+    if (ToulBar2::varOrder && (numberOfVariables() < LARGE_NB_VARS || reinterpret_cast<uintptr_t>(ToulBar2::varOrder) == MAX_CARD || reinterpret_cast<uintptr_t>(ToulBar2::varOrder) >= ELIM_MAX)) {
         vector<int> order;
         if (isAlreadyTreeDec(ToulBar2::varOrder))
             treeDecFile2Vector(ToulBar2::varOrder, order);
@@ -2619,7 +2619,7 @@ void WCSP::preprocessing()
     propagate();
 
     // recompute current DAC order and its reverse
-    if (ToulBar2::varOrder && numberOfVariables() >= LARGE_NB_VARS && numberOfUnassignedVariables() < LARGE_NB_VARS && (((long)((void*)ToulBar2::varOrder)) >= MIN_DEGREE && ((long)((void*)ToulBar2::varOrder)) <= APPROX_MIN_DEGREE)) {
+    if (ToulBar2::varOrder && numberOfVariables() >= LARGE_NB_VARS && numberOfUnassignedVariables() < LARGE_NB_VARS && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) >= MIN_DEGREE && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) <= APPROX_MIN_DEGREE) {
         vector<int> order;
         if (isAlreadyTreeDec(ToulBar2::varOrder))
             treeDecFile2Vector(ToulBar2::varOrder, order);
@@ -4993,7 +4993,7 @@ void WCSP::printVACStat()
 
 bool WCSP::isAlreadyTreeDec(char* filename)
 {
-    if (filename == NULL || (((long)((void*)filename)) > ELIM_NONE && ((long)((void*)filename)) < ELIM_MAX))
+    if (filename == NULL || (reinterpret_cast<uintptr_t>(filename) > ELIM_NONE && reinterpret_cast<uintptr_t>(filename) < ELIM_MAX))
         return false;
     ifstream file;
     file.open(filename);
