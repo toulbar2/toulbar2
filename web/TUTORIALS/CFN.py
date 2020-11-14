@@ -8,10 +8,10 @@ class CFN:
         tb2.option.FullEAC = True
 #        tb2.option.VACthreshold = True
 #        tb2.option.useRASPS = True
-        tb2.option.verbose = 0
+        tb2.option.verbose = -1
 #        tb2.option.weightedTightness = False
 #        tb2.option.elimDegree_preprocessing = 1
-        tb2.option.showSolutions = True
+        tb2.option.showSolutions = False
 #        tb2.option.backtrackLimit = 50000
 #        tb2.option.solutionBasedPhaseSaving = False #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
 #        tb2.option.decimalPoint = 6
@@ -49,25 +49,36 @@ class CFN:
             raise RuntimeError(name+" already defined")
         cardinality = len(values)
         self.Variables[name] = values
-        vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, min(values), max(values))
+
+        if all(isinstance(value, int) for value in values):
+            vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, min(values), max(values))
+            for vn in values:
+                self.CFN.wcsp.addValueName(vIdx, 'v' + str(vn))
+        elif all(isinstance(value, str) for value in values):
+            vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, 0, len(values)-1)
+            for vn in values:
+                self.CFN.wcsp.addValueName(vIdx, vn)
+        else:
+                raise RuntimeError("Incorrect domain:"+str(values))
         self.VariableIndices[name] = vIdx
-        for vn in values:
-            self.CFN.wcsp.addValueName(vIdx, 'v' + str(vn))
         self.VariableNames.append(name)
+        return vIdx
 
     def AddFunction(self, scope, costs):
         sscope = set(scope)
         if len(scope) != len(sscope):
             raise RuntimeError("Duplicate variable in scope:"+str(scope))
         arity = len(scope)
+        iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices[v]
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v)) 
-            scope[i] = v
-        if (len(scope) == 1):
-            self.CFN.wcsp.postUnaryConstraint(scope[0], costs, False)
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v) 
+            
+        if (len(iscope) == 1):
+            self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, False)
         elif (len(scope) == 2):
             self.CFN.wcsp.postBinaryConstraint(scope[0], scope[1], costs, False)
         elif (len(scope) == 3):
