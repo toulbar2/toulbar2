@@ -79,10 +79,10 @@ class CFN:
             
         if (len(iscope) == 1):
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, False)
-        elif (len(scope) == 2):
-            self.CFN.wcsp.postBinaryConstraint(scope[0], scope[1], costs, False)
-        elif (len(scope) == 3):
-            self.CFN.wcsp.postTernaryConstraint(scope[0], scope[1], scope[2], costs, False)
+        elif (len(iscope) == 2):
+            self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, False)
+        elif (len(iscope) == 3):
+            self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, False)
         else:
             raise NameError('Higher than 3 arity functions not implemented yet in Python layer.')
         self.Scopes.append(sscope)
