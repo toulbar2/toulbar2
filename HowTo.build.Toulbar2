@@ -140,11 +140,14 @@ make doc ; # => html and pdf are create in doc/dev directory
 
 http://www.cmake.org/Wiki/CMake:Eclipse_UNIX_Tutorial
 
-#howto compile toulbar2 under Mac OSXX ?
+# Howto compile toulbar2 under MacOS
+# run misc/script/MacOS-requirements-install.sh
+# to install libraries needed by toulbar2 using homebrew
 
  mkdir build
  cd build
  cmake -G Xcode ..
+ 
 # open the xcode project file generated in the build directory
 # build and manage the source code in the xcode with no problem
 

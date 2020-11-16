@@ -78,6 +78,8 @@ Optional libraries:
 * libopenmpi-dev
 * libjemalloc-dev
 
+On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries.
+
 Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\*/toulbar2):
 
     mkdir build
