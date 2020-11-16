@@ -3,19 +3,19 @@ import pytoulbar2 as tb2
 class CFN:
     def __init__(self, ubinit):
         tb2.init()
-#        tb2.option.hbfs = False
-#        tb2.option.vac = 10
-        tb2.option.FullEAC = True
-#        tb2.option.VACthreshold = True
-#        tb2.option.useRASPS = True
-        tb2.option.verbose = -1
-#        tb2.option.weightedTightness = False
-#        tb2.option.elimDegree_preprocessing = 1
-        tb2.option.showSolutions = False
-#        tb2.option.backtrackLimit = 50000
+#        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
+#        tb2.option.vac = 10   # if no zero, maximum search depth where VAC algorithm is performed
+        tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable 
+#        tb2.option.VACthreshold = True  # if True, reuse VAC auto-threshold value found in preprocessing during search 
+#        tb2.option.useRASPS = True   # if True, perform RASPS algorithm in preprocessing to find good initial upperbound (use with VAC and FullEAC)
+        tb2.option.verbose = -1   # verbosity level of toulbar2 (-1:no message, 0:search statistics, 1:search tree, 2-7: propagation information)
+#        tb2.option.weightedTightness = False   # variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
+#        tb2.option.elimDegree_preprocessing = 1   # maximum degree level of variable elimination in preprocessing (-1: none, 0: null degree, 1: degree one, etc.) 
+        tb2.option.showSolutions = 0   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
+#        tb2.option.backtrackLimit = 50000   # maximum number of backtracks before restart
 #        tb2.option.solutionBasedPhaseSaving = False #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
-#        tb2.option.decimalPoint = 6
-#        tb2.option.allSolutions = 1000 
+#        tb2.option.decimalPoint = 6  # decimal precision of costs 
+#        tb2.option.allSolutions = 1000   # find all solutions up to a maximum limit
         self.Variables = {}
         self.VariableIndices = {}
         self.Scopes = []
