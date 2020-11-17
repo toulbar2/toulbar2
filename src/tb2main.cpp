@@ -30,7 +30,7 @@ const int maxdivnbsol = 1000;
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
-#ifdef WINDOWS
+#ifdef __WIN32__
 #define PATH_SEP_CHR '\\'
 #define PATH_DELIM ";"
 #else
@@ -38,7 +38,7 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 #define PATH_DELIM ":"
 #endif
 //*definition of  windows include for command line.
-#if defined(_MSC_VER) || _WIN32
+#ifdef __WIN32__
 #include <windows.h>
 #include <tchar.h>
 #else

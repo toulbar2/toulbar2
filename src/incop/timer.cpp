@@ -2,7 +2,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#ifndef WINDOWS
+#ifndef __WIN32__
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
@@ -16,7 +16,7 @@
  *  to get the amount of time used by the backtracking routine.
  */
 
-#ifdef WINDOWS
+#ifdef __WIN32__
 void start_timers(){};
 void stop_timers(Timer type){};
 

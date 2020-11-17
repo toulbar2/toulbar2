@@ -34,7 +34,6 @@ include(CMakeDependentOption)
 # cmake option definition
 ##########################################
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
-OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF) 
 OPTION(MENDELSOFT "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 OPTION(PYTB2 "Python3 toulbar2 module compilation (MPI off) [default: off]" OFF)
@@ -132,7 +131,7 @@ IF(STATIC)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++") 
+  set(CMAKE_EXE_LINKER_FLAGS "-static --enable-static -static-libgcc -static-libstdc++") 
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
 ENDIF(STATIC)
@@ -181,24 +180,7 @@ SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
 ##########################################
 # Windows options
 ##########################################
-IF(WIN32)
-  # option used for cross compilation 
-  set (EXE ".exe")
-  set(COST INT_COST)
-  set(LIBTB2 OFF)
-  set(XML OFF)
-  set(CPLEX OFF)
-  set(Boost OFF)
-  set(MPI OFF)
-  set(ILOG OFF)
-
-  # mingW32 env setup
-  include(${My_cmake_script}/mingw32-config.cmake) 
-  
-  MESSAGE(STATUS "WIN32 ON")
-ELSE(WIN32)
-  SET(COST LONGLONG_COST)
-ENDIF(WIN32)
+SET(COST LONGLONG_COST)
 
 ##########################################
 # Find optional libs 
@@ -210,7 +192,9 @@ IF(PYTB2)
   SET(WITH_MEM_JEMALLOC OFF)
   SET(MPI OFF)
   SET(LIBTB2 ON)
-  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  FIND_PACKAGE(Python COMPONENTS Interpreter Development)
+  FIND_PACKAGE(pybind11 CONFIG)
+#  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/home/sdegivry/.local/share/crossroad/roads/w64/toulbar2/include/python3.8")
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
     OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -304,13 +288,6 @@ ENDIF(MENDELSOFT)
 ##########################################
 
 IF(LIBTB2)
-  IF(WIN32 AND LONG_COSTS)
-    MESSAGE(STATUS "LIBTB2 not compliant with win32 if using LONG_COSTS!")
-  ENDIF(WIN32 AND LONG_COSTS)
-  IF(WIN32 AND LONG_PROBABILITY)
-    MESSAGE(STATUS "LIBTB2  not compliant with win32 if using LONG_PROBABILITY!")
-  ENDIF(WIN32 AND LONG_PROBABILITY)
-  
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
   ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
@@ -318,11 +295,12 @@ IF(LIBTB2)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
-    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytoulbar2")
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+#    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
+#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytoulbar2")
+#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
+#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+     pybind11_add_module(pytoulbar2 ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
   ENDIF(PYTB2)
   
   IF(MPI)
@@ -335,7 +313,7 @@ IF(LIBTB2)
     ENDIF(MPI_LINK_FLAGS)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
-    TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+    TARGET_LINK_LIBRARIES(pytoulbar2 ${all_depends})
   ENDIF(MPI)
   
   INSTALL(TARGETS tb2

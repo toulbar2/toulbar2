@@ -91,7 +91,7 @@ void Stat_GWW::init_try(int trynumber)
 
 void Stat_GWW::execution_report(int nessai, Long lower_bound)
 {
-#ifdef WINDOWS
+#ifdef __WIN32__
     execution_time_try[nessai] += 1.00;
     cout << " WARNING : Timer not supported under windows OS : ==> incop exec time is false " << endl;
 #else
@@ -821,7 +821,7 @@ void executer_essai(OpProblem* problem, IncompleteAlgorithm* algo, Configuration
 
     Statistiques->init_try(nessai);
 // d�clenchement du chronom�tre
-#ifndef WINDOWS
+#ifndef __WIN32__
     start_timers();
 #endif
     // population initiale
@@ -850,7 +850,7 @@ void executer_essai(OpProblem* problem, IncompleteAlgorithm* algo, Configuration
     // lancement de la resolution
     algo->run(problem, population);
 // apres resolution : arret du chronometre
-#ifndef WINDOWS // time not supported under windows OS
+#ifndef __WIN32__
     stop_timers(VIRTUAL);
 #endif
     //    ecriture_fin_resolution(Statistiques->cost_try[nessai]);

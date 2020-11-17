@@ -15,7 +15,7 @@ const char* PrintFormatProb = "%lf";
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */
-#ifdef LINUX
+#ifndef __WIN32__
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -88,6 +88,7 @@ void timerStop()
 }
 
 #else
+void timeOut(int sig) {}
 double cpuTime()
 {
     return (double)(clock() / CLOCKS_PER_SEC);

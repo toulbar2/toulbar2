@@ -373,14 +373,14 @@ int LSAlgorithm::test_bestfound(Move* move)
 {
     if (move->valuation < Statistiques->cost_try[Statistiques->current_try]) {
         if (TRACEMODE) {
-#ifndef WINDOWS
+#ifndef __WIN32__
             stop_timers(VIRTUAL);
             Statistiques->execution_time_try[Statistiques->current_try] += VIRTUAL_TIMELAPSE;
 #else // timer not supported under windows
             Statistiques->execution_time_try[Statistiques->current_try];
 #endif
             ecriture_meilleure_valeur(methodname, move->valuation, threshold, nbmoves, nbhsearch->maxneighbors);
-#ifndef WINDOWS
+#ifndef __WIN32__
             start_timers();
 #endif
         }
