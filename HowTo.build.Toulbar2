@@ -46,8 +46,22 @@ mkdir build ; cd build ; cmake .. ; make package
 
 # cross compilation ==> compile toulbar2 under for win64 plateform
 
-cmake .. -DWIN32=ON ; make package
-
+sudo apt-get install mingw64 mingw-w64-common mingw-w64-x86-64-dev mingw-w64-tools
+sudo apt-get update cmake
+pip3 install pybind11
+pip3 install crossroad
+bash
+crossroad w64 toulbar2
+crossroad install gmp
+crossroad install boost
+crossroad install zlib
+crossroad install xz
+crossroad install jemalloc
+crossroad install libxml2
+crossroad install python
+crossroad install pybind11
+crossroad cmake ..
+make
 
 # in advanced mode you can tune your compilation option using:
 

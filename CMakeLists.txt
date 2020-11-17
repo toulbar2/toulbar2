@@ -189,9 +189,8 @@ IF(PYTB2)
   SET(WITH_MEM_JEMALLOC OFF)
   SET(MPI OFF)
   SET(LIBTB2 ON)
-  FIND_PACKAGE(Python COMPONENTS Interpreter Development)
-  FIND_PACKAGE(pybind11 CONFIG)
-#  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/home/sdegivry/.local/share/crossroad/roads/w64/toulbar2/include/python3.8")
+  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+### Old cmake, python and pybind11
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
     OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -200,6 +199,9 @@ IF(PYTB2)
     COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
     OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
   MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+### New cmake and python and pybind11
+#  FIND_PACKAGE(pybind11 CONFIG)
+###
 ENDIF(PYTB2)
 
 IF(WITH_MEM_JEMALLOC)
@@ -295,12 +297,15 @@ IF(LIBTB2)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
-#    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
-#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
-#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytoulbar2")
-#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
-#    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
-     pybind11_add_module(pytoulbar2 ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+### Old cmake, python and pybind11
+    ADD_LIBRARY(pytoulbar2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES OUTPUT_NAME "pytoulbar2")
+    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES SUFFIX ${Python3_SUFFIX})
+    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+### New cmake, python and pybind11
+#    pybind11_add_module(pytoulbar2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+###
   ENDIF(PYTB2)
   
   IF(MPI)

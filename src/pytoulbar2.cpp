@@ -395,7 +395,7 @@ PYBIND11_MODULE(pytoulbar2, m)
             tb2checkOptions();
             return s.read_wcsp(fileName);
         })
-#ifdef LINUX
+#ifndef __WIN32__
         .def("timer", [](WeightedCSPSolver& s, int timeout) {
             signal(SIGINT, timeOut);
             signal(SIGTERM, timeOut);

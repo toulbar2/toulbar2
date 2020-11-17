@@ -26,7 +26,7 @@ If you don't find all the libraries nor a recent cmake, only install libgmp-dev,
 ```
 cd src
 echo '#define Toulbar_VERSION "1.1.0"' > ToulbarVersion.hpp
-g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG -DLINUX -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -lgmp -static
+g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -lgmp -static
 cd ..
 ln -s src/toulbar2 .
 ```

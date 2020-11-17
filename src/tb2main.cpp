@@ -759,7 +759,7 @@ void help_msg(char* toulbar2filename)
          << endl;
 #endif
 #ifndef MENDELSOFT
-#ifdef LINUX
+#ifndef __WIN32__
     cout << "   -timer=[integer] : CPU time limit in seconds" << endl;
 #endif
     cout << "   -bt=[integer] : limit on the number of backtracks (" << ToulBar2::backtrackLimit << " by default)" << endl;
@@ -2681,7 +2681,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
             solver->dump_wcsp(problemname.c_str(), true, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)));
         } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
-#ifdef LINUX
+#ifndef __WIN32__
             signal(SIGINT, timeOut);
             signal(SIGTERM, timeOut);
             if (timeout > 0)

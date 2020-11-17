@@ -4,7 +4,7 @@
  */
 ///////////////////
 
-#ifdef _WIN32
+#ifdef __WIN32__
 # pragma warning(disable: 4786)
 #endif
 
@@ -70,11 +70,11 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 //
 // Snippets that are used on the website
 
-#ifdef _WIN32
+#ifdef __WIN32__
 # pragma warning(disable: 4786)
 #endif
 
-#ifndef _WIN32
+#ifndef __WIN32__
 # include <unistd.h>
 #endif
 #include <fstream>

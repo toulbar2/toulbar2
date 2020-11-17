@@ -26,15 +26,10 @@ void timerStop(); ///< \brief stop a timer
 typedef long long Long;
 
 #ifndef LONGLONG_MAX
-#ifdef LINUX
 #ifdef LONG_LONG_MAX
 const Long LONGLONG_MAX = LONG_LONG_MAX;
 #else
 const Long LONGLONG_MAX = LLONG_MAX;
-#endif
-#endif
-#ifdef WINDOWS
-const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
 #endif
 #endif
 
@@ -68,7 +63,6 @@ inline double mydrand() { return drand48(); }
 #endif
 
 #ifdef DOUBLE_PROB
-#ifdef LINUX
 inline double Pow(double x, double y)
 {
     return pow(x, y);
@@ -80,22 +74,8 @@ inline double Expm1(double x) { return expm1(x); }
 inline double Log(double x) { return log(x); }
 inline double Log1p(double x) { return log1p(x); }
 #endif
-#ifdef WINDOWS
-inline double Pow(double x, double y)
-{
-    return pow(x, y);
-}
-inline double Exp10(double x) { return pow(10., x); }
-inline double Exp(double x) { return exp(x); }
-inline double Log10(double x) { return log(x) / log(10.); }
-inline double Log(double x) { return log(x); }
-inline double Log1p(double x) { return log(1. + x); }
-inline double Expm1(double x) { return exp(x) - 1.; }
-#endif
-#endif
 
 #ifdef LONGDOUBLE_PROB
-#ifdef LINUX
 inline Double Pow(Double x, Double y)
 {
     return powl(x, y);
@@ -106,18 +86,6 @@ inline Double Log10(Double x) { return log10l(x); }
 inline Double Expm1(Double x) { return expm1l(x); }
 inline Double Log(Double x) { return logl(x); }
 inline Double Log1p(Double x) { return log1pl(x); }
-#endif
-#ifdef WINDOWS
-inline Double Pow(Double x, Double y)
-{
-    return pow(x, y);
-}
-inline Double Exp10(Double x) { return pow(10., x); }
-inline Double Log10(Double x) { return log(x) / log(10.); }
-inline Double Log(Double x) { return log(x); }
-inline Double Log1p(Double x) { return log(1. + x); }
-inline Double Expm1(Double x) { return exp(x) - 1.; }
-#endif
 #endif
 
 #ifdef QUAD_PROB
@@ -216,18 +184,10 @@ inline Long ceil(const Long e) { return e; }
 inline Long floor(const Long e) { return e; }
 inline Long randomCost(Long min, Long max) { return min + (myrandl() % (max - min + 1)); }
 
-#ifdef LINUX
 inline Long string2Cost(const char* ptr)
 {
     return atoll(ptr);
 }
-#endif
-#ifdef WINDOWS
-inline Long string2Cost(const char* ptr)
-{
-    return atol(ptr);
-}
-#endif
 
 inline int cost2log2(Long x)
 {
@@ -271,13 +231,10 @@ inline Long luby(Long r)
 }
 
 // function mkdir
-#ifdef LINUX
 #include <sys/stat.h>
-#include <signal.h>
-#endif
 
-#ifdef WIN32
-#include <direct.h> // for WINDOWS?
+#ifndef __WIN32__
+#include <signal.h>
 #endif
 
 #ifndef SIZE_MAX

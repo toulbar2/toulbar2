@@ -152,7 +152,7 @@ enum SG_Error {
 // if we aren't on Windows and we have ICU available, then enable ICU
 // by default. Define this to 0 to intentially disable it.
 #ifndef SG_HAVE_ICU
-#if !defined(_WIN32) && defined(USTRING_H)
+#if !defined(__WIN32__) && defined(USTRING_H)
 #define SG_HAVE_ICU 1
 #else
 #define SG_HAVE_ICU 0
@@ -164,7 +164,7 @@ enum SG_Error {
 
 // on Windows we want to use MBCS aware string functions and mimic the
 // Unix glob functionality. On Unix we just use glob.
-#ifdef _WIN32
+#ifdef __WIN32__
 #include <mbstring.h>
 #define sg_strchr ::_mbschr
 #define sg_strrchr ::_mbsrchr
@@ -292,12 +292,12 @@ public:
     {
         return sg_strcasecmp((const SOCHAR_T*)s1, (const SOCHAR_T*)s2);
     }
-#if _WIN32
+#if __WIN32__
     static int strcasecmp(const wchar_t* s1, const wchar_t* s2)
     {
         return ::_wcsicmp(s1, s2);
     }
-#endif // _WIN32
+#endif // __WIN32__
 #if SG_HAVE_ICU
     static int strcasecmp(const UChar* s1, const UChar* s2)
     {
@@ -312,7 +312,7 @@ enum SG_FileType {
     SG_FILETYPE_DIR
 };
 
-#ifdef _WIN32
+#ifdef __WIN32__
 
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
@@ -410,7 +410,7 @@ private:
     WIN32_FIND_DATAW m_oFindDataW;
 };
 
-#else // !_WIN32
+#else // !__WIN32__
 
 #define SG_PATH_CHAR '/'
 
@@ -563,7 +563,7 @@ private:
 #endif
 };
 
-#endif // _WIN32
+#endif // __WIN32__
 
 #endif // DOXYGEN
 
@@ -744,7 +744,7 @@ template <class SOCHAR>
 int CSimpleGlobTempl<SOCHAR>::Add(
     const SOCHAR* a_pszFileSpec)
 {
-#ifdef _WIN32
+#ifdef __WIN32__
     // Windows FindFirst/FindNext recognizes forward slash as the same as
     // backward slash and follows the directories. We need to do the same
     // when calculating the prefix and when we have no wildcards.
@@ -771,7 +771,7 @@ int CSimpleGlobTempl<SOCHAR>::Add(
         return AppendName(a_pszFileSpec, nType == SG_FILETYPE_DIR);
     }
 
-#ifdef _WIN32
+#ifdef __WIN32__
     // Windows doesn't return the directory with the filename, so we need to
     // extract the path from the search string ourselves and prefix it to the
     // filename we get back.

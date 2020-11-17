@@ -247,19 +247,19 @@ enum SI_Error {
 
 #define SI_UTF8_SIGNATURE     "\xEF\xBB\xBF"
 
-#ifdef _WIN32
+#ifdef __WIN32__
 # define SI_NEWLINE_A   "\r\n"
 # define SI_NEWLINE_W   L"\r\n"
-#else // !_WIN32
+#else // !__WIN32__
 # define SI_NEWLINE_A   "\n"
 # define SI_NEWLINE_W   L"\n"
-#endif // _WIN32
+#endif // __WIN32__
 
 #if defined(SI_CONVERT_ICU)
 # include <unicode/ustring.h>
 #endif
 
-#if defined(_WIN32)
+#if defined(__WIN32__)
 # define SI_HAS_WIDE_FILE
 # define SI_WCHAR_T     wchar_t
 #elif defined(SI_CONVERT_ICU)
@@ -651,7 +651,7 @@ public:
         const SI_WCHAR_T *  a_pwszFile,
         bool                a_bAddSignature = true
         ) const;
-#endif // _WIN32
+#endif // __WIN32__
 
     /** Save the INI data to a file. See Save() for details.
 
@@ -1348,7 +1348,7 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::LoadFile(
     const SI_WCHAR_T * a_pwszFile
     )
 {
-#ifdef _WIN32
+#ifdef __WIN32__
     FILE * fp = NULL;
 #if __STDC_WANT_SECURE_LIB__ && !_WIN32_WCE
     _wfopen_s(&fp, a_pwszFile, L"rb");
@@ -1359,11 +1359,11 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::LoadFile(
     SI_Error rc = LoadFile(fp);
     fclose(fp);
     return rc;
-#else // !_WIN32 (therefore SI_CONVERT_ICU)
+#else // !__WIN32__ (therefore SI_CONVERT_ICU)
     char szFile[256];
     u_austrncpy(szFile, a_pwszFile, sizeof(szFile));
     return LoadFile(szFile);
-#endif // _WIN32
+#endif // __WIN32__
 }
 #endif // SI_HAS_WIDE_FILE
 
@@ -2368,7 +2368,7 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::SaveFile(
     bool                a_bAddSignature
     ) const
 {
-#ifdef _WIN32
+#ifdef __WIN32__
     FILE * fp = NULL;
 #if __STDC_WANT_SECURE_LIB__ && !_WIN32_WCE
     _wfopen_s(&fp, a_pwszFile, L"wb");
@@ -2379,11 +2379,11 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::SaveFile(
     SI_Error rc = SaveFile(fp, a_bAddSignature);
     fclose(fp);
     return rc;
-#else // !_WIN32 (therefore SI_CONVERT_ICU)
+#else // !__WIN32__ (therefore SI_CONVERT_ICU)
     char szFile[256];
     u_austrncpy(szFile, a_pwszFile, sizeof(szFile));
     return SaveFile(szFile, a_bAddSignature);
-#endif // _WIN32
+#endif // __WIN32__
 }
 #endif // SI_HAS_WIDE_FILE
 
@@ -2674,7 +2674,7 @@ CSimpleIniTempl<SI_CHAR,SI_STRLESS,SI_CONVERTER>::DeleteString(
 //  SI_CONVERT_WIN32        Use the Win32 API functions for conversion.
 
 #if !defined(SI_CONVERT_GENERIC) && !defined(SI_CONVERT_WIN32) && !defined(SI_CONVERT_ICU)
-# ifdef _WIN32
+# ifdef __WIN32__
 #  define SI_CONVERT_WIN32
 # else
 #  define SI_CONVERT_GENERIC

@@ -782,7 +782,7 @@ SOCHAR
 CSimpleOptTempl<SOCHAR>::PrepareArg(
     SOCHAR* a_pszString) const
 {
-#ifdef _WIN32
+#ifdef __WIN32__
     // On Windows we can accept the forward slash as a single character
     // option delimiter, but it cannot replace the '-' option used to
     // denote stdin. On Un*x paths may start with slash so it may not
