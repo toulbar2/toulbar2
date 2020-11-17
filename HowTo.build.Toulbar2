@@ -26,7 +26,7 @@ sudo apt-get install libjemalloc-dev
 # if you want to cross compile toulbar2 please upload static GMP library and header file for MinGW
 # at the following url : http://cs.nyu.edu/exact/core/gmp/
 # location of static gmp lib for windows must be update in cmake-script/FindGmp.cmake
-# by default locate is ./lib/win32/
+# by default locate is ./lib/win64/
 
 #cmake package are also required
 sudo apt-get install cmake cmake-data cmake-curses-gui
@@ -34,7 +34,7 @@ sudo apt-get install cmake cmake-data cmake-curses-gui
 #for cross compilation under ubuntu
 #the following package are required
 
-sudo apt-get install mingw32 mingw32-binutils mingw32-runtime nsis
+sudo apt-get install  mingw-w64 mingw-w64-x86-64-dev mingw-w64-tools binutils-mingw-w64-x86-64 libz-mingw-w64-dev nsis
 
 # for default compilation under linux please use:
 
@@ -44,7 +44,7 @@ mkdir build ; cd build ; cmake .. ; make package
 # by default only toulbar2 package for linux distro will be generate
 
 
-# cross compilation ==> compile toulbar2 under for win32 plateform
+# cross compilation ==> compile toulbar2 under for win64 plateform
 
 cmake .. -DWIN32=ON ; make package
 
@@ -140,11 +140,14 @@ make doc ; # => html and pdf are create in doc/dev directory
 
 http://www.cmake.org/Wiki/CMake:Eclipse_UNIX_Tutorial
 
-#howto compile toulbar2 under Mac OSXX ?
+# Howto compile toulbar2 under MacOS
+# run misc/script/MacOS-requirements-install.sh
+# to install libraries needed by toulbar2 using homebrew
 
  mkdir build
  cd build
  cmake -G Xcode ..
+ 
 # open the xcode project file generated in the build directory
 # build and manage the source code in the xcode with no problem
 

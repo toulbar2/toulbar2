@@ -73,6 +73,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11" )
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
+#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1271")
@@ -131,9 +132,10 @@ IF(STATIC)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "-static --enable-static -static-libgcc -static-libstdc++") 
+  set(CMAKE_EXE_LINKER_FLAGS "-static --enable-static -static-libgcc -static-libstdc++")   # -flto 
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
+  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall")   # -flto
 ENDIF(STATIC)
 
 ##########################################
@@ -176,11 +178,6 @@ ENDIF(ILOG)
 
 SET(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_SYSTEM_NAME})
 SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
-
-##########################################
-# Windows options
-##########################################
-SET(COST LONGLONG_COST)
 
 ##########################################
 # Find optional libs 
@@ -291,7 +288,10 @@ IF(LIBTB2)
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
   ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
-  SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
+  IF(WIN64)
+  ELSE(WIN64)
+    SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
+  ENDIF(WIN64)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)

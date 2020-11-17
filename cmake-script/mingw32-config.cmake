@@ -11,7 +11,7 @@
 # and the toolchain prefix
 set(CMAKE_SYSTEM_NAME Windows)
 SET(CMAKE_SYSTEM_VERSION 1)
-set(TOOLCHAIN_PREFIX i686-w64-mingw32)
+set(TOOLCHAIN_PREFIX x86_64-w64-mingw32)
 
 # cross compilers to use for C and C++
 set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc)
@@ -21,7 +21,7 @@ set(CMAKE_RC_COMPILER ${TOOLCHAIN_PREFIX}-windres)
 # target environment on the build host system
 #   set 1st to dir with the cross compiler's C/C++ headers/libs
 #   set 2nd to dir containing personal cross development headers/libs
-set(CMAKE_FIND_ROOT_PATH /usr/${TOOLCHAIN_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/win32)
+set(CMAKE_FIND_ROOT_PATH /usr/${TOOLCHAIN_PREFIX} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/win64)
 
 # modify default behavior of FIND_XXX() commands to
 # search for headers/libs in the target environment and

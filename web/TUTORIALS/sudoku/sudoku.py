@@ -1,6 +1,7 @@
 import pytoulbar2,CFN
 import numpy as np
 import itertools
+import pandas as pd
 
 # Adds a clique of differences with violation "cost" on "varList"
 def addCliqueAllDiff(theCFN, varList, cost):
@@ -25,9 +26,12 @@ myCFN = CFN.CFN(1)
 par = 3
 size = par * par
 
-# Prefilld grid with 0 meaning unknown
-hints = "002000010000050600000000000560090000400000002000600080700201000030000900000800000"
-grid = [int(h) for h in hints]
+# Prefilled grids/solutions from the validation set of the RRN paper (0 meaning unknown)
+valid = pd.read_csv("valid.csv.xz",sep=",", header=None).values
+hints = valid[:][:,0]
+sols = valid[:][:,1]
+
+grid = [int(h) for h in hints[0]]
 
 # list of row, column and cells variable indices
 rows = [ [] for _ in range(size) ]
