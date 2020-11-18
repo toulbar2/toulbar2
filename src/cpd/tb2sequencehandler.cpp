@@ -120,10 +120,10 @@ void SequenceHandler::update_sequences(int backbone, unsigned sequence_index, Do
 {
   // if (ToulBar2::diffneg)
   //     cost = cost - costs_[sequence_index];
+  sequencecosts[sequence_index].push_back(cost);
   if (cost < bestcost)
     remove_sequence(sequence_index);
   else {
-    sequencecosts[sequence_index].push_back(cost);
     if (sequencecosts[sequence_index].size() == bkbsequences.size()) // if this sequence has a cost for every backbone
       update_best_cost(sequence_index); // we can update bestcost to this sequence's min cost
   }
@@ -132,6 +132,17 @@ void SequenceHandler::update_sequences(int backbone, unsigned sequence_index, Do
 void SequenceHandler::report()
 {
   cout << "Writing report:" << endl;
+  for(unsigned i=0;i<sequences_.size(); i++)
+    {
+      Double mincost = LDBL_MAX;
+      for (unsigned j = 0; j < sequencecosts[i].size(); j++)
+        {
+          cout << sequencecosts[i][j] << endl;
+          if (sequencecosts[i][j] < mincost)
+            mincost = sequencecosts[i][j];
+        }
+      cout << sequences_[i] << " " << costs_[i]-mincost << endl;
+    }
   cout << "Best candidate sequence for negative design : " << sequences_[bestsequence] << endl;
   if (ToulBar2::diffneg)
     {

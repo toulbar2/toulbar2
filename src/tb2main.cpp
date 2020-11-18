@@ -2666,6 +2666,7 @@ int _tmain(int argc, TCHAR* argv[])
                     Store::store();
                     cout << "Mutating sequence to " << ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()) << endl;
                     mpisolver->mutate(ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()));
+                    cout << "...Done." << endl;
                     // We look for a new sequence, we can restart the search
                     mpisolver->solve();
                     found_a_sequence = ((Jobs*)ToulBar2::jobs)->request_sequence(); // We are using MPI and need another job
