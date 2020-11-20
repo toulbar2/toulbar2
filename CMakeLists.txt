@@ -132,7 +132,7 @@ IF(STATIC)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "-static --enable-static -static-libgcc -static-libstdc++")   # -flto 
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --enable-static -static-libgcc -static-libstdc++")   # -flto 
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
   SET(CMAKE_SHARED_LINKER_FLAGS "-Wall")   # -flto
@@ -251,6 +251,9 @@ INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 IF(TOULBAR2)
   ADD_LIBRARY(tb2-objects OBJECT ${LIBTB2FILES})
   ADD_EXECUTABLE(toulbar2${EXE} ${My_Source}/tb2main.cpp $<TARGET_OBJECTS:tb2-objects>)
+  IF(STATIC)
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} PUBLIC "-static")
+  ENDIF(STATIC)
   ADD_LIBRARY(tb2-archive STATIC $<TARGET_OBJECTS:tb2-objects>)
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)

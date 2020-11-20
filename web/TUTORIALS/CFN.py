@@ -2,10 +2,10 @@ import pytoulbar2 as tb2
 import numbers
 
 class CFN:
-    def __init__(self, ubinit, resolution = 0):
+    def __init__(self, ubinit, resolution = 0, vac = 0):
         tb2.init()
 #        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
-#        tb2.option.vac = 10   # if no zero, maximum search depth where VAC algorithm is performed
+        tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable 
 #        tb2.option.VACthreshold = True  # if True, reuse VAC auto-threshold value found in preprocessing during search 
 #        tb2.option.useRASPS = True   # if True, perform RASPS algorithm in preprocessing to find good initial upperbound (use with VAC and FullEAC)
@@ -21,7 +21,7 @@ class CFN:
         self.VariableIndices = {}
         self.Scopes = []
         self.VariableNames = []
-        self.CFN = tb2.Solver(ubinit * 10**resolution)
+        self.CFN = tb2.Solver(ubinit * 10**resolution) # initialize VAC algorithm depending on tb2.option.vac
 
         self.Contradiction = tb2.Contradiction
         self.SolverOut = tb2.SolverOut
@@ -79,14 +79,34 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
             
-        if (len(iscope) == 1):
+        if (len(iscope) == 0):
+            self.CFN.wcsp.postNullaryConstraint(costs)
+        elif (len(iscope) == 1):
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, False)
         elif (len(iscope) == 2):
             self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, False)
         elif (len(iscope) == 3):
             self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, False)
         else:
-            raise NameError('Higher than 3 arity functions not implemented yet in Python layer.')
+            mincost = min(costs)
+            maxcost = max(costs)
+            self.CFN.wcsp.postNullaryConstraint(mincost)
+            if (mincost == maxcost):
+                return
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0), True)
+            tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
+            for cost in costs:
+                if cost > mincost:
+                    self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, (cost-mincost) * 10 ** tb2.option.decimalPoint)
+                for r in range(len(iscope)):
+                    i = len(iscope)-1-r
+                    v = iscope[i]
+                    if tuple[i] < self.CFN.wcsp.toValue(v, self.CFN.wcsp.getDomainInitSize(v) - 1):
+                        tuple[i] += 1
+                        for j in range(i+1,len(iscope)):
+                            tuple[j] = self.CFN.wcsp.toValue(iscope[j], 0)
+                        break
+            self.CFN.wcsp.postNaryConstraintEnd(idx)
         self.Scopes.append(sscope)
         return
 

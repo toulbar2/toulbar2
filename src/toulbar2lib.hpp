@@ -99,6 +99,10 @@ public:
     /// \brief increases problem lower bound thanks to \e eg soft local consistencies
     /// \param addLb increment value to be \b added to the problem lower bound
     virtual void increaseLb(Cost addLb) = 0;
+    /// \brief shift problem optimum toward negative costs
+    /// \param shift positive shifting value to be subtracted to the problem optimum when printing the solutions
+    virtual void decreaseLb(Cost shift) = 0;
+    virtual Cost getNegativeLb() const = 0; ///< \brief gets constant term used to subtract to the problem optimum when printing the solutions
     /// \brief computes the worst-case assignment finite cost (sum of maximum finite cost over all cost functions plus one)
     /// \return the worst-case assignment finite cost
     /// \warning current problem should be completely loaded and propagated before calling this function
@@ -419,7 +423,6 @@ public:
 
     virtual void setLb(Cost newLb) = 0; ///< \internal sets problem lower bound
     virtual void setUb(Cost newUb) = 0; ///< \internal sets problem upper bound
-    virtual Cost getNegativeLb() const = 0; ///< \internal manages negative costs in probabilistic inference
     virtual void restoreSolution(Cluster* c = NULL) = 0; ///< \internal restores correct values to eliminated variables when all the variables have been assigned
 
     virtual void buildTreeDecomposition() = 0;

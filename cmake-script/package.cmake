@@ -17,7 +17,7 @@ ENDIF (APPLE)
 
 	MESSAGE(STATUS "#################################")
 	MESSAGE(STATUS " project :${PROJECT_NAME} packaging")
-	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR} FOR UNIX")
+	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR}")
 	MESSAGE(STATUS "#################################")
 
 	SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libgcc1 (>= 1:3.4.2-12), boost (>=1.34.0), xml2, openmpi ")

@@ -60,7 +60,7 @@ crossroad install jemalloc
 crossroad install libxml2
 crossroad install python
 crossroad install pybind11
-crossroad cmake ..
+crossroad cmake -DSTATIC=ON ..
 make
 
 # in advanced mode you can tune your compilation option using:

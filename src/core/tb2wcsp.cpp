@@ -2224,7 +2224,7 @@ void WCSP::postNullaryConstraint(Cost cost)
     if (cost >= MIN_COST) {
         increaseLb(cost);
     } else {
-        decreaseLb(cost);
+        decreaseLb(-cost);
     }
 }
 

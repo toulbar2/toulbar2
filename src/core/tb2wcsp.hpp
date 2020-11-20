@@ -204,7 +204,6 @@ public:
 
     void decreaseLb(Cost cost)
     {
-        assert(cost <= MIN_COST);
         negCost += cost;
     } ///< \internal manages negative costs in probabilistic inference
     Cost getNegativeLb() const { return negCost; } ///< \internal manages negative costs in probabilistic inference
