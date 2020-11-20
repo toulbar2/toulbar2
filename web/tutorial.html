@@ -13,6 +13,23 @@
 
   gtag('config', 'UA-105144714-1');
 </script>
+
+
+
+
+<script>
+function toggle_visibility(id){ // to show/hide element id
+  var e = document.getElementById(id);
+  if (e!=null){
+      if (e.style.display == 'block'){ e.style.display = 'none';
+      } else { e.style.display = 'block'; }
+  }
+}
+</script>
+
+
+
+
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <meta name="Description" content="toulbar2, an open-source cost function network solver" />
   <meta name="Keywords" content="cost function network, weighted constraint satisfaction problem, probabilistic graphical model, combinatorial optimization, exact solver" />
@@ -64,6 +81,33 @@
 <h5>CFN model</h5>
 <p>A solution must have only one queen per column and per row. We create N variables for every column with domain size N to represent the selected row for each queen. A clique of binary constraints is used to express that two queens cannot be on the same row. Forbidden assignments have cost k=N**2+1. Two other cliques of binary constraints are used to express that two queens do not attack each other on a lower/upper diagonal.</p>
 <h5>Example for N=4 in JSON .cfn format</h5>
+
+<p><a href=#queen onclick="toggle_visibility('illustration1');">show/hide more details</a></p>
+<div id="illustration1" class="show_hide" style="display:none;">
+
+<p>4 variables Q0, Q1, Q2, Q3. Forbidden assignments have cost k = 17.<br> A first clique of binary constraints to express that two queens cannot be on the same row.<br> A second and a third cliques of binary constraints to express that two queens do not attack each other on a lower/upper diagonal.</p>
+
+<div style="float: left;">
+<figure><figcaption>(Q0,Q1) constraint (1st clique)</figcaption>
+<img alt="Exemples into cliques" src="IMAGES/queen4_clique1.png" width="100%" height="100%"/>
+</figure>
+</div>
+<div style="float: left;">
+<figure><figcaption>(Q0,Q2) constraint (2nd clique)</figcaption>
+<img alt="Exemples into cliques" src="IMAGES/queen4_clique2.png" width="100%" height="100%"/>
+</figure>
+</div>
+<div style="float: left;">
+<figure><figcaption>(Q0,Q2) constraint (3rd clique)</figcaption>
+<img alt="Exemples into cliques" src="IMAGES/queen4_clique3.png" width="100%" height="100%"/>
+</figure>
+</div>
+<div style="clear:both;"></div>
+
+<p>=> into 1st clique : {scope: ["Q0", "Q1"], "costs": [17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17]}<br> => into 2nd clique : {scope: ["Q0", "Q2"], "costs": [0, 0, 0, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 17, 0, 0]}<br> => into 3rd clique : {scope: ["Q0", "Q2"], "costs": [0, 0, 17, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0]}</p>
+
+</div>
+
 <pre><code contenteditable spellcheck="false">
 {
 	problem: { "name": "4-queen", "mustbe": "<17" },
