@@ -17,7 +17,7 @@ class CFN:
 #        tb2.option.allSolutions = 1000   # find all solutions up to a maximum limit
 
         self.configuration = configuration   # if True then special settings for learning
-	if configuration:
+        if configuration:
             tb2.option.elimDegree_preprocessing = 1   # maximum degree level of variable elimination in preprocessing (-1: none, 0: null degree, 1: degree one, etc.)
             tb2.option.solutionBasedPhaseSaving = False   #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
 
