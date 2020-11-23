@@ -2,21 +2,25 @@ import pytoulbar2 as tb2
 import numbers
 
 class CFN:
-    def __init__(self, ubinit, resolution = 0, vac = 0):
+    def __init__(self, ubinit, resolution = 0, vac = 0, configuration = False):
         tb2.init()
-#        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
+        tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable 
 #        tb2.option.VACthreshold = True  # if True, reuse VAC auto-threshold value found in preprocessing during search 
 #        tb2.option.useRASPS = True   # if True, perform RASPS algorithm in preprocessing to find good initial upperbound (use with VAC and FullEAC)
-        tb2.option.verbose = -1   # verbosity level of toulbar2 (-1:no message, 0:search statistics, 1:search tree, 2-7: propagation information)
-#        tb2.option.weightedTightness = False   # variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
-#        tb2.option.elimDegree_preprocessing = 1   # maximum degree level of variable elimination in preprocessing (-1: none, 0: null degree, 1: degree one, etc.) 
-        tb2.option.showSolutions = 0   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
+#        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
 #        tb2.option.backtrackLimit = 50000   # maximum number of backtracks before restart
-#        tb2.option.solutionBasedPhaseSaving = False #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
-        tb2.option.decimalPoint = resolution   # decimal precision of costs
+#        tb2.option.weightedTightness = False   # variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
+        tb2.option.verbose = -1   # verbosity level of toulbar2 (-1:no message, 0:search statistics, 1:search tree, 2-7: propagation information)
+        tb2.option.showSolutions = 0   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
 #        tb2.option.allSolutions = 1000   # find all solutions up to a maximum limit
+
+        self.configuration = configuration   # if True then special settings for learning
+	if configuration:
+            tb2.option.elimDegree_preprocessing = 1   # maximum degree level of variable elimination in preprocessing (-1: none, 0: null degree, 1: degree one, etc.)
+            tb2.option.solutionBasedPhaseSaving = False   #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
+
         self.Variables = {}
         self.VariableIndices = {}
         self.Scopes = []
@@ -114,7 +118,7 @@ class CFN:
         self.CFN.read(problem)
 
     def Parse(self, certificate):
-        self.CFN.parse_solution(certificate, True)    # if False do not reuse certificate in future searches
+        self.CFN.parse_solution(certificate, False if self.configuration else True)    # WARNING! False: do not reuse certificate in future searches used by structure learning evaluation procedure!
 
     def Domain(self, varIndex):
         return self.CFN.wcsp.getEnumDomain(varIndex)
