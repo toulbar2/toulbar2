@@ -1050,6 +1050,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
     string mpifile;
     string negfile;
+    string negreport;
     while (args.Next()) {
 
         if (args.LastError() == SO_SUCCESS) {
@@ -2120,6 +2121,9 @@ int _tmain(int argc, TCHAR* argv[])
                     donegdesign = true;
 #endif
                     negfile = args.OptionArg();
+                    size_t extpoint = negfile.find_last_of(".");
+                    negreport = negfile.substr(0, extpoint);
+                    negreport+="_negative.txt";
                 } else {
                     cout << "Option --negative-sequences needs a file as argument" << endl;
                     exit(1);
@@ -2146,7 +2150,7 @@ int _tmain(int argc, TCHAR* argv[])
     if (dompi) {
         if (donegdesign) {
             ToulBar2::jobs = new Jobs(mpifile);
-            ToulBar2::sequence_handler = new SequenceHandler(negfile, ToulBar2::jobs->nb_jobs());
+            ToulBar2::sequence_handler = new SequenceHandler(negfile, negreport,ToulBar2::jobs->nb_jobs());
         } else
             ToulBar2::jobs = new BaseJobs(mpifile);
     } else if (donegdesign) {

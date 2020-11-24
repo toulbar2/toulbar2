@@ -7,7 +7,7 @@ using namespace std;
 
 class SequenceHandler {
 public:
-  SequenceHandler(const string &filename, unsigned nb_backbones);
+  SequenceHandler(const string &filename, const string &_reportname, unsigned nb_backbones);
   ~SequenceHandler();
   void read_enum(const string &filename);
   string get_sequence(unsigned sequence_index) { return sequences_[sequence_index]; };
@@ -27,6 +27,7 @@ private:
   vector<unsigned> slavebkb; // backbone affected to each slave (! only accessible by master !)
   Double bestcost; // best cost on all backbones
   unsigned bestsequence; // best sequence on all backbones
+  string reportname; // filename for report
 };
 
 #endif

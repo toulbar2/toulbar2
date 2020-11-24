@@ -7,7 +7,7 @@
 
 using namespace std;
 
-SequenceHandler::SequenceHandler(const string &filename, unsigned nb_backbones)
+SequenceHandler::SequenceHandler(const string &filename, const string &_reportname, unsigned nb_backbones)
 {
   read_enum(filename);
   sequencecosts.resize(sequences_.size());
@@ -19,6 +19,7 @@ SequenceHandler::SequenceHandler(const string &filename, unsigned nb_backbones)
   srand(time(NULL));
   bestcost = -LDBL_MAX;
   bestsequence = UINT_MAX;
+  reportname = _reportname;
 }
 
 SequenceHandler::~SequenceHandler()
@@ -131,7 +132,9 @@ void SequenceHandler::update_sequences(int backbone, unsigned sequence_index, Do
 
 void SequenceHandler::report()
 {
-  cout << "Writing report:" << endl;
+  cout << "Writing report..." << endl;
+  ofstream reportstream;
+  reportstream.open(reportname);
   for(unsigned i=0;i<sequences_.size(); i++)
     {
       Double mincost = LDBL_MAX;
@@ -140,14 +143,16 @@ void SequenceHandler::report()
           if (sequencecosts[i][j] < mincost)
             mincost = sequencecosts[i][j];
         }
-      cout << sequences_[i] << " " << costs_[i]-mincost << endl;
+      reportstream << sequences_[i] << " " << costs_[i]-mincost << endl;
     }
-  cout << "Best candidate sequence for negative design : " << sequences_[bestsequence] << endl;
+  reportstream << "Best candidate sequence for negative design : " << sequences_[bestsequence] << endl;
   if (ToulBar2::diffneg)
     {
-      cout << "Energy : " << bestcost  << endl;
-      cout << "Energy difference with positive states : " << bestcost - costs_[bestsequence] << endl;
+      reportstream << "Energy : " << bestcost  << endl;
+      reportstream << "Energy difference with positive states : " << bestcost - costs_[bestsequence] << endl;
     }
   else
-    cout << "Energy : " << bestcost << endl;
+    reportstream << "Energy : " << bestcost << endl;
+  reportstream.close();
+  cout << "...Done writing report." << endl;
 }
