@@ -137,7 +137,6 @@ void SequenceHandler::report()
       Double mincost = LDBL_MAX;
       for (unsigned j = 0; j < sequencecosts[i].size(); j++)
         {
-          cout << sequencecosts[i][j] << endl;
           if (sequencecosts[i][j] < mincost)
             mincost = sequencecosts[i][j];
         }
