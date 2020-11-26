@@ -8,7 +8,7 @@ class CFN:
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable 
 #        tb2.option.VACthreshold = True  # if True, reuse VAC auto-threshold value found in preprocessing during search 
-#        tb2.option.useRASPS = True   # if True, perform RASPS algorithm in preprocessing to find good initial upperbound (use with VAC and FullEAC)
+#        tb2.option.useRASPS = 1000   # if True, perform RASPS algorithm in preprocessing during 1000 backtracks to find good initial upperbound (use with VAC and FullEAC)
 #        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
 #        tb2.option.backtrackLimit = 50000   # maximum number of backtracks before restart
 #        tb2.option.weightedTightness = False   # variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)

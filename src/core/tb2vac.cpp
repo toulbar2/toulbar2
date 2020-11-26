@@ -229,7 +229,7 @@ bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
 
 bool VACExtension::propagate()
 {
-    if (Store::getDepth() >= abs(ToulBar2::vac)) {
+    if (!ToulBar2::RASPS && Store::getDepth() >= abs(ToulBar2::vac)) {
         inconsistentVariable = -1;
         return false;
     }
@@ -329,7 +329,7 @@ bool VACExtension::propagate()
                     double ratio = (ToulBar2::RASPSnbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RASPSnbStrictACVariables / (double)wcsp->numberOfVariables()) / (double)itThreshold);
                     if (ToulBar2::verbose >= 0) {
                         cout << std::fixed << std::setprecision(7);
-                        cout << "Threshold: " << itThreshold << " NbAssignedVar: " << ToulBar2::RASPSnbStrictACVariables << " Ratio: " << ratio << endl;
+                        cout << "Threshold: " << itThreshold << " NbAssignedVar: " << ToulBar2::RASPSnbStrictACVariables << " Ratio: " << ratio << " SumOfDomainSize: "<< wcsp->getDomainSizeSum() << endl;
                         cout << std::fixed << std::setprecision(DECIMAL_POINT);
                     }
                     ToulBar2::RASPSitThresholds.push_back(std::make_pair(itThreshold, ratio));
