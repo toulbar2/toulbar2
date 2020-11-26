@@ -262,14 +262,26 @@ void TernaryConstraint::print(ostream& os)
 
 void TernaryConstraint::dump(ostream& os, bool original)
 {
-    os << "3 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() * z->getDomainSize() << endl;
+    unsigned int tuples = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
+                    tuples++;
+                }
+            }
+        }
+    }
+    os << "3 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << " " << MIN_COST << " " << tuples << endl;
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
-                os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? z->toIndex(*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
+                    os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? z->toIndex(*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                }
             }
         }
     }

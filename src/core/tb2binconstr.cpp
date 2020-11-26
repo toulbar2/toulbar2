@@ -83,12 +83,22 @@ void BinaryConstraint::print(ostream& os)
 
 void BinaryConstraint::dump(ostream& os, bool original)
 {
-    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() << endl;
+    unsigned int tuples = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            if (getCost(*iterX, *iterY) > MIN_COST) {
+                tuples++;
+            }
+        }
+    }
+    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << MIN_COST << " " << tuples << endl;
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
-            os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
+            if (getCost(*iterX, *iterY) > MIN_COST) {
+                os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
+            }
         }
     }
 }
