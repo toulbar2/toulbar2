@@ -38,7 +38,7 @@ protected:
 
 public:
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
-    EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
+    EnumeratedVariable(WCSP* wcsp, string n, vector<Value>& dom);
 
     bool enumerated() const FINAL { return true; }
 

@@ -118,7 +118,7 @@ inline __float128 Log10(__float128 x) { return log10q(x); }
 inline __float128 Log1p(__float128 x) { return log1pq(x); }
 #endif
 
-#ifdef INT_COST
+#if defined(INT_COST) || defined(SHORT_COST)
 inline double to_double(const int cost)
 {
     return (double)cost;

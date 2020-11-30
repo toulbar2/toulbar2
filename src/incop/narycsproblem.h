@@ -39,8 +39,8 @@ public:
     /* evaluation de la contrainte : recherche dans le tableau des n-uplets */
     /** Constraint Evalution : searching in the tuple table */
     Long constraint_value(Configuration* configuration);
-    int compute_index(int* values, vector<int>* tabdomaines);
-    int compute_indexpart(int i, int vali, vector<int>* tabdomaines);
+    int compute_index(int* values, vector<Value>* tabdomaines);
+    int compute_indexpart(int i, int vali, vector<Value>* tabdomaines);
     /* variables liées par la contraintes */
     /** variables linked by the constraint */
     vector<int> constrainedvariables;
@@ -48,9 +48,9 @@ public:
     /** table of valued tuples */
     vector<Long> tuplevalues;
     vector<int> multiplyers;
-    void compute_indexmultiplyers(vector<int>* tabdomaines);
-    int compute_indexmultiplyer(int i, vector<int>* tabdomaines);
-    int nbtuples(vector<int>* tabdomaines);
+    void compute_indexmultiplyers(vector<Value>* tabdomaines);
+    int compute_indexmultiplyer(int i, vector<Value>* tabdomaines);
+    int nbtuples(vector<Value>* tabdomaines);
 };
 
 /* Variable liée à une contrainte n-aire */
@@ -65,7 +65,7 @@ public:
 INCOP::NaryCSProblem* weighted_narycsp_creation(int nbvar, int nbconst, int maxdomsize,
     vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct);
 
-void wcspdomaines_file_read(WCSP* wcsp, int nbvar, vector<int>* tabdomaines);
+void wcspdomaines_file_read(WCSP* wcsp, int nbvar, vector<Value>* tabdomaines);
 
 int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
-    vector<int>* connexions, vector<int>* tabdomaines);
+    vector<int>* connexions, vector<Value>* tabdomaines);

@@ -24,8 +24,11 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     supportY = vector<Value>(sizeY, x->getInf());
     trwsM = vector<Cost>(max(sizeX, sizeY), MIN_COST);
 
+#ifdef NO_STORE_BINARY_COSTS
+    costs = vector<Cost>((size_t)sizeX * (size_t)sizeY, MIN_COST);
+#else
     costs = vector<StoreCost>((size_t)sizeX * (size_t)sizeY, StoreCost(MIN_COST));
-
+#endif
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];

@@ -13,8 +13,8 @@ VACVariable::VACVariable(WCSP* wcsp, string n, Value iinf, Value isup)
     init();
 }
 
-VACVariable::VACVariable(WCSP* wcsp, string n, Value* d, int dsize)
-    : EnumeratedVariable(wcsp, n, d, dsize)
+VACVariable::VACVariable(WCSP* wcsp, string n, vector<Value>& dom)
+    : EnumeratedVariable(wcsp, n, dom)
     , vac(wcsp->vac)
     , myThreshold(MIN_COST)
 {

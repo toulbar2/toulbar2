@@ -239,6 +239,10 @@ public:
         , linkY(NULL)
         , linkZ(NULL)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        cerr << "Sorry, only binary cost functions!" << endl;
+        exit(EXIT_FAILURE);
+#endif
         assert(xx != yy);
         assert(xx != zz);
         assert(yy != zz);
@@ -472,6 +476,10 @@ public:
         : Constraint(wcsp)
         , arity_(arity_in)
     {
+#if defined(NO_STORE_BINARY_COSTS) || defined(NO_STORE_TERNARY_COSTS)
+        cerr << "Sorry, no " << arity_in << "-ary cost functions!" << endl;
+        exit(EXIT_FAILURE);
+#endif
         scope = new EnumeratedVariable*[arity_];
         scope_dac = new EnumeratedVariable*[arity_];
         links = new DLink<ConstraintLink>*[arity_];

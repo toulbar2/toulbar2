@@ -173,7 +173,7 @@ Cost TreeConstraint::recomputeMST(vector<TreeConstraint::Edge>& edgeList)
     int n = arity();
     Cost treeCost = 0;
 
-    minTreeEdgeCost = INT_MAX;
+    minTreeEdgeCost = std::numeric_limits<Cost>::max();
     maxTreeEdgeCost = 0;
     treeEdge.clear();
     inorder.clear();

@@ -23,7 +23,7 @@ public:
     LocalSearch(Cost initUpperBound);
     ~LocalSearch();
 
-    Cost generateInitSolution(VNSSolutionInitMethod mode, map<int, int>& solutionInit, bool& complete);
+    Cost generateInitSolution(VNSSolutionInitMethod mode, map<int, Value>& solutionInit, bool& complete);
     Cost evaluate_partialInstantiation(vector<int>& variables, vector<Value>& values);
     Cost evaluate_partialInstantiation(map<int, Value>& solution)
     {
@@ -35,8 +35,8 @@ public:
         }
         return evaluate_partialInstantiation(variables, values);
     }
-    bool repair_recursiveSolve(int discrepancy, vector<int>& variables, vector<int>& values, Cost ls_ub = MAX_COST); /// \warning if discrepancy>=0 then explores with LDS else with a complete search
-    bool repair_recursiveSolve(vector<int>& variables, vector<int>& values, Cost ls_ub = MAX_COST) { return repair_recursiveSolve(-1, variables, values, ls_ub); } /// explores with a complete search
+    bool repair_recursiveSolve(int discrepancy, vector<int>& variables, vector<Value>& values, Cost ls_ub = MAX_COST); /// \warning if discrepancy>=0 then explores with LDS else with a complete search
+    bool repair_recursiveSolve(vector<int>& variables, vector<Value>& values, Cost ls_ub = MAX_COST) { return repair_recursiveSolve(-1, variables, values, ls_ub); } /// explores with a complete search
 
     virtual void newSolution();
 };

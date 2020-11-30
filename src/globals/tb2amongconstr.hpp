@@ -74,7 +74,7 @@ public:
     {
         string name = "samong";
         name += "_" + to_string(lb) + "_" + to_string(ub) + "_" + to_string(V.size());
-        for (set<int>::iterator iter = V.begin(); iter != V.end(); ++iter)
+        for (set<Value>::iterator iter = V.begin(); iter != V.end(); ++iter)
             name += "_" + to_string(*iter);
         return name;
     }

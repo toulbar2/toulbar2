@@ -103,7 +103,7 @@ Solver::Solver(Cost initUpperBound)
     , initialDepth(0)
     , prevDivSolutionCost(MIN_COST)
 {
-    searchSize = new StoreCost(MIN_COST);
+    searchSize = new StoreInt(0);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
 }
 
@@ -114,7 +114,7 @@ Solver::~Solver()
     delete unassignedVars;
     delete[] allVars;
     delete wcsp;
-    delete ((StoreCost*)searchSize);
+    delete ((StoreInt*)searchSize);
 }
 
 void Solver::initVarHeuristic()
@@ -845,7 +845,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
         } else if (ToulBar2::vnsKmax > 0) {
             cout << " " << ToulBar2::vnsKcur << " " << ToulBar2::vnsLDScur;
         }
-        cout << " " << Exp(((Cost)(*((StoreCost*)searchSize))) / 10e6);
+        cout << " " << Exp(((int)(*((StoreInt*)searchSize))) / 10e3);
         if (wcsp->getTreeDec())
             cout << " C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
         if (isatty(fileno(stdout)))
@@ -1338,7 +1338,7 @@ void Solver::newSolution()
     } else if (!ToulBar2::btdMode)
         nbSol += 1.;
     if (ToulBar2::isZ) {
-        ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, wcsp->getLb() + wcsp->getNegativeLb());
+        ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, (Cost)(wcsp->getLb() + wcsp->getNegativeLb()));
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
             cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
     }
@@ -1461,7 +1461,7 @@ void Solver::recursiveSolve(Cost lb)
     else
         varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeRandomized() : getVarMinDomainDivMaxDegree());
     if (varIndex >= 0) {
-        *((StoreCost*)searchSize) += ((Cost)(10e6 * Log(wcsp->getDomainSize(varIndex))));
+        *((StoreInt*)searchSize) += ((int)(10e3 * Log(wcsp->getDomainSize(varIndex))));
         if (ToulBar2::bep)
             scheduleOrPostpone(varIndex);
         else if (wcsp->enumerated(varIndex)) {
@@ -1821,7 +1821,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     ToulBar2::lds = 0; // avoid TimeOut exception when new solutions found
     if (ToulBar2::incop_cmd.size() > 0) {
         double incopStartTime = cpuTime();
-        vector<int> bestsol(getWCSP()->numberOfVariables(), 0);
+        vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
             bestsol[i] = (wcsp->canbe(i, wcsp->getBestValue(i)) ? wcsp->getBestValue(i) : wcsp->getSupport(i));
         narycsp(ToulBar2::incop_cmd, bestsol);
@@ -2065,14 +2065,26 @@ bool Solver::solve(bool first)
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
                             if (ToulBar2::useRASPS) {
-                                enforceUb();
-                                wcsp->propagate();
-                                ToulBar2::RASPS = true;
-                                ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RASPSlastitThreshold);
-                                ((WCSP*)wcsp)->vac->propagate(); // VAC done again
-                                ToulBar2::RASPS = false;
-                                if (ToulBar2::verbose >= 0)
-                                    cout << "RASPS done in preprocessing (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
+                                int idthres = ToulBar2::RASPSitThresholds.size() - 1;
+                                Cost lastUb = wcsp->getUb();
+                                do {
+                                    enforceUb();
+                                    wcsp->propagate();
+                                    ToulBar2::RASPS = true;
+                                    ((WCSP*)wcsp)->vac->iniThreshold(ToulBar2::RASPSlastitThreshold);
+                                    ((WCSP*)wcsp)->vac->propagate(); // VAC done again
+                                    ToulBar2::RASPS = false;
+                                    if (ToulBar2::verbose >= 0)
+                                        cout << "RASPS done in preprocessing at threshold " << ToulBar2::RASPSlastitThreshold << " (backtrack: " << nbBacktracks << " nodes: " << nbNodes << ")" << endl;
+                                    while (idthres >= 0) {
+                                        if (ToulBar2::RASPSitThresholds[idthres].first > ToulBar2::RASPSlastitThreshold) {
+                                            ToulBar2::RASPSlastitThreshold = ToulBar2::RASPSitThresholds[idthres].first;
+                                            break;
+                                        } else {
+                                            idthres--;
+                                        }
+                                    }
+                                } while (nbBacktracks < ToulBar2::RASPSnbBacktracks && idthres >= 0 && wcsp->getUb() == lastUb);
                                 enforceUb();
                                 wcsp->propagate();
                                 if (ToulBar2::RASPSreset) {

@@ -639,7 +639,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         return make_pair(bestlb, cub);
     } else {
         // Enumerates cluster proper variables
-        *((StoreCost*)searchSize) += ((Cost)(10e6 * Log(wcsp->getDomainSize(varIndex))));
+        *((StoreInt*)searchSize) += ((int)(10e3 * Log(wcsp->getDomainSize(varIndex))));
         pair<Cost, Cost> res = make_pair(MIN_COST, MAX_COST);
         if (wcsp->enumerated(varIndex)) {
             assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));

@@ -43,6 +43,10 @@ OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX
 OPTION(Boost "boost graph binding [default: on]" ON) 
 OPTION(MPI "MPI [default: off]" OFF)
 OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
+OPTION(SHORT_COSTS  "use short int to encode costs [default:off]" OFF)
+OPTION(BINARYWCSP  "do not store binary costs (only binary WCSP with no variable elimination during search) [default:off]" OFF)
+OPTION(TERNARYWCSP  "do not store ternary costs (only ternary WCSP can be expressed) [default:off]" OFF)
+OPTION(SHORT_VALUES  "use short int to encode domain values instead of int [default:off]" OFF)
 OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
 OPTION(QUAD_PROBABILITY  "use quadmath to encode probabilities [default:off]" OFF)
 OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
@@ -54,7 +58,7 @@ OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 
 MARK_AS_ADVANCED(FORCE BUILD_API_DOC_LATEX)
-MARK_AS_ADVANCED(FORCE CPLEX ILOG XML verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS)
+MARK_AS_ADVANCED(FORCE CPLEX ILOG XML verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS)
 MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS GMP_LIBRARY MPI_LIBRARY MPI_EXTRA_LIBRARY)
 MARK_AS_ADVANCED(FORCE BENCH)
 
@@ -72,7 +76,7 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11" )
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
 #SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
@@ -329,6 +333,8 @@ IF(LIBTB2)
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     )
+ELSE(LIBTB2)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWCSPFORMATONLY" )
 ENDIF(LIBTB2)
 
 ##########################################

@@ -36,7 +36,7 @@ private:
 
 public:
     VACVariable(WCSP* wcsp, string n, Value iinf, Value isup);
-    VACVariable(WCSP* wcsp, string n, Value* d, int dsize);
+    VACVariable(WCSP* wcsp, string n, vector<Value>& dom);
     ~VACVariable();
 
     bool removeVAC(Value v)

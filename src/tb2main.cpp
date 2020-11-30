@@ -1487,7 +1487,11 @@ int _tmain(int argc, TCHAR* argv[])
             } else if (args.OptionId() == OPT_elimDegree and args.OptionArg() != NULL) {
                 int ndegree = -1;
                 ndegree = atol(args.OptionArg());
+#ifdef NO_STORE_BINARY_COSTS
+                if ((ndegree >= 0) && (ndegree <= 1)) {
+#else
                 if ((ndegree >= 0) && (ndegree <= 3)) {
+#endif
                     ToulBar2::elimDegree = ndegree;
                 }
                 if (ToulBar2::debug)

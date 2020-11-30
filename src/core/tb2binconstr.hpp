@@ -33,8 +33,11 @@ protected:
     unsigned int sizeY;
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
+#ifdef NO_STORE_BINARY_COSTS
+    vector<Cost> costs;
+#else
     vector<StoreCost> costs;
-
+#endif
     vector<Value> supportX;
     vector<Value> supportY;
 
@@ -385,7 +388,11 @@ public:
         if (max(sizeX, sizeY) > trwsM.size())
             trwsM.resize(max(sizeX, sizeY), MIN_COST);
         if ((unsigned long)sizeX * (unsigned long)sizeY > costs.size())
+#ifdef NO_STORE_BINARY_COSTS
+            costs.resize((size_t)sizeX * (size_t)sizeY, MIN_COST);
+#else
             costs.resize((size_t)sizeX * (size_t)sizeY, StoreCost(MIN_COST));
+#endif
         linkX->removed = true;
         linkY->removed = true;
         linkX->content.constr = this;
@@ -656,7 +663,11 @@ public:
     void dump(ostream& os, bool original = true);
     void dump_CFN(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY; }
+#ifdef NO_STORE_BINARY_COSTS
+    Long space() const FINAL { return (Long)sizeof(Cost) * sizeX * sizeY; }
+#else
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }
+#endif
 
     friend struct Functor_getCost;
     friend struct Functor_getCostReverse;

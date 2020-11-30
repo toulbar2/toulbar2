@@ -17,18 +17,18 @@ Domain::Domain(Value inf, Value sup)
     init(inf, sup);
 }
 
-Domain::Domain(Value* d, int dsize)
+Domain::Domain(vector<Value>& dom)
     : BTList<Value>(&Store::storeDomain)
-    , initSize(max(d, dsize) - min(d, dsize) + 1)
-    , distanceToZero(min(d, dsize))
+    , initSize(*max_element(dom.begin(), dom.end()) - *min_element(dom.begin(), dom.end()) + 1)
+    , distanceToZero(*min_element(dom.begin(), dom.end()))
 {
-    assert(dsize >= 1);
-    assert(dsize <= MAX_DOMAIN_SIZE);
-    qsort(d, dsize, sizeof(Value), cmpValue);
-    init(d[0], d[dsize - 1]);
+    assert(dom.size() >= 1);
+    assert(dom.size() <= MAX_DOMAIN_SIZE);
+    qsort(&dom[0], dom.size(), sizeof(Value), cmpValue);
+    init(dom[0], dom[dom.size() - 1]);
     int i = 0;
     for (iterator iter = begin(); iter != end(); ++iter) {
-        if (*iter < d[i])
+        if (*iter < dom[i])
             BTList<Value>::erase(&all[toIndex(*iter)], false);
         else
             i++;

@@ -178,8 +178,8 @@ public:
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
     virtual unsigned int medianArity() const = 0; ///< \brief median arity of current cost functions
-    virtual int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
-    virtual int getMaxCurrentDomainSize() const = 0; ///< \brief maximum current domain size found in all variables
+    virtual unsigned int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
+    virtual unsigned int getMaxCurrentDomainSize() const = 0; ///< \brief maximum current domain size found in all variables
     virtual unsigned int getDomainSizeSum() const = 0; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
@@ -221,7 +221,7 @@ public:
     /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
-    virtual int makeEnumeratedVariable(string n, Value* d, int dsize) = 0; ///< \brief create an enumerated variable with its domain values
+    virtual int makeEnumeratedVariable(string n, vector<Value>& dom) = 0; ///< \brief create an enumerated variable with its domain values
     virtual void addValueName(int xIndex, const string& valuename) = 0; ///< \brief add next value name \warning should be called on EnumeratedVariable object as many times as its number of initial domain values
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
     virtual void postNullaryConstraint(Double cost) = 0;

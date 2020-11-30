@@ -211,7 +211,11 @@ protected:
     unsigned int sizeX;
     unsigned int sizeY;
     unsigned int sizeZ;
+#ifdef NO_STORE_TERNARY_COSTS
+    vector<Cost> costs;
+#else
     vector<StoreCost> costs;
+#endif
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
     vector<StoreCost> deltaCostsZ;
@@ -225,8 +229,11 @@ protected:
     vector<pair<Value, Value>> supportX;
     vector<pair<Value, Value>> supportY;
     vector<pair<Value, Value>> supportZ;
+#ifdef NO_STORE_TERNARY_COSTS
+    vector<Cost> costsYZ;
+#else
     vector<StoreCost> costsYZ;
-
+#endif
     inline Value getFunctionX(Value vy, Value vz) const { return functionX[y->toIndex(vy) * sizeZ + z->toIndex(vz)]; }
     inline Value getFunctionY(Value vx, Value vz) const { return functionY[x->toIndex(vx) * sizeZ + z->toIndex(vz)]; }
     inline Value getFunctionZ(Value vx, Value vy) const { return functionZ[x->toIndex(vx) * sizeY + y->toIndex(vy)]; }
@@ -1116,7 +1123,11 @@ public:
         if (sizeZ > supportZ.size())
             supportZ.resize(sizeZ);
         if ((unsigned long)sizeX * (unsigned long)sizeY * (unsigned long)sizeZ > costs.size())
+#ifdef NO_STORE_TERNARY_COSTS
+            costs.resize((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, MIN_COST);
+#else
             costs.resize((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, StoreCost(MIN_COST));
+#endif
         linkX->removed = true;
         linkY->removed = true;
         linkZ->removed = true;
@@ -1141,8 +1152,11 @@ public:
     void dump(ostream& os, bool original = true);
     void dump_CFN(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY * sizeZ; }
+#ifdef NO_STORE_TERNARY_COSTS
+    Long space() const FINAL { return (Long)sizeof(Cost) * sizeX * sizeY * sizeZ; }
+#else
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY * sizeZ; }
-
+#endif
     friend struct Functor_getCostXYZ;
     friend struct Functor_getCostXZY;
     friend struct Functor_getCostYXZ;

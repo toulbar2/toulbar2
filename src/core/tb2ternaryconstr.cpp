@@ -76,7 +76,11 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     yz = yz_;
 
     if (functionalX) {
+#ifdef NO_STORE_TERNARY_COSTS
+        costsYZ = vector<Cost>((size_t)sizeY * (size_t)sizeZ, MIN_COST);
+#else
         costsYZ = vector<StoreCost>((size_t)sizeY * (size_t)sizeZ, StoreCost(MIN_COST));
+#endif
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
                 if (functionX[b * sizeZ + c] != WRONG_VAL)
@@ -85,7 +89,11 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
         }
         //    	costs.free_all();
     } else {
+#ifdef NO_STORE_TERNARY_COSTS
+        costs = vector<Cost>((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, MIN_COST);
+#else
         costs = vector<StoreCost>((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, StoreCost(MIN_COST));
+#endif
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
                 for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {

@@ -26,11 +26,11 @@ EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value iinf, Value isup
     init();
 }
 
-EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, Value* d, int dsize)
-    : Variable(w, n, min(d, dsize), max(d, dsize))
-    , domain(d, dsize)
+EnumeratedVariable::EnumeratedVariable(WCSP* w, string n, vector<Value>& dom)
+    : Variable(w, n, *min_element(dom.begin(), dom.end()), *max_element(dom.begin(), dom.end()))
+    , domain(dom)
     , deltaCost(MIN_COST)
-    , support(min(d, dsize))
+    , support(*min_element(dom.begin(), dom.end()))
     , watchForIncrease(false)
     , watchForDecrease(false)
 {
@@ -1259,7 +1259,9 @@ void EnumeratedVariable::eliminate()
             TernaryConstraint* ternCtr = existTernary();
 
             if (ternCtr) {
+#ifndef NO_STORE_BINARY_COSTS
                 if (!elimVar(ternCtr))
+#endif
                     return;
             } else {
                 if (getDegree() > 2)
@@ -1276,7 +1278,9 @@ void EnumeratedVariable::eliminate()
                     if (xzlink.constr->arity() > 2 || !(xzlink.constr->extension()))
                         return;
 
+#ifndef NO_STORE_BINARY_COSTS
                     if (!elimVar(xylink, xzlink))
+#endif
                         return;
                 } else {
                     BinaryConstraint* xy = (BinaryConstraint*)xylink.constr;

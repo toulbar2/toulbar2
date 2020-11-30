@@ -8,7 +8,7 @@ class CFN:
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable 
 #        tb2.option.VACthreshold = True  # if True, reuse VAC auto-threshold value found in preprocessing during search 
-#        tb2.option.useRASPS = 1000   # if True, perform RASPS algorithm in preprocessing during 1000 backtracks to find good initial upperbound (use with VAC and FullEAC)
+#        tb2.option.useRASPS = 1   # if 1 or greater, perform iterative RASPS depth-first search (or LDS if greater than 1) in preprocessing during 1000 backtracks to find good initial upperbound (use with VAC)
 #        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
 #        tb2.option.backtrackLimit = 50000   # maximum number of backtracks before restart
 #        tb2.option.weightedTightness = False   # variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
@@ -70,7 +70,7 @@ class CFN:
         self.VariableNames.append(name)
         return vIdx
 
-    def AddFunction(self, scope, costs):
+    def AddFunction(self, scope, costs, incremental = False):
         sscope = set(scope)
         if len(scope) != len(sscope):
             raise RuntimeError("Duplicate variable in scope:"+str(scope))
@@ -86,12 +86,14 @@ class CFN:
         if (len(iscope) == 0):
             self.CFN.wcsp.postNullaryConstraint(costs)
         elif (len(iscope) == 1):
-            self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, False)
+            self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
         elif (len(iscope) == 2):
-            self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, False)
+            self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, incremental)
         elif (len(iscope) == 3):
-            self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, False)
+            self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, incremental)
         else:
+            if incremental:
+                raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
             mincost = min(costs)
             maxcost = max(costs)
             self.CFN.wcsp.postNullaryConstraint(mincost)

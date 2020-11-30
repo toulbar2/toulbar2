@@ -49,7 +49,7 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
     Cost cost = MAX_COST;
     complete = false;
     vector<int> dumvariables;
-    vector<int> dumvalues;
+    vector<Value> dumvalues;
     int lds = ToulBar2::lds;
     switch (mode) {
     case LS_INIT_RANDOM:
@@ -114,7 +114,7 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
 }
 
 Cost LocalSearch::evaluate_partialInstantiation(
-    vector<int>& variables, vector<int>& values)
+    vector<int>& variables, vector<Value>& values)
 {
     Cost cost = MAX_COST;
     int storedepth = Store::getDepth();
@@ -130,7 +130,7 @@ Cost LocalSearch::evaluate_partialInstantiation(
     return cost;
 }
 
-bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables, vector<int>& values, Cost ls_ub)
+bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables, vector<Value>& values, Cost ls_ub)
 {
     lastUb = MAX_COST;
     lastSolution.clear();

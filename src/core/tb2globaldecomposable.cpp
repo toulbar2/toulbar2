@@ -297,7 +297,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         string varname = IMPLICIT_VAR_TAG + "WR" + to_string(current_var_number);
         if (ToulBar2::verbose > 1)
             cout << "DEBUG>> wregular q0 index " << q0 << " domain = " << domsize + 1 << endl;
-        int varIdx = wcsp->makeEnumeratedVariable(varname, (Value)0, (Value)domsize); // add q0 variable
+        int varIdx = wcsp->makeEnumeratedVariable(varname, 0, domsize); // add q0 variable
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(varIdx));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
             theVar->addValueName("q" + std::to_string(val));
@@ -327,7 +327,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         string varname = IMPLICIT_VAR_TAG + "WR" + to_string(v + q0);
 
         //        DEBONLY(int theindex =)
-        int theindex = wcsp->makeEnumeratedVariable(varname, (Value)0, (Value)domsize); // add qi variable
+        int theindex = wcsp->makeEnumeratedVariable(varname, 0, domsize); // add qi variable
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(theindex));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
             theVar->addValueName("q" + std::to_string(val));

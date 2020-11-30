@@ -65,7 +65,7 @@ class WCSP FINAL : public WeightedCSP {
     Long nbNodes; ///< current number of calls to propagate method (roughly equal to number of search nodes), used as a time-stamp by Queue methods
     Long nbDEE; ///< number of value removals due to DEE
     Constraint* lastConflictConstr; ///< hook for last conflict variable heuristic
-    int maxdomainsize; ///< maximum initial domain size found in all variables
+    unsigned int maxdomainsize; ///< maximum initial domain size found in all variables
     vector<GlobalConstraint*> globalconstrs; ///< a list of all original global constraints (also inserted in constrs)
     vector<int> delayedNaryCtr; ///< a list of all original nary constraints in extension (also inserted in constrs)
     bool isDelayedNaryCtr; ///< postpone naryctr propagation after all variables have been created
@@ -383,8 +383,8 @@ public:
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
     unsigned int medianDegree() const; ///< \brief median current degree of variables
     unsigned int medianArity() const; ///< \brief median arity of current cost functions
-    int getMaxDomainSize() const { return maxdomainsize; } ///< \brief maximum initial domain size found in all variables
-    int getMaxCurrentDomainSize() const; ///< \brief maximum current domain size found in all variables
+    unsigned int getMaxDomainSize() const { return maxdomainsize; } ///< \brief maximum initial domain size found in all variables
+    unsigned int getMaxCurrentDomainSize() const; ///< \brief maximum current domain size found in all variables
     unsigned int getDomainSizeSum() const; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
@@ -408,7 +408,7 @@ public:
 #endif
 
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
-    int makeEnumeratedVariable(string n, Value* d, int dsize);
+    int makeEnumeratedVariable(string n, vector<Value>& dom);
     void addValueName(int xIndex, const string& name);
     int makeIntervalVariable(string n, Value iinf, Value isup);
 

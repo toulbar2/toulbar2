@@ -109,31 +109,31 @@ ostream& operator<<(ostream& os, vector<T> const& v)
 //    else return y;
 //}
 
-template <class T>
-T min(T* array, int size)
-{
-    assert(size >= 1);
-    T res = array[0];
-    for (int i = 1; i < size; i++) {
-        if (array[i] < res) {
-            res = array[i];
-        }
-    }
-    return res;
-}
+//template <class T>
+//T min(T* array, int size)
+//{
+//    assert(size >= 1);
+//    T res = array[0];
+//    for (int i = 1; i < size; i++) {
+//        if (array[i] < res) {
+//            res = array[i];
+//        }
+//    }
+//    return res;
+//}
 
-template <class T>
-T max(T* array, int size)
-{
-    assert(size >= 1);
-    T res = array[0];
-    for (int i = 1; i < size; i++) {
-        if (array[i] > res) {
-            res = array[i];
-        }
-    }
-    return res;
-}
+//template <class T>
+//T max(T* array, int size)
+//{
+//    assert(size >= 1);
+//    T res = array[0];
+//    for (int i = 1; i < size; i++) {
+//        if (array[i] > res) {
+//            res = array[i];
+//        }
+//    }
+//    return res;
+//}
 
 template <class T>
 inline std::string to_string(const T& t)

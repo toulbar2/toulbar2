@@ -51,8 +51,8 @@ VACExtension::VACExtension(WCSP* w)
     , bneckCF(NULL)
     , bneckCost(MIN_COST)
 {
-    queueP = new stack<pair<int, int>>;
-    queueR = new stack<pair<int, int>>;
+    queueP = new stack<pair<int, Value>>;
+    queueR = new stack<pair<int, Value>>;
 }
 
 VACExtension::~VACExtension()

@@ -41,18 +41,24 @@ const string IMPLICIT_VAR_TAG = "#";
 const string DIVERSE_VAR_TAG = "^";
 
 /// Domain value (can be positive or negative integers)
+#ifdef SHORT_VALUE
+typedef int16_t Value;
+typedef int16_t tValue;
+#else
 typedef int Value;
+typedef int16_t tValue;
+#endif
+
 /// Maximum domain value
-const Value MAX_VAL = (INT_MAX / 2);
+const Value MAX_VAL = (std::numeric_limits<Value>::max() / 2);
 /// Forbidden domain value
-const Value WRONG_VAL = INT_MAX;
+const Value WRONG_VAL = std::numeric_limits<Value>::max();
 /// Minimum domain value
-const Value MIN_VAL = -(INT_MAX / 2);
+const Value MIN_VAL = -(std::numeric_limits<Value>::max() / 2);
 /// Maximum domain size
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
 const Value MAX_DOMAIN_SIZE = 2000;
 
-typedef short int tValue;
 typedef vector<tValue> Tuple;
 
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
@@ -63,6 +69,79 @@ const int MAX_BRANCH_SIZE = 1000000;
 const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
 const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
 
+#ifdef SHORT_COST
+const bool PARTIALORDER = false;
+typedef int16_t Cost;
+const Cost MIN_COST = short{0};
+const Cost UNIT_COST = short{1};
+const Cost SMALL_COST = short{1};
+const Cost MEDIUM_COST = short{3};
+const Cost LARGE_COST = short{100};
+const Cost MAX_COST = (std::numeric_limits<Cost>::max() / MEDIUM_COST);
+//inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
+//inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
+//inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
+
+//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
+inline int16_t min(int16_t x, int y) {
+    if (x < y) return x;
+    else return y;
+}
+inline int16_t min(int x, int16_t y) {
+    if (x < y) return x;
+    else return y;
+}
+inline int16_t max(int16_t x, int y) {
+    if (x > y) return x;
+    else return y;
+}
+inline int16_t max(int x, int16_t y) {
+    if (x > y) return x;
+    else return y;
+}
+
+inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MAX(Cost a, Cost b) { return max(a, b); }
+inline Cost MULT(Cost a, double b)
+{
+    assert(b < MAX_COST);
+    if (a >= MAX_COST)
+        return MAX_COST;
+    else if (b <= UNIT_COST)
+        return a * b;
+    else if (a < MAX_COST / b)
+        return a * b;
+    else {
+        cerr << "Error: cost multiplication overflow!" << endl;
+        exit(1);
+    }
+}
+inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
+inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
+inline bool GLB(Cost* a, Cost b)
+{
+    if (b < *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool LUB(Cost* a, Cost b)
+{
+    if (b > *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool GLBTEST(Cost a, Cost b) { return (b < a); }
+inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
+inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
+inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
+inline bool SUPPORTTEST(Cost a) { return false; }
+inline void initCosts() {}
+#endif
+
 #ifdef INT_COST
 const bool PARTIALORDER = false;
 typedef int Cost;
@@ -71,10 +150,11 @@ const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
-const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
+const Cost MAX_COST = ((std::numeric_limits<Cost>::max()/2) / MEDIUM_COST / MEDIUM_COST);
 //inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
 //inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
 //inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
+
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
@@ -600,7 +680,7 @@ public:
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
 };
 
-#ifdef INT_COST
+#if defined(INT_COST) || defined(SHORT_COST)
 inline Cost rounding(Cost lb)
 {
     return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);

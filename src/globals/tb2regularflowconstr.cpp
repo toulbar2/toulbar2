@@ -154,7 +154,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
     for (int i = 0; i < nstate; i++) {
         for (vector<pair<int, int>>::iterator it = dfa.transition[i].begin();
              it != dfa.transition[i].end(); it++) {
-            for (set<int>::iterator jt = sigma.begin();
+            for (set<Value>::iterator jt = sigma.begin();
                  jt != sigma.end(); jt++) {
                 if (costTb[i].find(*jt) != costTb[i].end())
                     costTb[i][*jt].insert(make_pair((int)it->second, (Cost)subdef));
@@ -174,7 +174,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
                  it != dfa.transition[i].end(); it++) {
                 costTb[i][epsilonChar][it->second] = insdef;
             }
-            for (set<int>::iterator jt = sigma.begin();
+            for (set<Value>::iterator jt = sigma.begin();
                  jt != sigma.end(); jt++) {
                 map<int, Cost>::iterator pos = costTb[i][*jt].find(i);
                 if (pos == costTb[i][*jt].end()) {

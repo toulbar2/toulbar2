@@ -42,6 +42,9 @@
 
 int Store::depth = 0;
 StoreStack<BTList<Value>, DLink<Value>*> Store::storeDomain(STORE_SIZE);
+#ifdef SHORT_VALUE
+StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
+#endif
 StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
 StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
 StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
@@ -267,7 +270,11 @@ void tb2init()
     ToulBar2::allSolutions = 0;
     ToulBar2::dumpWCSP = 0;
     ToulBar2::approximateCountingBTD = false;
+#ifdef NO_STORE_BINARY_COSTS
+    ToulBar2::elimDegree = 1;
+#else
     ToulBar2::elimDegree = 3;
+#endif
     ToulBar2::elimDegree_preprocessing = -1;
     ToulBar2::elimDegree_ = -1;
     ToulBar2::elimDegree_preprocessing_ = -1;
@@ -536,8 +543,8 @@ void tb2checkOptions()
         cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -vacint option)." << endl;
         exit(1);
     }
-    if (ToulBar2::FullEAC && ToulBar2::LcLevel != LC_EDAC) { /// \warning VAC-integral assumes EAC supports
-        cerr << "Error: VAC-based variable ordering heuristic requires EDAC local consistency (select EDAC using -k option)." << endl;
+    if (ToulBar2::FullEAC && ToulBar2::LcLevel != LC_EDAC && !ToulBar2::vac) { /// \warning VAC-integral assumes EAC supports
+        cerr << "Error: VAC-based variable ordering heuristic requires either EDAC local consistency or VAC (select EDAC using -k option or VAC using -A)." << endl;
         exit(1);
     }
     if (ToulBar2::useRASPS && ToulBar2::btdMode >= 1) {
@@ -663,29 +670,30 @@ WeightedCSP* WeightedCSP::makeWeightedCSP(Cost upperBound, void* solver)
 /// \brief create an enumerated variable with its domain bounds
 int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
 {
+    assert(isup >= iinf);
     EnumeratedVariable* x;
     if (!ToulBar2::vac) {
         x = new EnumeratedVariable(this, n, iinf, isup);
     } else {
         x = new VACVariable(this, n, iinf, isup);
     }
-    if (maxdomainsize < isup - iinf + 1)
+    if ((int)maxdomainsize < isup - iinf + 1)
         maxdomainsize = isup - iinf + 1;
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     return x->wcspIndex;
 }
 
 /// \brief create an enumerated variable with its domain values
-int WCSP::makeEnumeratedVariable(string n, Value* d, int dsize)
+int WCSP::makeEnumeratedVariable(string n, vector<Value>& dom)
 {
     EnumeratedVariable* x;
     if (!ToulBar2::vac) {
-        x = new EnumeratedVariable(this, n, d, dsize);
+        x = new EnumeratedVariable(this, n, dom);
     } else {
-        x = new VACVariable(this, n, d, dsize);
+        x = new VACVariable(this, n, dom);
     }
-    if (maxdomainsize < dsize)
-        maxdomainsize = dsize;
+    if (maxdomainsize < dom.size())
+        maxdomainsize = dom.size();
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     return x->wcspIndex;
 }
@@ -707,7 +715,7 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
         ToulBar2::minsumDiffusion = 0;
     }
     IntervalVariable* x = new IntervalVariable(this, n, iinf, isup);
-    if (maxdomainsize < isup - iinf + 1)
+    if ((int)maxdomainsize < isup - iinf + 1)
         maxdomainsize = isup - iinf + 1;
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     return x->wcspIndex;
@@ -1896,7 +1904,7 @@ int WCSP::postWAmong(int* scopeIndex, int arity, const string& semantics, const 
 #endif
     if (propagator == "network") {
         string semantics_ = semantics;
-        int* values_ = (int*)&values[0];
+        Value* values_ = (Value*)&values[0];
         postWAmong(scopeIndex, arity, semantics_, baseCost, values_, values.size(), lb, ub);
         return INT_MIN;
     }
@@ -2914,12 +2922,12 @@ void WCSP::setInfiniteCost()
     }
 }
 
-int WCSP::getMaxCurrentDomainSize() const
+unsigned int WCSP::getMaxCurrentDomainSize() const
 {
-    int max = (vars.size() > 0) ? 1 : 0;
+    unsigned int max = (vars.size() > 0) ? 1 : 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->unassigned()) {
-            int sz = vars[i]->getDomainSize();
+            unsigned int sz = vars[i]->getDomainSize();
             if (sz > max)
                 max = sz;
         }
