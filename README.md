@@ -94,7 +94,7 @@ Commands for compiling the Python API on Linux/MacOS with cmake (Python module i
     cmake -DPYTB2=ON ..
     make
 
-Move the cpython library and the experimental [CFN.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/CFN.py) python class wrapper in the folder of the python script that does "import pytoulbar2, CFN".
+Move the cpython library and the experimental [CFN.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/CFN.py) python class wrapper in the folder of the python script that does "import CFN".
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
