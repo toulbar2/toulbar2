@@ -235,8 +235,10 @@ bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
 
 bool ToulBar2::bilevel;
+Cost ToulBar2::bilevelShiftP1;
 Cost ToulBar2::bilevelShiftP2;
 Cost ToulBar2::bilevelShiftNegP2;
+Cost ToulBar2::initialLbP1;
 Cost ToulBar2::initialLbP2;
 Cost ToulBar2::initialLbNegP2;
 
@@ -427,8 +429,10 @@ void tb2init()
     ToulBar2::verifiedOptimum = MAX_COST;
 
     ToulBar2::bilevel = false;
+    ToulBar2::bilevelShiftP1 = MIN_COST;
     ToulBar2::bilevelShiftP2 = MIN_COST;
     ToulBar2::bilevelShiftNegP2 = MIN_COST;
+    ToulBar2::initialLbP1 = MIN_COST;
     ToulBar2::initialLbP2 = MIN_COST;
     ToulBar2::initialLbNegP2 = MIN_COST;
 }

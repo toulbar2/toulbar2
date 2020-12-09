@@ -295,8 +295,9 @@ void Variable::projectLB(Cost cost)
     }
     if (ToulBar2::bilevel && Store::getDepth() == 0) { // update Problem2 or NegProblem2 initial lower bound if needed
         char cluster = getName().back();
-        if (cluster=='1') ToulBar2::initialLbP2 += cost;
-        else if (cluster=='2') ToulBar2::initialLbNegP2 += cost;
+        if (cluster=='1') ToulBar2::initialLbP1 += cost;
+        else if (cluster=='2') ToulBar2::initialLbP2 += cost;
+        else if (cluster=='3') ToulBar2::initialLbNegP2 += cost;
     }
 }
 

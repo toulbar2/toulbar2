@@ -1860,8 +1860,10 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
         wcsp->buildTreeDecomposition();
         if (ToulBar2::bilevel) {
-            Cluster *problem1 = wcsp->getTreeDec()->getRoot();
-            auto iter = problem1->beginEdges();
+            Cluster *problem0 = wcsp->getTreeDec()->getRoot();
+            auto iter = problem0->beginEdges();
+            Cluster *problem1 = *iter;
+            ++iter;
             Cluster *problem2 = *iter;
             ++iter;
             Cluster *negproblem2 = *iter;
@@ -1870,7 +1872,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             // propagate (partially) channeling constraints between Problem1 and NegProblem2 only
             for (unsigned int i=0; i < ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
                 BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
-                if (ctr->getVar(0)->getName().back() == '2' || ctr->getVar(1)->getName().back() == '2') {
+                if (ctr->getVar(0)->getName().back() == '1' || ctr->getVar(1)->getName().back() == '1' || ctr->getVar(0)->getName().back() == '3' || ctr->getVar(1)->getName().back() == '3') {
                     ctr->reconnect();
                     ctr->assignCluster();
                     ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds
@@ -2056,14 +2058,16 @@ bool Solver::solve(bool first)
                                             wcsp->propagate();
                                             initialDepth = Store::getDepth();
                                             if (ToulBar2::bilevel && ToulBar2::verbose >= 0) {
-                                                Cluster *problem1 = td->getRoot();
-                                                auto iter = problem1->beginEdges();
+                                                Cluster *problem0 = td->getRoot();
+                                                auto iter = problem0->beginEdges();
+                                                Cluster *problem1 = *iter;
+                                                ++iter;
                                                 Cluster *problem2 = *iter;
                                                 ++iter;
                                                 Cluster *negproblem2 = *iter;
                                                 assert(problem2->getLb() == MIN_COST);
                                                 assert(problem2->getCurrentDeltaUb() == MIN_COST);
-                                                Cost lbP1 = problem1->getLb() - ToulBar2::initialLbNegP2 - negproblem2->getCurrentDeltaLb();
+                                                Cost lbP1 = problem0->getLb() + problem1->getLb() - ToulBar2::initialLbNegP2 - negproblem2->getCurrentDeltaLb();
                                                 Cost lbP2 = ToulBar2::initialLbP2;
                                                 Cost lbNegP2 = negproblem2->getLb() + ToulBar2::initialLbNegP2 + negproblem2->getCurrentDeltaLb();
 //                                                cout << "Current lb: " << wcsp->getLb() << endl;

@@ -486,20 +486,22 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
 // Maintains the best (monotonically increasing) lower bound of the cluster in parameter lbgood
 
 /// \defgroup bilevel Bi-level optimization
-/// Our goal is to minimize Problem1 - Problem2
-/// We assume a tree decomposition with three clusters: root cluster 0 is Problem1, left child cluster 1 is Problem2, and right child cluster 2 is NegProblem2 (i.e., -Problem2)
+/// Our goal is to minimize Problem0 + Problem1 - Problem2
+/// We assume a tree decomposition with four clusters: root cluster 0 is Problem0, left child cluster 1 is Problem1, middle child cluster 2 is Problem2, and right child cluster 3 is NegProblem2 (i.e., -Problem2)
 /// For each child cluster, we have:
-/// - an initial lower bound computed in preprocessing (see \ref Toulbar2::initialLbP2 and \ref Toulbar2::initialLbNegP2)
-/// - a shifting cost value in order to deal with non negative costs only (see \ref ToulBar2::bilevelShiftP2 and \ref ToulBar2::bilevelShiftNegP2)
+/// - an initial lower bound computed in preprocessing (see ToulBar2::initialLbP2 and \ref Toulbar2::initialLbP2 and \ref Toulbar2::initialLbNegP2)
+/// - a shifting cost value in order to deal with non negative costs only (see Toulbar2::bilevelShiftP1 and \ref ToulBar2::bilevelShiftP2 and \ref ToulBar2::bilevelShiftNegP2)
 ///
 /// We maintain the following properties during search:
-/// - bilevelShiftP1 = wcsp->getNegativeLb() - Toulbar2::initialLbP2 - \ref Toulbar2::initialLbNegP2
-/// - deltaNegP2 = lower bound on costs that has been moved from NegProblem2 to Problem1 by soft local consistencies
-/// - cluster0.lb <= Problem1 + initialLbNegP2 + deltaNegP2 + bilevelShiftP1 + bilevelShiftP2
-/// - cluster1.lb <= Problem2 + bilevelShiftP2 - initialLbP2
-/// - cluster2.lb <= -Problem2 + bilevelShiftNegP2 - initialLbNegP2 - deltaNegP2
+/// - bilevelShiftP0 = wcsp->getNegativeLb() - ToulBar2::initialLbP1 - Toulbar2::initialLbP2 - \ref Toulbar2::initialLbNegP2
+/// - deltaP1 = upper bound on costs that have been moved from Problem1 to Problem0 by soft local consistencies
+/// - deltaNegP2 = lower bound on costs that has been moved from NegProblem2 to Problem0 by soft local consistencies
+/// - cluster0.lb <= Problem0 + initialLbNegP2 + deltaNegP2 + bilevelShiftP0 + bilevelShiftP1 + bilevelShiftP2
+/// - cluster1.lb <= Problem1 - deltaP1 + bilevelShiftP1 -initialLbP1
+/// - cluster2.lb <= Problem2 + bilevelShiftP2 - initialLbP2
+/// - cluster3.lb <= -Problem2 + bilevelShiftNegP2 - initialLbNegP2 - deltaNegP2
 /// Thus, during search in root cluster, we always have:
-/// - wcsp->getLb() = cluster0.lb + cluster2.lb <= Problem1 - Problem2  + bilevelShiftP1 + bilevelShiftP2 + bilevelShiftNegP2 <= wcsp->getUb()
+/// - wcsp->getLb() = cluster0.lb + cluster1.lb + cluster3.lb <= Problem0 + Problem1 -Problem2 + bilevelShiftP0 + bilevelShiftP1 + bilevelShiftP2 + bilevelShiftNegP2 <= wcsp->getUb()
 /// - wcsp->getLb() = cluster0.lb + cluster2.lb <= Problem1 - Problem2  + wcsp->getNegativeLb() <= wcsp->getUb()
 pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
 {
@@ -529,7 +531,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             // Solves each cluster son with local lower and upper bounds
             Cluster* c = *iter;
             ++iter;
-            if (ToulBar2::bilevel && c != *cluster->beginEdges()) continue; // skip the right cluster NegProblem2, keep only left cluster Problem2
+            if (ToulBar2::bilevel && c == *cluster->rbeginEdges()) continue; // skip the right cluster NegProblem2, keep only left cluster Problem2
             Cost lbSon = MIN_COST;
             Cost ubSon = MAX_COST;
             bool good = false;
@@ -562,25 +564,31 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     // TODO: compute better initial bounds for Problem2
                     Cost bestP2 = MIN_COST;
                     if (ToulBar2::bilevel) {
-                        // initialize current bounds for Problem2
-                        Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
-                        Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
-                        Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
-                        ubSon = ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
-                        lbSon = MIN_COST;
-                        bestP2 = max(MIN_COST, lbP1 + ToulBar2::bilevelShiftNegP2 - cub);
-                        if (ToulBar2::verbose>=2 && bestP2>MIN_COST) cout << "bestP2: " << bestP2 << endl;
-                        wcsp->setUb(ubSon);
-                        wcsp->setLb(MIN_COST);
+                        if (c == *cluster->beginEdges()) { // initialize current bounds for Problem1
+                            wcsp->setUb(ubSon);
+                            wcsp->setLb(lbSon);
+                        } else { // initialize current bounds for Problem2
+                            assert(c != *cluster->rbeginEdges());
+                            //TODO
+                            Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
+                            Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
+                            Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
+                            ubSon = ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
+                            lbSon = MIN_COST;
+                            bestP2 = max(MIN_COST, lbP1 + ToulBar2::bilevelShiftNegP2 - cub);
+                            if (ToulBar2::verbose>=2 && bestP2>MIN_COST) cout << "bestP2: " << bestP2 << endl;
+                            wcsp->setUb(ubSon);
+                            wcsp->setLb(MIN_COST);
+                        }
                     }
                     try {
                         Store::store();
                         wcsp->enforceUb();
-                        if (ToulBar2::bilevel) {
+                        if (ToulBar2::bilevel && c != *cluster->beginEdges()) {
                             // add channeling constraints between Problem1 and Problem2
                             for (unsigned int i=0; i< ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
                                 BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
-                                if (ctr->getVar(0)->getName().back() == '1' || ctr->getVar(1)->getName().back() == '1') {
+                                if (ctr->getVar(0)->getName().back() == '2' || ctr->getVar(1)->getName().back() == '2') {
                                     static vector<Cost> costs;
                                     costs.resize(((EnumeratedVariable *)ctr->getVar(0))->getDomainInitSize()*((EnumeratedVariable *)ctr->getVar(1))->getDomainInitSize(), MIN_COST);
                                     int incbin = wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs);
@@ -605,16 +613,18 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
                         Long nbBtAfter = nbBacktracks;
                         assert(res.first >= bestlb && res.second <= ubSon);
-                        if (ToulBar2::verbose && res.second<bestP2 && nbBtAfter > nbBtBefore) cout << "Find better solution " << res.second << " than needed " << bestP2 << " for Problem2!" << endl;
+                        if (ToulBar2::verbose && c != *cluster->beginEdges() && res.second<bestP2 && nbBtAfter > nbBtBefore) cout << "Find better solution " << res.second << " than needed " << bestP2 << " for Problem2!" << endl;
                         c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
                         if (ToulBar2::bilevel) {
-                            assert(res.first == res.second); // Problem2 must be solved to optimality
-                            assert(c->getCurrentDeltaUb() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
-                            // Compute new global upper bound for Problem1 + NegProblem2
-                            csol = cluster->getLb() - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDeltaLb() - res.first - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
-                            clb = csol;
-                            Store::restore();
-                            break;
+                            assert(res.first == res.second); // Problem 1 && Problem2 must be solved to optimality
+                            if (c == *cluster->beginEdges()){ // Problem1 solved
+//TODO
+                            } else { // Problem1 & Problem2 solved
+                                csol = cluster->getLb() + (*cluster->beginEdges())->getLbRec() - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDeltaLb() - res.first - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                                clb = csol;
+                                Store::restore();
+                                break;
+                            }
                         }
                         clb += res.first - lbSon;
                         if (csol < MAX_COST) {
@@ -641,9 +651,9 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     }
                 }
             } else {
-                if (ToulBar2::bilevel) {
+                if (ToulBar2::bilevel && c != *cluster->beginEdges() && c != *cluster->rbeginEdges()) {
                     // Problem2 has been already solved
-                    csol = (cluster->getLb() - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDeltaLb()) - lbSon  - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                    csol = (cluster->getLb() + (*cluster->beginEdges())->getLbRec() - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDeltaLb()) - lbSon  - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
                     clb = csol;
                 }
             }

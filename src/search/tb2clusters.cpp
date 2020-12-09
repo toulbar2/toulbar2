@@ -791,8 +791,9 @@ void Cluster::getSolution(TAssign& sol)
         }
     }
     for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
-        if (ToulBar2::bilevel && iter != beginEdges()) break; // do not reconstruct solution for NegProblem2
+//        if (ToulBar2::bilevel && iter = rbeginEdges()) break; // do not reconstruct solution for NegProblem2
         Cluster* cluster = *iter;
+        if (ToulBar2::bilevel && cluster == *rbeginEdges()) break;
         cluster->getSolution(sol);
     }
 }

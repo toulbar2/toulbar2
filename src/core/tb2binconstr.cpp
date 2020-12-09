@@ -32,7 +32,7 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
 
     if (ToulBar2::bilevel && xx->getName().back() != yy->getName().back()) {
         // detect channeling constraints between Problem1 and Problem2 or NegProblem2 and postpone their propagation
-        assert(xx->getName().back() == '0' || yy->getName().back() == '0'); // channeling constraints must be between root cluster and left/right child cluster
+        assert(xx->getName().back() == '0' || yy->getName().back() == '0'); // channeling constraints must be between root cluster and left/middel/right child cluster
         deconnect(true);
         wcsp->delayedBilevelCtr.push_back(wcspIndex);
     } else {

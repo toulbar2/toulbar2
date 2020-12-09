@@ -1205,8 +1205,9 @@ void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost, const 
     wcsp->increaseLb(zeroAryCost);
     if (ToulBar2::bilevel && Store::getDepth() == 0) { // update Problem2 or NegProblem2 initial lower bound if needed
         char cluster =  funcName.back();
-        if (cluster=='1') ToulBar2::initialLbP2 += zeroAryCost;
-        else if (cluster=='2') ToulBar2::initialLbNegP2 += zeroAryCost;
+        if (cluster=='1') ToulBar2::initialLbP1 += zeroAryCost;
+        else if (cluster=='2') ToulBar2::initialLbP2 += zeroAryCost;
+        else if (cluster=='3') ToulBar2::initialLbNegP2 += zeroAryCost;
     }
     skipCBrace(); // read final function CBrace
 }
