@@ -57,10 +57,9 @@ args = parser.parse_args()
 # pour l'instant, on veut D <= d <= 26
 min_cost = -10
 max_cost = 10
-mustbe = "<1000"
-top = 1000
-
 n = args.nvar
+top = max(abs(min_cost), abs(max_cost)) * (2*n + 4*n^2)
+mustbe = f'<{top}'
 d = args.domainsize
 D = args.ntype
 if D > 26:
@@ -78,7 +77,12 @@ def generate_cfn(name, mustbe, n, d, D):
     #Variables
     cfn["variables"] = OrderedDict()
     for i in range(n):
-        cfn["variables"][f'V{i}'] = [f'{type[np.random.randint(D)]}{j}' for j in range(d)]
+        cfn["variables"][f'V{i}'] = []
+        for t in range(D):
+            for j in range(int(d/D)):
+                cfn["variables"][f'V{i}'].append(f'{type[t]}{t*int(d/D)+j}')
+        for j in range(d%D):
+            cfn["variables"][f'V{i}'].append(f'{type[np.random.randint(D)]}{D*int(d/D) + j}')
     #Functions
     cfn["functions"] = OrderedDict()
     ##Unary
@@ -149,7 +153,7 @@ def write_cov(filename):
     f = open(filename, 'w')
     f.write(f'0 -1 {range_to_str(0,n)}\n')
     f.write(f'1 0 {range_to_str(0,n)} {range_to_str(n, 2*n)}\n')
-    f.write(f'1 0 {range_to_str(0,n)} {range_to_str(2*n, 3*n)}')
+    f.write(f'2 0 {range_to_str(0,n)} {range_to_str(2*n, 3*n)}')
     f.close()
 
 

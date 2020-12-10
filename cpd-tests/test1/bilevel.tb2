@@ -1,0 +1,71 @@
+c ../../toulbar2  version : 1.0.1-160-g398e5d3f-bilevel-tainted (1607626103), copyright (c) 2006-2020, toulbar2 team
+loading gzip'd cfn file: bilevel.cfn.gz
+loading tree decomposition in file: bilevel.cov
+Read 20 variables, with 8 values at most, and 75 cost functions, with maximum arity 2 (shifting value: 406000).
+Reverse DAC dual bound: -282.000 (+4.032%)
+Preprocessing time: 0.003 seconds.
+20 unassigned variables, 140 values in all current domains (med. size:8, max size:8) and 30 non-unary cost functions (med. arity:2, med. degree:4)
+Initial lower and upper bounds: [-282.000, 422.000] 166.825%
+Tree decomposition width  : 9
+Tree decomposition height : 10
+Number of clusters         : 4
+Tree decomposition time: 0.000 seconds.
+WCSPGETLB 220000
+InitialLbP1 33000
+InitialLbP2 47000
+InitialLbNegP2 44000
+problem0->getLb() 220000
+problem1->getLb() 0
+Current lb: 220000
+Problem0 lb: 0
+NegProblem2 lb: 0
+NegProblem2 delta lb: 0
+Initial lower bound for Problem1: -110.000
+Initial lower bound for Problem2: -95.000
+Initial upper bound for Problem2: 76.000
+Initial lower bound for Problem1-Problem2: -186.000
+New solution: -88.000 (10 backtracks, 17 nodes, depth 7)
+Optimality gap: [-181.000, -88.000] 51.381 % (322 backtracks, 534 nodes)
+Optimality gap: [-177.000, -88.000] 50.282 % (709 backtracks, 1073 nodes)
+Optimality gap: [-152.000, -88.000] 42.105 % (1229 backtracks, 1819 nodes)
+Optimality gap: [-147.000, -88.000] 40.136 % (1348 backtracks, 2002 nodes)
+Optimality gap: [-145.000, -88.000] 39.310 % (1385 backtracks, 2056 nodes)
+Optimality gap: [-114.000, -88.000] 22.807 % (1445 backtracks, 2137 nodes)
+Optimum: -88.000 in 1457 backtracks and 2155 nodes and 0.027 seconds.
+end.
+c ../../toulbar2  version : 1.0.1-160-g398e5d3f-bilevel-tainted (1607626103), copyright (c) 2006-2020, toulbar2 team
+loading gzip'd cfn file: bilevel.cfn.gz
+loading tree decomposition in file: bilevel.cov
+Read 20 variables, with 8 values at most, and 75 cost functions, with maximum arity 2 (shifting value: 406000).
+Reverse DAC dual bound: -282.000 (+4.032%)
+Preprocessing time: 0.004 seconds.
+20 unassigned variables, 140 values in all current domains (med. size:8, max size:8) and 30 non-unary cost functions (med. arity:2, med. degree:4)
+Initial lower and upper bounds: [-282.000, 422.000] 166.825%
+Tree decomposition width  : 9
+Tree decomposition height : 10
+Number of clusters         : 4
+Tree decomposition time: 0.000 seconds.
+WCSPGETLB 220000
+InitialLbP1 33000
+InitialLbP2 47000
+InitialLbNegP2 44000
+problem0->getLb() 220000
+problem1->getLb() 0
+Current lb: 220000
+Problem0 lb: 0
+NegProblem2 lb: 0
+NegProblem2 delta lb: 0
+Initial lower bound for Problem1: -110.000
+Initial lower bound for Problem2: -95.000
+Initial upper bound for Problem2: 76.000
+Initial lower bound for Problem1-Problem2: -186.000
+New solution: -88.000 (10 backtracks, 17 nodes, depth 7)
+2 1 3 2 2 7 4 3 6 6 6 4 3 6 6 0 0 0 0 0
+Optimality gap: [-181.000, -88.000] 51.381 % (322 backtracks, 534 nodes)
+Optimality gap: [-177.000, -88.000] 50.282 % (709 backtracks, 1073 nodes)
+Optimality gap: [-152.000, -88.000] 42.105 % (1229 backtracks, 1819 nodes)
+Optimality gap: [-147.000, -88.000] 40.136 % (1348 backtracks, 2002 nodes)
+Optimality gap: [-145.000, -88.000] 39.310 % (1385 backtracks, 2056 nodes)
+Optimality gap: [-114.000, -88.000] 22.807 % (1445 backtracks, 2137 nodes)
+Optimum: -88.000 in 1457 backtracks and 2155 nodes and 0.034 seconds.
+end.

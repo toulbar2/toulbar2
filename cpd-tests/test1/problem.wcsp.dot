@@ -1,0 +1,14 @@
+ graph graphname {
+ 
+// number of constraint = 10 number of variable=  5
+V0 -- V1 [len= 10171.9];
+V0 -- V2 [len= 6843.75];
+V0 -- V3 [len= 9937.5];
+V0 -- V4 [len= 10375];
+V1 -- V2 [len= 9984.38];
+V1 -- V3 [len= 10109.4];
+V1 -- V4 [len= 8281.25];
+V2 -- V3 [len= 9468.75];
+V2 -- V4 [len= 9187.5];
+V3 -- V4 [len= 9312.5];
+}
