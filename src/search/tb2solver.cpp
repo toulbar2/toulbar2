@@ -1868,7 +1868,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             ++iter;
             Cluster *negproblem2 = *iter;
             //problem2.isused = false //FIXME???
-            problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching in Problem1
+            problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem 0 
             // propagate (partially) channeling constraints between Problem1 and NegProblem2 only
             for (unsigned int i=0; i < ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
                 BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
@@ -2071,7 +2071,7 @@ bool Solver::solve(bool first)
                                                 Cost lbP2 = ToulBar2::initialLbP2;
                                                 Cost lbNegP2 = negproblem2->getLb() + ToulBar2::initialLbNegP2 + negproblem2->getCurrentDeltaLb();
 //                                                cout << "Current lb: " << wcsp->getLb() << endl;
-//                                                cout << "Problem1 lb: " << problem1->getLb() << endl;
+//                                                cout << "Problem0 lb: " << problem1->getLb() << endl;
 //                                                cout << "NegProblem2 lb: " << negproblem2->getLb() << endl;
 //                                                cout << "NegProblem2 delta lb: " << negproblem2->getCurrentDeltaLb() << endl;
                                                 cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(lbP1 - (wcsp->getNegativeLb() - ToulBar2::bilevelShiftNegP2)) << endl;

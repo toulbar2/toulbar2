@@ -538,18 +538,22 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             if (!c->isActive()) {
                 c->reactivate();
                 c->nogoodGet(lbSon, ubSon, &c->open);
-                assert(!ToulBar2::bilevel || (lbSon == MIN_COST && ubSon == MAX_COST) || lbSon == ubSon);
+                //assert(!ToulBar2::bilevel || (lbSon == MIN_COST && ubSon == MAX_COST) || lbSon == ubSon);
                 good = true;
             } else {
-                assert(!ToulBar2::bilevel);
-                lbSon = c->getLbRec();
-                ubSon = c->getUb();
+                if (!ToulBar2::bilevel){
+                    lbSon = c->getLbRec();
+                    ubSon = c->getUb();
 #ifndef NDEBUG
-                Cost dummylb = -MAX_COST;
-                Cost tmpub = -MAX_COST;
-                c->nogoodGet(dummylb, tmpub, &c->open);
-                assert(tmpub == ubSon);
+                    Cost dummylb = -MAX_COST;
+                    Cost tmpub = -MAX_COST;
+                    c->nogoodGet(dummylb, tmpub, &c->open);
+                    assert(tmpub == ubSon);
 #endif
+                } else {
+                    c->nogoodGet(lbSon,ubSon,&c->open);
+                    good = true;
+                }
             }
             if (ToulBar2::verbose >= 2)
                 cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << " cluster->lb: " << c->getLbRec() << endl;
@@ -565,8 +569,6 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     Cost bestP2 = MIN_COST;
                     if (ToulBar2::bilevel) {
                         if (c == *cluster->beginEdges()) { // initialize current bounds for Problem1
-                            wcsp->setUb(ubSon);
-                            wcsp->setLb(lbSon);
                         } else { // initialize current bounds for Problem2
                             assert(c != *cluster->rbeginEdges());
                             //TODO
@@ -584,8 +586,8 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     try {
                         Store::store();
                         wcsp->enforceUb();
-                        if (ToulBar2::bilevel && c != *cluster->beginEdges()) {
-                            // add channeling constraints between Problem1 and Problem2
+                        if (ToulBar2::bilevel && c != *cluster->beginEdges() && c != *cluster->rbeginEdges()) {
+                            // add channeling constraints between Problem0 and Problem2
                             for (unsigned int i=0; i< ((WCSP *)wcsp)->delayedBilevelCtr.size(); i++) {
                                 BinaryConstraint *ctr = (BinaryConstraint *) ((WCSP *)wcsp)->getCtr(((WCSP *)wcsp)->delayedBilevelCtr[i]);
                                 if (ctr->getVar(0)->getName().back() == '2' || ctr->getVar(1)->getName().back() == '2') {
@@ -635,7 +637,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         }
                     } catch (const Contradiction&) {
                         wcsp->whenContradiction();
-                        assert(!ToulBar2::bilevel); //FIXME ????
+                        assert(!ToulBar2::bilevel || c == *cluster->beginEdges()); //FIXME ????
                         c->nogoodRec(ubSon, MAX_COST, &c->open);
                         clb += ubSon - lbSon;
                         if (csolution)
@@ -651,6 +653,9 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     }
                 }
             } else {
+                if (ToulBar2::bilevel && c == *cluster->beginEdges()) {
+                    // Problem1 has already been solved
+                }
                 if (ToulBar2::bilevel && c != *cluster->beginEdges() && c != *cluster->rbeginEdges()) {
                     // Problem2 has been already solved
                     csol = (cluster->getLb() + (*cluster->beginEdges())->getLbRec() - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDeltaLb()) - lbSon  - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
