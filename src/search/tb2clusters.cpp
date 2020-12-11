@@ -201,7 +201,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
         cout << t;
         cout << "," << MAX(MIN_COST, clb + deltares) << "," << MAX(MIN_COST, cub + deltares) << ">" << endl;
     }
-    if (open) {
+    if (open && ToulBar2::hbfs) {
         if (*open) {
             // open node list already found => the corresponding nogood has been created before
             assert(itng != nogoods.end());
