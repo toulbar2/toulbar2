@@ -541,19 +541,14 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                 //assert(!ToulBar2::bilevel || (lbSon == MIN_COST && ubSon == MAX_COST) || lbSon == ubSon);
                 good = true;
             } else {
-                if (!ToulBar2::bilevel){
-                    lbSon = c->getLbRec();
-                    ubSon = c->getUb();
+                lbSon = c->getLbRec();
+                //ubSon = c->getUb();
 #ifndef NDEBUG
-                    Cost dummylb = -MAX_COST;
-                    Cost tmpub = -MAX_COST;
-                    c->nogoodGet(dummylb, tmpub, &c->open);
-                    assert(tmpub == ubSon);
+                //                    Cost dummylb = -MAX_COST;
+                //                    Cost tmpub = -MAX_COST;
+                //                    c->nogoodGet(dummylb, tmpub, &c->open);
+                //                    assert(tmpub == ubSon);
 #endif
-                } else {
-                    c->nogoodGet(lbSon,ubSon,&c->open);
-                    good = true;
-                }
             }
             if (ToulBar2::verbose >= 2)
                 cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << " cluster->lb: " << c->getLbRec() << endl;
@@ -567,21 +562,18 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     wcsp->setLb((good) ? c->getLbRec() : lbSon);
                     // TODO: compute better initial bounds for Problem2
                     Cost bestP2 = MIN_COST;
-                    if (ToulBar2::bilevel) {
-                        if (c == *cluster->beginEdges()) { // initialize current bounds for Problem1
-                        } else { // initialize current bounds for Problem2
-                            assert(c != *cluster->rbeginEdges());
-                            //TODO
-                            Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
-                            Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
-                            Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
-                            ubSon = ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
-                            lbSon = MIN_COST;
-                            bestP2 = max(MIN_COST, lbP1 + ToulBar2::bilevelShiftNegP2 - cub);
-                            if (ToulBar2::verbose>=2 && bestP2>MIN_COST) cout << "bestP2: " << bestP2 << endl;
-                            wcsp->setUb(ubSon);
-                            wcsp->setLb(MIN_COST);
-                        }
+                    if (ToulBar2::bilevel && c != *cluster->beginEdges()) { // initialize current bounds for Problem2
+                        assert(c != *cluster->rbeginEdges());
+                        //TODO
+                        Cost deltaNegP2 = (*cluster->rbeginEdges())->getCurrentDeltaLb();
+                        Cost lbP1 = cluster->getLb() - ToulBar2::initialLbNegP2 - deltaNegP2;
+                        Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbNegP2 + deltaNegP2;
+                        ubSon = ToulBar2::bilevelShiftNegP2 - lbNegP2 + ToulBar2::bilevelShiftP2 - ToulBar2::initialLbP2 + UNIT_COST;
+                        lbSon = MIN_COST;
+                        bestP2 = max(MIN_COST, lbP1 + ToulBar2::bilevelShiftNegP2 - cub);
+                        if (ToulBar2::verbose>=2 && bestP2>MIN_COST) cout << "bestP2: " << bestP2 << endl;
+                        wcsp->setUb(ubSon);
+                        wcsp->setLb(MIN_COST);
                     }
                     try {
                         Store::store();
@@ -617,16 +609,13 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         assert(res.first >= bestlb && res.second <= ubSon);
                         if (ToulBar2::verbose && c != *cluster->beginEdges() && res.second<bestP2 && nbBtAfter > nbBtBefore) cout << "Find better solution " << res.second << " than needed " << bestP2 << " for Problem2!" << endl;
                         c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
-                        if (ToulBar2::bilevel) {
+                        if (ToulBar2::bilevel && c != *cluster->beginEdges()) { // Problem1 & Problem2 solved
                             assert(res.first == res.second); // Problem 1 && Problem2 must be solved to optimality
-                            if (c == *cluster->beginEdges()){ // Problem1 solved
-//TODO
-                            } else { // Problem1 & Problem2 solved
-                                csol = cluster->getLb() + (*cluster->beginEdges())->getLbRec() - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDeltaLb() - res.first - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
-                                clb = csol;
-                                Store::restore();
-                                break;
-                            }
+                            assert(c->getCurrentDeltaUb() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
+                            csol = clb - (*cluster->rbeginEdges())->getLb() - ToulBar2::initialLbNegP2 - (*cluster->rbeginEdges())->getCurrentDeltaLb() - res.first - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                            clb = csol;
+                            Store::restore();
+                            break;
                         }
                         clb += res.first - lbSon;
                         if (csol < MAX_COST) {
@@ -653,12 +642,9 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                     }
                 }
             } else {
-                if (ToulBar2::bilevel && c == *cluster->beginEdges()) {
-                    // Problem1 has already been solved
-                }
                 if (ToulBar2::bilevel && c != *cluster->beginEdges() && c != *cluster->rbeginEdges()) {
                     // Problem2 has been already solved
-                    csol = (cluster->getLb() + (*cluster->beginEdges())->getLbRec() - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDeltaLb()) - lbSon  - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
+                    csol = clb - (*cluster->rbeginEdges())->getLb() - ToulBar2::initialLbNegP2  - (*cluster->rbeginEdges())->getCurrentDeltaLb() - lbSon  - ToulBar2::initialLbP2 + ToulBar2::bilevelShiftP2 + ToulBar2::bilevelShiftNegP2;
                     clb = csol;
                 }
             }
