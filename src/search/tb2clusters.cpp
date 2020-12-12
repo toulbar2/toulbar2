@@ -21,7 +21,12 @@ bool CmpClusterStructBasic::operator()(const Cluster* lhs, const Cluster* rhs) c
 }
 bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
 {
-    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs->getIndex() < rhs->getIndex()))));
+    if (ToulBar2::bilevel) {
+        // do not sort clusters by size if bilevel (keep id ordering)
+        return lhs && rhs && (lhs->getIndex() < rhs->getIndex());
+    } else {
+        return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs->getIndex() < rhs->getIndex()))));
+    }
 }
 
 /*
@@ -2236,11 +2241,9 @@ void TreeDecomposition::newSolution(Cost lb)
     wcsp->setUb(lb);
 
     TAssign a;
-
     Cluster* root = getRoot();
     wcsp->restoreSolution(root);
     root->getSolution(a);
-
     if ((ToulBar2::elimDegree > 0 || ToulBar2::elimDegree_preprocessing > 0 || ToulBar2::preprocessFunctional > 0) && root->getNbVars() == 0) {
         // recorded solutions in clusters containing a single variable eliminated in preprocessing may be wrong due to variable elimination in preprocessing; must be recovered after complete assignment and restoreSolution
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
