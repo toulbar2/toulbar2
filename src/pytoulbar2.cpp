@@ -73,6 +73,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def_readwrite_static("debug", &ToulBar2::debug)
         .def_readwrite_static("externalUB", &ToulBar2::externalUB)
         .def_readwrite_static("showSolutions", &ToulBar2::showSolutions)
+        .def_readwrite_static("showHidden", &ToulBar2::showHidden)
         //        .def_readwrite_static("writeSolution", &ToulBar2::writeSolution)
         .def_readwrite_static("allSolutions", &ToulBar2::allSolutions)
         .def_readwrite_static("dumpWCSP", &ToulBar2::dumpWCSP)
@@ -253,8 +254,8 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("getEnumDomainAndCost", (vector<pair<Value, Cost>>(WeightedCSP::*)(int varIndex)) & WeightedCSP::getEnumDomainAndCost)
         .def("getDomainInitSize", &WeightedCSP::getDomainInitSize)
         .def("toValue", &WeightedCSP::toValue)
-        .def("toIndex", (unsigned int (WeightedCSP::*)(int varIndex, Value value)) &WeightedCSP::toIndex)
-        .def("toIndex", (unsigned int (WeightedCSP::*)(int varIndex, const string& valueName)) &WeightedCSP::toIndex)
+        .def("toIndex", (unsigned int (WeightedCSP::*)(int varIndex, Value value)) & WeightedCSP::toIndex)
+        .def("toIndex", (unsigned int (WeightedCSP::*)(int varIndex, const string& valueName)) & WeightedCSP::toIndex)
         .def("getDACOrder", &WeightedCSP::getDACOrder)
         .def("assigned", &WeightedCSP::assigned)
         .def("unassigned", &WeightedCSP::unassigned)
@@ -295,19 +296,25 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
         .def("cartProd", &WeightedCSP::cartProd)
         .def("getNbDEE", &WeightedCSP::getNbDEE)
-        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) &WeightedCSP::makeEnumeratedVariable)
+        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
         .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
-        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-            return s.postUnaryConstraint(xIndex, costs, incremental);
-        }, py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
-            return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
-        }, py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
-            return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
-        }, py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def(
+            "postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
+                return s.postUnaryConstraint(xIndex, costs, incremental);
+            },
+            py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def(
+            "postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
+                return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
+            },
+            py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def(
+            "postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
+                return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
+            },
+            py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int> & scope, Cost defval, Long nbtuples, bool forcenary)) & WeightedCSP::postNaryConstraintBegin)
         .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
@@ -358,7 +365,8 @@ PYBIND11_MODULE(pytoulbar2, m)
             initCosts();
             if (ToulBar2::seed < 0) { // initialize seed using current time
                 ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
-                if (ToulBar2::verbose >= 0) cout << "Initial random seed is " << ToulBar2::seed << endl;
+                if (ToulBar2::verbose >= 0)
+                    cout << "Initial random seed is " << ToulBar2::seed << endl;
             }
             mysrand(ToulBar2::seed);
             if (ToulBar2::incop_cmd.size() > 0 && ToulBar2::seed != 1 && ToulBar2::incop_cmd.find("0 1 ") == 0) {
@@ -366,7 +374,8 @@ PYBIND11_MODULE(pytoulbar2, m)
                 ToulBar2::incop_cmd.replace(2, 1, sseed);
             }
             return WeightedCSPSolver::makeWeightedCSPSolver(ub);
-        }), py::arg("ub") = MAX_COST)
+        }),
+            py::arg("ub") = MAX_COST)
         .def_property_readonly("wcsp", &WeightedCSPSolver::getWCSP, py::return_value_policy::reference_internal)
         .def("read", [](WeightedCSPSolver& s, const char* fileName) {
             if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
@@ -401,10 +410,12 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("timer", [](WeightedCSPSolver& s, int timeout) {
             signal(SIGINT, timeOut);
             signal(SIGTERM, timeOut);
-            if (timeout > 0) timer(timeout);
+            if (timeout > 0)
+                timer(timeout);
         })
 #endif
-        .def("solve", [](WeightedCSPSolver& s, bool first) {
+        .def(
+            "solve", [](WeightedCSPSolver& s, bool first) {
             bool res = false;
             try {
                 res = s.solve(first);
@@ -420,7 +431,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("recursiveSolveLDS", &WeightedCSPSolver::recursiveSolveLDS)
         .def("hybridSolve", &WeightedCSPSolver::hybridSolve)
         .def("endSolve", &WeightedCSPSolver::endSolve)
-        .def("solution", (const vector<Value> (WeightedCSPSolver::*)()) &WeightedCSPSolver::getSolution)
+        .def("solution", (const vector<Value> (WeightedCSPSolver::*)()) & WeightedCSPSolver::getSolution)
         .def("solutionValue", &WeightedCSPSolver::getSolutionValue)
         .def("solutionCost", &WeightedCSPSolver::getSolutionCost)
         .def("solutions", &WeightedCSPSolver::getSolutions)
@@ -433,7 +444,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("generate", &WeightedCSPSolver::read_random)
         //        .def("narycsp", &WeightedCSPSolver::narycsp)
         //        .def("solve_symmax2sat", &WeightedCSPSolver::solve_symmax2sat)
-        .def("dump_wcsp", (void (WeightedCSPSolver::*)(const char*, bool, int)) &WeightedCSPSolver::dump_wcsp)
+        .def("dump_wcsp", (void (WeightedCSPSolver::*)(const char*, bool, int)) & WeightedCSPSolver::dump_wcsp)
         .def("read_solution", &WeightedCSPSolver::read_solution)
         .def("parse_solution", &WeightedCSPSolver::parse_solution);
 }
