@@ -75,6 +75,7 @@ Long ToulBar2::RASPSnbBacktracks;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 int ToulBar2::showSolutions;
+bool ToulBar2::showHidden;
 int ToulBar2::writeSolution;
 FILE* ToulBar2::solutionFile;
 long ToulBar2::solutionFileRewindPos;
@@ -290,6 +291,7 @@ void tb2init()
     ToulBar2::RASPSitThresholds.clear();
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
+    ToulBar2::showHidden = false;
     ToulBar2::writeSolution = 0;
     ToulBar2::solutionFile = NULL;
     ToulBar2::solutionFileRewindPos = 0L;

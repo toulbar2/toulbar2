@@ -1444,6 +1444,10 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_showSolutions) {
                 if (args.OptionArg() != NULL) {
                     int showType = atoi(args.OptionArg());
+                    if (showType < 0) {
+                        showType = -showType;
+                        ToulBar2::showHidden = true;
+                    }
                     if (showType > 0 && showType < 4)
                         ToulBar2::showSolutions = showType;
                 } else

@@ -1644,18 +1644,20 @@ void Solver::newSolution()
                     string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                     string varlabel = myvar->getName();
 
-                    switch (ToulBar2::showSolutions) {
-                    case 1:
-                        cout << myvalue;
-                        break;
-                    case 2:
-                        cout << valuelabel;
-                        break;
-                    case 3:
-                        cout << varlabel << "=" << valuelabel;
-                        break;
-                    default:
-                        break;
+                    if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                        switch (ToulBar2::showSolutions) {
+                        case 1:
+                            cout << myvalue;
+                            break;
+                        case 2:
+                            cout << valuelabel;
+                            break;
+                        case 3:
+                            cout << varlabel << "=" << valuelabel;
+                            break;
+                        default:
+                            break;
+                        }
                     }
                 } else {
                     cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
@@ -2074,14 +2076,13 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     ToulBar2::hbfs = 0; // do not perform hbfs operations in preprocessing except for building tree decomposition
 
     if (!ToulBar2::isZ) {
-    Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
-    if (finiteUb < initialUpperBound) {
-        initialUpperBound = finiteUb;
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
-        wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
-    }
-    wcsp->setInfiniteCost(); // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
-
+        Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
+        if (finiteUb < initialUpperBound) {
+            initialUpperBound = finiteUb;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
+            wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
+        }
+        wcsp->setInfiniteCost(); // shrink forbidden costs based on problem lower and upper bounds to avoid integer overflow errors when summing costs
     }
     Cost initialLowerBound = wcsp->getLb();
     wcsp->enforceUb();
@@ -2089,14 +2090,14 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound || wcsp->getLb() > initialLowerBound) {
-    if (finiteUb < initialUpperBound) {
+            if (finiteUb < initialUpperBound) {
                 ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
                 wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
             }
-        wcsp->setInfiniteCost();
+            wcsp->setInfiniteCost();
             if (finiteUb < initialUpperBound) {
-        wcsp->enforceUb();
-        wcsp->propagate();
+                wcsp->enforceUb();
+                wcsp->propagate();
                 initialUpperBound = finiteUb;
             }
         }
@@ -2104,7 +2105,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     wcsp->preprocessing(); // preprocessing after initial propagation
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
-    if (finiteUb < initialUpperBound) {
+        if (finiteUb < initialUpperBound) {
             ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(finiteUb, wcsp->getUb())));
             wcsp->updateUb(finiteUb + ToulBar2::deltaUb);
         }
@@ -2588,8 +2589,8 @@ bool Solver::solve(bool first)
                 } catch (const NbBacktracksOut&) {
                     if (nbBacktracks > ToulBar2::backtrackLimit)
                         throw NbBacktracksOut();
-                        nbbacktracksout = true;
-                        ToulBar2::limited = false;
+                    nbbacktracksout = true;
+                    ToulBar2::limited = false;
                 }
                 Store::restore(storedepth);
             } while (nbbacktracksout);

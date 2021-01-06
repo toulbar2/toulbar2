@@ -526,6 +526,7 @@ public:
     static int debug;
     static string externalUB;
     static int showSolutions;
+    static bool showHidden;
     static int writeSolution;
     static FILE* solutionFile;
     static long solutionFileRewindPos;
