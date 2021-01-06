@@ -5,6 +5,7 @@
 #include "tb2binconstr.hpp"
 #include "tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
+#include "tb2vacutils.hpp"
 
 /*
  * Constructors and misc.
@@ -23,8 +24,12 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     supportY = vector<Value>(sizeY, x->getInf());
     trwsM = vector<Cost>(max(sizeX, sizeY), MIN_COST);
 
-    costs = vector<StoreCost>(sizeX * sizeY, StoreCost(MIN_COST));
+#ifdef NO_STORE_BINARY_COSTS
+    costs = vector<Cost>((size_t)sizeX * (size_t)sizeY, MIN_COST);
+#else
+    costs = vector<StoreCost>((size_t)sizeX * (size_t)sizeY, StoreCost(MIN_COST));
 
+#endif
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];
@@ -57,8 +62,18 @@ void BinaryConstraint::print(ostream& os)
     if (ToulBar2::weightedDegree)
         os << "/" << getConflictWeight();
     if (wcsp->getTreeDec())
-        os << "   cluster: " << getCluster() << endl;
-    else
+        os << "   cluster: " << getCluster();
+    if (ToulBar2::verbose >= 8) {
+        os << "supportX:[";
+        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+            os << " " << supportX[x->toIndex(*iterX)];
+        }
+        os << " ] supportY:[";
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            os << " " << supportY[y->toIndex(*iterY)];
+        }
+        os << " ]";
+    }
         os << endl;
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -72,12 +87,22 @@ void BinaryConstraint::print(ostream& os)
 
 void BinaryConstraint::dump(ostream& os, bool original)
 {
-    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() << endl;
+    unsigned int tuples = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            if (getCost(*iterX, *iterY) > MIN_COST) {
+                tuples++;
+            }
+        }
+    }
+    os << "2 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << MIN_COST << " " << tuples << endl;
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
-            os << ((original) ? (*iterX) : i) << " " << ((original) ? (*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
+            if (getCost(*iterX, *iterY) > MIN_COST) {
+                os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
+            }
         }
     }
 }
@@ -85,8 +110,8 @@ void BinaryConstraint::dump(ostream& os, bool original)
 void BinaryConstraint::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;
-    os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\":{\"scope\":[\"";
-    os << x->getName() << "\",\"" << y->getName() << "\"],";
+    os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_" << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "\":{\"scope\":[";
+    os << x->getName() << "," << y->getName() << "],";
     os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
@@ -95,8 +120,8 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
             if (getCost(*iterX, *iterY) != MIN_COST) {
                 if (printed)
                     os << ",\n";
-                os << ((original) ? (*iterX) : i) << "," << ((original) ? (*iterY) : j) << ","
-                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost((wcsp->getUb(), getCost(*iterX, *iterY))));
+                os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << ","
+                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY))));
                 printed = true;
             }
         }

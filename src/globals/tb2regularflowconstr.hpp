@@ -22,6 +22,10 @@ private:
         {
         }
 
+        ~DFA()
+        {
+            delete[] transition;
+        }
         void setNumStates(int size)
         {
             transition = new vector<pair<int, int>>[size];
@@ -43,7 +47,7 @@ private:
             return nstate;
         }
 
-        void addTransition(int start, int ch, int end, int weight)
+        void addTransition(int start, int ch, int end, Cost weight)
         {
             transition[start].push_back(make_pair(ch, end));
         }
@@ -118,7 +122,7 @@ private:
 
     static const int INS_TAG = -(INT_MAX >> 3);
 
-    int subdef, insdef, deldef;
+    Cost subdef, insdef, deldef;
     DFA dfa;
     typedef vector<map<int, map<int, Cost>>> CostTable; //[start][char][end]
     CostTable costTb;
@@ -152,7 +156,7 @@ private:
 
     void buildWeightedDFATable();
 
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
 
 public:
     RegularFlowConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
@@ -163,7 +167,7 @@ public:
 
     string getName();
 
-    //Cost eval(const String& s);
+    //Cost eval(const Tuple& s);
     void read(istream& file, bool mult = true);
     WeightedAutomaton* getWeightedAutomaton() { return &dfa; }
     void organizeConfig();

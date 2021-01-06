@@ -34,7 +34,7 @@ public:
     ~AllDiffConstraint()
     {
     }
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
 
     void read(istream& file, bool mult = true);
     void organizeConfig();

@@ -65,24 +65,24 @@ void SameConstraint::read(istream& file, bool mult)
     }
 }
 
-Cost SameConstraint::evalOriginal(const String& s)
+Cost SameConstraint::evalOriginal(const Tuple& s)
 {
     Cost tuple_cost = 0;
-    map<char, int> appear;
+    map<tValue, Cost> appear;
     for (vector<int>::iterator i = group[0].begin(); i != group[0].end(); i++) {
         appear[s[*i]] += def;
     }
     for (vector<int>::iterator i = group[1].begin(); i != group[1].end(); i++) {
         appear[s[*i]] -= def;
     }
-    int sum = 0;
-    for (map<char, int>::iterator i = appear.begin(); i != appear.end(); i++) {
+    Cost sum = MIN_COST;
+    for (map<tValue, Cost>::iterator i = appear.begin(); i != appear.end(); i++) {
         sum += (i->second < 0) ? (-(i->second)) : i->second;
     }
     tuple_cost += sum / 2;
     /*for (int i=0;i<s.length();i++) {
     	if (tuple_cost < wcsp->getUb()) {
-    		tuple_cost -= deltaCost[i][s[i]-CHAR_FIRST];
+			tuple_cost -= deltaCost[i][s[i]];
     	}
     }
     tuple_cost -= projectedCost;

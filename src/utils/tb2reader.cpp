@@ -468,6 +468,21 @@ CFNStreamReader::~CFNStreamReader()
 bool inline isOBrace(const string& token) { return ((token == "{") || (token == "[")); }
 bool inline isCBrace(const string& token) { return ((token == "}") || (token == "]")); }
 
+inline void yellOBrace(const string& token, const int& l)
+{
+    if (!isOBrace(token)) {
+        cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+inline void yellCBrace(const string& token, const int& l)
+{
+    if (!isCBrace(token)) {
+        cerr << "Error: expected a ']' or ']' instead of '" << token << "' at line " << l << endl;
+        exit(EXIT_FAILURE);
+    }
+}
 // checks if the next token is an opening brace
 // and yells otherwise
 void CFNStreamReader::skipOBrace()
@@ -476,10 +491,7 @@ void CFNStreamReader::skipOBrace()
     string token;
 
     std::tie(l, token) = this->getNextToken();
-    if (!isOBrace(token)) {
-        cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
-    }
+    yellOBrace(token, l);
 }
 // checks if the next token is a closing brace
 // and yells otherwise
@@ -489,10 +501,7 @@ void CFNStreamReader::skipCBrace()
     string token;
 
     std::tie(l, token) = this->getNextToken();
-    if (!isCBrace(token)) {
-        cerr << "Error: expected a '} or ']' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
-    }
+    yellCBrace(token, l);
 }
 
 // Tests if a read token is the expected (JSON) tag and yells otherwise.
@@ -652,35 +661,55 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         try {
             domainSize = stoi(token);
             if (domainSize >= 0)
-                for (int i = 0; i < domainSize; i++)
-                    valueNames.push_back(to_string(i));
+                for (int ii = 0; ii < domainSize; ii++)
+                    valueNames.push_back(to_string(ii));
         } catch (std::invalid_argument&) {
             cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
         }
     }
 
+    unsigned int varIndex = wcsp->getVarIndex(varName);
+    bool newvar = (varIndex == wcsp->numberOfVariables());
     if (ToulBar2::verbose >= 1)
-        cout << "Variable " << varName << " with domain size " << domainSize << " read" << endl;
+        cout << "Variable " << varName << ((newvar) ? " new " : " known ") << "with domain size " << domainSize << " read";
     // Create the toulbar2 variable and store its name in the variable map.
-    unsigned int varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
+    if (newvar) {
+        varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
+    }
+    if (ToulBar2::verbose >= 1)
+        cout << " # " << varIndex << endl;
     if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
         cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
         exit(EXIT_FAILURE);
     }
     // set the value names (if any) in the Variable.values map
-    varValNameToIdx.resize(varValNameToIdx.size() + 1);
-    assert(varValNameToIdx.size() == varIndex + 1);
-    for (unsigned int i = 0; i < valueNames.size(); ++i) {
-        if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[i], i)).second) {
-            cerr << "Error: duplicated value name '" << valueNames[i] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+    varValNameToIdx.resize(max((size_t)varIndex + 1, varValNameToIdx.size() + 1));
+    assert(varValNameToIdx.size() >= varIndex + 1);
+    for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
+        if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[ii], ii)).second) {
+            cerr << "Error: duplicated value name '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
     }
 
-    for (unsigned int i = 0; i < valueNames.size(); ++i)
-        wcsp->getVar(varIndex)->newValueName(valueNames[i]);
+    if (newvar) {
+        for (unsigned int ii = 0; ii < valueNames.size(); ++ii)
+            wcsp->addValueName(varIndex, valueNames[ii]);
+    } else {
+        if (((EnumeratedVariable*)wcsp->getVar(varIndex))->getDomainInitSize() != (unsigned int)domainSize) {
+            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable*)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+            exit(EXIT_FAILURE);
+        }
+        for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
+            if (wcsp->getVar(varIndex)->getValueName(ii) != valueNames[ii]) {
+                cerr << "Error: same variable has two different domains " << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
 
     if (ToulBar2::cpd) {
+
         vector<char> rots;
         for (const auto& vname : valueNames) {
             assert(vname.size() > 0);
@@ -799,7 +828,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         if (nbCostInserted < costVecSize) // there are some defaultCost remaining
             minCost = min(defaultCost, minCost);
     }
-    // al is true: we expect a full costs list
+    // all is true: we expect a full costs list
     else {
         unsigned int tableIdx = 0;
         while (tableIdx < costVecSize) {
@@ -842,10 +871,10 @@ void CFNStreamReader::enforceUB(Cost bound)
     if (ToulBar2::costMultiplier < 0.0)
         shifted = -shifted; // shifted unscaled upper bound
 
-    if (shifted < (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
+    if (shifted <= (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
         bound = (bound * ToulBar2::costMultiplier) + wcsp->negCost;
     else {
-        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << endl;
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << bound << " " << wcsp->negCost << " )" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -857,7 +886,8 @@ void CFNStreamReader::enforceUB(Cost bound)
     }
 
     if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUb = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+        ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(bound, wcsp->getUb())));
         if (ToulBar2::deltaUb > MIN_COST) {
             // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
             bound += ToulBar2::deltaUb;
@@ -1078,7 +1108,6 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                         assert(costs.size() == unarycf.var->getDomainInitSize());
                         unarycf.costs = costs;
                         unaryCFs.push_back(unarycf);
-                        //this->wcsp->postUnaryConstraint(scope[0], costs);
                         if (isShared) {
                             unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
                             for (const auto& ns : tableShares[funcName]) {
@@ -1213,10 +1242,9 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
     if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
-    Char buf[MAX_ARITY];
-    String tup;
-    map<String, Cost> costFunction;
     unsigned int arity = scope.size();
+    Tuple tup(arity);
+    map<Tuple, Cost> costFunction;
     unsigned long int nbTuples = 0;
     int scopeArray[arity];
     for (unsigned int i = 0; i < scope.size(); i++) {
@@ -1230,13 +1258,11 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         while (!isCBrace(token)) {
             // We have read a full tuple: finish the tuple
             if (scopeIdx == arity) {
-                buf[scopeIdx] = '\0';
-                tup = buf;
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
                 if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
 
-                if (not costFunction.insert(pair<String, Cost>(tup, cost)).second) {
+                if (not costFunction.insert(pair<Tuple, Cost>(tup, cost)).second) {
                     cerr << "Error: tuple on scope [ ";
                     for (int i : scope)
                         cout << i << " ";
@@ -1249,7 +1275,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             } else {
                 unsigned int valueIdx = getValueIdx(scope[scopeIdx], token, lineNumber);
                 assert(valueIdx >= 0 && valueIdx < wcsp->getDomainInitSize(scope[scopeIdx]));
-                buf[scopeIdx] = valueIdx + CHAR_FIRST; // fill String
+                tup[scopeIdx] = valueIdx; // fill Tuple
             }
 
             scopeIdx = ((scopeIdx == arity) ? 0 : scopeIdx + 1);
@@ -1322,7 +1348,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
-        { "clique", ":rhs:N:values:[V+]S" },
+        { "clique", ":rhs:N:values:[v+]S" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1594,7 +1620,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
             std::tie(lineNumber, token) = this->getNextToken();
             for (char c : token) {
-                if (!isdigit(c)) {
+                if (!isdigit(c) && c != '-') {
                     cerr << "Error: number required at line " << lineNumber << " but read " << token << endl;
                     exit(EXIT_FAILURE);
                 }
@@ -1638,7 +1664,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     char symbol = repeatedSymbols[repeatIndex];
                     if (symbol == 'N') {
                         for (char c : token) {
-                            if (!isdigit(c)) {
+                            if (!isdigit(c) && c != '-') {
                                 cerr << "Error: integer required at line " << lineNumber << " but read " << token << endl;
                                 exit(EXIT_FAILURE);
                             }
@@ -1822,13 +1848,12 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
     string start_symbol = token;
 
     skipJSONTag("terminals"); // 0 or 2
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token); // First [
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken(); // Second [ or ]
     while (token != "]") {
 
         string terminal_rule;
-        isOBrace(token);
+        yellOBrace(token, lineNumber);
         // Read terminal_symbol
         std::tie(lineNumber, token) = this->getNextToken();
         terminal_rule += token + " ";
@@ -1841,7 +1866,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
             Cost tcost = wcsp->decimalToCost(token, lineNumber);
-            if (cost < 0) {
+            if (tcost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 exit(EXIT_FAILURE);
             }
@@ -1850,19 +1875,17 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 
         terminal_rules.push_back(terminal_rule);
 
-        std::tie(lineNumber, token) = this->getNextToken();
-        isCBrace(token);
+        skipCBrace();
         std::tie(lineNumber, token) = this->getNextToken();
     }
 
     skipJSONTag("non_terminals"); // 1 or 3
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token); // First [
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken(); // Second [ or ]
     while (token != "]") {
 
         string non_terminal_rule;
-        isOBrace(token);
+        yellOBrace(token, lineNumber);
 
         // Read nonterminal_in
         std::tie(lineNumber, token) = this->getNextToken();
@@ -1880,7 +1903,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
             // Read weight
             std::tie(lineNumber, token) = this->getNextToken();
             Cost tcost = wcsp->decimalToCost(token, lineNumber);
-            if (cost < 0) {
+            if (tcost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 exit(EXIT_FAILURE);
             }
@@ -1889,8 +1912,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 
         non_terminal_rules.push_back(non_terminal_rule);
 
-        std::tie(lineNumber, token) = this->getNextToken();
-        isCBrace(token);
+        skipCBrace();
         std::tie(lineNumber, token) = this->getNextToken();
     }
 
@@ -1940,8 +1962,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
     // TODO Cost should be >= 0
 
     skipJSONTag("vars1");
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token);
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken();
 
     while (token != "]") {
@@ -1961,8 +1982,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
     }
 
     skipJSONTag("vars2");
-    std::tie(lineNumber, token) = this->getNextToken();
-    isOBrace(token);
+    skipOBrace();
     std::tie(lineNumber, token) = this->getNextToken();
 
     while (token != "]") {
@@ -2009,6 +2029,32 @@ Cost WCSP::read_wcsp(const char* fileName)
     Nfile2 = strdup(fileName);
     name = string(basename(Nfile2));
     free(Nfile2);
+    // Done internally by the CFN reader
+    if (!ToulBar2::cfn) {
+        if (ToulBar2::deltaUbS.length() != 0) {
+            ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
+            ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
+        }
+
+        if (ToulBar2::externalUB.size()) {
+            Cost top = string2Cost(ToulBar2::externalUB.c_str());
+            double K = ToulBar2::costMultiplier;
+            if (top < MAX_COST / K)
+                top = top * K;
+            else
+                top = MAX_COST;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+            updateUb(top + ToulBar2::deltaUb);
+            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+        }
+
+        if (ToulBar2::costThresholdS.size())
+            ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
+        if (ToulBar2::costThresholdPreS.size())
+            ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
+        if (ToulBar2::vnsOptimumS.size())
+            ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
+    }
 
     if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::xz) {
 #ifdef BOOST
@@ -2024,7 +2070,6 @@ Cost WCSP::read_wcsp(const char* fileName)
                 exit(EXIT_FAILURE);
             } else {
                 CFNStreamReader fileReader(stream, this);
-                return getUb();
             }
         }
 #else
@@ -2045,7 +2090,6 @@ Cost WCSP::read_wcsp(const char* fileName)
         } else {
             //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
-            return getUb();
         }
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CFN format files." << endl;
@@ -2066,7 +2110,6 @@ Cost WCSP::read_wcsp(const char* fileName)
         } else {
             //  inbuf.push(file);
             CFNStreamReader fileReader(stream, this);
-            return getUb();
         }
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
@@ -2076,63 +2119,111 @@ Cost WCSP::read_wcsp(const char* fileName)
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
         exit(EXIT_FAILURE);
 #endif
-    }
-
-    if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUb = string2Cost(ToulBar2::deltaUbS.c_str());
-    }
-
-    if (ToulBar2::externalUB.size()) {
-        Cost top = string2Cost(ToulBar2::externalUB.c_str());
-        double K = ToulBar2::costMultiplier;
-        if (top < MAX_COST / K)
-            top = top * K;
-        else
-            top = MAX_COST;
-        updateUb(top + ToulBar2::deltaUb);
-        // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-    }
-
-    if (ToulBar2::costThresholdS.size())
-        ToulBar2::costThreshold = string2Cost(ToulBar2::costThresholdS.c_str());
-    if (ToulBar2::costThresholdPreS.size())
-        ToulBar2::costThresholdPre = string2Cost(ToulBar2::costThresholdPreS.c_str());
-    if (ToulBar2::vnsOptimumS.size())
-        ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
-
-    if (ToulBar2::haplotype) {
+    } else if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);
-        return getUb();
     } else if (ToulBar2::pedigree) {
         if (!ToulBar2::bayesian)
             ToulBar2::pedigree->read(fileName, this);
         else
             ToulBar2::pedigree->read_bayesian(fileName, this);
-        return getUb();
     } else if (ToulBar2::uai) {
         read_uai2008(fileName);
         if (ToulBar2::isTrie_File) { // read all-solution tb2 file (temporary way to do)
             ToulBar2::trieZ = read_TRIE(fileName);
         }
-        return getUb();
     } else if (ToulBar2::xmlflag) {
         read_XML(fileName);
-        return getUb();
     } else if (ToulBar2::bep) {
         ToulBar2::bep->read(fileName, this);
-        return getUb();
     } else if (ToulBar2::wcnf) {
         read_wcnf(fileName);
-        return getUb();
     } else if (ToulBar2::qpbo) {
         read_qpbo(fileName);
-        return getUb();
+    } else {
+        read_legacy(fileName);
     }
 
-    // TOOLBAR WCSP LEGACY PARSER
+    // Diverse variables structure and variables allocation and initialization
+    if (ToulBar2::divNbSol > 1) {
+        for (auto var : vars) {
+            if (var->unassigned() && var->getName()[0] != IMPLICIT_VAR_TAG[0]) {
+                if (var->enumerated()) {
+                    divVariables.push_back(var);
+                } else {
+                    cerr << "Error: cannot control diversity of non enumerated variable: " << var->getName() << endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
 
+        // Dual variables allocation, only needed for divMethod 0 Dual or 1 Hidden
+        if (ToulBar2::divMethod < 2) {
+            divVarsId.resize(ToulBar2::divNbSol);
+            for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
+                for (Variable* x : divVariables) {
+                    int xId = x->wcspIndex;
+                    divVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_sol" + std::to_string(j) + "_" + x->getName(), 0, 2 * ToulBar2::divBound + 1);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[j][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("q" + std::to_string(val % (ToulBar2::divBound + 1)) + ":"
+                            + std::to_string(min(ToulBar2::divBound, (val % (ToulBar2::divBound + 1)) + (val / (ToulBar2::divBound + 1)))));
+                    }
+                }
+            }
+        }
+
+        // Hidden variables, only needed for divMethod 1 Hidden or 2 Ternary
+        if (ToulBar2::divMethod >= 1) {
+            divHVarsId.resize(ToulBar2::divNbSol); // make room for hidden state variables
+            for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
+                bool first = true;
+                for (Variable* x : divVariables) {
+                    if (!first) {
+                        int xId = x->wcspIndex;
+                        divHVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
+                        EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
+                        for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                            theVar->addValueName("q" + std::to_string(val));
+                        }
+                    }
+                    first = false;
+                }
+            }
+        }
+
+        // Joint DivMin MDD
+        if (ToulBar2::divWidth > 0) { //add variables for relaxed constraint
+            if (ToulBar2::divMethod < 2) {
+                for (Variable* x : divVariables) {
+                    int xId = x->wcspIndex;
+                    divVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_relax_" + x->getName(), 0, ToulBar2::divWidth * ToulBar2::divWidth - 1);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[ToulBar2::divNbSol - 1][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("Q" + std::to_string(val));
+                    }
+                }
+            }
+            if (ToulBar2::divMethod >= 1) {
+                for (Variable* x : divVariables) {
+                    int xId = x->wcspIndex;
+                    divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[ToulBar2::divNbSol - 1][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("q" + std::to_string(val));
+                    }
+                }
+            }
+        }
+    }
+    return getUb();
+}
+
+// TOULBAR2 WCSP LEGACY PARSER
+void WCSP::read_legacy(const char* fileName)
+{
     string pbname;
-    int nbvar, nbval, nbconstr;
+    unsigned int nbvar, nbval;
+    int nbconstr;
     int nbvaltrue = 0;
     Cost top;
     int i, j, k, t, ic;
@@ -2153,8 +2244,8 @@ Cost WCSP::read_wcsp(const char* fileName)
     int maxarity = 0;
     vector<int> sharedSize;
     vector<vector<Cost>> sharedCosts;
-    vector<vector<String>> sharedTuples;
-    vector<String> emptyTuples;
+    vector<vector<Tuple>> sharedTuples;
+    vector<Tuple> emptyTuples;
 
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
@@ -2198,10 +2289,6 @@ Cost WCSP::read_wcsp(const char* fileName)
     file >> top;
     if (ToulBar2::verbose >= 1)
         cout << "Read problem: " << pbname << endl;
-    ToulBar2::nbvar = nbvar;
-
-    assert(vars.empty());
-    assert(constrs.empty());
 
     double K = ToulBar2::costMultiplier;
     if (top < MAX_COST / K)
@@ -2209,20 +2296,36 @@ Cost WCSP::read_wcsp(const char* fileName)
     else
         top = MAX_COST;
 
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
+    Tuple tup;
+    vector<Tuple> tuples;
+    vector<Cost> costs;
     // read variable domain sizes
-    for (i = 0; i < nbvar; i++) {
+    for (unsigned int i = 0; i < nbvar; i++) {
         string varname;
         varname = "x" + to_string(i);
         file >> domsize;
         if (domsize > nbvaltrue)
             nbvaltrue = domsize;
         if (ToulBar2::verbose >= 3)
-            cout << "read variable " << i << " of size " << domsize << endl;
-        DEBONLY(int theindex =)
-        ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
-        assert(theindex == i);
+            cout << "read " << ((i >= numberOfVariables()) ? "new" : "known") << " variable " << i << " of size " << domsize << endl;
+        if (i >= numberOfVariables()) {
+            DEBONLY(int theindex =)
+            ((domsize >= 0) ? makeEnumeratedVariable(varname, 0, domsize - 1) : makeIntervalVariable(varname, 0, -domsize - 1));
+            assert(theindex == (int)i);
+        } else {
+            if ((domsize >= 0) != getVar(i)->enumerated()) {
+                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain type (" << (getVar(i)->enumerated() ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize()) << ") different than the new one (" << domsize << ")!" << endl;
+                exit(EXIT_FAILURE);
+            } else if (domsize < 0) {
+                decrease(i, -domsize - 1);
+            } else if (domsize >= 0 && (unsigned int)domsize != ((EnumeratedVariable*)getVar(i))->getDomainInitSize()) {
+                cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain size " << (getVar(i)->enumerated() ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize()) << " different than the new one of " << domsize << "!" << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
     }
 
     // read each constraint
@@ -2286,21 +2389,18 @@ Cost WCSP::read_wcsp(const char* fileName)
                     int naryIndex = postNaryConstraintBegin(scopeIndex, arity, tmpcost, ntuples);
                     NaryConstraint* nary = (NaryConstraint*)constrs[naryIndex];
 
-                    Char buf[MAX_ARITY];
-                    vector<String> tuples;
-                    vector<Cost> costs;
+                    tup.resize(arity);
+                    tuples.clear();
+                    costs.clear();
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
                             for (i = 0; i < arity; i++) {
-                                file >> j;
-                                buf[i] = j + CHAR_FIRST;
+                                file >> tup[i]; // FIXME: why not translating from Value to tValue?
                             }
-                            buf[i] = '\0';
                             file >> cost;
                             Cost tmpcost = MULT(cost, K);
                             if (CUT(tmpcost, getUb()) && (tmpcost < MEDIUM_COST * getUb()) && getUb() < (MAX_COST / MEDIUM_COST))
                                 tmpcost *= MEDIUM_COST;
-                            String tup = buf;
                             if (shared) {
                                 tuples.push_back(tup);
                                 costs.push_back(tmpcost);
@@ -2420,7 +2520,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
                     EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
                     EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
-                    vector<Cost> costs(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize(), MIN_COST);
+                    vector<Cost> costs((size_t)x->getDomainInitSize() * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize(), MIN_COST);
                     postTernaryConstraint(i, j, k, costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
@@ -2694,14 +2794,23 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::verbose >= 0)
         cout << "Read " << nbvar << " variables, with " << nbvaltrue << " values at most, and " << nbconstr << " cost functions, with maximum arity " << maxarity << "." << endl;
-    return getUb();
 }
 
 void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular, string globalname)
 {
+    if (ToulBar2::externalUB.size()) {
+        Cost top = string2Cost(ToulBar2::externalUB.c_str());
+        double K = ToulBar2::costMultiplier;
+        if (top < MAX_COST / K)
+            top = top * K;
+        else
+            top = MAX_COST;
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+        updateUb(top + ToulBar2::deltaUb);
+        // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+    }
     naryRandom randwcsp(this, seed);
     randwcsp.Input(n, m, p, forceSubModular, globalname);
-    ToulBar2::nbvar = n;
 
     unsigned int nbconstr = numberOfConstraints();
     sortConstraints();
@@ -2788,7 +2897,6 @@ void WCSP::read_uai2008(const char* fileName)
     //bool bayes = uaitype == string("BAYES");
 
     file >> nbvar;
-    ToulBar2::nbvar = nbvar;
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
@@ -2899,7 +3007,7 @@ void WCSP::read_uai2008(const char* fileName)
     TernaryConstraint* tctr = NULL;
     BinaryConstraint* bctr = NULL;
     NaryConstraint* nctr = NULL;
-    String s;
+    Tuple s;
 
     ToulBar2::markov_log = 0; // for the MARKOV Case
 
@@ -2963,8 +3071,6 @@ void WCSP::read_uai2008(const char* fileName)
             p = costsProb[k];
             Cost cost;
             // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
-            //if (maxp>1){
-            //cout<< "Div : "<< p<<" by " <<maxp<<" equal to "<<log(p / maxp)<<endl;
             if (markov)
                 cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
             else
@@ -3009,10 +3115,6 @@ void WCSP::read_uai2008(const char* fileName)
             cpd->read_rotamers2aa(file, vars);
             ToulBar2::seq->generate_mask(cpd->getRotamers2AA());
         }
-        //~ else
-        //~ {
-        //~ cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
-        //~ }
     }
 
     updateUb(upperbound);
@@ -3167,7 +3269,7 @@ void WCSP::read_uai2008(const char* fileName)
     }
 }
 
-void WCSP::solution_UAI(Cost res, bool opt)
+void WCSP::solution_UAI(Cost res)
 {
     if (!ToulBar2::uai && !ToulBar2::uaieval)
         return;
@@ -3236,24 +3338,27 @@ void WCSP::solution_XML(bool opt)
         cout << "s OPTIMUM FOUND" << endl;
 
     //ofstream fsol;
-    ifstream sol;
-    sol.open(ToulBar2::writeSolution);
+    //ifstream sol;
+    //sol.open(ToulBar2::writeSolution);
     //if(!sol) { cout << "cannot open solution file to translate" << endl; exit(EXIT_FAILURE); }
     //fsol.open("solution");
     //fsol << "SOL ";
 
+    freopen(NULL, "r", ToulBar2::solutionFile);
     cout << "v ";
     for (unsigned int i = 0; i < vars.size(); i++) {
         int value;
-        sol >> value;
+        //soll >> value;
+        fscanf(ToulBar2::solutionFile, "%d", &value);
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
     }
     cout << endl;
+    freopen(NULL, "w", ToulBar2::solutionFile);
 
     //fsol << endl;
     //fsol.close();
-    sol.close();
+//sol.close();
 #endif
 }
 
@@ -3303,7 +3408,7 @@ void WCSP::read_wcnf(const char* fileName)
     string dummy, sflag;
 
     file >> sflag;
-    while (sflag == "c") {
+    while (sflag[0] == 'c') {
         getline(file, dummy);
         file >> sflag;
     }
@@ -3316,7 +3421,6 @@ void WCSP::read_wcnf(const char* fileName)
     Cost top;
     file >> format;
     file >> nbvar;
-    ToulBar2::nbvar = nbvar;
     file >> nbclauses;
     if (format == "wcnf") {
         getline(file, strtop);
@@ -3336,7 +3440,9 @@ void WCSP::read_wcnf(const char* fileName)
     } else {
         if (ToulBar2::verbose >= 0)
             cout << "c Max-SAT input format" << endl;
-        updateUb((nbclauses + 1) * K + ToulBar2::deltaUb);
+        Cost top = (nbclauses + 1) * K;
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+        updateUb(top + ToulBar2::deltaUb);
     }
 
     // create Boolean variables
@@ -3349,10 +3455,11 @@ void WCSP::read_wcnf(const char* fileName)
     }
 
     // Read each clause
+    Tuple tup;
     for (int ic = 0; ic < nbclauses; ic++) {
 
         int scopeIndex[MAX_ARITY];
-        Char buf[MAX_ARITY];
+        tup.clear();
         int arity = 0;
         if (ToulBar2::verbose >= 3)
             cout << "read clause on ";
@@ -3366,7 +3473,11 @@ void WCSP::read_wcnf(const char* fileName)
             file >> j;
             if (j != 0 && !tautology) {
                 scopeIndex[arity] = abs(j) - 1;
-                buf[arity] = ((j > 0) ? 0 : 1) + CHAR_FIRST;
+                if (arity < (int)tup.size()) {
+                    tup[arity] = ((j > 0) ? 0 : 1);
+                } else {
+                    tup.push_back((j > 0) ? 0 : 1);
+                }
                 int k = 0;
                 while (k < arity) {
                     if (scopeIndex[k] == scopeIndex[arity]) {
@@ -3375,7 +3486,7 @@ void WCSP::read_wcnf(const char* fileName)
                     k++;
                 }
                 if (k < arity) {
-                    if (buf[k] != buf[arity]) {
+                    if (tup[k] != tup[arity]) {
                         tautology = true;
                         if (ToulBar2::verbose >= 3)
                             cout << j << " is a tautology! skipped.";
@@ -3391,12 +3502,10 @@ void WCSP::read_wcnf(const char* fileName)
             cout << endl;
         if (tautology)
             continue;
-        buf[arity] = '\0';
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
             int index = postNaryConstraintBegin(scopeIndex, arity, MIN_COST, 1);
-            String tup = buf;
             postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
         } else if (arity == 3) {
@@ -3408,7 +3517,7 @@ void WCSP::read_wcnf(const char* fileName)
                     }
                 }
             }
-            costs[(buf[0] - CHAR_FIRST) * 4 + (buf[1] - CHAR_FIRST) * 2 + (buf[2] - CHAR_FIRST)] = MULT(cost, K);
+            costs[(tup[0]) * 4 + (tup[1]) * 2 + (tup[2])] = MULT(cost, K);
             postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
         } else if (arity == 2) {
             vector<Cost> costs;
@@ -3417,13 +3526,13 @@ void WCSP::read_wcnf(const char* fileName)
                     costs.push_back(MIN_COST);
                 }
             }
-            costs[(buf[0] - CHAR_FIRST) * 2 + (buf[1] - CHAR_FIRST)] = MULT(cost, K);
+            costs[(tup[0]) * 2 + (tup[1])] = MULT(cost, K);
             postBinaryConstraint(scopeIndex[0], scopeIndex[1], costs);
         } else if (arity == 1) {
             EnumeratedVariable* x = (EnumeratedVariable*)vars[scopeIndex[0]];
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = x;
-            if ((buf[0] - CHAR_FIRST) == 0) {
+            if ((tup[0]) == 0) {
                 unaryconstr.costs.push_back(MULT(cost, K));
                 unaryconstr.costs.push_back(MIN_COST);
             } else {
@@ -3539,7 +3648,6 @@ void WCSP::read_qpbo(const char* fileName)
     m = e;
 
     // create Boolean variables
-    ToulBar2::nbvar = n;
     for (int i = 0; i < n; i++) {
         makeEnumeratedVariable("x" + to_string(i), 0, 1);
     }
@@ -3560,7 +3668,9 @@ void WCSP::read_qpbo(const char* fileName)
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         exit(EXIT_FAILURE);
     }
-    updateUb((Cost)multiplier * sumcost + 1 + ToulBar2::deltaUb);
+    Cost top = (Cost)multiplier * sumcost + 1;
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+    updateUb(top + ToulBar2::deltaUb);
 
     // create weighted binary clauses
     for (int e = 0; e < m; e++) {

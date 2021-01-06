@@ -3,70 +3,70 @@
     @version 3.6
 
     @brief A cross-platform command line library which can parse almost any
-    of the standard command line formats in use today. It is designed
-    explicitly to be portable to any platform and has been tested on Windows
+    of the standard command line formats in use today. It is designed 
+    explicitly to be portable to any platform and has been tested on Windows 
     and Linux. See CSimpleOptTempl for the class definition.
 
     @section features FEATURES
-    -   MIT Licence allows free use in all software (including GPL
+    -   MIT Licence allows free use in all software (including GPL 
         and commercial)
     -   multi-platform (Windows 95/98/ME/NT/2K/XP, Linux, Unix)
     -   supports all lengths of option names:
         <table width="60%">
-            <tr><td width="30%"> -
+            <tr><td width="30%"> - 
                 <td>switch character only (e.g. use stdin for input)
-            <tr><td> -o
+            <tr><td> -o          
                 <td>short (single character)
-            <tr><td> -long
+            <tr><td> -long       
                 <td>long (multiple character, single switch character)
-            <tr><td> --longer
+            <tr><td> --longer    
                 <td>long (multiple character, multiple switch characters)
         </table>
     -   supports all types of arguments for options:
         <table width="60%">
-            <tr><td width="30%"> --option
+            <tr><td width="30%"> --option        
                 <td>short/long option flag (no argument)
-            <tr><td> --option ARG
+            <tr><td> --option ARG    
                 <td>short/long option with separate required argument
-            <tr><td> --option=ARG
+            <tr><td> --option=ARG    
                 <td>short/long option with combined required argument
-            <tr><td> --option[=ARG]
+            <tr><td> --option[=ARG]  
                 <td>short/long option with combined optional argument
-            <tr><td> -oARG
+            <tr><td> -oARG           
                 <td>short option with combined required argument
-            <tr><td> -o[ARG]
+            <tr><td> -o[ARG]         
                 <td>short option with combined optional argument
         </table>
     -   supports options with multiple or variable numbers of arguments:
         <table width="60%">
-            <tr><td width="30%"> --multi ARG1 ARG2
+            <tr><td width="30%"> --multi ARG1 ARG2      
                 <td>Multiple arguments
-            <tr><td> --multi N ARG-1 ARG-2 ... ARG-N
+            <tr><td> --multi N ARG-1 ARG-2 ... ARG-N    
                 <td>Variable number of arguments
         </table>
-    -   supports case-insensitive option matching on short, long and/or
+    -   supports case-insensitive option matching on short, long and/or 
         word arguments.
-    -   supports options which do not use a switch character. i.e. a special
-        word which is construed as an option.
-        e.g. "foo.exe open /directory/file.txt"
-    -   supports clumping of multiple short options (no arguments) in a string
+    -   supports options which do not use a switch character. i.e. a special 
+        word which is construed as an option. 
+        e.g. "foo.exe open /directory/file.txt" 
+    -   supports clumping of multiple short options (no arguments) in a string 
         e.g. "foo.exe -abcdef file1" <==> "foo.exe -a -b -c -d -e -f file1"
-    -   automatic recognition of a single slash as equivalent to a single
+    -   automatic recognition of a single slash as equivalent to a single 
         hyphen on Windows, e.g. "/f FILE" is equivalent to "-f FILE".
     -   file arguments can appear anywhere in the argument list:
         "foo.exe file1.txt -a ARG file2.txt --flag file3.txt file4.txt"
-        files will be returned to the application in the same order they were
+        files will be returned to the application in the same order they were 
         supplied on the command line
     -   short-circuit option matching: "--man" will match "--mandate"
-        invalid options can be handled while continuing to parse the command
+        invalid options can be handled while continuing to parse the command 
         line valid options list can be changed dynamically during command line
-        processing, i.e. accept different options depending on an option
+        processing, i.e. accept different options depending on an option 
         supplied earlier in the command line.
     -   implemented with only a single C++ header file
     -   optionally use no C runtime or OS functions
     -   char, wchar_t and Windows TCHAR in the same program
     -   complete working examples included
-    -   compiles cleanly at warning level 4 (Windows/VC.NET 2003), warning
+    -   compiles cleanly at warning level 4 (Windows/VC.NET 2003), warning 
         level 3 (Windows/VC6) and -Wall (Linux/gcc)
 
     @section usage USAGE
@@ -89,19 +89,19 @@
 </pre>
         Note that all options must start with a hyphen even if the slash will
         be accepted. This is because the slash character is automatically
-        converted into a hyphen to test against the list of options.
-        For example, the following line matches both "-?" and "/?"
+        converted into a hyphen to test against the list of options. 
+        For example, the following line matches both "-?" and "/?" 
         (on Windows).
 <pre>
     { OPT_HELP, _T("-?"),     SO_NONE    }, // "-?"
 </pre>
-   <li> Instantiate a CSimpleOpt object supplying argc, argv and the option
+   <li> Instantiate a CSimpleOpt object supplying argc, argv and the option 
         table
 <pre>
 @link CSimpleOptTempl CSimpleOpt @endlink args(argc, argv, g_rgOptions);
 </pre>
-   <li> Process the arguments by calling Next() until it returns false.
-        On each call, first check for an error by calling LastError(), then
+   <li> Process the arguments by calling Next() until it returns false. 
+        On each call, first check for an error by calling LastError(), then 
         either handle the error or process the argument.
 <pre>
 while (args.Next()) {
@@ -142,12 +142,12 @@ ShowFiles(args.FileCount(), args.Files());
     The above copyright notice and this permission notice shall be included
     in all copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </pre>
 */
@@ -165,16 +165,16 @@ ShowFiles(args.FileCount(), args.Files());
     A cross-platform library providing a simple method to parse almost any of
     the standard command-line formats in use today.
 
-    See the @link SimpleOpt.h SimpleOpt @endlink documentation for full
+    See the @link SimpleOpt.h SimpleOpt @endlink documentation for full 
     details.
 
     @section SimpleGlob SimpleGlob
 
     A cross-platform file globbing library providing the ability to
-    expand wildcards in command-line arguments to a list of all matching
+    expand wildcards in command-line arguments to a list of all matching 
     files.
 
-    See the @link SimpleGlob.h SimpleGlob @endlink documentation for full
+    See the @link SimpleGlob.h SimpleGlob @endlink documentation for full 
     details.
 */
 
@@ -197,27 +197,27 @@ typedef enum _ESOError {
     //! No error
     SO_SUCCESS = 0,
 
-    /*! It looks like an option (it starts with a switch character), but
-	    it isn't registered in the option table. */
+    /*! It looks like an option (it starts with a switch character), but 
+        it isn't registered in the option table. */
     SO_OPT_INVALID = -1,
 
-    /*! Multiple options matched the supplied option text.
-	    Only returned when NOT using SO_O_EXACT. */
+    /*! Multiple options matched the supplied option text. 
+        Only returned when NOT using SO_O_EXACT. */
     SO_OPT_MULTIPLE = -2,
 
-    /*! Option doesn't take an argument, but a combined argument was
-	    supplied. */
+    /*! Option doesn't take an argument, but a combined argument was 
+        supplied. */
     SO_ARG_INVALID = -3,
 
     /*! SO_REQ_CMB style-argument was supplied to a SO_REQ_SEP option
-	    Only returned when using SO_O_PEDANTIC. */
+        Only returned when using SO_O_PEDANTIC. */
     SO_ARG_INVALID_TYPE = -4,
 
     //! Required argument was not supplied
     SO_ARG_MISSING = -5,
 
-    /*! Option argument looks like another option.
-	    Only returned when NOT using SO_O_NOERR. */
+    /*! Option argument looks like another option. 
+        Only returned when NOT using SO_O_NOERR. */
     SO_ARG_INVALID_DATA = -6
 } ESOError;
 
@@ -226,32 +226,32 @@ enum _ESOFlags {
     /*! Disallow partial matching of option names */
     SO_O_EXACT = 0x0001,
 
-    /*! Disallow use of slash as an option marker on Windows.
-	    Un*x only ever recognizes a hyphen. */
+    /*! Disallow use of slash as an option marker on Windows. 
+        Un*x only ever recognizes a hyphen. */
     SO_O_NOSLASH = 0x0002,
 
-    /*! Permit arguments on single letter options with no equals sign.
-	    e.g. -oARG or -o[ARG] */
+    /*! Permit arguments on single letter options with no equals sign. 
+        e.g. -oARG or -o[ARG] */
     SO_O_SHORTARG = 0x0004,
 
-    /*! Permit single character options to be clumped into a single
-	    option string. e.g. "-a -b -c" <==> "-abc" */
+    /*! Permit single character options to be clumped into a single 
+        option string. e.g. "-a -b -c" <==> "-abc" */
     SO_O_CLUMP = 0x0008,
 
-    /*! Process the entire argv array for options, including the
-	    argv[0] entry. */
+    /*! Process the entire argv array for options, including the 
+        argv[0] entry. */
     SO_O_USEALL = 0x0010,
 
-    /*! Do not generate an error for invalid options. errors for missing
-	    arguments will still be generated. invalid options will be
-	    treated as files. invalid options in clumps will be silently
-	    ignored. */
+    /*! Do not generate an error for invalid options. errors for missing 
+        arguments will still be generated. invalid options will be 
+        treated as files. invalid options in clumps will be silently 
+        ignored. */
     SO_O_NOERR = 0x0020,
 
-    /*! Validate argument type pedantically. Return an error when a
-	    separated argument "-opt arg" is supplied by the user as a
-	    combined argument "-opt=arg". By default this is not considered
-	    an error. */
+    /*! Validate argument type pedantically. Return an error when a 
+        separated argument "-opt arg" is supplied by the user as a 
+        combined argument "-opt=arg". By default this is not considered 
+        an error. */
     SO_O_PEDANTIC = 0x0040,
 
     /*! Case-insensitive comparisons for short arguments */
@@ -260,8 +260,8 @@ enum _ESOFlags {
     /*! Case-insensitive comparisons for long arguments */
     SO_O_ICASE_LONG = 0x0200,
 
-    /*! Case-insensitive comparisons for word arguments
-	    i.e. arguments without any hyphens at the start. */
+    /*! Case-insensitive comparisons for word arguments 
+        i.e. arguments without any hyphens at the start. */
     SO_O_ICASE_WORD = 0x0400,
 
     /*! Case-insensitive comparisons for all arg types */
@@ -270,29 +270,29 @@ enum _ESOFlags {
 
 /*! Types of arguments that options may have. Note that some of the _ESOFlags
     are not compatible with all argument types. SO_O_SHORTARG requires that
-    relevant options use either SO_REQ_CMB or SO_OPT. SO_O_CLUMP requires
+    relevant options use either SO_REQ_CMB or SO_OPT. SO_O_CLUMP requires 
     that relevant options use only SO_NONE.
  */
 typedef enum _ESOArgType {
     /*! No argument. Just the option flags.
-	    e.g. -o         --opt */
+        e.g. -o         --opt */
     SO_NONE,
 
-    /*! Required separate argument.
-	    e.g. -o ARG     --opt ARG */
+    /*! Required separate argument.  
+        e.g. -o ARG     --opt ARG */
     SO_REQ_SEP,
 
-    /*! Required combined argument.
-	    e.g. -oARG      -o=ARG      --opt=ARG  */
+    /*! Required combined argument.  
+        e.g. -oARG      -o=ARG      --opt=ARG  */
     SO_REQ_CMB,
 
-    /*! Optional combined argument.
-	    e.g. -o[ARG]    -o[=ARG]    --opt[=ARG] */
+    /*! Optional combined argument.  
+        e.g. -o[ARG]    -o[=ARG]    --opt[=ARG] */
     SO_OPT,
 
     /*! Multiple separate arguments. The actual number of arguments is
-	    determined programatically at the time the argument is processed.
-	    e.g. -o N ARG1 ARG2 ... ARGN    --opt N ARG1 ARG2 ... ARGN */
+        determined programatically at the time the argument is processed.
+        e.g. -o N ARG1 ARG2 ... ARGN    --opt N ARG1 ARG2 ... ARGN */
     SO_MULTI
 } ESOArgType;
 
@@ -327,9 +327,9 @@ public:
         /*! ID to return for this flag. Optional but must be >= 0 */
         int nId;
 
-        /*! arg string to search for, e.g.  "open", "-", "-f", "--file"
-		    Note that on Windows the slash option marker will be converted
-		    to a hyphen so that "-f" will also match "/f". */
+        /*! arg string to search for, e.g.  "open", "-", "-f", "--file" 
+            Note that on Windows the slash option marker will be converted
+            to a hyphen so that "-f" will also match "/f". */
         const SOCHAR* pszArg;
 
         /*! type of argument accepted by this option */
@@ -365,25 +365,25 @@ public:
 
     /*! @brief Initialize the class in preparation for calling Next.
 
-	    The table of options pointed to by a_rgOptions does not need to be
-	    valid at the time that Init() is called. However on every call to
-	    Next() the table pointed to must be a valid options table with the
-	    last valid entry set to SO_END_OF_OPTIONS.
+        The table of options pointed to by a_rgOptions does not need to be
+        valid at the time that Init() is called. However on every call to
+        Next() the table pointed to must be a valid options table with the
+        last valid entry set to SO_END_OF_OPTIONS.
 
-	    NOTE: the array pointed to by a_argv will be modified by this
-	    class and must not be used or modified outside of member calls to
-	    this class.
+        NOTE: the array pointed to by a_argv will be modified by this
+        class and must not be used or modified outside of member calls to
+        this class.
 
-	    @param a_argc       Argument array size
-	    @param a_argv       Argument array
-	    @param a_rgOptions  Valid option array
-	    @param a_nFlags     Optional flags to modify the processing of
-	                        the arguments
+        @param a_argc       Argument array size
+        @param a_argv       Argument array
+        @param a_rgOptions  Valid option array
+        @param a_nFlags     Optional flags to modify the processing of 
+                            the arguments
 
-	    @return true        Successful
-	    @return false       if SO_MAX_ARGC > 0:  Too many arguments
-	                        if SO_MAX_ARGC == 0: Memory allocation failure
-	*/
+        @return true        Successful 
+        @return false       if SO_MAX_ARGC > 0:  Too many arguments
+                            if SO_MAX_ARGC == 0: Memory allocation failure
+    */
     bool Init(
         int a_argc,
         SOCHAR* a_argv[],
@@ -392,8 +392,8 @@ public:
 
     /*! @brief Change the current options table during option parsing.
 
-	    @param a_rgOptions  Valid option array
-	 */
+        @param a_rgOptions  Valid option array
+     */
     inline void SetOptions(const SOption* a_rgOptions)
     {
         m_rgOptions = a_rgOptions;
@@ -401,11 +401,11 @@ public:
 
     /*! @brief Change the current flags during option parsing.
 
-	    Note that changing the SO_O_USEALL flag here will have no affect.
-	    It must be set using Init() or the constructor.
+        Note that changing the SO_O_USEALL flag here will have no affect.
+        It must be set using Init() or the constructor.
 
-	    @param a_nFlags     Flags to modify the processing of the arguments
-	 */
+        @param a_nFlags     Flags to modify the processing of the arguments
+     */
     inline void SetFlags(int a_nFlags) { m_nFlags = a_nFlags; }
 
     /*! @brief Query if a particular flag is set */
@@ -416,81 +416,81 @@ public:
 
     /*! @brief Advance to the next option if available.
 
-	    When all options have been processed it will return false. When true
-	    has been returned, you must check for an invalid or unrecognized
-	    option using the LastError() method. This will be return an error
-	    value other than SO_SUCCESS on an error. All standard data
-	    (e.g. OptionText(), OptionArg(), OptionId(), etc) will be available
-	    depending on the error.
+        When all options have been processed it will return false. When true
+        has been returned, you must check for an invalid or unrecognized
+        option using the LastError() method. This will be return an error 
+        value other than SO_SUCCESS on an error. All standard data 
+        (e.g. OptionText(), OptionArg(), OptionId(), etc) will be available
+        depending on the error.
 
-	    After all options have been processed, the remaining files from the
-	    command line can be processed in same order as they were passed to
-	    the program.
+        After all options have been processed, the remaining files from the
+        command line can be processed in same order as they were passed to
+        the program.
 
-	    @return true    option or error available for processing
-	    @return false   all options have been processed
-	*/
+        @return true    option or error available for processing
+        @return false   all options have been processed
+    */
     bool Next();
 
     /*! Stops processing of the command line and returns all remaining
-	    arguments as files. The next call to Next() will return false.
-	 */
+        arguments as files. The next call to Next() will return false.
+     */
     void Stop();
 
     /*! @brief Return the last error that occurred.
 
-	    This function must always be called before processing the current
-	    option. This function is available only when Next() has returned true.
-	 */
+        This function must always be called before processing the current 
+        option. This function is available only when Next() has returned true.
+     */
     inline ESOError LastError() const { return m_nLastError; }
 
     /*! @brief Return the nId value from the options array for the current
-	    option.
+        option.
 
-	    This function is available only when Next() has returned true.
-	 */
+        This function is available only when Next() has returned true.
+     */
     inline int OptionId() const { return m_nOptionId; }
 
-    /*! @brief Return the pszArg from the options array for the current
-	    option.
+    /*! @brief Return the pszArg from the options array for the current 
+        option.
 
-	    This function is available only when Next() has returned true.
-	 */
+        This function is available only when Next() has returned true.
+     */
     inline const SOCHAR* OptionText() const { return m_pszOptionText; }
 
     /*! @brief Return the argument for the current option where one exists.
 
-	    If there is no argument for the option, this will return NULL.
-	    This function is available only when Next() has returned true.
-	 */
+        If there is no argument for the option, this will return NULL.
+        This function is available only when Next() has returned true.
+     */
     inline SOCHAR* OptionArg() const { return m_pszOptionArg; }
 
     /*! @brief Validate and return the desired number of arguments.
 
-	    This is only valid when OptionId() has return the ID of an option
-	    that is registered as SO_MULTI. It may be called multiple times
-	    each time returning the desired number of arguments. Previously
-	    returned argument pointers are remain valid.
+        This is only valid when OptionId() has return the ID of an option
+        that is registered as SO_MULTI. It may be called multiple times
+        each time returning the desired number of arguments. Previously
+        returned argument pointers are remain valid.
 
-	    If an error occurs during processing, NULL will be returned and
-	    the error will be available via LastError().
+        If an error occurs during processing, NULL will be returned and
+        the error will be available via LastError().
 
-	    @param n    Number of arguments to return.
-	 */
+        @param n    Number of arguments to return.
+     */
     SOCHAR** MultiArg(int n);
 
     /*! @brief Returned the number of entries in the Files() array.
 
-	    After Next() has returned false, this will be the list of files (or
-	    otherwise unprocessed arguments).
-	 */
+        After Next() has returned false, this will be the list of files (or
+        otherwise unprocessed arguments).
+     */
     inline int FileCount() const { return m_argc - m_nLastArg; }
 
     /*! @brief Return the specified file argument.
 
-	    @param n    Index of the file to return. This must be between 0
-	                and FileCount() - 1;
-	 */
+        @param n    Index of the file to return. This must be between 0
+                    and FileCount() - 1;
+     */
     inline SOCHAR* File(int n) const
     {
         SO_ASSERT(n >= 0 && n < FileCount());
@@ -782,7 +782,7 @@ SOCHAR
 CSimpleOptTempl<SOCHAR>::PrepareArg(
     SOCHAR* a_pszString) const
 {
-#ifdef _WIN32
+#ifdef __WIN32__
     // On Windows we can accept the forward slash as a single character
     // option delimiter, but it cannot replace the '-' option used to
     // denote stdin. On Un*x paths may start with slash so it may not

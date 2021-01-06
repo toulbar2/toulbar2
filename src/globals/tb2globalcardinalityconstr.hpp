@@ -2,6 +2,8 @@
  *  \brief Flow based global cost function : sgcc_flow
  */
 
+#ifndef TB2GLOBALCARDCONSTR_HPP_
+#define TB2GLOBALCARDCONSTR_HPP_
 //#include "glpk.h"
 //#include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
@@ -18,7 +20,7 @@ private:
         return make_pair(varindex + 1, mapval[val]);
     }
     //JP Start// This array stores the respective weight of each bound
-    map<Value, pair<int, int>> weights;
+    map<Value, pair<Cost, Cost>> weights;
     int nDistinctDomainValue;
     //JP End//
 
@@ -42,7 +44,7 @@ public:
     }
 
     string getName();
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
     void read(istream& file, bool mult = true);
 
     //GlobalCostFunctionParameters* getParameters() {return this;}
@@ -52,7 +54,7 @@ public:
             upper = arity();
         bound[value] = make_pair(lower, upper);
     }
-    void addValueAndWeights(Value value, int wexcess = -1, int wshortage = -1)
+    void addValueAndWeights(Value value, Cost wexcess = -1, Cost wshortage = -1)
     {
         if (wexcess == -1)
             wexcess = def;
@@ -65,6 +67,7 @@ public:
     //    void print(ostream& os);
     void dump(ostream& os, bool original = true);
 };
+#endif /*TB2GLOBALCARDCONSTR_HPP_*/
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

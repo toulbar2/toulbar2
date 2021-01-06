@@ -15,7 +15,7 @@ struct WTransition {
     unsigned int symbol;
     Cost weight;
 
-    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, int _weight)
+    WTransition(unsigned int _start, unsigned int _end, unsigned int _symbol, Cost _weight)
     {
         start = _start;
         end = _end;

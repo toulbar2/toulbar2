@@ -139,6 +139,36 @@ public:
         priority_queue::container_type::iterator end() { return c.end(); }
     };
 
+    class SolutionTrie {
+    public:
+        class TrieNode {
+        public:
+            TrieNode(size_t w = 0);
+            ~TrieNode();
+            vector<vector<TrieNode*>> insertSolution(const vector<Value>& sol, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos);
+            vector<TrieNode*> sons;
+            vector<vector<TrieNode*>> insertNode(Value v, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos);
+            bool present(Value v);
+            void printTrie(vector<Value>& sol);
+            static size_t nbSolutions;
+            static vector<size_t> widths;
+        };
+
+        SolutionTrie(){};
+        ~SolutionTrie(){};
+        void init(const vector<Variable*>& vv);
+        void insertSolution(const vector<Value>& sol);
+        void printTrie();
+        size_t getNbSolutions() { return root.nbSolutions; };
+        vector<vector<TrieNode*>> getNodesAtPos() { return nodesAtPos; };
+
+    private:
+        TrieNode root;
+        vector<vector<TrieNode*>> nodesAtPos;
+    };
+
+    Mdd computeMDD(SolutionTrie* solTrie, Cost cost);
+    ostream& printLayers(ostream& os, Mdd mdd);
     typedef enum {
         CP_ASSIGN = 0,
         CP_REMOVE = 1,
@@ -196,6 +226,7 @@ protected:
     friend class ClustersNeighborhoodStructure;
     friend class RandomClusterChoice;
     friend class ParallelRandomClusterChoice;
+    friend class VACExtension;
     Long nbNodes;
     Long nbBacktracks;
     Long nbBacktracksLimit;
@@ -206,7 +237,6 @@ protected:
     void* searchSize;
 
     BigInteger nbSol;
-    int nbSoldiv = 0;
     Long nbSGoods; //number of #good which created
     Long nbSGoodsUse; //number of #good which used
     map<int, BigInteger> ubSol; // upper bound of solution number
@@ -230,6 +260,8 @@ protected:
     void showGap(Cost newlb, Cost newub);
     void showZGap();
 
+    Cost prevDivSolutionCost;
+    SolutionTrie solTrie;
     // Heuristics and search methods
     /// \warning hidden feature: do not branch on variable indexes from ToulBar2::nbDecisionVars to the last variable
     void initVarHeuristic();
@@ -258,17 +290,12 @@ protected:
     void enforceUb();
     void enforceZUb(Cluster* cluster = NULL);
     void singletonConsistency();
-    Cost beginSolve(Cost ub);
-    Cost preprocessing(Cost ub);
-    void endSolve(bool isSolution, Cost cost, bool isComplete);
 
     void scpChoicePoint(int xIndex, Value value, Cost lb);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);
     void narySortedChoicePointLDS(int xIndex, int discrepancy);
-    void recursiveSolve(Cost lb = MIN_COST);
-    void recursiveSolveLDS(int discrepancy);
     Value postponeRule(int varIndex);
     void scheduleOrPostpone(int varIndex);
 
@@ -285,7 +312,6 @@ protected:
     pair<Cost, Cost> binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost cub, int varIndex, Value value);
     pair<Cost, Cost> recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub);
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
-    pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 
     void hybridCounting(TLogProb Zlb, TLogProb Zub);
@@ -300,7 +326,7 @@ protected:
     TLogProb BTD_sharpZ(Cluster* cluster);
 
 public:
-    Solver(Cost initUpperBound, Long nbBacktracksLimit = LONGLONG_MAX);
+    Solver(Cost initUpperBound);
     ~Solver();
 
     Cost read_wcsp(const char* fileName);
@@ -310,54 +336,75 @@ public:
     Long getNbBacktracks() const FINAL { return nbBacktracks; }
     set<int> getUnassignedVars() const;
 
-    virtual bool solve();
+    unsigned int numberOfUnassignedVariables() const; // faster than its WCSP linear-time counterpart, but it is valid only during search
+
+    virtual bool solve(bool first = true);
+
+    // internal methods called by solve, for advanced programmers only!!!
+    void beginSolve(Cost ub);
+    Cost preprocessing(Cost ub);
+    void recursiveSolve(Cost lb = MIN_COST);
+    void recursiveSolveLDS(int discrepancy);
+    pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
+    void endSolve(bool isSolution, Cost cost, bool isComplete);
+    // end of internal solve methods
 
     Cost narycsp(string cmd, vector<Value>& solution);
 
     bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol);
 
-    void dump_wcsp(const char* fileName, bool original = true);
+    void dump_wcsp(const char* fileName, bool original = true, ProblemFormat format = WCSP_FORMAT);
     void read_solution(const char* fileName, bool updateValueHeuristic = true);
-    void parse_solution(const char* certificate);
+    void parse_solution(const char* certificate, bool updateValueHeuristic = true);
     void mutate(char* mutationString);
     void mutate(std::string mutationString);
     void applyCompositionalBiases();
     virtual void newSolution();
-    Cost getSolution(vector<Value>& solution);
+    const vector<Value> getSolution() { return wcsp->getSolution(); }
+    Double getSolutionValue() const { return wcsp->getSolutionValue(); }
+    Cost getSolutionCost() const { return wcsp->getSolutionCost(); }
+    Cost getSolution(vector<Value>& solution) const
+    {
+        Cost cost = MAX_COST;
+        solution = wcsp->getSolution(&cost);
+        return cost;
+    }
+    vector<pair<Double, vector<Value>>> getSolutions() const { return wcsp->getSolutions(); }
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);
 
     WeightedCSP* getWCSP() FINAL { return wcsp; }
 };
 
-class NbBacktracksOut {
+class SolverOut : public std::exception {
 public:
-    NbBacktracksOut()
+    SolverOut()
     {
         ToulBar2::limited = true;
         if (ToulBar2::verbose >= 2)
-            cout << "... limit on the number of backtracks reached!" << endl;
+            cout << SolverOut::what() << endl;
     }
+    virtual const char* what() const throw() { return "... some solver limit was reached!"; }
 };
 
-class NbSolutionsOut {
+class NbBacktracksOut : public SolverOut {
 public:
-    NbSolutionsOut()
-    {
-        ToulBar2::limited = true;
-        if (ToulBar2::verbose >= 2)
-            cout << "... limit on the number of solutions reached!" << endl;
-    }
+    const char* what() const throw() FINAL { return "... limit on the number of backtracks reached!"; }
 };
 
-class TimeOut {
+class NbSolutionsOut : public SolverOut {
 public:
-    TimeOut()
-    {
-        ToulBar2::limited = true;
-        if (ToulBar2::verbose >= 2)
-            cout << "... time limit reached!" << endl;
-    }
+    const char* what() const throw() FINAL { return "... limit on the number of solutions reached!"; }
+};
+
+class DivSolutionOut : public SolverOut {
+public:
+    const char* what() const throw() FINAL { return "... optimal diverse solution found!"; }
+};
+
+class TimeOut : public SolverOut {
+public:
+    const char* what() const throw() FINAL { return "... time limit reached!"; }
 };
 
 int solveSymMax2SAT(int n, int m, int* posx, int* posy, double* cost, int* sol);

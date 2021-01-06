@@ -9,6 +9,7 @@
 
 #ifndef TB2VNSUTILS_HPP_
 #define TB2VNSUTILS_HPP_
+#ifdef BOOST
 
 #include "tb2vns.hpp"
 #include "tb2localsearch.hpp"
@@ -143,6 +144,7 @@ public:
     double ecart_type(vector<int> data);
 };
 
+#endif
 #endif /* TB2VNSUTILS_HPP_ */
 
 /* Local Variables: */

@@ -30,6 +30,7 @@ protected:
 
     StoreValue inf;
     StoreValue sup;
+    StoreInt fulleac; // =1 if assigning this variable and all its neighbors to their EAC support value has a zero cost, =0 otherwise
 
     ConstraintList constrs;
     //    ConstraintList triangles;
@@ -52,6 +53,7 @@ protected:
     Variable(const Variable& x);
     Variable& operator=(const Variable& x);
 
+    friend class VACExtension;
 public:
     Variable(WCSP* w, string n, Value iinf, Value isup);
 
@@ -65,7 +67,6 @@ public:
     char getNativeResidue() const { return nativeResidue; }
     int getState() const { return state; }
     void newValueName(const string& vname) { valueNames.push_back(vname); }
-    const string& getValueName(int idx) const;
     int getDACOrder() const { return dac; }
     void setDACOrder(int order) { dac = order; }
     Value getInf() const { return inf; }
@@ -75,6 +76,7 @@ public:
         assert(assigned());
         return inf;
     }
+    virtual const string& getValueName(int index) const { static const string None = std::string(""); return None; }
     virtual unsigned int getDomainSize() const = 0;
     int getCurrentVarId();
     void setCurrentVarId(int idx);
@@ -88,7 +90,7 @@ public:
     virtual void decrease(Value newSup, bool isDecision = false) = 0;
     virtual void remove(Value remValue, bool isDecision = false) = 0;
     virtual void assign(Value newValue, bool isDecision = false) = 0;
-    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs) = 0;
+    virtual void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) = 0;
 
     //    ConstraintList *getTriangles() {return &triangles;}
     ConstraintList* getConstrs() { return &constrs; }
@@ -99,7 +101,7 @@ public:
     void resetWeightedDegree();
     DLink<ConstraintLink>* link(Constraint* c, int index);
     void sortConstraints();
-    virtual void eliminate() { cout << "variable elimination not implemented!" << endl; };
+    virtual void eliminate(){};
 
     BinaryConstraint* getConstr(Variable* x);
     TernaryConstraint* getConstr(Variable* x, Variable* y);
@@ -116,9 +118,14 @@ public:
     virtual Cost getCost(const Value value) const = 0;
 
     virtual Value getSupport() const { return inf; } // If there is no defined support then return inf
+    bool isFullEAC() const { return fulleac; }
+    void setFullEAC() { fulleac = 1; }
+    void unsetFullEAC() { fulleac = 0; }
 
     Cost getMaxCost() const { return maxCost; }
+    void setMaxCost(Cost cost) { maxCost = cost; }
     Value getMaxCostValue() const { return maxCostValue; }
+    void setMaxCostValue(Value value) { maxCostValue = value; }
 
     virtual void propagateNC() = 0;
     virtual bool verifyNC() = 0;

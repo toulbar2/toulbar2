@@ -239,6 +239,10 @@ public:
         , linkY(NULL)
         , linkZ(NULL)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        cerr << "Sorry, only binary cost functions!" << endl;
+        exit(EXIT_FAILURE);
+#endif
         assert(xx != yy);
         assert(xx != zz);
         assert(yy != zz);
@@ -465,13 +469,17 @@ protected:
     DLink<ConstraintLink>** links;
 
     vector<EnumeratedVariable::iterator> it_values; // used by firstlex/nextlex and for separator decomposition tests
-    String evalTuple;
+    Tuple evalTuple;
 
 public:
     AbstractNaryConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
         : Constraint(wcsp)
         , arity_(arity_in)
     {
+#if defined(NO_STORE_BINARY_COSTS) || defined(NO_STORE_TERNARY_COSTS)
+        cerr << "Sorry, no " << arity_in << "-ary cost functions!" << endl;
+        exit(EXIT_FAILURE);
+#endif
         scope = new EnumeratedVariable*[arity_];
         scope_dac = new EnumeratedVariable*[arity_];
         links = new DLink<ConstraintLink>*[arity_];
@@ -482,7 +490,7 @@ public:
             scope[i] = var;
             scope_dac[i] = var;
             links[i] = var->link(this, i);
-            evalTuple.append(1, CHAR_FIRST);
+            evalTuple.push_back(0);
         }
         setDACScopeIndex();
     }
@@ -492,7 +500,12 @@ public:
     {
     }
 
-    virtual ~AbstractNaryConstraint() {}
+    virtual ~AbstractNaryConstraint()
+    {
+        delete[] scope;
+        delete[] scope_dac;
+        delete[] links;
+    }
 
     int arity() const FINAL { return arity_; }
     Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
@@ -559,12 +572,12 @@ public:
         }
     }
 
-    virtual Cost eval(const String& t)
+    virtual Cost eval(const Tuple& t)
     {
         cout << "dummy eval on: " << *this << endl;
         return MIN_COST;
     }
-    //    virtual void insertTuple( String t, Cost c, EnumeratedVariable** scope_in ) { }
+    //    virtual void insertTuple( Tuple t, Cost c, EnumeratedVariable** scope_in ) { }
 
     int getSmallestVarIndexInScope(int forbiddenScopeIndex) FINAL
     {
@@ -643,7 +656,7 @@ public:
     }
 
     void firstlex();
-    bool nextlex(String& t, Cost& c);
+    bool nextlex(Tuple& t, Cost& c);
 
     void projectNaryBeforeSearch();
     // USE ONLY DURING SEARCH when less than three unassigned variables remain:

@@ -97,7 +97,7 @@ public:
 
 class TreeConstraint : public DPGlobalConstraint {
 private:
-    int curTreeCost;
+    Cost curTreeCost;
 
     struct Edge {
         int u;
@@ -112,8 +112,8 @@ private:
         bool operator<(const Edge& e) const { return weight < e.weight; }
     };
 
-    int minTreeEdgeCost;
-    int maxTreeEdgeCost;
+    Cost minTreeEdgeCost;
+    Cost maxTreeEdgeCost;
     set<pair<int, int>> treeEdge;
 
     struct CCTreeNode; // Forward declaration
@@ -165,8 +165,8 @@ private:
 
     map<int, int> val2VarIndex;
 
-    int recomputeCurMST();
-    int recomputeMST(vector<Edge>& edgeList);
+    Cost recomputeCurMST();
+    Cost recomputeMST(vector<Edge>& edgeList);
 
 protected:
     Cost minCostOriginal();
@@ -187,14 +187,19 @@ protected:
     }
 
     // No need to run anything for (weak) ED(G)AC*
-    bool isEAC(int var, Value val) { return true; }
+    bool isEAC(int var, Value val)
+    {
+        if (ToulBar2::FullEAC)
+            reviseEACGreedySolution(var, val);
+        return true;
+    }
     void findFullSupportEAC(int var) {}
 
 public:
     TreeConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~TreeConstraint();
 
-    Cost eval(const String& s);
+    Cost eval(const Tuple& s);
 
     void read(istream& file, bool mult = true) {} //No parameter needed
     void initMemoization();

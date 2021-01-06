@@ -138,7 +138,7 @@ void Pedigree::read_bayesian(const char* fileName, WCSP* wcsp)
     buildWCSP_bayesian(fileName, wcsp);
 }
 
-inline bool cmp_generation(Individual i1, Individual i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
+inline bool cmp_generation(const Individual& i1, const Individual& i2) { return i1.generation < i2.generation || (i1.generation == i2.generation && i1.individual < i2.individual); }
 
 int Pedigree::fixGenerationNumber(int index)
 {
@@ -778,7 +778,9 @@ void Pedigree::printCorrectSol(WCSP* wcsp)
     string problemname = ToulBar2::problemsaved_filename;
     if (problemname.rfind(".wcsp") != string::npos)
         problemname.replace(problemname.rfind(".wcsp"), 5, "_correct.sol");
-    if (problemname.rfind(".pre") != string::npos)
+    else if (problemname.rfind(".cfn") != string::npos)
+        problemname.replace(problemname.rfind(".cfn"), 4, "_correct.sol");
+    else if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, "_correct.sol");
     if (problemname.rfind("_correct.sol") == string::npos)
         problemname = problemname + to_string("_correct.sol");
@@ -810,6 +812,8 @@ void Pedigree::printSol(WCSP* wcsp)
     string problemname = ToulBar2::problemsaved_filename;
     if (problemname.rfind(".wcsp") != string::npos)
         problemname.replace(problemname.rfind(".wcsp"), 5, ".sol");
+    if (problemname.rfind(".cfn") != string::npos)
+        problemname.replace(problemname.rfind(".cfn"), 4, ".sol");
     if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, ".sol");
     if (problemname.rfind(".sol") == string::npos)

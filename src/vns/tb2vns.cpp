@@ -6,10 +6,12 @@
  *      Phd. Student : LITIO, University of Oran. GREYC, University of Caen.
  */
 
+#ifdef BOOST
 #include "tb2vns.hpp"
 #include "core/tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
 
+using namespace boost;
 // loading decomposition for only a given file
 void ClustersNeighborhoodStructure::load_decomposition()
 {
@@ -298,7 +300,7 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size, zone z
     return zone();
 }
 
-const bool RandomClusterChoice::incrementK()
+bool RandomClusterChoice::incrementK()
 {
     if (file.size() == 0) {
         file = clusters;
@@ -497,7 +499,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
     return insideHeuristic->getNeighborhood(NeighborhoodSize, z);
 }
 
-const bool ParallelRandomClusterChoice::incrementK()
+bool ParallelRandomClusterChoice::incrementK()
 {
     if (file.size() == 0) {
         file = clusters;
@@ -555,6 +557,7 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
     }
     return z.size();
 }
+#endif
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

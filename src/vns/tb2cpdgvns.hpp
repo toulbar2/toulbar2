@@ -60,7 +60,7 @@ public:
     }
     ~CooperativeParallelDGVNS() {}
 
-    bool solve() FINAL;
+    bool solve(bool first = true);
     // Model
     void master();
     void slave();

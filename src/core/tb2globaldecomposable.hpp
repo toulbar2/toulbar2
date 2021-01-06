@@ -18,7 +18,7 @@ protected:
 public:
     DecomposableGlobalCostFunction();
     DecomposableGlobalCostFunction(unsigned int _arity, int* _scope);
-    ~DecomposableGlobalCostFunction();
+    virtual ~DecomposableGlobalCostFunction();
     static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file, bool mult = true);
 
     int getArity() { return arity; }

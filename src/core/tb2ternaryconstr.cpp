@@ -4,7 +4,6 @@
 
 #include "tb2ternaryconstr.hpp"
 #include "tb2wcsp.hpp"
-#include "tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 /*
@@ -34,9 +33,9 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     deltaCostsY = vector<StoreCost>(sizeY, StoreCost(MIN_COST));
     deltaCostsZ = vector<StoreCost>(sizeZ, StoreCost(MIN_COST));
     assert(getIndex(x) < getIndex(y) && getIndex(y) < getIndex(z));
-    functionX = vector<Value>(sizeY * sizeZ, WRONG_VAL);
-    functionY = vector<Value>(sizeX * sizeZ, WRONG_VAL);
-    functionZ = vector<Value>(sizeX * sizeY, WRONG_VAL);
+    functionX = vector<Value>((size_t)sizeY * (size_t)sizeZ, WRONG_VAL);
+    functionY = vector<Value>((size_t)sizeX * (size_t)sizeZ, WRONG_VAL);
+    functionZ = vector<Value>((size_t)sizeX * (size_t)sizeY, WRONG_VAL);
     supportX = vector<pair<Value, Value>>(sizeX, make_pair(y->getInf(), z->getInf()));
     supportY = vector<pair<Value, Value>>(sizeY, make_pair(x->getInf(), z->getInf()));
     supportZ = vector<pair<Value, Value>>(sizeZ, make_pair(x->getInf(), y->getInf()));
@@ -77,7 +76,11 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     yz = yz_;
 
     if (functionalX) {
-        costsYZ = vector<StoreCost>(sizeY * sizeZ, StoreCost(MIN_COST));
+#ifdef NO_STORE_TERNARY_COSTS
+        costsYZ = vector<Cost>((size_t)sizeY * (size_t)sizeZ, MIN_COST);
+#else
+        costsYZ = vector<StoreCost>((size_t)sizeY * (size_t)sizeZ, StoreCost(MIN_COST));
+#endif
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
                 if (functionX[b * sizeZ + c] != WRONG_VAL)
@@ -86,7 +89,11 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
         }
         //    	costs.free_all();
     } else {
-        costs = vector<StoreCost>(sizeX * sizeY * sizeZ, StoreCost(MIN_COST));
+#ifdef NO_STORE_TERNARY_COSTS
+        costs = vector<Cost>((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, MIN_COST);
+#else
+        costs = vector<StoreCost>((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, StoreCost(MIN_COST));
+#endif
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
                 for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
@@ -263,14 +270,26 @@ void TernaryConstraint::print(ostream& os)
 
 void TernaryConstraint::dump(ostream& os, bool original)
 {
-    os << "3 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << " " << MIN_COST << " " << x->getDomainSize() * y->getDomainSize() * z->getDomainSize() << endl;
+    unsigned int tuples = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
+                    tuples++;
+                }
+            }
+        }
+    }
+    os << "3 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << " " << MIN_COST << " " << tuples << endl;
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
-                os << ((original) ? (*iterX) : i) << " " << ((original) ? (*iterY) : j) << " " << ((original) ? (*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
+                    os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? z->toIndex(*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                }
             }
         }
     }
@@ -281,10 +300,10 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
     bool printed = false;
     os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_"
        << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "_"
-       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[\"";
-    os << x->getName() << "\",\""
-       << y->getName() << "\",\""
-       << z->getName() << "\"],";
+       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[";
+    os << x->getName() << ","
+       << y->getName() << ","
+       << z->getName() << "],";
     os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
@@ -295,7 +314,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
                 if (printed)
                     os << ",\n";
                 if (getCost(*iterX, *iterY, *iterZ) != MIN_COST) {
-                    os << ((original) ? (*iterX) : i) << ", " << ((original) ? (*iterY) : j) << "," << ((original) ? (*iterZ) : k) << ","
+                    os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << "," << ((original) ? z->toIndex(*iterZ) : k) << ","
                        << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))));
                     printed = true;
                 } else
@@ -428,7 +447,7 @@ pair<pair<Cost, Cost>, pair<Cost, Cost>> TernaryConstraint::getMaxCost(int varIn
 bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable* vz)
 {
     Cost c1, c;
-    Char tch[4];
+    Tuple tch(3, 0);
     bool neweq = true; // true if we have  not a difference value
     bool sep = true; // false if vy and vz are not separable
     Cost diff = 0;
@@ -442,14 +461,13 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
         itvz = zvar->begin();
         while (sep && itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
-            tch[0] = ix + CHAR_FIRST;
+            tch[0] = ix;
             while (sep && itvy != yvar->end()) {
                 unsigned int iy = yvar->toIndex(*itvy);
-                tch[1] = iy + CHAR_FIRST;
+                tch[1] = iy;
                 while (sep && itvy != itvyfirst && itvz != zvar->end()) {
                     unsigned int iz = zvar->toIndex(*itvz);
-                    tch[2] = iz + CHAR_FIRST;
-                    tch[3] = '\0';
+                    tch[2] = iz;
 
                     c1 = getCost(xvar, yvar, zvar, *itvx, *(itvyfirst), *itvz);
                     c = getCost(xvar, yvar, zvar, *itvx, *itvy, *itvz);
@@ -462,7 +480,7 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
                                 cout << endl;
                         }
                         if (ToulBar2::verbose >= 3)
-                            cout << " C" << tch[2] - CHAR_FIRST << "." << tch[0] - CHAR_FIRST << "." << tch[1] - CHAR_FIRST << " -  C" << tch[2] - CHAR_FIRST << "." << tch[0] - 48 << "." << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
+                            cout << " C" << tch[2] << "." << tch[0] << "." << tch[1] << " -  C" << tch[2] << "." << tch[0] << "." << yvar->toIndex(*itvyfirst) << " = " << c << " - " << c1;
 
                         if (neweq) {
                             diff = squareminus(c, c1, wcsp->getUb());
@@ -499,8 +517,8 @@ void TernaryConstraint::separate(EnumeratedVariable* vy, EnumeratedVariable* vz)
     Cost cost, minCost = MAX_COST;
     //assert(separability(vy,vz));
     first(vy, vz);
-    vector<Cost> costsZX(zvar->getDomainInitSize() * xvar->getDomainInitSize(), MIN_COST);
-    vector<Cost> costsXY(xvar->getDomainInitSize() * yvar->getDomainInitSize(), MIN_COST);
+    vector<Cost> costsZX((size_t)zvar->getDomainInitSize() * (size_t)xvar->getDomainInitSize(), MIN_COST);
+    vector<Cost> costsXY((size_t)xvar->getDomainInitSize() * (size_t)yvar->getDomainInitSize(), MIN_COST);
     string xv(xvar->getName()), yv(yvar->getName()), zv(zvar->getName());
     if (ToulBar2::verbose == 1)
         cout << "\n";

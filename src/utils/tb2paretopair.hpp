@@ -226,9 +226,12 @@ inline ParetoPair MAX(ParetoPair a, ParetoPair b)
 inline ParetoPair MULT(ParetoPair a, double b)
 {
     assert(b < INT_MAX);
-    if (a >= PARETOPAIR_MAX) return PARETOPAIR_MAX;
-    else if (b <= UNIT_COST) return ParetoPair(a.p * b, a.q * b);
-    else if (a.p < PARETOPAIR_MAX.p / b && a.q < PARETOPAIR_MAX.q / b) return ParetoPair(a.p * b, a.q * b);
+    if (a >= PARETOPAIR_MAX)
+        return PARETOPAIR_MAX;
+    else if (b <= UNIT_COST)
+        return ParetoPair(a.p * b, a.q * b);
+    else if (a.p < PARETOPAIR_MAX.p / b && a.q < PARETOPAIR_MAX.q / b)
+        return ParetoPair(a.p * b, a.q * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         exit(1);

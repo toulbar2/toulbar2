@@ -33,8 +33,12 @@ protected:
     unsigned int sizeY;
     vector<StoreCost> deltaCostsX;
     vector<StoreCost> deltaCostsY;
+#ifdef NO_STORE_BINARY_COSTS
+    vector<Cost> costs;
+#else
     vector<StoreCost> costs;
 
+#endif
     vector<Value> supportX;
     vector<Value> supportY;
     bool isinspanningtree = false; //pair<bool,int> isInMST
@@ -236,6 +240,19 @@ public:
         }
     }
 
+    Cost getMaxFiniteCost()
+    {
+        Cost ub = wcsp->getUb();
+        Cost maxcost = MIN_COST;
+        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+            for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+                Cost cost = getCost(*iterX, *iterY);
+                if (cost < ub && cost > maxcost)
+                    maxcost = cost;
+            }
+        }
+        return maxcost;
+    }
     void setInfiniteCost(Cost ub)
     {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
@@ -251,7 +268,7 @@ public:
         }
     }
 
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL
     {
         Value vals[2];
         int count = 0;
@@ -260,7 +277,7 @@ public:
             EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
             int ind = ctr->getIndex(var);
             if (ind >= 0) {
-                vals[i] = var->toValue(s[ind] - CHAR_FIRST);
+                vals[i] = var->toValue(s[ind]);
                 count++;
             }
         }
@@ -269,7 +286,13 @@ public:
         else
             return MIN_COST;
     }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstr(s, (Constraint*)ctr); } // NaryConstraint class undefined
+
+    void resetSupports()
+    {
+        supportX.assign(supportX.size(), y->getInf());
+        supportY.assign(supportY.size(), x->getInf());
+    }
 
     Value getSupport(EnumeratedVariable* var, Value v)
     {
@@ -300,16 +323,15 @@ public:
         yvar = y;
     }
 
-    bool next(String& t, Cost& c)
+    bool next(Tuple& t, Cost& c)
     {
-        Char tch[3];
+        Tuple tch(2, 0);
         if (itvx != xvar->end()) {
             unsigned int ix = xvar->toIndex(*itvx);
-            tch[0] = ix + CHAR_FIRST;
+            tch[0] = ix;
             if (itvy != yvar->end()) {
                 unsigned int iy = yvar->toIndex(*itvy);
-                tch[1] = iy + CHAR_FIRST;
-                tch[2] = '\0';
+                tch[1] = iy;
                 t = tch;
                 c = getCost(xvar, yvar, *itvx, *itvy);
                 ++itvy;
@@ -324,19 +346,19 @@ public:
     }
 
     void firstlex() { first(); }
-    bool nextlex(String& t, Cost& c) { return next(t, c); }
+    bool nextlex(Tuple& t, Cost& c) { return next(t, c); }
 
-    void setTuple(const String& t, Cost c) FINAL
+    void setTuple(const Tuple& t, Cost c) FINAL
     {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
+        Value v0 = x->toValue(t[0]);
+        Value v1 = y->toValue(t[1]);
         setcost(v0, v1, c);
     }
 
-    void addtoTuple(const String& t, Cost c) FINAL
+    void addtoTuple(const Tuple& t, Cost c) FINAL
     {
-        Value v0 = x->toValue(t[0] - CHAR_FIRST);
-        Value v1 = y->toValue(t[1] - CHAR_FIRST);
+        Value v0 = x->toValue(t[0]);
+        Value v1 = y->toValue(t[1]);
         addcost(v0, v1, c);
     }
 
@@ -368,8 +390,12 @@ public:
             supportY.resize(sizeY);
         if (max(sizeX, sizeY) > trwsM.size())
             trwsM.resize(max(sizeX, sizeY), MIN_COST);
-        if (sizeX * sizeY > costs.size())
-            costs.resize(sizeX * sizeY, StoreCost(MIN_COST));
+        if ((unsigned long)sizeX * (unsigned long)sizeY > costs.size())
+#ifdef NO_STORE_BINARY_COSTS
+            costs.resize((size_t)sizeX * (size_t)sizeY, MIN_COST);
+#else
+            costs.resize((size_t)sizeX * (size_t)sizeY, StoreCost(MIN_COST));
+#endif
         linkX->removed = true;
         linkY->removed = true;
         linkX->content.constr = this;
@@ -420,6 +446,14 @@ public:
                 x->queueDAC();
             else
                 x->queueAC();
+        }
+        if (ToulBar2::FullEAC) {
+            reviseEACGreedySolution();
+            for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
+                if ((*iter).constr->isTernary() && (*iter).constr->getIndex(y) >= 0) {
+                    (*iter).constr->reviseEACGreedySolution(); // all ternary cost functions including this current binary cost function need to be revised
+                }
+            }
         }
     }
     void remove(int varIndex)
@@ -479,6 +513,28 @@ public:
         }
     }
 
+    bool checkEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        assert(x->canbe((getIndex(x) == index) ? a : x->getSupport()));
+        assert(x->getCost((getIndex(x) == index) ? a : x->getSupport()) == MIN_COST);
+        assert(y->canbe((getIndex(y) == index) ? a : y->getSupport()));
+        assert(y->getCost((getIndex(y) == index) ? a : y->getSupport()) == MIN_COST);
+        return (getCost((getIndex(x) == index) ? a : x->getSupport(), (getIndex(y) == index) ? a : y->getSupport()) == MIN_COST);
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value a = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, a);
+        if (!result) {
+            if (index >= 0)
+                getVar(index)->unsetFullEAC();
+            else {
+                x->unsetFullEAC();
+                y->unsetFullEAC();
+            }
+        }
+        return result;
+    }
     void fillEAC2(int varIndex)
     {
         assert(!isDuplicate());
@@ -486,7 +542,7 @@ public:
             if (varIndex == 0) {
                 assert(y->canbe(y->getSupport()));
                 unsigned int yindex = y->toIndex(y->getSupport());
-                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+                if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], y->getSupport()) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
                     y->queueEAC2();
                 }
             }
@@ -494,7 +550,7 @@ public:
             if (varIndex == 1) {
                 assert(x->canbe(x->getSupport()));
                 unsigned int xindex = x->toIndex(x->getSupport());
-                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < ToulBar2::vac)) {
+                if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(x->getSupport(), supportX[xindex]) > MIN_COST || (ToulBar2::vacValueHeuristic && Store::getDepth() < abs(ToulBar2::vac))) {
                     x->queueEAC2();
                 }
             }
@@ -504,9 +560,14 @@ public:
     bool isEAC(int varIndex, Value a)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return true;
         if (varIndex == 0) {
+            assert(y->canbe(y->getSupport()));
+            assert(y->getCost(y->getSupport()) == MIN_COST);
+            if (getCost(a, y->getSupport()) > MIN_COST) {
+                if (ToulBar2::FullEAC)
+                    x->unsetFullEAC();
             unsigned int xindex = x->toIndex(a);
             if (y->cannotbe(supportX[xindex]) || y->getCost(supportX[xindex]) > MIN_COST || getCost(a, supportX[xindex]) > MIN_COST) {
                 for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
@@ -517,7 +578,13 @@ public:
                 }
                 return false;
             }
+            }
         } else {
+            assert(x->canbe(x->getSupport()));
+            assert(x->getCost(x->getSupport()) == MIN_COST);
+            if (getCost(x->getSupport(), a) > MIN_COST) {
+                if (ToulBar2::FullEAC)
+                    y->unsetFullEAC();
             unsigned int yindex = y->toIndex(a);
             if (x->cannotbe(supportY[yindex]) || x->getCost(supportY[yindex]) > MIN_COST || getCost(supportY[yindex], a) > MIN_COST) {
                 for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -529,13 +596,14 @@ public:
                 return false;
             }
         }
+        }
         return true;
     }
 
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
-        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex())
+        if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return;
         if (varIndex == 0)
             findFullSupportX();
@@ -593,11 +661,15 @@ public:
 
     bool isFunctional(EnumeratedVariable* x, EnumeratedVariable* y, map<Value, Value>& functional);
 
-    void print(ostream& os);
+    virtual void print(ostream& os);
     void dump(ostream& os, bool original = true);
     void dump_CFN(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY; }
+#ifdef NO_STORE_BINARY_COSTS
+    Long space() const FINAL { return (Long)sizeof(Cost) * sizeX * sizeY; }
+#else
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }
+#endif
 
     friend struct Functor_getCost;
     friend struct Functor_getCostReverse;

@@ -28,7 +28,7 @@ public:
 
     Domain(Value inf, Value sup);
 
-    Domain(Value* d, int dsize);
+    Domain(vector<Value>& dom);
 
     ~Domain()
     {

@@ -25,7 +25,8 @@ void GrammarConstraint::read(istream& file, bool mult)
 
     string str;
     file >> str >> def;
-    if (mult) def *= ToulBar2::costMultiplier;
+    if (mult)
+        def *= ToulBar2::costMultiplier;
 
     /*if (str == "var") mode = VAR;
     else mode = WEIGHTED;*/
@@ -68,16 +69,20 @@ void GrammarConstraint::read(istream& file, bool mult)
             break;
         }
         case 2: {
-            int A, v, w;
+            int A, v;
+            Cost w;
             file >> A >> v >> w;
-            if (mult) w *= ToulBar2::costMultiplier;
+            if (mult)
+                w *= ToulBar2::costMultiplier;
             cfg.addProduction(A, v, w);
             break;
         }
         case 3: {
-            int A, B, C, w;
+            int A, B, C;
+            Cost w;
             file >> A >> B >> C >> w;
-            if (mult) w *= ToulBar2::costMultiplier;
+            if (mult)
+                w *= ToulBar2::costMultiplier;
             cfg.addProduction(A, B, C, w);
             break;
         }
@@ -154,7 +159,7 @@ Cost GrammarConstraint::minCostOriginal()
 
     recomputeTable(curf);
 
-    int minCost = curf[0][n - 1][cfg.getStartSymbol()];
+    Cost minCost = curf[0][n - 1][cfg.getStartSymbol()];
 
     return minCost;
 }
@@ -164,17 +169,17 @@ Cost GrammarConstraint::minCostOriginal(int var, Value val, bool changed)
     return minCost(var, val, changed).first;
 }
 
-Cost GrammarConstraint::eval(const String& s)
+Cost GrammarConstraint::eval(const Tuple& s)
 {
     int n = arity();
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < cfg.getNumTerminals(); j++) {
-            u[i][j] = unary(cfg.toValue(j), i, s[i] - CHAR_FIRST);
+            u[i][j] = unary(cfg.toValue(j), i, s[i]);
         }
     }
 
     recomputeTable(curf);
-    int minCost = curf[0][n - 1][cfg.getStartSymbol()];
+    Cost minCost = curf[0][n - 1][cfg.getStartSymbol()];
 
     return minCost - projectedCost;
 }
@@ -279,7 +284,7 @@ void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable)
                 for (WCNFCFG::NonTermProdIterator r = cfg.beginNonTermProd(); r != cfg.endNonTermProd(); ++r) {
                     if (marked[i][j][r->from]) {
                         for (int k = i; k < j; k++) {
-                            Cost tmp; // = table[i][k][r->to[0]] + table[k + 1][j][r->to[1]] + r->weight;
+                            Cost tmp = table[i][k][r->to[0]] + table[k + 1][j][r->to[1]] + r->weight;
                             //if (tmp <= upTable[i][j][r->from])
                             {
                                 marked[i][k][r->to[0]] = true;

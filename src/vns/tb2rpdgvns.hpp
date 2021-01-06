@@ -38,7 +38,7 @@ public:
     }
     ~ReplicatedParallelDGVNS() {}
 
-    bool solve();
+    bool solve(bool first = true);
     // Model
     bool radgvns();
     bool rsdgvns();

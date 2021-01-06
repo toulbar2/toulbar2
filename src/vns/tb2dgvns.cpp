@@ -8,16 +8,22 @@
 
 #include "tb2dgvns.hpp"
 #include "core/tb2wcsp.hpp"
+#ifdef BOOST
 
-bool VNSSolver::solve()
+bool VNSSolver::solve(bool first)
 {
     // Initialization
     beginSolve(MAX_COST);
     try {
         lastUb = MAX_COST;
         lastSolution.clear();
+        if (first) {
         preprocessing(MAX_COST);
-    } catch (Contradiction) {
+        } else {
+            if (ToulBar2::elimDegree >= 0)
+                ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+        }
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (lastUb < MAX_COST)
             wcsp->setSolution(lastUb, &lastSolution);
@@ -45,7 +51,7 @@ bool VNSSolver::solve()
             endSolve(lastUb < MAX_COST, lastUb, true);
             return (lastUb < MAX_COST);
         }
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (bestUb < MAX_COST)
             wcsp->setSolution(bestUb, &bestSolution);
@@ -110,7 +116,7 @@ bool VNSSolver::solve()
             }
             vector<int> variables;
             variables.reserve(unassignedVars->getSize());
-            vector<int> values;
+            vector<Value> values;
             values.reserve(unassignedVars->getSize());
             for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
                 int v = *iter;
@@ -141,7 +147,7 @@ bool VNSSolver::solve()
                             k *= 2;
                             break;
                         case VNS_LUBY:
-                            k = ToulBar2::vnsKmin * luby(rank);
+                            k = ToulBar2::vnsKmin * (int)luby(rank);
                             break;
                         case VNS_ADD1JUMP:
                             if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1)
@@ -185,7 +191,7 @@ bool VNSSolver::solve()
                         lds *= 2;
                         break;
                     case VNS_LUBY:
-                        lds = ToulBar2::vnsLDSmin * luby(restart);
+                        lds = ToulBar2::vnsLDSmin * (int)luby(restart);
                         break;
                     default:
                         cerr << "Unknown LDS increment strategy inside VNS (see option -linc)!" << endl;
@@ -207,6 +213,7 @@ bool VNSSolver::solve()
 
     return (bestUb < MAX_COST);
 }
+#endif
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

@@ -63,22 +63,22 @@ void AllDiffConstraint::organizeConfig()
         decompose();
 }
 
-Cost AllDiffConstraint::evalOriginal(const String& s)
+Cost AllDiffConstraint::evalOriginal(const Tuple& s)
 {
     Cost tuple_cost = 0;
     if (mode == DEC) {
-        for (unsigned int i = 0; i < s.length(); i++) {
-            for (unsigned int j = i + 1; j < s.length(); j++) {
+        for (unsigned int i = 0; i < s.size(); i++) {
+            for (unsigned int j = i + 1; j < s.size(); j++) {
                 if (s[i] == s[j])
                     tuple_cost += def;
             }
         }
     } else {
-        set<char> count;
-        for (unsigned int i = 0; i < s.length(); i++) {
+        set<tValue> count;
+        for (unsigned int i = 0; i < s.size(); i++) {
             count.insert(s[i]);
         }
-        tuple_cost = (s.length() - count.size()) * def;
+        tuple_cost = (s.size() - count.size()) * def;
     }
     return tuple_cost;
 }

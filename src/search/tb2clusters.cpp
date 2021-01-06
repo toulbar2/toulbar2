@@ -38,20 +38,15 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
 {
-    Char* tbuf = new Char[arity_in + 1];
-    tbuf[arity_in] = '\0';
     for (int i = 0; i < arity_in; i++) {
-        tbuf[i] = CHAR_FIRST;
         unsigned int domsize = scope_in[i]->getDomainInitSize();
         vars.insert(scope_in[i]->wcspIndex);
-        if (domsize + CHAR_FIRST > (unsigned int)std::numeric_limits<Char>::max()) {
-            cerr << "Nary constraints overflow in " << __FILE__ << ". Try undefine NARYCHAR in makefile." << endl;
-            cerr << "Variable " << scope_in[i]->getName() << " has domain size " << domsize << endl;
+        if (domsize > (unsigned int)std::numeric_limits<tValue>::max()) {
+            cerr << "Nary constraints overflow. Extend tValue type range." << endl;
             exit(EXIT_FAILURE);
         }
     }
-    t = String(tbuf);
-    delete[] tbuf;
+    t = Tuple(arity_in, 0);
 
     linkSep.content = this;
 
@@ -91,20 +86,14 @@ void Separator::setup(Cluster* cluster_in)
     if (!nvars)
         return;
 
-    Char* sbuf = new Char[cluster->getNbVars() + 1];
-    int i = 0;
     int nproper = 0;
     it = cluster->beginVars();
     while (it != cluster->endVars()) {
         if (!cluster->isSepVar(*it))
             nproper++;
-        sbuf[i] = CHAR_FIRST;
         ++it;
-        i++;
     }
-    sbuf[nproper] = '\0';
-    s = String(sbuf);
-    delete[] sbuf;
+    s = Tuple(cluster->getNbVars(), 0);
 }
 
 void Separator::assign(int varIndex)
@@ -194,10 +183,10 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
-        Value val = wcsp->getValue(*it);
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST;
+        t[i] = val;
         deltares += delta[i][val];
         ++it;
         i++;
@@ -205,11 +194,11 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
     if (ToulBar2::verbose >= 1)
         cout << ")";
     assert(clb < cub || clb + deltares >= MIN_COST);
-    //assert(nogoods.find(String(t)) == nogoods.end() || nogoods[String(t)].second <= MAX(MIN_COST, c + deltares));
+    //assert(nogoods.find(t) == nogoods.end() || nogoods[Tuple(t)].second <= MAX(MIN_COST, c + deltares));
     TNoGoods::iterator itng = nogoods.find(t);
     if (ToulBar2::verbose >= 3) {
         cout << " <C" << cluster->getId() << ",";
-        Cout << t;
+        cout << t;
         cout << "," << MAX(MIN_COST, clb + deltares) << "," << MAX(MIN_COST, cub + deltares) << ">" << endl;
     }
     if (open) {
@@ -252,10 +241,10 @@ void Separator::setSg(Cost c, BigInteger nb)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
-        Value val = wcsp->getValue(*it);
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST;
+        t[i] = val;
         deltares += delta[i][val];
         ++it;
         i++;
@@ -274,14 +263,14 @@ Cost Separator::getCurrentDelta()
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         if (wcsp->assigned(*it)) {
-            Value val = wcsp->getValue(*it);
+            tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
             sumdelta += delta[i][val];
         } else {
             EnumeratedVariable* x = (EnumeratedVariable*)wcsp->getVar(*it);
             if (wcsp->td->isDeltaModified(x->wcspIndex)) {
                 Cost del = -MAX_COST;
                 for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
-                    Value val = *itx;
+                    tValue val = x->toIndex(*itx);
                     // Cost unaryc = x->getCost(val);
                     // Could use delta[i][val]-unaryc for pure RDS with only one separator per variable
                     if (del < delta[i][val])
@@ -307,11 +296,11 @@ bool Separator::get(Cost& clb, Cost& cub, Solver::OpenList** open)
         cout << "( ";
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
-        assert(cluster->getWCSP()->assigned(*it));
-        Value val = cluster->getWCSP()->getValue(*it);
+        assert(wcsp->assigned(*it));
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         clb -= delta[i][val]; // delta structure
         cub -= delta[i][val]; // delta structure
         ++it;
@@ -357,11 +346,11 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
         cout << "( ";
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
-        assert(cluster->getWCSP()->assigned(*it));
-        Value val = cluster->getWCSP()->getValue(*it);
+        assert(wcsp->assigned(*it));
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         res -= delta[i][val]; // delta structure
         ++it;
         i++;
@@ -384,13 +373,13 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
     }
 }
 
-bool Separator::solGet(TAssign& a, String& sol)
+bool Separator::solGet(TAssign& a, Tuple& sol)
 {
     int i = 0;
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
-        Value val = a[*it];
-        t[i] = val + CHAR_FIRST; // build the tuple
+        tValue val = wcsp->toIndex(*it, a[*it]);
+        t[i] = val; // build the tuple
         ++it;
         i++;
     }
@@ -402,9 +391,9 @@ bool Separator::solGet(TAssign& a, String& sol)
 
         if (ToulBar2::verbose >= 1) {
             cout << "asking  solution  sep:";
-            Cout << t;
+            cout << t;
             cout << "  cost: " << p.first << endl;
-            Cout << "  sol: " << sol << endl;
+            cout << "  sol: " << sol << endl;
         }
 
         return true;
@@ -421,8 +410,8 @@ void Separator::solRec(Cost ub)
     TVars::iterator it = vars.begin();
     while (it != vars.end()) {
         assert(wcsp->assigned(*it));
-        Value val = wcsp->getValue(*it);
-        t[i] = val + CHAR_FIRST; // build the tuple
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+        t[i] = val; // build the tuple
         deltares += delta[i][val];
         ++it;
         i++;
@@ -442,8 +431,8 @@ void Separator::solRec(Cost ub)
     while (it != cluster->endVars()) {
         assert(wcsp->assigned(*it));
         if (!cluster->isSepVar(*it)) {
-            Value val = wcsp->getValue(*it);
-            s[i] = val + CHAR_FIRST;
+            tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+            s[i] = val;
             i++;
         }
         ++it;
@@ -454,7 +443,7 @@ void Separator::solRec(Cost ub)
     if (ToulBar2::verbose >= 1) {
         cout << "recording solution  "
              << " cost: " << ub << " + delta: " << deltares;
-        Cout << " sol: " << s << " sep: " << t << endl;
+        cout << " sol: " << s << " sep: " << t << endl;
     }
 }
 
@@ -497,7 +486,7 @@ void Separator::print(ostream& os)
             TPairNG p = it->second;
             os << "<";
             for (unsigned int i = 0; i < it->first.size(); i++) {
-                os << it->first[i] - CHAR_FIRST;
+                os << it->first[i];
                 if (i < it->first.size() - 1)
                     os << " ";
             }
@@ -740,10 +729,10 @@ void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 // side-effect: remember last solution
 void Cluster::getSolution(TAssign& sol)
 {
+    static Tuple s; //FIXME: unsafe???
     TVars::iterator it;
     if (parent == NULL || this == td->getRootRDS()) {
-        if (vars.size() == 0) {
-        } else {
+        if (vars.size() != 0) {
             it = beginVars();
             while (it != endVars()) {
                 assert(wcsp->assigned(*it));
@@ -753,7 +742,6 @@ void Cluster::getSolution(TAssign& sol)
             }
         }
     }
-    String s;
     if (sep) {
 #ifndef NDEBUG
         bool found = sep->solGet(sol, s);
@@ -765,9 +753,9 @@ void Cluster::getSolution(TAssign& sol)
         it = beginVars();
         while (it != endVars()) {
             if (!isSepVar(*it)) {
-                sol[*it] = ((EnumeratedVariable*)wcsp->getVar(*it))->toValue(s[i] - CHAR_FIRST);
+                sol[*it] = wcsp->toValue(*it, s[i]);
                 //				cout << *it << " := " << sol[*it] << endl;
-                if (!ToulBar2::verifyOpt)
+                if (!ToulBar2::verifyOpt && ToulBar2::solutionBasedPhaseSaving)
                     wcsp->setBestValue(*it, sol[*it]);
                 i++;
             }
@@ -2229,6 +2217,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable* x, Value value, C
 // use assignment "a" instead
 void TreeDecomposition::newSolution(Cost lb)
 {
+    ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)lb));
     wcsp->setUb(lb);
 
     TAssign a;
@@ -2256,7 +2245,7 @@ void TreeDecomposition::newSolution(Cost lb)
         wcsp->setSolution(lb, &a);
 
     if (ToulBar2::showSolutions) {
-        wcsp->printSolution(cout);
+        wcsp->printSolution();
         cout << endl;
         if (ToulBar2::cpd) {
             ToulBar2::cpd->printSequence(a, wcsp->getVars());
@@ -2265,7 +2254,7 @@ void TreeDecomposition::newSolution(Cost lb)
 
     if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
         if (!ToulBar2::allSolutions)
-            rewind(ToulBar2::solutionFile);
+            fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
     }
@@ -2429,7 +2418,7 @@ void TreeDecomposition::dump(Cluster* c)
     if (!c) {
         char tmpName[256];
         sprintf(tmpName, "%s.info", getWCSP()->getName().c_str());
-#ifdef WIN32
+#ifdef __WIN32__
         mkdir(tmpName);
 #else
         mkdir(tmpName, 0777);

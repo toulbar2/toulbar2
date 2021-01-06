@@ -154,7 +154,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
     for (int i = 0; i < nstate; i++) {
         for (vector<pair<int, int>>::iterator it = dfa.transition[i].begin();
              it != dfa.transition[i].end(); it++) {
-            for (set<int>::iterator jt = sigma.begin();
+            for (set<Value>::iterator jt = sigma.begin();
                  jt != sigma.end(); jt++) {
                 if (costTb[i].find(*jt) != costTb[i].end())
                     costTb[i][*jt].insert(make_pair((int)it->second, (Cost)subdef));
@@ -174,7 +174,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
                  it != dfa.transition[i].end(); it++) {
                 costTb[i][epsilonChar][it->second] = insdef;
             }
-            for (set<int>::iterator jt = sigma.begin();
+            for (set<Value>::iterator jt = sigma.begin();
                  jt != sigma.end(); jt++) {
                 map<int, Cost>::iterator pos = costTb[i][*jt].find(i);
                 if (pos == costTb[i][*jt].end()) {
@@ -187,7 +187,7 @@ void RegularFlowConstraint::buildWeightedDFATable()
     }
 }
 
-Cost RegularFlowConstraint::evalOriginal(const String& s)
+Cost RegularFlowConstraint::evalOriginal(const Tuple& s)
 {
 
     typedef pair<Cost, pair<int, int>> Element;
@@ -211,10 +211,10 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
                 break;
             }
         } else {
-            int curValue = s[curIndex] - CHAR_FIRST;
+            int curValue = s[curIndex];
             for (map<int, Cost>::iterator i = costTb[curState][curValue].begin();
                  i != costTb[curState][curValue].end(); i++) {
-                int nextWeight = weight + i->second;
+                Cost nextWeight = weight + i->second;
                 int nextState = i->first;
                 int nextIndex = curIndex + 1;
                 minqueue.push(make_pair(nextWeight, make_pair(nextIndex, nextState)));
@@ -223,7 +223,7 @@ Cost RegularFlowConstraint::evalOriginal(const String& s)
             if (insdef > 0) {
                 for (map<int, Cost>::iterator i = costTb[curState][epsilonChar].begin();
                      i != costTb[curState][epsilonChar].end(); i++) {
-                    int nextWeight = weight + i->second;
+                    Cost nextWeight = weight + i->second;
                     int nextState = i->first;
                     int nextIndex = curIndex;
                     minqueue.push(make_pair(nextWeight, make_pair(nextIndex, nextState)));

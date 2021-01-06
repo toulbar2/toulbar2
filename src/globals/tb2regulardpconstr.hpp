@@ -22,6 +22,11 @@ private:
         {
         }
 
+        ~DFA()
+        {
+            delete[] transition;
+            delete[] invTransition;
+        }
         void setNumStates(int size)
         {
             transition = new vector<pair<int, int>>[size];
@@ -44,7 +49,7 @@ private:
             return nstate;
         }
 
-        void addTransition(int start, int ch, int end, int weight)
+        void addTransition(int start, int ch, int end, Cost weight)
         {
             transition[start].push_back(make_pair(ch, end));
             invTransition[end].push_back(make_pair(ch, start));
@@ -103,7 +108,7 @@ private:
 
     template <class Source>
     struct TableCell {
-        int val;
+        Cost val;
         Source source;
     };
 
@@ -115,7 +120,7 @@ private:
     typedef TableCell<Value> UnaryTableCell;
     UnaryTableCell** u;
 
-    int top;
+    Cost top;
 
     template <class T>
     void resizeTable(T**& table, int width, int heigth)
@@ -151,7 +156,7 @@ public:
     RegularDPConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~RegularDPConstraint();
 
-    Cost eval(const String& s);
+    Cost eval(const Tuple& s);
     void read(istream& file, bool mult = true);
     WeightedAutomaton* getWeightedAutomaton() { return &dfa; }
     string getName()

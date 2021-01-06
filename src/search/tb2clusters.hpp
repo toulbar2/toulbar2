@@ -29,18 +29,18 @@ struct CmpClusterStruct {
 typedef set<Cluster*, CmpClusterStruct> TClustersSorted;
 
 typedef triplet<Cost, Cost, Solver::OpenList> TPairNG;
-typedef pair<Cost, String> TPairSol;
+typedef pair<Cost, Tuple> TPairSol;
 
-typedef map<String, TPairNG> TNoGoods;
-typedef map<String, TPairSol> TSols;
+typedef map<Tuple, TPairNG> TNoGoods;
+typedef map<Tuple, TPairSol> TSols;
 
 // for solution counting :
 typedef pair<Cost, BigInteger> TPairSG;
-typedef map<String, TPairSG> TSGoods;
+typedef map<Tuple, TPairSG> TSGoods;
 
 // for LogZ (LZ) computing :
 typedef pair<TLogProb, bool> TPairLz; // < logZ Count, iscount >
-typedef map<String, TPairLz> TLZGoods;
+typedef map<Tuple, TPairLz> TLZGoods;
 
 class Separator : public AbstractNaryConstraint {
 private:
@@ -58,8 +58,8 @@ private:
     TSols solutions;
     DLink<Separator*> linkSep; // link to insert the separator in PendingSeparator list
 
-    String t; // temporary buffer for a separator tuple
-    String s; // temporary buffer for a solution tuple
+    Tuple t; // temporary buffer for a separator tuple
+    Tuple s; // temporary buffer for a solution tuple
 
 public:
     Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
@@ -84,7 +84,7 @@ public:
     TPairLz getLz();
 
     void solRec(Cost ub);
-    bool solGet(TAssign& a, String& sol);
+    bool solGet(TAssign& a, Tuple& sol);
 
     void resetLb();
     void resetUb();
@@ -95,7 +95,7 @@ public:
     void addDelta(unsigned int posvar, Value value, Cost cost)
     {
         assert(posvar < vars.size());
-        delta[posvar][value] += cost;
+        delta[posvar][wcsp->toIndex(posvar, value)] += cost;
     }
     Cost getCurrentDelta(); // separator variables may be unassigned
 

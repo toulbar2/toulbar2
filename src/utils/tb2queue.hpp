@@ -18,7 +18,7 @@ struct VariableWithTimeStamp {
     int incdec;
 };
 
-class Queue : private BTList<VariableWithTimeStamp> {
+class Queue : public BTList<VariableWithTimeStamp> {
     // make it private because we don't want copy nor assignment
     Queue(const Queue& s);
     Queue& operator=(const Queue& s);
@@ -46,6 +46,7 @@ public:
     Variable* pop_max();
     Variable* pop_max(int* incdec);
     Variable* pop_first();
+    void sort(bool increase = true);
 
     void print(ostream& o);
 };

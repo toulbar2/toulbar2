@@ -63,7 +63,7 @@ Cost TreeConstraint::minCostOriginal(int var, Value val, bool changed)
     return result.first;
 }
 
-Cost TreeConstraint::eval(const String& s)
+Cost TreeConstraint::eval(const Tuple& s)
 {
 
     int n = arity();
@@ -74,7 +74,7 @@ Cost TreeConstraint::eval(const String& s)
     edgeList.resize(n);
 
     for (int i = 0; i < n; i++) {
-        int val = s[i] - CHAR_FIRST;
+        int val = s[i];
         if (val2VarIndex[val] == i) {
             root = i;
             nRoot++;
@@ -140,7 +140,7 @@ DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool chan
             int u = var;
             int v = val2VarIndex[val];
             CCTreeNodePtr lca = ((pos[u] < pos[v]) ? inorder[RMQ.query(pos[u], pos[v])] : inorder[RMQ.query(pos[v], pos[u])]);
-            int maxWeight = lca->weight;
+            Cost maxWeight = lca->weight;
             if (x->getCost(val) + curTreeCost - maxWeight > wcsp->getUb())
                 consistent = false;
         }
@@ -152,7 +152,7 @@ DPGlobalConstraint::Result TreeConstraint::minCost(int var, Value val, bool chan
         return DPGlobalConstraint::Result(wcsp->getUb(), NULL);
 }
 
-int TreeConstraint::recomputeCurMST()
+Cost TreeConstraint::recomputeCurMST()
 {
     int n = arity();
     vector<Edge> edgeList;
@@ -167,13 +167,13 @@ int TreeConstraint::recomputeCurMST()
     return recomputeMST(edgeList);
 }
 
-int TreeConstraint::recomputeMST(vector<TreeConstraint::Edge>& edgeList)
+Cost TreeConstraint::recomputeMST(vector<TreeConstraint::Edge>& edgeList)
 {
 
     int n = arity();
-    int treeCost = 0;
+    Cost treeCost = 0;
 
-    minTreeEdgeCost = INT_MAX;
+    minTreeEdgeCost = std::numeric_limits<Cost>::max();
     maxTreeEdgeCost = 0;
     treeEdge.clear();
     inorder.clear();

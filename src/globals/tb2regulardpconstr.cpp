@@ -2,7 +2,7 @@
 
 RegularDPConstraint::RegularDPConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity)
     : DPGlobalConstraint(wcsp, scope, arity)
-    , top(0)
+    , top(MIN_COST)
 {
 }
 
@@ -78,7 +78,7 @@ Cost RegularDPConstraint::minCostOriginal()
 
     recomputeTable(curf);
 
-    int minCost = top;
+    Cost minCost = top;
     for (vector<int>::iterator s = dfa.final.begin(); s != dfa.final.end(); s++)
         if (minCost > curf[n][*s].val)
             minCost = curf[n][*s].val;
@@ -91,21 +91,21 @@ Cost RegularDPConstraint::minCostOriginal(int var, Value val, bool changed)
     return minCost(var, val, changed).first;
 }
 
-Cost RegularDPConstraint::eval(const String& s)
+Cost RegularDPConstraint::eval(const Tuple& s)
 {
     int n = arity();
     for (int i = 1; i <= n; i++) {
         for (unsigned int j = 0; j < dfa.symbol.size(); j++) {
-            u[i][j].val = unary(dfa.symbol[j], i - 1, s[i - 1] - CHAR_FIRST);
+            u[i][j].val = unary(dfa.symbol[j], i - 1, s[i - 1]);
         }
     }
 
     recomputeTable(curf);
 
-    int minCost = top;
-    for (vector<int>::iterator s = dfa.final.begin(); s != dfa.final.end(); s++)
-        if (minCost > curf[n][*s].val)
-            minCost = curf[n][*s].val;
+    Cost minCost = top;
+    for (vector<int>::iterator ss = dfa.final.begin(); ss != dfa.final.end(); ss++)
+        if (minCost > curf[n][*ss].val)
+            minCost = curf[n][*ss].val;
 
     return minCost - projectedCost;
 }
@@ -135,10 +135,10 @@ DPGlobalConstraint::Result RegularDPConstraint::minCost(int var, Value val, bool
     if (changed)
         recompute();
 
-    int minCost = wcsp->getUb();
+    Cost minCost = wcsp->getUb();
     for (int qk = 0; qk < dfa.size(); qk++) {
         for (vector<pair<int, int>>::iterator qj = dfa.transition[qk].begin(); qj != dfa.transition[qk].end(); qj++) {
-            int curCost = f[var][qk].val + unary(qj->first, var, val) + invf[var + 1][qj->second].val;
+            Cost curCost = f[var][qk].val + unary(qj->first, var, val) + invf[var + 1][qj->second].val;
             if (minCost > curCost)
                 minCost = curCost;
         }
@@ -168,7 +168,7 @@ void RegularDPConstraint::recomputeTable(DPTableCell** table, DPTableCell** invT
             table[i][j].val = top;
             table[i][j].source = make_pair(-1, -1);
             for (vector<pair<int, int>>::iterator qk = dfa.invTransition[j].begin(); qk != dfa.invTransition[j].end(); qk++) {
-                int curCost = table[i - 1][qk->second].val + u[i][dfa.symbolIndex[qk->first]].val;
+                Cost curCost = table[i - 1][qk->second].val + u[i][dfa.symbolIndex[qk->first]].val;
                 if (table[i][j].val > curCost) {
                     table[i][j].val = curCost;
                     table[i][j].source = make_pair(u[i][dfa.symbolIndex[qk->first]].source, qk->second);
@@ -181,13 +181,13 @@ void RegularDPConstraint::recomputeTable(DPTableCell** table, DPTableCell** invT
         for (int j = 0; j < dfa.size(); j++)
             invTable[n][j].val = top;
         for (vector<int>::iterator it = dfa.final.begin(); it != dfa.final.end(); it++)
-            invTable[n][*it].val = 0;
+            invTable[n][*it].val = MIN_COST;
 
         for (int i = n - 1; i >= 0; i--) {
             for (int j = 0; j < dfa.size(); j++) {
                 invTable[i][j].val = top;
                 for (vector<pair<int, int>>::iterator qj = dfa.transition[j].begin(); qj != dfa.transition[j].end(); qj++) {
-                    int curCost = invTable[i + 1][qj->second].val + u[i + 1][dfa.symbolIndex[qj->first]].val;
+                    Cost curCost = invTable[i + 1][qj->second].val + u[i + 1][dfa.symbolIndex[qj->first]].val;
                     if (invTable[i][j].val > curCost) {
                         invTable[i][j].val = curCost;
                         invTable[i][j].source = make_pair(u[i + 1][dfa.symbolIndex[qj->first]].source, qj->second);

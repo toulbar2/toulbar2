@@ -23,69 +23,46 @@ void timeOut(int sig);
 void timer(int t); ///< \brief set a timer (in seconds)
 void timerStop(); ///< \brief stop a timer
 
-#ifdef WIDE_STRING
-typedef wchar_t Char;
-typedef wstring String;
-#define Cout wcout
-#include <cwchar>
-#define Strcpy wcscpy
-//    #define Strncpy wcsncpy
-//    #define Strcat wcscat
-//    #define Strncat wcsncat
-#define Strcmp wcscmp
-//    #define Strncmp wcsncmp
-#define Strlen wcslen
-#else
-typedef char Char;
-typedef string String;
-#define Cout cout
-#define Strcpy strcpy
-#define Strncpy strncpy
-#define Strcat strcat
-#define Strncat strncat
-#define Strcmp strcmp
-#define Strncmp strncmp
-#define Strlen strlen
-#endif
-
 typedef long long Long;
 
 #ifndef LONGLONG_MAX
-#ifdef LINUX
 #ifdef LONG_LONG_MAX
 const Long LONGLONG_MAX = LONG_LONG_MAX;
 #else
 const Long LONGLONG_MAX = LLONG_MAX;
 #endif
 #endif
-#ifdef WINDOWS
-const Long LONGLONG_MAX = 0x7FFFFFFFFFFFFFFFLL;
-#endif
-#endif
 
 typedef long double Double;
 
-#ifdef LINUX
+#ifdef __WIN32__
+#include <random>
+inline void mysrand(long) {};
+inline double mydrand() {
+    static std::ranlux48 source(std::random_device{}());
+    return std::uniform_real_distribution<double>(0,1)(source);
+}
+inline int myrand() {
+    return INT_MAX * mydrand();
+}
+inline Long myrandl() {
+    return LONG_MAX * mydrand();
+}
+inline Long myrandln() {
+    return LONG_MAX * 2. * (mydrand() - 0.5);
+}
+#else
 inline void mysrand(int seed)
 {
     return srand48(seed);
 }
-inline int myrand() { return lrand48(); }
+inline int myrand() { return (int)lrand48(); }
 inline Long myrandl() { return (Long)((Long)lrand48() /**LONGLONG_MAX*/); }
+inline Long myrandln() { return (Long)((Long)mrand48() /**LONGLONG_MAX*/); }
 inline double mydrand() { return drand48(); }
-#endif
-#ifdef WINDOWS
-inline void mysrand(int seed)
-{
-    return srand(seed);
-}
-inline int myrand() { return rand(); }
-inline Long myrandl() { return (Long)((Long)rand() /**LONGLONG_MAX*/); }
-inline double mydrand() { return drand(); } //If compiler warning, replace by (double(rand()) / RAND_MAX);
 #endif
 
 #ifdef DOUBLE_PROB
-#ifdef LINUX
 inline double Pow(double x, double y)
 {
     return pow(x, y);
@@ -97,22 +74,8 @@ inline double Expm1(double x) { return expm1(x); }
 inline double Log(double x) { return log(x); }
 inline double Log1p(double x) { return log1p(x); }
 #endif
-#ifdef WINDOWS
-inline double Pow(double x, double y)
-{
-    return pow(x, y);
-}
-inline double Exp10(double x) { return pow(10., x); }
-inline double Exp(double x) { return exp(x); }
-inline double Log10(double x) { return log(x) / log(10.); }
-inline double Log(double x) { return log(x); }
-inline double Log1p(double x) { return log(1. + x); }
-inline double Expm1(double x) { return exp(x) - 1.; }
-#endif
-#endif
 
 #ifdef LONGDOUBLE_PROB
-#ifdef LINUX
 inline Double Pow(Double x, Double y)
 {
     return powl(x, y);
@@ -123,18 +86,6 @@ inline Double Log10(Double x) { return log10l(x); }
 inline Double Expm1(Double x) { return expm1l(x); }
 inline Double Log(Double x) { return logl(x); }
 inline Double Log1p(Double x) { return log1pl(x); }
-#endif
-#ifdef WINDOWS
-inline Double Pow(Double x, Double y)
-{
-    return pow(x, y);
-}
-inline Double Exp10(Double x) { return pow(10., x); }
-inline Double Log10(Double x) { return log(x) / log(10.); }
-inline Double Log(Double x) { return log(x); }
-inline Double Log1p(Double x) { return log(1. + x); }
-inline Double Expm1(Double x) { return exp(x) - 1.; }
-#endif
 #endif
 
 #ifdef QUAD_PROB
@@ -167,7 +118,7 @@ inline __float128 Log10(__float128 x) { return log10q(x); }
 inline __float128 Log1p(__float128 x) { return log1pq(x); }
 #endif
 
-#ifdef INT_COST
+#if defined(INT_COST) || defined(SHORT_COST)
 inline double to_double(const int cost)
 {
     return (double)cost;
@@ -233,18 +184,10 @@ inline Long ceil(const Long e) { return e; }
 inline Long floor(const Long e) { return e; }
 inline Long randomCost(Long min, Long max) { return min + (myrandl() % (max - min + 1)); }
 
-#ifdef LINUX
 inline Long string2Cost(const char* ptr)
 {
     return atoll(ptr);
 }
-#endif
-#ifdef WINDOWS
-inline Long string2Cost(const char* ptr)
-{
-    return atol(ptr);
-}
-#endif
 
 inline int cost2log2(Long x)
 {
@@ -288,13 +231,11 @@ inline Long luby(Long r)
 }
 
 // function mkdir
-#ifdef LINUX
 #include <sys/stat.h>
-#include <signal.h>
-#endif
 
-#ifdef WIN32
-#include <direct.h> // for WINDOWS?
+
+#ifndef __WIN32__
+#include <signal.h>
 #endif
 
 #ifndef SIZE_MAX

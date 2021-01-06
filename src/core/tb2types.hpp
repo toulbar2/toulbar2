@@ -8,13 +8,13 @@
  * - ::TProb : probability value (exact type depends on compilation flag)
  * - ::TLogProb : log probability value (exact type depends on compilation flag)
  * - ::Double : large float (long double)
- * - ::String : string with extended character size (wide string) to encode tuples
+ * - ::tValue : a short Value type for tuples
+ * - ::Tuple : vector of tValues to encode tuples
  *
  * \note Compilation flag for Cost is: \c INT_COST (int), \c LONGLONG_COST (long long), or \c PARETOPAIR_COST (see ::ParetoPair)
  * \warning \c PARETOPAIR_COST is fragile.
  * \note Compilation flag for TProb is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
  * \note Compilation flag for T(Log)Prob is: \c DOUBLE_PROB or \c LONGDOUBLE_PROB
- * \note Compilation flag for String is: \c WIDE_STRING or nothing (usual C++ string)
  */
 
 #ifndef TB2TYPES_HPP_
@@ -27,9 +27,6 @@
 //#define DOUBLE_PROB
 //#define LONGDOUBLE_PROB
 
-// uncomment if using large enumerated domains with BTD or in nary cost functions
-//#define WIDE_STRING
-
 #include "utils/tb2utils.hpp"
 //Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
@@ -37,17 +34,29 @@
 #include <quadmath.h> // only with gcc/g++
 #endif
 
+/// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
+const string IMPLICIT_VAR_TAG = "#";
+
+/// Special character value at the beginning of a variable's name to identify diverse extra variables corresponding to the current sequence of diverse solutions found so far
+const string DIVERSE_VAR_TAG = "^";
 /// Domain value (can be positive or negative integers)
+#ifdef SHORT_VALUE
+typedef int16_t Value;
+typedef int16_t tValue;
+#else
 typedef int Value;
+typedef int16_t tValue;
+#endif
 /// Maximum domain value
-const Value MAX_VAL = (INT_MAX / 2);
+const Value MAX_VAL = (std::numeric_limits<Value>::max() / 2);
 /// Forbidden domain value
-const Value WRONG_VAL = INT_MAX;
+const Value WRONG_VAL = std::numeric_limits<Value>::max();
 /// Minimum domain value
-const Value MIN_VAL = -(INT_MAX / 2);
+const Value MIN_VAL = -(std::numeric_limits<Value>::max() / 2);
 /// Maximum domain size
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
 const Value MAX_DOMAIN_SIZE = 2000;
+typedef vector<tValue> Tuple;
 
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
 const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
@@ -57,6 +66,78 @@ const int MAX_BRANCH_SIZE = 1000000;
 const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
 const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
 
+#ifdef SHORT_COST
+const bool PARTIALORDER = false;
+typedef int16_t Cost;
+const Cost MIN_COST = short{0};
+const Cost UNIT_COST = short{1};
+const Cost SMALL_COST = short{1};
+const Cost MEDIUM_COST = short{3};
+const Cost LARGE_COST = short{100};
+const Cost MAX_COST = (std::numeric_limits<Cost>::max() / MEDIUM_COST);
+//inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
+//inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
+//inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
+
+//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
+inline int16_t min(int16_t x, int y) {
+    if (x < y) return x;
+    else return y;
+}
+inline int16_t min(int x, int16_t y) {
+    if (x < y) return x;
+    else return y;
+}
+inline int16_t max(int16_t x, int y) {
+    if (x > y) return x;
+    else return y;
+}
+inline int16_t max(int x, int16_t y) {
+    if (x > y) return x;
+    else return y;
+}
+
+inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MAX(Cost a, Cost b) { return max(a, b); }
+inline Cost MULT(Cost a, double b)
+{
+    assert(b < MAX_COST);
+    if (a >= MAX_COST)
+        return MAX_COST;
+    else if (b <= UNIT_COST)
+        return a * b;
+    else if (a < MAX_COST / b)
+        return a * b;
+    else {
+        cerr << "Error: cost multiplication overflow!" << endl;
+        exit(1);
+    }
+}
+inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
+inline Cost LUB(Cost a, Cost b) { return MAX(a, b); }
+inline bool GLB(Cost* a, Cost b)
+{
+    if (b < *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool LUB(Cost* a, Cost b)
+{
+    if (b > *a) {
+        *a = b;
+        return true;
+    } else
+        return false;
+}
+inline bool GLBTEST(Cost a, Cost b) { return (b < a); }
+inline bool LUBTEST(Cost a, Cost b) { return (b > a); }
+inline bool DACTEST(Cost a, Cost b) { return (a == 0 && b > 0); }
+inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
+inline bool SUPPORTTEST(Cost a) { return false; }
+inline void initCosts() {}
+#endif
 #ifdef INT_COST
 const bool PARTIALORDER = false;
 typedef int Cost;
@@ -65,7 +146,7 @@ const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
-const Cost MAX_COST = ((INT_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
+const Cost MAX_COST = ((std::numeric_limits<Cost>::max()/2) / MEDIUM_COST / MEDIUM_COST);
 //inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
 //inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
 //inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
@@ -147,9 +228,9 @@ inline Cost MULT(Cost a, double b)
     if (a >= MAX_COST)
         return MAX_COST;
     else if (b <= UNIT_COST)
-        return a * b;
-    else if (a < MAX_COST / b)
-        return a * b;
+        return (Cost)((double)a * b);
+    else if (a < (double)MAX_COST / b)
+        return (Cost)((double)a * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         exit(1);
@@ -251,11 +332,6 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 typedef map<int, int> TSCOPE;
 typedef map<int, Value> TAssign;
 
-#ifdef NARYCHAR
-#define CHAR_FIRST '0'
-#else
-#define CHAR_FIRST 1
-#endif
 
 typedef unsigned int uint;
 /*
@@ -264,12 +340,11 @@ typedef unsigned int uint;
  */
 
 // A value with weight
-template <class Object>
-struct WeightedObj {
-    Object val;
+struct WeightedObjInt {
+    int val;
     Cost weight;
 
-    WeightedObj(const Object& val_, Cost weight_ = MIN_COST)
+    WeightedObjInt(int val_, Cost weight_ = MIN_COST)
         : val(val_)
         , weight(weight_)
     {
@@ -277,13 +352,12 @@ struct WeightedObj {
 };
 
 // A value with upper and lower limit
-template <class Object>
-struct BoundedObj {
-    Object val;
+struct BoundedObjValue {
+    Value val;
     unsigned int upper;
     unsigned int lower;
 
-    BoundedObj(const Object& val_, unsigned int upper_, unsigned int lower_ = 0)
+    BoundedObjValue(Value val_, unsigned int upper_, unsigned int lower_ = 0)
         : val(val_)
         , upper(upper_)
         , lower(lower_)
@@ -296,7 +370,7 @@ struct DFATransition {
     int start;
     int end;
     Value symbol;
-    unsigned int weight;
+    Cost weight;
 
     DFATransition(int start_, Value symbol_, int end_, Cost weight_ = MIN_COST)
         : start(start_)
@@ -310,7 +384,7 @@ struct DFATransition {
 // A production rule in CFG
 struct CFGProductionRule {
     int from;
-    unsigned int weight;
+    Cost weight;
     int order;
     int* to;
 };
@@ -344,11 +418,11 @@ typedef enum {
     ELIM_MAX
 } ElimOrderType;
 
-class Seq;
 class Pedigree;
 class Haplotype;
 class BEP;
 class Cpd;
+class Seq;
 class Tb2ScpBranch;
 class TrieNum;
 #ifdef OPENMPI
@@ -405,6 +479,21 @@ typedef enum {
     VNS_ADD1JUMP = 4
 } VNSInc;
 
+typedef enum {
+    WCSP_FORMAT = 1,
+    CFN_FORMAT,
+    WCNF_FORMAT,
+    OPB_FORMAT,
+    BEP_FORMAT,
+    CNF_FORMAT,
+    LG_FORMAT,
+    MAP_FORMAT,
+    PRE_FORMAT,
+    QPBO_FORMAT,
+    UAI_FORMAT,
+    XCSP2_FORMAT
+} ProblemFormat;
+
 struct ValueCost {
     Value value;
     Cost cost;
@@ -414,189 +503,217 @@ struct ValueCost {
 };
 
 ///contains all global variables (mainly solver's command-line options)
-namespace ToulBar2 {
-extern string version;
-extern int verbose;
-extern int debug;
-extern string externalUB;
-extern int showSolutions;
-extern char* writeSolution;
-extern FILE* solutionFile;
-extern Long allSolutions;
-extern int dumpWCSP;
-extern bool approximateCountingBTD;
-extern bool binaryBranching;
-extern int dichotomicBranching;
-extern unsigned int dichotomicBranchingSize;
-extern bool sortDomains;
-extern map<int, ValueCost*> sortedDomains;
-extern bool solutionBasedPhaseSaving;
-extern int elimDegree;
-extern int elimDegree_preprocessing;
-extern int elimDegree_;
-extern int elimDegree_preprocessing_;
-extern int elimSpaceMaxMB;
-extern int minsumDiffusion;
-extern int prodsumDiffusion;
-extern int preprocessTernaryRPC;
-extern int preprocessFunctional;
-extern bool costfuncSeparate;
-extern int preprocessNary;
-extern bool QueueComplexity;
-extern bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
-extern bool lastConflict;
-extern int weightedDegree;
-extern int weightedTightness;
-extern bool MSTDAC;
-extern int DEE;
-extern int DEE_;
-extern int nbDecisionVars;
-extern int lds;
-extern bool limited;
-extern Long restart;
-extern externalevent setvalue;
-extern externalevent setmin;
-extern externalevent setmax;
-extern externalevent removevalue;
-extern externalcostevent setminobj;
-extern externalsolution newsolution;
-extern Pedigree* pedigree;
-extern Haplotype* haplotype;
-extern Cpd* cpd;
-extern Tb2ScpBranch* scpbranch;
+class ToulBar2 {
+protected:
+    virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
+public:
+    static string version;
+    static int verbose;
+
+    static bool FullEAC;
+    static bool VACthreshold;
+    static int nbTimesIsVAC;
+    static int nbTimesIsVACitThresholdMoreThanOne;
+    static bool RASPS;
+    static int useRASPS;
+    static bool RASPSreset;
+    static int RASPSangle;
+    static Long RASPSnbBacktracks;
+    static int RASPSnbStrictACVariables;
+    static Cost RASPSlastitThreshold;
+    static bool RASPSsaveitThresholds;
+    static vector<pair<Cost, double>> RASPSitThresholds;
+    static int debug;
+    static string externalUB;
+    static int showSolutions;
+    static int writeSolution;
+    static FILE* solutionFile;
+    static long solutionFileRewindPos;
+    static Long allSolutions;
+    static int dumpWCSP;
+    static bool approximateCountingBTD;
+    static bool binaryBranching;
+    static int dichotomicBranching;
+    static unsigned int dichotomicBranchingSize;
+    static bool sortDomains;
+
+    static map<int, ValueCost*> sortedDomains;
+    static bool solutionBasedPhaseSaving;
+    static int elimDegree;
+    static int elimDegree_preprocessing;
+    static int elimDegree_;
+    static int elimDegree_preprocessing_;
+    static int elimSpaceMaxMB;
+    static int minsumDiffusion;
+    static int prodsumDiffusion;
+    static int preprocessTernaryRPC;
+    static int preprocessFunctional;
+    static bool costfuncSeparate;
+    static int preprocessNary;
+    static bool QueueComplexity;
+    static bool Static_variable_ordering; // flag for static variable ordering during search (dynamic ordering is default value)
+    static bool lastConflict;
+    static int weightedDegree;
+    static int weightedTightness;
+    static bool MSTDAC;
+    static int DEE;
+    static int DEE_;
+    static int nbDecisionVars;
+    static int lds;
+    static bool limited;
+    static Long restart;
+    static Long backtrackLimit;
+    static externalevent setvalue;
+    static externalevent setmin;
+    static externalevent setmax;
+    static externalevent removevalue;
+    static externalcostevent setminobj;
+    static externalsolution newsolution;
+    static Pedigree* pedigree;
+    static Haplotype* haplotype;
+    static Cpd* cpd;
+    static Tb2ScpBranch* scpbranch;
 #ifdef OPENMPI
-extern BaseJobs* jobs;
+    static BaseJobs* jobs;
 #endif
-extern SequenceHandler* sequence_handler;
-extern bool diffneg;
-extern string map_file;
-extern bool cfn;
-extern bool gz;
-extern bool xz;
-extern bool bayesian;
-extern int uai;
-extern int resolution;
-extern TProb errorg;
-extern TLogProb NormFactor;
-extern int foundersprob_class;
-extern vector<TProb> allelefreqdistrib;
-extern bool consecutiveAllele;
-extern bool generation;
-extern int pedigreeCorrectionMode;
-extern int pedigreePenalty;
-extern int vac;
-extern string costThresholdS;
-extern string costThresholdPreS;
-extern Cost costThreshold;
-extern Cost costThresholdPre;
-extern double trwsAccuracy;
-extern bool trwsOrder;
-extern unsigned int trwsNIter;
-extern unsigned int trwsNIterNoChange;
-extern unsigned int trwsNIterComputeUb;
-extern double costMultiplier;
-extern unsigned int decimalPoint;
-extern string deltaUbS;
-extern Cost deltaUb;
-extern bool singletonConsistency;
-extern bool vacValueHeuristic;
-extern BEP* bep;
-extern LcLevelType LcLevel;
-extern bool wcnf;
-extern bool qpbo;
-extern double qpboQuadraticCoefMultiplier;
+    static SequenceHandler* sequence_handler;
+    static bool diffneg;
+    static string map_file;
+    static bool cfn;
+    static bool gz;
+    static bool xz;
+    static bool bayesian;
+    static int uai;
+    static int resolution;
+    static TProb errorg;
+    static TLogProb NormFactor;
+    static int foundersprob_class;
+    static vector<TProb> allelefreqdistrib;
+    static bool consecutiveAllele;
+    static bool generation;
+    static int pedigreeCorrectionMode;
+    static int pedigreePenalty;
+    static int vac;
+    static string costThresholdS;
+    static string costThresholdPreS;
+    static Cost costThreshold;
+    static Cost costThresholdPre;
+    static double trwsAccuracy;
+    static bool trwsOrder;
+    static unsigned int trwsNIter;
+    static unsigned int trwsNIterNoChange;
+    static unsigned int trwsNIterComputeUb;
+    static double costMultiplier;
+    static unsigned int decimalPoint;
+    static string deltaUbS;
+    static Cost deltaUb;
+    static Cost deltaUbAbsolute;
+    static Double deltaUbRelativeGap;
+    static bool singletonConsistency;
+    static bool vacValueHeuristic;
+    static BEP* bep;
+    static LcLevelType LcLevel;
+    static bool wcnf;
+    static bool qpbo;
+    static double qpboQuadraticCoefMultiplier;
 
-extern char* varOrder;
-extern int btdMode;
-extern int btdSubTree;
-extern int btdRootCluster;
+    static unsigned int divNbSol;
+    static unsigned int divBound;
+    static unsigned int divWidth;
+    static unsigned int divMethod; // 0: Dual, 1: Hidden, 2: Ternary
+    static unsigned int divRelax; // 0: random, 1: high div, 2: small div, 3: high unary costs
 
-extern bool maxsateval;
-extern bool xmlflag;
-extern TLogProb markov_log;
-extern string evidence_file;
-extern FILE* solution_uai_file;
-extern string solution_uai_filename;
-extern string problemsaved_filename;
-extern bool isZ;
-extern float isZCelTemp;
-extern int isZUB;
-extern Cost enumUB;
-extern bool bestconf;
-extern bool stop; // STOP TB2 (TMP way)
-extern bool isGumbel;
-extern Seq* seq;
-extern TLogProb logZ;
-extern TLogProb Entropy;
-extern TLogProb Enthalpy;
-extern TLogProb GlobalLogUbZ; // Upper bound on Z.
-extern TLogProb GlobalLogLbZ; // Upper bound on Z.
-extern TLogProb logU; // upper bound on rejected potentials
-extern TLogProb logepsilon; // epsilon for Z* pruning
-extern TProb sigma; // sigma set for HBFS-Counting
-extern TrieNum* trieZ; // Trie over preprocessing Optimum Energies
-extern string Trie_File;
-extern bool isTrie_File;
+    static char* varOrder;
+    static int btdMode;
+    static int btdSubTree;
+    static int btdRootCluster;
 
-extern TLogProb ubE;
-extern TLogProb Normalizing_Constant;
 
-extern bool uaieval;
-extern string stdin_format; // stdin format declaration
+    static bool maxsateval;
+    static bool xmlflag;
+    static TLogProb markov_log;
+    static string evidence_file;
+    static FILE* solution_uai_file;
+    static string solution_uai_filename;
+    static string problemsaved_filename;
+    static bool isZ;
+    static float isZCelTemp;
+    static int isZUB;
+    static Cost enumUB;
+    static bool bestconf;
+    static bool stop; // STOP TB2 (TMP way)
+    static bool isGumbel;
+    static Seq* seq;
+    static TLogProb logZ;
+    static TLogProb Entropy;
+    static TLogProb Enthalpy;
+    static TLogProb GlobalLogUbZ; // Upper bound on Z.
+    static TLogProb GlobalLogLbZ; // Upper bound on Z.
+    static TLogProb logU; // upper bound on rejected potentials
+    static TLogProb logepsilon;
+    static TProb sigma; // sigma set for HBFS-Counting
+    static TrieNum* trieZ; // Trie over preprocessing Optimum Energies
+    static string Trie_File;
+    static bool isTrie_File;
 
-extern double startCpuTime;
+    static TLogProb ubE;
+    static TLogProb Normalizing_Constant;
 
-extern int splitClusterMaxSize;
-extern double boostingBTD;
-extern int maxSeparatorSize;
-extern int minProperVarSize;
-extern int smallSeparatorSize;
+    static bool uaieval;
+    static string stdin_format; // stdin format declaration
 
-extern int Berge_Dec; // flag for berge acyclic decomposition
-extern int nbvar; // initial number of variable (read in the file)
-extern bool learning; // if true, perform pseudoboolean learning
-extern externalfunc timeOut;
-extern bool interrupted;
-extern int seed;
+    static double startCpuTime;
 
-extern string incop_cmd;
+    static int splitClusterMaxSize;
+    static double boostingBTD;
+    static int maxSeparatorSize;
+    static int minProperVarSize;
+    static int smallSeparatorSize;
 
-extern SearchMethod searchMethod;
+    static int Berge_Dec; // flag for berge acyclic decomposition
+    static bool learning; // if true, perform pseudoboolean learning
+    static externalfunc timeOut;
+    static bool interrupted;
+    static int seed;
 
-extern string clusterFile; // cluster tree decomposition file (without running intersection property)
-extern ofstream vnsOutput; // output file for VNS
+    static string incop_cmd;
 
-extern VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
-extern int vnsLDSmin; // discrepancy initial value
-extern int vnsLDSmax; // discrepancy maximum value
-extern VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
-extern int vnsKmin; // neighborhood initial size
-extern int vnsKmax; // neighborhood maximum size
-extern VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
+    static SearchMethod searchMethod;
 
-extern int vnsLDScur; // current discrepancy (used only for debugging display)
-extern int vnsKcur; // current neighborhood size (used only for debugging display)
-extern VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
-extern bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
-extern bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
-extern bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
-extern bool vnsParallelSync; // true if RSGDVNS else RADGVNS
-extern string vnsOptimumS;
-extern Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
-extern bool vnsParallel; // true if in master/slaves paradigm
+    static string clusterFile; // cluster tree decomposition file (without running intersection property)
+    static ofstream vnsOutput; // output file for VNS
 
-extern Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
-extern Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
-extern Long hbfsAlpha; // inverse of minimum node redundancy goal limit
-extern Long hbfsBeta; // inverse of maximum node redundancy goal limit
-extern ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
-extern ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
+    static VNSSolutionInitMethod vnsInitSol; // initial solution strategy (search with max discrepancy limit if positive value)
+    static int vnsLDSmin; // discrepancy initial value
+    static int vnsLDSmax; // discrepancy maximum value
+    static VNSInc vnsLDSinc; // discrepancy increment strategy inside VNS
+    static int vnsKmin; // neighborhood initial size
+    static int vnsKmax; // neighborhood maximum size
+    static VNSInc vnsKinc; // neighborhood size increment strategy inside VNS
 
-extern bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
-extern Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
-}; // namespace ToulBar2
+    static int vnsLDScur; // current discrepancy (used only for debugging display)
+    static int vnsKcur; // current neighborhood size (used only for debugging display)
+    static VNSVariableHeuristic vnsNeighborVarHeur; // variable heuristic to build a neighborhood (used to differentiate VNS/DGVNS)
+    static bool vnsNeighborChange; // true if change neighborhood cluster only when not improved (only in RADGVNS)
+    static bool vnsNeighborSizeSync; // true if neighborhood size is synchronized (only in RADGVNS)
+    static bool vnsParallelLimit; // true if number of parallel slaves limited by number of clusters (only in RSDGVNS and RADGVNS)
+    static bool vnsParallelSync; // true if RSGDVNS else RADGVNS
+    static string vnsOptimumS;
+    static Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
+    static bool vnsParallel; // true if in master/slaves paradigm
 
-#ifdef INT_COST
+    static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
+    static Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
+    static Long hbfsAlpha; // inverse of minimum node redundancy goal limit
+    static Long hbfsBeta; // inverse of maximum node redundancy goal limit
+    static ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
+    static ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
+
+    static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
+    static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
+};
+
+#if defined(INT_COST) || defined(SHORT_COST)
 inline Cost rounding(Cost lb)
 {
     return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);
@@ -634,8 +751,9 @@ public:
     Contradiction()
     {
         if (ToulBar2::verbose >= 2)
-            cout << "... contradiction!" << endl;
+            cout << what() << endl;
     }
+    const char* what() const { return "... contradiction!"; }
 };
 #define THROWCONTRADICTION            \
     {                                 \
@@ -664,6 +782,7 @@ class Solver;
 class Cluster;
 class Separator;
 class TreeDecomposition;
+class VACExtension;
 
 class ConstraintLink {
 public:
@@ -710,6 +829,8 @@ public:
 };
 typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
+//For incremental diverse solution search - relaxed constraint
+typedef vector<vector<vector<vector<Cost>>>> Mdd; //mdd[layer][source][target][value] = label weight if source---val--->target exists, getUb otherwise
 
 #endif /*TB2TYPES_HPP_*/
 

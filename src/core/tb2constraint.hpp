@@ -67,7 +67,7 @@ public:
             fromElim2->incConflictWeight(from);
     }
     void incConflictWeight(Long incval) { conflictWeight += incval; }
-    void resetConflictWeight() { conflictWeight = 1 + ((ToulBar2::weightedTightness) ? getTightness() : 0); }
+    virtual void resetConflictWeight() { conflictWeight = 1 + ((ToulBar2::weightedTightness) ? getTightness() : 0); }
     void elimFrom(Constraint* from1, Constraint* from2 = NULL)
     {
         fromElim1 = from1;
@@ -104,8 +104,18 @@ public:
     virtual void assign(int index) { propagate(); }
     void assigns();
 
+    virtual bool checkEACGreedySolution(int index = -1, Value a = 0); // if index is non-negative use value a instead of its support for the corresponding variable
+    virtual bool reviseEACGreedySolution(int index = -1, Value a = 0); // if index is negative revise all variables else only one
     virtual void fillEAC2(int index) {}
-    virtual bool isEAC(int index, Value a) { return true; }
+    virtual bool isEAC(int index, Value a)
+    {
+        if (ToulBar2::FullEAC && !isSep()) {
+            bool res = reviseEACGreedySolution(index, a);
+            if (ToulBar2::verbose >= 4 && !res)
+                cout << "Current greedy solution violates this constraint: " << *this << endl;
+        }
+        return true;
+    }
     virtual void findFullSupportEAC(int index) {}
 
     virtual void linkCostProvidingPartition(int index, Variable* support) {}
@@ -120,19 +130,27 @@ public:
     virtual void dump(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
     virtual void dump_CFN(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
 
-    virtual Long getDomainSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
-    virtual Long size() const { return 0; } ///< \brief number of tuples stored by the cost function
-    virtual Long space() const { return 0; } ///< \brief estimate of the cost function memory space size
+    virtual Long getDomainSizeProduct() const; // warning! return LONGLONG_MAX if overflow occurs
+    virtual Long size() const { return getDomainSizeProduct(); } ///< \brief number of tuples stored by the cost function
+    virtual Long space() const
+    {
+        Long sz = size();
+        Long eltsz = sizeof(Cost) + arity() * sizeof(tValue);
+        if (sz < LONGLONG_MAX / eltsz)
+            return (sz * eltsz);
+        else
+            return LONGLONG_MAX;
+    } ///< \brief estimate of the cost function memory space size
 
     virtual void firstlex() {} ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order (initialization call)
-    virtual bool nextlex(String& t, Cost& c)
+    virtual bool nextlex(Tuple& t, Cost& c)
     {
         cout << "dummy nextlex on (" << this << ")!" << endl;
         return false;
     } ///< \brief enumerate all **valid** tuples of the cost function in lexicographic order
 
     virtual void first() { firstlex(); } ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost (initialization call)
-    virtual bool next(String& t, Cost& c) { return nextlex(t, c); } ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost
+    virtual bool next(Tuple& t, Cost& c) { return nextlex(t, c); } ///< \brief enumerate **valid** tuples of the cost function in undefined order, possibly skipping some valid tuples with a default cost
 
     virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta) {}
     virtual bool separability(EnumeratedVariable* alpha, EnumeratedVariable* beta) { return false; }
@@ -160,16 +178,16 @@ public:
     }
     bool verifySeparate(Constraint* ctr1, Constraint* ctr2);
 
-    virtual void setTuple(const String& t, Cost c) {}
-    virtual void addtoTuple(const String& t, Cost c) {}
+    virtual void setTuple(const Tuple& t, Cost c) {}
+    virtual void addtoTuple(const Tuple& t, Cost c) {}
 
     virtual void getScope(TSCOPE& scope_inv) {}
-    virtual Cost evalsubstr(const String& s, Constraint* ctr)
+    virtual Cost evalsubstr(const Tuple& s, Constraint* ctr)
     {
         cerr << "dummy evalsubstr call on:" << *this << endl;
         return MIN_COST;
     }
-    virtual Cost evalsubstr(const String& s, NaryConstraint* ctr)
+    virtual Cost evalsubstr(const Tuple& s, NaryConstraint* ctr)
     {
         cerr << "dummy evalsubstr call on:" << *this << endl;
         return MIN_COST;

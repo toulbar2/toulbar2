@@ -1,6 +1,5 @@
 #include "tb2globalconstr.hpp"
 #include "core/tb2wcsp.hpp"
-#include "core/tb2vac.hpp"
 #include "search/tb2clusters.hpp"
 
 GlobalConstraint::GlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost defval)
@@ -104,14 +103,14 @@ void GlobalConstraint::print(ostream& os)
             os << *scope[i] << endl;
 }
 
-Cost GlobalConstraint::eval(const String& s)
+Cost GlobalConstraint::eval(const Tuple& s)
 {
 
     Cost tcost = evalOriginal(s);
-    for (unsigned int i = 0; i < s.length(); i++) {
+    for (unsigned int i = 0; i < s.size(); i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         if (tcost < wcsp->getUb()) {
-            tcost -= deltaCost[i][x->toIndex(s[i] - CHAR_FIRST)];
+            tcost -= deltaCost[i][x->toIndex(s[i])];
         }
     }
     if (tcost < wcsp->getUb()) {
@@ -129,14 +128,16 @@ void GlobalConstraint::assign(int varIndex)
         nonassigned = nonassigned - 1;
         if (nonassigned == 0) {
             deconnect();
-            String t(arity_, CHAR_FIRST);
+            Tuple t(arity_, 0);
             for (int i = 0; i < arity_; i++) {
-                t[i] = getVar(i)->getValue() + CHAR_FIRST;
+                t[i] = ((EnumeratedVariable*)getVar(i))->toIndex(getVar(i)->getValue());
             }
             wcsp->revise(this);
             projectLB(eval(t));
         } else {
             pushAll();
+            if (ToulBar2::FullEAC)
+                reviseEACGreedySolution();
         }
     }
 }
@@ -408,6 +409,8 @@ void GlobalConstraint::propagateNIC()
 
 bool GlobalConstraint::isEAC(int index, Value a)
 {
+    if (ToulBar2::FullEAC)
+        reviseEACGreedySolution(index, a);
     if (currentVar != index) {
         currentVar = index;
 

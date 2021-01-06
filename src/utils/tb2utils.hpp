@@ -26,6 +26,7 @@
 #endif
 
 #include <limits>
+#include <iterator>
 #include <vector>
 #include <map>
 #include <sstream>
@@ -37,15 +38,6 @@
 #include <algorithm>
 #include <numeric>
 using namespace std;
-#ifdef BOOST
-#include <boost/tokenizer.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/compressed_pair.hpp>
-#endif
 
 #ifdef NDEBUG
 #define DEBONLY(x)
@@ -117,31 +109,31 @@ ostream& operator<<(ostream& os, vector<T> const& v)
 //    else return y;
 //}
 
-template <class T>
-T min(T* array, int size)
-{
-    assert(size >= 1);
-    T res = array[0];
-    for (int i = 1; i < size; i++) {
-        if (array[i] < res) {
-            res = array[i];
-        }
-    }
-    return res;
-}
+//template <class T>
+//T min(T* array, int size)
+//{
+//    assert(size >= 1);
+//    T res = array[0];
+//    for (int i = 1; i < size; i++) {
+//        if (array[i] < res) {
+//            res = array[i];
+//        }
+//    }
+//    return res;
+//}
 
-template <class T>
-T max(T* array, int size)
-{
-    assert(size >= 1);
-    T res = array[0];
-    for (int i = 1; i < size; i++) {
-        if (array[i] > res) {
-            res = array[i];
-        }
-    }
-    return res;
-}
+//template <class T>
+//T max(T* array, int size)
+//{
+//    assert(size >= 1);
+//    T res = array[0];
+//    for (int i = 1; i < size; i++) {
+//        if (array[i] > res) {
+//            res = array[i];
+//        }
+//    }
+//    return res;
+//}
 
 template <class T>
 inline std::string to_string(const T& t)
@@ -155,8 +147,7 @@ static inline void rtrim(std::string& s)
 {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
         return !std::isspace(ch);
-    })
-                .base(),
+    }).base(),
         s.end());
 }
 

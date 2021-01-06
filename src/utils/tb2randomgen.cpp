@@ -33,17 +33,17 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
         // soft alldiff
-        vector<BoundedObj<Value>> values;
+        vector<BoundedObjValue> values;
         for (unsigned int i = 0; i < scopeVars[0]->getDomainInitSize(); i++) {
-            values.push_back(BoundedObj<Value>(i, 1));
+            values.push_back(BoundedObjValue(i, 1));
         }
         wcsp.postWGcc(scopeIndexs, arity, "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : "DAG"), Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
         // random parity automaton (XOR)
-        vector<WeightedObj<int>> init(1, WeightedObj<int>(0));
-        vector<WeightedObj<int>> last(1, WeightedObj<int>(1));
+        vector<WeightedObjInt> init(1, WeightedObjInt(0));
+        vector<WeightedObjInt> last(1, WeightedObjInt(1));
         if (globalname == "wregular")
-            last.push_back(WeightedObj<int>(0, Top));
+            last.push_back(WeightedObjInt(0, Top));
         vector<DFATransition> trans;
         for (unsigned int i = 0; i < scopeVars[0]->getDomainInitSize(); i++) {
             trans.push_back(DFATransition(0, i, (i % 2) ? 1 : 0));
@@ -65,7 +65,6 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
     int arity = indexs.size();
     EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
     int* scopeIndexs = new int[arity];
-    Char* tuple = new Char[arity + 1];
     Cost Top = wcsp.getUb();
     if (costMax < Top)
         Top = costMax;
@@ -73,16 +72,14 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
     for (i = 0; i < arity; i++) {
         scopeIndexs[i] = indexs[i];
         scopeVars[i] = (EnumeratedVariable*)wcsp.getVar(indexs[i]);
-        tuple[i] = 0 + CHAR_FIRST;
     }
-    tuple[arity] = '\0';
 
     Constraint* nctr = wcsp.getCtr(wcsp.postNaryConstraintBegin(scopeIndexs, arity, 0, nogoods));
 
-    String s(tuple);
+    Tuple s(arity, 0);
     while (nogoods > 0) {
         for (i = 0; i < arity; i++)
-            s[i] = myrand() % scopeVars[i]->getDomainInitSize() + CHAR_FIRST;
+            s[i] = myrand() % scopeVars[i]->getDomainInitSize();
         Cost c = ToulBar2::costMultiplier * randomCost(MIN_COST, costMax);
         nctr->setTuple(s, c);
         nogoods--;
@@ -91,7 +88,6 @@ void naryRandom::generateNaryCtr(vector<int>& indexs, long nogoods, Cost costMin
 
     delete[] scopeIndexs;
     delete[] scopeVars;
-    delete[] tuple;
 }
 
 void naryRandom::generateTernCtr(int i, int j, int k, long nogoods, Cost costMin, Cost costMax)
@@ -103,7 +99,7 @@ void naryRandom::generateTernCtr(int i, int j, int k, long nogoods, Cost costMin
     int mx = x->getDomainInitSize();
     int my = y->getDomainInitSize();
     int mz = z->getDomainInitSize();
-    long total_nogoods = mx * my * mz;
+    int total_nogoods = mx * my * mz;
 
     vector<Cost> costs;
     for (a = 0; a < mx; a++)
@@ -211,19 +207,20 @@ void naryRandom::generateBinCtr(int i, int j, long nogoods, Cost costMin, Cost c
     wcsp.postBinaryConstraint(i, j, costs);
 }
 
-long naryRandom::toIndex(vector<int>& index)
+long long naryRandom::toIndex(vector<int>& index)
 {
-    long result = 1;
+    long long result = 1;
     for (int i = 0; i < (int)index.size(); i++)
-        result += (long)pow((double)n, i) * index[i];
+        result += (long long)powl((double)n, i) * index[i];
     return result;
 }
 
-void naryRandom::ini(vector<int>& index, int arity)
+void naryRandom::ini(vector<int>& index, int arity, int n)
 {
     index.clear();
+    int dec = (arity>10)?(myrand()%(n-arity)):0;
     for (int i = 0; i < arity; i++)
-        index.push_back(i);
+        index.push_back(i + dec);
 }
 
 bool naryRandom::inc(vector<int>& index)
@@ -243,7 +240,7 @@ int naryRandom::inc(vector<int>& index, int i)
 
     index[i]++;
     if (index[i] == n - ((int)index.size() - i - 1)) {
-        if (i >= 0) {
+
             int val = inc(index, i - 1);
             if (val < 0)
                 return -1;
@@ -251,7 +248,6 @@ int naryRandom::inc(vector<int>& index, int i)
             if (index[i] == n)
                 return -1;
         }
-    }
     return index[i];
 }
 
@@ -264,7 +260,6 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
 
     int i, arity;
     vector<int> indexs;
-    vector<long> totalCtrs;
     vector<long> numCtrs;
 
     int maxa = p.size();
@@ -289,13 +284,13 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     for (arity = maxa; arity > 1; arity--) {
         long nogoods = (long)(((double)p[0] / 100.) * pow((double)m, arity) + 0.5);
         //long totalarraysize = (long) pow( (double)n, arity);
-        long tCtrs = 1;
-        set<long> scopes;
-        for (i = 0; i < arity; i++)
+        long long tCtrs = static_cast<long long>(n)*static_cast<long long>(n-1);
+        set<long long> scopes;
+        for (i = 2; i < arity; i++) {
             tCtrs *= (n - i);
-        for (i = 2; i <= arity; i++)
             tCtrs /= i;
 
+        }
         if (numCtrs[arity] > tCtrs) {
             cout << numCtrs[arity] << "  " << arity << "ary constraints and the maximum is " << tCtrs << endl;
             numCtrs[arity] = tCtrs;
@@ -303,8 +298,8 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
 
         while (numCtrs[arity]) {
             bool oneadded = false;
-            int dice = myrand() % tCtrs;
-            ini(indexs, arity);
+            int dice = max(0,min(MAX_ARITY*MAX_ARITY*MAX_ARITY, (int)((long long)myrand() % tCtrs)));
+            ini(indexs, arity, n);
             do {
                 if (scopes.end() == scopes.find(toIndex(indexs))) {
                     if (dice == 0) {
@@ -315,7 +310,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
                                 if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
                                     generateBinCtr(indexs[0], indexs[1], nogoods);
                                 else
-                                    generateSubModularBinCtr(indexs[0], indexs[1], SMALL_COST, MEDIUM_COST);
+                                    generateSubModularBinCtr(indexs[0], indexs[1], SMALL_COST, LARGE_COST);
                                 break;
                             case 3:
                                 generateTernCtr(indexs[0], indexs[1], indexs[2], nogoods);
@@ -341,7 +336,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     for (i = 0; i < n; i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-            x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST), true);
+            x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, LARGE_COST), true);
         }
         x->findSupport();
     }

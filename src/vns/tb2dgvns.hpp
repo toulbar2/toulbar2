@@ -19,7 +19,7 @@ public:
     {
     }
     ~VNSSolver() {}
-    bool solve() FINAL;
+    bool solve(bool first = true);
 };
 
 #endif /* TB2DGVNS_HPP_ */

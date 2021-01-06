@@ -36,9 +36,39 @@ Constraint::Constraint(WCSP* w, int elimCtrIndex)
     cluster = -1;
 }
 
+bool Constraint::checkEACGreedySolution(int index, Value support)
+{
+    static Tuple t;
+    int a = arity();
+    t.resize(a);
+    for (int i = 0; i < a; i++) {
+        Variable* var = getVar(i);
+        if (var->enumerated())
+            t[i] = ((EnumeratedVariable*)var)->toIndex((i == index) ? support : var->getSupport());
+        else
+            t[i] = ((i == index) ? support : var->getSupport());
+    }
+    return (evalsubstr(t, this) == MIN_COST);
+}
+
+bool Constraint::reviseEACGreedySolution(int index, Value support)
+{
+    bool result = !isGlobal() && checkEACGreedySolution(index, support);
+    if (!result) {
+        if (index >= 0) {
+            getVar(index)->unsetFullEAC();
+        } else {
+            int a = arity();
+            for (int i = 0; i < a; i++) {
+                getVar(i)->unsetFullEAC();
+            }
+        }
+    }
+    return result;
+}
 /// \return size of the cartesian product of all domains in the constraint scope.
 /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
-Long Constraint::getDomainSizeProduct()
+Long Constraint::getDomainSizeProduct() const
 {
     if (arity() == 0)
         return 1;
@@ -99,7 +129,7 @@ void Constraint::sumScopeIncluded(Constraint* ctr)
 {
     Cost Top = wcsp->getUb();
     Cost c;
-    String t;
+    Tuple t;
 
     if (getDefCost() < Top) { // enumeration case
         firstlex();
@@ -145,11 +175,12 @@ void Constraint::assignCluster()
 /// \warning always returns 0 for cost functions in intention
 Cost Constraint::getMinCost()
 {
+    static Tuple tuple;
     if (!extension())
         return MIN_COST;
 
     // 	    Cost minc = MAX_COST;
-    //         String tuple;
+    //         Tuple tuple;
     //         Cost cost;
     //         firstlex();
     //         while (nextlex(tuple,cost)) {
@@ -158,7 +189,6 @@ Cost Constraint::getMinCost()
     //         return minc;
 
     Cost minc = MAX_COST;
-    String tuple;
     Cost cost;
     Long nbtuples = 0;
     first();
@@ -174,14 +204,15 @@ Cost Constraint::getMinCost()
 
 Cost Constraint::getCost()
 {
+    static Tuple t;
     int a = arity();
-    String t(a, '0');
+    t.resize(a);
     for (int i = 0; i < a; i++) {
         Variable* var = getVar(i);
         if (var->enumerated())
-            t[i] = ((EnumeratedVariable*)var)->toIndex(var->getValue()) + CHAR_FIRST;
+            t[i] = ((EnumeratedVariable*)var)->toIndex(var->getValue());
         else
-            t[i] = var->getValue() + CHAR_FIRST;
+            t[i] = var->getValue();
     }
     return evalsubstr(t, this);
 }
@@ -189,10 +220,11 @@ Cost Constraint::getCost()
 /// \warning always returns false for cost functions in intention
 bool Constraint::universal()
 {
+    static Tuple tuple;
     if (!extension())
         return false;
 
-    //   String tuple;
+    //   Tuple tuple;
     //   Cost cost;
     //   firstlex();
     //   while (nextlex(tuple,cost)) {
@@ -200,7 +232,6 @@ bool Constraint::universal()
     //   }
     //   return true;
 
-    String tuple;
     Cost cost;
     Long nbtuples = 0;
     first();
@@ -217,11 +248,11 @@ bool Constraint::universal()
 /// \warning always returns MAX_COST for cost functions in intention
 Cost Constraint::getMaxFiniteCost()
 {
+    static Tuple tuple;
     if (!extension())
         return MAX_COST;
 
     Cost maxcost = MIN_COST;
-    String tuple;
     Cost cost;
     Long nbtuples = 0;
     first();
@@ -238,10 +269,10 @@ Cost Constraint::getMaxFiniteCost()
 /// \warning always returns false for cost functions in intention
 bool Constraint::ishard()
 {
+    static Tuple tuple;
     if (!extension())
         return false;
 
-    String tuple;
     Cost cost;
     firstlex();
     while (nextlex(tuple, cost)) {
@@ -255,7 +286,7 @@ bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
 {
     assert(scopeIncluded(ctr1));
     assert(scopeIncluded(ctr2));
-    String tuple;
+    static Tuple tuple;
     Cost cost, c1, c2;
     firstlex();
     if (ToulBar2::verbose >= 3) {
@@ -269,7 +300,7 @@ bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
         c2 = ctr2->evalsubstr(tuple, this);
         if (ToulBar2::verbose >= 3) {
             for (int i = 0; i < arity(); ++i)
-                cout << tuple[i] - CHAR_FIRST << " ";
+                cout << tuple[i] << " ";
             //cout << endl;
             cout << " : " << cost << " =? " << c1 << " + " << c2 << " : " << c1 + c2 << endl;
         }
@@ -319,17 +350,19 @@ bool Constraint::decompose()
 
 Constraint* Constraint::copy()
 {
+    static Tuple t;
     int scope[arity()];
     for (int i = 0; i < arity(); i++)
         scope[i] = getVar(i)->wcspIndex;
-    int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), getDefCost(), size());
+    Cost defcost = getDefCost();
+    int ctrIndex = wcsp->postNaryConstraintBegin(scope, arity(), defcost, size(), true); // be sure to not create a clause instead of NaryConstraint!
     Cost c;
-    String t;
     first();
     while (next(t, c)) {
+        if (c != defcost)
         wcsp->postNaryConstraintTuple(ctrIndex, t, c);
     }
-    wcsp->getCtr(ctrIndex)->deconnect();
+    wcsp->getCtr(ctrIndex)->deconnect(true);
     return wcsp->getCtr(ctrIndex);
 }
 

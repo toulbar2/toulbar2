@@ -23,7 +23,8 @@ WFA::WFA(istream& file, bool mult)
         unsigned int init;
         Cost weight;
         file >> init >> weight;
-        if (mult) weight *= ToulBar2::costMultiplier;
+        if (mult)
+            weight *= ToulBar2::costMultiplier;
         //cout << "reading INIT = " << init << " " << weight << endl;
         pair<int, Cost> initSt = make_pair(init, weight);
         //cout << initSt.first << " " << initSt.second << endl;
@@ -35,7 +36,8 @@ WFA::WFA(istream& file, bool mult)
         unsigned int accept;
         Cost weight;
         file >> accept >> weight;
-        if (mult) weight *= ToulBar2::costMultiplier;
+        if (mult)
+            weight *= ToulBar2::costMultiplier;
         //cout << "reading ACCEPT = " << accept << " " << weight << endl;
         pair<int, Cost> acceptSt = make_pair(accept, weight);
         //cout << acceptSt.first << " " << acceptSt.second << endl;
@@ -46,7 +48,8 @@ WFA::WFA(istream& file, bool mult)
         unsigned int start, end, symbol;
         Cost weight;
         file >> start >> symbol >> end >> weight;
-        if (mult) weight *= ToulBar2::costMultiplier;
+        if (mult)
+            weight *= ToulBar2::costMultiplier;
         //cout << "TRANS " << start << "x" <<  symbol << "-->" << end << " w= " << weight << endl;
         transitions.push_back(new WTransition(start, end, symbol, weight));
     }
@@ -64,7 +67,7 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost)
     for (unsigned int currentState = 0; currentState < nbStates; currentState++) {
         for (unsigned int symbol = 0; symbol < (unsigned int)nbSymbols; symbol++) {
             string res = forbiddenPattern.substr(0, currentState) + ((char)(symbol + 48));
-            int weight = (res == forbiddenPattern) ? cost : 0;
+            Cost weight = (res == forbiddenPattern) ? cost : 0;
             int start = currentState;
             int end = 0;
             for (int receptionState = ((int)min(currentState + 1, nbStates - 1)); receptionState > 0; receptionState--) {

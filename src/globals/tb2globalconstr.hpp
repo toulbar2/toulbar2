@@ -16,7 +16,7 @@ public:
     virtual void setNumStates(int nStates) = 0;
     virtual void addInitialState(int begin) = 0;
     virtual void addFinalState(int end) = 0;
-    virtual void addTransition(int start, int symbol, int end, int weight) = 0;
+    virtual void addTransition(int start, int symbol, int end, Cost weight) = 0;
 };
 
 class GlobalConstraint : public AbstractGlobalConstraint {
@@ -76,7 +76,7 @@ protected:
     // undo the previous extension
     virtual void undoExtend() {}
     // compute the original cost of the tuple s (i.e. cost without projection)
-    virtual Cost evalOriginal(const String& s) { return 0; }
+    virtual Cost evalOriginal(const Tuple& s) { return 0; }
 
     // compute the minimum cost of the tuple from all feasible tuples
 
@@ -92,7 +92,7 @@ public:
     bool isGlobal() const { return true; }
 
     // evaluate the cost of the tuple
-    virtual Cost eval(const String& s);
+    virtual Cost eval(const Tuple& s);
 
     double computeTightness() { return 0; }
     virtual string getName() = 0;

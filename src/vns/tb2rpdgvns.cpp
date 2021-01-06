@@ -111,15 +111,20 @@ void timeOut()
     //    exit(0);
 }
 
-bool ReplicatedParallelDGVNS::solve()
+bool ReplicatedParallelDGVNS::solve(bool first)
 {
     // Initialization
     beginSolve(MAX_COST);
     try {
         lastUb = MAX_COST;
         lastSolution.clear();
+        if (first) {
         preprocessing(MAX_COST);
-    } catch (Contradiction) {
+        } else {
+            if (ToulBar2::elimDegree >= 0)
+                ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+        }
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (env0.myrank == 0) {
             if (lastUb < MAX_COST)
@@ -393,7 +398,7 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                         k *= 2;
                         break;
                     case VNS_LUBY:
-                        k = ToulBar2::vnsKmin * luby(rank);
+                        k = ToulBar2::vnsKmin * (int)luby(rank);
                         break;
                     case VNS_ADD1JUMP:
                         if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1)
@@ -423,7 +428,7 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                         lds *= 2;
                         break;
                     case VNS_LUBY:
-                        lds = ToulBar2::vnsLDSmin * luby(restart);
+                        lds = ToulBar2::vnsLDSmin * (int)luby(restart);
                         break;
                     default:
                         cerr << "Unknown LDS increment strategy inside VNS (see option -linc)!" << endl;
@@ -711,17 +716,25 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
             cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << " in " << MPI_Wtime() - startTime << " seconds." << endl;
     }
     if (improved && ToulBar2::showSolutions) {
-        wcsp->printSolution(cout);
+        wcsp->printSolution();
         cout << endl;
     }
     if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
-        rewind(ToulBar2::solutionFile);
+        fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
+    }
+    if (ToulBar2::xmlflag) {
+        cout << "o " << bestUb << endl;
+    }
+    if (ToulBar2::maxsateval) {
+        cout << "o " << bestUb << endl;
     }
     if (ToulBar2::uaieval && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(bestUb);
     }
+    if (ToulBar2::newsolution)
+        (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
 }
 #endif
 

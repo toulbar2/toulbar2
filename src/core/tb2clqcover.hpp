@@ -30,11 +30,11 @@ public:
 
     void propagate() override;
 
-    Cost eval(const String& s) override
+    Cost eval(const Tuple& s) override
     {
         bool iszerotuple = true;
         for(int i=0;i<arity_;i++) {
-            if (inclq[i][scope[i]->toValue(s[i]-CHAR_FIRST)]) {
+            if (inclq[i][s[i]]) {
                 iszerotuple = false;
                 break;
             }
@@ -44,10 +44,10 @@ public:
         else
             return MIN_COST;
     }
-    Cost evalsubstr(const String& s, Constraint* ctr) override { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) override { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) override { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) override { return evalsubstrAny(s, ctr); }
     template <class T>
-    Cost evalsubstrAny(const String& s, T* ctr)
+    Cost evalsubstrAny(const Tuple& s, T* ctr)
     {
         int count = 0;
 
@@ -92,14 +92,33 @@ public:
             }
         }
     }
+    void resetConflictWeight() override
+    {
+        conflictWeights.assign(conflictWeights.size(), 0);
+        Constraint::resetConflictWeight();
+    }
     double computeTightness() override;
-    void dump(ostream&, bool) override {cerr << "warning! clique constraint cannot be dump." << endl;}
+    Cost getMaxFiniteCost() override
+    {
+        if (!CUT(all0, wcsp->getUb())) {
+            return all0;
+        } else {
+            return MIN_COST;
+        }
+    }
+    void setInfiniteCost(Cost ub) override
+    {
+        Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
+        if (CUT(all0, ub))
+            all0 = mult_ub;
+    }
+    void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; } //TODO
 private:
     // ----------------------------------------------------------------------
     // definition
 
     // two views of values in the clique: vector<bool> per variable
-    // (inclq[var][val] == true iff (var,val) is in clique) and array
+    // (inclq[var][var->toIndex(val)] == true iff (var,val) is in clique) and array
     // of values in clique per variable
     vector<vector<bool>> inclq;
     vector<vector<int>> clqvals;

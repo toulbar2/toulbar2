@@ -49,7 +49,7 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
     Cost cost = MAX_COST;
     complete = false;
     vector<int> dumvariables;
-    vector<int> dumvalues;
+    vector<Value> dumvalues;
     int lds = ToulBar2::lds;
     switch (mode) {
     case LS_INIT_RANDOM:
@@ -114,22 +114,23 @@ Cost LocalSearch::generateInitSolution(VNSSolutionInitMethod mode, map<int, Valu
 }
 
 Cost LocalSearch::evaluate_partialInstantiation(
-    vector<int>& variables, vector<int>& values)
+    vector<int>& variables, vector<Value>& values)
 {
     Cost cost = MAX_COST;
+    int storedepth = Store::getDepth();
     Store::store();
     try {
         wcsp->setUb(MAX_COST);
         wcsp->assignLS(variables, values);
         cost = wcsp->getLb();
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
-    Store::restore();
+    Store::restore(storedepth);
     return cost;
 }
 
-bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables, vector<int>& values, Cost ls_ub)
+bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables, vector<Value>& values, Cost ls_ub)
 {
     lastUb = MAX_COST;
     lastSolution.clear();
@@ -155,10 +156,10 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
                 recursiveSolveLDS(discrepancy);
             else
                 recursiveSolve();
-        } catch (TimeOut) {
+        } catch (const TimeOut&) {
             ToulBar2::limited = true;
         }
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);

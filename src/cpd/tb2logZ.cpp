@@ -533,7 +533,7 @@ TPairLz Separator::getLz()
         Value val = cluster->getWCSP()->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST; // build the tuple
+        t[i] = val; // build the tuple
         deltares -= delta[i][val]; // delta structure
         ++it;
         i++;
@@ -541,7 +541,7 @@ TPairLz Separator::getLz()
     TLZGoods::iterator itlz = lzgoods.find(t);
     if (ToulBar2::verbose >= 1) {
         cout << " < C" << cluster->getId() << " , ";
-        Cout << t;
+        cout << t;
         cout << ",delta: " << deltares << ">";
     }
     if (itlz != lzgoods.end()) {
@@ -569,7 +569,7 @@ void Separator::setLz(TLogProb logz)
         Value val = wcsp->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST;
+        t[i] = val;
         deltares += delta[i][val];
         ++it;
         i++;
@@ -577,7 +577,7 @@ void Separator::setLz(TLogProb logz)
     assert(deltares >= MIN_COST);
     if (ToulBar2::verbose >= 1) {
         cout << " < C" << cluster->getId() << " , ";
-        Cout << t;
+        cout << t;
         cout << ",delta: " << deltares;
     }
     TLZGoods::iterator itlz = lzgoods.find(t);
@@ -604,7 +604,7 @@ void Separator::add2Lz(TLogProb logz) // Add solution to logz of the separator.
         Value val = wcsp->getValue(*it);
         if (ToulBar2::verbose >= 1)
             cout << "(" << *it << "," << val << ") ";
-        t[i] = val + CHAR_FIRST;
+        t[i] = val;
         deltares += delta[i][val];
         ++it;
         i++;
@@ -612,7 +612,7 @@ void Separator::add2Lz(TLogProb logz) // Add solution to logz of the separator.
     TLZGoods::iterator itng = lzgoods.find(t);
     if (ToulBar2::verbose >= 1) {
         cout << " < C" << cluster->getId() << " , ";
-        Cout << t;
+        cout << t;
         cout << ",delta: " << deltares << ",";
     }
     if (itng == lzgoods.end()) { // There isn't any logZ count

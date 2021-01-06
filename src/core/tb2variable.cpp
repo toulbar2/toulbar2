@@ -29,6 +29,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     , pos(-1)
     , inf(iinf)
     , sup(isup)
+    , fulleac((isup > iinf) ? 0 : 1)
     , constrs(&Store::storeConstraint)
     ,
     //triangles(&Store::storeConstraint),
@@ -115,15 +116,6 @@ void Variable::setCurrentVarId(int idx)
 {
     pos = idx;
     timestamp = wcsp->getNbNodes();
-}
-
-const string& Variable::getValueName(int idx) const
-{
-    static const string None = std::string("");
-    if (valueNames.empty())
-        return None;
-    else
-        return valueNames[idx];
 }
 
 int cmpConstraint(const void* p1, const void* p2)
@@ -489,7 +481,7 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         if ((*iter).constr->isSep() || (*iter).constr->isGlobal())
             continue;
-        if ((*iter).constr->arity() == 2) {
+        if ((*iter).constr->isBinary()) {
             BinaryConstraint* bctr = (BinaryConstraint*)(*iter).constr;
             double bintight = bctr->getTightness();
             if (bintight > maxtight) {

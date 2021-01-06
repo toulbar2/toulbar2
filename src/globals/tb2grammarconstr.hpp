@@ -24,7 +24,7 @@ private:
 
     /*struct Rule {
         int from;
-        int weight;
+        Cost weight;
         int to[2];
     };
 
@@ -76,7 +76,7 @@ public:
     GrammarConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~GrammarConstraint();
 
-    Cost eval(const String& s);
+    Cost eval(const Tuple& s);
 
     void read(istream& file, bool mult = true);
     //void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}

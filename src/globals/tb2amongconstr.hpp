@@ -11,7 +11,7 @@ class AmongConstraint : public DPGlobalConstraint {
 private:
     template <class Source>
     struct TableCell {
-        int val;
+        Cost val;
         Source source;
     };
 
@@ -62,7 +62,7 @@ public:
     AmongConstraint(WCSP* wcsp, EnumeratedVariable** scope, int arity);
     virtual ~AmongConstraint();
 
-    Cost evalOriginal(const String& s);
+    Cost evalOriginal(const Tuple& s);
 
     void read(istream& file, bool mult = true);
     void setUpperBound(int upper) { ub = upper; }
@@ -74,7 +74,7 @@ public:
     {
         string name = "samong";
         name += "_" + to_string(lb) + "_" + to_string(ub) + "_" + to_string(V.size());
-        for (set<int>::iterator iter = V.begin(); iter != V.end(); ++iter)
+        for (set<Value>::iterator iter = V.begin(); iter != V.end(); ++iter)
             name += "_" + to_string(*iter);
         return name;
     }

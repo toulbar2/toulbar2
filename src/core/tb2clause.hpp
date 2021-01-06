@@ -10,16 +10,17 @@
 // warning! we assume binary variables
 class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
-    String tuple; // forbidden assignment corresponding to the negation of the clause
-    StoreCost lb; // projected cost to problem lower bound
+    Tuple tuple; // forbidden assignment corresponding to the negation of the clause
+    StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
-    String evalTuple; // temporary data structure
     vector<Long> conflictWeights; // used by weighted degree heuristics
+    bool zeros; // true if all deltaCosts are zero (temporally used by first/next)
+    bool done; // should be true after one call to next
 
-    Value getTuple(int i) { return scope[i]->toValue(tuple[i] - CHAR_FIRST); }
-    Value getClause(int i) { return scope[i]->toValue(!(tuple[i] - CHAR_FIRST)); }
+    Value getTuple(int i) { return scope[i]->toValue(tuple[i]); }
+    Value getClause(int i) { return scope[i]->toValue(!(tuple[i])); }
     void projectLB(Cost c)
     {
         lb += c;
@@ -78,37 +79,41 @@ class WeightedClause : public AbstractNaryConstraint {
 
 public:
     // warning! give the negation of the clause as input
-    WeightedClause(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost cost_in = MIN_COST, String tuple_in = String())
+    WeightedClause(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Cost cost_in = MIN_COST, Tuple tuple_in = Tuple())
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , cost(cost_in)
         , tuple(tuple_in)
         , lb(MIN_COST)
         , support(0)
         , nonassigned(arity_in)
+        , zeros(true)
+        , done(false)
     {
         if (tuple_in.empty() && arity_in > 0)
-            tuple = String(arity_in, CHAR_FIRST);
+            tuple = Tuple(arity_in, 0);
         deltaCosts = vector<StoreCost>(arity_in, StoreCost(MIN_COST));
-        Char* tbuf = new Char[arity_in + 1];
-        tbuf[arity_in] = '\0';
         for (int i = 0; i < arity_in; i++) {
             assert(scope_in[i]->getDomainInitSize() == 2);
-            tbuf[i] = CHAR_FIRST;
             conflictWeights.push_back(0);
         }
-        evalTuple = String(tbuf);
-        delete[] tbuf;
     }
 
     virtual ~WeightedClause() {}
 
-    void setTuple(const String& tin, Cost c) FINAL
+    void setTuple(const Tuple& tin, Cost c) FINAL
     {
         cost = c;
         tuple = tin;
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+    Long size() const FINAL
+    {
+        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
+        if (sumdelta == MIN_COST)
+            return 1;
+        return getDomainSizeProduct();
+    }
     void reconnect()
     {
         if (deconnected()) {
@@ -142,6 +147,12 @@ public:
         }
     }
 
+    void resetConflictWeight()
+    {
+        conflictWeights.assign(conflictWeights.size(), 0);
+        Constraint::resetConflictWeight();
+    }
+
     bool universal()
     {
         if (cost != MIN_COST || lb != MIN_COST)
@@ -152,8 +163,12 @@ public:
         return true;
     }
 
-    Cost eval(const String& s)
+    Cost eval(const Tuple& s)
     {
+        if (lb == MIN_COST && tuple[support] != s[support]) {
+            assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
+            return MIN_COST;
+        } else {
         Cost res = -lb;
         bool istuple = true;
         for (int i = 0; i < arity_; i++) {
@@ -167,10 +182,11 @@ public:
         assert(res >= MIN_COST);
         return res;
     }
-    Cost evalsubstr(const String& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const String& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    }
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
     template <class T>
-    Cost evalsubstrAny(const String& s, T* ctr)
+    Cost evalsubstrAny(const Tuple& s, T* ctr)
     {
         int count = 0;
 
@@ -195,18 +211,44 @@ public:
     {
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            evalTuple[i] = var->toIndex(var->getValue()) + CHAR_FIRST;
+            evalTuple[i] = var->toIndex(var->getValue());
         }
         return eval(evalTuple);
     }
 
     double computeTightness() { return 1.0 * cost / getDomainSizeProduct(); }
 
-    //    pair< pair<Cost,Cost>, pair<Cost,Cost> > getMaxCost(int index, Value a, Value b) { return make_pair(make_pair(MAX_COST,MAX_COST),make_pair(MAX_COST,MAX_COST)); }
+    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
+    {
+        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
+        bool supporta = (getClause(index) == a);
+        Cost maxcosta = max((supporta) ? MIN_COST : (cost - lb), sumdelta - ((supporta) ? MIN_COST : (Cost)deltaCosts[index]));
+        Cost maxcostb = max((supporta) ? (cost - lb) : MIN_COST, sumdelta - ((supporta) ? (Cost)deltaCosts[index] : MIN_COST));
+        return make_pair(make_pair(maxcosta, maxcosta), make_pair(maxcostb, maxcostb));
+    }
+
+    void first()
+    {
+        zeros = all_of(deltaCosts.begin(), deltaCosts.end(), [](Cost c) { return c == MIN_COST; });
+        done = false;
+        if (!zeros)
+            firstlex();
+    }
+    bool next(Tuple& t, Cost& c)
+    {
+        if (!zeros)
+            return nextlex(t, c);
+        if (done)
+            return false;
+        t = tuple;
+        c = cost - lb;
+        done = true;
+        return true;
+    }
 
     Cost getMaxFiniteCost()
     {
-        Cost sumdelta = accumulate(deltaCosts.begin(), deltaCosts.end(), -lb);
+        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
         if (CUT(cost, wcsp->getUb()))
@@ -237,6 +279,9 @@ public:
             if (nonassigned <= 3) {
                 deconnect();
                 projectNary();
+            } else {
+                if (ToulBar2::FullEAC)
+                    reviseEACGreedySolution();
             }
         }
     }
@@ -264,7 +309,7 @@ public:
 
     bool verify()
     {
-        String t;
+        Tuple t;
         Cost c;
         firstlex();
         while (nextlex(t, c)) {
@@ -282,6 +327,49 @@ public:
             propagate();
     }
 
+    bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        bool zerolb = (lb == MIN_COST);
+        if (zerolb && getTuple(support) != ((support == index) ? supportValue : getVar(support)->getSupport())) {
+            assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
+            return true;
+        } else {
+            Cost res = -lb;
+            bool istuple = true;
+            for (int i = 0; i < arity_; i++) {
+                if (getTuple(i) != ((i == index) ? supportValue : getVar(i)->getSupport())) {
+                    res += deltaCosts[i];
+                    istuple = false;
+                    if (zerolb) {
+                        assert(res == MIN_COST);
+                        assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
+                        return true;
+                    }
+                }
+            }
+            if (istuple)
+                res += cost;
+            assert(res >= MIN_COST);
+            return (res == MIN_COST);
+        }
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, supportValue);
+        if (!result) {
+            if (index >= 0) {
+                getVar(index)->unsetFullEAC();
+            } else {
+                int a = arity();
+                for (int i = 0; i < a; i++) {
+                    getVar(i)->unsetFullEAC();
+                }
+            }
+        }
+        return result;
+    }
+
     void print(ostream& os)
     {
         os << endl
@@ -293,7 +381,7 @@ public:
                 unassigned_++;
             if (getClause(i) == 0)
                 os << "-";
-            os << scope[i]->wcspIndex;
+            os << wcsp->getName(scope[i]->wcspIndex);
             if (i < arity_ - 1)
                 os << ",";
         }
@@ -328,17 +416,17 @@ public:
             if (maxdelta == MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
-                    os << scope[i]->toValue(tuple[i] - CHAR_FIRST) << " ";
+                    os << tuple[i] << " ";
                 }
                 os << cost << endl;
             } else {
                 os << " " << 0 << " " << getDomainSizeProduct() << endl;
-                String t;
+                Tuple t;
                 Cost c;
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
-                        os << scope[i]->toValue(t[i] - CHAR_FIRST) << " ";
+                        os << t[i] << " ";
                     }
                     os << c << endl;
                 }
@@ -352,23 +440,130 @@ public:
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
                     if (scope[i]->unassigned())
-                        os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i] - CHAR_FIRST)) << " ";
+                        os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i])) << " ";
                 }
                 os << min(wcsp->getUb(), cost) << endl;
             } else {
                 os << " " << 0 << " " << getDomainSizeProduct() << endl;
-                String t;
+                Tuple t;
                 Cost c;
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
                         if (scope[i]->unassigned())
-                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i] - CHAR_FIRST)) << " ";
+                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i])) << " ";
                     }
                     os << min(wcsp->getUb(), c) << endl;
                 }
             }
         }
+    }
+
+    void dump_CFN(ostream& os, bool original = true)
+    {
+        bool printed = false;
+        os << "\"F_";
+
+        Cost maxdelta = MIN_COST;
+        for (vector<StoreCost>::iterator it = deltaCosts.begin(); it != deltaCosts.end(); ++it) {
+            Cost d = (*it);
+            if (d > maxdelta)
+                maxdelta = d;
+        }
+        if (original) {
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << "_";
+                os << scope[i]->wcspIndex;
+                printed = true;
+            }
+
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << ",";
+                os << scope[i]->getName();
+                printed = true;
+            }
+            os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
+
+            if (maxdelta == MIN_COST) {
+                printed = false;
+                for (int i = 0; i < arity_; i++) {
+                    if (printed)
+                        os << ",";
+                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(tuple[i]) : std::to_string(tuple[i]));
+                    printed = true;
+                }
+                os << "," << wcsp->Cost2RDCost(cost);
+            } else {
+                Tuple t;
+                Cost c;
+                printed = false;
+                firstlex();
+                while (nextlex(t, c)) {
+                    os << endl;
+                    for (int i = 0; i < arity_; i++) {
+                        if (printed)
+                            os << ",";
+                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                        printed = true;
+                   }
+                   os << "," << wcsp->Cost2RDCost(c);
+                }
+            }
+        } else {
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << "_";
+                    os << scope[i]->getCurrentVarId();
+                    printed = true;
+                }
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << ",";
+                    os << scope[i]->getName();
+                    printed = true;
+                }
+            os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
+
+            if (maxdelta == MIN_COST) {
+                printed = false;
+                for (int i = 0; i < arity_; i++) {
+                    if (scope[i]->unassigned()) {
+                        if (printed)
+                            os << ",";
+                        os << scope[i]->toCurrentIndex(scope[i]->toValue(tuple[i]));
+                        printed = true;
+                    }
+                }
+                os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), cost));
+            } else {
+                Tuple t;
+                Cost c;
+                printed = false;
+                firstlex();
+                while (nextlex(t, c)) {
+                    os << endl;
+                    for (int i = 0; i < arity_; i++) {
+                        if (scope[i]->unassigned()) {
+                            if (printed)
+                                os << ",";
+                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
+                            printed = true;
+                        }
+                    }
+                    os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), c));
+                }
+            }
+        }
+        os << "]},\n";
     }
 };
 #endif /*TB2WCLAUSE_HPP_*/

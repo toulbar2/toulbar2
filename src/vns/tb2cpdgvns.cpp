@@ -65,7 +65,7 @@ void CooperativeParallelDGVNS::MsgToSol(
 
 //---------------- Class Definition --------------------------//
 
-bool CooperativeParallelDGVNS::solve()
+bool CooperativeParallelDGVNS::solve(bool first)
 {
     mysrand(abs(ToulBar2::seed) + env0.myrank);
 
@@ -74,8 +74,13 @@ bool CooperativeParallelDGVNS::solve()
     try {
         lastUb = MAX_COST;
         lastSolution.clear();
+        if (first) {
         preprocessing(MAX_COST);
-    } catch (Contradiction) {
+        } else {
+            if (ToulBar2::elimDegree >= 0)
+                ToulBar2::elimDegree_ = ToulBar2::elimDegree;
+        }
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         if (env0.myrank == 0) {
             if (lastUb < MAX_COST)
@@ -336,7 +341,7 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
     int k = kinit;
     //cout << "taille maximal du cluster "<< currentcluster<< " "<< numberclu<< " "<< kmax << endl ;
     //cout << env0.myrank <<" slave 1" << endl ;
-    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< ToulBar2::nbvar<< "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
+    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< wcsp->numberOfVariables() << "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
     for (; k <= kmax && k <= unassignedVars->getSize() && ToulBar2::vnsOptimum < bestUb;) {
         //neighborhood and partial instantiation
         //cout <<"neighborhood"<< " "<<currentcluster<< " "<< numberclu << " " << k << endl ;

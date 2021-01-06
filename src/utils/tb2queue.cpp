@@ -127,6 +127,49 @@ Variable* Queue::pop_first()
     return elt->content.var;
 }
 
+int cmpVariableDAC(const void* p1, const void* p2)
+{
+    DLink<VariableWithTimeStamp>* c1 = *((DLink<VariableWithTimeStamp>**)p1);
+    DLink<VariableWithTimeStamp>* c2 = *((DLink<VariableWithTimeStamp>**)p2);
+    int v1 = c1->content.var->getDACOrder();
+    int v2 = c2->content.var->getDACOrder();
+    if (v1 > v2)
+        return 1;
+    else if (v1 < v2)
+        return -1;
+    else
+        return 0;
+}
+
+int cmpVariableRevDAC(const void* p1, const void* p2)
+{
+    DLink<VariableWithTimeStamp>* c1 = *((DLink<VariableWithTimeStamp>**)p1);
+    DLink<VariableWithTimeStamp>* c2 = *((DLink<VariableWithTimeStamp>**)p2);
+    int v1 = c1->content.var->getDACOrder();
+    int v2 = c2->content.var->getDACOrder();
+    if (v1 < v2)
+        return 1;
+    else if (v1 > v2)
+        return -1;
+    else
+        return 0;
+}
+
+void Queue::sort(bool increase)
+{
+    int size = getSize();
+    DLink<VariableWithTimeStamp>** sorted = new DLink<VariableWithTimeStamp>*[size]; // replace size by MAX_BRANCH_SIZE in case of compilation problem
+    int i = 0;
+    for (iterator iter = begin(); iter != end(); ++iter) {
+        sorted[i++] = iter.getElt();
+    }
+    qsort(sorted, size, sizeof(DLink<VariableWithTimeStamp>*), (increase) ? cmpVariableDAC : cmpVariableRevDAC);
+    for (int i = 0; i < size; i++) {
+        erase(sorted[i], false);
+        push_back(sorted[i], false);
+    }
+    delete[] sorted;
+}
 void Queue::print(ostream& os)
 {
     os << "Queue: ";

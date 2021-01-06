@@ -16,13 +16,14 @@ protected:
     StoreCost deltaCost;
     StoreValue support; // Warning! the unary support has to be backtrackable
     double trwsGamma;  // The gamma factor used in TRW-S
+    vector<string> valueNames;
 
     DLink<VariableWithTimeStamp> linkACQueue;
     DLink<VariableWithTimeStamp> linkDACQueue;
     DLink<VariableWithTimeStamp> linkEAC1Queue;
     DLink<VariableWithTimeStamp> linkEAC2Queue;
     DLink<VariableWithTimeStamp> linkDEEQueue;
-    DLink<VariableWithTimeStamp> linkZQueue;
+    DLink<VariableWithTimeStamp> linkFEACQueue;
 
     bool watchForIncrease; ///< \warning should be true if there exists a cost function on this variable watching for increase events
     bool watchForDecrease; ///< \warning should be true if there exists a cost function on this variable watching for decrease events
@@ -31,15 +32,19 @@ protected:
 
     void init();
 
-    virtual void increaseFast(Value newInf); // Do not check for a support nor insert in NC and DAC queue
-    virtual void decreaseFast(Value newSup); // Do not check for a support nor insert in NC and DAC queue
-    virtual void removeFast(Value val); // Do not check for a support nor insert in NC and DAC queue
+    void increaseFast(Value newInf); // Do not check for a support nor insert in NC and DAC queue
+    void decreaseFast(Value newSup); // Do not check for a support nor insert in NC and DAC queue
+    void removeFast(Value val); // Do not check for a support nor insert in NC and DAC queue
 
 public:
     EnumeratedVariable(WCSP* wcsp, string n, Value iinf, Value isup);
-    EnumeratedVariable(WCSP* wcsp, string n, Value* d, int dsize);
+    EnumeratedVariable(WCSP* wcsp, string n, vector<Value>& dom);
 
     bool enumerated() const FINAL { return true; }
+    bool isValueNames() const { return valueNames.size() == getDomainInitSize(); }
+    void addValueName(const string& vname) { valueNames.push_back(vname); }
+    const string& getValueName(int index) const { static const string None = std::string(""); if (isValueNames()) return valueNames[index]; else return None; }
+    unsigned int toIndex(const string& vname) { vector<string>::iterator iter = find_if(valueNames.begin(), valueNames.end(), [&vname](const string& val){return (val==vname);}); return (unsigned int) std::distance(valueNames.begin(), iter); }
 
     unsigned int getDomainInitSize() const { return domain.getInitSize(); }
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
@@ -73,18 +78,27 @@ public:
     bool canbeAfterElim(Value v) const { return domain.canbe(v); }
     bool cannotbe(Value v) const FINAL { return v < inf || v > sup || domain.cannotbe(v); }
 
-    virtual void increase(Value newInf, bool isDecision = false);
-    virtual void decrease(Value newSup, bool isDecision = false);
-    virtual void remove(Value value, bool isDecision = false);
-    virtual void assign(Value newValue, bool isDecision = false);
+    void increase(Value newInf, bool isDecision = false) FINAL;
+    void decrease(Value newSup, bool isDecision = false) FINAL;
+    void remove(Value value, bool isDecision = false) FINAL;
+    void assign(Value newValue, bool isDecision = false) FINAL;
     void assignWhenEliminated(Value newValue);
-    void assignLS(Value newValue, ConstraintSet& delayedCtrs);
+    void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) FINAL;
 
-    virtual void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
-    virtual void extend(Value value, Cost cost);
-    virtual void extendAll(Cost cost);
+    void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
+    void extend(Value value, Cost cost);
+    void extendAll(Cost cost);
     Value getSupport() const FINAL { return support; }
-    void setSupport(Value val) { support = val; }
+    void setSupport(Value val)
+    {
+        if (support != val) {
+            if (ToulBar2::verbose >= 8)
+                cout << "change support for " << getName() << " from " << support << " to " << val << endl;
+            support = val;
+            if (ToulBar2::FullEAC)
+                queueFEAC();
+        }
+    }
     inline Cost getCost(const Value value) const FINAL
     {
         return costs[toIndex(value)] - deltaCost;
@@ -97,11 +111,11 @@ public:
 
     Cost getInfCost() const FINAL { return costs[toIndex(getInf())] - deltaCost; }
     Cost getSupCost() const FINAL { return costs[toIndex(getSup())] - deltaCost; }
-    void projectInfCost(Cost cost);
-    void projectSupCost(Cost cost);
+    void projectInfCost(Cost cost) FINAL;
+    void projectSupCost(Cost cost) FINAL;
 
-    void propagateNC();
-    bool verifyNC();
+    void propagateNC() FINAL;
+    bool verifyNC() FINAL;
     void queueAC(); // public method used also by tb2binconstr.hpp
     void queueDAC();
     void propagateAC();
@@ -112,22 +126,24 @@ public:
 
     void queueEAC1();
     void queueEAC2();
+    void queueFEAC();
     void fillEAC2(bool self);
     bool isEAC(Value a);
-    bool isEAC();
+    bool isEAC() FINAL;
     void propagateEAC();
     void setCostProvidingPartition();
-    virtual void queueVAC2() {}
+    bool checkEACGreedySolution();
+    bool reviseEACGreedySolution();
 
-    void eliminate();
+    void eliminate() FINAL;
     bool elimVar(BinaryConstraint* xy);
     bool elimVar(ConstraintLink xylink, ConstraintLink xzlink);
     bool elimVar(TernaryConstraint* xyz);
 
-    void queueDEE();
+    void queueDEE() FINAL;
     void propagateDEE(Value a, Value b, bool dee = true);
     bool verifyDEE(Value a, Value b);
-    bool verifyDEE();
+    bool verifyDEE() FINAL;
 
     void queueZ();
     bool Marginalisation();
@@ -233,7 +249,7 @@ public:
     void permuteDomain(Value a, Value b);
     ValueCost* sortDomain(vector<Cost>& costs);
 
-    void print(ostream& os);
+    virtual void print(ostream& os);
 
     vector<TProb> MFdistrib;
     void initMFdistrib();

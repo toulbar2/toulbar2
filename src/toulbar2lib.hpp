@@ -2,7 +2,7 @@
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
 <pre>
-    Copyright (c) 2006-2019, toulbar2 team
+    Copyright (c) 2006-2020, toulbar2 team
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-    toulbar2 is currently maintained by Simon de Givry, INRA - MIAT, Toulouse, France (simon.de-givry@inra.fr)
+    toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)
 </pre>
  */
 
@@ -80,6 +80,7 @@ public:
 
     virtual int getIndex() const = 0; ///< \brief instantiation occurrence number of current WCSP object
     virtual string getName() const = 0; ///< \brief get WCSP problem name (defaults to filename with no extension)
+    virtual void setName(const string& problem) = 0; ///< \brief set WCSP problem name
     virtual void* getSolver() const = 0; ///< \brief special hook to access solver information
 
     virtual Cost getLb() const = 0; ///< \brief gets internal dual lower bound
@@ -98,6 +99,10 @@ public:
     /// \brief increases problem lower bound thanks to \e eg soft local consistencies
     /// \param addLb increment value to be \b added to the problem lower bound
     virtual void increaseLb(Cost addLb) = 0;
+    /// \brief shift problem optimum toward negative costs
+    /// \param shift positive shifting value to be subtracted to the problem optimum when printing the solutions
+    virtual void decreaseLb(Cost shift) = 0;
+    virtual Cost getNegativeLb() const = 0; ///< \brief gets constant term used to subtract to the problem optimum when printing the solutions
     /// \brief computes the worst-case assignment finite cost (sum of maximum finite cost over all cost functions plus one)
     /// \return the worst-case assignment finite cost
     /// \warning current problem should be completely loaded and propagated before calling this function
@@ -109,15 +114,19 @@ public:
     virtual const vector<Variable*>& getVars() const = 0;
     virtual bool enumerated(int varIndex) const = 0; ///< \brief true if the variable has an enumerated domain
     virtual string getName(int varIndex) const = 0; ///< \note by default, variables names are integers, starting at zero
+    virtual unsigned int getVarIndex(const string& s) const = 0; ///< return variable index from its name, or numberOfVariables() if not found
     virtual Value getInf(int varIndex) const = 0; ///< \brief minimum current domain value
     virtual Value getSup(int varIndex) const = 0; ///< \brief maximum current domain value
     virtual Value getValue(int varIndex) const = 0; ///< \brief current assigned value \warning undefined if not assigned yet
     virtual unsigned int getDomainSize(int varIndex) const = 0; ///< \brief current domain size
-    virtual bool getEnumDomain(int varIndex, Value* array) = 0; ///< \brief gets current domain values in an array
-    virtual bool getEnumDomainAndCost(int varIndex, ValueCost* array) = 0; ///< \brief gets current domain values and unary costs in an array
+    virtual vector<Value> getEnumDomain(int varIndex) = 0; ///< \brief gets current domain values in an array
+    virtual bool getEnumDomain(int varIndex, Value* array) = 0; ///< \deprecated
+    virtual vector<pair<Value, Cost>> getEnumDomainAndCost(int varIndex) = 0; ///< \brief gets current domain values and unary costs in an array
+    virtual bool getEnumDomainAndCost(int varIndex, ValueCost* array) = 0; ///< \deprecated
     virtual unsigned int getDomainInitSize(int varIndex) const = 0; ///< \brief gets initial domain size (warning! assumes EnumeratedVariable)
     virtual Value toValue(int varIndex, unsigned int idx) = 0; ///< \brief gets value from index (warning! assumes EnumeratedVariable)
     virtual unsigned int toIndex(int varIndex, Value value) = 0; ///< \brief gets index from value (warning! assumes EnumeratedVariable)
+    virtual unsigned int toIndex(int varIndex, const string& valueName) = 0; ///< \brief gets index from value name (warning! assumes EnumeratedVariable with value names)
     virtual int getDACOrder(int varIndex) const = 0; ///< \brief index of the variable in the DAC variable ordering
 
     virtual bool assigned(int varIndex) const = 0;
@@ -134,8 +143,8 @@ public:
     /// \brief assigns a set of variables at once and propagates (used by Local Search methods such as Large Neighborhood Search)
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
-    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues) = 0;
-    virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate) = 0;
+    virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false) = 0;
+    virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false) = 0;
 
     virtual Cost getUnaryCost(int varIndex, Value v) const = 0; ///< \brief unary cost associated to a domain value
     virtual Cost getMaxUnaryCost(int varIndex) const = 0; ///< \brief maximum unary cost in the domain
@@ -168,7 +177,9 @@ public:
     virtual unsigned int numberOfConnectedBinaryConstraints() const = 0; ///< \brief current number of binary cost functions
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
-    virtual int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
+    virtual unsigned int medianArity() const = 0; ///< \brief median arity of current cost functions
+    virtual unsigned int getMaxDomainSize() const = 0; ///< \brief maximum initial domain size found in all variables
+    virtual unsigned int getMaxCurrentDomainSize() const = 0; ///< \brief maximum current domain size found in all variables
     virtual unsigned int getDomainSizeSum() const = 0; ///< \brief total sum of current domain sizes
     /// \brief Cartesian product of current domain sizes
     /// \param cartesianProduct result obtained by the GNU Multiple Precision Arithmetic Library GMP
@@ -210,17 +221,25 @@ public:
     /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
-    virtual int makeEnumeratedVariable(string n, Value* d, int dsize) = 0; ///< \brief create an enumerated variable with its domain values
-    virtual void addValueName(int xIndex, const string& name) = 0; /// \brief push back a value name for the enumerated variable
+    virtual int makeEnumeratedVariable(string n, vector<Value>& dom) = 0; ///< \brief create an enumerated variable with its domain values
+    virtual void addValueName(int xIndex, const string& valuename) = 0; ///< \brief add next value name \warning should be called on EnumeratedVariable object as many times as its number of initial domain values
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
+    virtual void postNullaryConstraint(Double cost) = 0;
+    virtual void postNullaryConstraint(Cost cost) = 0;
     virtual void postUnary(int xIndex, vector<Cost>& costs) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
+    virtual void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
-    virtual void postUnaryConstraint(int xIndex, vector<long double>& costs) = 0;
+    virtual void postIncrementalUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
+    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
-    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<long double>& costs) = 0;
+    virtual int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
+    virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
-    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
-    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0;
+    virtual int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
+    virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0, bool forcenary = false) = 0; /// \deprecated
+    virtual void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) = 0;
+    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0; /// \deprecated
     virtual void postNaryConstraintEnd(int ctrindex) = 0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
     virtual int postUnary(int xIndex, Value* d, int dsize, Cost penalty) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
     virtual int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) = 0;
@@ -228,7 +247,8 @@ public:
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
 
-    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0;
+    virtual int postCliqueConstraint(vector<int>& scope, const string& arguments) = 0;
+    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
 
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
 
@@ -241,11 +261,11 @@ public:
     /// \param values a vector of values to be restricted
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
-    virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<Value>& values, int lb, int ub)
-        = 0;
+    virtual int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
+    virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    virtual void postWVarAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \deprecated
 
     /// \brief post a soft or weighted regular cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -254,16 +274,12 @@ public:
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation ("flow", "DAG")
     /// \param nbStates the number of the states in the corresponding DFA. The states are indexed as 0, 1, ..., nbStates-1
-    /// \param initial_States a vector of WeightedObj specifying the starting states with weight
-    /// \param accepting_States a vector of WeightedObj specifying the final states
+    /// \param initial_States a vector of WeightedObjInt specifying the starting states with weight
+    /// \param accepting_States a vector of WeightedObjInt specifying the final states
     /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
-    virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        int nbStates,
-        const vector<WeightedObj<int>>& initial_States,
-        const vector<WeightedObj<int>>& accepting_States,
-        const vector<DFATransition>& Wtransitions)
-        = 0;
+    virtual int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
+    virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< \deprecated
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
     /// \brief post a soft alldifferent cost function
@@ -281,9 +297,9 @@ public:
     /// \param semantics the semantics of the global cost function: "var" (DAG-based propagator only) or -- "var" or "dec" or "wdec" (flow-based propagator only) or -- "hard" or "lin" or "quad" (network-based propagator only)--
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
-    /// \param values a vector of BoundedObj, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
+    /// \param values a vector of BoundedObjValue, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
     virtual int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObj<Value>>& values)
+        const vector<BoundedObjValue>& values)
         = 0;
     virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) = 0; ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
 
@@ -364,15 +380,22 @@ public:
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 
     virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief load problem in all format supported by toulbar2. Returns the UB known to the solver before solving (file and command line).
+    virtual void read_legacy(const char* fileName) = 0; ///< \brief load problem in wcsp legacy format
     virtual void read_uai2008(const char* fileName) = 0; ///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char* fileName) = 0; ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
 
-    virtual const vector<Value>& getSolution(Cost* cost_ptr = NULL) = 0; ///< \brief returns current best solution and its cost
+    virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual Double getSolutionValue() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
+    virtual Cost getSolutionCost() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
+    virtual const vector<Value> getSolution(Cost* cost_ptr) = 0; ///< \deprecated \brief returns current best solution and its cost
+    virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///\brief returns all solutions found
+    virtual void initSolutionCost() = 0; ///< \brief invalidate best solution by changing its cost to MAX_COST
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
-    virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution
-    virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution
+    virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
+    virtual void printSolution(ostream& os) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
+    virtual void printSolution(FILE* f) = 0; ///< \brief prints current best solution (using variable and value names if cfn format and ToulBar2::writeSolution>1)
 
     virtual void print(ostream& os) = 0; ///< \brief print current domains and active cost functions (see \ref verbosity)
     virtual void dump(ostream& os, bool original = true) = 0; ///< \brief output the current WCSP into a file in wcsp format \param os output file \param original if true then keeps all variables with their original domain size else uses unassigned variables and current domains recoding variable indexes
@@ -400,16 +423,21 @@ public:
 
     virtual void setLb(Cost newLb) = 0; ///< \internal sets problem lower bound
     virtual void setUb(Cost newUb) = 0; ///< \internal sets problem upper bound
-    virtual Cost getNegativeLb() const = 0; ///< \internal manages negative costs in probabilistic inference
     virtual void restoreSolution(Cluster* c = NULL) = 0; ///< \internal restores correct values to eliminated variables when all the variables have been assigned
 
     virtual void buildTreeDecomposition() = 0;
     virtual TreeDecomposition* getTreeDec() = 0;
 
+    virtual const vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
+    virtual void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
+    virtual void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
+    virtual void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
+    virtual void addMDDConstraint(Mdd mdd, int relaxed) = 0;
+    virtual void addHMDDConstraint(Mdd mdd, int relaxed) = 0;
+    virtual void addTMDDConstraint(Mdd mdd, int relaxed) = 0;
     virtual void iniSingleton() = 0;
     virtual void updateSingleton() = 0;
     virtual void removeSingleton() = 0;
-    virtual int getVACHeuristic() = 0;
     virtual void printVACStat() = 0;
 };
 
@@ -428,7 +456,7 @@ ostream& operator<<(ostream& os, WeightedCSP& wcsp); ///< \see WeightedCSP::prin
 
 class WeightedCSPSolver {
 public:
-    static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound, Long nbBacktracksLimit = LONGLONG_MAX); ///< \brief WeightedCSP Solver factory
+    static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound); ///< \brief WeightedCSP Solver factory
 
     virtual ~WeightedCSPSolver() {}
 
@@ -494,14 +522,23 @@ public:
      * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 
-    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function netwrok from a file (format as indicated by ToulBar2:: global variables)
+    virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function network from a file (format as indicated by ToulBar2:: global variables)
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP, see WeightedCSP::read_random
 
     /// \brief simplifies and solves to optimality the problem
     /// \return false if there is no solution found
     /// \warning after solving, the current problem has been modified by various preprocessing techniques
     /// \warning DO NOT READ VALUES OF ASSIGNED VARIABLES USING WeightedCSP::getValue (temporally wrong assignments due to variable elimination in preprocessing) BUT USE WeightedCSPSolver::getSolution INSTEAD
-    virtual bool solve() = 0;
+    virtual bool solve(bool first = true) = 0;
+
+    // internal methods called by solve, for advanced programmers only!!!
+    virtual void beginSolve(Cost ub) = 0;
+    virtual Cost preprocessing(Cost ub) = 0;
+    virtual void recursiveSolve(Cost lb = MIN_COST) = 0;
+    virtual void recursiveSolveLDS(int discrepancy) = 0;
+    virtual pair<Cost, Cost> hybridSolve() = 0;
+    virtual void endSolve(bool isSolution, Cost cost, bool isComplete) = 0;
+    // end of internal solve methods
 
     /// \brief solves the current problem using INCOP local search solver by Bertrand Neveu
     /// \return best solution cost found
@@ -521,18 +558,24 @@ public:
     /// \see ::solvesymmax2sat_ for Fortran call
     virtual bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol) = 0;
 
-    virtual void dump_wcsp(const char* fileName, bool original = true) = 0; ///< \brief output current problem in a file \see WeightedCSP::dump
+    virtual void dump_wcsp(const char* fileName, bool original = true, ProblemFormat format = WCSP_FORMAT) = 0; ///< \brief output current problem in a file \see WeightedCSP::dump
     virtual void read_solution(const char* fileName, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a file
-    virtual void parse_solution(const char* certificate) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
-    virtual void mutate(char* certificate) = 0; ///< \brief read a mutation string (see ToulBar2 option \e --mut)
-    virtual void mutate(std::string certificate) = 0; ///< \brief read a mutation string (see ToulBar2 option \e --mut)
+    virtual void parse_solution(const char* certificate, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
     virtual void applyCompositionalBiases() = 0;
-    virtual Cost getSolution(vector<Value>& solution) = 0; ///< \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual void mutate(char* certificate) = 0; ///< \brief read a mutation string (see ToulBar2 option --mut)
+    virtual void mutate(std::string certificate) = 0; ///< \brief read a mutation string (see ToulBar2 option --mut)
+
+    virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual Double getSolutionValue() const = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual Cost getSolutionCost() const = 0; ///< \brief after solving the problem, return the optimal solution nonnegative integer cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual Cost getSolution(vector<Value>& solution) const = 0; ///< \deprecated \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
+    virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
 
     // -----------------------------------------------------------
     // Internal Solver functions DO NOT USE THEM
 
     virtual set<int> getUnassignedVars() const = 0; ///< \internal returns the set of unassigned variable indexes \warning not valid before the search (see WeightedCSPSolver::solve)
+    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (see WeightedCSPSolver::solve)
 };
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)

@@ -8,8 +8,10 @@
  *
  *  Trailing stacks are associated to each storable type:
  *  - Store::storeValue for storable domain values ::StoreValue (value supports, etc)
+ *  - Store::storeInt for storable integer values ::StoreInt (number of non assigned variables in nary cost functions, etc)
  *  - Store::storeCost for storable costs ::StoreCost (inside cost functions, etc)
  *  - Store::storeDomain for enumerated domains (to manage holes inside domains)
+ *  - Store::storeIndexList for integer lists (to manage edge connections in global cost functions)
  *  - Store::storeConstraint for backtrackable lists of constraints
  *  - Store::storeVariable for backtrackable lists of variables
  *  - Store::storeSeparator for backtrackable lists of separators (see tree decomposition methods)
@@ -17,7 +19,6 @@
  *
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
  *  \note storable data are not trailed at depth 0.
- *  \warning ::StoreInt uses Store::storeValue stack (it assumes Value is encoded as int!).
  *  \warning Current storable data management is not multi-threading safe! (Store is a static virtual class relying on StoreBasic<T> static members)
  */
 
@@ -172,13 +173,25 @@ public:
         *adr[x] = val[x];
     }
 
-#ifndef INT_COST
+#if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
     void restore(Cost** adr, Cost* val, ptrdiff_t x)
     {
         *adr[x] = val[x];
     }
 #endif
 
+#if defined(SHORT_VALUE) && !defined(INT_COST)
+    void restore(int** adr, int* val, ptrdiff_t x)
+    {
+        *adr[x] = val[x];
+    }
+#endif
+#ifndef LONGLONG_COST
+    void restore(Long** adr, Long* val, ptrdiff_t x)
+    {
+        *adr[x] = val[x];
+    }
+#endif
     void restore(BigInteger** adr, BigInteger* val, ptrdiff_t x)
     {
         *adr[x] = val[x];
@@ -231,7 +244,7 @@ public:
 
     StoreBasic& operator=(const StoreBasic& elt)
     { ///< \note assignment has to be backtrackable
-        if (&elt != this) {
+        if (&elt != this && v != elt.v) {
             mystore.store(&v);
             v = elt.v;
         }
@@ -240,20 +253,26 @@ public:
 
     StoreBasic& operator=(const T vv)
     {
+        if (v != vv) {
         mystore.store(&v);
         v = vv;
+        }
         return *this;
     }
     StoreBasic& operator+=(const T vv)
     {
+        if (vv != 0) {
         mystore.store(&v);
         v += vv;
+        }
         return *this;
     }
     StoreBasic& operator-=(const T vv)
     {
+        if (vv != 0) {
         mystore.store(&v);
         v -= vv;
+        }
         return *this;
     }
 
@@ -264,9 +283,26 @@ template <class T>
 StoreStack<T, T> StoreBasic<T>::mystore(STORE_SIZE);
 
 typedef StoreBasic<Value> StoreValue;
-typedef StoreValue StoreInt;
+#if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
 typedef StoreBasic<Cost> StoreCost;
+#else
+typedef StoreValue StoreCost;
+#endif
+#ifdef SHORT_VALUE
+#ifndef INT_COST
+typedef StoreBasic<int> StoreInt;
+#else
+typedef StoreCost StoreInt;
+#endif
+#else
+typedef StoreValue StoreInt;
+#endif
 typedef StoreBasic<BigInteger> StoreBigInteger;
+#ifndef LONGLONG_COST
+typedef StoreBasic<Long> StoreLong;
+#else
+typedef StoreCost StoreLong;
+#endif
 
 /*
  * Container for all storable stacks
@@ -278,6 +314,9 @@ protected:
 public:
     static int depth;
     static StoreStack<BTList<Value>, DLink<Value>*> storeDomain;
+#ifdef SHORT_VALUE
+    static StoreStack<BTList<int>, DLink<int>*> storeIndexList;
+#endif
     static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> storeConstraint;
     static StoreStack<BTList<Variable*>, DLink<Variable*>*> storeVariable;
     static StoreStack<BTList<Separator*>, DLink<Separator*>*> storeSeparator;
@@ -293,7 +332,18 @@ public:
     {
         depth++;
         StoreValue::store();
+#if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
         StoreCost::store();
+#endif
+#ifdef SHORT_VALUE
+#ifndef INT_COST
+        StoreInt::store();
+#endif
+        storeIndexList.store();
+#endif
+#ifndef LONGLONG_COST
+        StoreLong::store();
+#endif
         StoreBigInteger::store();
         storeDomain.store();
         storeConstraint.store();
@@ -306,7 +356,18 @@ public:
     {
         depth--;
         StoreValue::restore();
+#if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
         StoreCost::restore();
+#endif
+#ifdef SHORT_VALUE
+#ifndef INT_COST
+        StoreInt::restore();
+#endif
+        storeIndexList.restore();
+#endif
+#ifndef LONGLONG_COST
+        StoreLong::restore();
+#endif
         StoreBigInteger::restore();
         storeDomain.restore();
         storeConstraint.restore();
@@ -323,7 +384,9 @@ public:
     }
 };
 
+#ifndef SHORT_VALUE
 #define storeIndexList storeDomain
+#endif
 
 #endif /*TB2STORE_HPP_*/
 

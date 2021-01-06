@@ -35,7 +35,8 @@ void MaxConstraint::read(istream& file, bool mult)
         unsigned int v;
         Cost w;
         file >> varID >> v >> w;
-        if (mult) w *= ToulBar2::costMultiplier;
+        if (mult)
+            w *= ToulBar2::costMultiplier;
         setAssignmentWeight((EnumeratedVariable*)(wcsp->getVar(varID)), v, w);
     }
 }
@@ -84,13 +85,13 @@ void MaxConstraint::initMemoization()
     best.resize(n);
 }
 
-Cost MaxConstraint::evalOriginal(const String& s)
+Cost MaxConstraint::evalOriginal(const Tuple& s)
 {
-    int largeComp = 0;
+    Cost largeComp = 0;
     int n = arity();
     for (int i = 0; i < n; i++) {
-        if (largeComp < weightMap[i][s[i] - CHAR_FIRST])
-            largeComp = weightMap[i][s[i] - CHAR_FIRST];
+        if (largeComp < weightMap[i][s[i]])
+            largeComp = weightMap[i][s[i]];
     }
     return largeComp;
 }
