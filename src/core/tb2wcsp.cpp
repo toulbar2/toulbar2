@@ -69,6 +69,7 @@ Long ToulBar2::RASPSnbBacktracks;
 int ToulBar2::debug;
 string ToulBar2::externalUB;
 int ToulBar2::showSolutions;
+bool ToulBar2::showHidden;
 int ToulBar2::writeSolution;
 FILE* ToulBar2::solutionFile;
 long ToulBar2::solutionFileRewindPos;
@@ -264,6 +265,7 @@ void tb2init()
 
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
+    ToulBar2::showHidden = false;
     ToulBar2::writeSolution = 0;
     ToulBar2::solutionFile = NULL;
     ToulBar2::solutionFileRewindPos = 0L;
@@ -1725,10 +1727,11 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
-    }else {
-        if(gcname =="knapsack"){
-        postKnapsackConstraint(scopeIndex,arity,file);
-        return -1;}
+    } else {
+        if (gcname == "knapsack") {
+            postKnapsackConstraint(scopeIndex, arity, file);
+            return -1;
+        }
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
@@ -1824,14 +1827,14 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file)
         for (int j = i + 1; j < arity; j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-        //Eliminate variable with weigth 0.
+    //Eliminate variable with weigth 0.
     vector<int> Weightzero;
     vector<Long> weights;
-    int nbzeros=0;
+    int nbzeros = 0;
     Long readw;
     Long capacity;
-    Long MaxWeight=0;
-    Long NegCapacity=0;
+    Long MaxWeight = 0;
+    Long NegCapacity = 0;
 
     file >> capacity;
 
@@ -1847,20 +1850,20 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file)
             clausecapacity--;
         }
         weights.push_back(readw);
-        if(weights[i]==0){
+        if (weights[i] == 0) {
             Weightzero.push_back(i);
-            nbzeros++;}
-        else if(weights[i]<0)
-            NegCapacity-=weights[i];
+            nbzeros++;
+        } else if (weights[i] < 0)
+            NegCapacity -= weights[i];
         else
-            MaxWeight+=weights[i];
+            MaxWeight += weights[i];
     }
     isclause &= (clausecapacity == capacity);
-    int k=0;
-    for(int i=0; i<nbzeros;i++){
-        weights.erase(weights.begin() + Weightzero[i]-k);
-        for(int j=Weightzero[i]-k;j<arity;j++)
-            *(scopeIndex+j)=*(scopeIndex+j+1);
+    int k = 0;
+    for (int i = 0; i < nbzeros; i++) {
+        weights.erase(weights.begin() + Weightzero[i] - k);
+        for (int j = Weightzero[i] - k; j < arity; j++)
+            *(scopeIndex + j) = *(scopeIndex + j + 1);
         k++;
         arity--;
     }
@@ -1870,10 +1873,11 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file)
     AbstractNaryConstraint* cc = NULL;
     if (isclause) {
         assert(arity == (int)clausetuple.size());
-        if (ToulBar2::verbose >= 3) cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
+        if (ToulBar2::verbose >= 3)
+            cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
         cc = new WeightedClause(this, scopeVars.data(), arity, getUb(), clausetuple);
     } else {
-        cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight,NegCapacity);
+        cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight, NegCapacity);
     }
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
@@ -3129,7 +3133,7 @@ void printClique(ostream& os, int arity, Constraint* ctr)
     }
     for (int i = 0; i < arity - 1; i++) {
         for (int j = i + 1; j < arity; j++) {
-//            os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
+            //            os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
             if (ctr->getVar(i)->wcspIndex < ctr->getVar(j)->wcspIndex) {
                 os << ctr->getVar(i)->getName() << " -- " << ctr->getVar(j)->getName() << " [len= " << ctr->getTightness() << "];" << endl;
             } else {
@@ -3378,11 +3382,11 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
-            os << vars[i]->getName() << "],\"defaultcost\":" << getDPrimalBound()-negCost << ",\n";
+            os << vars[i]->getName() << "],\"defaultcost\":" << getDPrimalBound() - negCost << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
-                os << ((original) ? (((EnumeratedVariable *) vars[i])->toIndex(domcost[v].value)) : v) << ","
-                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound()-negCost, Cost2RDCost(domcost[v].cost)));
+                os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
+                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound() - negCost, Cost2RDCost(domcost[v].cost)));
                 if (v != (size - 1)) {
                     os << ",";
                 }
@@ -4081,7 +4085,7 @@ void WCSP::propagate()
                     int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
-                               && !DAC.empty())
+                            && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
                         eac_iter++;
                         propagateIncDec();

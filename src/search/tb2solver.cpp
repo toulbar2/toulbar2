@@ -281,25 +281,24 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
     char operation = '\0';
     while ((certif2 != NULL) && (certif2[0] != '\0')) {
         int items = 0;
-        char *ope = strpbrk(certif2+1, "=#<>"); // avoid first character of a variable name (can be an operation char)
+        char* ope = strpbrk(certif2 + 1, "=#<>"); // avoid first character of a variable name (can be an operation char)
         if (ope) {
             items++;
             operation = *ope;
             items++;
             strncpy(svar, certif2, ope - certif2);
             svar[ope - certif2] = '\0';
-            char *nextsep = strpbrk(ope+2, sep);
+            char* nextsep = strpbrk(ope + 2, sep);
             if (nextsep) {
                 items++;
-                strncpy(svalue, ope+1, nextsep-ope-1);
-                svalue[nextsep-ope-1] = '\0';
+                strncpy(svalue, ope + 1, nextsep - ope - 1);
+                svalue[nextsep - ope - 1] = '\0';
             } else {
-                if (strlen(ope+1) > 0) {
+                if (strlen(ope + 1) > 0) {
                     items++;
-                    strcpy(svalue, ope+1);
+                    strcpy(svalue, ope + 1);
                 }
             }
-
         }
         if (items != 3) {
             cerr << "Certificate " << certif2 << " incorrect! " << items << endl;
@@ -630,8 +629,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
             EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
             if (!var->isFullEAC()
                 && ((varIndex < 0)
-                       || (heuristic < best - epsilon * best)
-                       || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {
+                    || (heuristic < best - epsilon * best)
+                    || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {
                 best = heuristic;
                 varIndex = *iter;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1379,18 +1378,20 @@ void Solver::newSolution()
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                switch (ToulBar2::showSolutions) {
-                case 1:
-                    cout << myvalue;
-                    break;
-                case 2:
-                    cout << valuelabel;
-                    break;
-                case 3:
-                    cout << varlabel << "=" << valuelabel;
-                    break;
-                default:
-                    break;
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                    switch (ToulBar2::showSolutions) {
+                    case 1:
+                        cout << myvalue;
+                        break;
+                    case 2:
+                        cout << valuelabel;
+                        break;
+                    case 3:
+                        cout << varlabel << "=" << valuelabel;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             } else {
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
@@ -1760,8 +1761,8 @@ void Solver::beginSolve(Cost ub)
     // reactivate on-the-fly variable elimination and dead-end elimination if needed
     for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
         if (wcsp->unassigned(i)) {
-            ((WCSP *)wcsp)->getVar(i)->queueEliminate();
-            ((WCSP *)wcsp)->getVar(i)->queueDEE();
+            ((WCSP*)wcsp)->getVar(i)->queueEliminate();
+            ((WCSP*)wcsp)->getVar(i)->queueDEE();
         }
     }
 }
@@ -1866,7 +1867,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     }
 
     if (ToulBar2::dumpWCSP) {
-        dump_wcsp(ToulBar2::problemsaved_filename.c_str(), false, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)));
+        dump_wcsp(ToulBar2::problemsaved_filename.c_str(), false, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)));
         cout << "end." << endl;
         exit(0);
     }
@@ -2181,8 +2182,8 @@ bool Solver::solve(bool first)
                                                 // reactivate on-the-fly variable elimination and dead-end elimination
                                                 for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
                                                     if (wcsp->unassigned(i)) {
-                                                        ((WCSP *)wcsp)->getVar(i)->queueEliminate();
-                                                        ((WCSP *)wcsp)->getVar(i)->queueDEE();
+                                                        ((WCSP*)wcsp)->getVar(i)->queueEliminate();
+                                                        ((WCSP*)wcsp)->getVar(i)->queueDEE();
                                                     }
                                                 }
                                                 wcsp->propagate();
