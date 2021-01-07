@@ -318,7 +318,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         if (pb->getVars()[varIdx]->getState())
             continue;
         int pos = pb->getVars()[varIdx]->getPosition();
-        bool isAA = (std::count(NotAnAA.begin(), NotAnAA.end(), pb->getVars()[varIdx]->getName()[0]) == 0);
+        bool isAA = ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]);
 
         if (debug)
             cout << "Variable " << pb->getVars()[varIdx]->getName() << " has position " << pos << endl;
@@ -398,8 +398,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
     // process unaries
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
-        if (pb->getVars()[varIdx]->getState() || (std::count(NotAnAA.begin(), NotAnAA.end(), pb->getVars()[varIdx]->getName()[0]) == 0)
-            || pb->getVars()[varIdx]->isEvolutionMasked())
+        if (pb->getVars()[varIdx]->getState() || !ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]) || pb->getVars()[varIdx]->isEvolutionMasked())
             continue;
         bool warn = true;
         vector<Cost> biases;

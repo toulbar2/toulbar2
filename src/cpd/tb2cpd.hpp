@@ -21,7 +21,6 @@ public:
     void Penalize(WeightedCSP* pb, TLogProb biasStrength);
 
 private:
-    const string NotAnAA = "Z" + IMPLICIT_VAR_TAG; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
     map<int, vector<TLogProb>> unaries;
     map<pair<int, int>, vector<vector<TLogProb>>> binaries;
     static const map<char, int> AminoMRFIdx;
@@ -47,6 +46,7 @@ public:
     void printSequence(TAssign& assig, const vector<Variable*>& vars);
     int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
+    bool isAAVariable(const Variable* var) { return (std::count(NotAnAA.begin(), NotAnAA.end(), var->getName()[0]) == 0); }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
     Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value]; }
     Value getRight(int varIndex, Value value) { return RightAA[varIndex][value]; }
@@ -59,6 +59,7 @@ public:
     float AminoMRFBias = 0.0;
 
 private:
+    const string NotAnAA = "Z" + IMPLICIT_VAR_TAG; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
     const static map<char, int> PSSMIdx; // converts AA char to indices in PsiBlast PSSMatrix
     TrieCpd cpdtrie;
