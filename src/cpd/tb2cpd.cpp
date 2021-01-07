@@ -1,4 +1,5 @@
 #include "tb2cpd.hpp"
+#include <algorithm>
 
 const map<char, int> Cpd::PSMIdx = { { 'A', 0 }, { 'R', 1 }, { 'N', 2 }, { 'D', 3 }, { 'C', 4 }, { 'Q', 5 },
     { 'E', 6 }, { 'G', 7 }, { 'H', 8 }, { 'I', 9 }, { 'L', 10 }, { 'K', 11 }, { 'M', 12 }, { 'F', 13 },
@@ -317,7 +318,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         if (pb->getVars()[varIdx]->getState())
             continue;
         int pos = pb->getVars()[varIdx]->getPosition();
-        bool isAA = pb->getVars()[varIdx]->getName()[0] != 'Z';
+        bool isAA = (std::count(NotAnAA.begin(), NotAnAA.end(), pb->getVars()[varIdx]->getName()[0]) == 0);
 
         if (debug)
             cout << "Variable " << pb->getVars()[varIdx]->getName() << " has position " << pos << endl;
@@ -397,7 +398,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
     // process unaries
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
-        if (pb->getVars()[varIdx]->getState() || pb->getVars()[varIdx]->getName()[0] == 'Z' || pb->getVars()[varIdx]->isEvolutionMasked())
+        if (pb->getVars()[varIdx]->getState() || (std::count(NotAnAA.begin(), NotAnAA.end(), pb->getVars()[varIdx]->getName()[0]) == 0)
+            || pb->getVars()[varIdx]->isEvolutionMasked())
             continue;
         bool warn = true;
         vector<Cost> biases;

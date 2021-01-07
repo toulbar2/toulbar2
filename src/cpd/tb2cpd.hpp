@@ -21,6 +21,7 @@ public:
     void Penalize(WeightedCSP* pb, TLogProb biasStrength);
 
 private:
+    const string NotAnAA = "Z" + IMPLICIT_VAR_TAG; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
     map<int, vector<TLogProb>> unaries;
     map<pair<int, int>, vector<vector<TLogProb>>> binaries;
     static const map<char, int> AminoMRFIdx;
