@@ -59,7 +59,7 @@ public:
     float AminoMRFBias = 0.0;
 
 private:
-    const string NotAnAA = "Z" + IMPLICIT_VAR_TAG; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
+    const string NotAnAA = "Z" + HIDEABLE_VAR_TAGS; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
     const static map<char, int> PSSMIdx; // converts AA char to indices in PsiBlast PSSMatrix
     TrieCpd cpdtrie;

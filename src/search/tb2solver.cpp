@@ -1644,7 +1644,7 @@ void Solver::newSolution()
                     string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                     string varlabel = myvar->getName();
 
-                    if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                    if (ToulBar2::showHidden || (!varlabel.empty() && HIDEABLE_VAR_TAGS.find(varlabel[0]) == string::npos)) {
                         switch (ToulBar2::showSolutions) {
                         case 1:
                             cout << myvalue;
