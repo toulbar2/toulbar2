@@ -38,6 +38,8 @@
 const string IMPLICIT_VAR_TAG = "#";
 /// Special character value at the beginning of a variable's name to identify diverse extra variables corresponding to the current sequence of diverse solutions found so far
 const string DIVERSE_VAR_TAG = "^";
+/// List of special chars that tag variables that should be involved in diversity constraints.
+const string DIVERSIFIED_VAR_TAG = "§";
 /// List of special chars that tag variables which value is not printed by default (when -s is used with a non negative arg)
 const string HIDEABLE_VAR_TAGS = IMPLICIT_VAR_TAG + DIVERSE_VAR_TAG;
 /// Domain value (can be positive or negative integers)

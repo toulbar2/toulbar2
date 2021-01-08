@@ -2146,7 +2146,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     // Diverse variables structure and variables allocation and initialization
     if (ToulBar2::divNbSol > 1) {
         for (auto var : vars) {
-            if (var->unassigned() && var->getName()[0] != IMPLICIT_VAR_TAG[0]) {
+            if (var->unassigned() && var->getName()[0] == DIVERSIFIED_VAR_TAG[0]) {
                 if (var->enumerated()) {
                     divVariables.push_back(var);
                 } else {
