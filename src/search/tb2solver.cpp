@@ -2479,7 +2479,7 @@ bool Solver::solve(bool first)
 
                                         Cost eUpperBound = initUb;
                                         if (!extrapolatedBound) { // previous extrapolated bound was fine
-                                            if (energies.size() >= 2) {
+                                            if (false) { //(energies.size() >= 2) {
                                                 auto back = energies.end() - 1;
                                                 Cost maxDelta = *(back) - *(--back);
                                                 int maxCount = 5;
