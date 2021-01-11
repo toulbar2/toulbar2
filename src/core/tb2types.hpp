@@ -41,7 +41,7 @@ const string DIVERSE_VAR_TAG = "^";
 /// List of special chars that tag variables that should be involved in diversity constraints.
 const string DIVERSIFIED_VAR_TAG = "§";
 /// List of special chars that tag variables which value is not printed by default (when -s is used with a non negative arg)
-const string HIDEABLE_VAR_TAGS = IMPLICIT_VAR_TAG + DIVERSE_VAR_TAG;
+const string HIDEABLE_VAR_TAGS = IMPLICIT_VAR_TAG + DIVERSE_VAR_TAG + DIVERSIFIED_VAR_TAG;
 /// Domain value (can be positive or negative integers)
 #ifdef SHORT_VALUE
 typedef int16_t Value;

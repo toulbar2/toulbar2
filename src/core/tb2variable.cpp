@@ -57,7 +57,8 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     if (ToulBar2::cfn && ToulBar2::cpd) {
         if (name.size() > 0) {
             nativeResidue = name[0];
-            if (nativeResidue != 'Z' && nativeResidue != 'X') {// Special non designable AA variables
+            const string notaa = "Z" + HIDEABLE_VAR_TAGS;
+            if (std::count(notaa.begin(), notaa.end(), nativeResidue) == 0) {// Special non designable AA variables
                 size_t separatorPos = name.find('-');
                 size_t multiStatePos = name.find('_');
                 

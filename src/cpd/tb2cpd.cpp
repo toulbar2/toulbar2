@@ -641,9 +641,11 @@ void Cpd::storeSequence(const vector<Variable*>& vars, Double energy)
 {
     string sequence;
     for (size_t i = 0; i < vars.size(); i++) {
-        char aa = rotamers2aa[i][vars[i]->getValue()];
-        if (aa != '*')
-            sequence.push_back(aa);
+        if (isAAVariable(vars[i])) {
+            char aa = rotamers2aa[i][vars[i]->getValue()];
+            if (aa != '*')
+                sequence.push_back(aa);
+        }
     }
     cpdtrie.insert_sequence(sequence, energy);
 }
@@ -660,12 +662,14 @@ void Cpd::printSequence(const vector<Variable*>& vars, Double energy)
 
     cout << "New rotamers:";
     for (size_t i = 0; i < vars.size(); i++) {
-        char aa = rotamers2aa[i][vars[i]->getValue()];
-        if (aa != '*') {
-            sequence.push_back(aa);
-            cout << " " << vars[i]->getValue();
+        if (isAAVariable(vars[i])) {
+            char aa = rotamers2aa[i][vars[i]->getValue()];
+            if (aa != '*') {
+                sequence.push_back(aa);
+                cout << " " << vars[i]->getValue();
+            }
+            mutations += (aa != vars[i]->getNativeResidue());
         }
-        mutations += (aa != vars[i]->getNativeResidue());
     }
     cout << "\nNew sequence: " << sequence << " Mutations: " << mutations << " Energy: " << std::setprecision(ToulBar2::decimalPoint);
     if (AminoMRFBias != 0.0) {
