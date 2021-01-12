@@ -164,7 +164,6 @@ enum {
     OPT_problemsaved_filename,
     OPT_PARTIAL_ASSIGNMENT,
     NO_OPT_PARTIAL_ASSIGNMENT,
-    OpT_showSolutions,
     OPT_writeSolution,
     OPT_pedigreePenalty,
     OPT_allSolutions,
@@ -1346,6 +1345,10 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_showSolutions) {
                 if (args.OptionArg() != NULL) {
                     int showType = atoi(args.OptionArg());
+                    if (showType < 0) {
+                        showType = -showType;
+                        ToulBar2::showHidden = true;
+                    }
                     if (showType > 0 && showType < 4)
                         ToulBar2::showSolutions = showType;
                 } else
@@ -1889,11 +1892,11 @@ int _tmain(int argc, TCHAR* argv[])
                 if (args.OptionArg() != NULL) {
                     if (strlen(args.OptionArg()) == 1 && args.OptionArg()[0] >= '1' && args.OptionArg()[0] <= '4') {
                         ToulBar2::dumpWCSP = atoi(args.OptionArg());
-                        if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) != CFN_FORMAT) {
+                        if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) != CFN_FORMAT) {
                             cerr << "Error: filename extension .cfn not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
                             exit(EXIT_FAILURE);
                         }
-                        if (ToulBar2::problemsaved_filename.rfind(".wcsp") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) != WCSP_FORMAT) {
+                        if (ToulBar2::problemsaved_filename.rfind(".wcsp") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) != WCSP_FORMAT) {
                             cerr << "Error: filename extension .wcsp not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
                             exit(EXIT_FAILURE);
                         }
@@ -2675,15 +2678,15 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
 
         if (ToulBar2::problemsaved_filename.empty())
-            ToulBar2::problemsaved_filename = ((static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? "problem.cfn" : "problem.wcsp");
+            ToulBar2::problemsaved_filename = ((static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? "problem.cfn" : "problem.wcsp");
 
         if (ToulBar2::dumpWCSP % 2) {
             string problemname = ToulBar2::problemsaved_filename;
             if (ToulBar2::uaieval) {
                 problemname = ToulBar2::solution_uai_filename;
-                problemname.replace(problemname.rfind(".uai.MPE"), 8, (static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? ".cfn" : ".wcsp");
+                problemname.replace(problemname.rfind(".uai.MPE"), 8, (static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? ".cfn" : ".wcsp");
             }
-            solver->dump_wcsp(problemname.c_str(), true, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1)+(ToulBar2::dumpWCSP & 1)));
+            solver->dump_wcsp(problemname.c_str(), true, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)));
         } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
 #ifndef __WIN32__
             signal(SIGINT, timeOut);

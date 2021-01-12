@@ -72,32 +72,44 @@ const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
 #ifdef SHORT_COST
 const bool PARTIALORDER = false;
 typedef int16_t Cost;
-const Cost MIN_COST = short{0};
-const Cost UNIT_COST = short{1};
-const Cost SMALL_COST = short{1};
-const Cost MEDIUM_COST = short{3};
-const Cost LARGE_COST = short{100};
+const Cost MIN_COST = short{ 0 };
+const Cost UNIT_COST = short{ 1 };
+const Cost SMALL_COST = short{ 1 };
+const Cost MEDIUM_COST = short{ 3 };
+const Cost LARGE_COST = short{ 100 };
 const Cost MAX_COST = (std::numeric_limits<Cost>::max() / MEDIUM_COST);
 //inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
 //inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
 //inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
 
 //C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
-inline int16_t min(int16_t x, int y) {
-    if (x < y) return x;
-    else return y;
+inline int16_t min(int16_t x, int y)
+{
+    if (x < y)
+        return x;
+    else
+        return y;
 }
-inline int16_t min(int x, int16_t y) {
-    if (x < y) return x;
-    else return y;
+inline int16_t min(int x, int16_t y)
+{
+    if (x < y)
+        return x;
+    else
+        return y;
 }
-inline int16_t max(int16_t x, int y) {
-    if (x > y) return x;
-    else return y;
+inline int16_t max(int16_t x, int y)
+{
+    if (x > y)
+        return x;
+    else
+        return y;
 }
-inline int16_t max(int x, int16_t y) {
-    if (x > y) return x;
-    else return y;
+inline int16_t max(int x, int16_t y)
+{
+    if (x > y)
+        return x;
+    else
+        return y;
 }
 
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
@@ -150,7 +162,7 @@ const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
 const Cost MEDIUM_COST = 3;
 const Cost LARGE_COST = 100;
-const Cost MAX_COST = ((std::numeric_limits<Cost>::max()/2) / MEDIUM_COST / MEDIUM_COST);
+const Cost MAX_COST = ((std::numeric_limits<Cost>::max() / 2) / MEDIUM_COST / MEDIUM_COST);
 //inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
 //inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
 //inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
@@ -521,6 +533,7 @@ public:
     static int debug;
     static string externalUB;
     static int showSolutions;
+    static bool showHidden;
     static int writeSolution;
     static FILE* solutionFile;
     static long solutionFileRewindPos;
