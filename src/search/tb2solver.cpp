@@ -2533,6 +2533,7 @@ bool Solver::solve(bool first)
                                                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                                                     }
                                                 }
+                                                wcsp->enforceUb();
                                                 wcsp->propagate();
                                                 initialDepth = Store::getDepth();
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
