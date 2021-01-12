@@ -4892,6 +4892,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
     return added;
 }
 
+//TODO: add dummy binary cost functions to make the constraint graph chordal before creating dummy ternary cost functions
 void WCSP::ternaryCompletion()
 {
     if (numberOfUnassignedVariables() < 3)
