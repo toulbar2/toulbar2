@@ -689,12 +689,14 @@ void Cpd::printSequence(TAssign& assig, const vector<Variable*>& vars)
 
     cout << "New rotamers:";
     for (size_t i = 0; i < assig.size(); i++) {
-        char aa = rotamers2aa[i][assig[i]];
-        if (aa != '*') {
-            sequence.push_back(aa);
-            cout << " " << assig[i];
+        if (isAAVariable(vars[i])) {
+            char aa = rotamers2aa[i][assig[i]];
+            if (aa != '*') {
+                sequence.push_back(aa);
+                cout << " " << assig[i];
+            }
+            mutations += (aa != vars[i]->getNativeResidue());
         }
-        mutations += (aa != vars[i]->getNativeResidue());
     }
     cout << "\nNew sequence: " << sequence << " Mutations: " << mutations;
     if (AminoMRFBias != 0.0)
