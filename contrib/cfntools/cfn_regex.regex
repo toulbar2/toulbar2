@@ -1,0 +1,14 @@
+[CFN_REGEXP]
+ub_valid= <-*[0-9]*\\.[0-9]*
+
+; variable n 
+var_valid= M*[A-Z]_[0-Z]_[0-9]*
+
+; values regexp
+val_valid= [A-Z]*_[0-9]*
+
+; function regexp
+f_valid= (C*B[0-9]*-[0-9]*)|(C*M*S[0-9]*)|(C*M*Etmp)|(C*M[0-9]*)
+
+; variable name after merging 
+ var_merged_valid = "M*[A-Z]_[0-Z]_[0-9]*"
