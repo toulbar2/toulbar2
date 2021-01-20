@@ -1057,7 +1057,7 @@ void CFNManager::infos(){
 
 	}
 	cout << "-------------- \n Total function number  :"  << function_counter << "\n ----------------"<< endl;
-	for (std::vector<int>::iterator it = Scope_Hist.begin() ; it != Scope_Hist.end(); ++it) { 
+	for (std::vector<int>::iterator it = Scope_Hist.begin() ; it <= Scope_Hist.end(); ++it) { 
 
 		if ( *it > 0 ) { 
 			int arity = std::distance(Scope_Hist.begin(), it);
