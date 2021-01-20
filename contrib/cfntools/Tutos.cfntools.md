@@ -1,11 +1,11 @@
 # cfntools cfn format  Limit :
 ## Supported format 
 
-the current release doesn't support only unary and binary cfn with cost functions 
-with scope base only on variable lable .
+the current release supports only unary and binary cost functions 
+with scopes given by a list of variable names.
 
 * defaut mode * 
-use regular expression in order to detecte variable and function 
+use regular expression in order to detect variable and function 
 
 
 ##Unsupported cfn : 

@@ -82,8 +82,8 @@ List of options :
 
 * -h : display this help
 
-#Tuto 
-[Tuto](http://github.com/toulbar2/toulbar2/contrib/cfntools/Tutos.cfntools.md)
+#Tuto# 
+[Tuto](Tutos.cfntools.md).
 
 **WARNING : the operations are done in the order you wrote it**
 
