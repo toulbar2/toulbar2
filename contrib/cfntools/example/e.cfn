@@ -1,43 +1,13 @@
 {
-    "problem": {
-        "name": "merge-function_em-function_em",
-        "mustbe": "<236.648605"
-    },
- "variables": {
-        "P_A_1": [
-            "M_0",
-            "M_1",
-            "M_2" 
-        ],
-        "P_A_2": [
-            "R_0",
-            "R_1",
-            "R_2" 
-        ]
-
-},
+    "problem": { "name": "merge-function_em-function_em", "mustbe": "<236.648605" },
+ "variables": { "P_A_1": [ "M_0", "M_1", "M_2" ], "P_A_2": [ "R_0", "R_1", "R_2" ] },
     "functions": {
         "S1": { "scope": [ "P_A_1" ],
-            "costs": [
-                0,
-                1,
-                2.00002
-            ]
-        },
+            "costs": [ 0, 1, 2.00002 ] },
         "S2": { "scope": [ "P_A_2" ],
-            "costs": [
-                7,
-                6,
-                5
-            ]
-        },
+            "costs": [ 7, 6, 5 ] },
         "B1-2": { "scope": [ "P_A_1", "P_A_2" ],
-            "costs": [
-                1000, 0, 0.000002,
-                20, 0, 0,
-                0, 30.0, 0
-                
-            ]
-        }
-        }
-    }
+            "costs": [ 1000, 0, 0.000002, 20, 0, 0, 0, 30.0, 0 ] }
+    
+}
+}

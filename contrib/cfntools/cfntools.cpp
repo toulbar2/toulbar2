@@ -1026,6 +1026,10 @@ void CFNManager::infos(){
 	std::vector<int> Scope_Hist; 
 	Value& variables = cfn["variables"];
 
+		// add CO constraint Etmp ... with no scope definition
+		// putative scope Nbar+1
+		Scope_Hist.push_back(-1);
+
 	for(Value::MemberIterator v = variables.MemberBegin(); v < variables.MemberEnd(); v++){
 		string name = v->name.GetString();
 		Value& l_rot = variables[name.c_str()];
@@ -1047,7 +1051,7 @@ void CFNManager::infos(){
 	cout<< ">> Max domaine size  = " << Maxdom << endl;
 	cout<< ">> Min domaine size  = " << Mindom << endl;
 	Value& func = cfn["functions"];
-	for(Value::MemberIterator f=func.MemberBegin(); f!=func.MemberEnd(); f++){
+	for(Value::MemberIterator f=func.MemberBegin(); f<func.MemberEnd(); f++){
 		function_counter++;
 		Value& scope = func[f->name.GetString()]["scope"];
 		int index = 0;
@@ -1057,7 +1061,7 @@ void CFNManager::infos(){
 
 	}
 	cout << "-------------- \n Total function number  :"  << function_counter << "\n ----------------"<< endl;
-	for (std::vector<int>::iterator it = Scope_Hist.begin() ; it <= Scope_Hist.end(); ++it) { 
+	for (std::vector<int>::iterator it = Scope_Hist.begin() ; it < Scope_Hist.end(); it++) { 
 
 		if ( *it > 0 ) { 
 			int arity = std::distance(Scope_Hist.begin(), it);
