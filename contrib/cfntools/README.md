@@ -42,7 +42,7 @@ to use it.
 General form of line command :
 ```
 cfntools -f file.cfn  [-o output.cfn] [-comp file] [-merge file] [-add file]
-[-pctself ps] [-pctpair pp] [-extract list] [-mul k] [-mulself ks] [-mulpair kp]
+[-pctUnary ps] [-pctBin pp] [-extract list] [-mul k] [-mulself ks] [-mulpair kp]
 [-UB value] [-t threshold] [-d nb_digit] [--verbose v] [-sol file.sol]
 [-fast] [-meandeltafunction] [-info] [-h]
 ```
@@ -53,28 +53,37 @@ List of options :
 * -comp file2.cfn : compare ref_file with specifed second cfn file
 * -merge file2.cfn : merge  two cfn into one (-output merge_foo.cfn)  (rename variables if same name etc) (goal for instance : a cfn file for two configuration of the protein (one opened and one closed), more useful if mutation than scp)
 * -add fil2.cfn : merge constraints include in the ref_file with file2.cfn (variables and domain cost function have to be the same)
-* -pctself ps : when adding a map, multiply unary cost of the map by ps*reader.mediandeltaunary/map.mediandeltaunary
-* -pctpair pp : when adding a map, multiply binary cost of th map by pp*reader.mediandeltabinary/map.mediandeltabinary
+* -pctUnary ps : when adding  file2.cfn, multiply unary cost of the file2.cfn by ps*(reader.median_delta_unary)/(file2.median_delta_unary)
+* -pctBin pp : when adding  file2.cfn , multiply binary cost of file2.cfn by pp*(reader.median_delta_binary)/ (file2.median_delta_binary)
 
 * -extract var_list.txt : list of variables to extract (extract the variables and the functions which scope is included in this list) -> if a variable is in list and not in cfn, just not considered
 
 * -mul k : multiply by k (float) all the values (saved in a new cfn)
+
 * -mulself k : multiply by k (float) the values of functions with a scope size = 1 (saved in a new cfn)
+
 * -mulpair k : multiply by k (float) the values of functions with a scope size = 2 (saved in a new cfn)
+
 * -UB upperbound to adjust (float) : -UB 0 => compute the UB according to the cost in the cfn
+
 * -t threshold (float) : all values above threshold are set equal to upper bound
+
 * -d number of digits (int) : -d 0 => adjust to Upperbound format (by default prec = 6 digits)
 
 * -sol file.sol :  check toulbar2 solutio (-w=2 format ) and extract cost function assignement and values index  in csv file
 
 * -meandeltafunction : return the delta mean for unary cost and for binary costs
+
 * --verbose v (int) : verbose level range defautl = 1  to 3
+
 * -fast : set verbose to 0 and don't check format (don't use if not sure)
+
 * -info : print information about the cfn
+
 * -h : display this help
 
-#Tuto# 
-[Tuto](http://github.com/toulbar2/toulbar2/contrib/cfntools/Tutos.cfntools.md).
+#Tuto 
+[Tuto](http://github.com/toulbar2/toulbar2/contrib/cfntools/Tutos.cfntools.md)
 
 **WARNING : the operations are done in the order you wrote it**
 

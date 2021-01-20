@@ -1,5 +1,5 @@
 # cfntools cfn format  Limit :
-## Supported format ##
+## Supported format 
 
 the current release doesn't support only unary and binary cfn with cost functions 
 with scope base only on variable lable .
@@ -8,7 +8,7 @@ with scope base only on variable lable .
 use regular expression in order to detecte variable and function 
 
 
-##Unsupported cfn : ## 
+##Unsupported cfn : 
 
 		  **  functions using scope base on index
 		   * arity function > 2 
@@ -22,7 +22,7 @@ use regular expression in order to detecte variable and function
 # Command line simple :
   	 
 * info files *
-   __ cfntools -info -f test_cfn/b1_t42.cfn __
+   ' cfntools -info -f test_cfn/b1_t42.cfn '
    
  - check the cfn format validity and  print the abstract information about the cfn file ( -f foo.cfn )
    number of variable , cost function ( sorted by arity ) ,  upper bound value 
@@ -31,7 +31,7 @@ use regular expression in order to detecte variable and function
 
 * compare 2 cfn files *
 
-__   cfntools -f e.cfn -comp e1.cfn  __
+'   cfntools -f e.cfn -comp e1.cfn  '
  
    compare 2 cfn files and return error if each homologue cost function ( function with same name )
    includes  at least one tuple with different cost higher than the cfn precision .
@@ -48,17 +48,17 @@ __   cfntools -f e.cfn -comp e1.cfn  __
 * toulbar2 solution format :
 toulbar2 foo.cfn -w=2 -w=foo.ol
 
-__	cfntools -sol foo2.sol -f test_cfn/b1_ub0.cfn  __
+'	cfntools -sol foo2.sol -f test_cfn/b1_ub0.cfn  '
 
 * .. Output ..*
-		cost written in foo2.sol_energies.csv
+		cost written in foo2.sol'energies.csv
 		CFNTOOLS>> final cost = -785.655936
 
 * Extract CFN :* 
 
-__ ./cfntools -f b1_d2.cfn -extract var_name.txt -o my_extractation.cfn __
+' ./cfntools -f b1_d2.cfn -extract var_name.txt -o my_extractation.cfn '
 
-  var_name.txt is text file including  all variable name of the mandatory extraction 
+  var'name.txt is text file including  all variable name of the mandatory extraction 
   P_A_1
   P_A_2 
 ..
@@ -72,17 +72,17 @@ toulbar2  the default solution format in not supported
 -w=2 option must be used  => solution based on value label
 
 solution exemple foo.sol :
-M_10 R_56 I_1 I_0 L_0 L_0 ...
+M'10 R_56 I_1 I_0 L_0 L_0 ...
 
 
-foo.sol_energies.csv
+foo.sol'energies.csv
 
 
 * Values filtering *
 -t option allows to prune value highter than a given treshold  , the new cfn file has the same number of variable and function
 but filtered value cost is replaced by the current UB. ( defined in head mustbe < xxxx.xxx )
 
- __ cfntools -f b1_d2.cfn -t=10.000 -o aa.cfn __
+ ' cfntools -f b1_d2.cfn -t=10.000 -o aa.cfn '
 
 
 * Comment: 
@@ -93,27 +93,27 @@ the value fitering doesn't can produce a new instance without solution  with the
 -UB option allows to replace de default upper bound of the cfn file  specificed by -f foo.cfn
 
 
- __ cfntools -f foo.cfn -UB=10.000 -o foo_ub10.cfn __
+ ' cfntools -f foo.cfn -UB=10.000 -o foo_ub10.cfn '
 
 when is set to 0 => -UB 0  cfntools replace the upper  bound by the max sum of the cost function include in the input cfn
 
- __ cfntools -f foo.cfn -UB=0 -o foo_ub10.cfn __
+ ' cfntools -f foo.cfn -UB=0 -o foo_ub10.cfn '
 
 
 * Merge CFN *
 
-the following command merge two cfn file a.cfn and b.cfn into  a_b.cfn
+the following command merge two cfn file a.cfn and b.cfn into  a'b.cfn
 
-__cfntools -f a.cfn -merge b.cfn -o a_b.cfn __
+'cfntools -f a.cfn -merge b.cfn -o a_b.cfn '
 
 
 * comment :
 - the resulting file can be check using -info option
 
-  __cfntools -f a_b.cfn -info __ 
+  'cfntools -f a_b.cfn -info _ 
 or directely with :
 
-__cfntools -f a.cfn -merge b.cfn -o a_b.cfn  -info __
+'cfntools -f a.cfn -merge b.cfn -o a_b.cfn  -info '
 
 - upper bound is updated with the sum of the max cost of the resulting file.
 - the variable from cfn declared by merge option are rename 
@@ -145,4 +145,41 @@ become :
 
 new function M1 and M2 are added for merging tuple between P_A_1 and P_A_1 in the orignal cfn file.
 	
+# Howto add to cost distribution :
 
+the context is the following :  
+you got 2 cfn file with a the same set of variables and values , for exemple : to type of information with different objective function 
+and you want to merge the 2  cost distribution ( or probality distribution ) 
+
+cfntools allows to do the jobs in conjonction with -add option 
+
+
+
+' cfntools -fast -f 3LF9_ref.cfn -add 3LF9_mapV.cfn -pctunary 5 -pctBin 5 -o 3LF9/3LF9_EMV.cfn '
+
+- '-add option allows to declare the cfn to add to the reference cfn file ( -f foo'ref.cfn )'
+- '-pctunary option for pourcentage unary of unary   rescaling '
+- '-pctbin for pourcentage to Binary cost function ' 
+
+M'unary and M_Binary are respectively the  Median value of the cost distribution of the cost function F .
+f has the same scope and domain respectively in the reference file ( declared in -f ) and in the secondery distribution   
+(-add foo.cfn ) 
+pctUnary is unary rescale constant factor Pu (float)  used for  each unary function  : $k_{i} = k_{Pu, i}*median(\Delta E_{Ref,i})/median(\Delta E_{add,i})$
+pctBin is binary rescale constant factor Pb (float)  used  for  each binary function : $^k'_{j} = k_{Pu, j}*median(\Delta E_{Ref,j})/median(\Delta E_{add,j})$
+
+the goal is to rescale the added cost ditribution  in order to impact the cost distribution defined in the  reference cfn file.
+the added cost are shifted  before addition in the final cfn files .
+
+
+* comments : 
+-fast option allows to improve the processing speed by relaxing the json document format checking 
+ref cfn file and cfn to add need to have same variables and values label same domaine size.
+function label to add need get the same name.
+
+
+Upper Bound of the output cfn is computed automaticaly after rescaling .
+Ub is set to the max cost sum of each function ( as -UB option ) 
+
+cost function set of the ref file and added file could be different . If the ref file include Unary and Binary functions
+the add file can containt only unary or binary sub set but with the same scope and the same function label.
+hence the option  -pctunary and or pctBin can be used in conjonction or independentely

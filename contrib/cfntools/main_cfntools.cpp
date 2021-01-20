@@ -102,6 +102,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
 	{ OPT_ADD, "-add", SO_REQ_SEP},
 	{ OPT_PS, "-pctself", SO_REQ_SEP},
 	{ OPT_PP, "-pctpair", SO_REQ_SEP},
+	{ OPT_PS, "-pctUnary", SO_REQ_SEP}, // renaming of pctse
+	{ OPT_PP, "-pctBin", SO_REQ_SEP},
 	{ OPT_COMP, "-comp", SO_REQ_SEP},
 	{ OPT_MUL, "-mul", SO_REQ_SEP},
 	{ OPT_MULSELF, "-mulself", SO_REQ_SEP},
