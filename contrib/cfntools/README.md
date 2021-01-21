@@ -1,6 +1,6 @@
 # ReadMe CFNTOOLS
 
-Module to manage CFN (which is the file to give to toulbar2 to solve the SCP problem)
+command line Module to manage binary CFN instances.
 
 ## Getting Started
 
