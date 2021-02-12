@@ -57,6 +57,7 @@ namespace py = pybind11;
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 #include "search/tb2solver.hpp"
+#include "cpd/tb2cpd.hpp"
 
 PYBIND11_MODULE(pytoulbar2, m)
 {
@@ -402,6 +403,10 @@ PYBIND11_MODULE(pytoulbar2, m)
             tb2checkOptions();
             return s.read_wcsp(fileName);
         })
+        .def("cpd", [](WeightedCSPSolver& s) {
+                        if (ToulBar2::cpd == NULL)
+                            ToulBar2::cpd = new Cpd;
+        })
 #ifndef __WIN32__
         .def("timer", [](WeightedCSPSolver& s, int timeout) {
             signal(SIGINT, timeOut);
@@ -444,6 +449,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("read_solution", &WeightedCSPSolver::read_solution)
         .def("parse_solution", &WeightedCSPSolver::parse_solution);
 }
+
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
