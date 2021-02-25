@@ -1,5 +1,4 @@
 import pytoulbar2 as tb2
-import numbers
 
 class CFN:
     def __init__(self, ubinit, resolution = 0, vac = 0, configuration = False):
@@ -53,7 +52,6 @@ class CFN:
     def AddVariable(self, name, values):
         if name in self.Variables:
             raise RuntimeError(name+" already defined")
-        cardinality = len(values)
         self.Variables[name] = values
 
         if all(isinstance(value, int) for value in values):
@@ -74,7 +72,6 @@ class CFN:
         sscope = set(scope)
         if len(scope) != len(sscope):
             raise RuntimeError("Duplicate variable in scope:"+str(scope))
-        arity = len(scope)
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):

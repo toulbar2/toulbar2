@@ -1,6 +1,6 @@
 
 import sys
-from random import randint, seed
+from random import seed
 seed(123456789)
 
 import CFN

@@ -1,4 +1,4 @@
-import pytoulbar2,CFN
+import CFN
 import numpy as np
 import itertools
 import pandas as pd

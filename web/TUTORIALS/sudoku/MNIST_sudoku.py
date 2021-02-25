@@ -4,7 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pickle
 import torch
-from torchvision import datasets, transforms, utils
+from torchvision import datasets, transforms
 import itertools
 import pandas as pd
 import hashlib
