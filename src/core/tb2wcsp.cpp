@@ -58,6 +58,19 @@ StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_S
 
 int WCSP::wcspCounter = 0;
 
+vector<Cost> initpow10Cache()
+{
+    vector<Cost> cache;
+    Cost c = 1;
+    for (size_t i = 0; i < std::numeric_limits<Cost>::digits10; i++) {
+        cache.push_back(c);
+        c *= 10;
+    }
+    return cache;
+}
+
+vector<Cost> WCSP::pow10Cache = initpow10Cache();
+
 int ToulBar2::verbose;
 bool ToulBar2::FullEAC;
 bool ToulBar2::VACthreshold;
@@ -863,8 +876,8 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
     if (incremental) {
         return postIncrementalBinaryConstraint(xIndex, yIndex, icosts);
     } else {
-    return postBinaryConstraint(xIndex, yIndex, icosts);
-}
+        return postBinaryConstraint(xIndex, yIndex, icosts);
+    }
 }
 
 /// \brief create a binary cost function from a vector of floating point values that will be approximated to the ToulBar2:decimalPoint precision
@@ -3110,7 +3123,7 @@ void printClique(ostream& os, int arity, Constraint* ctr)
     }
     for (int i = 0; i < arity - 1; i++) {
         for (int j = i + 1; j < arity; j++) {
-//            os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
+            //            os << "v" << ctr->getVar(i)->wcspIndex + 1 << " -- v" << ctr->getVar(j)->wcspIndex + 1 << " [len= " << ctr->getTightness() << "];" << endl;
             if (ctr->getVar(i)->wcspIndex < ctr->getVar(j)->wcspIndex) {
                 os << ctr->getVar(i)->getName() << " -- " << ctr->getVar(j)->getName() << " [len= " << ctr->getTightness() << "];" << endl;
             } else {
@@ -3316,34 +3329,33 @@ void WCSP::dump_CFN(ostream& os, bool original)
         EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
         if (original) {
             os << "\"" << s->getName() << "\":";
-                os << "[";
-                printed = false;
-                for (size_t p = 0; p < s->getDomainInitSize(); p++) {
-                    if (printed)
-                        os << ",";
+            os << "[";
+            printed = false;
+            for (size_t p = 0; p < s->getDomainInitSize(); p++) {
+                if (printed)
+                    os << ",";
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
-                    printed = true;
+                printed = true;
             }
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\":";
             int domsize = s->getDomainSize();
             Value* values = new Value[domsize];
             s->getDomain(values);
-                os << "[";
-                printed = false;
-                for (int p = 0; p < domsize; p++) {
-                    if (printed)
-                        os << ",";
+            os << "[";
+            printed = false;
+            for (int p = 0; p < domsize; p++) {
+                if (printed)
+                    os << ",";
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
-                    printed = true;
-                }
+                printed = true;
             }
-        os << "]";
-            if (i < vars.size() - 1)
-                os << ",";
-            os << "\n";
         }
-
+        os << "]";
+        if (i < vars.size() - 1)
+            os << ",";
+        os << "\n";
+    }
 
     os << "},\n\"functions\": {\n";
     for (unsigned int i = 0; i < constrs.size(); i++)
@@ -3361,11 +3373,11 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
-            os << vars[i]->getName() << "],\"defaultcost\":" << getDPrimalBound()-negCost << ",\n";
+            os << vars[i]->getName() << "],\"defaultcost\":" << getDPrimalBound() - negCost << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
-                os << ((original) ? (((EnumeratedVariable *) vars[i])->toIndex(domcost[v].value)) : v) << ","
-                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound()-negCost, Cost2RDCost(domcost[v].cost)));
+                os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
+                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(getDPrimalBound() - negCost, Cost2RDCost(domcost[v].cost)));
                 if (v != (size - 1)) {
                     os << ",";
                 }
@@ -3418,7 +3430,7 @@ bool WCSP::verify()
         }
         // Warning! in the CSP case, EDAC is no equivalent to GAC on ternary constraints due to the combination with binary constraints
         // Warning bis! isEAC() may change the current support for variables and constraints during verify (when supports are not valid due to VAC epsilon heuristic for instance)
-         bool old_fulleac = false;
+        bool old_fulleac = false;
         if (vars[i]->enumerated())
             old_fulleac = vars[i]->isFullEAC();
         if (ToulBar2::LcLevel == LC_EDAC && vars[i]->enumerated() && vars[i]->unassigned() && !CSP(getLb(), getUb()) && !((EnumeratedVariable*)vars[i])->isEAC(vars[i]->getSupport())) {
@@ -3439,7 +3451,7 @@ bool WCSP::verify()
                 cout << "warning! support " << vars[i]->getSupport() << " of variable " << vars[i]->getName() << " has wrong FullEAC status!" << endl;
             }
             if (Store::getDepth() >= max(1, abs(ToulBar2::vac)))
-            return false;
+                return false;
         }
     }
     if (ToulBar2::LcLevel >= LC_AC) {
@@ -5219,63 +5231,88 @@ void WCSP::setDACOrder(vector<int>& order)
 }
 
 // -----------------------------------------------------------
-// Functions for dealing with probabilities
+// Functions for dealing with probabilities and decimal point numbers.
 // Warning: ToulBar2::NormFactor has to be initialized
-// Converts the decimal Token to a cost and yells if unfeasible.
-// the conversion uses the upper bound precision and ToulBar2::costMultiplier for scaling
-// but does not shift cost using negCost. The input string should not contain white chars.
+// Converts the decimal Token to a cost and a actual number of significant digit after the decimal
+// Should yell if unfeasible with recent GCC/CLang complier with builtins.
+// The string is assumed to be space trimmed.The conversion uses the upper bound precision
+// and ToulBar2::costMultiplier for scaling but does not shift cost using negCost.
+
+inline pair<Cost, int> WCSP::Decimal2Cost(const string& decimalToken, const unsigned int lineNumber) const
+{
+    Cost r = 0;
+    size_t pos = 0;
+    size_t dot = decimalToken.length() - 1;
+    int sig = 0;
+    bool negative = false;
+
+    if (decimalToken.empty()) {
+        cerr << "Error: invalid empty cost '";
+        goto invalid;
+    }
+
+    if (decimalToken[pos] == '-') {
+        negative = true;
+        pos = 1;
+    } else if (decimalToken[pos] == '+') {
+        pos = 1;
+    }
+
+    while ((pos < decimalToken.length()) && (pos <= ToulBar2::decimalPoint + dot)) {
+
+        if (decimalToken[pos] == '.') {
+            dot = pos++;
+        } else if (decimalToken[pos] == '0') {
+            if (Mul(r, (Cost)10, &r))
+                goto overflow;
+            pos++;
+        } else if (isdigit(decimalToken[pos])) {
+            if (Mul(r, (Cost)10, &r))
+                goto overflow;
+            if (Add(r, (Cost)(decimalToken[pos] - '0'), &r))
+                goto overflow;
+            sig = pos++;
+        } else {
+            cerr << "Error: invalid cost '" << decimalToken;
+            goto invalid;
+        }
+    }
+
+#ifndef NDEBUG
+    if (pos < decimalToken.length())
+        cout << "Warning: " << decimalToken << " truncated!" << endl;
+#endif
+
+    for (size_t i = pos; i < decimalToken.length(); i++) {
+        if (!isdigit(decimalToken[pos])) {
+            cerr << "Error: invalid cost '" << decimalToken;
+            goto invalid;
+        }
+    }
+
+    if (Mul(r, pow10Cache[((ToulBar2::decimalPoint + 1) + dot) - pos], &r))
+        goto overflow;
+    r *= ToulBar2::costMultiplier; // Only remaining floating point operation
+    if (negative)
+        r = -r;
+    return pair<Cost, size_t>(r, sig - dot);
+
+overflow:
+    cerr << "Error: overflow on cost '" << decimalToken;
+invalid:
+    if (lineNumber)
+        cerr
+            << "' at line "
+            << lineNumber
+            << endl;
+    else
+        cerr << "' in command line" << endl;
+    exit(1);
+}
 
 Cost WCSP::decimalToCost(const string& decimalToken, const unsigned int lineNumber) const
 {
-    size_t dotFound = decimalToken.find('.');
-    size_t readIdx;
-
-    if (dotFound == std::string::npos) {
-        try {
-            Cost cost = (Cost)std::stoll(decimalToken, &readIdx) * ToulBar2::costMultiplier * (Cost)powl(10, ToulBar2::decimalPoint);
-            if (decimalToken[readIdx])
-                throw std::invalid_argument("Not a cost");
-            return cost;
-        } catch (const std::invalid_argument&) {
-            cerr << "Error: invalid cost '" << decimalToken;
-            if (lineNumber)
-                cerr << "' at line " << lineNumber << endl;
-            else
-                cerr << "' in command line" << endl;
-            exit(1);
-        }
-    }
-
-    bool negative = (decimalToken[0] == '-');
-    string integerPart;
-    if (dotFound == negative)
-        integerPart = "0";
-    else
-        integerPart = (negative ? decimalToken.substr(1, dotFound - 1) : decimalToken.substr(0, dotFound));
-    string decimalPart = decimalToken.substr(dotFound + 1);
-    int shift = ToulBar2::decimalPoint - decimalPart.size();
-
-    Cost cost;
-    try {
-        cost = (std::stoll(integerPart, &readIdx) * (Cost)powl(10, ToulBar2::decimalPoint) * ToulBar2::costMultiplier);
-        if (integerPart[readIdx])
-            throw std::invalid_argument("Not a cost");
-        if (decimalPart.size()) {
-            cost += std::stoll(decimalPart, &readIdx) * (Cost)powl(10, shift) * ToulBar2::costMultiplier;
-            if (decimalPart[readIdx])
-                throw std::invalid_argument("Not a cost");
-        }
-    } catch (const std::invalid_argument&) {
-        cerr << "Error: invalid cost '" << decimalToken;
-        if (lineNumber)
-            cerr << "' at line " << lineNumber << endl;
-        else
-            cerr << "' in command line" << endl;
-        exit(1);
-    }
-    if (negative)
-        cost = -cost;
-    return cost;
+    return Decimal2Cost(decimalToken, lineNumber).first;
 }
 
 Cost WCSP::Prob2Cost(TProb p) const

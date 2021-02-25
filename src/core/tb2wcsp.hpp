@@ -12,6 +12,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
 #include "search/tb2solver.hpp"
+#include <limits>
 
 class NaryConstraint;
 
@@ -35,6 +36,7 @@ class RegularFlowConstraint;
 
 class WCSP FINAL : public WeightedCSP {
     static int wcspCounter; ///< count the number of instances of WCSP class
+    static vector<Cost> pow10Cache; ///< precomputed powers of 10 as Costs
     int instance; ///< instance number
     string name; ///< problem name
     void* solver; ///< special hook to access solver information
@@ -130,7 +132,7 @@ public:
     // General API for weighted CSP global constraint
 
     int getIndex() const { return instance; } ///< \brief instantiation occurrence number of current WCSP object
-    string getName() const { return (name.size()>0)?name:"problem"; }
+    string getName() const { return (name.size() > 0) ? name : "problem"; }
     void setName(const string& problem) { name = problem; }
     void* getSolver() const { return solver; }
 
@@ -214,7 +216,12 @@ public:
 
     const vector<Variable*>& getVars() const { return vars; }
     string getName(int varIndex) const { return vars[varIndex]->getName(); } ///< \note by default, variables names are integers, starting at zero
-    unsigned int getVarIndex(const string& s) const { int i = std::distance(vars.begin(), find_if(vars.begin(), vars.end(), [&s](const Variable *var){return (var->getName()==s);})); assert (i >= 0); return static_cast<unsigned>(i); }
+    unsigned int getVarIndex(const string& s) const
+    {
+        int i = std::distance(vars.begin(), find_if(vars.begin(), vars.end(), [&s](const Variable* var) { return (var->getName() == s); }));
+        assert(i >= 0);
+        return static_cast<unsigned>(i);
+    }
     Value getInf(int varIndex) const { return vars[varIndex]->getInf(); } ///< \brief minimum current domain value
     Value getSup(int varIndex) const { return vars[varIndex]->getSup(); } ///< \brief maximum current domain value
     Value getValue(int varIndex) const { return vars[varIndex]->getValue(); } ///< \brief current assigned value \warning undefined if not assigned yet
@@ -254,7 +261,7 @@ public:
     {
         assert(vars[varIndex]->enumerated());
         return ((EnumeratedVariable*)vars[varIndex])->toIndex(valueName);
-    }///< \brief gets index from value name (warning! assumes EnumeratedVariable)
+    } ///< \brief gets index from value name (warning! assumes EnumeratedVariable)
     int getDACOrder(int varIndex) const { return vars[varIndex]->getDACOrder(); } ///< \brief index of the variable in the DAC variable ordering
     void updateCurrentVarsId(); ///< \brief determines the position of each variable in the current list of unassigned variables (see \ref WCSP::dump)
 
@@ -607,7 +614,7 @@ public:
                     break;
                 }
             } else {
-            fprintf(f, "%d", solution[i]);
+                fprintf(f, "%d", solution[i]);
             }
             if (i < numberOfVariables() - 1)
                 fprintf(f, " ");
@@ -761,10 +768,11 @@ public:
     // -----------------------------------------------------------
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
+    pair<Cost, int> Decimal2Cost(const string& decimalToken, const unsigned int lineNumber) const;
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
-    Cost DoubletoCost(const Double& c) const { return Round(c * powl(10.0, ToulBar2::decimalPoint)) + negCost; }
+    Cost DoubletoCost(const Double& c) const { return Round(c * pow10Cache[ToulBar2::decimalPoint]) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
-    Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / Exp10(ToulBar2::decimalPoint) / ToulBar2::costMultiplier); } //Relative costs
+    Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / pow10Cache[ToulBar2::decimalPoint] / ToulBar2::costMultiplier); } //Relative costs
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TLogProb Cost2LogProb(Cost c) const;
