@@ -3803,10 +3803,9 @@ void WCSP::read_opb(const char* fileName)
     int opsize = 4;
     Double multiplier = Exp10((Double)ToulBar2::resolution);
     ToulBar2::costMultiplier = multiplier;
-    if (token.substr(0,4) == "min:") {
-    } else if (token.substr(0,4) == "max:") {
+    if (token.substr(0,4) == "max:") {
         ToulBar2::costMultiplier *= -1.0;
-    } else {
+    } else if (token.substr(0,4) != "min:") {
         opt = false;
         opsize = 0;
         updateUb(UNIT_COST * multiplier);
