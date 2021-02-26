@@ -25,7 +25,7 @@ IF(LIBTB2)
 	ENDIF(MPI)
 	  
 	set_property(TARGET toulbar2test
-                 PROPERTY COMPILE_DEFINITIONS ${COST} ${VALUE} ${BINARYWCSPONLY} ${TERNARYWCSPONLY} ${XMLFLAG} ${boostflag} ${mpiflag} ${PROBABILITY})
+                 PROPERTY COMPILE_DEFINITIONS ${COST} ${VALUE} ${BINARYWCSPONLY} ${TERNARYWCSPONLY} ${XMLFLAG} ${boostflag} ${mpiflag} ${PROBABILITY})
                  	  
 	add_dependencies(toulbar2test tb2)
 	install( TARGETS toulbar2test DESTINATION bin )

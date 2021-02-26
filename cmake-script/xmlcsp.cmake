@@ -1,6 +1,4 @@
 IF(XML)
-
-
         file( 
                         GLOB_RECURSE
                         xml_file
@@ -8,7 +6,8 @@ IF(XML)
 
                                              )
 
-             SET (XMLFLAG XMLFLAG) # ==> XML Flag used for code preprocessing (define ...)
+ # ==> XML Flag used for code preprocessing (define ...)
+        SET(XMLFLAG "XMLFLAG")
 
 #  libxml2detection 
 # required : libxml2   libxml2-dev
@@ -22,8 +21,7 @@ IF(XML)
         MESSAGE(STATUS "XML2 Package configured successfully.")
         MESSAGE(STATUS "#################################")
 
-        SET (all_depends  ${all_depends} ${LIBXML2_LIBRARIES})
-
+        SET(all_depends  ${all_depends} ${LIBXML2_LIBRARIES})
 
         INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR}) 
         INCLUDE_DIRECTORIES(${My_Source}/xmlcsp/)
