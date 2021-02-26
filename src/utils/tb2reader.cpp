@@ -3164,7 +3164,14 @@ void WCSP::read_uai2008(const char* fileName)
     int nevi = 0;
     ifstream fevid(ToulBar2::evidence_file.c_str());
     if (!fevid) {
-        string strevid(string(fileName) + string(".evid"));
+        string tmpname(fileName);
+        // skip compressed extensions like .xz or .gz
+        if (tmpname.find(".uai") != std::string::npos) {
+            tmpname.replace(tmpname.find(".uai"), tmpname.length(), ".uai");
+        } else if (tmpname.find(".LG") != std::string::npos) {
+            tmpname.replace(tmpname.find(".LG"), tmpname.length(), ".LG");
+        }
+        string strevid(string(tmpname) + string(".evid"));
         fevid.open(strevid.c_str());
         if (ToulBar2::verbose >= 0)
             cout << "No evidence file specified. Trying " << strevid << endl;
