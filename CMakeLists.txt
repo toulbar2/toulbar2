@@ -416,9 +416,9 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 # Examples installation
 ##########################################
 add_custom_target(create_validation_tar ALL COMMAND
-  ${CMAKE_COMMAND} -E tar "cfvJ" "validation.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_validation_dir}")
+  ${CMAKE_COMMAND} -E tar "cfJ" "validation.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_validation_dir}")
 add_custom_target(create_cover_tar ALL COMMAND
-  ${CMAKE_COMMAND} -E tar "cfvJ" "cover.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_cover_dir}")
+  ${CMAKE_COMMAND} -E tar "cfJ" "cover.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_cover_dir}")
 
 
 ##########################################
