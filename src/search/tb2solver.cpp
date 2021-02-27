@@ -180,8 +180,9 @@ void Solver::mutate(char* mutationString)
     }
 }
 
-void Solver::mutate(std::string mutationString)
+void Solver::mutate(std::string mutationString, Cost initUB)
 {
+    wcsp->setUb(initUB);
     for (size_t i = 0; i < mutationString.size(); i++)
         if (((size_t)ToulBar2::cpd->getRight(i, 0)) != ToulBar2::cpd->rot2aaSize(i) - 1 && i <= wcsp->numberOfVariables()) // find out if current residue is mutable
         {
@@ -192,9 +193,11 @@ void Solver::mutate(std::string mutationString)
                 }
             }
             if (present)
-                for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
-                    if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
-                        wcsp->remove(i, v);
+                {
+                    for (size_t v = 0; v < wcsp->getDomainInitSize(i); v++) {
+                        if (ToulBar2::cpd->getAA(i, v) != mutationString[i] && wcsp->canbe(i, v)) {
+                            wcsp->remove(i, v);
+                        }
                     }
                 }
             else
@@ -2310,7 +2313,6 @@ bool Solver::solve(bool first)
 #ifdef OPENMPI
                                 if (ToulBar2::sequence_handler) {
                                     ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getDDualBound());
-                                    wcsp->setUb(initialUpperBound);
                                 }
 #endif
                             } else {
@@ -2581,7 +2583,6 @@ bool Solver::solve(bool first)
 #ifdef OPENMPI
                                 if (ToulBar2::sequence_handler) {
                                     ((Jobs*)ToulBar2::jobs)->send_results(wcsp->getDDualBound());
-                                    wcsp->setUb(initialUpperBound);
                                 }
 #endif
                             }

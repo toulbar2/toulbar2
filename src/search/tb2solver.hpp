@@ -357,7 +357,7 @@ public:
     void read_solution(const char* fileName, bool updateValueHeuristic = true);
     void parse_solution(const char* certificate, bool updateValueHeuristic = true);
     void mutate(char* mutationString);
-    void mutate(std::string mutationString);
+    void mutate(std::string mutationString, Cost ub);
     void applyCompositionalBiases();
     virtual void newSolution();
     const vector<Value> getSolution() { return wcsp->getSolution(); }

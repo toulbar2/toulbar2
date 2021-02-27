@@ -563,7 +563,7 @@ public:
     virtual void parse_solution(const char* certificate, bool updateValueHeuristic = true) = 0; ///< \brief read a solution from a string (see ToulBar2 option \e -x)
     virtual void applyCompositionalBiases() = 0;
     virtual void mutate(char* certificate) = 0; ///< \brief read a mutation string (see ToulBar2 option --mut)
-    virtual void mutate(std::string certificate) = 0; ///< \brief read a mutation string (see ToulBar2 option --mut)
+    virtual void mutate(std::string certificate, Cost ub) = 0; ///< \brief read a mutation string (see ToulBar2 option --mut)
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual Double getSolutionValue() const = 0; ///< \brief after solving the problem, return the optimal solution value (can be an arbitrary real cost in minimization or preference in maximization, see CFN format) (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)

@@ -2919,17 +2919,18 @@ int _tmain(int argc, TCHAR* argv[])
             while (ToulBar2::jobs->next_job(cur_job_id)) {
                 ToulBar2::cpd->init();
                 WeightedCSPSolver* mpisolver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
-                mpisolver->read_wcsp((char*)cur_job_id.c_str());
-                bool found_a_sequence = true;
+                Cost initUB = mpisolver->read_wcsp((char*)cur_job_id.c_str());
+                bool found_a_sequence = true;                
                 while (found_a_sequence) {
+                    int depth = Store::getDepth();
                     Store::store();
                     cout << "Mutating sequence to " << ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()) << endl;
-                    mpisolver->mutate(ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()));
+                    mpisolver->mutate(ToulBar2::sequence_handler->get_sequence(((Jobs*)ToulBar2::jobs)->get_current_sequence()), initUB);
                     cout << "...Done." << endl;
-                    // We look for a new sequence, we can restart the search
                     mpisolver->solve();
+                    // We look for a new sequence, we can restart the search
                     found_a_sequence = ((Jobs*)ToulBar2::jobs)->request_sequence(); // We are using MPI and need another job
-                    Store::restore();
+                    Store::restore(depth);
                 }
             }
         } else {

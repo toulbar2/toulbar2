@@ -143,7 +143,7 @@ void SequenceHandler::report()
           if (sequencecosts[i][j] < mincost)
             mincost = sequencecosts[i][j];
         }
-      reportstream << sequences_[i] << " " << costs_[i]-mincost << endl;
+      reportstream << sequences_[i] << " " << costs_[i] << " " << mincost << " " << costs_[i] - mincost << endl;
     }
   reportstream << "Best candidate sequence for negative design : " << sequences_[bestsequence] << endl;
   if (ToulBar2::diffneg)
