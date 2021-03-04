@@ -194,6 +194,13 @@ IF(PYTB2)
   SET(MPI OFF)
   SET(LIBTB2 ON)
   FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  if(NOT Python3_Interpreter_FOUND)
+    MESSAGE(STATUS "Python3_Interpreter NOT FOUND")
+    SET(Python3_EXECUTABLE /usr/bin/python3)
+  else()
+    MESSAGE(STATUS "Python3_Interpreter FOUND")
+  endif()
+  MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 ### Old cmake, python and pybind11
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 

@@ -51,6 +51,12 @@ DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, in
         return new WeightedSame(_arity, _scope, file, mult);
     if (type == "wsamegcc")
         return new WeightedSameGcc(_arity, _scope, file, mult);
+    if (type == "wdiverse")
+        return new WeightedDiverse(_arity, _scope, file, 0, mult);
+    if (type == "whdiverse")
+        return new WeightedDiverse(_arity, _scope, file, 1, mult);
+    if (type == "wtdiverse")
+        return new WeightedDiverse(_arity, _scope, file, 2, mult);
 
     cout << type << " unknown decomposable global cost function" << endl;
     return 0;
@@ -1730,6 +1736,142 @@ void WeightedSameGcc::display()
         pair<Value, pair<unsigned int, unsigned int>> bound = *it;
         cout << bound.first << " [" << (bound.second).first << ":" << (bound.second).second << "]" << endl;
     }
+}
+
+
+/// WEIGHTED AMONG /////////////////////////////////////////////////////
+
+WeightedDiverse::WeightedDiverse()
+    : DecomposableGlobalCostFunction()
+{
+}
+
+WeightedDiverse::WeightedDiverse(unsigned int _arity, int* _scope)
+    : DecomposableGlobalCostFunction(_arity, _scope)
+{
+}
+
+WeightedDiverse::WeightedDiverse(unsigned int _arity, int* _scope, istream& file, int _method, bool mult)
+    : DecomposableGlobalCostFunction(_arity, _scope)
+{
+    //file >> semantics >> baseCost;
+    semantics = "hard";
+    baseCost = UNIT_COST;
+    if (mult)
+        baseCost *= ToulBar2::costMultiplier;
+    file >> distance;
+    for (unsigned int value = 0; value < _arity; ++value) {
+        Value valueRead;
+        file >> valueRead;
+        values.push_back(valueRead);
+    }
+    method = _method;
+}
+
+WeightedDiverse::~WeightedDiverse()
+{
+    values.clear();
+}
+
+void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
+{
+    baseCost = wcsp->getUb();
+
+    vector<Variable *> divVars;
+    map<int,Value> solutionmap;
+    for (int var = 0; var < arity; var++) {
+        divVars.push_back(wcsp->getVar(scope[var]));
+        solutionmap[scope[var]] = values[var];
+    }
+    map<int, int> divVarsIdMap;
+    map<int, int> divHVarsIdMap;
+    bool first = true;
+    switch (method) {
+    case 0:
+        for (Variable* x : divVars) {
+            int xId = x->wcspIndex;
+            divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_" + x->getName(), 0, 2 * distance + 1);
+            EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
+            for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                theVar->addValueName("q" + std::to_string(val % (distance + 1)) + ":"
+                        + std::to_string(min(distance, (val % (distance + 1)) + (val / (distance + 1)))));
+            }
+        }
+//        wcsp->getListSuccessors()->at(xId).push_back(divVarsIdMap[xId]);
+//        wcsp->getListSuccessors()->at(divVarsIdMap[xId]).push_back(xId);
+        wcsp->addDivConstraint(divVars, distance, solutionmap, divVarsIdMap);
+        break;
+    case 1:
+        for (Variable* x : divVars) {
+            int xId = x->wcspIndex;
+            divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_" + x->getName(), 0, 2 * distance + 1);
+            EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
+            for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                theVar->addValueName("q" + std::to_string(val % (distance + 1)) + ":"
+                        + std::to_string(min(distance, (val % (distance + 1)) + (val / (distance + 1)))));
+            }
+        }
+        for (Variable* x : divVars) {
+            if (!first) {
+                int xId = x->wcspIndex;
+                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + x->getName(), 0, distance);
+                EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
+                for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                    theVar->addValueName("q" + std::to_string(val));
+                }
+            }
+            first = false;
+        }
+        wcsp->addHDivConstraint(divVars, distance, solutionmap, divVarsIdMap, divHVarsIdMap);
+        break;
+    case 2:
+        for (Variable* x : divVars) {
+            if (!first) {
+                int xId = x->wcspIndex;
+                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + x->getName(), 0, distance);
+                EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
+                for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                    theVar->addValueName("q" + std::to_string(val));
+                }
+            }
+            first = false;
+        }
+        wcsp->addTDivConstraint(divVars, distance, solutionmap, divHVarsIdMap);
+        break;
+    default:
+        cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+Cost WeightedDiverse::evaluate(Value* tuple)
+{
+    unsigned int diff = 0;
+    for (int var = 0; var < arity; var++) {
+        if (values[var] != tuple[var])
+            diff++;
+    }
+    if (diff < distance) {
+        if (semantics == "hard")
+            return baseCost;
+    }
+    return 0;
+}
+
+void WeightedDiverse::display()
+{
+    cout << "W" << ((method==1)?"H":((method==2)?"T":"")) << "Diverse (" << arity << ") : ";
+    for (int variable = 0; variable < arity; ++variable) {
+        cout << scope[variable] << " ";
+    }
+    cout << endl;
+    cout << "sem : " << semantics << " " << baseCost << endl;
+    cout << "distance: " << distance << endl;
+    cout << "values: ";
+    for (Value v: values) {
+        cout << v << " ";
+    }
+    cout << endl;
 }
 
 /* Local Variables: */

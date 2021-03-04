@@ -375,6 +375,14 @@ public:
     /// \param rightRes right-hand side value of the comparison
     virtual void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) = 0;
 
+    /// \brief post a diversity Hamming distance constraint between a list of variables and a given fixed assignment
+    /// \param scope a vector of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
+    /// \param distance the Hamming distance minimum bound
+    /// \param values a vector of values (same size as scope)
+    /// \param method the network decomposition method (0:Dual, 1:Hidden, 2:Ternary)
+    /// \note depending on the decomposition method, it adds dual and/or hidden variables
+    virtual void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
+
     virtual vector<vector<int>>* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
@@ -428,13 +436,7 @@ public:
     virtual void buildTreeDecomposition() = 0;
     virtual TreeDecomposition* getTreeDec() = 0;
 
-    virtual const vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
-    virtual void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
-    virtual void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
-    virtual void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
-    virtual void addMDDConstraint(Mdd mdd, int relaxed) = 0;
-    virtual void addHMDDConstraint(Mdd mdd, int relaxed) = 0;
-    virtual void addTMDDConstraint(Mdd mdd, int relaxed) = 0;
+    virtual vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
 
     virtual void iniSingleton() = 0;
     virtual void updateSingleton() = 0;

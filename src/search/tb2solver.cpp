@@ -2113,15 +2113,20 @@ bool Solver::solve(bool first)
 
                                         //get solution from previous solve and add pairwise Hamming distance constraint
                                         if (energies.size() > 0 && !extrapolatedBound) {
+                                            vector<Value> solutionvec = wcsp->getSolution();
+                                            map<int,Value> solutionmap;
+                                            for (Variable *x: wcsp->getDivVariables()) {
+                                                solutionmap[x->wcspIndex] = solutionvec[x->wcspIndex];
+                                            }
                                             switch (ToulBar2::divMethod) {
                                             case 0:
-                                                wcsp->addDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
+                                                ((WCSP*)wcsp)->addDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divVarsId[energies.size() - 1], true);
                                                 break;
                                             case 1:
-                                                wcsp->addHDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
+                                                ((WCSP*)wcsp)->addHDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divVarsId[energies.size() - 1], ((WCSP*)wcsp)->divHVarsId[energies.size() - 1], true);
                                                 break;
                                             case 2:
-                                                wcsp->addTDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
+                                                ((WCSP*)wcsp)->addTDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divHVarsId[energies.size() - 1], true);
                                                 break;
                                             default:
                                                 cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
@@ -2166,13 +2171,13 @@ bool Solver::solve(bool first)
                                                     //os.close();
                                                     switch (ToulBar2::divMethod) {
                                                     case 0:
-                                                        wcsp->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
+                                                        ((WCSP*)wcsp)->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
                                                         break;
                                                     case 1:
-                                                        wcsp->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                        ((WCSP*)wcsp)->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
                                                         break;
                                                     case 2:
-                                                        wcsp->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                        ((WCSP*)wcsp)->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
                                                         break;
                                                     default:
                                                         cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;

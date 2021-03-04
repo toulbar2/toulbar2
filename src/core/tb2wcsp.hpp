@@ -44,8 +44,6 @@ class WCSP FINAL : public WeightedCSP {
     StoreCost negCost; ///< shifting value to be added to problem lowerbound when computing the partition function
     vector<Variable*> vars; ///< list of all variables
     vector<Variable*> divVariables; ///< list of variables submitted to diversity requirements
-    vector<map<int, int>> divVarsId; // vector[j][idx] = index of the dual variable that encodes the diversity constraint on sol j at position idx
-    vector<map<int, int>> divHVarsId; // vector[j][idx] = index of the hidden variable that encodes the diversity constraint on sol j between idx/idx+1
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
     vector<Value> solution; ///< remember last solution found
     vector<pair<Double, vector<Value>>> solutions; ///< remember all solutions found
@@ -447,14 +445,16 @@ public:
     // Methods for diverse solutions
     // -----------------------------------------------------------
 
-    void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost); // to look for the (j+1)-th solution, with j = sol_id
-    void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost);
-    void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost);
+    vector<map<int, int>> divVarsId; // vector[j][idx] = index of the dual variable that encodes the diversity constraint on sol j at variable index idx
+    vector<map<int, int>> divHVarsId; // vector[j][idx] = index of the hidden variable that encodes the diversity constraint on sol j at variable index idx
+    void addDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divVarsIdMap, bool incremental = false); // to look for the (j+1)-th solution, with j = sol_id
+    void addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divVarsIdMap, map<int, int>& divHVarsIdMap, bool incremental = false);
+    void addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divHVarsIdMap, bool incremental = false);
     void addMDDConstraint(Mdd mdd, int relaxed);
     void addHMDDConstraint(Mdd mdd, int relaxed);
     void addTMDDConstraint(Mdd mdd, int relaxed);
 
-    const vector<Variable*>& getDivVariables()
+    vector<Variable*>& getDivVariables()
     {
         return divVariables;
     }
@@ -510,6 +510,7 @@ public:
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
+    void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
 
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
 

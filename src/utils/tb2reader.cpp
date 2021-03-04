@@ -160,6 +160,9 @@ typedef struct {
  *     - woverlap hard|lin|quad \e cost \e comparator \e righthandside  overlaps between two sequences of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero))
  *     - wsum hard|lin|quad \e cost \e comparator \e righthandside to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-hand-side value
  *     - wvarsum hard \e cost \e comparator to express a hard sum constraint to restrict the sum to be \e comparator to the value of the last variable in the scope
+ *     - wdiverse \e distance (\e value)* to express a hard diversity constraint using a dual encoding such that there is a given minimum Hamming distance to a given variable assignment
+ *     - whdiverse \e distance (\e value)* to express a hard diversity constraint using a hidden encoding such that there is a given minimum Hamming distance to a given variable assignment
+ *     - wtdiverse \e distance (\e value)* to express a hard diversity constraint using a ternary encoding such that there is a given minimum Hamming distance to a given variable assignment
  *
  *       Let us note <> the comparator, K the right-hand-side value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:
  *       -	if <> is == : gap = abs(K - Sum)
@@ -182,7 +185,7 @@ typedef struct {
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
  * - simple arithmetic hard constraint \f$x1 < x2\f$: \code 2 1 2 -1 < 0 0 \endcode
  * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
- * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
+ * - clique cut on Boolean variables ({x0,x1,x2,x3}) such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
  * - knapsack constraint (2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
@@ -192,11 +195,12 @@ typedef struct {
  * - soft_among({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 1 2 3 4 -1 samongdp var 1000 1 3 2 1 2 \endcode
  * - soft max({x0,x1,x2,x3}) with cost equal to \f$\max_{i=0}^3((x_i!=i)?1000:(4-i))\f$: \code 4 0 1 2 3 -1 smaxdp 1000 4 0 0 4 1 1 3 2 2 2 3 3 1 \endcode
  * - wregular({x0,x1,x2,x3}) with DFA (0(10)*2*): \code 4 0 1 2 3 -1 wregular 3 1 0 0 1 2 0 9 0 0 1 0 0 1 1 1 0 2 1 1 1 1 0 0 1 0 0 1 1 2 0 1 1 2 2 0 1 0 2 1 1 1 2 1 \endcode
- * - wamong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 1 2 3 4 -1 wamong hard 1000 2 1 2 1 3 \endcode
- * - wvaramong ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i \in \{1,2\}) \neq x_4\f$: \code 4 1 2 3 4 -1 wvaramong hard 1000 2 1 2 \endcode
+ * - wamong({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i \in \{1,2\}) < 1\f$ or \f$\sum_{i=1}^4(x_i \in \{1,2\}) > 3\f$: \code 4 1 2 3 4 -1 wamong hard 1000 2 1 2 1 3 \endcode
+ * - wvaramong({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i \in \{1,2\}) \neq x_4\f$: \code 4 1 2 3 4 -1 wvaramong hard 1000 2 1 2 \endcode
  * - woverlap({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^2(x_i = x_{i+2}) \geq 1\f$: \code 4 1 2 3 4 -1 woverlap hard 1000 < 1\endcode
- * - wsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i) \neq 4\f$: \code 4 1 2 3 4 -1 wsum hard 1000 == 4 \endcode
- * - wvarsum ({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i) \neq x_4\f$: \code 4 1 2 3 4 -1 wvarsum hard 1000 == \endcode
+ * - wsum({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^4(x_i) \neq 4\f$: \code 4 1 2 3 4 -1 wsum hard 1000 == 4 \endcode
+ * - wvarsum({x1,x2,x3,x4}) with hard cost (1000) if \f$\sum_{i=1}^3(x_i) \neq x_4\f$: \code 4 1 2 3 4 -1 wvarsum hard 1000 == \endcode
+ * - wdiverse({x0,x1,x2,x3}) hard constraint on four variables with minimum Hamming distance of 2 to the value assignment (1,1,0,0): \code 4 0 1 2 3 -1 wdiverse 2 1 1 0 0 \endcode
  * .
  *
  * Latin Square 4 x 4 crisp CSP example in wcsp format:
@@ -1360,7 +1364,10 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "wvaramong", ":metric:K:cost:c:values:[v]+" },
         { "woverlap", ":metric:K:cost:c:comparator:K:to:N" },
         { "wsum", ":metric:K:cost:c:comparator:K:to:N" },
-        { "wvarsum", ":metric:K:cost:c:comparator:K" }
+        { "wvarsum", ":metric:K:cost:c:comparator:K" },
+        { "wdiverse", ":distance:N:values:[v]S" },
+        { "whdiverse", ":distance:N:values:[v]S" },
+        { "wtdiverse", ":distance:N:values:[v]S" }
     };
 
     auto it = GCFTemplates.find(funcName);
@@ -2620,12 +2627,11 @@ void WCSP::read_legacy(const char* fileName)
                     file >> funcparam6;
                     postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
                 } else if(funcname=="knapsack"){
-                        int scopeIndex[2];
-                        scopeIndex[0] = i;
-                        scopeIndex[1] = j;
+                    int scopeIndex[2];
+                    scopeIndex[0] = i;
+                    scopeIndex[1] = j;
                     postKnapsackConstraint(scopeIndex,arity,file);
-                }
-                else{
+                } else{
                     int scopeIndex[2];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
@@ -2654,11 +2660,11 @@ void WCSP::read_legacy(const char* fileName)
                     if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                         decomposableGCF->addToCostFunctionNetwork(this);
-                    }else if(gcname=="knapsack"){
+                    } else if(gcname=="knapsack"){
                         int scopeIndex[1];
                         scopeIndex[0] = i;
                         postKnapsackConstraint(scopeIndex,arity,file);
-                      }
+                    }
                     else { // monolithic global cost functions
                         postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                     }
