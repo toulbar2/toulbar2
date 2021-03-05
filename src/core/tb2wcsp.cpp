@@ -1759,8 +1759,8 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
 void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, vector<Value>& values, int method)
 {
 #ifndef NDEBUG
-    for (int i = 0; i < scopeIndex.size(); i++)
-        for (int j = i + 1; j < scopeIndex.size(); j++)
+    for (unsigned int i = 0; i < scopeIndex.size(); i++)
+        for (unsigned int j = i + 1; j < scopeIndex.size(); j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     WeightedDiverse* decomposableGCF = new WeightedDiverse(scopeIndex.size(), &scopeIndex[0]);
@@ -3424,6 +3424,10 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
                 printed = true;
             }
+            os << "]";
+            if (i < vars.size() - 1)
+                os << ",";
+            os << "\n";
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\":";
             int domsize = s->getDomainSize();
@@ -3437,11 +3441,11 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
                 printed = true;
             }
+            os << "]";
+            if (i < vars.size() - 1)
+                os << ",";
+            os << "\n";
         }
-        os << "]";
-        if (i < vars.size() - 1)
-            os << ",";
-        os << "\n";
     }
 
     os << "},\n\"functions\": {\n";
