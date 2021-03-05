@@ -190,7 +190,7 @@ echo "\\end{DoxyCode}}"
 
 echo -n "\\item "
 #echo "________________________________________________________________________________"
-echo "Find a greedy sequence of at most 20 diverse solutions with Hamming distance greater than 12 between any pair:"
+echo "Find a greedy sequence of at most 20 diverse solutions with Hamming distance greater than 12 between any pair of solutions:"
 echo "\\begin{DoxyCode}"
 echo "	toulbar2 EXAMPLES/latin4.wcsp.xz -a=20 -div=12"
 echo "\\end{DoxyCode}"

@@ -551,86 +551,106 @@ public:
     void printSolution()
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            bool printed = false;
             if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
                 Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                switch (ToulBar2::showSolutions) {
-                case 1:
-                    cout << myvalue;
-                    break;
-                case 2:
-                    cout << valuelabel;
-                    break;
-                case 3:
-                    cout << varlabel << "=" << valuelabel;
-                    break;
-                default:
-                    break;
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                    switch (ToulBar2::showSolutions) {
+                    case 1:
+                        printed = true;
+                        cout << myvalue;
+                        break;
+                    case 2:
+                        printed = true;
+                        cout << valuelabel;
+                        break;
+                    case 3:
+                        printed = true;
+                        cout << varlabel << "=" << valuelabel;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             } else {
+                printed = true;
                 cout << solution[i];
             }
-            cout << (i < numberOfVariables() - 1 ? " " : "");
+            if (printed && i < numberOfVariables() - 1) cout << " ";
         }
     }
     void printSolution(ostream& os)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            bool printed = false;
             if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
                 Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                switch (ToulBar2::writeSolution) {
-                case 1:
-                    os << myvalue;
-                    break;
-                case 2:
-                    os << valuelabel;
-                    break;
-                case 3:
-                    os << varlabel << "=" << valuelabel;
-                    break;
-                default:
-                    break;
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                    switch (ToulBar2::writeSolution) {
+                    case 1:
+                        printed = true;
+                        os << myvalue;
+                        break;
+                    case 2:
+                        printed = true;
+                        os << valuelabel;
+                        break;
+                    case 3:
+                        printed = true;
+                        os << varlabel << "=" << valuelabel;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             } else {
+                printed = true;
                 os << solution[i];
             }
-            os << (i < numberOfVariables() - 1 ? " " : "");
+            if (printed && i < numberOfVariables() - 1) os << " ";
         }
     }
     void printSolution(FILE* f)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            bool printed = false;
             if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
                 Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                switch (ToulBar2::writeSolution) {
-                case 1:
-                    fprintf(f, "%d", myvalue);
-                    break;
-                case 2:
-                    fprintf(f, "%s", valuelabel.c_str());
-                    break;
-                case 3:
-                    fprintf(f, "%s=%s", varlabel.c_str(), valuelabel.c_str());
-                    break;
-                default:
-                    break;
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                    switch (ToulBar2::writeSolution) {
+                    case 1:
+                        printed = true;
+                        fprintf(f, "%d", myvalue);
+                        break;
+                    case 2:
+                        printed = true;
+                        fprintf(f, "%s", valuelabel.c_str());
+                        break;
+                    case 3:
+                        printed = true;
+                        fprintf(f, "%s=%s", varlabel.c_str(), valuelabel.c_str());
+                        break;
+                    default:
+                        break;
+                    }
                 }
             } else {
+                printed = true;
                 fprintf(f, "%d", solution[i]);
             }
-            if (i < numberOfVariables() - 1)
-                fprintf(f, " ");
+            if (printed && i < numberOfVariables() - 1) fprintf(f, " ");
         }
     }
     void printSolutionMaxSAT(ostream& os)

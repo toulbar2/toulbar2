@@ -2505,7 +2505,7 @@ void WCSP::sortConstraints()
 
         //Mark native variable
         for (int i = ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : numberOfVariables()) - 1; i >= 0; i--) {
-            if (!marked[i] && getName(i)[0] != IMPLICIT_VAR_TAG[0]) {
+            if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG,0) != 0) {
                 visit(i, revdac, marked, listofsuccessors);
             }
         }

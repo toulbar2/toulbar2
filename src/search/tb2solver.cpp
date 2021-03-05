@@ -1366,11 +1366,12 @@ void Solver::newSolution()
         }
 
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-            cout << " ";
             if (ToulBar2::pedigree) {
+                cout << " ";
                 cout << wcsp->getName(i) << ":";
                 ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
             } else if (ToulBar2::haplotype) {
+                cout << " ";
                 ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
             } else if (wcsp->enumerated(i) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
@@ -1381,12 +1382,15 @@ void Solver::newSolution()
                 if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
                     switch (ToulBar2::showSolutions) {
                     case 1:
+                        cout << " ";
                         cout << myvalue;
                         break;
                     case 2:
+                        cout << " ";
                         cout << valuelabel;
                         break;
                     case 3:
+                        cout << " ";
                         cout << varlabel << "=" << valuelabel;
                         break;
                     default:
@@ -1394,6 +1398,7 @@ void Solver::newSolution()
                     }
                 }
             } else {
+                cout << " ";
                 cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
             }
         }
