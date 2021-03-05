@@ -330,7 +330,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
     //################################################accepting state ##############################################
     for (int v = 1; v < arity + 1; v++) {
         int unsigned domsize = automaton->getNbStates() - 1;
-        string varname = IMPLICIT_VAR_TAG + "WR" + to_string(v + q0);
+        string varname = IMPLICIT_VAR_TAG + "WR" + to_string(current_var_number) + "_" + to_string(v + q0);
 
         //        DEBONLY(int theindex =)
         int theindex = wcsp->makeEnumeratedVariable(varname, 0, domsize); // add qi variable
@@ -1432,6 +1432,7 @@ WeightedSame::~WeightedSame() {}
 void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
 {
     Cost top = wcsp->getUb();
+    int nbVariableCFN = wcsp->numberOfVariables();
 
     // Counting the number of value
     int inf = ((EnumeratedVariable*)wcsp->getVar(scope[0]))->getInf();
@@ -1449,8 +1450,8 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
     int** newVariable = new int*[nbValue];
     for (int value = inf; value <= sup; value++) {
         newVariable[positionVar] = new int[2];
-        string varnamel = IMPLICIT_VAR_TAG + "WSame_ValueLeft=" + to_string(value);
-        string varnamer = IMPLICIT_VAR_TAG + "WSame_ValueRight=" + to_string(value);
+        string varnamel = IMPLICIT_VAR_TAG + "WSame" + to_string(nbVariableCFN) + "_ValueLeft=" + to_string(value);
+        string varnamer = IMPLICIT_VAR_TAG + "WSame" + to_string(nbVariableCFN) + "_ValueRight=" + to_string(value);
         newVariable[positionVar][0] = wcsp->makeEnumeratedVariable(varnamel, 0, arity / 2);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][0]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
@@ -1581,6 +1582,7 @@ void WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
 void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
 {
     Cost top = wcsp->getUb();
+    int nbVariableCFN = wcsp->numberOfVariables();
 
     // Counting the number of value
     int inf = ((EnumeratedVariable*)wcsp->getVar(scope[0]))->getInf();
@@ -1598,8 +1600,8 @@ void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
     int** newVariable = new int*[nbValue];
     for (int value = inf; value <= sup; value++) {
         newVariable[positionVar] = new int[2];
-        string varnamel = IMPLICIT_VAR_TAG + "WSame_ValueLeft=" + to_string(value);
-        string varnamer = IMPLICIT_VAR_TAG + "WSame_ValueRight=" + to_string(value);
+        string varnamel = IMPLICIT_VAR_TAG + "WSame" + to_string(nbVariableCFN) + "_ValueLeft=" + to_string(value);
+        string varnamer = IMPLICIT_VAR_TAG + "WSame" + to_string(nbVariableCFN) + "_ValueRight=" + to_string(value);
         newVariable[positionVar][0] = wcsp->makeEnumeratedVariable(varnamel, 0, arity / 2);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][0]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
@@ -1776,7 +1778,7 @@ WeightedDiverse::~WeightedDiverse()
 void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
 {
     baseCost = wcsp->getUb();
-
+    int nbVariableCFN = wcsp->numberOfVariables();
     vector<Variable *> divVars;
     map<int,Value> solutionmap;
     for (int var = 0; var < arity; var++) {
@@ -1789,11 +1791,11 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
     case 0:
         for (Variable* x : divVars) {
             int xId = x->wcspIndex;
-            divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_" + x->getName(), 0, 2 * distance + 1);
+            divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, 2 * distance + 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("q" + std::to_string(val % (distance + 1)) + "_"
-                        + std::to_string(min(distance, (val % (distance + 1)) + (val / (distance + 1)))));
+                        + std::to_string(val / (distance + 1)));
             }
         }
 //        wcsp->getListSuccessors()->at(xId).push_back(divVarsIdMap[xId]);
@@ -1803,17 +1805,17 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
     case 1:
         for (Variable* x : divVars) {
             int xId = x->wcspIndex;
-            divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_" + x->getName(), 0, 2 * distance + 1);
+            divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, 2 * distance + 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("q" + std::to_string(val % (distance + 1)) + "_"
-                        + std::to_string(min(distance, (val % (distance + 1)) + (val / (distance + 1)))));
+                        + std::to_string(val / (distance + 1)));
             }
         }
         for (Variable* x : divVars) {
             if (x != divVars.back()) { // last variable has no associated hidden variable
                 int xId = x->wcspIndex;
-                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + x->getName(), 0, distance);
+                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
                 EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
                 for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                     theVar->addValueName("q" + std::to_string(val));
@@ -1826,7 +1828,7 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
         for (Variable* x : divVars) {
             if (x != divVars.back()) { // last variable has no associated hidden variable
                 int xId = x->wcspIndex;
-                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + x->getName(), 0, distance);
+                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
                 EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
                 for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                     theVar->addValueName("q" + std::to_string(val));

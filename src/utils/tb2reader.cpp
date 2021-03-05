@@ -691,7 +691,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     assert(varValNameToIdx.size() >= varIndex + 1);
     for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
         if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[ii], ii)).second) {
-            cerr << "Error: duplicated value name '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+            cerr << "Error: duplicated value name '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -700,12 +700,12 @@ unsigned CFNStreamReader::readVariable(unsigned i)
             wcsp->addValueName(varIndex, valueNames[ii]);
     } else {
         if (((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() != (unsigned int) domainSize) {
-            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << " for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
         for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
             if (wcsp->getVar(varIndex)->getValueName(ii) != valueNames[ii]) {
-                cerr << "Error: same variable has two different domains " << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "'' at line " << lineNumber << endl;
+                cerr << "Error: same variable has two different domains '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
                 exit(EXIT_FAILURE);
             }
         }
@@ -2169,7 +2169,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                         theVar->addValueName("q" + std::to_string(val % (ToulBar2::divBound + 1)) + "_"
-                            + std::to_string(min(ToulBar2::divBound, (val % (ToulBar2::divBound + 1)) + (val / (ToulBar2::divBound + 1)))));
+                            + std::to_string(val / (ToulBar2::divBound + 1)));
                     }
                 }
             }
