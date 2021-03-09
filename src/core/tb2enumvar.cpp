@@ -1218,7 +1218,7 @@ void EnumeratedVariable::eliminate()
         return;
     if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0)
         return;
-    if (ToulBar2::divNbSol > 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && Store::getDepth() == 0)
+    if (ToulBar2::divNbSol > 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && Store::getDepth() == 0)  // do not eliminate decision variables nor diversity variables before generating diversity constraints
         return;
 
     assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster(cluster)->isActive());
@@ -1418,7 +1418,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
         return false;
     if (ToulBar2::allSolutions && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0))
         return false;
-    if (ToulBar2::divNbSol > 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && Store::getDepth() == 0)
+    if (ToulBar2::divNbSol > 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && Store::getDepth() == 0) // do not eliminate decision variables nor diversity variables before generating diversity constraints
         return false;
     double mult = (1.0 * x->getDomainSize()) / getDomainSize();
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {

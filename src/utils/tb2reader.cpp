@@ -2180,13 +2180,11 @@ Cost WCSP::read_wcsp(const char* fileName)
             divHVarsId.resize(ToulBar2::divNbSol); // make room for hidden state variables
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
-                    if (x != divVariables.back()) { // last variable has no associated hidden variable
-                        int xId = x->wcspIndex;
-                        divHVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
-                        EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
-                        for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                            theVar->addValueName("q" + std::to_string(val));
-                        }
+                    int xId = x->wcspIndex;
+                    divHVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
+                    EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
+                    for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                        theVar->addValueName("q" + std::to_string(val));
                     }
                 }
             }

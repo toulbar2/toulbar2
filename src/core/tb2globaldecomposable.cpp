@@ -1813,26 +1813,22 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             }
         }
         for (Variable* x : divVars) {
-            if (x != divVars.back()) { // last variable has no associated hidden variable
-                int xId = x->wcspIndex;
-                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
-                EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
-                for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                    theVar->addValueName("q" + std::to_string(val));
-                }
+            int xId = x->wcspIndex;
+            divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
+            EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
+            for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                theVar->addValueName("q" + std::to_string(val));
             }
         }
         wcsp->addHDivConstraint(divVars, distance, solutionmap, divVarsIdMap, divHVarsIdMap);
         break;
     case 2:
         for (Variable* x : divVars) {
-            if (x != divVars.back()) { // last variable has no associated hidden variable
-                int xId = x->wcspIndex;
-                divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
-                EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
-                for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                    theVar->addValueName("q" + std::to_string(val));
-                }
+            int xId = x->wcspIndex;
+            divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
+            EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
+            for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                theVar->addValueName("q" + std::to_string(val));
             }
         }
         wcsp->addTDivConstraint(divVars, distance, solutionmap, divHVarsIdMap);

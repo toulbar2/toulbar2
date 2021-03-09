@@ -1277,6 +1277,10 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             } else {
                 postBinaryConstraint(cId, hId, vc);
             }
+        } else {
+            hId = divHVarsIdMap[xId]; //index of variable h
+            h = (EnumeratedVariable*)getVar(hId);
+            assign(hId, h->getInf());  // h variable is unused and cannot be determined before sorting divVariables
         }
         hp = h;
         hpId = hId;
@@ -1313,7 +1317,7 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
     int hId = -1;
     int hpId = -1;
 
-    for (unsigned divVarPos = 0; divVarPos < divVars.size(); divVarPos++) {
+    for (unsigned divVarPos = 0; divVarPos < divVars.size(); divVarPos++) { // follow divVars variable order (can be sorted by DAC order)
         ex = (EnumeratedVariable*)divVars[divVarPos];
         int xId = ex->wcspIndex; //wcsp index of current divVariable
 
@@ -1332,7 +1336,10 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             } else {
                 postBinaryConstraint(xId, hId, vc);
             }
-        } else if (divVarPos + 1 == divVars.size()) { // last position, no h
+        } else if (divVarPos + 1 == divVars.size()) { // last position
+            hId = divHVarsIdMap[xId]; //index of variable h
+            h = (EnumeratedVariable*)getVar(hId);
+            assign(hId, h->getInf()); // h variable is unused and cannot be determined before sorting divVariables
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
                 for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
                     vc.push_back((val_hp + (ex->toValue(val_ex) != solution[xId]) >= distance) ? MIN_COST : getUb());

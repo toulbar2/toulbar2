@@ -1883,6 +1883,8 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 bool Solver::solve(bool first)
 {
     beginSolve(wcsp->getUb());
+    int _DEE_ = ToulBar2::DEE;
+    int _elimDegree_ = ToulBar2::elimDegree;
 
     Cost initialUpperBound = wcsp->getUb();
 
@@ -2190,6 +2192,8 @@ bool Solver::solve(bool first)
                                                     }
                                                 }
                                                 // reactivate on-the-fly variable elimination and dead-end elimination
+                                                ToulBar2::DEE_ = _DEE_;
+                                                ToulBar2::elimDegree_ = _elimDegree_;
                                                 for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
                                                     if (wcsp->unassigned(i)) {
                                                         ((WCSP*)wcsp)->getVar(i)->queueEliminate();
