@@ -384,6 +384,8 @@ public:
     virtual void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
 
     virtual vector<vector<int>>* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
+    virtual vector<int> getBergeDecElimOrder() = 0; ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
+    virtual void setDACOrder(vector<int>& elimVarOrder) = 0; ///< \brief change DAC order and propagate from scratch
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 
@@ -575,7 +577,7 @@ public:
     // Internal Solver functions DO NOT USE THEM
 
     virtual set<int> getUnassignedVars() const = 0; ///< \internal returns the set of unassigned variable indexes \warning not valid before the search (see WeightedCSPSolver::solve)
-    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (see WeightedCSPSolver::solve)
+    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (returns -1)
 };
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)

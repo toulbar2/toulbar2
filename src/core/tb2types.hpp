@@ -690,7 +690,7 @@ public:
     static int minProperVarSize;
     static int smallSeparatorSize;
 
-    static int Berge_Dec; // flag for berge acyclic decomposition
+    static bool Berge_Dec; // flag for berge acyclic decomposition
     static bool learning; // if true, perform pseudoboolean learning
     static externalfunc timeOut;
     static bool interrupted;

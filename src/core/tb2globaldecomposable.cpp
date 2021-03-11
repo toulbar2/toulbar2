@@ -7,7 +7,7 @@ DecomposableGlobalCostFunction::DecomposableGlobalCostFunction()
     , scope(NULL)
     , label("empty")
 {
-    ToulBar2::Berge_Dec = 1;
+    ToulBar2::Berge_Dec = true;
 }
 
 DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _arity, int* _scope)
@@ -18,7 +18,7 @@ DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _ari
     for (unsigned int variable = 0; variable < _arity; ++variable) {
         scope[variable] = _scope[variable];
     }
-    ToulBar2::Berge_Dec = 1;
+    ToulBar2::Berge_Dec = true;
 }
 
 DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction()
@@ -287,7 +287,6 @@ WeightedRegular::~WeightedRegular()
 
 void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
 {
-    ToulBar2::Berge_Dec = 1;
     //automaton->display();
     Cost top = wcsp->getUb();
     int unsigned current_var_number = wcsp->numberOfVariables();
@@ -1785,6 +1784,10 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
         divVars.push_back(wcsp->getVar(scope[var]));
         solutionmap[scope[var]] = values[var];
     }
+    sort(divVars.begin(), divVars.end(),
+        [](const Variable* v1, const Variable* v2) -> bool {
+            return (v1->getDACOrder() < v2->getDACOrder());
+        });
     map<int, int> divVarsIdMap;
     map<int, int> divHVarsIdMap;
     switch (method) {
@@ -1798,8 +1801,6 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
                         + std::to_string(val / (distance + 1)));
             }
         }
-//        wcsp->getListSuccessors()->at(xId).push_back(divVarsIdMap[xId]);
-//        wcsp->getListSuccessors()->at(divVarsIdMap[xId]).push_back(xId);
         wcsp->addDivConstraint(divVars, distance, solutionmap, divVarsIdMap);
         break;
     case 1:

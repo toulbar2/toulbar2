@@ -281,6 +281,8 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("resetWeightedDegree", &WeightedCSP::resetWeightedDegree)
         .def("preprocessing", &WeightedCSP::preprocessing)
         .def("sortConstraints", &WeightedCSP::sortConstraints) // must be called after creating the model
+        .def("getBergeDecElimOrder", &WeightedCSP::getBergeDecElimOrder)
+        .def("setDACOrder", &WeightedCSP::setDACOrder)
         .def("whenContradiction", &WeightedCSP::whenContradiction)
         .def("propagate", &WeightedCSP::propagate)
         .def("verify", &WeightedCSP::verify)

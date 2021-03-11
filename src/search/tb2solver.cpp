@@ -83,7 +83,6 @@ Solver::Solver(Cost initUpperBound)
     , nbBacktracks(0)
     , nbBacktracksLimit(LONGLONG_MAX)
     , wcsp(NULL)
-    , allVars(NULL)
     , unassignedVars(NULL)
     , lastConflictVar(-1)
     , nbSol(0.)
@@ -112,28 +111,41 @@ Solver::~Solver()
     delete cp;
     delete open;
     delete unassignedVars;
-    delete[] allVars;
+    for (unsigned int i=0; i<allVars.size(); i++) {
+        delete allVars[i];
+    }
     delete wcsp;
     delete ((StoreInt*)searchSize);
 }
 
 void Solver::initVarHeuristic()
 {
+    for (unsigned int j = 0; j < wcsp->numberOfVariables(); j++) {
+        allVars.push_back(new DLink<Value>());
+    }
     unassignedVars = new BTList<Value>(&Store::storeDomain);
-    allVars = new DLink<Value>[wcsp->numberOfVariables()];
     for (unsigned int j = 0; j < wcsp->numberOfVariables(); j++) {
         unsigned int i = wcsp->getDACOrder(j);
-        allVars[i].content = j;
+        allVars[i]->content = j;
     }
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-        unassignedVars->push_back(&allVars[i], false);
-        if (wcsp->assigned(allVars[i].content) || (ToulBar2::nbDecisionVars > 0 && allVars[i].content >= ToulBar2::nbDecisionVars))
-            unassignedVars->erase(&allVars[i], false);
+        unassignedVars->push_back(allVars[i], false);
+        if (wcsp->assigned(allVars[i]->content) || (ToulBar2::nbDecisionVars > 0 && allVars[i]->content >= ToulBar2::nbDecisionVars))
+            unassignedVars->erase(allVars[i], false);
         else
-            wcsp->resetWeightedDegree(allVars[i].content);
+            wcsp->resetWeightedDegree(allVars[i]->content);
     }
     // Now function setvalue can be called safely!
     ToulBar2::setvalue = setvalue;
+}
+
+// keep consistent order of allVars with getDACOrder, needed by setvalue function
+void Solver::updateVarHeuristic()
+{
+    sort(allVars.begin(), allVars.end(),
+            [this](const DLink<Value> *v1, const DLink<Value> *v2) -> bool {
+                  return (wcsp->getDACOrder(v1->content) < wcsp->getDACOrder(v2->content));
+               });
 }
 
 Cost Solver::read_wcsp(const char* fileName)
@@ -414,8 +426,7 @@ set<int> Solver::getUnassignedVars() const
 }
 unsigned int Solver::numberOfUnassignedVariables() const
 {
-    assert(unassignedVars);
-    return unassignedVars->getSize();
+    return ((unassignedVars)?unassignedVars->getSize():-1);
 }
 
 /*
@@ -428,8 +439,8 @@ void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
     //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
     Solver* solver = (Solver*)_solver_;
     unsigned int i = solver->getWCSP()->getDACOrder(varIndex);
-    if (!solver->allVars[i].removed) {
-        solver->unassignedVars->erase(&solver->allVars[i], true);
+    if (!solver->allVars[i]->removed) {
+        solver->unassignedVars->erase(solver->allVars[i], true);
     }
 }
 
@@ -2139,7 +2150,7 @@ bool Solver::solve(bool first)
                                                 cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
                                                 exit(EXIT_FAILURE);
                                             }
-                                            wcsp->propagate();
+                                            // wcsp->propagate(); it will propagate with a possibly modified DAC order at previous iterations resulting in undefined behavior
                                         }
 
                                         Cost eUpperBound = initUb;
@@ -2191,7 +2202,7 @@ bool Solver::solve(bool first)
                                                         exit(EXIT_FAILURE);
                                                     }
                                                 }
-                                                // reactivate on-the-fly variable elimination and dead-end elimination
+                                                // reactivate on-the-fly variable elimination and dead-end elimination (undone in preprocessing on diversity variables and later deactivated by endSolve call)
                                                 ToulBar2::DEE_ = _DEE_;
                                                 ToulBar2::elimDegree_ = _elimDegree_;
                                                 for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
@@ -2200,8 +2211,9 @@ bool Solver::solve(bool first)
                                                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                                                     }
                                                 }
+                                                vector<int> revdac = wcsp->getBergeDecElimOrder();
                                                 wcsp->enforceUb();
-                                                wcsp->propagate();
+                                                wcsp->setDACOrder(revdac);
                                                 initGap(wcsp->getLb(), wcsp->getUb());
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
                                             } catch (const DivSolutionOut&) {

@@ -207,7 +207,7 @@ bool ToulBar2::isZ;
 TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
-int ToulBar2::Berge_Dec = 0; // berge decomposition flag  > 0 if wregular found in the problem
+bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 
 externalfunc ToulBar2::timeOut;
 bool ToulBar2::interrupted;
@@ -399,7 +399,7 @@ void tb2init()
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::Berge_Dec = 0;
+    ToulBar2::Berge_Dec = false;
 
     ToulBar2::timeOut = NULL;
     ToulBar2::interrupted = false;
@@ -1147,6 +1147,7 @@ void WCSP::addDivConstraint(vector<Variable*>& divVars, unsigned int distance, m
         } else {
             postBinaryConstraint(xId, cId, vc);
         }
+        getListSuccessors()->at(xId).push_back(cId);
 
         // Add constraint between c_j_x and c_j_x-1
         vc.clear();
@@ -1175,6 +1176,7 @@ void WCSP::addDivConstraint(vector<Variable*>& divVars, unsigned int distance, m
             } else {
                 postBinaryConstraint(cpId, cId, vc);
             }
+            getListSuccessors()->at(cpId).push_back(xId); // link decision variables together
         }
         cp = c;
         cpId = cId;
@@ -1233,6 +1235,7 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
         } else {
             postBinaryConstraint(xId, cId, vc);
         }
+        getListSuccessors()->at(xId).push_back(cId);
 
         // Add constraint between hp_j_x and c_j_x
         vc.clear();
@@ -1258,6 +1261,7 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             } else {
                 postBinaryConstraint(hpId, cId, vc);
             }
+            getListSuccessors()->at(hpId).push_back(xId); // link decision variables together
         }
 
         // Add constraint between c_j_x and h_j_x a (except last var, done after loop)
@@ -1277,6 +1281,7 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             } else {
                 postBinaryConstraint(cId, hId, vc);
             }
+            getListSuccessors()->at(cId).push_back(hId);
         } else {
             hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
@@ -1334,8 +1339,10 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             if (incremental) {
                 postIncrementalBinaryConstraint(xId, hId, vc);
             } else {
+
                 postBinaryConstraint(xId, hId, vc);
             }
+            getListSuccessors()->at(xId).push_back(hId);
         } else if (divVarPos + 1 == divVars.size()) { // last position
             hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
@@ -1350,6 +1357,7 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             } else {
                 postBinaryConstraint(hpId, xId, vc);
             }
+            getListSuccessors()->at(hpId).push_back(xId);
         } else {
             hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
@@ -1366,6 +1374,8 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             } else {
                 postTernaryConstraint(hpId, xId, hId, vc);
             }
+            getListSuccessors()->at(hpId).push_back(xId);
+            getListSuccessors()->at(xId).push_back(hId);
         }
         hp = h;
         hpId = hId;
@@ -2494,47 +2504,8 @@ void WCSP::sortConstraints()
         }
     }
 
-    if (ToulBar2::Berge_Dec > 0) {
-        // flag pour indiquer si une variable a deja ete visitee initialement a faux
-        vector<bool> marked(numberOfVariables(), false);
-        vector<int> revdac;
-        // nouvel ordre DAC inverse
-        //	for (int i = numberOfVariables()-1 ; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-        //	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-
-        //	for (unsigned int i = 0; i< numberOfVariables(); i++) {
-        //		cout << "listofsuccessors(" << i << "):";
-        //		for (unsigned int a = 0; a < listofsuccessors[i].size(); a++) {
-        //			cout << " " << listofsuccessors[i][a];
-        //		}
-        //		cout << endl;
-        //	}
-
-        //Mark native variable
-        for (int i = ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : numberOfVariables()) - 1; i >= 0; i--) {
-            if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG,0) != 0) {
-                visit(i, revdac, marked, listofsuccessors);
-            }
-        }
-        //Mark q variable only
-        for (int i = numberOfVariables() - 1; i >= 0; i--) {
-            if (!marked[i]) {
-                visit(i, revdac, marked, listofsuccessors);
-            }
-        }
-
-        // listofsuccessors.clear(); // appel a la methode clear de l'objet vector
-
-        if (ToulBar2::verbose >= 1) {
-            cout << "BERGE DAC reverse order:";
-            for (unsigned int i = 0; i < numberOfVariables(); i++) {
-                cout << " " << revdac[i];
-            }
-            cout << endl;
-        }
-
-        assert(revdac.size() == numberOfVariables());
-
+    if (ToulBar2::Berge_Dec) {
+        vector<int> revdac = getBergeDecElimOrder();
         setDACOrder(revdac);
     }
     // postpone costly variable elimination heuristics if too many variables
@@ -5274,6 +5245,49 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
     }
 }
 
+vector<int> WCSP::getBergeDecElimOrder()
+{
+    vector<bool> marked(numberOfVariables(), false);
+    vector<int> revdac;
+
+    // start from current DAC order
+    vector<int> dacorder(numberOfVariables(), -1);
+    for (unsigned int idx = 0; idx < numberOfVariables(); idx++) {
+        dacorder[getDACOrder(idx)] = idx;
+    }
+    assert(all_of(dacorder.begin(), dacorder.end(), [](int idx) { return idx != -1; }));
+
+    //Mark native variable
+    for (int j = numberOfVariables() - 1; j >= 0; j--) {
+        int i = dacorder[j];
+        if (ToulBar2::nbDecisionVars == 0 || i < ToulBar2::nbDecisionVars) {
+            if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG,0) != 0 && getName(i).rfind(DIVERSE_VAR_TAG,0) != 0) {
+                visit(i, revdac, marked, listofsuccessors);
+            }
+        }
+    }
+    //Mark other variables
+    for (int j = numberOfVariables() - 1; j >= 0; j--) {
+        int i = dacorder[j];
+        if (!marked[i]) {
+            visit(i, revdac, marked, listofsuccessors);
+        }
+    }
+
+    // listofsuccessors.clear();
+
+    if (ToulBar2::verbose >= 1) {
+        cout << "BERGE DAC reverse order:";
+        for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            cout << " " << getName(revdac[i]);
+        }
+        cout << endl;
+    }
+
+    assert(revdac.size() == numberOfVariables());
+    return revdac;
+}
+
 /// \param order variable elimination order (reverse of DAC order)
 void WCSP::setDACOrder(vector<int>& order)
 {
@@ -5297,8 +5311,13 @@ void WCSP::setDACOrder(vector<int>& order)
 
     sort(divVariables.begin(), divVariables.end(),
         [](const Variable* v1, const Variable* v2) -> bool {
-            return (v1->getDACOrder() > v2->getDACOrder());
+            return (v1->getDACOrder() < v2->getDACOrder());
         });
+
+    // during search, must reorder allVars accordingly before propagate calls setvalue
+    if (solver && ((Solver *)solver)->numberOfUnassignedVariables() >= 0) {
+        ((Solver *)solver)->updateVarHeuristic();
+    }
 
     for (unsigned int i = 0; i < numberOfConstraints(); i++) {
         Constraint* ctr = getCtr(i);
@@ -5320,7 +5339,8 @@ void WCSP::setDACOrder(vector<int>& order)
             ctr->propagate();
     }
     propagate();
-    // recompute all tightness: too slow???
+
+    // recompute all tightness: too slow??? side-effect to reset weighted degrees???
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected())
             constrs[i]->computeTightness();

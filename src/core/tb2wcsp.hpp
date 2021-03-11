@@ -791,6 +791,7 @@ public:
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char* elimVarOrderFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
     void treeDecFile2Vector(char* treeDecFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition
+    vector<int> getBergeDecElimOrder(); ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
     void setDACOrder(vector<int>& elimVarOrder); ///< \brief change DAC order and propagate from scratch
 
     // dac order reordering when Berge acyclic gobal constraint are present in the wcsp

@@ -123,7 +123,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
                 vecZ.push_back(xx->wcspIndex);
                 vecZ.push_back(yy->wcspIndex);
             }
-            ToulBar2::Berge_Dec = 1;
+            ToulBar2::Berge_Dec = true;
             break;
         case 2:
             if (functionalX && functionalY) {
@@ -151,7 +151,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
                     vecX.push_back(yy->wcspIndex);
                 }
             }
-            ToulBar2::Berge_Dec = 1;
+            ToulBar2::Berge_Dec = true;
             break;
         case 3:
             if (xx->wcspIndex < yy->wcspIndex && xx->wcspIndex < zz->wcspIndex) {
@@ -179,7 +179,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
                     vecZ.push_back(xx->wcspIndex);
                 }
             }
-            ToulBar2::Berge_Dec = 1;
+            ToulBar2::Berge_Dec = true;
             break;
         default:
             break;
