@@ -3807,7 +3807,7 @@ void WCSP::read_opb(const char* fileName)
         readToken(file, token);
     }
 
-    // read linear objective function
+    // read objective function
     bool opt = true;
     int opsize = 4;
     Double multiplier = Exp10((Double)ToulBar2::resolution);
@@ -3844,6 +3844,10 @@ void WCSP::read_opb(const char* fileName)
                 vector<int> scopeIndex;
                 while (!isInteger(token)) {
                     string varname = token.substr(0,token.size()-((token.back()==';')?1:0));
+                    if (varname.rfind("~", 0) == 0) {
+                        cerr << "Sorry, negative literals in opb format not implemented in this version!" << endl;
+                        exit(EXIT_FAILURE);
+                    }
                     int var = 0;
                     if (varnames.find(varname) != varnames.end()) {
                         var = varnames[varname];
@@ -3909,7 +3913,7 @@ void WCSP::read_opb(const char* fileName)
                 } else if (scopeIndex.size() == 0) {
                     inclowerbound += cost;
                 } else {
-                    cerr << "Sorry! Cannot read objective function with non linear term of arity " << scopeIndex.size() << endl;
+                    cerr << "Sorry! Cannot read objective function with non linear terms of arity " << scopeIndex.size() << endl;
                     exit(EXIT_FAILURE);
                 }
             }
@@ -3922,6 +3926,7 @@ void WCSP::read_opb(const char* fileName)
         vector<Cost> coefs;
         string params;
         Cost coef; // allows long long coefficients inside linear constraints
+        bool first = true;
         do {
             readToken(file, token, &opsize); // read coefficient or operator or comments
             // skip comments
@@ -3931,6 +3936,10 @@ void WCSP::read_opb(const char* fileName)
             }
             if (!file || token == ";") break;
             if (token.substr(0,2) == "<=" || token.substr(0,1) == "=" || token.substr(0,2) == ">=") {
+                if (first) {
+                    cerr << "Wrong constraint definition with empty left-hand side! " << token << endl;
+                    exit(EXIT_FAILURE);
+                }
                 opsize = (token[0] == '=')?1:2;
                 string op = token.substr(0,opsize);
                 readToken(file, token, &opsize); // read right coef
@@ -3958,6 +3967,10 @@ void WCSP::read_opb(const char* fileName)
                     coef = string2Cost((char*)token.c_str());
                     readToken(file, token, &opsize); // read varname
                 } else {
+                    if (!first) {
+                        cerr << "Sorry, constraints with non-linear terms in opb format not implemented in this version!" << endl;
+                        exit(EXIT_FAILURE);
+                    }
                     coef = 1;
                 }
                 assert(token.back() != ';');
@@ -3966,6 +3979,10 @@ void WCSP::read_opb(const char* fileName)
                     opsize = (token[token.size()-2] == '<' || token[token.size()-2] == '>')?-2:-1;
                 }
                 string varname = token.substr(0, token.size() + opsize);
+                if (varname.rfind("~", 0) == 0) {
+                    cerr << "Sorry, negative literals in opb format not implemented in this version!!" << endl;
+                    exit(EXIT_FAILURE);
+                }
                 int var = 0;
                 if (varnames.find(varname) != varnames.end()) {
                     var = varnames[varname];
@@ -3983,6 +4000,7 @@ void WCSP::read_opb(const char* fileName)
                     coefs[find(scopeIndex.begin(), scopeIndex.end(), var) - scopeIndex.begin()] += coef;
                 }
             }
+            first = false;
         } while (token.back() != ';');
     }
 
