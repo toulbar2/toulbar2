@@ -3804,6 +3804,20 @@ void WCSP::read_opb(const char* fileName)
     readToken(file, token);
     while (token[0] == '*') {
         getline(file, dummy);
+        if (dummy.find("#variable=") != string::npos) {
+            int n = atoi(dummy.substr(dummy.find("#variable=") + 10).c_str());
+            if (n > 0) {
+                for (int i=1; i<=n; i++) {
+                    string varname = "x";
+                    varname += to_string(i);
+                    int var = makeEnumeratedVariable(varname, 0, 1);
+                    addValueName(var, "v0");
+                    addValueName(var, "v1");
+                    varnames[varname] = var;
+                    nbvar++;
+                }
+            }
+        }
         readToken(file, token);
     }
 
