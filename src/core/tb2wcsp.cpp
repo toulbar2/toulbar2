@@ -5211,6 +5211,13 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
             for (int i = numberOfVariables() - 1; i >= 0; i--)
                 order.push_back(i);
             break;
+        case ELIM_LEXICOGRAPHIC_ORDER:
+            order.clear();
+            order.reserve(vars.size());
+            for (int i = numberOfVariables() - 1; i >= 0; i--)
+                order.push_back(i);
+            sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
+            break;
         default: {
             cerr << "Variable elimination order " << reinterpret_cast<uintptr_t>(elimVarOrder) << " not implemented yet!" << endl;
             exit(EXIT_FAILURE);

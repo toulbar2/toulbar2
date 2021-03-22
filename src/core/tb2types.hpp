@@ -470,6 +470,7 @@ typedef enum {
     CUTHILL_MCKEE = 5,
     APPROX_MIN_DEGREE = 6,
     ELIM_FILE_ORDER = 7,
+    ELIM_LEXICOGRAPHIC_ORDER = 8,
     ELIM_MAX
 } ElimOrderType;
 
