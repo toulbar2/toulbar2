@@ -307,14 +307,14 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
             tCtrs *= (n - i);
             tCtrs /= i;
         }
+        tCtrs /= arity;
         if (numCtrs[arity] > tCtrs) {
             cout << numCtrs[arity] << "  " << arity << "ary constraints and the maximum is " << tCtrs << endl;
             numCtrs[arity] = tCtrs;
         }
-
         while (numCtrs[arity]) {
             bool oneadded = false;
-            int dice = max(0,min(MAX_ARITY*MAX_ARITY*MAX_ARITY, (int)((long long)myrand() % tCtrs)));
+            long long dice = max(0LL,min(static_cast<long long>(MAX_ARITY)*static_cast<long long>(MAX_ARITY)*static_cast<long long>(MAX_ARITY), myrandl() % tCtrs));
             ini(indexs, arity, n);
             do {
                 if (scopes.end() == scopes.find(toIndex(indexs))) {
