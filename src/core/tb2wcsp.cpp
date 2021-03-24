@@ -5364,7 +5364,7 @@ void WCSP::setDACOrder(vector<int>& order)
 // Warning: ToulBar2::NormFactor has to be initialized
 
 // Converts the decimal Token to a cost and a actual number of significant digit after the decimal
-// Should yell if unfeasible with recent GCC/CLang complier with builtins.
+// Should yell if unfeasible with recent GCC/CLang compiler with builtins.
 // The string is assumed to be space trimmed.The conversion uses the upper bound precision
 // and ToulBar2::costMultiplier for scaling but does not shift cost using negCost.
 
