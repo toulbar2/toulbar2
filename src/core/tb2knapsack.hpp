@@ -1,28 +1,48 @@
 #ifndef TB2KNAPSACK_HPP_
 #define TB2KNAPSACK_HPP_
-
+#include <utility>
+#include <variant>
 #include "tb2abstractconstr.hpp"
 #include "tb2ternaryconstr.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 #include "../utils/tb2store.hpp"
 #include <numeric>
-
-// warning! we assume binary variables
+#include <chrono>
+#include <thread>
 class KnapsackConstraint : public AbstractNaryConstraint {
     StoreLong capacity; // knapsack capacity
-    vector<Long> weights; // knapsack linear positive integer coefficients
+    vector<vector<Long>> weights; // knapsack linear positive integer coefficients
+    vector<StoreInt> GreatestWeightIdx;
+    vector<StoreInt> LowestWeightIdx;
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
-    vector<StoreCost> deltaCosts0; // extended costs from unary costs for value 0 to the cost function
-    vector<StoreCost> deltaCosts1; // extended costs from unary costs for value 1 to the cost function
+    vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs for value 1 to the cost function
+    StoreCost assigneddeltas;
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<Long> conflictWeights; // used by weighted degree heuristics
     StoreLong  MaxWeight;
+    StoreLong MinWeight;
     Long Original_capacity;
+    vector<StoreCost> LastCostforKnapsack; // Store the cost used in the last propagation
     vector<Cost> CostforKnapsack; // temporary data structure for propagate
+    vector<vector<Cost>> Profit; // temporary data structure for propagate
+    vector<Cost> UnaryCost1;
+    vector<Cost> UnaryCost0;
+    vector<vector<Double>> OptSol;
     vector<int> arrvar; // temporary data structure for propagate
-    vector<Double> Weightedtprofit; // temporary data structure for propagate
-    StoreLong NegCapacity;
+    vector<vector<Value>> VarVal;
+    vector<vector<Value>> NotVarVal;
+    vector<Value> lastval1;
+    vector<Value> lastval0;
+    vector<StoreInt> lastval0ok;
+    vector<StoreInt> assigned;
+    vector<int> current_scope_idx;
+    vector<vector<int>> current_val_idx;
+    vector<vector<Double>> Slopes;
+    StoreInt carity;
+    vector<int> nbValue;
+    vector<int> tempveStoreint;
+    int LastDomSize;
 
     void projectLB(Cost c)
     {
@@ -33,7 +53,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
     }
 
-    Double Ceil(Double v){
+    static Double Ceil(Double v){
         const Double epsilon = 1e-7;
 
         if(floorl(v)+epsilon>v)
@@ -41,32 +61,212 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         else
             return ceill(v);
     }
-    Double Trunc(Double v){
-        return truncl(v);
+    void Updatelastval0(int idx){
+        if (!lastval0ok[idx] && !scope[idx]->canbe(lastval0[idx]) ) {
+            int last = lastval0[idx];
+            unsigned int j = 0;
+            while (j < NotVarVal[idx].size() && last == lastval0[idx]) {
+                if (scope[idx]->canbe(NotVarVal[idx][j])) {
+                    lastval0[idx] = NotVarVal[idx][j];
+                    VarVal[idx].back() = lastval0[idx];
+                } else
+                    j++;
+            }
+            if(last==lastval0[idx])
+                lastval0ok[idx]=true;
+        }
+    }
+    //Return if the variable scope[idx] is unassigned
+    bool isunassigned(int idx) {
+        if (assigned[idx] == 0 && scope[idx]->getDomainSize() > 1) {
+            Updatelastval0(idx);
+            if (!scope[idx]->canbe(lastval1[idx])) {
+                int last = lastval1[idx];
+                unsigned int j = 0;
+                while (j < VarVal[idx].size() - 1 && last == lastval1[idx]) {
+                    if (scope[idx]->canbe(VarVal[idx][j]))
+                        lastval1[idx] = VarVal[idx][j];
+                    else
+                        j++;
+                }
+                if (last == lastval1[idx]) {
+                    return false;
+                }
+            }
+            assert(scope[idx]->canbe(VarVal[idx].back()) || lastval0ok[idx]);
+            assert(lastval1[idx] != lastval0[idx]);
+            return true;
+        } else
+            return false;
+    }
+
+    void Group_extendNVV(int var, Cost C){
+        for(unsigned int i=0;i<NotVarVal[var].size();i++){
+            if(scope[var]->canbe(NotVarVal[var][i])){
+                assert(scope[var]->getCost(NotVarVal[var][i])>=C);
+                scope[var]->extend(NotVarVal[var][i],C);}
+        }
+    }
+    void Group_ProjectNVV(int var, Cost C){
+        for(unsigned int i=0;i<NotVarVal[var].size();i++){
+            if(scope[var]->canbe(NotVarVal[var][i]))
+                scope[var]->project(NotVarVal[var][i],C,true);
+        }
+    }
+
+    //Depending of the value and the cost, extend or project the cost on the value 1 or 0 of the variable var
+    void ExtOrProJ(int var,int value,Cost C )
+    {
+        if(C>0){
+            if(value<(int)VarVal[var].size()-1){
+                assert(scope[var]->getCost(VarVal[var][value])>=C);
+                scope[var]->extend(VarVal[var][value],C);
+                deltaCosts[var][value]+=C;
+            }
+            else{
+                Group_extendNVV(var, C);
+                deltaCosts[var].back()+=C;
+            }
+        } else {
+            if(value<(int)VarVal[var].size()-1)
+            {
+                scope[var]->project(VarVal[var][value],-C,true);
+                deltaCosts[var][value]+=C;
+            }
+            else{
+                Group_ProjectNVV(var, -C);
+                deltaCosts[var].back()+=C;
+            }
+        }
+    }
+    void get_current_scope()
+    {
+        // recover current scope
+        bool greatok;
+        bool lowok;
+        Long w1;
+        unsigned int k=0;
+        for (int i = 0; i < arity_; i++) {
+            greatok= false;
+            lowok=false;
+            if (assigned[i]==0 ) {
+                Updatelastval0(i);
+                tempveStoreint.clear();
+                    for (int j = 0; j < (int)VarVal[i].size(); ++j) {
+                        if(scope[i]->canbe(VarVal[i][j])) {
+                            if(GreatestWeightIdx[i]==j)
+                                greatok=true;
+                            if(LowestWeightIdx[i]==j)
+                                lowok=true;
+                            tempveStoreint.push_back(j);
+                        }
+                    }
+                    if(!greatok){
+                        MaxWeight-=weights[i][GreatestWeightIdx[i]];
+                        GreatestWeightIdx[i]=LowestWeightIdx[i];
+                        w1=weights[i][LowestWeightIdx[i]];
+                        for (int j = 0; j < (int)VarVal[i].size(); ++j) {
+                            if(scope[i]->canbe(VarVal[i][j]) && weights[i][j]>=w1) {
+                                w1=weights[i][j];
+                                GreatestWeightIdx[i]=j;
+                            }
+                        }
+                        MaxWeight+=weights[i][GreatestWeightIdx[i]];
+                    }
+                    if(!lowok){
+                        MinWeight-=weights[i][LowestWeightIdx[i]];
+                        LowestWeightIdx[i]=GreatestWeightIdx[i];
+                        w1=weights[i][GreatestWeightIdx[i]];
+                        for (int j = 0; j < (int)VarVal[i].size(); ++j) {
+                            if(scope[i]->canbe(VarVal[i][j]) && weights[i][j]<=w1) {
+                                w1=weights[i][j];
+                                LowestWeightIdx[i]=j;
+                            }
+                        }
+                        MinWeight+=weights[i][LowestWeightIdx[i]];
+                    }
+                    if(k>=current_scope_idx.size()) {
+                        current_scope_idx.push_back(i);
+                        current_val_idx.push_back(tempveStoreint);
+                        nbValue.push_back(current_val_idx.back().size());
+                    }else {
+                        current_scope_idx[k] = i;
+                        current_val_idx[k] = tempveStoreint;
+                        nbValue[k] = current_val_idx[k].size();
+                    }
+                k++;
+                assert(scope[i]->canbe(VarVal[i][LowestWeightIdx[i]]));
+                assert(scope[i]->canbe(VarVal[i][GreatestWeightIdx[i]]));
+                LastDomSize+=scope[i]->getDomainSize();
+            }
+        }
+        if(k<current_val_idx.size()){
+            current_scope_idx.resize(k,0);
+            current_val_idx.resize(k,current_scope_idx);
+            nbValue.resize(k,0);
+        }
+        assert(current_scope_idx.size()==current_val_idx.size());
+        assert(current_scope_idx.size()==k);
+        assert(current_val_idx.size()==k);
+        assert(nbValue.size()==k);
+        carity = current_scope_idx.size();
+
+        assert(carity==current_scope_idx.size());
     }
 
 public:
     KnapsackConstraint(WCSP *wcsp, EnumeratedVariable **scope_in, int arity_in, Long capacity_in,
-                       vector<Long> weights_in, Long MaxWeigth_in, Long NegCapacity_in)
+                       vector<vector<Long>> weights_in,Long MaxWeight_in, vector<vector<int>> VarVal_in,vector<vector<int>> NotVarVal_in)
             : AbstractNaryConstraint(wcsp, scope_in, arity_in)
             , capacity(capacity_in)
-            , weights(weights_in)
+            , weights(std::move(weights_in))
             , lb(MIN_COST)
+            , assigneddeltas(MIN_COST)
             , nonassigned(arity_in)
-            , MaxWeight(MaxWeigth_in)
+            , MaxWeight(MaxWeight_in)
+            , MinWeight(0)
             , Original_capacity(capacity_in)
-            , NegCapacity(NegCapacity_in)
-            {
-        deltaCosts0 = vector<StoreCost>(arity_in, StoreCost(MIN_COST));
-        deltaCosts1 = vector<StoreCost>(arity_in, StoreCost(MIN_COST));
+            , VarVal(std::move(VarVal_in))
+            , NotVarVal(std::move(NotVarVal_in))
+            , carity(arity_in)
+    {
         for (int i = 0; i < arity_in; i++) {
-            assert(scope_in[i]->getDomainInitSize() == 2 && scope_in[i]->toValue(0) == 0 && scope_in[i]->toValue(1) == 1);
+            assert(VarVal[i].size()>1);
+            lastval0ok.emplace_back(false);
+            OptSol.emplace_back(weights[i].size(),MIN_COST);
+            Profit.emplace_back(weights[i].size(),MIN_COST);
+            current_val_idx.emplace_back(VarVal[i].size(),MIN_COST);
+            deltaCosts.emplace_back(weights[i].size(),MIN_COST);
             conflictWeights.push_back(0);
             CostforKnapsack.push_back(MIN_COST);
-            arrvar.push_back(i);
-            Weightedtprofit.push_back(0.);
+            LastCostforKnapsack.push_back(MIN_COST);
+            assigned.emplace_back(0);
+            UnaryCost0.push_back(MIN_COST);
+            current_scope_idx.emplace_back(0);
+            tempveStoreint.emplace_back(0);
+            nbValue.emplace_back(0);
+            GreatestWeightIdx.emplace_back(max_element(weights[i].begin(), weights[i].end())-weights[i].begin());
+            LowestWeightIdx.emplace_back(min_element(weights[i].begin(), weights[i].end())-weights[i].begin());
+            if (NotVarVal[i].empty()) {
+                lastval0.push_back(scope[i]->getInf()-1);
+            } else {
+                lastval0.push_back(NotVarVal[i][0]);
+            }
+            lastval1.push_back(VarVal[i][0]);
+            assert(VarVal[i].size()==weights[i].size());
         }
+#ifndef NDEBUG
 
+        Long Sumw=0;
+        for (int i = 0; i < arity_; ++i) {
+            Sumw+=weights[i][GreatestWeightIdx[i]];
+        }
+        assert(MaxWeight==Sumw);
+#endif
+        if(universal()) {
+            deconnected();
+        }
+        get_current_scope();
     }
 
     virtual ~KnapsackConstraint() {}
@@ -112,9 +312,16 @@ public:
         Constraint::resetConflictWeight();
     }
 
-    bool universal() {
+    bool universal()
+    {
         // returns true if constraint always satisfied
-        if (capacity + NegCapacity <= 0)
+        if(capacity<=0)
+            return true;
+        Long minweight=0;
+        for (int i = 0; i < carity; ++i) {
+            minweight+=weights[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]];
+        }
+        if (minweight >= capacity)
             return true;
         else
             return false;
@@ -124,24 +331,26 @@ public:
     {
         // returns the cost of the corresponding assignment s
         Long W=0;
-        Cost res = -lb;
+        Cost res = -lb+assigneddeltas;
         for (int i = 0; i < arity_; i++) {
-            if (ToulBar2::verbose >= 2)
+            if (ToulBar2::verbose >= 1)
                 cout<<s[i]<<" ";
-            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            if(var->toValue(s[i])==0)
-                res+=deltaCosts0[i];
+            auto* var = (EnumeratedVariable*)getVar(i);
+            auto it=find(VarVal[i].begin(), VarVal[i].end(), var->toValue(s[i]));
+            if( it == VarVal[i].end()) {
+                res += deltaCosts[i].back();
+                W+=weights[i].back();
+            }
             else
             {
-                W+=weights[i];
-                res+=deltaCosts1[i];
+                W+=weights[i][distance(VarVal[i].begin(),it)];
+                res+=deltaCosts[i][distance(VarVal[i].begin(),it)];
             }
         }
         if(W < Original_capacity || res > wcsp->getUb())
             res=wcsp->getUb();
         assert(res <= wcsp->getUb());
-        if (ToulBar2::verbose >= 2)
-            cout<<"   "<<res<<endl;
+        assert(res>=MIN_COST);
         return res;
     }
     Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
@@ -183,462 +392,597 @@ public:
     //pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
 
     //Cost getMaxFiniteCost() //TODO: return the maximum finite cost for any valid tuple less than wcsp->getUb()
-    //void setInfiniteCost(Cost ub)
+    Cost getMaxFiniteCost()
+    {
+        Cost delta=0;
+        for(int i=0; i<arity_;i++)
+        {
+            Cost m = *max_element(deltaCosts[i].begin(),deltaCosts[i].end());
+            if(m>MIN_COST)
+                delta+=m;
+        }
+        Cost sumdelta = ((lb > MIN_COST) ?  delta-lb : MIN_COST);
+        if (CUT(sumdelta, wcsp->getUb()))
+            return MAX_COST;
+        else
+            return sumdelta;
+    }
 
+    //void setInfiniteCost(Cost ub)
     void assign(int varIndex)
     {
-        if (connected(varIndex)) {
-            if (ToulBar2::verbose >= 2)
-                cout<<" var assigned: " <<scope[varIndex]->getName() << " weight: "<<weights[varIndex]<<endl;
-            deconnect(varIndex);
-            nonassigned = nonassigned - 1;
-            assert(nonassigned >= 0);
-            if (scope[varIndex]->getValue() == 1) {
-                if (weights[varIndex] > 0) {
-                    MaxWeight -= weights[varIndex];
-                    capacity -= weights[varIndex];
-                } else if (weights[varIndex] < 0) {
-                    capacity -= weights[varIndex];
-                    NegCapacity += weights[varIndex];
-                }
+        if (assigned[varIndex]==0) {
+            assigned[varIndex]=1;
+            if(scope[varIndex]->getDomainSize()==1){
+                nonassigned=nonassigned-1;
+                assigned[varIndex]=2;
+                deconnect(varIndex);
             }
-            else if(weights[varIndex]>0)
-                MaxWeight -= weights[varIndex];
-            else
-                NegCapacity+=weights[varIndex];
+            assert(nonassigned >= 0);
+            //Update the problem
+            auto it=find(VarVal[varIndex].begin(), VarVal[varIndex].end(), scope[varIndex]->getInf());
+            if( it == VarVal[varIndex].end()) {
+                capacity -= weights[varIndex].back();
+                assigneddeltas+=deltaCosts[varIndex].back();
+            }else
+            {
+                capacity -= weights[varIndex][distance(VarVal[varIndex].begin(),it)];
+                assigneddeltas+=deltaCosts[varIndex][distance(VarVal[varIndex].begin(),it)];
+            }
+            fill(deltaCosts[varIndex].begin(),deltaCosts[varIndex].end(),0);
+            MaxWeight -= weights[varIndex][GreatestWeightIdx[varIndex]];
+            MinWeight-=weights[varIndex][LowestWeightIdx[varIndex]];
+            get_current_scope();
             if (universal()) {
                 deconnect();
-                if (ToulBar2::verbose >= 2)
-                    cout<<"lb : "<<lb<<endl;
-                Cost TobeProjected = -lb;
-                lb=0;
-                for(int i = 0; i < arity_; i++){
-                    if (ToulBar2::verbose >= 2)
-                        cout<<scope[i]->getName()<<" deltacosts0 : " <<deltaCosts0[i]<<" deltacosts1 :" << deltaCosts1[i]<<endl;
-                    if(scope[i]->unassigned()){
-                        scope[i]->project(1,deltaCosts1[i],true);
-                        deltaCosts1[i]=0;
-                        scope[i]->project(0,deltaCosts0[i],true);
-                        deltaCosts0[i]=0;
-                        scope[i]->findSupport();
+                Cost TobeProjected = -lb + assigneddeltas;
+                lb = MIN_COST;
+                Cost mindelta;
+                for (int i = 0; i < carity; i++) {
+                    mindelta=MAX_COST;
+                    for (int j = 0; j < nbValue[i]; ++j) {
+                        if (mindelta > deltaCosts[current_scope_idx[i]][current_val_idx[i][j]])
+                            mindelta = deltaCosts[current_scope_idx[i]][current_val_idx[i][j]];
                     }
-                    else if(scope[i]->canbe(1)) {
-                        TobeProjected+=deltaCosts1[i];
-                        deltaCosts1[i]=0;
+                    TobeProjected += mindelta;
+                    for (int j = 0; j < nbValue[i] ; ++j) {
+                        assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
+                        if(current_val_idx[i][j]==(int)VarVal[current_scope_idx[i]].size()-1){
+                            Group_ProjectNVV(current_scope_idx[i],deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                        }
+                        else
+                            scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]],deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                     }
-                    else{
-                        TobeProjected+=deltaCosts0[i];
-                        deltaCosts0[i]=0;
-                    }
+                    scope[current_scope_idx[i]]->findSupport();
                 }
                 assert(TobeProjected >= MIN_COST);
                 Constraint::projectLB(TobeProjected);
-            } else if (nonassigned <= 3) {
-                deconnect(); // this constraint is removed from the current WCSP problem
-                if (ToulBar2::verbose >= 2)
-                    cout<<"EVALUATION "<<endl;
-                projectNary(); // and replaced by a ternary constraint in extension
+            } else if (nonassigned <= 3 ) {
+            deconnect(); // this constraint is removed from the current WCSP problem
+            if (ToulBar2::verbose >= 2)
+                cout << "EVALUATION " << endl;
+            projectNary();
             } else {
                 //TODO: incremental bound propagation
+
                 propagate();
                 if (ToulBar2::FullEAC)
                     reviseEACGreedySolution();
             }
+        }else{
+            if(assigned[varIndex]==1 && scope[varIndex]->getDomainSize()==1){
+                nonassigned=nonassigned-1;
+                assigned[varIndex]=2;
+                if(nonassigned <= 3){
+                    deconnect(); // this constraint is removed from the current WCSP problem
+                    if (ToulBar2::verbose >= 2)
+                        cout<<"EVALUATION "<<endl;
+                    projectNary();
+                }
+            }
+        }
+    }
+    //Return True if a value has been deleted else return False
+    bool BoundConsistency()
+    {
+        int k = 0, k2;
+        bool b = false;
+        int currentvar;
+        while (k < carity && !b) {
+            currentvar=current_scope_idx[k];
+            //Determine if at least one value of the current variable can be erased.
+            if (MaxWeight - weights[currentvar][GreatestWeightIdx[currentvar]] + weights[currentvar][LowestWeightIdx[currentvar]]<capacity) {
+                k2 = 0;
+                if(assigned[currentvar]==0 && isunassigned(currentvar)) {
+                    while (k2 < nbValue[k] && !b) {
+                        if (MaxWeight - weights[currentvar][GreatestWeightIdx[currentvar]] + weights[currentvar][current_val_idx[k][k2]] < capacity) {
+                            if (current_val_idx[k][k2] == (int)VarVal[currentvar].size() - 1) {
+                                for (unsigned int i = 0; i < NotVarVal[currentvar].size(); ++i) {
+                                    if (scope[currentvar]->canbe(NotVarVal[currentvar][i])) {
+                                        scope[currentvar]->remove(NotVarVal[currentvar][i]);
+                                    }
+                                }
+                            } else {
+                                scope[currentvar]->remove(VarVal[currentvar][current_val_idx[k][k2]]);
+                            }
+                        }
+                        k2++;
+                    }
+                    if(connected() && assigned[currentvar]==0 && !isunassigned(currentvar)) {
+                        assign(currentvar);
+                        b = true;
+                    }
+                    if(deconnected() || assigned[currentvar]>0 || !isunassigned(currentvar)){
+                        b=true;
+                    }else{
+                        get_current_scope();
+                    }
+                }
+            }
+            k++;
+        }
+        return b;
+    }
+    bool ComputeProfit()
+    {
+        Cost verifopt=-lb+assigneddeltas;   //Used to check if the last optimal solution has still a cost of 0
+        Long verifweight=0;        //Used to check if the last optimal solution has still a cost of 0
+        Double storec,storew;   //Used to check if the last optimal solution has still a cost of 0
+        int sumOPT=0;
+        Cost UN;
+        bool b1=true;
+        for (int i = 0; i < carity; i++) {
+            assert(assigned[current_scope_idx[i]]==0 && scope[current_scope_idx[i]]->getDomainSize()>1);
+            storec = 0;
+            storew = 0;
+            for (int j = 0; j < nbValue[i] ; j++) {
+                assert(scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]])>= MIN_COST);
+                if(current_val_idx[i][j]==(int)VarVal[current_scope_idx[i]].size()-1){
+                    UnaryCost0[current_scope_idx[i]]=MAX_COST;
+                    for (unsigned int l = 0; l < NotVarVal[current_scope_idx[i]].size(); l++) {
+                        if (scope[current_scope_idx[i]]->canbe(NotVarVal[current_scope_idx[i]][l])) {
+                            assert(scope[current_scope_idx[i]]->getCost(NotVarVal[current_scope_idx[i]][l])>=MIN_COST);
+                            UN = scope[current_scope_idx[i]]->getCost(NotVarVal[current_scope_idx[i]][l]);
+                            if (UN < UnaryCost0[current_scope_idx[i]]) {
+                                UnaryCost0[current_scope_idx[i]] = UN;
+
+                            }
+                        }
+                    }
+                    Profit[current_scope_idx[i]][current_val_idx[i][j]] =  UnaryCost0[current_scope_idx[i]] + deltaCosts[current_scope_idx[i]][current_val_idx[i][j]];
+                }
+                else{
+                    Profit[current_scope_idx[i]][current_val_idx[i][j]]=scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]) + deltaCosts[current_scope_idx[i]][current_val_idx[i][j]];
+                }
+                storew += weights[current_scope_idx[i]][current_val_idx[i][j]] * OptSol[current_scope_idx[i]][current_val_idx[i][j]];
+                storec += Profit[current_scope_idx[i]][current_val_idx[i][j]] * OptSol[current_scope_idx[i]][current_val_idx[i][j]];
+                sumOPT+=OptSol[current_scope_idx[i]][current_val_idx[i][j]];
+            }
+            //Compute the cost of the last optimal solution
+            verifopt += Ceil(storec);
+            verifweight += Ceil(storew);
+            if(b1 && (*max_element(Profit[i].begin(),Profit[i].end())!=MIN_COST || *min_element(Profit[i].begin(),Profit[i].end())!=MIN_COST))
+                b1= false;
+            assert(*max_element(Profit[i].begin(),Profit[i].end())<MAX_COST);
+        }
+        assert(verifopt>= 0 || verifweight<capacity || sumOPT<carity);
+        if(b1)
+            return false;
+        if(verifopt>0 || verifweight<capacity || sumOPT<carity)
+            return true;
+        else
+            return false;
+    }
+
+    //Return a vector containing the slopes, a slope is defined between 2 values of a variable : <Var, Val1, Val2, slopes>
+    void ComputeSlopes(Long *W,Cost *c)
+    {
+        int item1 = 0;
+        int k = 0;
+        Slopes.clear();
+        for (int i = 0; i < carity; i++) {
+            fill(OptSol[current_scope_idx[i]].begin(),OptSol[current_scope_idx[i]].end(),0);
+            //Sort the value in ascending weight
+            arrvar.clear();
+            arrvar=current_val_idx[i];
+            sort(arrvar.begin(), arrvar.end(),
+                 [&](int x, int y) {if(weights[current_scope_idx[i]][x] == weights[current_scope_idx[i]][y]){
+                     if(Profit[current_scope_idx[i]][x] == Profit[current_scope_idx[i]][y]){
+                         if(scope[current_scope_idx[i]]->getSupport()==VarVal[current_scope_idx[i]][x]){
+                             return true;
+                         }
+                         else
+                             return false;
+                     }else
+                        return Profit[current_scope_idx[i]][x] > Profit[current_scope_idx[i]][y];
+                 }else
+                     return weights[current_scope_idx[i]][x] < weights[current_scope_idx[i]][y];});
+            //Find the value with the heaviest weight
+            k = arrvar.size() - 1;
+            item1 = arrvar[k];
+            while (k > 0) {
+                k--;
+                //We don't consider dominated items : p_i < p_j && w_i > w_j   (i dominate j)
+                if (Profit[current_scope_idx[i]][arrvar[k]] < Profit[current_scope_idx[i]][item1] &&
+                    weights[current_scope_idx[i]][arrvar[k]] < weights[current_scope_idx[i]][item1]) {
+                    //If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
+                    //Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
+                    //If it is dominated, we replace the last slope else we add a new one
+                    if (Slopes.empty() || Slopes.back()[0] != current_scope_idx[i] || Slopes.back()[3] >=Double((Profit[current_scope_idx[i]][item1] - Profit[current_scope_idx[i]][arrvar[k]])) /(weights[current_scope_idx[i]][item1] -weights[current_scope_idx[i]][arrvar[k]]))
+                        Slopes.push_back(
+                                      {Double(current_scope_idx[i]), Double(arrvar[k]), Double(item1),
+                                       Double((Profit[current_scope_idx[i]][item1] - Profit[current_scope_idx[i]][arrvar[k]])) /
+                                       (weights[current_scope_idx[i]][item1] - weights[current_scope_idx[i]][arrvar[k]])});
+                    else{
+                        Slopes.back() = {Double(current_scope_idx[i]), Double(arrvar[k]), Slopes.back()[2],
+                                     Double((Profit[current_scope_idx[i]][Slopes.back()[2]] - Profit[current_scope_idx[i]][arrvar[k]])) /
+                                     (weights[current_scope_idx[i]][Slopes.back()[2]] - weights[current_scope_idx[i]][arrvar[k]])};
+                        while (Slopes.size()>1 && Slopes.end()[-2][0]==Slopes.back()[0] && Slopes.back()[3]>=Slopes.end()[-2][3]){
+                            Slopes.end()[-2]= {Double(current_scope_idx[i]), Slopes.back()[1], Slopes.end()[-2][2],
+                                             Double((Profit[current_scope_idx[i]][Slopes.end()[-2][2]] - Profit[current_scope_idx[i]][Slopes.back()[1]])) /
+                                             (weights[current_scope_idx[i]][Slopes.end()[-2][2]] - weights[current_scope_idx[i]][Slopes.back()[1]])};
+                            Slopes.pop_back();
+                        }
+
+                    }
+                    item1 = arrvar[k];
+                }
+            }
+            //Compute a first Solution
+            if (Slopes.size() == 0 || Slopes.back()[0] != current_scope_idx[i]) {
+                OptSol[current_scope_idx[i]][item1] = 1;
+                *W += weights[current_scope_idx[i]][item1];
+                *c += Profit[current_scope_idx[i]][item1];
+            } else {
+                *W += weights[current_scope_idx[i]][Slopes.back()[1]];
+                OptSol[current_scope_idx[i]][Slopes.back()[1]] = 1;
+                *c += Profit[current_scope_idx[i]][Slopes.back()[1]];
+            }
+        }
+    }
+
+    //Find the optimal solution. Follow the order of the slopes and modify OptSol until we fill the constraint
+    void FindOpt(vector<vector<Double>> Slopes, Long *W,Cost *c,Double *xk, int *iter)
+    {
+        int currentVar;
+        Long capacityLeft;
+        while (*W < capacity) {
+            currentVar = int(Slopes[*iter][0]);
+            if (*W + weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]] >=capacity) {
+                capacityLeft = capacity - *W;
+                *xk = Double(capacityLeft) / (weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]]);
+                OptSol[currentVar][Slopes[*iter][2]] = *xk;
+                OptSol[currentVar][Slopes[*iter][1]] = 1 - *xk;
+                *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
+                *c += Ceil(*xk *(Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
+                assert(capacityLeft > 0);
+            } else {
+                assert(OptSol[currentVar][Slopes[*iter][1]]==1);
+                OptSol[currentVar][Slopes[*iter][1]] = 0;
+                OptSol[currentVar][Slopes[*iter][2]] = 1;
+                *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
+                *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
+                *iter=*iter+1;
+            }
+        }
+    }
+
+    //Do the Extension/Projection
+    void ExtensionProjection(vector<Double> y_i, Double y_cc)
+    {
+        for (int i = 0; i < carity; i++) {
+            for (int j = 0; j < nbValue[i]; ++j) {
+                    if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] == 1) {
+                        if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
+                            Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
+                        } else {
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
+                            scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                        }
+                    } else if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] == 0) {
+                        if (Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]])!=0)
+                            ExtOrProJ(current_scope_idx[i], current_val_idx[i][j],Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]));
+                    } else {
+                        if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
+                            Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
+                        } else {
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
+                            scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                        }
+                    }
+            }
+            scope[current_scope_idx[i]]->findSupport();
         }
     }
 
     void propagate()
     {
         // propagates from scratch the constraint
+        //auto start0 = std::chrono::system_clock::now();
         if (connected()) {
-            for(int i = 0; connected() && i < arity_; i++){
-                if (connected(i) && scope[i]->assigned()) {
-                    assign(i);
-                }
+            bool b=false;
+            for (int i = 0; connected() && i < arity_; i++) {
+                if (assigned[i]==0 && !isunassigned(i)){
+                    assign(i);}  /* indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..) */
+                else
+                    assert(assigned[i]>0 || scope[i]->getDomainSize()>1);
             }
-            if (connected()) {
+            if (connected() ) {
                 if (!verify()) {
                     THROWCONTRADICTION;
                 } else if (nonassigned > 3 && ToulBar2::LcLevel >= LC_AC) {
-                    if (ToulBar2::verbose >= 2)
-                        cout << " BOUND  PROPAGATION" << endl;
-                    //Bound propagation : we verify that each variable can be both assigned to 1 or 0 without breaking the constraint.
-                    int k = 0;
-                    bool b = false;
-                    while (k < arity_ && b == false) {
-                        if(weights[k]>0) {
-                            if (MaxWeight - weights[k] < capacity && scope[k]->unassigned()) {
-                                scope[k]->assign(1);
-                                if (ToulBar2::verbose >= 2)
-                                    cout << scope[k]->getName() << " has been assigned" << endl;
-                                b = true;
-                            } else
-                                k++;
-                        }
-                        else {
-                                if (MaxWeight + weights[k] < capacity && scope[k]->unassigned()) {
-                                    scope[k]->assign(0);
-                                    if (ToulBar2::verbose >= 2)
-                                        cout << scope[k]->getName() << " has been assigned" << endl;
-                                    b = true;
-                                } else
-                                    k++;
-                            }
-                    }
-                    if (connected() && ToulBar2::LcLevel >= LC_DAC && b == false) {
-                        if (ToulBar2::verbose >= 2)
-                            cout << "REDUCED COST PROJECTION" << endl;
-                        for (int i = 0; i < arity_; i++) {
-                            CostforKnapsack[i] = scope[i]->getCost(1) - scope[i]->getCost(0);
-                        }
-                        if (ToulBar2::verbose >= 2)
-                            cout << "capacity is : " << capacity << endl;
-                        Cost NegweightNegprofit=0; //Used in the case of cap>0
-                        Cost PosweightPosprofit=0; //Used in the case of cap<=0
-                        int nbmincost=0;
-                        // Compute weighted profit : p_i / w_i. MAX_COST and MIN_COST are used when the weighted profit is no relevant and we need
-                        // to impose some variables to be at the end or the beginning of the sorting.
-                        if(capacity>=0) {
-                            for (int i = 0; i < arity_; i++) {
-                                if (scope[i]->unassigned()) {
-                                    if (ToulBar2::verbose >= 2)
-                                        cout << scope[i]->getName() << " : " << CostforKnapsack[i] << " / "
-                                             << weights[i] << endl;
-                                    if ((weights[i] > 0 && CostforKnapsack[i] >= MIN_COST) ||
-                                        (weights[i] > 0 && CostforKnapsack[i] < MIN_COST)) {
-                                        Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
-                                    } else if (weights[i] < 0 && CostforKnapsack[i] >= MIN_COST) {
-                                        Weightedtprofit[i] = MAX_COST;
-                                    } else if (weights[i] < 0 && CostforKnapsack[i] < MIN_COST) {
-                                        Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
-                                        NegweightNegprofit -= weights[i];
-                                    }
-                                } else {
-                                    Weightedtprofit[i] = MAX_COST;
-                                }
-                            }
-                        }
-                        else{
-                            for (int i = 0; i < arity_; i++) {
-                                if (scope[i]->unassigned()) {
-                                    if (ToulBar2::verbose >= 2)
-                                        cout << scope[i]->getName() << " : " << CostforKnapsack[i] << " / "
-                                             << weights[i] << endl;
-                                    if (weights[i] < 0 && CostforKnapsack[i] < MIN_COST) {
-                                        Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
-                                    } else if (weights[i] < 0 && CostforKnapsack[i] >= MIN_COST) {
-                                        Weightedtprofit[i] = MIN_COST;
-                                        nbmincost++;
-                                    } else if (weights[i] > 0 && CostforKnapsack[i] > MIN_COST) {
-                                        Weightedtprofit[i] = Double(CostforKnapsack[i]) / weights[i];
-                                        PosweightPosprofit += weights[i];
-                                    } else if (weights[i] > 0 && CostforKnapsack[i] <= MIN_COST){
-                                        Weightedtprofit[i] = MAX_COST;
-                                    }
-                                } else {
-                                    Weightedtprofit[i] = MIN_COST;
-                                    nbmincost++;
-                                }
-                            }
-                        }
-                        if (ToulBar2::verbose >= 2){
-                            cout << "Unsorted variable by Weighted profit : ";
-                            for (int i = 0; i < int(arrvar.size()); i++) {
-                                cout << " " << arrvar[i];
-                                cout << "-" << Weightedtprofit[arrvar[i]];
-                            }
-                            cout << endl;
-                        }
-                        //Sort variables in ascendant or descendant order depending of the sign of the capacity
-                        //Use stable sort for reproducibility of the results
-                        if(capacity>=0)
-                            stable_sort(arrvar.begin(), arrvar.end(),[&](int x, int y) { return Weightedtprofit[x] < Weightedtprofit[y]; });
-                        else
-                            stable_sort(arrvar.begin(), arrvar.end(),[&](int x, int y) { return Weightedtprofit[x] > Weightedtprofit[y]; });
-
-                        if (ToulBar2::verbose >= 2){
-                            cout << "Sorted variable by weighted profit: ";
-                            for (int i = 0; i < int(arrvar.size()); i++) {
-                                cout << " " << arrvar[i];
-                                cout << "-" << Weightedtprofit[arrvar[i]];
-                            }
-                            cout << endl;}
-
-                        //Find splitting variable x_k 
-                        Long W = 0;
-                        int splitvar = -1;
-                        Cost c = 0; //Cost we will project on c_0, if the capacity is positive it is the profit sum of the variables before x_k
-                        // if the capacity is negative it is the profit sum of the variables after x_k 
-                        if(capacity >=0) {
-                            while (W < capacity + NegweightNegprofit) {
-                                splitvar = splitvar + 1;
-                                if (weights[arrvar[splitvar]] > 0)
-                                    W += weights[arrvar[splitvar]];
-                                else
-                                    W -= weights[arrvar[splitvar]];
-                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
-                                    c += CostforKnapsack[arrvar[splitvar]];
-                                else if (weights[arrvar[splitvar]] < 0)
-                                    c -= CostforKnapsack[arrvar[splitvar]];
-                            }
-                        }
-                        else{
-                            while (W >= capacity - PosweightPosprofit && splitvar != arity_-nbmincost-1) {
-                                splitvar = splitvar + 1;
-                                if (weights[arrvar[splitvar]] < 0)
-                                    W += weights[arrvar[splitvar]];
-                                else if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
-                                    W -= weights[arrvar[splitvar]];
-                                else
-                                    W += weights[arrvar[splitvar]];
-                            }
-                            for (int i=splitvar+1; i < arity_-nbmincost-1; i++) {
-                                if(CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]]>0)
-                                    c+=CostforKnapsack[arrvar[i]];
-                                else if(CostforKnapsack[arrvar[i]] < MIN_COST && weights[arrvar[i]]<0)
-                                    c-=CostforKnapsack[arrvar[i]];
-                            }
-                        }
-                        if (ToulBar2::verbose >= 2)
-                            cout << "splitvar : " << splitvar << endl;
-                        Double xk=0;
-                        // we add the profit of x_k 
-                        if(splitvar>-1) {
-                            Long capacityLeft;
-                            if(capacity >=0) {
-                                if (weights[arrvar[splitvar]] > 0)
-                                    capacityLeft = capacity + NegweightNegprofit - W + weights[arrvar[splitvar]];
-                                else
-                                    capacityLeft = capacity + NegweightNegprofit - W - weights[arrvar[splitvar]];
-
-                                xk = Double(capacityLeft) / weights[arrvar[splitvar]];
-                            }
-                            else if(W <= capacity - PosweightPosprofit){
-                                if (weights[arrvar[splitvar]] > 0)
-                                    capacityLeft = capacity - PosweightPosprofit - W - weights[arrvar[splitvar]];
-                                else
-                                    capacityLeft = capacity - PosweightPosprofit - W + weights[arrvar[splitvar]];
-
-                                xk = Double(capacityLeft) / weights[arrvar[splitvar]];
-                            }
-                            if (xk < 0)
-                                xk = -xk;
-                            assert(xk <= 1);
-                            assert(xk >= 0);
-                            if (capacity>=0) {
-                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
-                                    c = c - CostforKnapsack[arrvar[splitvar]] +
-                                        Ceil(CostforKnapsack[arrvar[splitvar]] * xk);
-                                else if (weights[arrvar[splitvar]] < 0)
-                                    c = c + CostforKnapsack[arrvar[splitvar]] +
-                                        Ceil(-CostforKnapsack[arrvar[splitvar]] * xk);
-                            }
-                            else if(W <= capacity - PosweightPosprofit){
-                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
-                                    c = c + Ceil(CostforKnapsack[arrvar[splitvar]] * (1-xk));
-                                else if (weights[arrvar[splitvar]] < 0)
-                                    c = c + Ceil(-CostforKnapsack[arrvar[splitvar]] * (1-xk));
-                            }
-                        }
-                        //If c<= 0 it means that we use only negative cost, it means we use only variables with cost on value 0
-                        if (c > 0) {
-                            //New value for p_k to obtain integer cost (p_k' might be decimal)
-                            Double Newkcost = 0.;
-                            Double epsi = 1e-5;
-                            if(splitvar != 0) {
-                                if (capacity >= 0)
-                                    Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]),
-                                                   max(Double(CostforKnapsack[arrvar[splitvar - 1]]) /
-                                                       weights[arrvar[splitvar - 1]] * weights[arrvar[splitvar]],
-                                                       Double((Trunc(xk * CostforKnapsack[arrvar[splitvar]]) + epsi) /
-                                                              xk)));
-                                else
-                                    Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]),
-                                                   max(Double(CostforKnapsack[arrvar[splitvar - 1]]) /
-                                                       weights[arrvar[splitvar - 1]] * weights[arrvar[splitvar]],
-                                                       Double((Trunc((1 - xk) * CostforKnapsack[arrvar[splitvar]]) +
-                                                               epsi) / (1 - xk))));
-
-                            }
-                            else {
-                                    if(capacity>=0)
-                                        Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]), Double((Trunc(xk * CostforKnapsack[arrvar[splitvar]]) + epsi) / xk));
-                                    else
-                                        Newkcost = min(Double(CostforKnapsack[arrvar[splitvar]]), Double((Trunc((1-xk) * CostforKnapsack[arrvar[splitvar]]) + epsi) / (1-xk)));
-                           }
-                            //--------------Test-------------
+                    get_current_scope();
 #ifndef NDEBUG
-                            Double Testprofit = 0;
-                            if(capacity>=0) {
-                                for (int i = 0; i < splitvar; i++) {
-                                    if (CostforKnapsack[arrvar[i]] > MIN_COST)
-                                        Testprofit += CostforKnapsack[arrvar[i]];
-                                    else if (weights[arrvar[i]] < 0)
-                                        Testprofit -= CostforKnapsack[arrvar[i]];
-                                }
-                                if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
-                                    Testprofit += xk * Newkcost;
-                                else
-                                    Testprofit -= xk * Newkcost;
-                            }
-                            else{
-                                for (int i = splitvar+1; i < arity_-nbmincost-1; i++) {
-                                    if (CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]]>0)
-                                        Testprofit += CostforKnapsack[arrvar[i]];
-                                    else if (weights[arrvar[i]] < 0 && weights[arrvar[i]]<0)
-                                        Testprofit -= CostforKnapsack[arrvar[i]];
-                                }
-                                if(W <= capacity - PosweightPosprofit){
-                                    if (CostforKnapsack[arrvar[splitvar]] > MIN_COST)
-                                        Testprofit += (1-xk) * Newkcost;
-                                    else
-                                        Testprofit -= (1-xk) * Newkcost;
-                                }
-                            }
-                            assert(Ceil(Testprofit) == Ceil(c));
+                    for (int i = 0; i < carity; ++i) {
+                        assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]].back()) || lastval0ok[current_scope_idx[i]]);
+                        assert(scope[current_scope_idx[i]]->getDomainSize()>1);
+                        assert(assigned[current_scope_idx[i]]==0);
+                        for (int j = 0; j < nbValue[i]; ++j) {
+                            assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                            assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]));
+                            assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]));
+                            assert(weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]>=weights[current_scope_idx[i]][current_val_idx[i][j]]);
+                            assert(weights[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]<=weights[current_scope_idx[i]][current_val_idx[i][j]]);
+                        }
+
+                        assert(nbValue[i]>1);
+                    }
 #endif
-                            //--------------------------
-                            if (ToulBar2::verbose >= 2)
-                                cout << "deltaCost : ";
-                            // Compute the reduced cost for each variable and add it to deltacost, depending of the sign of the capacity we proceed differently
-                            if(capacity>=0) {
-                                for (int i = 0; i < arity_; i++) {
-                                    if (scope[arrvar[i]]->unassigned()) {
-                                        if (i < splitvar) {
-                                            if (CostforKnapsack[arrvar[i]] > MIN_COST) {
-                                                deltaCosts1[arrvar[i]] += CostforKnapsack[arrvar[i]];
-                                                assert(CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(1));
-                                                scope[arrvar[i]]->extend(1, CostforKnapsack[arrvar[i]]);
-                                            } else if (CostforKnapsack[arrvar[i]] < MIN_COST) {
-                                                deltaCosts0[arrvar[i]] -= CostforKnapsack[arrvar[i]];
-                                                assert(-CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(0));
-                                                scope[arrvar[i]]->extend(0, -CostforKnapsack[arrvar[i]]);
-                                            }
-                                        } else if (CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]] > 0) {
-                                            deltaCosts1[arrvar[i]] += min( Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c));
-                                            assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * weights[arrvar[i]]), Double(c)) <= scope[arrvar[i]]->getCost(1));
-                                            scope[arrvar[i]]->extend(1, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c)));
-                                        } else if (CostforKnapsack[arrvar[i]] < MIN_COST && weights[arrvar[i]] < 0) {
-                                            deltaCosts0[arrvar[i]] += min( Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c));
-                                            assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * -weights[arrvar[i]]), Double(c)) <= scope[arrvar[i]]->getCost(0));
-                                            scope[arrvar[i]]->extend(0, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c)));
+
+                    //Bound propagation, return true if a variable has been assigned
+                    b=BoundConsistency();
+                    if(!b){
+#ifndef NDEBUG
+                        for (int i = 0; i < carity; ++i) {
+                            assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]].back()) || lastval0ok[current_scope_idx[i]]);
+                            assert(scope[current_scope_idx[i]]->getDomainSize()>1);
+                            assert(assigned[current_scope_idx[i]]==0);
+                            for (int j = 0; j < nbValue[i]; ++j) {
+                                assert(MaxWeight-weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]+weights[current_scope_idx[i]][current_val_idx[i][j]]>=capacity);
+                                assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                                assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]));
+                                assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]));
+                                assert(weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]>=weights[current_scope_idx[i]][current_val_idx[i][j]]);
+                                assert(weights[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]<=weights[current_scope_idx[i]][current_val_idx[i][j]]);
+                            }
+                            assert(nbValue[i]>1);
+                        }
+#endif
+                        // Return True if the last optimal solution has a cost of 0
+                        b=ComputeProfit();
+
+                        if (connected() && b) {
+                            Long W = 0;
+                            Cost c = -lb + assigneddeltas;
+                            ComputeSlopes(&W,&c); // temporary data structure for propagate
+
+                            if(ToulBar2::verbose >= 4) {
+                                cout << "cap is " << capacity << endl;
+                                for (int i = 0; i < carity; ++i) {
+                                        cout << scope[current_scope_idx[i]]->getName();
+                                        for (unsigned int j = 0; j < VarVal[current_scope_idx[i]].size(); ++j) {
+                                            cout << " " << j << " : " << Profit[current_scope_idx[i]][j] << "/" << weights[current_scope_idx[i]][j];
                                         }
-                                    }
+                                        cout << endl;
                                 }
                             }
-                            else{
-                                for (int i = 0; i < arity_; i++) {
-                                    if (scope[arrvar[i]]->unassigned()) {
-                                        if (i > splitvar) {
-                                            if (CostforKnapsack[arrvar[i]] > MIN_COST) {
-                                                deltaCosts1[arrvar[i]] += CostforKnapsack[arrvar[i]];
-                                                assert(CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(1));
-                                                scope[arrvar[i]]->extend(1, CostforKnapsack[arrvar[i]]);
-                                            } else if (CostforKnapsack[arrvar[i]] < MIN_COST) {
-                                                deltaCosts0[arrvar[i]] -= CostforKnapsack[arrvar[i]];
-                                                assert(-CostforKnapsack[arrvar[i]] <= scope[arrvar[i]]->getCost(0));
-                                                scope[arrvar[i]]->extend(0, -CostforKnapsack[arrvar[i]]);
-                                            }
-                                        } else if (CostforKnapsack[arrvar[i]] > MIN_COST && weights[arrvar[i]] > 0) {
-                                            deltaCosts1[arrvar[i]] += min( Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c));
-                                            assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * weights[arrvar[i]]), Double(c)) <=scope[arrvar[i]]->getCost(1));
-                                            scope[arrvar[i]]->extend(1, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * weights[arrvar[i]]), Double(c)));
-                                        } else if (CostforKnapsack[arrvar[i]] < MIN_COST && weights[arrvar[i]] < 0) {
-                                            deltaCosts0[arrvar[i]] += min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c));
-                                            assert(min(Ceil(Newkcost / weights[arrvar[splitvar]] * -weights[arrvar[i]]), Double(c)) <=scope[arrvar[i]]->getCost(0));
-                                            scope[arrvar[i]]->extend(0, min(Ceil(Newkcost / Double(weights[arrvar[splitvar]]) * -weights[arrvar[i]]), Double(c)));
+#ifndef NDEBUG
+                            for (unsigned int i = 0; i < Slopes.size(); ++i) {
+                                assert(Slopes[i].size() == 4);
+                                assert(Slopes[i][3] >= MIN_COST);
+                                assert(Slopes[i][3] < MAX_COST);
+                            }
+                            Long Sumw=0;
+                            for (int i = 0; i < carity; ++i) {
+                                Sumw+=weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]];
+                            }
+                            assert(Sumw==MaxWeight);
+                            assert(c < MAX_COST);
+                            assert(W >= 0);
+#endif
+                            //Sort the Slopes
+                            sort(Slopes.begin(), Slopes.end(),
+                                 [&](vector<Double> x, vector<Double> y) {
+                                     if (x[3] == y[3]) {
+                                         if (x[0]==y[0])
+                                             return weights[int(x[0])][int(x[1])]<=weights[int(y[0])][int(y[1])];
+                                         else
+                                             return scope[int(x[0])]->getDACOrder() < scope[int(y[0])]->getDACOrder();
+                                     }else
+                                         return x[3] < y[3];
+                                 });
+                            int iter = 0;
+                            Double xk = 0;
+
+                            //Find the optimal solution
+                            FindOpt(Slopes,&W,&c,&xk,&iter);
+                            assert(W >= capacity);
+                            assert(xk >= 0 && xk <= 1);
+                            assert(iter <= Slopes.size());
+                            assert(c > -1);
+#ifndef NDEBUG
+                            Double t = 0;
+                            double a = 0;
+                            double epsi = 0.00001;
+                            for (int i = 0; i < carity; ++i) {
+                                a = 0;
+                                for (int j = 0; j < OptSol[current_scope_idx[i]].size(); ++j) {
+                                    a += OptSol[current_scope_idx[i]][j];
+                                }
+                                assert(a < 1 + epsi && a > 1 - epsi);
+                                for (int j = 0; j < VarVal[current_scope_idx[i]].size(); ++j) {
+                                    t += OptSol[current_scope_idx[i]][j] * weights[current_scope_idx[i]][j];
+                                }
+                             }
+                            assert(Ceil(t) > capacity - epsi && Ceil(t) < capacity + epsi || iter == 0);
+#endif
+
+                            if (c > 0) {
+                                //Compute the dual variable y_cc and y_i using the optimal primal solution
+                                Double y_cc = 0;
+                                if(!Slopes.empty())
+                                     y_cc = Slopes[iter][3];
+                                if (xk == 0)
+                                    y_cc = 0;
+                                vector<Double> y_i;
+                                assert(y_cc >= MIN_COST);
+                                int k=0;
+                                for (int i = 0; i < carity; i++) {
+                                    k = 0;
+                                    while (OptSol[current_scope_idx[i]][current_val_idx[i][k]] == 0)
+                                        k++;
+                                    y_i.push_back(Profit[current_scope_idx[i]][current_val_idx[i][k]] - y_cc * weights[current_scope_idx[i]][current_val_idx[i][k]]);
+                                    assert(y_i[i] < MAX_COST);
+                                }
+                                //Use y_cc and y_i to extend/project the right cost
+                                ExtensionProjection(y_i,y_cc);
+
+                                if(ToulBar2::verbose >=4) {
+                                    cout<<"projected cost "<<c<<" LB : "<<lb-assigneddeltas<<endl;
+                                    for (int i = 0; i < carity; ++i) {
+                                        cout << " Delta " << scope[current_scope_idx[i]]->getName() << " : ";
+                                        for (unsigned int j = 0; j < VarVal[current_scope_idx[i]].size(); ++j) {
+                                            cout << " " << deltaCosts[current_scope_idx[i]][j];
                                         }
+                                        cout << endl;
                                     }
                                 }
+                                projectLB(c);
                             }
-                            if (ToulBar2::verbose >= 2) {
-                                cout << endl << "c :" << c << " lb : " << lb << endl;
-                            }
-                            projectLB(c);
                         }
                     }
-                } else if (nonassigned <= 3) {
-                    assert(connected());
-                    deconnect(); // this constraint is removed from the current WCSP problem
-                    if (ToulBar2::verbose >= 2)
-                        cout<<"EVALUATION 2"<<endl;
-                    projectNary();  // and replaced by a ternary constraint in extension
+                } else {
+                    get_current_scope();
+                    if (universal()) {
+                        deconnect();
+                        Cost TobeProjected = -lb + assigneddeltas;
+                        lb = MIN_COST;
+                        Cost mindelta;
+                        for (int i = 0; i < carity; i++) {
+                            mindelta=MAX_COST;
+                            if(scope[current_scope_idx[i]]->getDomainSize()>1) {
+                                for (int j = 0; j < nbValue[i]; ++j) {
+                                    if (mindelta > deltaCosts[current_scope_idx[i]][current_val_idx[i][j]])
+                                        mindelta = deltaCosts[current_scope_idx[i]][current_val_idx[i][j]];
+                                }
+                                TobeProjected += mindelta;
+                                for (int j = 0; j < nbValue[i] ; ++j) {
+                                    assert(mindelta <= deltaCosts[current_scope_idx[i]][j]);
+                                    if(current_val_idx[i][j]==(int)VarVal[current_scope_idx[i]].size() - 1)
+                                        Group_ProjectNVV(current_scope_idx[i],deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                                    else
+                                        scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][j],deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                                }
+                                scope[current_scope_idx[i]]->findSupport();
+                            }else{
+                                auto it1=find(VarVal[current_scope_idx[i]].begin(), VarVal[current_scope_idx[i]].end(), scope[current_scope_idx[i]]->getInf());
+                                if( it1 == VarVal[current_scope_idx[i]].end()) {
+                                    TobeProjected+=deltaCosts[current_scope_idx[i]].back();
+                                }else
+                                {
+                                    TobeProjected+=deltaCosts[current_scope_idx[i]][distance(VarVal[current_scope_idx[i]].begin(),it1)];
+                                }
+                            }
+                        }
+                        assert(TobeProjected >= MIN_COST && TobeProjected < MAX_COST);
+                        Constraint::projectLB(TobeProjected);
+                    }else if (nonassigned <= 3) {
+                        deconnect(); // this constraint is removed from the current WCSP problem
+                        if (ToulBar2::verbose >= 2)
+                            cout << "EVALUATION " << endl;
+                        projectNary(); // and replaced by a ternary constraint in extension
+                     }
                 }
             }
         }
     }
-
 
     bool verify()
     {
         // checks that propagation has been done correctly such that at least there exists one valid tuple with zero cost (called by WCSP::verify in Debug mode at each search node)
-        if(capacity<=MaxWeight)
+        if(capacity<=MaxWeight) {
             return true;
+        }
         else
             return false;
     }
-    void increase(int index) {}
-    void decrease(int index) {}
-    void remove(int index) {}
+    void increase(int index) override {
+        remove(index);
+    }
+    void decrease(int index) override {
+        remove(index);
+    }
+    void remove(int idx) override
+    {
+        if (isunassigned(idx)) {
+            get_current_scope();
+            propagate();
+        } else if (assigned[idx] < 2) {
+            assign(idx);
+        }
+    }
     void projectFromZero(int index)
     {
         //TODO: incremental cost propagation
+        if((int)current_scope_idx.size()!=carity )
+            get_current_scope();
+        else{
+            int sumVa=0;
+            for (int i = 0; i < carity; ++i) {
+                sumVa+=scope[current_scope_idx[i]]->getDomainSize();
+            }
+            if(sumVa!=LastDomSize)
+                get_current_scope();
+        }
+
         propagate();
     }
 
-    //bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL //TODO: checks if current EAC support has zero cost
-    //bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
-
-    void print(ostream& os)
+    bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
     {
-        os << endl
-           << this << " knapsack(";
-
-        int unassigned_ = 0;
+        Long W=0;
+        Cost res = -lb+assigneddeltas;
         for (int i = 0; i < arity_; i++) {
-            if (scope[i]->unassigned())
-                unassigned_++;
-            os << weights[i];
-            os << "*";
-            os << scope[i]->wcspIndex;
-            if (i < arity_ - 1)
-                os << " + ";
-        }
-        os << " >= " << capacity << ") / " << lb << " (";
-        for (int i = 0; i < arity_; i++) {
-            os << deltaCosts0[i];
-            if (i < arity_ - 1)
-                os << ",";
-        }
-        os << ") (";
-        for (int i = 0; i < arity_; i++) {
-            os << deltaCosts1[i];
-            if (i < arity_ - 1)
-                os << ",";
-        }
-        os << ") ";
-        if (ToulBar2::weightedDegree) {
-            os << "/" << getConflictWeight();
-            for (int i = 0; i < arity_; i++) {
-                os << "," << conflictWeights[i];
+            Value support = ((i == index) ? supportValue : scope[i]->getSupport());
+            auto it=find(VarVal[i].begin(), VarVal[i].end(), support);
+            if( it == VarVal[i].end()) {
+                res += deltaCosts[i].back();
+                W+=weights[i].back();
+            }
+            else
+            {
+                W+=weights[i][distance(VarVal[i].begin(),it)];
+                res+=deltaCosts[i][distance(VarVal[i].begin(),it)];
             }
         }
-        os << " arity: " << arity_;
-        os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
+        if(W < Original_capacity)
+            res=wcsp->getUb();
+        return (res==MIN_COST);
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, supportValue);
+        if (!result) {
+            if (index >= 0) {
+                getVar(index)->unsetFullEAC();
+            } else {
+                int a = arity();
+                for (int i = 0; i < a; i++) {
+                    getVar(i)->unsetFullEAC();
+                }
+            }
+        }
+        return result;
     }
 
     void dump(ostream& os, bool original = true)
     {
         bool iszerodeltas = (lb == MIN_COST);
-        for (vector<StoreCost>::iterator it = deltaCosts0.begin(); it != deltaCosts0.end(); ++it) {
-            Cost d = (*it);
-            if (d != MIN_COST) {
-                iszerodeltas = false;
-                break;
-            }
-        }
-        if (iszerodeltas) {
-            for (vector<StoreCost>::iterator it = deltaCosts1.begin(); it != deltaCosts1.end(); ++it) {
+        for (int i = 0; i < arity_; ++i) {
+            for (auto it = deltaCosts[i].begin(); it != deltaCosts[i].end(); ++it) {
                 Cost d = (*it);
                 if (d != MIN_COST) {
                     iszerodeltas = false;
@@ -646,15 +990,18 @@ public:
                 }
             }
         }
-
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
                 os << " " << scope[i]->wcspIndex;
             if (iszerodeltas) {
-                os << " " << -1 << " knapsack " << capacity;
+                os << " " << -1 << " knapsackp " << capacity;
                 for (int i = 0; i < arity_; i++) {
-                    os << " " << weights[i];
+                    os << " "<< VarVal[i].size();
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        os << " "<< VarVal[i][j];
+                        os << " " << weights[i][j];
+                    }
                 }
                 os << endl;
             } else {
@@ -678,7 +1025,7 @@ public:
                 os << " " << -1 << " knapsack " << capacity;
                 for (int i = 0; i < arity_; i++) {
                     if (scope[i]->unassigned())
-                        os << " " << weights[i];
+                        os << " " << weights[i][0];
                 }
                 os << endl;
             } else {
@@ -703,15 +1050,8 @@ public:
         os << "\"F_";
 
         bool iszerodeltas = (lb == MIN_COST);
-        for (vector<StoreCost>::iterator it = deltaCosts0.begin(); it != deltaCosts0.end(); ++it) {
-            Cost d = (*it);
-            if (d != MIN_COST) {
-                iszerodeltas = false;
-                break;
-            }
-        }
-        if (iszerodeltas) {
-            for (vector<StoreCost>::iterator it = deltaCosts1.begin(); it != deltaCosts1.end(); ++it) {
+        for (int i = 0; i < arity_; ++i) {
+            for (auto it = deltaCosts[i].begin(); it != deltaCosts[i].end(); ++it) {
                 Cost d = (*it);
                 if (d != MIN_COST) {
                     iszerodeltas = false;
@@ -737,15 +1077,25 @@ public:
                 os << scope[i]->getName();
                 printed = true;
             }
-            os << "],\n\"type\":\"knapsack\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
+            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
 
             if (iszerodeltas) {
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << weights[i];
+                    for (unsigned int j = 0; j < weights[i].size(); ++j) {
+                        os << weights[i][j];
+                    }
                     printed = true;
+                }
+                os << "],\n\t\"values\":[";
+                for (int i = 0; i < arity_; i++) {
+                    os << "[";
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        os << " " << VarVal[i][j];
+                    }
+                    os << "]";
                 }
             } else {
                 Tuple t;
@@ -780,15 +1130,25 @@ public:
                     os << scope[i]->getName();
                     printed = true;
                 }
-            os << "],\n\"type\":\"knapsack\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
+            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
 
             if (iszerodeltas) {
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << weights[i];
+                    for (unsigned int j = 0; j < weights[i].size(); ++j) {
+                        os << weights[i][j];
+                    }
                     printed = true;
+                }
+                os << "],\n\t\"values\":[";
+                for (int i = 0; i < arity_; i++) {
+                    os << "[";
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        os << " " << VarVal[i][j];
+                    }
+                    os << "]";
                 }
             } else {
                 Tuple t;

@@ -2136,6 +2136,9 @@ bool Solver::solve(bool first)
                                             for (Variable *x: wcsp->getDivVariables()) {
                                                 solutionmap[x->wcspIndex] = solutionvec[x->wcspIndex];
                                             }
+                                            int arity = wcsp->getDivVariables().size();
+                                            vector<int> scope;
+                                            string parameters;
                                             switch (ToulBar2::divMethod) {
                                             case 0:
                                                 ((WCSP*)wcsp)->addDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divVarsId[energies.size() - 1], true);
@@ -2145,6 +2148,16 @@ bool Solver::solve(bool first)
                                                 break;
                                             case 2:
                                                 ((WCSP*)wcsp)->addTDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divHVarsId[energies.size() - 1], true);
+                                                break;
+                                            case 3:
+                                                parameters.append(to_string(-(arity-(int)ToulBar2::divBound)));
+                                                for (Variable *x: wcsp->getDivVariables()) {
+                                                    scope.push_back(x->wcspIndex);
+                                                    parameters.append(" 1 ");
+                                                    parameters.append(to_string(solutionmap[x->wcspIndex]));
+                                                    parameters.append(" -1");
+                                                }
+                                                ((WCSP*)wcsp)->postKnapsackConstraint(scope, parameters, false, true);
                                                 break;
                                             default:
                                                 cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
@@ -2198,7 +2211,7 @@ bool Solver::solve(bool first)
                                                         ((WCSP*)wcsp)->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
                                                         break;
                                                     default:
-                                                        cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
+                                                        cerr << "Error: no such MDD diversity encoding method: " << ToulBar2::divMethod << endl;
                                                         exit(EXIT_FAILURE);
                                                     }
                                                 }

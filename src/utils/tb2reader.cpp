@@ -133,6 +133,7 @@ typedef struct {
  * - Global cost functions using a dedicated propagator:
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
  *     - knapsack \e capacity (\e weight)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator)
+ *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
  *
  * - Global cost functions using a flow-based propagator:
  *     - salldiff var|dec|decbi \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec and \e decbi keywords) cost semantic with a given \e cost per violation (\e decbi decomposes into a binary cost function complete network)
@@ -185,8 +186,9 @@ typedef struct {
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
  * - simple arithmetic hard constraint \f$x1 < x2\f$: \code 2 1 2 -1 < 0 0 \endcode
  * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
- * - clique cut on Boolean variables ({x0,x1,x2,x3}) such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
- * - knapsack constraint (2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
+ * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
+ * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
+ * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5\endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
@@ -1340,6 +1342,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     map<string, string> GCFTemplates = {
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
+        { "knapsackp", ":capacity:N:weightedvalues:[[vN]+]S" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1394,9 +1397,12 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
                 exit(EXIT_FAILURE);
             }
+        } else if (funcName == "knapsackp") {
+            string ps = paramsStream.str();
+            this->wcsp->postKnapsackConstraint(scopeArray, arity, paramsStream, false, true);
         } else if (funcName == "knapsack") {
             string ps = paramsStream.str();
-            this->wcsp->postKnapsackConstraint(scopeArray, arity, paramsStream);
+            this->wcsp->postKnapsackConstraint(scopeArray, arity, paramsStream, false, false);
         } else { // monolithic
             int nbconstr; // unused int for pointer ref
             this->wcsp->postGlobalConstraint(scopeArray, arity, funcName, paramsStream, &nbconstr, false);
@@ -2176,7 +2182,7 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
 
         // Hidden variables, only needed for divMethod 1 Hidden or 2 Ternary
-        if (ToulBar2::divMethod >= 1) {
+        if (ToulBar2::divMethod >= 1 && ToulBar2::divMethod <= 2) {
             divHVarsId.resize(ToulBar2::divNbSol); // make room for hidden state variables
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
@@ -2202,7 +2208,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     }
                 }
             }
-            if (ToulBar2::divMethod >= 1) {
+            if (ToulBar2::divMethod >= 1 && ToulBar2::divMethod <= 2) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
                     divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
@@ -2361,8 +2367,10 @@ void WCSP::read_legacy(const char* fileName)
                     decomposableGCF->addToCostFunctionNetwork(this);
                 } else if (gcname == "clique") {
                     postCliqueConstraint(scopeIndex, arity, file);
-                } else if (gcname == "knapsack") {
-                    postKnapsackConstraint(scopeIndex, arity, file);
+                } else if (gcname == "knapsackp") {
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true);
+                }else if (gcname == "knapsack") {
+                    postKnapsackConstraint(scopeIndex, arity, file, false, false);
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
@@ -2520,6 +2528,18 @@ void WCSP::read_legacy(const char* fileName)
                     EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
                     vector<Cost> costs((size_t)x->getDomainInitSize() * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize(), MIN_COST);
                     postTernaryConstraint(i, j, k, costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
+                } else if (gcname == "knapsackp") {
+                    int scopeIndex[3];
+                    scopeIndex[0] = i;
+                    scopeIndex[1] = j;
+                    scopeIndex[2] = k;
+                    postKnapsackConstraint(scopeIndex,arity,file, false, true);
+                } else if (gcname == "knapsack") {
+                    int scopeIndex[3];
+                    scopeIndex[0] = i;
+                    scopeIndex[1] = j;
+                    scopeIndex[2] = k;
+                    postKnapsackConstraint(scopeIndex,arity,file, false, false);
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
@@ -2622,11 +2642,16 @@ void WCSP::read_legacy(const char* fileName)
                     file >> funcparam5;
                     file >> funcparam6;
                     postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
+                } else if(funcname=="knapsackp"){
+                    int scopeIndex[2];
+                    scopeIndex[0] = i;
+                    scopeIndex[1] = j;
+                    postKnapsackConstraint(scopeIndex,arity,file, false, true);
                 } else if(funcname=="knapsack"){
                     int scopeIndex[2];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
-                    postKnapsackConstraint(scopeIndex,arity,file);
+                    postKnapsackConstraint(scopeIndex,arity,file, false, false);
                 } else{
                     int scopeIndex[2];
                     scopeIndex[0] = i;
@@ -2656,12 +2681,15 @@ void WCSP::read_legacy(const char* fileName)
                     if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                         decomposableGCF->addToCostFunctionNetwork(this);
+                    } else if(gcname=="knapsackp"){
+                        int scopeIndex[1];
+                        scopeIndex[0] = i;
+                        postKnapsackConstraint(scopeIndex,arity,file,false,true);
                     } else if(gcname=="knapsack"){
                         int scopeIndex[1];
                         scopeIndex[0] = i;
-                        postKnapsackConstraint(scopeIndex,arity,file);
-                    }
-                    else { // monolithic global cost functions
+                        postKnapsackConstraint(scopeIndex,arity,file,false,false);
+                    } else { // monolithic global cost functions
                         postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                     }
                 } else {

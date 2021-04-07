@@ -912,7 +912,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default value is " << ToulBar2::allSolutions << ")";
     cout << endl;
     cout << "   -div=[integer] : minimum Hamming distance between diverse solutions (use in conjunction with -a=integer with a limit of " << maxdivnbsol << " solutions) (default value is " << ToulBar2::divBound << ")" << endl;
-    cout << "   -divm=[integer] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary (default value is " << ToulBar2::divMethod << ")" << endl;
+    cout << "   -divm=[integer] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary 3:Knapsack (default value is " << ToulBar2::divMethod << ")" << endl;
     cout << "   -mdd=[integer] : maximum relaxed MDD width for diverse solution global constraint (default value is " << ToulBar2::divWidth << ")" << endl;
     cout << "   -mddh=[integer] : MDD relaxation heuristic: 0: random, 1: high div, 2: small div, 3: high unary costs (default value is " << ToulBar2::divRelax << ")" << endl;
     cout << "   -D : approximate satisfiable solution count with BTD";

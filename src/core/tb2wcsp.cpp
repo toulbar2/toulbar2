@@ -1121,8 +1121,8 @@ void WCSP::addDivConstraint(vector<Variable*>& divVars, unsigned int distance, m
 
     EnumeratedVariable* c;
     EnumeratedVariable* cp = NULL;
-    int cId;
-    int cpId;
+    int cId = -1;
+    int cpId = -1;
 
     bool first_pos = true;
 
@@ -1822,11 +1822,6 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
-    } else {
-        if (gcname == "knapsack") {
-            postKnapsackConstraint(scopeIndex, arity, file);
-            return -1;
-        }
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
@@ -1893,6 +1888,9 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
         for (int j = i + 1; j < arity; j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
+#ifdef CLIQUE2KNAPSACK
+    return postKnapsackConstraint(scopeIndex,arity,file,true,true);
+#else
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
@@ -1914,65 +1912,127 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
         cc->propagate();
     }
     return cc->wcspIndex;
+#endif
 }
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file)
+
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp)
 {
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    //Eliminate variable with weigth 0.
+    //Eliminate variable with weight 0
     vector<int> Weightzero;
-    vector<Long> weights;
-    int nbzeros = 0;
+    vector<Long> TempWeights;
+    vector<vector<Long>> weights;
     Long readw;
+    int readv1;
     Long capacity;
-    Long MaxWeight = 0;
-    Long NegCapacity = 0;
-
-    file >> capacity;
-
-    bool isclause = (capacity <= 1 && arity > 3);
-    Long clausecapacity = 1;
+    Long MaxWeight=0;
+    int skip;
+    unsigned int size;
+    int readnbval;
+    Long minweight;
+    vector<int> TempVarVal,TempNotVarVal;
+    vector<vector<int>> VarVal,NotVarVal;
     vector<tValue> clausetuple(arity, 0);
-
-    for (int i = 0; i != arity; ++i) {
-        file >> readw;
-        isclause &= (readw == 1 || readw == -1);
-        if (readw == -1) {
-            clausetuple[i] = 1;
-            clausecapacity--;
-        }
-        weights.push_back(readw);
-        if (weights[i] == 0) {
-            Weightzero.push_back(i);
-            nbzeros++;
-        } else if (weights[i] < 0)
-            NegCapacity -= weights[i];
-        else
-            MaxWeight += weights[i];
-    }
-    isclause &= (clausecapacity == capacity);
-    int k = 0;
-    for (int i = 0; i < nbzeros; i++) {
-        weights.erase(weights.begin() + Weightzero[i] - k);
-        for (int j = Weightzero[i] - k; j < arity; j++)
-            *(scopeIndex + j) = *(scopeIndex + j + 1);
-        k++;
-        arity--;
-    }
+    bool isclause=0;
     vector<EnumeratedVariable*> scopeVars(arity);
-    for (int i = 0; i < arity; i++)
+    int ar=arity;
+    if (!isclique) {
+        file >> capacity;
+    } else {
+        capacity=-1;
+        file >> skip;
+    }
+    for (int i = 0; i < ar; i++)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+    int nbdel=0;
+    for (int i = 0; i < ar; ++i) {
+        if (!kp) {
+            file >> readw;
+            TempVarVal.clear();
+            TempWeights.clear();
+            TempNotVarVal.clear();
+            minweight = 0;
+            if (readw != 0) {
+                if (readw < minweight)
+                    minweight = readw;
+                TempWeights.push_back(readw);
+                TempVarVal.push_back(1);
+            }
+        } else {
+            file >> readnbval;
+            TempVarVal.clear();
+            TempWeights.clear();
+            TempNotVarVal.clear();
+            minweight = 0;
+            for (int j = 0; j < readnbval; ++j) {
+                file >> readv1;
+                if (!isclique) {
+                    file >> readw;
+                    if (readw != 0) {
+                        if (readw < minweight)
+                            minweight = readw;
+                        TempVarVal.push_back(readv1);
+                        TempWeights.push_back(readw);
+                    }
+                } else {
+                    minweight=-1;
+                    TempVarVal.push_back(readv1);
+                    TempWeights.push_back(-1);
+                }
+            }
+        }
+        size = scopeVars[i]->getDomainSize();
+        if (size != TempVarVal.size()) {
+            TempWeights.push_back(0);
+            Value *VV = new Value[size];
+            scopeVars[i]->getDomain(VV);
+            for (unsigned int j = 0; j < size; j++) {
+                if (find(TempVarVal.begin(), TempVarVal.end(), VV[j]) == TempVarVal.end())
+                    TempNotVarVal.push_back(VV[j]);
+            }
+            TempVarVal.push_back(TempNotVarVal[0]);
+            if (minweight < 0) {
+                for (unsigned int j = 0; j < TempWeights.size(); j++)
+                    TempWeights[j] -= minweight;
+                capacity -= minweight;
+            }
+        } else {
+            for (unsigned int j = 0; j < TempWeights.size(); j++)
+                TempWeights[j] -= minweight;
+            capacity -= minweight;
+        }
+        if (TempWeights.size() > 1) {
+            MaxWeight += *max_element(TempWeights.begin(), TempWeights.end());
+            assert(*max_element(TempWeights.begin(), TempWeights.end())>0);
+            weights.push_back(TempWeights);
+            VarVal.push_back(TempVarVal);
+            NotVarVal.push_back(TempNotVarVal);
+        } else {
+            scopeVars.erase(scopeVars.begin() + i - nbdel);
+            arity--;
+            nbdel++;
+        }
+    }
+    for (unsigned int i = 0; i < weights.size(); ++i) {
+        for (unsigned int j = 0; j < weights[i].size(); ++j) {
+            if (weights[i][j] > capacity) {
+                MaxWeight = MaxWeight - weights[i][j] + capacity;
+                weights[i][j] = capacity;
+            }
+        }
+    }
+    TempVarVal.clear();
     AbstractNaryConstraint* cc = NULL;
     if (isclause) {
         assert(arity == (int)clausetuple.size());
-        if (ToulBar2::verbose >= 3)
-            cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
+        if (ToulBar2::verbose >= 3) cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
         cc = new WeightedClause(this, scopeVars.data(), arity, getUb(), clausetuple);
-    } else {
-        cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight, NegCapacity);
+    } else{
+        cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight,VarVal,NotVarVal);
     }
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);

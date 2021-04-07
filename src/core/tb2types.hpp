@@ -661,7 +661,7 @@ public:
     static unsigned int divNbSol;
     static unsigned int divBound;
     static unsigned int divWidth;
-    static unsigned int divMethod; // 0: Dual, 1: Hidden, 2: Ternary
+    static unsigned int divMethod; // 0: Dual, 1: Hidden, 2: Ternary, 3: Knapsack
     static unsigned int divRelax; // 0: random, 1: high div, 2: small div, 3: high unary costs
 
     static char* varOrder;

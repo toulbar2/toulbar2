@@ -130,6 +130,37 @@ WeightedAmong::~WeightedAmong()
 
 void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
 {
+    if (semantics=="hard" || baseCost >= wcsp->getUb()) {
+        vector<int> scopevec;
+        for (int i=0; i<arity; i++) {
+            scopevec.push_back(scope[i]);
+        }
+        if (lb>0) {
+            string params;
+            params.append(to_string(lb)+ " ");
+            for (int i=0; i<arity; i++) {
+                params.append(to_string(values.size())+" ");
+                for (int e: values) {
+                    params.append( to_string(e) + " 1 ");
+                }
+            }
+            if (ToulBar2::verbose >= 1) cout  << "wamong => knapsackp " << params << endl;
+            wcsp->postKnapsackConstraint(scopevec, params, false, true);
+        }
+        if ((int)ub<arity) {
+            string params;
+            params.append("-" + to_string(ub)+ " ");
+            for (int i=0; i<arity; i++) {
+                params.append( to_string(values.size()) + " ");
+                for (int e: values) {
+                    params.append( to_string(e)+" -1 ");
+                }
+            }
+            if (ToulBar2::verbose >= 1) cout  << "wamong => knapsackp " << params << endl;
+            wcsp->postKnapsackConstraint(scopevec, params, false, true);
+        }
+        return;
+    }
     bool VERBOSE = false;
     bool VVERBOSE = false;
     int nbVariableCFN = wcsp->numberOfVariables();
