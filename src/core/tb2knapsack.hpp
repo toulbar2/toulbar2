@@ -256,7 +256,6 @@ public:
             assert(VarVal[i].size()==weights[i].size());
         }
 #ifndef NDEBUG
-
         Long Sumw=0;
         for (int i = 0; i < arity_; ++i) {
             Sumw+=weights[i][GreatestWeightIdx[i]];
@@ -401,7 +400,7 @@ public:
             if(m>MIN_COST)
                 delta+=m;
         }
-        Cost sumdelta = ((lb > MIN_COST) ?  delta-lb : MIN_COST);
+        Cost sumdelta = ((lb-assigneddeltas > MIN_COST) ?  delta-lb+assigneddeltas : MIN_COST);
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
         else
@@ -482,6 +481,7 @@ public:
             }
         }
     }
+
     //Return True if a value has been deleted else return False
     bool BoundConsistency()
     {
@@ -505,24 +505,19 @@ public:
                             } else {
                                 scope[currentvar]->remove(VarVal[currentvar][current_val_idx[k][k2]]);
                             }
+                            if(!connected() || assigned[currentvar]>0)
+                                b= true;
                         }
                         k2++;
                     }
-                    if(connected() && assigned[currentvar]==0 && !isunassigned(currentvar)) {
-                        assign(currentvar);
-                        b = true;
-                    }
-                    if(deconnected() || assigned[currentvar]>0 || !isunassigned(currentvar)){
-                        b=true;
-                    }else{
-                        get_current_scope();
-                    }
+                    b=true;
                 }
             }
             k++;
         }
         return b;
     }
+
     bool ComputeProfit()
     {
         Cost verifopt=-lb+assigneddeltas;   //Used to check if the last optimal solution has still a cost of 0
@@ -849,7 +844,9 @@ public:
                                         cout << endl;
                                     }
                                 }
+                                assert(c>0);
                                 projectLB(c);
+                                assert(getMaxFiniteCost()>=0);
                             }
                         }
                     }
