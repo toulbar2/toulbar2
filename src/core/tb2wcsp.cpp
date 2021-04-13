@@ -569,6 +569,10 @@ void tb2checkOptions()
         cerr << "Error: VAC-based upper bound probing heuristic requires VAC at least in preprocessing (add -A option)." << endl;
         exit(1);
     }
+    if (ToulBar2::useRASPS && ToulBar2::divNbSol > 1) {
+        cerr << "Error: VAC-based upper bound probing heuristic is not compatible with diverse solutions (remove -rasps option)." << endl;
+        exit(1);
+    }
     if (ToulBar2::VACthreshold && !ToulBar2::vac) {
         cerr << "Error: VAC threshold heuristic requires VAC during search (add -A option)." << endl;
         exit(1);
@@ -1780,6 +1784,18 @@ void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, ve
         for (unsigned int j = i + 1; j < scopeIndex.size(); j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
+    assert(scopeIndex.size() == values.size());
+    if (method==3) {
+        string parameters;
+        parameters.append(to_string(-((int)scopeIndex.size()-(int)distance)));
+        for (unsigned int i=0; i<scopeIndex.size(); i++) {
+            parameters.append(" 1 ");
+            parameters.append(to_string(values[i]));
+            parameters.append(" -1");
+        }
+        postKnapsackConstraint(scopeIndex, parameters, false, true);
+        return;
+    }
     WeightedDiverse* decomposableGCF = new WeightedDiverse(scopeIndex.size(), &scopeIndex[0]);
     decomposableGCF->setSemantics("hard");
     decomposableGCF->setBaseCost(getUb());
