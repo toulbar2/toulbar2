@@ -992,9 +992,9 @@ public:
             for (int i = 0; i < arity_; i++)
                 os << " " << scope[i]->wcspIndex;
             if (iszerodeltas) {
-                os << " " << -1 << " knapsackp " << capacity;
+                os << " " << -1 << " knapsackp " << Original_capacity;
                 for (int i = 0; i < arity_; i++) {
-                    os << " "<< VarVal[i].size();
+                    os << " " << VarVal[i].size();
                     for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
                         os << " "<< VarVal[i][j];
                         os << " " << weights[i][j];
@@ -1021,8 +1021,13 @@ public:
             if (iszerodeltas) {
                 os << " " << -1 << " knapsack " << capacity;
                 for (int i = 0; i < arity_; i++) {
-                    if (scope[i]->unassigned())
-                        os << " " << weights[i][0];
+                    if (scope[i]->unassigned()) {
+                        os << " " << VarVal[i].size();
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
+                            os << " " << weights[i][0];
+                        }
+                    }
                 }
                 os << endl;
             } else {
@@ -1074,24 +1079,21 @@ public:
                 os << scope[i]->getName();
                 printed = true;
             }
-            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
+            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << Original_capacity << ",\n\t\"weightedvalues\":[";
 
             if (iszerodeltas) {
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    for (unsigned int j = 0; j < weights[i].size(); ++j) {
-                        os << weights[i][j];
+                    os << "[";
+                    bool printedbis = false;
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        if (printedbis) os << ",";
+                        os << VarVal[i][j] << "," << weights[i][j];
+                        printedbis=true;
                     }
                     printed = true;
-                }
-                os << "],\n\t\"values\":[";
-                for (int i = 0; i < arity_; i++) {
-                    os << "[";
-                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                        os << " " << VarVal[i][j];
-                    }
                     os << "]";
                 }
             } else {
@@ -1127,25 +1129,24 @@ public:
                     os << scope[i]->getName();
                     printed = true;
                 }
-            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weights\":[";
+            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weightedvalues\":[";
 
             if (iszerodeltas) {
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
-                    if (printed)
-                        os << ",";
-                    for (unsigned int j = 0; j < weights[i].size(); ++j) {
-                        os << weights[i][j];
+                    if (scope[i]->unassigned()) {
+                        if (printed)
+                            os << ",";
+                        os << "[";
+                        bool printedbis = false;
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            if (printedbis) os << ",";
+                            os << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j];
+                            printedbis=true;
+                        }
+                        printed = true;
+                        os << "]";
                     }
-                    printed = true;
-                }
-                os << "],\n\t\"values\":[";
-                for (int i = 0; i < arity_; i++) {
-                    os << "[";
-                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                        os << " " << VarVal[i][j];
-                    }
-                    os << "]";
                 }
             } else {
                 Tuple t;
