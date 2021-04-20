@@ -134,10 +134,17 @@ public:
     }
     void incConflictWeight(Constraint* from)
     {
-        //assert(fromElim1==NULL);
-        //assert(fromElim2==NULL);
+        assert(from!=NULL);
         if (from == this) {
-            Constraint::incConflictWeight(1);
+            if (deconnected() || nonassigned==arity_) {
+                Constraint::incConflictWeight(1);
+            } else {
+                for (int i = 0; i < arity_; i++) {
+                    if (connected(i)) {
+                        conflictWeights[i]++;
+                    }
+                }
+            }
         } else if (deconnected()) {
             for (int i = 0; i < from->arity(); i++) {
                 int index = getIndex(from->getVar(i));
@@ -148,7 +155,6 @@ public:
             }
         }
     }
-
     void resetConflictWeight()
     {
         conflictWeights.assign(conflictWeights.size(), 0);

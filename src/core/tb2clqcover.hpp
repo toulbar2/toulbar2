@@ -78,8 +78,7 @@ public:
     }
     void incConflictWeight(Constraint* from) override
     {
-        //assert(fromElim1==NULL);
-        //assert(fromElim2==NULL);
+        assert(from!=NULL);
         if (from == this) {
             Constraint::incConflictWeight(1);
         } else if (deconnected()) {
