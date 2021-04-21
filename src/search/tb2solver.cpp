@@ -2314,21 +2314,23 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         return;
     }
     if (ToulBar2::allSolutions) {
-        if (ToulBar2::approximateCountingBTD)
-            cout << "Number of solutions    : ~= " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
-        else {
-            if (!isComplete)
-                cout << "Number of solutions    : >=  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
-            else
-                cout << "Number of solutions    : =  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
+        if (ToulBar2::verbose >=0) {
+            if (ToulBar2::approximateCountingBTD)
+                cout << "Number of solutions    : ~= " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
+            else {
+                if (!isComplete)
+                    cout << "Number of solutions    : >=  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
+                else
+                    cout << "Number of solutions    : =  " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
+            }
+            if (ToulBar2::btdMode >= 1) {
+                cout << "Number of #goods       :    " << nbSGoods << endl;
+                cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
+                cout << "Size of sep            :    " << tailleSep << endl;
+            }
+            cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+            cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
         }
-        if (ToulBar2::btdMode >= 1) {
-            cout << "Number of #goods       :    " << nbSGoods << endl;
-            cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
-            cout << "Size of sep            :    " << tailleSep << endl;
-        }
-        cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
-        cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
         return;
     }
 
