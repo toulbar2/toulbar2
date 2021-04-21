@@ -1,6 +1,6 @@
 language: cpp
 compiler: clang
-dist: trusty
+dist: xenial
 
 addons:
   apt:
