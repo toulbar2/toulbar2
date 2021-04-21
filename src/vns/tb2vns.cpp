@@ -10,6 +10,7 @@
 #include "tb2vns.hpp"
 #include "core/tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
+#include <random>
 
 using namespace boost;
 
@@ -177,11 +178,14 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     zone neighborhood;
     vector<int> z(l->unassignedVars->getSize());
     unsigned int j = 0;
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
         z[j] = *iter;
         ++j;
     }
-    random_shuffle(z.begin(), z.end());
+    shuffle(z.begin(), z.end(),g);
     assert(neighborhood_size <= z.size());
     neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
     return neighborhood;
@@ -190,7 +194,10 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, z
 {
     zone neighborhood;
     vector<int> zv(z.begin(), z.end());
-    random_shuffle(zv.begin(), zv.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    shuffle(zv.begin(), zv.end(), g);
     assert(neighborhood_size <= zv.size());
     neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
     return neighborhood;
@@ -198,6 +205,8 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, z
 
 void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
 
     this->l = l_;
     this->wcsp = wcsp_;
@@ -235,7 +244,7 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         clusters.pop_back();
     }
     file = clusters;
-    random_shuffle(file.begin(), file.end());
+    shuffle(file.begin(), file.end(),g);
     insideHeuristic = new RandomNeighborhoodChoice();
     precK = -1;
     insideHeuristic->init(wcsp, l);
@@ -243,12 +252,15 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 
 const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
     precK = neighborhood_size;
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;
-        random_shuffle(file.begin(), file.end());
+        shuffle(file.begin(), file.end(), g);
     }
     assert(file.size() > 0);
     int c = file.back();
@@ -268,7 +280,7 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 //merge neighbors of current cluster
-                random_shuffle(neighbors.begin(), neighbors.end());
+                shuffle(neighbors.begin(), neighbors.end(),g);
                 //add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
@@ -303,9 +315,12 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size, zone z
 
 bool RandomClusterChoice::incrementK()
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     if (file.size() == 0) {
         file = clusters;
-        random_shuffle(file.begin(), file.end());
+        shuffle(file.begin(), file.end(), g);
         return true;
     }
 
@@ -314,6 +329,9 @@ bool RandomClusterChoice::incrementK()
 
 void ParallelRandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     this->l = l_;
     this->wcsp = wcsp_;
     maxClusterSize = 0;
@@ -350,7 +368,7 @@ void ParallelRandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         clusters.pop_back();
     }
     file = clusters;
-    random_shuffle(file.begin(), file.end());
+    shuffle(file.begin(), file.end(), g);
     insideHeuristic = new RandomNeighborhoodChoice();
     precK = -1;
     insideHeuristic->init(wcsp, l);
@@ -358,6 +376,9 @@ void ParallelRandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 
 const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     precK = neighborhood_size;
     set<int> selclusters;
     int c = file.back();
@@ -375,7 +396,7 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 //merge neighbors of current cluster
-                random_shuffle(neighbors.begin(), neighbors.end());
+                shuffle(neighbors.begin(), neighbors.end(), g);
                 //add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
@@ -410,6 +431,9 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
 
 const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int CurrentCluster, size_t neighborhood_size)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     precK = neighborhood_size;
     set<int> selclusters;
     selclusters.insert(CurrentCluster);
@@ -425,7 +449,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 //merge neighbors of current cluster
-                random_shuffle(neighbors.begin(), neighbors.end());
+                shuffle(neighbors.begin(), neighbors.end(), g);
                 //add them to list
                 for (vector<int>::iterator it = neighbors.begin(); it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -452,6 +476,9 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
 
 const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int CurrentCluster, uint number, size_t NeighborhoodSize)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     precK = NeighborhoodSize;
     set<int> selclusters;
     selclusters.insert(CurrentCluster);
@@ -468,7 +495,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 //merge neighbors of current cluster
-                random_shuffle(neighbors.begin(), neighbors.end());
+                shuffle(neighbors.begin(), neighbors.end(), g);
                 //add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
@@ -502,9 +529,12 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
 
 bool ParallelRandomClusterChoice::incrementK()
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     if (file.size() == 0) {
         file = clusters;
-        random_shuffle(file.begin(), file.end());
+        shuffle(file.begin(), file.end(), g);
         return true;
     }
 
@@ -518,6 +548,9 @@ vector<int> ParallelRandomClusterChoice::getClustersIndex()
 
 uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     zone z = m_graph[c].vars;
     uint numclu = 0;
     if (number > 0) {
@@ -531,7 +564,7 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 //merge neighbors of current cluster
-                random_shuffle(neighbors.begin(), neighbors.end());
+                shuffle(neighbors.begin(), neighbors.end(), g);
                 //add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
