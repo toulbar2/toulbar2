@@ -3,7 +3,12 @@
 # version 0.9 -# David allouche 17/10/10
 ##########################################
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.9)
+IF(APPLE)
+    cmake_minimum_required(VERSION 3.13)
+ENDIF(APPLE)
+cmake_policy(SET CMP0054 NEW)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
@@ -15,7 +20,7 @@ set (MAINTAINER "David Allouche <david.allouche@inrae.fr>") #used in packaging
 set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
 # default name for packaging
 SET(Toulbar2_NAME "toulbar2")
-
+SET(CMAKE_MACOSX_RPATH 1)
 ##########################################
 # PROJECT NAME
 ##########################################
@@ -66,7 +71,11 @@ MARK_AS_ADVANCED(FORCE BENCH)
 #Default profile for compilation
 ##########################################
 IF(APPLE) # Find homebrew libraries first
+  message(STATUS "Apple/MacOS system detected. Selecting homebrew libraries first.")
   set(CMAKE_PREFIX_PATH /usr/local)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
+  SET(STATIC OFF)
+  SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -99,17 +108,6 @@ if(verbose)
 endif(verbose)
 
 ##########################################
-# Compile Options on recent 64 bytes Macs. 
-# thanks to alex rudnick 
-##########################################
-IF(APPLE)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
-  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64 -undefined dynamic_lookup" )
-  SET(STATIC OFF)
-  SET(WITH_MEM_JEMALLOC OFF)
-ENDIF(APPLE)
-
-##########################################
 # default OPTION for toulbar2 test  phase
 ##########################################
 SET(FOPT "test-opt.cmake" CACHE STRING "filename containing local options used for validation")
@@ -139,7 +137,7 @@ IF(STATIC)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --enable-static -static-libgcc -static-libstdc++")   # -flto 
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
-  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall")   # -flto
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
 ENDIF(STATIC)
 
 ##########################################
@@ -317,6 +315,10 @@ IF(LIBTB2)
     SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES OUTPUT_NAME "pytoulbar2")
     SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES SUFFIX ${Python3_SUFFIX})
     SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+    IF(APPLE)
+        target_link_options(pytoulbar2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
+    ENDIF(APPLE)
+
 ### New cmake, python and pybind11
 #    pybind11_add_module(pytoulbar2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
 ###

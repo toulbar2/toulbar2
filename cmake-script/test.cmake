@@ -37,7 +37,6 @@ ELSE (${Boost_rev} VERSION_GREATER "1.65.0")
 ENDIF (${Boost_rev} VERSION_GREATER "1.65.0")
 
 
-	MESSAGE(STATUS "##############TEST liste building #############")
 FOREACH (UTEST ${validation_file})
 	#reset ub end enum from the previous iteration
         UNSET(UB) 
@@ -55,11 +54,9 @@ FOREACH (UTEST ${validation_file})
 	  EXECUTE_PROCESS(COMMAND echo "1+(${TUB})" COMMAND bc OUTPUT_VARIABLE UBP)
           SET (OpTub "-ub" )
           SET (UBP "${OpTub}=${UBP}" )
-	  MESSAGE(STATUS "UB found ==> ${UB} " )
 
 	ELSE()
 	  UNSET(UBP)
-	  MESSAGE(STATUS "${UBF} does not exist")
 	ENDIF()
 
         IF (EXISTS ${LBF})
@@ -69,17 +66,14 @@ FOREACH (UTEST ${validation_file})
           EXECUTE_PROCESS(COMMAND echo "(${TLB})-1" COMMAND bc OUTPUT_VARIABLE LBP)
           SET (OpTub "-ub" )
           SET (UBP "${OpTub}=${LBP}" )
-          MESSAGE(STATUS "LB found ==> ${LB} " )
 
         ELSE()
           UNSET(LBP)
-          MESSAGE(STATUS "${LBF} does not exist")
         ENDIF()
 
 	IF (EXISTS ${ENUM_file})
           FILE(READ ${ENUM_file} TENUM)
 	  STRING(REPLACE "\n" ""  ENUM ${TENUM})
-	  MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} found ENUM variable loaded ")
 	ELSE()
 	set(ENUM)
         ENDIF()
@@ -87,25 +81,20 @@ FOREACH (UTEST ${validation_file})
 	IF (EXISTS ${ENUM_file})
           FILE(READ ${ENUM_file} TENUM)
 	  STRING(REPLACE "\n" ""  ENUM ${TENUM})
-	  MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} found ENUM variable loaded ")
 	ELSE()
 	  set(ENUM)
         ENDIF()
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	  include (${TPATH}/${FOPT})
-	  MESSAGE(STATUS "file: ${TPATH}/${FOPT} found.")
 	ELSE()
 	  # init default value :
 	  set (command_line_option ${Default_test_option} )
 	  set (test_timeout ${Default_test_timeout})
 	  set (test_regexp  ${Default_test_regexp})
 	  
-	  MESSAGE(STATUS "file: ${TPATH}/${FOPT} not found ==>
-	default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
 	ENDIF()
 	
-	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
 	STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
 	STRING(REGEX REPLACE ${BenchMatchString} ""  TNAME ${TMP})
 
@@ -126,8 +115,6 @@ FOREACH (UTEST ${validation_file})
 
 
 ENDFOREACH(UTEST)
-
-#	MESSAGE(STATUS "\n")
 
 ENABLE_TESTING()
 
