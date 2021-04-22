@@ -12,6 +12,9 @@ const char* PrintFormatProb = "%Lf";
 #else
 const char* PrintFormatProb = "%lf";
 #endif
+
+std::mt19937 myrandom_generator{std::random_device{}()};
+
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */

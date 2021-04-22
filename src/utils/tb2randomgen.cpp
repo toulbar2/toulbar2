@@ -1,7 +1,6 @@
 /*
  * ****** Random WCSP generator *******
  */
-#include <random>
 
 #include "tb2randomgen.hpp"
 #include "core/tb2constraint.hpp"
@@ -20,8 +19,6 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
     EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
     int* scopeIndexs = new int[arity];
     Cost Top = wcsp.getUb();
-    std::random_device rd;
-    std::mt19937 g(rd());
     
     if (costMax < Top)
         Top = ToulBar2::costMultiplier * costMax;
@@ -31,7 +28,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         scopeVars[i] = (EnumeratedVariable*)wcsp.getVar(indexs[i]);
     }
 
-    shuffle(&scopeIndexs[0], &scopeIndexs[arity - 1], g);
+    shuffle(&scopeIndexs[0], &scopeIndexs[arity - 1], myrandom_generator);
 
     if (globalname == "knapsackp") {
         string arguments;
