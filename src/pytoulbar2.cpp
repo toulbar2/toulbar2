@@ -58,7 +58,7 @@ namespace py = pybind11;
 #include "utils/tb2btlist.hpp"
 #include "search/tb2solver.hpp"
 
-PYBIND11_MODULE(pytoulbar2, m)
+PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
     m.attr("MAX_COST") = py::cast(MAX_COST);

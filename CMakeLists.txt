@@ -34,7 +34,7 @@ MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
 include(CMakeDependentOption)
-
+#set(Python3_ROOT_DIR "/opt/python/cp39-cp39/")
 ##########################################
 # cmake option definition
 ##########################################
@@ -310,17 +310,17 @@ IF(LIBTB2)
 
   IF(PYTB2)
 ### Old cmake, python and pybind11
-    ADD_LIBRARY(pytoulbar2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
-    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES PREFIX "")
-    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES OUTPUT_NAME "pytoulbar2")
-    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES SUFFIX ${Python3_SUFFIX})
-    SET_TARGET_PROPERTIES(pytoulbar2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytb2")
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
     IF(APPLE)
-        target_link_options(pytoulbar2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
+        target_link_options(pytb2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
     ENDIF(APPLE)
 
 ### New cmake, python and pybind11
-#    pybind11_add_module(pytoulbar2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+#    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
 ###
   ENDIF(PYTB2)
   
@@ -334,7 +334,7 @@ IF(LIBTB2)
     ENDIF(MPI_LINK_FLAGS)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
-    TARGET_LINK_LIBRARIES(pytoulbar2 ${all_depends})
+    TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
   ENDIF(MPI)
   
   INSTALL(TARGETS tb2
