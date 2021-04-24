@@ -11,12 +11,11 @@ function repair_wheel {
 }
 
 # Install a system package required by our library
-apt install -y libboost-graph-dev
-apt install -y libboost-iostreams-dev
-apt install -y zlib1g-dev
-apt install -y liblzma-dev
-apt install -y libxml2-dev
-apt install -y libjemalloc-dev
+yum -y install gmp-devel
+yum -y install boost-devel
+yum -y install zlib-devel
+yum -y install xz-devel
+yum -y install libxml2-devel
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
@@ -32,5 +31,5 @@ done
 # Install packages and test
 for PYBIN in /opt/python/*/bin/; do
     "${PYBIN}/pip" install python-manylinux-demo --no-index -f /io/wheelhouse
-    (cd "$HOME"; "${PYBIN}/nosetests" pymanylinuxdemo)
+    (cd "$HOME"; "${PYBIN}/nosetests" pytoulbar2)
 done
