@@ -272,7 +272,7 @@ public:
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
 
-    void reconnect()
+    void reconnect() override
     {
         if (deconnected()) {
             nonassigned = arity_;
@@ -281,14 +281,14 @@ public:
     }
     int getNonAssigned() const { return nonassigned; }
 
-    Long getConflictWeight() const { return Constraint::getConflictWeight(); }
-    Long getConflictWeight(int varIndex) const
+    Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
+    Long getConflictWeight(int varIndex) const override
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
         return conflictWeights[varIndex] + Constraint::getConflictWeight();
     }
-    void incConflictWeight(Constraint* from)
+    void incConflictWeight(Constraint* from) override
     {
         assert(from!=NULL);
         if (from == this) {
@@ -311,13 +311,13 @@ public:
             }
         }
     }
-    void resetConflictWeight()
+    void resetConflictWeight() override
     {
         conflictWeights.assign(conflictWeights.size(), 0);
         Constraint::resetConflictWeight();
     }
 
-    bool universal()
+    bool universal() override
     {
         // returns true if constraint always satisfied
         if(capacity<=0)
@@ -332,7 +332,7 @@ public:
             return false;
     }
 
-    Cost eval(const Tuple& s)
+    Cost eval(const Tuple& s) override
     {
         // returns the cost of the corresponding assignment s
         Long W=0;
@@ -391,13 +391,13 @@ public:
         return eval(evalTuple);
     }
 
-    double computeTightness() { return MIN_COST; } //TODO: compute a ratio of feasible tuples divided by getDomainSizeProduct()
+    double computeTightness() override { return MIN_COST; } //TODO: compute a ratio of feasible tuples divided by getDomainSizeProduct()
 
     //TODO: needed for dominance test by DEE
     //pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
 
     //Cost getMaxFiniteCost() //TODO: return the maximum finite cost for any valid tuple less than wcsp->getUb()
-    Cost getMaxFiniteCost()
+    Cost getMaxFiniteCost() override
     {
         Cost delta=0;
         for(int i=0; i<arity_;i++)
@@ -414,7 +414,7 @@ public:
     }
 
     //void setInfiniteCost(Cost ub)
-    void assign(int varIndex)
+    void assign(int varIndex) override
     {
         if (assigned[varIndex]==0) {
             assigned[varIndex]=1;
@@ -698,7 +698,7 @@ public:
         }
     }
 
-    void propagate()
+    void propagate() override
     {
         // propagates from scratch the constraint
         //auto start0 = std::chrono::system_clock::now();
@@ -902,7 +902,7 @@ public:
         }
     }
 
-    bool verify()
+    bool verify() override
     {
         // checks that propagation has been done correctly such that at least there exists one valid tuple with zero cost (called by WCSP::verify in Debug mode at each search node)
         if(capacity<=MaxWeight) {
@@ -926,7 +926,7 @@ public:
             assign(idx);
         }
     }
-    void projectFromZero(int index)
+    void projectFromZero(int index) override
     {
         //TODO: incremental cost propagation
         if((int)current_scope_idx.size()!=carity )
@@ -981,7 +981,7 @@ public:
         return result;
     }
 
-    void dump(ostream& os, bool original = true)
+    void dump(ostream& os, bool original = true) override
     {
         bool iszerodeltas = (lb == MIN_COST);
         for (int i = 0; i < arity_; ++i) {
