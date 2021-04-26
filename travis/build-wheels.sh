@@ -29,7 +29,7 @@ for whl in wheelhouse/*.whl; do
 done
 
 # Install packages and test
-for PYBIN in /opt/python/*/bin/; do
+for PYBIN in /opt/_internal/cpython-*/bin/; do
     "${PYBIN}/pip" install pytoulbar2 --no-index -f /io/wheelhouse
     (cd "$HOME"; "${PYBIN}/nosetests" pytoulbar2)
 done
