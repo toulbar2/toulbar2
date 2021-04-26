@@ -29,6 +29,7 @@ script:
 
 deploy:
   skip_cleanup: true
+  edge: true
   provider: pypi
   user: tschiex
   server: https://testpypi.python.org/pypi # Remove for deployment to official PyPi repo
