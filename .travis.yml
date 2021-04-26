@@ -35,4 +35,4 @@ deploy:
   password:
     secure: fVKgAcPReeTIn44D/7mlV5eUgvbMIdryfOjyPfzTA64nCAGhEyq3oWSAiVG9uzE76UEXlLKFAfzkrRRoLY8n6lZm7AlkaIbLUPxX0b05gSx0ryTOhQ6+aRKuLoLoF1hYBnPpkb8L12qkMYCQiA6dh/4Cx53Ztzth2ZUzza1NsTkHTFFgRJFM7eEgFwnBS4a6kg5sXMbVZX5Qep4y7xgLsxl9tcFLw0uBPvN15Ftdb/EkjtIc84uLF9CiPke6pWdsExrr9+AACPpV3/ERyumujuL2O/DkF3druZNuhLtRRWJmp2GfFGjgNbCmOWYeWEJQEhEzJrWtTNHw1BW36fCXt4z2/D/UTkT9jAcQdT5CGzw85L77P62dnsHN9rJ41Eh9ss9Q4YAVvTY2QFpO66hEdrpLMRkAZgwUECrJ18i96/GE1CKwFDptMSx2/rCYs2po/nR4EvZ0PT2pIoVri4m3yQvmHHyJraz2Q/seH+OT6wTv3Y+HwHJJtBDjGmR9LrmUFtJyiG7g+274hstfkpmcZUzFTFkq38ZKhCdFx62wBy2VrwyKgw+8dd5rFPr5scR3BCxdcwVZGg9VgU3PBI2fcH8GwIdxjilcGTFPgDfs/mbtrv8brg5CvOU09ccyUOBwOvJIQ0HgeuRkO0iVWhSKYHwbNvUJjS0I7EXdPs0XiH4=
   on:
-    condition: commit_message =~ ^\[pytb2-deploy\]
+    condition: commit_message =~ /^\[pytb2-deploy\]/
