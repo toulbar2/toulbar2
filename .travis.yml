@@ -15,7 +15,7 @@ install:
 addons:
   apt:
     packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev zlib1g-dev liblzma-dev
-      libjemalloc-dev libopenmpi-dev openmpi-bin
+      libjemalloc-dev libopenmpi-dev openmpi-bin twine
 
 script:
 - mkdir build
