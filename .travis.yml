@@ -25,8 +25,28 @@ matrix:
       - docker pull $DOCKER_IMAGE
 
     script:
-    - docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE /io/travis/build-wheels.sh
-    - pip3 install --user --upgrade pip
-    - pip3 install --user twine
-    - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*
+      - docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE /io/travis/build-wheels.sh
+      - ls wheelhouse/
+    after_success:
+      - pip3 install --user --upgrade pip
+      - pip3 install --user twine
+      - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
+
+  - os: osx
+    language: shell
+    install:
+      - softwareupdate -i "Command Line Tools (macOS High Sierra version 10.13) for Xcode-10.1" 
+      - travis_wait brew install cmake gmp zlib xz boost pybind11
+      - python3 -m pip install pybind11 
+    env:
+      - CIBW_BEFORE_BUILD="pip install -r requirements_dev.txt && pip install ."
+      - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
+      - CIBW_SKIP=*-manylinux*
+      - CC=/usr/local/opt/llvm/bin/clang++
+    script:
+      - travis_wait 60 python3 -m cibuildwheel --output-dir wheelhouse
+      - ls wheelhouse/
+    after_success:
+      - python3 -m pip install twine
+      - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
 
