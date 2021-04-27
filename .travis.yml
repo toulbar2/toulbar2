@@ -15,7 +15,10 @@ matrix:
     - make test
  
   - sudo: required
-    python: 3.9
+    dist: bionic
+    addons:
+      apt:
+        packages: python3 python3-pip python3-setuptools
     services: docker
     env: DOCKER_IMAGE=quay.io/pypa/manylinux2014_x86_64 PLAT=manylinux2014_x86_64
     install:
