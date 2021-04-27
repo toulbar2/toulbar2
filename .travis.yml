@@ -33,6 +33,7 @@ matrix:
       - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
 
   - os: osx
+    osx_image: xcode10.3
     language: shell
     install:
       - softwareupdate -i "Command Line Tools (macOS High Sierra version 10.13) for Xcode-10.1" 
