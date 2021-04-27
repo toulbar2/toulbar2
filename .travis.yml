@@ -14,7 +14,8 @@ matrix:
     - make
     - make test
  
-  - sudo: required
+  - if: commit_msg ~= /\[pytb2-deploy\]/
+    sudo: required
     dist: bionic
     addons:
       apt:
@@ -32,7 +33,8 @@ matrix:
       - pip3 install --user twine
       - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
 
-  - os: osx
+  - if: commit_msg ~= /\[pytb2-deploy\]/
+    os: osx
     osx_image: xcode10.3
     language: shell
     install:
@@ -46,7 +48,7 @@ matrix:
       - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
       - CIBW_SKIP=*-manylinux*
     script:
-      - python3 -m cibuildwheel --output-dir wheelhouse
+      - travis_wait 30 python3 -m cibuildwheel --output-dir wheelhouse
       - ls wheelhouse/
     after_success:
       - python3 -m pip install twine
