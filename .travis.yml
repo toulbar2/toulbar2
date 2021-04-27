@@ -44,7 +44,6 @@ matrix:
       - CIBW_BEFORE_BUILD="pip install -r dev-requirements.txt && pip install ."
       - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
       - CIBW_SKIP=*-manylinux*
-      - CC=/usr/local/opt/llvm/bin/clang++
     script:
       - travis_wait 60 python3 -m cibuildwheel --output-dir wheelhouse
       - ls wheelhouse/
