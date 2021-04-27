@@ -15,14 +15,11 @@ matrix:
     - make test
  
   - sudo: required
+    python: 3.9
     services: docker
     env: DOCKER_IMAGE=quay.io/pypa/manylinux2014_x86_64 PLAT=manylinux2014_x86_64
     install:
       - docker pull $DOCKER_IMAGE
-
-    addons: 
-      apt:
-        packages: python3 python3-pip python3-setuptools
 
     script:
     - docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE /io/travis/build-wheels.sh
