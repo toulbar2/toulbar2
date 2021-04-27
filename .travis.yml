@@ -38,6 +38,7 @@ matrix:
       - softwareupdate -i "Command Line Tools (macOS High Sierra version 10.13) for Xcode-10.1" 
       - travis_wait brew install cmake gmp zlib xz boost pybind11
       - python3 -m pip install pybind11 
+      - python3 -m pip install cibuildwheel==1.10.0
     env:
       - HOMEBREW_NO_AUTO_UPDATE=1
       - CIBW_BEFORE_BUILD="pip install -r requirements_dev.txt && pip install ."
