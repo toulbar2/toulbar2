@@ -72,7 +72,7 @@ def read_version():
 
 setup(
     name='pytoulbar2',
-    version="0.0.1",
+    version="0.0.2",
     author='ToulBar2 team',
     author_email='thomas.schiex@inrae.fr',
     description='ToulBar2 Python module',
