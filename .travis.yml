@@ -33,8 +33,7 @@ matrix:
       - pip3 install --user twine
       - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
 
-  - if: commit_msg ~= /\[pytb2-deploy\]/
-    os: osx
+  - os: osx
     osx_image: xcode10.3
     language: shell
     install:
