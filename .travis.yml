@@ -14,8 +14,7 @@ matrix:
     - make
     - make test
  
-  - if: commit_msg ~= /\[pytb2-deploy\]/
-    sudo: required
+  - sudo: required
     dist: bionic
     addons:
       apt:
