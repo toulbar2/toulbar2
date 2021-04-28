@@ -75,17 +75,24 @@ setup(
     version="0.0.2",
     author='ToulBar2 team',
     author_email='thomas.schiex@inrae.fr',
-    description='ToulBar2 Python module',
+    description='ToulBar2 Python package',
     long_description_content_type="text/markdown",
+    license='MIT',
+    keywords='optimization graphical-model',
     long_description=open("README.md").read(),
-    ext_modules=[CMakeExtension('pytoulbar2')],
-    packages=find_packages(exclude=["tools"]),
+    ext_modules=[CMakeExtension('pytoulbar2.pytb2')],
+    packages=['pytoulbar2'],
+    package_dir={'pytoulbar2': 'pytoulbar2'},
     cmdclass=dict(build_ext=CMakeBuild),
     url='http://miat.inrae.fr/toulbar2',
     zip_safe=False,
     classifiers=[
         'License :: OSI Approved :: MIT License',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Programming Language :: C++',
+        'Programming Language :: Python :: 3',
+        'Intended Audience :: Science/Research'
     ],
 )
-
 
