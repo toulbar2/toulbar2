@@ -2,7 +2,7 @@ import sys
 from random import randint, seed
 seed(123456789)
 
-import CFN
+import pytoulbar2
 
 # Read parameter number of queens
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 4
@@ -11,7 +11,7 @@ N = int(sys.argv[1]) if len(sys.argv) > 1 else 4
 top = N**2+1
 
 # create a new empty cost function network
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 
 for i in range(N):
     Problem.AddVariable("Q" + str(i), range(N))

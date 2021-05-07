@@ -1,4 +1,4 @@
-import CFN
+import pytoulbar2
 import numpy as np
 import itertools
 import pandas as pd
@@ -11,7 +11,7 @@ def addCliqueAllDiff(theCFN, varList, cost):
 
 # Sets the value of variable with index "vIdx" to "value" using a unary function
 def setHint(theCFN,vIdx,value):
-    costs = myCFN.GetUB()*np.ones(size, dtype = np.int64)
+    costs = theCFN.GetUB()*np.ones(size, dtype = np.int64)
     costs[value-1] = 0
     theCFN.AddFunction([vIdx], costs)
 
@@ -20,7 +20,7 @@ def printGrid(l):
         print(v,end=(' ' if (i+1)%size else '\n'))
 
 
-myCFN = CFN.CFN(1)
+myCFN = pytoulbar2.CFN(1)
 
 # Sudoku size parameter (typical 3 gives 3*3 x 3*3 grid)
 par = 3

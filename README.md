@@ -87,14 +87,14 @@ Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\
     cmake ..
     make
 
-Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytoulbar2.cpython\*.so):
+Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
 
     mkdir build
     cd build
     cmake -DPYTB2=ON ..
     make
 
-Move the cpython library and the experimental [CFN.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/CFN.py) python class wrapper in the folder of the python script that does "import CFN".
+Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
@@ -253,5 +253,5 @@ Please use one of the following references for citing toulbar2:
  F Trösser, S de Givry and G Katsirelos
  In Proc. of CPAIOR-20, Vienna, Austria, 2020
  
-Copyright (C) 2006-2020, toulbar2 team.
+Copyright (C) 2006-2021, toulbar2 team.
 toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)

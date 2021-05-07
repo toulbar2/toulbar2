@@ -1,4 +1,4 @@
-import CFN
+import pytoulbar2
 import math, numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -98,7 +98,7 @@ def addCliqueAllDiff(theCFN, varList, cost):
 
 # Sets the value of variable with index "vIdx" to "value" using a unary function
 def setHint(theCFN,vIdx,value):
-    costs = myCFN.GetUB()*np.ones(size, dtype = np.int64)
+    costs = theCFN.GetUB()*np.ones(size, dtype = np.int64)
     costs[value-1] = 0
     theCFN.AddFunction([vIdx], costs)
 
@@ -123,7 +123,7 @@ columns = [ [] for _ in range(size) ]
 cells = [ [] for _ in range(size) ]
 
 
-myCFN = CFN.CFN(1) if CP_mode else CFN.CFN(1000000,6)
+myCFN = pytoulbar2.CFN(1) if CP_mode else pytoulbar2.CFN(1000000,6)
 
 # create variables and keep indices in row, columns and cells 
 for i in range(size):

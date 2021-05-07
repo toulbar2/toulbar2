@@ -1,6 +1,6 @@
 
 import sys
-import CFN
+import pytoulbar2
 
 f = open(sys.argv[1], 'r').readlines()
 
@@ -39,7 +39,7 @@ for i in range(N):
 
 top = 99999
 
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 for i in range(N):
     Problem.AddVariable('x' + str(i), range(LT[i][0],LT[i][2]+1))
 
