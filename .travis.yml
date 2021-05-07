@@ -5,8 +5,9 @@ matrix:
     compiler: clang
     addons:
       apt:
-        packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev zlib1g-dev liblzma-dev
-          libjemalloc-dev libopenmpi-dev openmpi-bin
+        packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev
+                  zlib1g-dev liblzma-dev libjemalloc-dev libopenmpi-dev
+                  openmpi-bin
     script:
     - mkdir build
     - cd build
@@ -14,7 +15,8 @@ matrix:
     - make
     - make test
  
-  - sudo: required
+  - if: commit-msg =~ /\[pytb2-deploy\]/
+    sudo: required
     dist: bionic
     addons:
       apt:
@@ -32,7 +34,8 @@ matrix:
       - pip3 install --user twine
       - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
 
-  - os: osx
+  - if: commit-msg =~ /\[pytb2-deploy\]/
+    os: osx
     osx_image: xcode10.3
     language: shell
     install:
