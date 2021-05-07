@@ -17,20 +17,21 @@ yum -y install zlib-devel
 yum -y install xz-devel
 yum -y install libxml2-devel
 
+cd "$HOME"
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
     "${PYBIN}/pip" install -r /io/dev-requirements.txt
-    "${PYBIN}/pip" wheel /io/ --no-deps -w /io/wheelhouse/
+    "${PYBIN}/pip" wheel /io/ --no-deps -w wheelhouse
 done
 
 # Bundle external shared libraries into the wheels
-for whl in /io/wheelhouse/*.whl; do
+for whl in wheelhouse/*.whl; do
     repair_wheel "$whl"
 done
 
 # Install packages and test
 for PYBIN in /opt/python/*/bin/; do
     "${PYBIN}/pip" install pytoulbar2 --no-index -f /io/wheelhouse
-    (cd "$HOME"; "${PYBIN}/nosetests" pytoulbar2)
+    "${PYBIN}/python" -m nose2 pytoulbar2
 done
