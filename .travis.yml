@@ -15,7 +15,7 @@ matrix:
     - make
     - make test
  
-  - if: commit-msg =~ /\[pytb2-deploy\]/
+  - if: commit_message =~ /\[pytb2-deploy\]/
     sudo: required
     dist: bionic
     addons:
@@ -34,7 +34,7 @@ matrix:
       - pip3 install --user twine
       - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
 
-  - if: commit-msg =~ /\[pytb2-deploy\]/
+  - if: commit_message =~ /\[pytb2-deploy\]/
     os: osx
     osx_image: xcode10.3
     language: shell
