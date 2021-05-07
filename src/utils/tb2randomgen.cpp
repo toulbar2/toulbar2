@@ -356,24 +356,22 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
                 if (scopes.end() == scopes.find(toIndex(indexs))) {
                     if (dice == 0) {
                         scopes.insert(toIndex(indexs));
-                        if (arity > 1) {
-                            switch (arity) {
-                            case 2:
-                                if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
-                                    generateBinCtr(indexs[0], indexs[1], nogoods);
-                                else
-                                    generateSubModularBinCtr(indexs[0], indexs[1], SMALL_COST, LARGE_COST);
-                                break;
-                            case 3:
-                                generateTernCtr(indexs[0], indexs[1], indexs[2], nogoods);
-                                break;
-                            default:
-                                if (globalname == "" || globalname == "nary")
-                                    generateNaryCtr(indexs, nogoods);
-                                else
-                                    generateGlobalCtr(indexs, globalname);
-                                break;
-                            }
+                        switch (arity) {
+                        case 2:
+                            if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
+                                generateBinCtr(indexs[0], indexs[1], nogoods);
+                            else
+                                generateSubModularBinCtr(indexs[0], indexs[1], SMALL_COST, LARGE_COST);
+                            break;
+                        case 3:
+                            generateTernCtr(indexs[0], indexs[1], indexs[2], nogoods);
+                            break;
+                        default:
+                            if (globalname == "" || globalname == "nary")
+                                generateNaryCtr(indexs, nogoods);
+                            else
+                                generateGlobalCtr(indexs, globalname);
+                            break;
                         }
                         tCtrs--;
                         numCtrs[arity]--;

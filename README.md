@@ -2,7 +2,8 @@
 ## Exact optimization for cost function networks and additive graphical models 
 
 master: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
-cpd: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=cpd)](https://travis-ci.com/toulbar2/toulbar2) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/toulbar2/toulbar2.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/toulbar2/toulbar2/context:cpp)
+cpd: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=cpd)](https://travis-ci.com/toulbar2/toulbar2) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/toulbar2/toulbar2.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/toulbar2/toulbar2/context:cpp)[![PyPi version](https://img.shields.io/pypi/v/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi wheel](https://img.shields.io/pypi/wheel/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi python versions](https://img.shields.io/pypi/pyversions/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)
+
 
 ## What is toulbar2?
 
@@ -43,13 +44,27 @@ on [GitHub](https://github.com/toulbar2/CFN-learn).
 ## Installation from binaries
 
 You can install toulbar2 directly using the package manager in Debian
-and Debian derived Linux distributions (Ubuntu, Mint,...). E.g.:
+and Debian derived Linux distributions (Ubuntu, Mint,...):
 
     sudo apt-get update
     sudo apt-get install toulbar2 toulbar2-doc
 
 For the most recent binary or the Python API, compile from source.
 
+## Python interface
+
+An alpha-release Python interface can be tested through pip on Linux and MacOS:
+
+    python -m pip install pytoulbar2
+
+Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
+
+    mkdir build
+    cd build
+    cmake -DPYTB2=ON ..
+    make
+
+Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoullbar2".
 
 ## Download
 
@@ -86,15 +101,6 @@ Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\
     cd build
     cmake ..
     make
-
-Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
-
-    mkdir build
-    cd build
-    cmake -DPYTB2=ON ..
-    make
-
-Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
 
 Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 

@@ -32,7 +32,7 @@ matrix:
     after_success:
       - pip3 install --user --upgrade pip
       - pip3 install --user twine
-      - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
+      - python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ wheelhouse/*.whl
 
   - if: commit_message =~ /\[pytb2-deploy\].*MacOS/
     os: osx
@@ -55,5 +55,5 @@ matrix:
       - bash ./travis/repair_mac_wheels.sh wheelhouse
     after_success:
       - python3 -m pip install twine
-      - python3 -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
+      - python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ wheelhouse/*.whl
 

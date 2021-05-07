@@ -3,11 +3,10 @@ import re
 import sys
 import platform
 import subprocess
-import glob
 
 from setuptools import setup
 from setuptools.extension import Extension
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
@@ -72,7 +71,7 @@ def read_version():
 
 setup(
     name='pytoulbar2',
-    version="0.0.3.2",
+    version="0.0.0.1",
     author='ToulBar2 team',
     author_email='thomas.schiex@inrae.fr',
     description='ToulBar2 Python package',
