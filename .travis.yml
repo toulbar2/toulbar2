@@ -1,6 +1,7 @@
 matrix:
   include:
-  - dist: bionic
+  - if: commit_message =~ /^\[(code|bug)\]/
+    dist: bionic
     language: cpp
     compiler: clang
     addons:
@@ -15,7 +16,7 @@ matrix:
     - make
     - make test
  
-  - if: commit_message =~ /\[pytb2-deploy\].*Linux/ 
+  - if: commit_message =~ /^\[pytb2-deploy\].*Linux/ 
     sudo: required
     dist: bionic
     addons:
@@ -34,7 +35,7 @@ matrix:
       - pip3 install --user twine
       - python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ wheelhouse/*.whl
 
-  - if: commit_message =~ /\[pytb2-deploy\].*MacOS/
+  - if: commit_message =~ /^\[pytb2-deploy\].*MacOS/
     os: osx
     osx_image: xcode10.3
     language: shell
