@@ -46,7 +46,7 @@ matrix:
     env:
       - HOMEBREW_NO_AUTO_UPDATE=1
       - CIBW_BEFORE_BUILD="pip install -r dev-requirements.txt"
-      - CIBW_BUILD="cp38-*"
+      - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
       - CIBW_SKIP=*-manylinux*
       - CIBW_BUILD_VERBOSITY=1
     script:
@@ -56,4 +56,3 @@ matrix:
     after_success:
       - python3 -m pip install twine
       - python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ wheelhouse/*.whl
-
