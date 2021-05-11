@@ -1964,7 +1964,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     }
     for (int i = 0; i < ar; i++)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
-    int nbdel=0;
+    vector<int> tobedel;
     for (int i = 0; i < ar; ++i) {
         if (!kp) {
             file >> readw;
@@ -1986,18 +1986,22 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             minweight = 0;
             for (int j = 0; j < readnbval; ++j) {
                 file >> readv1;
-                if (!isclique) {
-                    file >> readw;
-                    if (readw != 0) {
-                        if (readw < minweight)
-                            minweight = readw;
+                if(scopeVars[i]->canbe(readv1)){
+                    if (!isclique) {
+                        file >> readw;
+                        if (readw != 0) {
+                            if (readw < minweight)
+                                minweight = readw;
+                            TempVarVal.push_back(readv1);
+                            TempWeights.push_back(readw);
+                        }
+                    } else {
+                        minweight=-1;
                         TempVarVal.push_back(readv1);
-                        TempWeights.push_back(readw);
+                        TempWeights.push_back(-1);
                     }
                 } else {
-                    minweight=-1;
-                    TempVarVal.push_back(readv1);
-                    TempWeights.push_back(-1);
+                    file>>skip;
                 }
             }
         }
@@ -2028,16 +2032,21 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             VarVal.push_back(TempVarVal);
             NotVarVal.push_back(TempNotVarVal);
         } else {
-            scopeVars.erase(scopeVars.begin() + i - nbdel);
-            arity--;
-            nbdel++;
+            tobedel.push_back(i);
         }
     }
-    for (unsigned int i = 0; i < weights.size(); ++i) {
-        for (unsigned int j = 0; j < weights[i].size(); ++j) {
-            if (weights[i][j] > capacity) {
-                MaxWeight = MaxWeight - weights[i][j] + capacity;
-                weights[i][j] = capacity;
+    sort(tobedel.begin(),tobedel.end(),greater<int>());
+    for (int i = 0; i < tobedel.size(); ++i) {
+        scopeVars.erase(scopeVars.begin() +tobedel[i]);
+        arity--;
+    }
+    if(capacity>0) {
+        for (unsigned int i = 0; i < weights.size(); ++i) {
+            for (unsigned int j = 0; j < weights[i].size(); ++j) {
+                if (weights[i][j] > capacity) {
+                    MaxWeight = MaxWeight - weights[i][j] + capacity;
+                    weights[i][j] = capacity;
+                }
             }
         }
     }
