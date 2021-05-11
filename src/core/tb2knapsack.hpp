@@ -296,7 +296,7 @@ public:
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {
-                    if (connected(i)) {
+                    if (connected(i)) { //TODO: compare with deconnected(i) and being NotVarVal
                         conflictWeights[i]++; //TODO: increase only variables participating to the relaxed optimal solution cost
                     }
                 }
