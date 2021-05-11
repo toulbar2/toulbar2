@@ -1,6 +1,6 @@
 matrix:
   include:
-  - if: commit_message =~ /^\[(code|bug)\]/
+  - if: commit_message =~ /^\[(code|bug|error|option)\]/
     dist: bionic
     language: cpp
     compiler: clang
