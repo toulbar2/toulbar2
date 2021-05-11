@@ -2036,8 +2036,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         }
     }
     sort(tobedel.begin(),tobedel.end(),greater<int>());
-    for (int i = 0; i < tobedel.size(); ++i) {
-        scopeVars.erase(scopeVars.begin() +tobedel[i]);
+    for (unsigned int i = 0; i < tobedel.size(); ++i) {
+        scopeVars.erase(scopeVars.begin() + tobedel[i]);
         arity--;
     }
     if(capacity>0) {
