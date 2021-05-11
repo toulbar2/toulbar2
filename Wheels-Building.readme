@@ -1,0 +1,8 @@
+The python wheels are build by Travis (see .travis.yml) when the commit message contains the string "[pytb2-deploy]" followed somewhere in the following text by either "Linux" or "MacOS" (or both, this is case-sensitive). This is directly uploaded on PyPi using the version number that is set in "setup.py".
+
+Linux: the manylinux docker image is used to build PyPi compatible images. The git directory is mounted on /io, the script in travis/buildwheels.sh is in charge of building the wheels in the /io/wheelhouse directory, using setup.py to guide the wheel assembly. then twine is used to upload the wheels on TestPypi (for now). The user and password for upload are stored in the toulbar2 Travis account. 
+
+MacOSX:  Travis macos image is used with cibuildwheels instead of the buildwheel.sh script. Twine does the upload again.
+
+Windows: to be done
+

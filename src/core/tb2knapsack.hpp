@@ -1054,7 +1054,7 @@ public:
         }
     }
 
-    void dump_CFN(ostream& os, bool original = true)
+    void dump_CFN(ostream& os, bool original = true) override
     {
         bool printed = false;
         os << "\"F_";

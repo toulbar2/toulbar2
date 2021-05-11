@@ -1,6 +1,6 @@
 
 import sys
-import CFN
+import pytoulbar2
 
 f = open(sys.argv[1], 'r').readlines()
 
@@ -46,7 +46,7 @@ for j in range(M):
     top += sum(CostS[-1])
 
 # create a new empty cost function network
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 # add warehouse variables
 for i in range(N):
     Problem.AddVariable('w' + str(i), range(2))

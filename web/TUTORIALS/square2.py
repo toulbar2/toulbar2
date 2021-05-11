@@ -1,16 +1,15 @@
-
 import sys
 from random import seed
 seed(123456789)
 
-import CFN
+import pytoulbar2
 
 N = int(sys.argv[1])
 S = int(sys.argv[2])
 
 top = 1
 
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 
 for i in range(N):
     Problem.AddVariable('sq' + str(i+1), range((S-i)*(S-i)))

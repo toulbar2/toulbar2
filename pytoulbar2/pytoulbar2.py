@@ -1,4 +1,4 @@
-import pytoulbar2 as tb2
+import pytoulbar2.pytb2 as tb2
 
 class CFN:
     def __init__(self, ubinit, resolution = 0, vac = 0, configuration = False):

@@ -14,8 +14,6 @@ set (bformat  ${Default_BenchFormat})
 SET(FOPT "test-opt.cmake") #cmake name where are declared local value for timeout,regexp and command line option
 SET (RANK 0)
 
-	MESSAGE(STATUS "##############TEST liste building #############")
-	
 FOREACH (UTEST ${validation_file})
 	#reset ub end enum from the previous iteration
     UNSET(UB) 
@@ -33,7 +31,6 @@ FOREACH (UTEST ${validation_file})
 	MATH(EXPR UBP "1+${TUB}")
         SET (OpTub "-ub" ) 
         SET (UBP "${OpTub}=${UBP}" )	
-	MESSAGE(STATUS "UB found ==> ${UBP} " )
 
 	ELSE()
 	 UNSET(UBP)
@@ -42,7 +39,6 @@ FOREACH (UTEST ${validation_file})
 	 IF (EXISTS ${ENUM_file})
         FILE(READ ${ENUM_file} TENUM)
 	STRING(REPLACE "\n" ""  ENUM ${TENUM})
-	MESSAGE(STATUS "ENUM file: ${TPATH}/${ENUM_file} found ENUM variable loaded ")
 	
 	ELSE()
 	set(ENUM)
@@ -51,7 +47,6 @@ FOREACH (UTEST ${validation_file})
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	include (${TPATH}/${FOPT})
-	MESSAGE(STATUS "file: ${TPATH}/${FOPT} found ")
 	ELSE()
 
 	# init default value :
@@ -61,8 +56,6 @@ FOREACH (UTEST ${validation_file})
 	set (bench_regexp  ${Default_bench_regexp})
 	
 	ENDIF()	
-
-	MESSAGE(STATUS "Bench found: ${UTEST} command line : ${command_line_option} timeout=${bench_timeout};regexp=${bench_regexp} ")
 
 # sub string subtitution
 	STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})

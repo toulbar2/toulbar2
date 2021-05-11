@@ -1,14 +1,59 @@
-language: cpp
-compiler: clang
-dist: bionic
+matrix:
+  include:
+  - if: commit_message =~ /^\[(code|bug)\]/
+    dist: bionic
+    language: cpp
+    compiler: clang
+    addons:
+      apt:
+        packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev
+                  zlib1g-dev liblzma-dev libjemalloc-dev libopenmpi-dev
+                  openmpi-bin
+    script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - make test
+ 
+  - if: commit_message =~ /^\[pytb2-deploy\].*Linux/ 
+    sudo: required
+    dist: bionic
+    addons:
+      apt:
+        packages: python3 python3-pip python3-setuptools
+    services: docker
+    env: DOCKER_IMAGE=quay.io/pypa/manylinux2014_x86_64 PLAT=manylinux2014_x86_64
+    install:
+      - docker pull $DOCKER_IMAGE
 
-addons:
-  apt:
-    packages: libboost-graph-dev libboost-iostreams-dev libgmp-dev zlib1g-dev liblzma-dev libjemalloc-dev libopenmpi-dev openmpi-bin
+    script:
+      - docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE /io/travis/build-wheels.sh
+      - ls wheelhouse/
+    after_success:
+      - pip3 install --user --upgrade pip
+      - pip3 install --user twine
+      - python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ wheelhouse/*.whl
 
-script:
-  - mkdir build
-  - cd build
-  - cmake ..
-  - make
-  - make test
+  - if: commit_message =~ /^\[pytb2-deploy\].*MacOS/
+    os: osx
+    osx_image: xcode10.3
+    language: shell
+    install:
+      - softwareupdate -i "Command Line Tools (macOS High Sierra version 10.13) for Xcode-10.1" 
+      - travis_wait brew install cmake gmp zlib xz boost pybind11
+      - python3 -m pip install pybind11 
+      - python3 -m pip install cibuildwheel==1.10.0
+    env:
+      - HOMEBREW_NO_AUTO_UPDATE=1
+      - CIBW_BEFORE_BUILD="pip install -r dev-requirements.txt"
+      - CIBW_BUILD="cp36-* cp37-* cp38-* cp39-*"
+      - CIBW_SKIP=*-manylinux*
+      - CIBW_BUILD_VERBOSITY=1
+    script:
+      - python3 -m cibuildwheel --output-dir wheelhouse
+      - ls wheelhouse/
+      - bash ./travis/repair_mac_wheels.sh wheelhouse
+    after_success:
+      - python3 -m pip install twine
+      - python3 -m twine upload --repository-url https://upload.pypi.org/legacy/ wheelhouse/*.whl

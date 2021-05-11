@@ -40,7 +40,3 @@ file(
 set(source_files ${LIBTB2FILES} ${My_Source}/tb2main.cpp)
 set(pysource_files ${LIBTB2FILES} ${My_Source}/pytoulbar2.cpp)
 
-MESSAGE(STATUS "-------------\n")
-MESSAGE(STATUS "toulbar2 source files = ${source_files}\n")
-MESSAGE(STATUS "-------------\n")
-
