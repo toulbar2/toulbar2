@@ -1,5 +1,5 @@
 import sys
-import CFN
+import pytoulbar2
 
 Lines = open(sys.argv[1], 'r').readlines()
 N = len(Lines)
@@ -13,7 +13,7 @@ Var = [(chr(65 + i) if N < 28 else "x" + str(i)) for i in range(N)] # Political 
 #    Var = ["justin","harry","whit","brian","paul","ian","mike","jim","dan","ray","cliff","mason","roy"] # Sharpstone
 #    Var  = ["Sherrif","CivilDef","Coroner","Attorney","HighwayP","ParksRes","GameFish","KansasDOT","ArmyCorps","ArmyReserve","CrableAmb","FrankCoAmb","LeeRescue","Shawney","BurlPolice","LyndPolice","RedCross","TopekaFD","CarbFD","TopekaRBW"] # Kansas
 
-Problem = CFN.CFN(Top)
+Problem = pytoulbar2.CFN(Top)
 for u in range(K):
     for v in range(K):
         Problem.AddVariable("M_" + str(u) + "_" + str(v), range(2))

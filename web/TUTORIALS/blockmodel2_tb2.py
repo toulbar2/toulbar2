@@ -1,5 +1,5 @@
 import sys
-import CFN
+import pytoulbar2
 
 Lines = open(sys.argv[1], 'r').readlines()
 N = len(Lines)
@@ -9,7 +9,7 @@ symmetric = all([Matrix[i][j] == Matrix[j][i] for i in range(N) for j in range(N
 K = int(sys.argv[2])
 
 Top = 1 + N*N
-Problem = CFN.CFN(Top)
+Problem = pytoulbar2.CFN(Top)
 
 Problem.Option.verbose = 0 # show toulbar2 statistics
 Problem.Option.showSolutions = 3  # output solutions found with variable and value names
