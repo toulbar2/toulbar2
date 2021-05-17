@@ -724,11 +724,11 @@ Each plane has to land within its predetermined time window such that separation
 <p>Original data files can be download from the cost function library <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/airland/data">airland</a>. Their format is described <a href="http://people.brunel.ac.uk/~mastjjb/jeb/orlib/airlandinfo.html">here</a>. You can try a small example <a href="TUTORIALS/airland1.txt">airland1.txt</a> with optimum value equal to 700.
 </p>
 <h5>Python model and solve</h5>
-<p>The following code uses the python3 module of toulbar2 and its <a href="TUTORIALS/CFN.py">CFN.py</a> interface to generate the cost function network and solve it (e.g. "python3 airland.py airland1.txt"). Compile toulbar2 with "cmake -DPYTB2=ON . ; make" an copy the module in your current directory "cp lib/Linux/pytb2.cpython* ."</p>
+<p>The following code uses the pytoulbar2 module to generate the cost function network and solve it (e.g. "python3 airland.py airland1.txt"). Compile toulbar2 with "cmake -DPYTB2=ON . ; make" and copy the resulting module in pytoulbar2 folder "cp lib/Linux/pytb2.cpython* pytoulbar2"</p>
 <figure><figcaption><a href="TUTORIALS/airland.py">airland.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 import sys
-import CFN
+import pytoulbar2
 
 f = open(sys.argv[1], 'r').readlines()
 
@@ -767,7 +767,7 @@ for i in range(N):
 
 top = 99999
 
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 for i in range(N):
     Problem.AddVariable('x' + str(i), range(LT[i][0],LT[i][2]+1))
 
@@ -861,11 +861,11 @@ if __name__ == '__main__':
 </code></pre>
 </figure>
 <h5>Python model and solve using pytoulbar2</h5>
-<p>The following code uses the python3 module of toulbar2 and its <a href="TUTORIALS/CFN.py">CFN.py</a> interface to generate the cost function network and solve it (e.g. "python3 warehouse2.py cap44.txt 1" found optimum value equal to 10349757). Other instances are available <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/instances/cfn">here</a> in cfn format. Compile toulbar2 with "cmake -DPYTB2=ON . ; make" an copy the module in your current directory "cp lib/Linux/pytb2.cpython* ." before running the example.</p>
+<p>The following code uses the pytoulbar2 module to generate the cost function network and solve it (e.g. "python3 warehouse2.py cap44.txt 1" found optimum value equal to 10349757). Other instances are available <a href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/instances/cfn">here</a> in cfn format. Compile toulbar2 with "cmake -DPYTB2=ON . ; make" and copy the resulting module in pytoulbar2 folder "cp lib/Linux/pytb2.cpython* pytoulbar2"</p>
 <figure><figcaption><a href="TUTORIALS/warehouse2.py">warehouse2.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 import sys
-import CFN
+import pytoulbar2
 
 f = open(sys.argv[1], 'r').readlines()
 
@@ -911,7 +911,7 @@ for j in range(M):
     top += sum(CostS[-1])
 
 # create a new empty cost function network
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 # add warehouse variables
 for i in range(N):
     Problem.AddVariable('w' + str(i), range(2))
@@ -975,21 +975,21 @@ if __name__ == '__main__':
 </code></pre>
 </figure>
 <h5>Python model and solve using pytoulbar2</h5>
-<p>The following code uses the python3 module of toulbar2 and its <a href="TUTORIALS/CFN.py">CFN.py</a> interface to generate the cost function network and solve it (e.g. "python3 square2.py 3 5"). Compile toulbar2 with "cmake -DPYTB2=ON . ; make" an copy the module in your current directory "cp lib/Linux/pytb2.cpython* ." before running the example.</p>
+<p>The following code uses the pytoulbar2 module to generate the cost function network and solve it (e.g. "python3 square2.py 3 5"). Compile toulbar2 with "cmake -DPYTB2=ON . ; make" and copy the resulting module in pytoulbar2 folder "cp lib/Linux/pytb2.cpython* pytoulbar2"</p>
 <figure><figcaption><a href="TUTORIALS/square2.py">square2.py</a></figcaption>
 <pre><code contenteditable spellcheck="false">
 import sys
 from random import randint, seed
 seed(123456789)
 
-import CFN
+import pytoulbar2
 
 N = int(sys.argv[1])
 S = int(sys.argv[2])
 
 top = 1
 
-Problem = CFN.CFN(top)
+Problem = pytoulbar2.CFN(top)
 
 for i in range(N):
     Problem.AddVariable('sq' + str(i+1), range((S-i)*(S-i)))
@@ -1171,6 +1171,6 @@ int main(int argc, char* argv[])
 </code></pre>
 </figure>
 
-<p id="footer"><br/><br/>Last modification : September 14, 2020</p>
+<p id="footer"><br/><br/>Last modification : May 18, 2021</p>
 </body>
 </html>

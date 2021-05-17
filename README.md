@@ -55,7 +55,7 @@ For the most recent binary or the Python API, compile from source.
 
 An alpha-release Python interface can be tested through pip on Linux and MacOS:
 
-    python -m pip install pytoulbar2
+    python3 -m pip install pytoulbar2
 
 Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
 
@@ -64,7 +64,7 @@ Commands for compiling the Python API on Linux/MacOS with cmake (Python module i
     cmake -DPYTB2=ON ..
     make
 
-Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/web/TUTORIALS/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoullbar2".
+Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/pytoulbar2/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
 
 ## Download
 
