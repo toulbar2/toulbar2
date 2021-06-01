@@ -77,7 +77,7 @@ void Variable::setCurrentVarId(int idx)
     timestamp = wcsp->getNbNodes();
 }
 
-int cmpConstraint(const void* p1, const void* p2)
+int cmpConstraintId(const void* p1, const void* p2)
 {
     DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
     DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
@@ -119,6 +119,92 @@ int cmpConstraintTightness(const void* p1, const void* p2)
         return 0;
 }
 
+int cmpConstraintDACTightness(const void* p1, const void* p2)
+{
+    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
+    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
+    int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+    if (v1 < v2)
+        return 1;
+    else if (v1 > v2)
+        return -1;
+    else {
+        double v1 = c1->content.constr->getTightness();
+        double v2 = c2->content.constr->getTightness();
+        if (v1 < v2)
+            return 1;
+        else if (v1 > v2)
+            return -1;
+        else
+            return 0;
+    }
+}
+
+int cmpConstraintTightnessDAC(const void* p1, const void* p2)
+{
+    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
+    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
+    double v1 = c1->content.constr->getTightness();
+    double v2 = c2->content.constr->getTightness();
+    if (v1 < v2)
+        return 1;
+    else if (v1 > v2)
+        return -1;
+    else {
+        int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+        int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+        if (v1 < v2)
+            return 1;
+        else if (v1 > v2)
+            return -1;
+        else
+            return 0;
+    }
+}
+
+int cmpConstraintRandom(const void* p1, const void* p2)
+{
+    if (myrand() % 2)
+        return -1;
+    else
+        return 1;
+}
+
+int cmpConstraint(const void* p1, const void* p2)
+{
+    if (p1 == p2) return 0;
+    int result = 0;
+    switch (abs(ToulBar2::constrOrdering)) {
+                    case CONSTR_ORDER_ID:
+                        result = cmpConstraintId(p1,p2);
+                        break;
+                    case CONSTR_ORDER_DAC:
+                        result = cmpConstraintDAC(p1,p2);
+                        break;
+                    case CONSTR_ORDER_TIGHTNESS:
+                        result = cmpConstraintTightness(p1,p2);
+                        break;
+                    case CONSTR_ORDER_DAC_TIGHTNESS:
+                        result = cmpConstraintDACTightness(p1,p2);
+                        break;
+                    case CONSTR_ORDER_TIGHTNESS_DAC:
+                        result = cmpConstraintTightnessDAC(p1,p2);
+                        break;
+                    case CONSTR_ORDER_RANDOM:
+                        result = cmpConstraintRandom(p1,p2);
+                        break;
+                    default:
+                        cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
+                        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::constrOrdering >= 0) {
+        return result;
+    } else {
+        return (-result);
+    }
+}
+
 void Variable::sortConstraints()
 {
     int size = constrs.getSize();
@@ -127,7 +213,7 @@ void Variable::sortConstraints()
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         sorted[i++] = iter.getElt();
     }
-    qsort(sorted, size, sizeof(DLink<ConstraintLink>*), cmpConstraintDAC);
+    qsort(sorted, size, sizeof(DLink<ConstraintLink>*), cmpConstraint);
     for (int i = 0; i < size; i++) {
         constrs.erase(sorted[i], true);
         constrs.push_back(sorted[i], true);

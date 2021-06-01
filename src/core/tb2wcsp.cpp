@@ -104,6 +104,7 @@ bool ToulBar2::lastConflict;
 int ToulBar2::dichotomicBranching;
 unsigned int ToulBar2::dichotomicBranchingSize;
 bool ToulBar2::sortDomains;
+int ToulBar2::constrOrdering;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 bool ToulBar2::solutionBasedPhaseSaving;
 int ToulBar2::lds;
@@ -304,6 +305,7 @@ void tb2init()
     ToulBar2::dichotomicBranching = 1;
     ToulBar2::dichotomicBranchingSize = 10;
     ToulBar2::sortDomains = false;
+    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
     ToulBar2::solutionBasedPhaseSaving = true;
     ToulBar2::lds = 0;
     ToulBar2::limited = false;
