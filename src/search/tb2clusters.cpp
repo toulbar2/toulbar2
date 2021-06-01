@@ -81,18 +81,19 @@ void Separator::setup(Cluster* cluster_in)
         ++it;
     }
 
-    int nvars = cluster->getNbVars();
+    // take into account the fact that the cluster may be used as it descendant
+    int nvars = cluster->getNbVarsTree();
     if (!nvars)
         return;
 
     int nproper = 0;
-    it = cluster->beginVars();
-    while (it != cluster->endVars()) {
+    it = cluster->beginVarsTree();
+    while (it != cluster->endVarsTree()) {
         if (!cluster->isSepVar(*it))
             nproper++;
         ++it;
     }
-    s = Tuple(cluster->getNbVars(), 0);
+    s = Tuple(cluster->getNbVarsTree(), 0);
 }
 
 void Separator::assign(int varIndex)
@@ -254,6 +255,86 @@ void Separator::setSg(Cost c, BigInteger nb)
     sgoods[t] = TPairSG(MAX(MIN_COST, c + deltares), nb);
 }
 
+void Separator::setF(bool free)
+{
+    int i = 0;
+    WCSP* wcsp = cluster->getWCSP();
+    if (ToulBar2::verbose >= 1)
+        cout << "( ";
+    TVars::iterator it = vars.begin();
+    while (it != vars.end()) {
+        assert(wcsp->assigned(*it));
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+        if (ToulBar2::verbose >= 1)
+            cout << "(" << *it << "," << val << ") ";
+        t[i] = val;
+        ++it;
+        i++;
+    }
+    if (ToulBar2::verbose >= 1)
+        cout << ") Learn from heuristic of freedom with " << free << endl;
+    frees[t] = free;
+}
+
+bool Separator::setFInc()
+{
+    int i = 0;
+    WCSP* wcsp = cluster->getWCSP();
+    TVars::iterator it = vars.begin();
+    while (it != vars.end()) {
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+        t[i] = val;
+        ++it;
+        i++;
+    }
+
+    int nb;
+    TFreesLimit::iterator itsg = freesLimit.find(t);
+    if (itsg != freesLimit.end()) {
+        nb = itsg->second;
+        // later this should be used as global value
+        if (cluster->sepSize() != 0) {
+            if (nb < 2 * ToulBar2::heuristicFreedomLimit) {
+                return true;
+            } else {
+                frees[t] = false;
+                return false;
+            }
+        } else {
+            if (nb < ToulBar2::heuristicFreedomLimit) {
+                return true;
+            } else {
+                frees[t] = false;
+                return false;
+            }
+        }
+
+    } else {
+        freesLimit[t] = 0;
+        frees[t] = true;
+        return true;
+    }
+}
+
+void Separator::freeIncS()
+{
+    int i = 0;
+    WCSP* wcsp = cluster->getWCSP();
+    TVars::iterator it = vars.begin();
+    while (it != vars.end()) {
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+        t[i] = val;
+        ++it;
+        i++;
+    }
+
+    freesLimit[t] += 1;
+
+//    if (ToulBar2::heuristicFreedom == 2 && freesLimit[t] >= ToulBar2::heuristicFreedomLimit) {
+//        cluster->setInterrupt(true);
+//    }
+}
+
 Cost Separator::getCurrentDelta()
 {
     int i = 0;
@@ -372,7 +453,35 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
     }
 }
 
-bool Separator::solGet(TAssign& a, Tuple& sol)
+bool Separator::getF(bool& free)
+{
+    int i = 0;
+    if (ToulBar2::verbose >= 1)
+        cout << "( ";
+    TVars::iterator it = vars.begin();
+    while (it != vars.end()) {
+        assert(wcsp->assigned(*it));
+        tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+        if (ToulBar2::verbose >= 1)
+            cout << "(" << *it << "," << val << ") ";
+        t[i] = val; // build the tuple
+        ++it;
+        i++;
+    }
+    TFrees::iterator itsg = frees.find(t);
+    if (itsg != frees.end()) {
+        if (ToulBar2::verbose >= 1)
+            cout << ") Use freedom with value = " << itsg->second << "on cluster " << cluster->getId() << endl;
+        free = itsg->second;
+        return true;
+    } else {
+        if (ToulBar2::verbose >= 1)
+            cout << ") freedom NOT FOUND for cluster " << cluster->getId() << endl;
+        return false;
+    }
+}
+
+bool Separator::solGet(TAssign& a, Tuple& sol, bool& free)
 {
     int i = 0;
     TVars::iterator it = vars.begin();
@@ -393,6 +502,13 @@ bool Separator::solGet(TAssign& a, Tuple& sol)
             cout << t;
             cout << "  cost: " << p.first << endl;
             cout << "  sol: " << sol << endl;
+        }
+
+        // update the freedom status
+        if (getNbVars() != 0) {
+            TFrees::iterator itsg = freesSol.find(t);
+            assert(itsg != freesSol.end());
+            free = itsg->second;
         }
 
         return true;
@@ -425,9 +541,19 @@ void Separator::solRec(Cost ub)
 
     wcsp->restoreSolution(cluster);
 
+    TVars::iterator iter_begin, iter_end;
+
+    if (cluster->getFreedom()) {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    } else {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    }
+
     i = 0;
-    it = cluster->beginVars();
-    while (it != cluster->endVars()) {
+    it = iter_begin;
+    while (it != iter_end) {
         assert(wcsp->assigned(*it));
         if (!cluster->isSepVar(*it)) {
             tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
@@ -438,6 +564,7 @@ void Separator::solRec(Cost ub)
     }
 
     solutions[t] = TPairSol(ub + deltares, s);
+    freesSol[t] = cluster->getFreedom();
 
     if (ToulBar2::verbose >= 1) {
         cout << "recording solution  "
@@ -522,6 +649,13 @@ Cluster::Cluster(TreeDecomposition* tdin)
     , nbBacktracks(0)
 {
     instance = clusterCounter++;
+    freedom_on = false;
+    freedom_init = false;
+    isCurrentlyInTD = true;
+    clusterInTD = -1;
+    depth = -1;
+    freedom_limit = 0;
+    interrupt = false;
 }
 
 Cluster::~Cluster()
@@ -652,6 +786,17 @@ Cost Cluster::getLbRec() const
     return res;
 }
 
+Cost Cluster::getLbRec2() const
+{
+    Cost res = lb;
+
+    for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
+        res += (*iter)->getLbRec2();
+    }
+
+    return res;
+}
+
 Cost Cluster::getLbRecRDS()
 {
     assert(isActive());
@@ -675,6 +820,13 @@ void Cluster::reactivate()
         if (!(*iter)->sep->used())
             (*iter)->reactivate();
     }
+}
+
+void Cluster::reactivate2()
+{
+    active = true;
+    for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter)
+        (*iter)->reactivate2();
 }
 
 void Cluster::deactivate()
@@ -725,11 +877,35 @@ void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 void Cluster::getSolution(TAssign& sol)
 {
     static Tuple s; //FIXME: unsafe???
-    TVars::iterator it;
-    if (parent == NULL || this == td->getRootRDS()) {
-        if (vars.size() != 0) {
-            it = beginVars();
-            while (it != endVars()) {
+
+
+    TVars::iterator it, iter_begin, iter_end;
+
+    bool free = getFreedom();
+
+    if (getParent() == NULL || this == td->getRootRDS()) {
+        if (vars.size() == 0) {
+            if (free) {
+                iter_begin = beginVarsTree();
+                iter_end = endVarsTree();
+
+                it = iter_begin;
+                while (it != iter_end) {
+                    assert(wcsp->assigned(*it));
+                    sol[*it] = wcsp->getValue(*it);
+                    ++it;
+                }
+            }
+        } else {
+            if (free) {
+                iter_begin = beginVarsTree();
+                iter_end = endVarsTree();
+            } else {
+                iter_begin = beginVars();
+                iter_end = endVars();
+            }
+            it = iter_begin;
+            while (it != iter_end) {
                 assert(wcsp->assigned(*it));
                 sol[*it] = wcsp->getValue(*it);
                 //				cout << *it << " := " << sol[*it] << endl;
@@ -739,14 +915,26 @@ void Cluster::getSolution(TAssign& sol)
     }
     if (sep) {
 #ifndef NDEBUG
-        bool found = sep->solGet(sol, s);
+        bool found = sep->solGet(sol, s, free);
         assert(found);
 #else
-        sep->solGet(sol, s);
+        sep->solGet(sol, s, free);
 #endif
+
+        if (sep->getNbVars() == 0)
+            free = getFreedom();
+
         int i = 0;
-        it = beginVars();
-        while (it != endVars()) {
+        if (free) {
+            iter_begin = beginVarsTree();
+            iter_end = endVarsTree();
+        } else {
+            iter_begin = beginVars();
+            iter_end = endVars();
+        }
+
+        it = iter_begin;
+        while (it != iter_end) {
             if (!isSepVar(*it)) {
                 sol[*it] = wcsp->toValue(*it, s[i]);
                 //				cout << *it << " := " << sol[*it] << endl;
@@ -757,9 +945,12 @@ void Cluster::getSolution(TAssign& sol)
             ++it;
         }
     }
-    for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
-        Cluster* cluster = *iter;
-        cluster->getSolution(sol);
+
+    if (!free) {
+        for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
+            Cluster* cluster = *iter;
+            cluster->getSolution(sol);
+        }
     }
 }
 
@@ -1510,6 +1701,17 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited)
     }
 }
 
+void TreeDecomposition::computeDepths(Cluster* c, int parent_depth)
+{
+    int c_depth = parent_depth + 1;
+    if (c_depth > max_depth)
+        max_depth = c_depth;
+    c->setDepth(c_depth);
+    for (TClusters::iterator iter = c->beginSortedEdges(); iter != c->endSortedEdges(); ++iter) {
+        computeDepths(*iter, c_depth);
+    }
+}
+
 int TreeDecomposition::makeRooted()
 {
     TClusters visited;
@@ -1557,7 +1759,7 @@ int TreeDecomposition::makeRooted()
         return 0;
 
     // if it is a forest then create a unique meta-root cluster with empty separators with its children
-    if (roots.size() > 1) {
+    if (roots.size() >= 1) {
         root = new Cluster(this);
         root->setId(clusters.size());
         clusters.push_back(root);
@@ -1573,7 +1775,9 @@ int TreeDecomposition::makeRooted()
             root->addEdge(oneroot);
             oneroot->setParent(root);
             root->getDescendants().insert(root);
-            clusterSum(root->getDescendants(), oneroot->getDescendants());
+            
+            //clusterSum(root->getDescendants(), oneroot->getDescendants());
+            sum(root->getVarsTree(), oneroot->getVarsTree()); // the variables of varsTree should also be updated
         }
         roots.clear();
         roots.push_back(root);
@@ -1611,6 +1815,9 @@ int TreeDecomposition::makeRooted()
     }
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition width  : " << treewidth - 1 << endl;
+
+    // compute the depth of each cluster
+    computeDepths(getRoot(), -1);
 
     return height(root);
 }
@@ -2419,6 +2626,38 @@ void TreeDecomposition::dump(Cluster* c)
     while (ita != c->endEdges()) {
         dump(*ita);
         ++ita;
+    }
+}
+
+void TreeDecomposition::updateInTD(Cluster* c)
+{
+    if (c->getFreedom()) {
+        //cout << "Update pour le cluster " << c->getId() << endl;
+        //all the descendants clusters are discarded from the TD
+        for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants(); ++iter)
+            if ((*iter)->getId() != c->getId()) {
+                //cout << "Update pour le cluster fils " << (*iter)->getId() << endl;
+                (*iter)->setIsCurrInTD(false);
+                //(*iter)->setIdClusterInTD(c->getId());
+                (*iter)->getSep()->deconnect();
+            }
+        //~ else
+        //~ {
+        //~ (*iter)->setIsCurrInTD(true);
+        //~ }
+    }
+}
+
+void TreeDecomposition::updateInTD2(Cluster* c)
+{
+    if (c->getFreedom()) {
+        //cout << "Restore pour le cluster  " << c->getId() << endl;
+        for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants(); ++iter)
+            if ((*iter)->getId() != c->getId()) {
+                //cout << "Restore pour le cluster fils " << (*iter)->getId() << endl;
+                (*iter)->setIsCurrInTD(true);
+                //(*iter)->getSep()->reconnect();
+            }
     }
 }
 

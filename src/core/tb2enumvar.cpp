@@ -1126,8 +1126,11 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
         return false;
 
     if (wcsp->getTreeDec()) {
-        if (cluster != xyz->getCluster())
+        if (cluster != xyz->getCluster() ||
+            (n2links > 0 && cluster != links[0].constr->getCluster()) ||
+            (n2links > 1 && cluster != links[1].constr->getCluster())) {
             return false;
+        }
     }
 
     for (int i = 0; i < n2links; i++) {
@@ -1212,7 +1215,7 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
 
 void EnumeratedVariable::eliminate()
 {
-    if (isSep_)
+    if (isSep())
         return;
     if (ToulBar2::nbDecisionVars > 0 && wcspIndex < ToulBar2::nbDecisionVars)
         return;

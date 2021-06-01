@@ -771,6 +771,9 @@ public:
     static int minProperVarSize;
     static int smallSeparatorSize;
 
+    static int heuristicFreedom; // the freedom heuristic used for BTD-like algorithms (if one is used)
+    static int heuristicFreedomLimit; // the freedom limit
+
     static bool Berge_Dec; // flag for berge acyclic decomposition
     static bool learning; // if true, perform pseudoboolean learning
     static externalfunc timeOut;

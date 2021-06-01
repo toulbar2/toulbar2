@@ -38,6 +38,10 @@ typedef map<Tuple, TPairSol> TSols;
 typedef pair<Cost, BigInteger> TPairSG;
 typedef map<Tuple, TPairSG> TSGoods;
 
+typedef map<Tuple, bool> TFrees;
+typedef map<Tuple, bool> TFreesSols;
+typedef map<Tuple, int> TFreesLimit;
+
 class Separator : public AbstractNaryConstraint {
 private:
     Cluster* cluster;
@@ -52,6 +56,10 @@ private:
     TSGoods sgoods; // for solution counting
     TSols solutions;
     DLink<Separator*> linkSep; // link to insert the separator in PendingSeparator list
+
+    TFrees frees; // for managing freedom
+    TFreesSols freesSol; // for managing freedom
+    TFreesLimit freesLimit; // for managing freedom
 
     Tuple t; // temporary buffer for a separator tuple
     Tuple s; // temporary buffer for a solution tuple
@@ -71,11 +79,16 @@ public:
     void set(Cost clb, Cost cub, Solver::OpenList** open = NULL);
     bool get(Cost& clb, Cost& cub, Solver::OpenList** open = NULL);
 
+    void setF(bool free);
+    bool getF(bool& free); ///\brief return true if the corresponding freedom information is found, false otherwise
+    bool setFInc();
+    void freeIncS();
+
     void setSg(Cost c, BigInteger nb);
     BigInteger getSg(Cost& res, BigInteger& nb);
 
     void solRec(Cost ub);
-    bool solGet(TAssign& a, Tuple& sol);
+    bool solGet(TAssign& a, Tuple& sol, bool& free);
 
     void resetLb();
     void resetUb();
@@ -130,6 +143,16 @@ private:
 
     StoreBigInteger countElimVars;
     int num_part; //for approximation: number of the corresponding partition
+
+    // current freedom of variables choice
+    bool freedom_on;
+    bool freedom_init;
+    int freedom_limit;
+
+    bool isCurrentlyInTD;
+    int clusterInTD;
+    int depth;
+    bool interrupt;
 
 public:
     Cluster(TreeDecomposition* tdin);
@@ -214,6 +237,7 @@ public:
     }
     void deactivate();
     void reactivate();
+    void reactivate2();
 
     Cost getLb() { return lb; }
     void setLb(Cost c) { lb = c; }
@@ -231,6 +255,7 @@ public:
         lbRDS = c;
     }
     Cost getLbRec() const;
+    Cost getLbRec2() const;
     Cost getLbRecRDS();
 
     void addDelta(int posvar, Value value, Cost cost)
@@ -268,6 +293,38 @@ public:
     int getPart() { return num_part; }
     void setPart(int num) { num_part = num; }
 
+    // for managing freedom of the cluster
+    void freeRec(bool free)
+    {
+        if (sep)
+            sep->setF(free);
+        freedom_on = free;
+    }
+    // the returned boolean says if the information is found or not
+    // return true if ok and false if limit is attained (number of true permitted for one separator assignment)
+    bool freeGet()
+    {
+        bool free, found;
+        found = sep->getF(free);
+        if (found)
+            freedom_on = free;
+        return found;
+    }
+    void freeRecInc()
+    {
+        bool ok;
+        ok = sep->setFInc();
+        if (ok)
+            freedom_on = true;
+        else
+            freedom_on = false;
+    }
+    void freeInc()
+    {
+        if (sep)
+            sep->freeIncS();
+    }
+
     void solutionRec(Cost c)
     {
         setUb(c);
@@ -278,6 +335,27 @@ public:
 
     void setWCSP2Cluster(); // sets the WCSP to the cluster problem, deconnecting the rest
     void getElimVarOrder(vector<int>& elimVarOrder);
+
+    // freedom of variables choice
+    bool getFreedom() { return freedom_on; }
+    void setFreedom(bool f) { freedom_on = f; }
+    bool isVarTree(int i)
+    {
+        TVars::iterator it = varsTree.find(i);
+        return it != varsTree.end();
+    }
+    bool getFreedomInit() { return freedom_init; }
+    void setFreedomInit(bool f) { freedom_init = f; }
+    bool getIsCurrInTD() { return isCurrentlyInTD; }
+    void setIsCurrInTD(bool f) { isCurrentlyInTD = f; }
+    int getIdClusterInTD() { return clusterInTD; }
+    void setIdClusterInTD(int id) { clusterInTD = id; }
+    int getDepth() { return depth; }
+    void setDepth(int d) { depth = d; }
+    int getFreedomLimit() { return freedom_limit; }
+    void setFreedomLimit(int l) { freedom_limit = l; }
+    void setInterrupt(bool b) { interrupt = b; }
+    bool getInterrupt() { return interrupt; }
 
     TVars::iterator beginVars() { return vars.begin(); }
     TVars::iterator endVars() { return vars.end(); }
@@ -320,6 +398,8 @@ public:
             ++it;
         }
     }
+
+    bool isLeaf() { return sortedEdges.begin() == sortedEdges.end(); }
 };
 
 class TreeDecomposition {
@@ -332,6 +412,8 @@ private:
 
     StoreInt currentCluster; // used to restrict local propagation (NC) and boosting by variable elimination to the current cluster's subtree
     vector<StoreInt> deltaModified; // accelerator avoiding unnecessary checks to delta structure if it is empty (Boolean value)
+
+    int max_depth;
 
 public:
     TreeDecomposition(WCSP* wcsp_in);
@@ -415,6 +497,12 @@ public:
     void print(Cluster* c = NULL, int recnum = 0);
     void printStats(Cluster* c = NULL);
     void dump(Cluster* c = NULL);
+
+    //manage freedom
+    void updateInTD(Cluster* c);
+    void updateInTD2(Cluster* c);
+    void computeDepths(Cluster* c, int parent_depth);
+    int getMaxDepth() { return max_depth; }
 };
 
 #endif

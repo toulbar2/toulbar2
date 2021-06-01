@@ -101,6 +101,12 @@ Solver::Solver(Cost initUpperBound)
     , globalUpperBound(MAX_COST)
     , initialDepth(0)
     , prevDivSolutionCost(MIN_COST)
+    , nbChoices(0)
+    , nbForcedChoices(0)
+    , nbForcedChoiceChange(0)
+    , nbChoiceChange(0)
+    , nbReadOnly(0)
+    , solveDepth(0)
 {
     searchSize = new StoreInt(0);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
@@ -1598,7 +1604,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         clb = MAX(clb, open_->getLb(delta));
         if (ToulBar2::verbose >= 1 && cluster)
             cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
-        while (clb < cub && !open_->finished() && (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
+        while (clb < cub && !open_->finished() && (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit)) && !(cluster && cluster->getFreedom() && cluster->getInterrupt())) {
             if (cluster) {
                 cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -2345,6 +2351,32 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
+    if (ToulBar2::verbose >= 0 && ToulBar2::heuristicFreedom) {
+        cout << "Summary freedom management: " << endl;
+        double sum = nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
+        if (sum != 0)
+            cout << "% of choices: " << (nbChoices / sum ) * 100.0 << endl;
+        else cout << "% of choices: NA" << endl;
+
+        if (nbChoices != 0)
+            cout << "% of stopping merging (w.r.t true choices): " << (nbChoiceChange / nbChoices) * 100.0 << endl;
+        else cout << "% of stopping merging (w.r.t true choices): NA" << endl;
+
+        if (sum != 0)
+            cout << "% of forced stopping merging: " << (nbForcedChoiceChange / sum) * 100.0 << endl;
+        else cout << "% of forced stopping merging: NA" << endl;
+
+        if (sum != 0)
+            cout << "% of forced choices: " << (nbForcedChoices / sum) * 100.0 << endl;
+        else cout << "% of forced choices: NA" << endl;
+
+        if (sum != 0)
+            cout << "% of read only: " << (nbReadOnly / sum) * 100.0 << endl;
+        else cout << "% of read only: NA" << endl;
+
+        cout << "Depth: " << solveDepth << " / " << wcsp->getTreeDec()->getMaxDepth() << endl;;
+    }
+
     if (isSolution) {
         if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {
             if (ToulBar2::haplotype)
@@ -2650,7 +2682,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
         ChoicePoint* cp_ptr = ((randomOrder) ? permute[idx - nd.first] : &cp[idx]);
-        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex));
+        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex) || (wcsp->getTreeDec()->getCurrentCluster()->getFreedom() && wcsp->getTreeDec()->getCurrentCluster()->isVarTree(cp_ptr->varIndex)));
         if ((cp_ptr->op == CP_ASSIGN && !(cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) || (cp_ptr->op == CP_REMOVE && cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) {
             assignLS[size] = cp_ptr->varIndex;
             valueLS[size] = cp_ptr->value;

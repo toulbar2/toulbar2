@@ -466,6 +466,31 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
     return maxtight;
 }
 
+bool Variable::isSep()
+{
+    if (ToulBar2::heuristicFreedom) {
+        isSep_ = false;
+
+        TSepLink::iterator it;
+
+        it=clusters.begin();
+
+        while (it != clusters.end()) {
+            int c = (*it).first;
+            if (wcsp->getTreeDec()->getCluster(c)->getIsCurrInTD()) {
+                isSep_ = true;
+                return true;
+            } else {
+                ++it;
+            }
+        }
+
+        return false;
+    } else {
+        return isSep_;
+    }
+}
+
 ostream& operator<<(ostream& os, Variable& var)
 {
     os << var.name; // << " #" << var.dac;

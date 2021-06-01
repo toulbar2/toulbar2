@@ -222,6 +222,15 @@ protected:
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
+
+    void Manage_Freedom(Cluster * cluster, bool is_root);
+    double nbChoices;
+    double nbForcedChoices;
+    double nbForcedChoiceChange;
+    double nbChoiceChange;
+    double nbReadOnly;
+    int solveDepth;
+
     void increase(int varIndex, Value value, bool reverse = false);
     void decrease(int varIndex, Value value, bool reverse = false);
     void assign(int varIndex, Value value, bool reverse = false);

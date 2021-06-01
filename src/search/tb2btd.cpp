@@ -19,7 +19,16 @@ int Solver::getNextUnassignedVar(Cluster* cluster)
 {
     if (unassignedVars->empty())
         return -1;
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
+
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter))
             return *iter;
     }
@@ -30,11 +39,19 @@ int Solver::getVarMinDomainDivMaxDegree(Cluster* cluster)
 {
     if (unassignedVars->empty())
         return -1;
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
@@ -53,13 +70,21 @@ int Solver::getVarMinDomainDivMaxDegreeRandomized(Cluster* cluster)
 {
     if (unassignedVars->empty())
         return -1;
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     int ties[cluster->getNbVars()];
     int nbties = 0;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
@@ -87,14 +112,22 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster* cluster)
     if (unassignedVars->empty())
         return -1;
 
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar))
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && ((!cluster->getFreedom() && cluster->isVar(lastConflictVar)) || (cluster->getFreedom() && cluster->isVarTree(lastConflictVar))))
         return lastConflictVar;
 
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
@@ -114,8 +147,17 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster* cluster)
     if (unassignedVars->empty())
         return -1;
 
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar))
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && ((!cluster->getFreedom() && cluster->isVar(lastConflictVar)) || (cluster->getFreedom() && cluster->isVarTree(lastConflictVar))))
         return lastConflictVar;
+
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
 
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
@@ -123,7 +165,7 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster* cluster)
     int ties[cluster->getNbVars()];
     int nbties = 0;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
@@ -150,11 +192,19 @@ int Solver::getVarMinDomainDivMaxWeightedDegree(Cluster* cluster)
 {
     if (unassignedVars->empty())
         return -1;
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             Cost unarymediancost = MIN_COST;
             int domsize = wcsp->getDomainSize(*iter);
@@ -180,13 +230,21 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster* cluster)
 {
     if (unassignedVars->empty())
         return -1;
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     int ties[cluster->getNbVars()];
     int nbties = 0;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             Cost unarymediancost = MIN_COST;
             int domsize = wcsp->getDomainSize(*iter);
@@ -221,14 +279,22 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster* cluster)
     if (unassignedVars->empty())
         return -1;
 
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar))
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && ((!cluster->getFreedom() && cluster->isVar(lastConflictVar)) || (cluster->getFreedom() && cluster->isVarTree(lastConflictVar))))
         return lastConflictVar;
 
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             Cost unarymediancost = MIN_COST;
             int domsize = wcsp->getDomainSize(*iter);
@@ -256,16 +322,24 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster* c
     if (unassignedVars->empty())
         return -1;
 
-    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && cluster->isVar(lastConflictVar))
+    if (lastConflictVar != -1 && wcsp->unassigned(lastConflictVar) && ((!cluster->getFreedom() && cluster->isVar(lastConflictVar)) || (cluster->getFreedom() && cluster->isVarTree(lastConflictVar))))
         return lastConflictVar;
 
+    TVars::iterator iter, iter_begin, iter_end;
+    if (!cluster->getFreedom()) {
+        iter_begin = cluster->beginVars();
+        iter_end = cluster->endVars();
+    } else {
+        iter_begin = cluster->beginVarsTree();
+        iter_end = cluster->endVarsTree();
+    }
     int varIndex = -1;
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     int ties[cluster->getNbVars()];
     int nbties = 0;
 
-    for (TVars::iterator iter = cluster->beginVars(); iter != cluster->endVars(); ++iter) {
+    for (iter = iter_begin; iter != iter_end; ++iter) {
         if (wcsp->unassigned(*iter)) {
             Cost unarymediancost = MIN_COST;
             int domsize = wcsp->getDomainSize(*iter);
@@ -294,6 +368,121 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster* c
         return ties[myrand() % nbties];
     else
         return varIndex;
+}
+
+// Managing freedom of clusters
+void Solver::Manage_Freedom(Cluster* c, bool is_root)
+{
+    if (c->getNbVars() == 0) {
+        c->setFreedom(false);
+        return;
+    }
+
+    // via cluster
+    if (ToulBar2::heuristicFreedom == 1) {
+        if (c->isLeaf()) {
+            c->setFreedomInit(true);
+            c->setFreedom(false);
+        } else {
+            if (!(c->getFreedomInit() && !c->getFreedom())) {
+                bool found = false;
+                for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants() && !found; ++iter) {
+                    if ((*iter)->getId() != c->getId()) {
+                        if ((*iter)->getSep()->used()) {
+                            found = true;
+                        }
+                    }
+                }
+                if (found) {
+                    if (c->getFreedomInit() && c->getFreedom()) {
+                        if (c->open) {
+                            *(c->open) = OpenList();
+                        }
+                        nbForcedChoiceChange++;
+                    } else {
+                        nbForcedChoices++;
+                    }
+                    c->setFreedomInit(true);
+                    c->setFreedom(false);
+                } else {
+                    if (!c->getFreedomInit()) {
+                        nbChoices++;
+                    }
+                    if (c->getFreedomInit()) {
+                        if (c->getFreedomLimit() < ToulBar2::heuristicFreedomLimit) {
+                            c->setFreedom(true);
+                            nbReadOnly++;
+                        } else {
+                            c->setFreedom(false);
+                            if (c->open) {
+                                *(c->open) = OpenList();
+                            }
+                            nbChoiceChange++;
+                        }
+                    } else {
+                        c->setFreedomInit(true);
+                        c->setFreedom(true);
+                    }
+                }
+            } else {
+                nbReadOnly++;
+            }
+        }
+        c->freeRec(c->getFreedom());
+    }
+
+    // via separator
+    if (ToulBar2::heuristicFreedom > 1) {
+        bool recorded = false;
+        recorded = c->freeGet();
+
+        if (c->isLeaf()) {
+            c->freeRec(false);
+        } else {
+            if (!(recorded && !c->getFreedom())) {
+                bool found = false;
+                for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants() && !found; ++iter) {
+                    if ((*iter)->getId() != c->getId()) {
+                        if ((*iter)->getSep()->used()) {
+                            found = true;
+                        }
+                    }
+                }
+                if (found) {
+                    if (recorded && c->getFreedom()) {
+                        if (c->open) {
+                            *(c->open) = OpenList();
+                        }
+                        nbForcedChoiceChange++;
+                    } else {
+                        nbForcedChoices++;
+                    }
+                    c->setFreedom(false);
+                } else {
+                    if (!recorded) {
+                        nbChoices++;
+                    }
+
+                    bool before = c->getFreedom();
+
+                    c->freeRecInc();
+
+                    if (recorded && before) {
+                        if (!c->getFreedom()) {
+                            if (c->open) {
+                                *(c->open) = OpenList();
+                            }
+                            nbChoiceChange++;
+                        } else {
+                            nbReadOnly++;
+                        }
+                    }
+                }
+            } else {
+                nbReadOnly++;
+            }
+        }
+    }
 }
 
 /*
@@ -492,6 +681,19 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
     assert(lbgood <= cub);
     TreeDecomposition* td = wcsp->getTreeDec();
     int varIndex = -1;
+
+    if (ToulBar2::heuristicFreedom && cluster == td->getRoot()) {
+        Manage_Freedom(cluster, true);
+        td->updateInTD(cluster);
+    }
+
+    if (ToulBar2::heuristicFreedom && cluster->getDepth() >= solveDepth) {
+        if (cluster->getDepth() > solveDepth) {
+            solveDepth = cluster->getDepth();
+        } else if (!cluster->getFreedom() && !cluster->isLeaf()) {
+            solveDepth++;
+        }
+    }
     if (ToulBar2::Static_variable_ordering)
         varIndex = getNextUnassignedVar(cluster);
     else if (ToulBar2::weightedDegree && ToulBar2::lastConflict)
@@ -503,80 +705,120 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
     else
         varIndex = ((ToulBar2::restart > 0) ? getVarMinDomainDivMaxDegreeRandomized(cluster) : getVarMinDomainDivMaxDegree(cluster));
 
+    if (ToulBar2::heuristicFreedom == 3 && cluster->getFreedom() && cluster->isVar(varIndex)) {
+        cluster->freeInc();
+    }
+
     if (varIndex < 0) {
-        // Current cluster is completely assigned
+        // Current cluster is completely assigned (if no freedom), current cluster descendant is completely assigned (if freedom)
         Cost clb = wcsp->getLb();
         assert(clb <= cub);
         Cost csol = clb;
 
-        for (TClusters::iterator iter = cluster->beginSortedEdges(); clb < cub && iter != cluster->endSortedEdges();) {
-            // Solves each cluster son with local lower and upper bounds
-            Cluster* c = *iter;
-            ++iter;
-            Cost lbSon = MIN_COST;
-            Cost ubSon = MAX_COST;
-            bool good = false;
-            if (!c->isActive()) {
-                c->reactivate();
-                c->nogoodGet(lbSon, ubSon, &c->open);
-                good = true;
-            } else {
-                lbSon = c->getLbRec();
-                ubSon = c->getUb();
+        if (!cluster->getFreedom()) {
+            for (TClusters::iterator iter = cluster->beginSortedEdges(); clb < cub && iter != cluster->endSortedEdges();) {
+                // Solves each cluster son with local lower and upper bounds
+                Cluster* c = *iter;
+                ++iter;
+                Cost lbSon = MIN_COST;
+                Cost ubSon = MAX_COST;
+                bool good = false;
+                if (!c->isActive()) {
+                    c->reactivate();
+                    c->nogoodGet(lbSon, ubSon, &c->open);
+                    good = true;
+                } else {
+                    lbSon = c->getLbRec();
+                    ubSon = c->getUb();
 #ifndef NDEBUG
-                Cost dummylb = -MAX_COST;
-                Cost tmpub = -MAX_COST;
-                c->nogoodGet(dummylb, tmpub, &c->open);
-                assert(tmpub == ubSon);
+                    Cost dummylb = -MAX_COST;
+                    Cost tmpub = -MAX_COST;
+                    c->nogoodGet(dummylb, tmpub, &c->open);
+                    assert(tmpub == ubSon);
 #endif
-            }
-            if (ToulBar2::verbose >= 2)
-                cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << " cluster->lb: " << c->getLbRec() << endl;
-            if (lbSon < ubSon) { // we do not have an optimality proof
-                if (clb <= lbgood || (csol < MAX_COST && ubSon >= cub - csol + lbSon)) { // we do not know a good enough son's solution or the currently reconstructed father's solution is not working or the currently reconstructed father's lower bound is not increasing
-                    bool csolution = (csol < MAX_COST && ubSon < cub - csol + lbSon);
-                    assert(!csolution || ubSon < cub - clb + lbSon);
-                    ubSon = MIN(ubSon, cub - clb + lbSon);
-                    td->setCurrentCluster(c);
-                    wcsp->setUb(ubSon);
-                    wcsp->setLb((good) ? c->getLbRec() : lbSon);
-                    try {
-                        Store::store();
-                        wcsp->enforceUb();
-                        wcsp->propagate();
-                        Cost bestlb = MAX(wcsp->getLb(), lbSon);
-                        if (csol < MAX_COST && iter == cluster->endSortedEdges())
-                            bestlb = MAX(bestlb, lbgood - csol + lbSon); // simple trick to provide a better initial lower bound for the last son
-                        if (ToulBar2::btdMode >= 2) {
-                            Cost rds = td->getLbRecRDS();
-                            bestlb = MAX(bestlb, rds);
-                            if (CUT(bestlb, ubSon))
-                                THROWCONTRADICTION;
+                }
+                if (ToulBar2::verbose >= 2)
+                    cout << "lbson: " << lbSon << " ubson: " << ubSon << " lbgood:" << lbgood << " clb: " << clb << " csol: " << csol << " cub: " << cub << " cluster->lb: " << c->getLbRec() << endl;
+                if (lbSon < ubSon) { // we do not have an optimality proof
+                    if (clb <= lbgood || (csol < MAX_COST && ubSon >= cub - csol + lbSon)) { // we do not know a good enough son's solution or the currently reconstructed father's solution is not working or the currently reconstructed father's lower bound is not increasing
+                        if (ToulBar2::heuristicFreedom) {
+                            bool recorded = false;
+                            bool before = false;
+                            bool current = c->getFreedom();
+                            if (ToulBar2::heuristicFreedom == 1) {
+                                recorded = c->freeGet();
+                                before = c->getFreedom();
+                                c->setFreedom(current);
+                            }
+
+                            Manage_Freedom(c, false);
+                            td->updateInTD(c);
+
+                            if (ToulBar2::heuristicFreedom == 1) {
+                                if (recorded && before && !c->getFreedom())
+                                    if (c->open) {
+                                        *(c->open) = OpenList();
+                                    }
+                            }
                         }
-                        pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
-                        assert(res.first >= bestlb && res.second <= ubSon);
-                        c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
-                        clb += res.first - lbSon;
-                        if (csol < MAX_COST) {
-                            if (res.second < ubSon || csolution)
-                                csol += res.second - lbSon;
+                        bool csolution = (csol < MAX_COST && ubSon < cub - csol + lbSon);
+                        assert(!csolution || ubSon < cub - clb + lbSon);
+                        ubSon = MIN(ubSon, cub - clb + lbSon);
+                        td->setCurrentCluster(c);
+                        wcsp->setUb(ubSon);
+                        wcsp->setLb((good) ? c->getLbRec() : lbSon);
+                        try {
+                            Store::store();
+                            wcsp->enforceUb();
+                            wcsp->propagate();
+                            Cost bestlb = MAX(wcsp->getLb(), lbSon);
+                            if (csol < MAX_COST && iter == cluster->endSortedEdges())
+                                bestlb = MAX(bestlb, lbgood - csol + lbSon); // simple trick to provide a better initial lower bound for the last son
+                            if (ToulBar2::btdMode >= 2) {
+                                Cost rds = td->getLbRecRDS();
+                                bestlb = MAX(bestlb, rds);
+                                if (CUT(bestlb, ubSon))
+                                    THROWCONTRADICTION;
+                            }
+                            if (ToulBar2::heuristicFreedom == 3 && c->getFreedom()) {
+                                c->setInterrupt(false);
+                            }
+                            pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
+                            assert(res.first >= bestlb && res.second <= ubSon);
+                            if (c->getFreedom() && ((res.first == bestlb && res.second == ubSon) && res.first != res.second)) {
+                                if (ToulBar2::heuristicFreedom == 1)
+                                    c->setFreedomLimit(c->getFreedomLimit() + 1);
+
+                                if (ToulBar2::heuristicFreedom == 2)
+                                    c->freeInc();
+                            }
+                            c->nogoodRec(res.first, ((res.second < ubSon) ? res.second : MAX_COST), &c->open);
+                            clb += res.first - lbSon;
+                            if (csol < MAX_COST) {
+                                if (res.second < ubSon || csolution)
+                                    csol += res.second - lbSon;
+                                else
+                                    csol = MAX_COST;
+                            }
+                        } catch (const Contradiction&) {
+                            wcsp->whenContradiction();
+                            c->nogoodRec(ubSon, MAX_COST, &c->open);
+                            clb += ubSon - lbSon;
+                            if (csolution)
+                                csol += ubSon - lbSon;
                             else
                                 csol = MAX_COST;
                         }
-                    } catch (const Contradiction&) {
-                        wcsp->whenContradiction();
-                        c->nogoodRec(ubSon, MAX_COST, &c->open);
-                        clb += ubSon - lbSon;
-                        if (csolution)
+                        Store::restore();
+                        // freedom management
+                        if (ToulBar2::heuristicFreedom) {
+                            td->updateInTD2(c);
+                        }
+                    } else {
+                        if (csol < MAX_COST) {
+                            assert(ubSon < MAX_COST);
                             csol += ubSon - lbSon;
-                        else
-                            csol = MAX_COST;
-                    }
-                    Store::restore();
-                } else {
-                    if (csol < MAX_COST) {
-                        assert(ubSon < MAX_COST);
-                        csol += ubSon - lbSon;
+                        }
                     }
                 }
             }
@@ -619,7 +861,11 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         assert(bestlb <= cub);
         if (ToulBar2::hbfs && bestlb < cub) { // keep current node in open list instead of closing it!
             if (cluster->getNbVars() > 0) {
-                int varid = *cluster->getVars().begin();
+                int varid = -1;
+                if (!cluster->getFreedom())
+                    varid = *cluster->getVars().begin();
+                else
+                    varid = *cluster->getVarsTree().begin();
                 assert(wcsp->assigned(varid));
                 cluster->cp->addChoicePoint(CP_ASSIGN, varid, wcsp->getValue(varid), true); // dummy additional choice point to avoid the reversal of the last effective choice point for this open node
             }
@@ -638,7 +884,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         }
         return make_pair(bestlb, cub);
     } else {
-        // Enumerates cluster proper variables
+        // Enumerates cluster proper variables (if no freedom), variables in cluster descendants (if freedom)
         *((StoreInt*)searchSize) += ((int)(10e3 * Log(wcsp->getDomainSize(varIndex))));
         pair<Cost, Cost> res = make_pair(MIN_COST, MAX_COST);
         if (wcsp->enumerated(varIndex)) {
