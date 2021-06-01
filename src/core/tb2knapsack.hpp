@@ -1084,7 +1084,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << scope[i]->getName();
+                os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
             os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << Original_capacity << ",\n\t\"weightedvalues\":[";
@@ -1134,7 +1134,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << scope[i]->getName();
+                    os << "\"" << scope[i]->getName() << "\"";
                     printed = true;
                 }
             os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weightedvalues\":[";

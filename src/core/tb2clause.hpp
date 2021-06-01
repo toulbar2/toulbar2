@@ -493,7 +493,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << scope[i]->getName();
+                os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
             os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
@@ -537,7 +537,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << scope[i]->getName();
+                    os << "\"" << scope[i]->getName() << "\"";
                     printed = true;
                 }
             os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";

@@ -300,10 +300,10 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
     bool printed = false;
     os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_"
        << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "_"
-       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[";
-    os << x->getName() << ","
-       << y->getName() << ","
-       << z->getName() << "],";
+       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[\"";
+    os << x->getName() << "\",\""
+       << y->getName() << "\",\""
+       << z->getName() << "\"],";
     os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
