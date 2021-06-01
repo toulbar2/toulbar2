@@ -224,6 +224,7 @@ double TernaryConstraint::computeTightness()
 {
     int count = 0;
     double sum = 0;
+    double tight = -1;
     Cost* costs = new Cost[x->getDomainSize() * y->getDomainSize() * z->getDomainSize()];
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {

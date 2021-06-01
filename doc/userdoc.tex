@@ -357,6 +357,7 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
   in the middle of domain range while d=2 splits domains in the middle
   of the sorted domain based on unary costs. 
 \item[-sortd] sorts domains in preprocessing based on increasing unary costs (works only for binary WCSPs).
+\item[-sortc] sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2 - default option), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6) or the opposite order if using a negative value.
 \item[-solr] solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
 \item[-vacint] VAC-integrality/Full-EAC variable ordering heuristic (can be combined with option -A)
 \end{description}

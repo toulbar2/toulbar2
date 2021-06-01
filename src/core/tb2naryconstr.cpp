@@ -1305,6 +1305,7 @@ double NaryConstraint::computeTightness()
 {
     int count = 0;
     double sum = 0;
+    double tight = -1;
     Cost* costs_ = new Cost[size()];
     if (pf) {
         TUPLES::iterator it = pf->begin();

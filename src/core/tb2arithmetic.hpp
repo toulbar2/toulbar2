@@ -40,7 +40,7 @@ public:
 
     double computeTightness()
     {
-        tight = (double)penalty * abs((int)permitted.size() - (int)x->getDomainSize()) / x->getDomainSize();
+        double tight = (double)penalty * abs((int)permitted.size() - (int)x->getDomainSize()) / x->getDomainSize();
         return tight;
     }
 

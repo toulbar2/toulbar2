@@ -474,6 +474,16 @@ typedef enum {
     ELIM_MAX
 } ElimOrderType;
 
+typedef enum {
+    CONSTR_ORDER_ID = 1,
+    CONSTR_ORDER_DAC = 2,
+    CONSTR_ORDER_TIGHTNESS = 3,
+    CONSTR_ORDER_DAC_TIGHTNESS = 4,
+    CONSTR_ORDER_TIGHTNESS_DAC = 5,
+    CONSTR_ORDER_RANDOM = 6,
+    CONSTR_ORDER_THEMAX
+} ConstrOrdering;
+
 class Pedigree;
 class Haplotype;
 class BEP;
@@ -602,6 +612,7 @@ public:
     static bool lastConflict;
     static int weightedDegree;
     static int weightedTightness;
+    static int constrOrdering;
     static bool MSTDAC;
     static int DEE;
     static int DEE_;

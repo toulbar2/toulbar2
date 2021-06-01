@@ -178,6 +178,7 @@ enum {
     NO_OPT_dichotomicBranching,
     OPT_sortDomains,
     NO_OPT_sortDomains,
+    OPT_constrOrdering,
     OPT_solutionBasedPhaseSaving,
     NO_OPT_solutionBasedPhaseSaving,
     OPT_weightedDegree,
@@ -396,6 +397,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_dichotomicBranching, (char*)"-d:", SO_NONE },
     { OPT_sortDomains, (char*)"-sortd", SO_NONE },
     { NO_OPT_sortDomains, (char*)"-sortd:", SO_NONE },
+    { OPT_constrOrdering, (char*)"-sortc", SO_REQ_SEP },
     { OPT_solutionBasedPhaseSaving, (char*)"-solr", SO_NONE },
     { NO_OPT_solutionBasedPhaseSaving, (char*)"-solr:", SO_NONE },
     { OPT_weightedDegree, (char*)"-q", SO_OPT },
@@ -784,6 +786,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::sortDomains)
         cout << " (default option)";
     cout << endl;
+    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6) or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
     cout << "   -solr : solution-based phase saving";
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
@@ -1442,6 +1445,13 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::sortDomains = true;
             } else if (args.OptionId() == NO_OPT_sortDomains) {
                 ToulBar2::sortDomains = false;
+            }
+
+            if (args.OptionId() == OPT_constrOrdering) {
+                int c = atoi(args.OptionArg());
+                if (abs(c) >= CONSTR_ORDER_ID || abs(c) < CONSTR_ORDER_THEMAX) {
+                    ToulBar2::constrOrdering = c;
+                }
             }
 
             if (args.OptionId() == OPT_solutionBasedPhaseSaving) {
