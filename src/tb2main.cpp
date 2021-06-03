@@ -1312,9 +1312,9 @@ int _tmain(int argc, TCHAR* argv[])
 
             // choice of freedom heuristic limit
             if (args.OptionId() == OPT_BTD_freedom_limit) {
-                int limit = 1;
+                int limit = 0;
                 if(args.OptionArg() != NULL ) limit = atoi(args.OptionArg());
-                if (limit >= 0) {
+                if (limit >= 1) {
                     ToulBar2::heuristicFreedomLimit = limit;
                 } else {
                     ToulBar2::heuristicFreedomLimit = 1;

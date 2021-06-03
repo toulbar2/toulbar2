@@ -237,7 +237,6 @@ public:
     }
     void deactivate();
     void reactivate();
-    void reactivate2();
 
     Cost getLb() { return lb; }
     void setLb(Cost c) { lb = c; }
@@ -255,7 +254,6 @@ public:
         lbRDS = c;
     }
     Cost getLbRec() const;
-    Cost getLbRec2() const;
     Cost getLbRecRDS();
 
     void addDelta(int posvar, Value value, Cost cost)

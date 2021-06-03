@@ -117,7 +117,7 @@ void Separator::propagate()
         if (getVar(i)->assigned())
             assign(i);
     }
-    if (nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
+    if (cluster->getIsCurrInTD() && nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
         wcsp->revise(this);
         if (ToulBar2::allSolutions) {
             Cost res = MIN_COST;
@@ -786,17 +786,6 @@ Cost Cluster::getLbRec() const
     return res;
 }
 
-Cost Cluster::getLbRec2() const
-{
-    Cost res = lb;
-
-    for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
-        res += (*iter)->getLbRec2();
-    }
-
-    return res;
-}
-
 Cost Cluster::getLbRecRDS()
 {
     assert(isActive());
@@ -820,13 +809,6 @@ void Cluster::reactivate()
         if (!(*iter)->sep->used())
             (*iter)->reactivate();
     }
-}
-
-void Cluster::reactivate2()
-{
-    active = true;
-    for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter)
-        (*iter)->reactivate2();
 }
 
 void Cluster::deactivate()
@@ -908,7 +890,6 @@ void Cluster::getSolution(TAssign& sol)
             while (it != iter_end) {
                 assert(wcsp->assigned(*it));
                 sol[*it] = wcsp->getValue(*it);
-                //				cout << *it << " := " << sol[*it] << endl;
                 ++it;
             }
         }
@@ -1147,6 +1128,7 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in)
     , rootRDS(NULL)
     , currentCluster(-1)
     , deltaModified(vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false)))
+    , max_depth(-1)
 {
 }
 
@@ -1675,7 +1657,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited)
         cj->setParent(c);
         visited.insert(cj);
 
-        if (ToulBar2::searchMethod == DFBB) {
+//        if (ToulBar2::searchMethod == DFBB) {
             TVars cjsep;
             intersection(c->getVars(), cj->getVars(), cjsep);
 
@@ -1694,7 +1676,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited)
                 cj->addCtr(cj->getSep());
             delete[] scopeVars;
             //-------
-        }
+//        }
 
         makeRootedRec(cj, visited);
         ++itj;
@@ -1755,8 +1737,8 @@ int TreeDecomposition::makeRooted()
         makeRootedRec(root, visited);
         makeDescendants(root);
     }
-    if (ToulBar2::searchMethod != DFBB)
-        return 0;
+//    if (ToulBar2::searchMethod != DFBB)
+//        return 0;
 
     // if it is a forest then create a unique meta-root cluster with empty separators with its children
     if (roots.size() >= 1) {
@@ -1776,7 +1758,7 @@ int TreeDecomposition::makeRooted()
             oneroot->setParent(root);
             root->getDescendants().insert(root);
             
-            //clusterSum(root->getDescendants(), oneroot->getDescendants());
+            clusterSum(root->getDescendants(), oneroot->getDescendants());
             sum(root->getVarsTree(), oneroot->getVarsTree()); // the variables of varsTree should also be updated
         }
         roots.clear();
@@ -2176,8 +2158,8 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
 
     roots.clear();
     int h = makeRooted();
-    if (ToulBar2::searchMethod != DFBB)
-        return;
+//    if (ToulBar2::searchMethod != DFBB)
+//        return;
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
     if (!ToulBar2::approximateCountingBTD) {
@@ -2632,31 +2614,21 @@ void TreeDecomposition::dump(Cluster* c)
 void TreeDecomposition::updateInTD(Cluster* c)
 {
     if (c->getFreedom()) {
-        //cout << "Update pour le cluster " << c->getId() << endl;
         //all the descendants clusters are discarded from the TD
         for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants(); ++iter)
             if ((*iter)->getId() != c->getId()) {
-                //cout << "Update pour le cluster fils " << (*iter)->getId() << endl;
                 (*iter)->setIsCurrInTD(false);
-                //(*iter)->setIdClusterInTD(c->getId());
                 (*iter)->getSep()->deconnect();
             }
-        //~ else
-        //~ {
-        //~ (*iter)->setIsCurrInTD(true);
-        //~ }
     }
 }
 
 void TreeDecomposition::updateInTD2(Cluster* c)
 {
     if (c->getFreedom()) {
-        //cout << "Restore pour le cluster  " << c->getId() << endl;
         for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants(); ++iter)
             if ((*iter)->getId() != c->getId()) {
-                //cout << "Restore pour le cluster fils " << (*iter)->getId() << endl;
                 (*iter)->setIsCurrInTD(true);
-                //(*iter)->getSep()->reconnect();
             }
     }
 }
