@@ -330,9 +330,9 @@ void Separator::freeIncS()
 
     freesLimit[t] += 1;
 
-//    if (ToulBar2::heuristicFreedom == 2 && freesLimit[t] >= ToulBar2::heuristicFreedomLimit) {
-//        cluster->setInterrupt(true);
-//    }
+    if (ToulBar2::heuristicFreedom == 3 && freesLimit[t] >= ToulBar2::heuristicFreedomLimit) {
+        cluster->setInterrupt(true);
+    }
 }
 
 Cost Separator::getCurrentDelta()

@@ -1301,23 +1301,23 @@ int _tmain(int argc, TCHAR* argv[])
 
             // choice of freedom heuristic
             if (args.OptionId() == OPT_BTD_freedom) {
-                int freedom = 0;
+                int freedom = 1;
                 if(args.OptionArg() != NULL ) freedom = atoi(args.OptionArg());
                 if (freedom >= 0) {
                     ToulBar2::heuristicFreedom = freedom;
                 } else {
-                    ToulBar2::heuristicFreedom = 0;
+                    ToulBar2::heuristicFreedom = 1;
                 }
             }
 
             // choice of freedom heuristic limit
             if (args.OptionId() == OPT_BTD_freedom_limit) {
-                int limit = 0;
+                int limit = 1;
                 if(args.OptionArg() != NULL ) limit = atoi(args.OptionArg());
-                if (limit >= 1) {
+                if (limit >= 0) {
                     ToulBar2::heuristicFreedomLimit = limit;
                 } else {
-                    ToulBar2::heuristicFreedomLimit = 0;
+                    ToulBar2::heuristicFreedomLimit = 1;
                 }
             }
 
