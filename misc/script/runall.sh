@@ -4,7 +4,7 @@
 # ./runall.sh ../validation
 
 solver=./toulbar2
-timelimit=3600
+timelimit=1200
 vmemlimit=16000000
 K=1
 problems=$1
@@ -12,9 +12,10 @@ shift
 
 rm -f outall
 
-for e in `find $problems -regex ".*[.]wcsp" -print | sort` ; do
+for e in `find $problems -regextype egrep -regex ".*[.]wcsp([.]xz)*" -print | sort` ; do
     dir=`dirname $e`
-    base=`basename $e .wcsp`
+    base=`basename $e .xz`
+    base=`basename $base .wcsp`
     file=$dir/$base
 
     ubfile=${dir}/${base}.ub
@@ -38,10 +39,10 @@ for e in `find $problems -regex ".*[.]wcsp" -print | sort` ; do
     ulimit -t $timelimit > /dev/null
     ulimit -v $vmemlimit > /dev/null
 
-#    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp -ub=$ub "$@" -C=$K >> outsolver) 2> usedtime
+#    (/usr/bin/time -f "%U user %S sys" $solver $e -ub=$ub "$@" -C=$K >> outsolver) 2> usedtime
 #    cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out
 # UNCOMMENT PREVIOUS *OR* NEXT TWO LINES
-    (/usr/bin/time -f "%U user %S sys" $solver $file.wcsp "$@" -C=$K >> outsolver) 2> usedtime
+    (/usr/bin/time -f "%U user %S sys" $solver $e "$@" -C=$K >> outsolver) 2> usedtime
     cat outsolver | awk -v UB=$ub -f ./misc/script/runall.awk >> out ; cat out
 
     cat usedtime | awk '/ user /{ printf("%.2f",0.0+$1+$3); }'
