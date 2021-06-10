@@ -21,7 +21,9 @@
 	initlb[d] += $4;
 	bt[d] += $5;
 	nodes[d] += $6;
-	time[d] += $7;
+	maxdepth[d] += $7;
+	totaldepth[d] += $8;
+	time[d] += $9;
 	name = name "/" path[i];
     }
 }
@@ -31,9 +33,9 @@ END {
 	printf("------------------------------------------------------------\n");
 	n=dirs[d];
 	if (d in nbopt) {
-	    printf("%s optimum: %.2f  initlb: %.2f  backtracks: %.2f  nodes: %.2f  time: %.2f  optimal: %d of %d\n", d, opt[d]/n, initlb[d]/n, bt[d]/n, nodes[d]/n, time[d]/n, nbopt[d], n);
+	    printf("%s optimum: %.2f  initlb: %.2f  backtracks: %.2f  nodes: %.2f  maxdepth: %.2f  totaldepth: %.2f  time: %.2f  optimal: %d of %d\n", d, opt[d]/n, initlb[d]/n, bt[d]/n, nodes[d]/n, maxdepth[d]/n, totaldepth[d]/n, time[d]/n, nbopt[d], n);
 	} else {
-	    printf("%s optimum: %.2f  initlb: %.2f  backtracks: %.2f  nodes: %.2f  time: %.2f  optimal: %d of %d\n", d, opt[d]/n, initlb[d]/n, bt[d]/n, nodes[d]/n, time[d]/n, 0, n);
+	    printf("%s optimum: %.2f  initlb: %.2f  backtracks: %.2f  nodes: %.2f  maxdepth: %.2f  totaldepth: %.2f  time: %.2f  optimal: %d of %d\n", d, opt[d]/n, initlb[d]/n, bt[d]/n, nodes[d]/n, maxdepth[d]/n, totaldepth[d]/n, time[d]/n, 0, n);
 	}
     }
 }
