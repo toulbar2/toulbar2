@@ -668,7 +668,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
             domainSize = stoi(token);
             if (domainSize >= 0)
                 for (int ii = 0; ii < domainSize; ii++)
-                    valueNames.push_back(to_string(ii));
+                    valueNames.push_back("v" + to_string(ii));
         } catch (std::invalid_argument&) {
             cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
         }

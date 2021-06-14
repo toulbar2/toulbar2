@@ -2000,7 +2000,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                         TempWeights.push_back(-1);
                     }
                 } else {
-                    file>>skip;
+                    if (!isclique) file>>skip;
                 }
             }
         }
@@ -3311,7 +3311,7 @@ void WCSP::dump(ostream& os, bool original)
             exit(EXIT_FAILURE);
         }
         if (original) {
-            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->getDomainInitSize() : (vars[i]->getSup() + 1));
+            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->toValue(((EnumeratedVariable*)vars[i])->getDomainInitSize()) : (vars[i]->getSup() + 1));
             if (domsize > maxdomsize)
                 maxdomsize = domsize;
         } else {
@@ -3334,7 +3334,7 @@ void WCSP::dump(ostream& os, bool original)
         if (original) {
             if (!vars[i]->enumerated())
                 os << "-";
-            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->getDomainInitSize() : (vars[i]->getSup() + 1));
+            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->toValue(((EnumeratedVariable*)vars[i])->getDomainInitSize()) : (vars[i]->getSup() + 1));
             os << domsize;
             if (i < vars.size() - 1)
                 os << " ";

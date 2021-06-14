@@ -100,7 +100,7 @@ void BinaryConstraint::dump(ostream& os, bool original)
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             if (getCost(*iterX, *iterY) > MIN_COST) {
-                os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
+                os << ((original) ? *iterX : i) << " " << ((original) ? *iterY : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
             }
         }
     }

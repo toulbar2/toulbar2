@@ -112,6 +112,7 @@ public:
             all0 = mult_ub;
     }
     void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; } //TODO
+    void dump_CFN(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; } //TODO
 
 private:
     // ----------------------------------------------------------------------

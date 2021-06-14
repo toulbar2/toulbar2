@@ -425,7 +425,7 @@ public:
             if (maxdelta == MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
-                    os << tuple[i] << " ";
+                    os << scope[i]->toValue(tuple[i]) << " ";
                 }
                 os << cost << endl;
             } else {
@@ -435,7 +435,7 @@ public:
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
-                        os << t[i] << " ";
+                        os << scope[i]->toValue(t[i]) << " ";
                     }
                     os << c << endl;
                 }
@@ -503,7 +503,7 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(tuple[i]) : std::to_string(tuple[i]));
+                    os << tuple[i];
                     printed = true;
                 }
                 os << "," << wcsp->Cost2RDCost(cost);
@@ -517,7 +517,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (printed)
                             os << ",";
-                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                        os << t[i];
                         printed = true;
                    }
                    os << "," << wcsp->Cost2RDCost(c);

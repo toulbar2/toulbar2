@@ -1035,7 +1035,7 @@ public:
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
-                        os << t[i] << " ";
+                        os << scope[i]->toValue(t[i]) << " ";
                     }
                     os << c << endl;
                 }
@@ -1126,7 +1126,7 @@ public:
                     for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
                         if (printedbis)
                             os << ",";
-                        os << VarVal[i][j] << "," << weights[i][j];
+                        os << "[" << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
                         printedbis = true;
                     }
                     printed = true;
@@ -1142,7 +1142,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (printed)
                             os << ",";
-                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                        os << t[i];
                         printed = true;
                     }
                     os << "," << wcsp->Cost2RDCost(c);
@@ -1179,7 +1179,7 @@ public:
                             if (printedbis)
                                 os << ",";
                             if (scope[i]->canbe(VarVal[i][j]) && weights[i][j] > 0) {
-                                os << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j];
+                                os << "[" << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
                                 printedbis = true;
                             }
                         }
