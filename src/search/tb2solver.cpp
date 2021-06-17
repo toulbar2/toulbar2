@@ -2620,9 +2620,14 @@ void Solver::restore(CPStore& cp, OpenNode nd)
         }
     }
     assert(nd.last >= nd.first);
-    nbRecomputationNodes += nd.last - nd.first;
 
     ptrdiff_t maxsize = nd.last - nd.first;
+    if (maxsize==0) {
+        wcsp->enforceUb();
+        wcsp->propagate();
+        return;
+    }
+    nbRecomputationNodes += maxsize;
     int assignLS[maxsize];
     Value valueLS[maxsize];
     unsigned int size = 0;
