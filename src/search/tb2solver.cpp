@@ -2628,15 +2628,27 @@ void Solver::restore(CPStore& cp, OpenNode nd)
         return;
     }
     nbRecomputationNodes += maxsize;
+    ChoicePoint *permute[maxsize];
     int assignLS[maxsize];
     Value valueLS[maxsize];
     unsigned int size = 0;
+    bool randomOrder = (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM);
+    if (randomOrder) {
+        unsigned int pos = 0;
+        for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
+            permute[pos] = &cp[idx];
+            ++pos;
+        }
+        assert(pos==maxsize);
+        shuffle(&permute[0], &permute[maxsize], myrandom_generator);
+    }
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
-        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
-        if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last - 1)) || (cp[idx].op == CP_REMOVE && cp[idx].reverse && idx < nd.last - 1)) {
-            assignLS[size] = cp[idx].varIndex;
-            valueLS[size] = cp[idx].value;
+        ChoicePoint *cp_ptr = ((randomOrder)? permute[idx - nd.first] : &cp[idx]);
+        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex));
+        if ((cp_ptr->op == CP_ASSIGN && !(cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) || (cp_ptr->op == CP_REMOVE && cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) {
+            assignLS[size] = cp_ptr->varIndex;
+            valueLS[size] = cp_ptr->value;
             size++;
         }
     }
@@ -2644,46 +2656,47 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
+        ChoicePoint *cp_ptr = ((randomOrder)? permute[idx - nd.first] : &cp[idx]);
         if (ToulBar2::verbose >= 1)
-            cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse) ? "*" : "") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx << endl;
+            cout << "retrieve choice point " << CPOperation[cp_ptr->op] << ((cp_ptr->reverse) ? "*" : "") << " (" << wcsp->getName(cp_ptr->varIndex) << ", " << cp_ptr->value << ") at position " << (cp_ptr - &cp[nd.first]) << endl;
         if (ToulBar2::verbose >= 1)
-            cout << *((WCSP*)wcsp)->getVar(cp[idx].varIndex) << endl;
+            cout << *((WCSP*)wcsp)->getVar(cp_ptr->varIndex) << endl;
         nbNodes++;
-        switch (cp[idx].op) { //TODO: some operations (remove,increase,decrease) are useless because of all assigns previously done
+        switch (cp_ptr->op) { //TODO: some operations (remove,increase,decrease) are useless because of all assigns previously done
         case CP_ASSIGN: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                wcsp->remove(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                wcsp->remove(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_REMOVE, cp_ptr->varIndex, cp_ptr->value, false);
             } else
-                addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+                addChoicePoint(CP_ASSIGN, cp_ptr->varIndex, cp_ptr->value, false);
             break;
         }
         case CP_REMOVE: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                addChoicePoint(CP_ASSIGN, cp_ptr->varIndex, cp_ptr->value, false);
             } else {
-                wcsp->remove(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
+                wcsp->remove(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_REMOVE, cp_ptr->varIndex, cp_ptr->value, false);
             }
             break;
         }
         case CP_INCREASE: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                wcsp->decrease(cp[idx].varIndex, cp[idx].value - 1);
-                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value - 1, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                wcsp->decrease(cp_ptr->varIndex, cp_ptr->value - 1);
+                addChoicePoint(CP_DECREASE, cp_ptr->varIndex, cp_ptr->value - 1, false);
             } else {
-                wcsp->increase(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value, false);
+                wcsp->increase(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_INCREASE, cp_ptr->varIndex, cp_ptr->value, false);
             }
             break;
         }
         case CP_DECREASE: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                wcsp->increase(cp[idx].varIndex, cp[idx].value + 1);
-                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value + 1, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                wcsp->increase(cp_ptr->varIndex, cp_ptr->value + 1);
+                addChoicePoint(CP_INCREASE, cp_ptr->varIndex, cp_ptr->value + 1, false);
             } else {
-                wcsp->decrease(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value, false);
+                wcsp->decrease(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_DECREASE, cp_ptr->varIndex, cp_ptr->value, false);
             }
             break;
         }
