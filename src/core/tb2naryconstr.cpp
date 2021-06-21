@@ -1424,7 +1424,7 @@ void NaryConstraint::dump(ostream& os, bool original)
                 Cost c = it->second;
                 it++;
                 for (unsigned int i = 0; i < t.size(); i++) {
-                    os << t[i] << " ";
+                    os << scope[i]->toValue(t[i]) << " ";
                 }
                 os << c << endl;
             }
@@ -1433,7 +1433,7 @@ void NaryConstraint::dump(ostream& os, bool original)
             vector<unsigned int> t(a, 0);
             for (ptrdiff_t idx = 0; idx < costSize; idx++) {
                 for (int i = 0; i < a; i++) {
-                    os << t[i] << " ";
+                    os << scope[i]->toValue(t[i]) << " ";
                 }
                 os << costs[idx] << endl;
                 int i = a - 1;
@@ -1504,7 +1504,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (unsigned int i = 0; i < t.size(); i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                    os << t[i];
                     printed = true;
                 }
                 os << "," << wcsp->Cost2RDCost(c);
@@ -1519,7 +1519,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     if (printed)
                         os << ",";
                     printed = true;
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                    os << t[i];
                 }
                 os << "," << wcsp->Cost2RDCost(costs[idx]);
                 int i = a - 1;

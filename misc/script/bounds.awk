@@ -1,7 +1,6 @@
 BEGIN {
-  print "" > "ub" N;
-  print "" > "lb" N;
-  print "" > "open" N;
+  print "" > N ".ub";
+  print "" > N ".lb";
 }
 
 FNR==1{start=$1}
@@ -10,59 +9,70 @@ FNR==1{start=$1}
 /Initial lower and upper bounds:/ {
   gsub("[[]","",$0);
   gsub(","," ",$0);
-#  print $1,$(NF-1) >> "ub" N;
-  print $1,$(NF-2) >> "lb" N;
-  fflush("ub" N);
-  fflush("lb" N);
+#  print $1,0+$(NF-1) >> N ".ub";
+  print $1,0+$(NF-2) >> N ".lb";
+  fflush(N ".ub");
+  fflush(N ".lb");
 }
 
-/New solution:/ {
+/New solution:/ && /backtracks/ {
   if (match($0,"log10like") || match($0,"energy")) {
-    print $1,$(NF-10) >> "ub" N;
+    print $1,0+$(NF-12) >> N ".ub";
   } else {
-    print $1,$(NF-6) >> "ub" N;
+    print $1,0+$(NF-8) >> N ".ub";
   }
-  fflush("ub" N);
-  fflush("lb" N);
+  fflush(N ".ub");
+  fflush(N ".lb");
+} 
+
+/New solution:/ && / in .* seconds[.]$/ {
+  if (match($0,"log10like") || match($0,"energy")) {
+    print $1,0+$(NF-7) >> N ".ub";
+  } else {
+    print $1,0+$(NF-3) >> N ".ub";
+  }
+  fflush(N ".ub");
+  fflush(N ".lb");
 } 
 
 /Optimality gap:/{
-  print $1,$(NF-9) >> "lb" N;
-  fflush("ub" N);
-  fflush("lb" N);
+  gsub("[[]","",$0);
+  gsub(","," ",$0);
+  print $1,0+$(NF-9) >> N ".lb";
+  fflush(N ".ub");
+  fflush(N ".lb");
 } 
 
 /Optimum:/{
  if (match($0,"log10like") || match($0,"energy")) {
   if (match($0,"DEE")) {
-    print $1,$(NF-18) >> "ub" N;
-    print $1,$(NF-18) >> "lb" N;
+    print $1,0+$(NF-18) >> N ".ub";
+    print $1,0+$(NF-18) >> N ".lb";
   } else {
-    print $1,$(NF-13) >> "ub" N;
-    print $1,$(NF-13) >> "lb" N;
+    print $1,0+$(NF-13) >> N ".ub";
+    print $1,0+$(NF-13) >> N ".lb";
   }
  } else {
   if (match($0,"DEE")) {
-    print $1,$(NF-14) >> "ub" N;
-    print $1,$(NF-14) >> "lb" N;
+    print $1,0+$(NF-14) >> N ".ub";
+    print $1,0+$(NF-14) >> N ".lb";
   } else {
-    print $1,$(NF-9) >> "ub" N;
-    print $1,$(NF-9) >> "lb" N;
+    print $1,0+$(NF-9) >> N ".ub";
+    print $1,0+$(NF-9) >> N ".lb";
   }
  }
-  fflush("ub" N);
-  fflush("lb" N);
+  fflush(N ".ub");
+  fflush(N ".lb");
 }
 
 /[0-9]+ .[0-9]+,[0-9]+.[/][0-9]+[/][0-9]+[/][0-9]+ [0-9.]+% [0-9.]+/ {
   gsub("[[]","",$0);
   gsub(","," ",$0);
   gsub("/"," ",$0);
-  print $1,$3 >> "lb" N;
-  print $1,$5 >> "open" N;
-  fflush("ub" N);
-  fflush("lb" N);
-  fflush("open" N);
+  print $1,0+$3 >> N ".lb";
+  fflush(N ".ub");
+  fflush(N ".lb");
 }
 
 {print $0;}
+

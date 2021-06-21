@@ -289,7 +289,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
                 if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
-                    os << ((original) ? x->toIndex(*iterX) : i) << " " << ((original) ? y->toIndex(*iterY) : j) << " " << ((original) ? z->toIndex(*iterZ) : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                    os << ((original) ? *iterX : i) << " " << ((original) ? *iterY : j) << " " << ((original) ? *iterZ : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
                 }
             }
         }
