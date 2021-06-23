@@ -548,7 +548,9 @@ public:
                 setBestValue(i, v);
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
-        solutions.push_back(make_pair(Cost2ADCost(solutionCost), solution));
+        if (!ToulBar2::allSolutions || ToulBar2::allSolutions < LONGLONG_MAX) {
+            solutions.push_back(make_pair(Cost2ADCost(solutionCost), solution));
+        }
     }
     void printSolution()
     {
