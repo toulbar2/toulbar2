@@ -30,7 +30,7 @@
 // awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
 // awk '/^class /{ok=1;class=$2} go&&/static/{gsub(";.*","",$0); print "        .def_readwrite_static(\"" $NF "\", &" class "::" $NF ")"} ok&&/public/{go=1}' core/tb2types.hpp
 
-//How to compile Python3 pytoulbar2 module library on Linux:
+//How to compile Python3 pytb2 module library on Linux:
 // apt install pybind11-dev (or else pip3 install pybind11)
 // git clone https://github.com/toulbar2/toulbar2.git
 // cd toulbar2; mkdir build; cd build
@@ -39,12 +39,12 @@
 // make
 // the module will be in lib/Linux
 
-//Examples using pytoulbar2 module from Python3:
-// NB: pytoulbar2.cpython* must be in your Python3 path or export PYTHONPATH=.
-// python3 -c "import sys; sys.path.append('.'); import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
-// python3 -c "import sys; sys.path.append('.'); import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytoulbar2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1, False); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+//Examples using pytb2 module from Python3:
+// NB: pytb2.cpython* must be in your Python3 path or export PYTHONPATH=.
+// python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
+// python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
+// python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+// python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1, False); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -59,7 +59,7 @@ namespace py = pybind11;
 #include "search/tb2solver.hpp"
 #include "cpd/tb2cpd.hpp"
 
-PYBIND11_MODULE(pytoulbar2, m)
+PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
     m.attr("MAX_COST") = py::cast(MAX_COST);
@@ -97,6 +97,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def_readwrite_static("lastConflict", &ToulBar2::lastConflict)
         .def_readwrite_static("weightedDegree", &ToulBar2::weightedDegree)
         .def_readwrite_static("weightedTightness", &ToulBar2::weightedTightness)
+        .def_readwrite_static("constrOrdering", &ToulBar2::constrOrdering)
         .def_readwrite_static("MSTDAC", &ToulBar2::MSTDAC)
         .def_readwrite_static("DEE", &ToulBar2::DEE)
         .def_readwrite_static("nbDecisionVars", &ToulBar2::nbDecisionVars)
@@ -140,6 +141,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def_readwrite_static("wcnf", &ToulBar2::wcnf)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
+        .def_readwrite_static("opb", &ToulBar2::opb)
         .def_readwrite_static("divNbSol", &ToulBar2::divNbSol)
         .def_readwrite_static("divBound", &ToulBar2::divBound)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
@@ -281,6 +283,8 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("resetWeightedDegree", &WeightedCSP::resetWeightedDegree)
         .def("preprocessing", &WeightedCSP::preprocessing)
         .def("sortConstraints", &WeightedCSP::sortConstraints) // must be called after creating the model
+        .def("getBergeDecElimOrder", &WeightedCSP::getBergeDecElimOrder)
+        .def("setDACOrder", &WeightedCSP::setDACOrder)
         .def("whenContradiction", &WeightedCSP::whenContradiction)
         .def("propagate", &WeightedCSP::propagate)
         .def("verify", &WeightedCSP::verify)
@@ -322,6 +326,9 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
         .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> & scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
+        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> & scope, const string& arguments, bool isclique, bool kp) {
+            return s.postKnapsackConstraint(scope, arguments, isclique, kp);
+        }, py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
@@ -335,6 +342,7 @@ PYBIND11_MODULE(pytoulbar2, m)
         //        .def("postWSum", &WeightedCSP::postWSum)
         //        .def("postWVarSum", &WeightedCSP::postWVarSum)
         //        .def("postWOverlap", &WeightedCSP::postWOverlap)
+        .def("postWDivConstraint", & WeightedCSP::postWDivConstraint)
         .def("isGlobal", &WeightedCSP::isGlobal)
         .def("getSolution", (const vector<Value> (WeightedCSP::*)()) & WeightedCSP::getSolution)
         .def("initSolutionCost", &WeightedCSP::initSolutionCost)
@@ -387,6 +395,8 @@ PYBIND11_MODULE(pytoulbar2, m)
                 ToulBar2::wcnf = true;
             if (strstr(fileName, ".qpbo"))
                 ToulBar2::qpbo = true;
+            if (strstr(fileName, ".opb"))
+                ToulBar2::opb = true;
             if (strstr(fileName, ".uai")) {
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
@@ -449,7 +459,6 @@ PYBIND11_MODULE(pytoulbar2, m)
         .def("read_solution", &WeightedCSPSolver::read_solution)
         .def("parse_solution", &WeightedCSPSolver::parse_solution);
 }
-
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

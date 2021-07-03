@@ -347,12 +347,12 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
         pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
         clb = MIN(res.first, clb);
         cub = MIN(res.second, cub);
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -392,7 +392,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
             clb = MIN(res.first, clb);
             cub = MIN(res.second, cub);
         }
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
@@ -443,12 +443,12 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
         lastConflictVar = -1;
         nb = sharpBTD(cluster);
         nbSol += nb;
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
     nbBacktracks++;
-    if (ToulBar2::restart > 0 && nbBacktracks > nbBacktracksLimit)
+    if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
     if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
@@ -471,7 +471,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
 
         nb = sharpBTD(cluster);
         nbSol += nb;
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore();
@@ -563,7 +563,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             else
                                 csol = MAX_COST;
                         }
-                    } catch (Contradiction) {
+                    } catch (const Contradiction&) {
                         wcsp->whenContradiction();
                         c->nogoodRec(ubSon, MAX_COST, &c->open);
                         clb += ubSon - lbSon;
@@ -589,9 +589,9 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             if (cluster == td->getRoot() || cluster == td->getRootRDS()) {
                 if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
                     if (!ToulBar2::bayesian)
-                        cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(csol) << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                        cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(csol) << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
                     else
-                        cout << "New solution: " << csol << " energy: " << -(wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                        cout << "New solution: " << csol << " energy: " << -(wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
                 }
                 if (cluster == td->getRoot())
                     td->newSolution(csol);
@@ -639,7 +639,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         return make_pair(bestlb, cub);
     } else {
         // Enumerates cluster proper variables
-        *((StoreCost*)searchSize) += ((Cost)(10e6 * Log(wcsp->getDomainSize(varIndex))));
+        *((StoreInt*)searchSize) += ((int)(10e3 * Log(wcsp->getDomainSize(varIndex))));
         pair<Cost, Cost> res = make_pair(MIN_COST, MAX_COST);
         if (wcsp->enumerated(varIndex)) {
             assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
@@ -725,7 +725,7 @@ pair<Cost, Cost> Solver::russianDollSearch(Cluster* c, Cost cub)
             cout << "---  done  cost = [" << res.first << "," << res.second << "] (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl
                  << endl;
 
-    } catch (Contradiction) {
+    } catch (const Contradiction&) {
         wcsp->whenContradiction();
         res.first = res.second;
         c->setLbRDS(cub);
@@ -802,7 +802,7 @@ BigInteger Solver::sharpBTD(Cluster* cluster)
                     nb = sharpBTD(c);
                     c->sgoodRec(0, nb);
                     nbSGoods++;
-                } catch (Contradiction) {
+                } catch (const Contradiction&) {
                     wcsp->whenContradiction();
                     c->sgoodRec(0, 0); // no solution
                     nbSGoods++;

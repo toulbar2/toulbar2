@@ -2265,7 +2265,7 @@ void TreeDecomposition::newSolution(Cost lb)
     if (ToulBar2::maxsateval) {
         cout << "o " << lb << endl;
     }
-    if (ToulBar2::uai || ToulBar2::uaieval) {
+    if (ToulBar2::uaieval && !ToulBar2::isZ) {
         wcsp->solution_UAI(lb);
     }
     // warning: cannot read solution from variable assignments

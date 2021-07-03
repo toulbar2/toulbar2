@@ -4,6 +4,14 @@
  */
 
 #include "toulbar2lib.hpp"
+
+#include "core/tb2wcsp.hpp"
+#include "vns/tb2vnsutils.hpp"
+#include "vns/tb2dgvns.hpp"
+#ifdef OPENMPI
+#include "vns/tb2cpdgvns.hpp"
+#include "vns/tb2rpdgvns.hpp"
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +49,7 @@ int main(int argc, char* argv[])
     int z = solver->getWCSP()->makeEnumeratedVariable("z", 0, 1);
 
     // add random unary cost functions on each variable
+    mysrand(getpid());
     {
         vector<Cost> costs(2, 0);
         costs[0] = randomCost(0, 100);
@@ -87,6 +96,7 @@ int main(int argc, char* argv[])
     //	solver->getWCSP()->print(cout);
     //	ToulBar2::verbose = verbose;
 
+    //tb2checkOptions();
     if (solver->solve()) {
         // show optimal solution
         vector<Value> sol;

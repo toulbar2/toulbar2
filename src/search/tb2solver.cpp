@@ -1218,7 +1218,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
             std::ios_base::fmtflags f(cout.flags());
-            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
             cout.flags(f);
         }
     }
@@ -1608,16 +1608,16 @@ void Solver::newSolution()
     if (ToulBar2::isZ) {
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, (Cost)(wcsp->getLb() + wcsp->getNegativeLb()));
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
-            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
+            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log)  << " in " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
     }
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
             if (ToulBar2::haplotype)
-                cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
             else if (!ToulBar2::bayesian)
-                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth()  << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
             else
-                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ")" << endl;
+                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth()  << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
         }
     }
 
@@ -1647,9 +1647,11 @@ void Solver::newSolution()
             for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                 cout << " ";
                 if (ToulBar2::pedigree) {
+                cout << " ";
                     cout << wcsp->getName(i) << ":";
                     ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
                 } else if (ToulBar2::haplotype) {
+                cout << " ";
                     ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
                 } else if (wcsp->enumerated(i) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
                     EnumeratedVariable* myvar = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
@@ -1660,12 +1662,15 @@ void Solver::newSolution()
                     if (ToulBar2::showHidden || (!varlabel.empty() && HIDEABLE_VAR_TAGS.find(varlabel[0]) == string::npos)) {
                         switch (ToulBar2::showSolutions) {
                         case 1:
+                        cout << " ";
                             cout << myvalue;
                             break;
                         case 2:
+                        cout << " ";
                             cout << valuelabel;
                             break;
                         case 3:
+                        cout << " ";
                             cout << varlabel << "=" << valuelabel;
                             break;
                         default:
@@ -1673,6 +1678,7 @@ void Solver::newSolution()
                         }
                     }
                 } else {
+                cout << " ";
                     cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
                 }
             }
@@ -3011,18 +3017,35 @@ void Solver::restore(CPStore& cp, OpenNode nd)
         }
     }
     assert(nd.last >= nd.first);
-    nbRecomputationNodes += nd.last - nd.first;
 
     ptrdiff_t maxsize = nd.last - nd.first;
+    if (maxsize==0) {
+        wcsp->enforceUb();
+        wcsp->propagate();
+        return;
+    }
+    nbRecomputationNodes += maxsize;
+    ChoicePoint *permute[maxsize];
     int assignLS[maxsize];
     Value valueLS[maxsize];
     unsigned int size = 0;
+    bool randomOrder = (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM);
+    if (randomOrder) {
+        unsigned int pos = 0;
+        for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
+            permute[pos] = &cp[idx];
+            ++pos;
+        }
+        assert(pos==maxsize);
+        shuffle(&permute[0], &permute[maxsize], myrandom_generator);
+    }
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
-        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp[idx].varIndex));
-        if ((cp[idx].op == CP_ASSIGN && !(cp[idx].reverse && idx < nd.last - 1)) || (cp[idx].op == CP_REMOVE && cp[idx].reverse && idx < nd.last - 1)) {
-            assignLS[size] = cp[idx].varIndex;
-            valueLS[size] = cp[idx].value;
+        ChoicePoint *cp_ptr = ((randomOrder)? permute[idx - nd.first] : &cp[idx]);
+        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex));
+        if ((cp_ptr->op == CP_ASSIGN && !(cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) || (cp_ptr->op == CP_REMOVE && cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) {
+            assignLS[size] = cp_ptr->varIndex;
+            valueLS[size] = cp_ptr->value;
             size++;
         }
     }
@@ -3030,46 +3053,47 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
+        ChoicePoint *cp_ptr = ((randomOrder)? permute[idx - nd.first] : &cp[idx]);
         if (ToulBar2::verbose >= 1)
-            cout << "retrieve choice point " << CPOperation[cp[idx].op] << ((cp[idx].reverse) ? "*" : "") << " (" << wcsp->getName(cp[idx].varIndex) << ", " << cp[idx].value << ") at position " << idx << endl;
+            cout << "retrieve choice point " << CPOperation[cp_ptr->op] << ((cp_ptr->reverse) ? "*" : "") << " (" << wcsp->getName(cp_ptr->varIndex) << ", " << cp_ptr->value << ") at position " << (cp_ptr - &cp[nd.first]) << endl;
         if (ToulBar2::verbose >= 1)
-            cout << *((WCSP*)wcsp)->getVar(cp[idx].varIndex) << endl;
+            cout << *((WCSP*)wcsp)->getVar(cp_ptr->varIndex) << endl;
         nbNodes++;
-        switch (cp[idx].op) { //TODO: some operations (remove,increase,decrease) are useless because of all assigns previously done
+        switch (cp_ptr->op) { //TODO: some operations (remove,increase,decrease) are useless because of all assigns previously done
         case CP_ASSIGN: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                wcsp->remove(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                wcsp->remove(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_REMOVE, cp_ptr->varIndex, cp_ptr->value, false);
             } else
-                addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+                addChoicePoint(CP_ASSIGN, cp_ptr->varIndex, cp_ptr->value, false);
             break;
         }
         case CP_REMOVE: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                addChoicePoint(CP_ASSIGN, cp[idx].varIndex, cp[idx].value, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                addChoicePoint(CP_ASSIGN, cp_ptr->varIndex, cp_ptr->value, false);
             } else {
-                wcsp->remove(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_REMOVE, cp[idx].varIndex, cp[idx].value, false);
+                wcsp->remove(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_REMOVE, cp_ptr->varIndex, cp_ptr->value, false);
             }
             break;
         }
         case CP_INCREASE: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                wcsp->decrease(cp[idx].varIndex, cp[idx].value - 1);
-                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value - 1, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                wcsp->decrease(cp_ptr->varIndex, cp_ptr->value - 1);
+                addChoicePoint(CP_DECREASE, cp_ptr->varIndex, cp_ptr->value - 1, false);
             } else {
-                wcsp->increase(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value, false);
+                wcsp->increase(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_INCREASE, cp_ptr->varIndex, cp_ptr->value, false);
             }
             break;
         }
         case CP_DECREASE: {
-            if (cp[idx].reverse && idx < nd.last - 1) {
-                wcsp->increase(cp[idx].varIndex, cp[idx].value + 1);
-                addChoicePoint(CP_INCREASE, cp[idx].varIndex, cp[idx].value + 1, false);
+            if (cp_ptr->reverse && cp_ptr != &cp[nd.last - 1]) {
+                wcsp->increase(cp_ptr->varIndex, cp_ptr->value + 1);
+                addChoicePoint(CP_INCREASE, cp_ptr->varIndex, cp_ptr->value + 1, false);
             } else {
-                wcsp->decrease(cp[idx].varIndex, cp[idx].value);
-                addChoicePoint(CP_DECREASE, cp[idx].varIndex, cp[idx].value, false);
+                wcsp->decrease(cp_ptr->varIndex, cp_ptr->value);
+                addChoicePoint(CP_DECREASE, cp_ptr->varIndex, cp_ptr->value, false);
             }
             break;
         }
