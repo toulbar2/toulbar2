@@ -152,6 +152,7 @@ public:
         EnumeratedVariable::print(os);
         cout << " Threshold: " << myThreshold;
     }
+
     void KilledOne();
 };
 
@@ -239,6 +240,7 @@ public:
         cout << "Threshold: " << myThreshold << endl;
     }
 };
+
 /**
  * A class that stores information about a ternary cost function
  */

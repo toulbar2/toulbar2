@@ -152,7 +152,6 @@ void EnumeratedVariable::queueFEAC()
 {
     wcsp->queueFEAC(&linkFEACQueue);
 }
-
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);
@@ -352,6 +351,7 @@ bool EnumeratedVariable::reviseEACGreedySolution()
     }
     return (!broken);
 }
+
 void EnumeratedVariable::fillEAC2(bool self)
 {
     if (self)
@@ -455,18 +455,16 @@ bool EnumeratedVariable::isEAC()
     }
     if (ToulBar2::FullEAC)
         setFullEAC();
-
     if (isEAC(support))
         return true;
-
     for (iterator iter = begin(); iter != end(); ++iter) {
         if (*iter == support || *iter == bestValue)
             continue;
         if (ToulBar2::FullEAC)
             setFullEAC();
         if (isEAC(*iter))
-                return true;
-        }
+            return true;
+    }
     if (ToulBar2::FullEAC)
         unsetFullEAC();
     return false;
@@ -1007,8 +1005,6 @@ bool EnumeratedVariable::elimVar(BinaryConstraint* ctr)
             if (ToulBar2::verbose >= 2)
                 cout << "Negcost increasing by elimvar binary" << endl;
             wcsp->decreaseLb(negcost);
-            if (td)
-                wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
         }
     }
     if (supportBroken) {
@@ -1079,8 +1075,6 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
         if (ToulBar2::verbose >= 2)
             cout << "Negcost increasing by elimvar binary constr" << endl;
         wcsp->decreaseLb(negcost);
-        if (td)
-            wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
     }
 
     if (yz) {
@@ -1211,9 +1205,7 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
                 yz->addcost(*itery, *iterz, -negcost);
             }
         }
-        //~ if (ToulBar2::verbose >= 2) cout<<"Negcost increasing by elimvar ternary constr"<<endl;
         wcsp->decreaseLb(negcost);
-        //~ if (td) wcsp->td->getCluster(getCluster())->decreaseLb(negcost);
     }
 
     if (y->unassigned() && z->unassigned())
@@ -1229,14 +1221,13 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
 
 void EnumeratedVariable::eliminate()
 {
-    TreeDecomposition* td = wcsp->getTreeDec();
     if (isSep_)
         return;
     if (ToulBar2::nbDecisionVars > 0 && wcspIndex < ToulBar2::nbDecisionVars)
         return;
-    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && getName()[0] != IMPLICIT_VAR_TAG[0])
+    if (ToulBar2::allSolutions && ToulBar2::btdMode != 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0)
         return;
-    if (ToulBar2::divNbSol > 1 && getName()[0] != IMPLICIT_VAR_TAG[0] && Store::getDepth() == 0)
+    if (ToulBar2::divNbSol > 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && Store::getDepth() == 0) // do not eliminate decision variables nor diversity variables before generating diversity constraints
         return;
 
     assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster(cluster)->isActive());
@@ -1316,14 +1307,10 @@ void EnumeratedVariable::eliminate()
                     if (ToulBar2::verbose >= 1)
                         cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + clogz << endl;
                     wcsp->decreaseLb(clogz);
-                    if (td)
-                        wcsp->td->getCluster(getCluster())->decreaseLb(clogz);
                 } else {
                     if (ToulBar2::verbose >= 1)
                         cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + clogz << endl;
                     wcsp->increaseLb(clogz);
-                    if (td)
-                        wcsp->td->getCluster(getCluster())->increaseLb(clogz);
                 }
             }
         }
@@ -1443,14 +1430,14 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
 {
     if (ToulBar2::nbDecisionVars > 0 && wcspIndex < ToulBar2::nbDecisionVars)
         return false;
-    if (ToulBar2::allSolutions && getName()[0] != IMPLICIT_VAR_TAG[0] && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0))
+    if (ToulBar2::allSolutions && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0))
         return false;
-    if (ToulBar2::divNbSol > 1 && getName()[0] != IMPLICIT_VAR_TAG[0] && Store::getDepth() == 0)
+    if (ToulBar2::divNbSol > 1 && getName().rfind(IMPLICIT_VAR_TAG, 0) != 0 && Store::getDepth() == 0) // do not eliminate decision variables nor diversity variables before generating diversity constraints
         return false;
     double mult = (1.0 * x->getDomainSize()) / getDomainSize();
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr = (*iter).constr;
-        if (ctr->isGlobal() || ctr->isSep() || (!ctr->extension() && Store::getDepth() > 0))
+        if (ctr->isGlobal() || ctr->isSep() || (!ctr->extension() && (Store::getDepth() > 0 || ctr->size() > 1))) // avoid functional elimination if diverse solutions or not a clause
             return false;
         if (mult > 1.1 && (mult * ctr->size() > MAX_NB_TUPLES))
             return false;
@@ -1616,7 +1603,6 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             //	  }
 
             assert(ctr->arity() >= 4);
-
             assert(ctr->isNary());
             NaryConstraint* oldctr = (NaryConstraint*)ctr;
             Cost defcost = oldctr->getDefCost();

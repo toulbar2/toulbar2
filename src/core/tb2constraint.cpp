@@ -517,6 +517,7 @@ int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLin
     }
 }
 
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */

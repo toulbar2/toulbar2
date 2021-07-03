@@ -123,7 +123,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
                 vecZ.push_back(xx->wcspIndex);
                 vecZ.push_back(yy->wcspIndex);
             }
-            ToulBar2::Berge_Dec = 1;
+            ToulBar2::Berge_Dec = true;
             break;
         case 2:
             if (functionalX && functionalY) {
@@ -151,7 +151,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
                     vecX.push_back(yy->wcspIndex);
                 }
             }
-            ToulBar2::Berge_Dec = 1;
+            ToulBar2::Berge_Dec = true;
             break;
         case 3:
             if (xx->wcspIndex < yy->wcspIndex && xx->wcspIndex < zz->wcspIndex) {
@@ -179,7 +179,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
                     vecZ.push_back(xx->wcspIndex);
                 }
             }
-            ToulBar2::Berge_Dec = 1;
+            ToulBar2::Berge_Dec = true;
             break;
         default:
             break;
@@ -224,6 +224,7 @@ double TernaryConstraint::computeTightness()
 {
     int count = 0;
     double sum = 0;
+    double tight = -1;
     Cost* costs = new Cost[x->getDomainSize() * y->getDomainSize() * z->getDomainSize()];
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
@@ -300,10 +301,10 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
     bool printed = false;
     os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_"
        << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "_"
-       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[";
-    os << x->getName() << ","
-       << y->getName() << ","
-       << z->getName() << "],";
+       << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << "\":{\"scope\":[\"";
+    os << x->getName() << "\",\""
+       << y->getName() << "\",\""
+       << z->getName() << "\"],";
     os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
@@ -358,7 +359,6 @@ void TernaryConstraint::extend(EnumeratedVariable* x, Value value, Cost cost, ve
     if (td)
         td->addDelta(cluster, x, value, -cost);
     deltaCostsX[x->toIndex(value)] -= cost; // Warning! Possible overflow???
-
     x->extend(value, cost);
 }
 

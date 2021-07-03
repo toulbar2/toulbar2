@@ -110,62 +110,21 @@ void Variable::setCurrentVarId(int idx)
     timestamp = wcsp->getNbNodes();
 }
 
-int cmpConstraint(const void* p1, const void* p2)
-{
-    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
-    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
-    int v1 = c1->content.constr->getSmallestVarIndexInScope(c1->content.scopeIndex);
-    int v2 = c2->content.constr->getSmallestVarIndexInScope(c2->content.scopeIndex);
-    if (v1 < v2)
-        return -1;
-    else if (v1 > v2)
-        return 1;
-    else
-        return 0;
-}
-
-int cmpConstraintDAC(const void* p1, const void* p2)
-{
-    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
-    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
-    int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
-    int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
-    if (v1 < v2)
-        return 1;
-    else if (v1 > v2)
-        return -1;
-    else
-        return 0;
-}
-
-int cmpConstraintTightness(const void* p1, const void* p2)
-{
-    DLink<ConstraintLink>* c1 = *((DLink<ConstraintLink>**)p1);
-    DLink<ConstraintLink>* c2 = *((DLink<ConstraintLink>**)p2);
-    double v1 = c1->content.constr->getTightness();
-    double v2 = c2->content.constr->getTightness();
-    if (v1 < v2)
-        return 1;
-    else if (v1 > v2)
-        return -1;
-    else
-        return 0;
-}
-
 void Variable::sortConstraints()
 {
-    int size = constrs.getSize();
-    DLink<ConstraintLink>** sorted = new DLink<ConstraintLink>*[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
-    int i = 0;
+    vector<DLink<ConstraintLink>*> sorted;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        sorted[i++] = iter.getElt();
+        sorted.push_back(iter.getElt());
     }
-    qsort(sorted, size, sizeof(DLink<ConstraintLink>*), cmpConstraintDAC);
-    for (int i = 0; i < size; i++) {
+    if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
+        shuffle(sorted.begin(), sorted.end(), myrandom_generator);
+    } else {
+        stable_sort(sorted.begin(), sorted.end(), Constraint::cmpConstraintLink);
+    }
+    for (unsigned int i = 0; i < sorted.size(); i++) {
         constrs.erase(sorted[i], true);
         constrs.push_back(sorted[i], true);
     }
-    delete[] sorted;
 }
 
 void Variable::deconnect(DLink<ConstraintLink>* link, bool reuse)
@@ -314,22 +273,17 @@ void Variable::projectLB(Cost cost)
 {
     if (cost == MIN_COST)
         return;
+    if (ToulBar2::verbose >= 2)
+        cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
     if (cost < MIN_COST) {
-        if (ToulBar2::verbose >= 0)
-            cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + cost << endl;
         wcsp->decreaseLb(cost);
     } else {
-        if (ToulBar2::verbose >= 2)
-            cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
         wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
     }
     if (wcsp->td) {
         if (ToulBar2::verbose >= 2)
             cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
-        if (cost >= MIN_COST)
-            wcsp->td->getCluster(getCluster())->increaseLb(cost);
-        else
-            wcsp->td->getCluster(getCluster())->decreaseLb(cost);
+        wcsp->td->getCluster(getCluster())->increaseLb(cost);
     }
 }
 

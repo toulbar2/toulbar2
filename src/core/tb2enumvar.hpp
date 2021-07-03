@@ -41,6 +41,7 @@ public:
     EnumeratedVariable(WCSP* wcsp, string n, vector<Value>& dom);
 
     bool enumerated() const FINAL { return true; }
+
     bool isValueNames() const { return valueNames.size() == getDomainInitSize(); }
     void addValueName(const string& vname) { valueNames.push_back(vname); }
     const string& getValueName(int index) const { static const string None = std::string(""); if (isValueNames()) return valueNames[index]; else return None; }

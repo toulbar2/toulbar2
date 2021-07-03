@@ -37,7 +37,6 @@ protected:
     vector<Cost> costs;
 #else
     vector<StoreCost> costs;
-
 #endif
     vector<Value> supportX;
     vector<Value> supportY;
@@ -253,6 +252,7 @@ public:
         }
         return maxcost;
     }
+
     void setInfiniteCost(Cost ub)
     {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
@@ -535,6 +535,7 @@ public:
         }
         return result;
     }
+
     void fillEAC2(int varIndex)
     {
         assert(!isDuplicate());
@@ -629,6 +630,7 @@ public:
     {
         int count = 0;
         double sum = 0;
+        double tight = -1;
         Cost* costs = new Cost[x->getDomainSize() * y->getDomainSize()];
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {

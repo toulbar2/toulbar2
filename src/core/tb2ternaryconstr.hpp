@@ -233,7 +233,6 @@ protected:
     vector<Cost> costsYZ;
 #else
     vector<StoreCost> costsYZ;
-
 #endif
     inline Value getFunctionX(Value vy, Value vz) const { return functionX[y->toIndex(vy) * sizeZ + z->toIndex(vz)]; }
     inline Value getFunctionY(Value vx, Value vz) const { return functionY[x->toIndex(vx) * sizeZ + z->toIndex(vz)]; }
@@ -539,6 +538,7 @@ public:
         }
         return maxcost;
     }
+
     void setInfiniteCost(Cost ub)
     {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
@@ -740,6 +740,7 @@ public:
         }
         return result;
     }
+
     void fillEAC2(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z,
         vector<pair<Value, Value>>& supportX)
     {
@@ -1155,7 +1156,6 @@ public:
     Long space() const FINAL { return (Long)sizeof(Cost) * sizeX * sizeY * sizeZ; }
 #else
     Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY * sizeZ; }
-
 #endif
     friend struct Functor_getCostXYZ;
     friend struct Functor_getCostXZY;

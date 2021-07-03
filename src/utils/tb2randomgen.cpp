@@ -30,7 +30,59 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
 
     shuffle(&scopeIndexs[0], &scopeIndexs[arity - 1], myrandom_generator);
 
-    if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
+    if (globalname == "knapsackp") {
+        string arguments;
+        Long capacity = (myrandln() % (Long) costMax);
+        if (capacity==0)
+            capacity++;
+        arguments.append(to_string(capacity));
+        string kparguments;
+        Value* VV;
+        int domsize;
+        Long weight;
+        for (i = 0; i < arity; i++) {
+            kparguments="";
+            int countone=0;
+            domsize=scopeVars[i]->getDomainSize();
+            VV= new Value[domsize];
+            scopeVars[i]->getDomain(VV);
+            for(int j=0;j<domsize;j++){
+                if ((rand() % 100) < 50) {
+                    kparguments.append(" ");
+                    kparguments.append(to_string(VV[j]));
+                    if ((rand() % 100) < 50) {
+                         weight = (myrandl() % capacity + 1);
+                    } else {
+                         weight = (-myrandl() % capacity - 1);
+                    }
+                    kparguments.append(" "+to_string(weight));
+                    countone++;
+                }
+           }
+            arguments.append(" "+to_string(countone)+kparguments);
+        }
+        istringstream file(arguments);
+        cout<<arguments<<endl;
+        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true);
+    } else if (globalname == "knapsack") {
+        string arguments;
+        Long capacity = (myrandln() % (Long) costMax);
+        if (capacity==0)
+            capacity++;
+        arguments.append(to_string(capacity));
+        for (i = 0; i < arity; i++) {
+            arguments.append(" ");
+            if ((rand() % 100) < 50) {
+                Long weight = (myrandl() % capacity + 1);
+                arguments.append(to_string(weight));
+            } else {
+                Long weight = (-myrandl() % capacity - 1);
+                arguments.append(to_string(weight));
+            }
+        }
+        istringstream file(arguments);
+        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false);
+    }else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
         // soft alldiff

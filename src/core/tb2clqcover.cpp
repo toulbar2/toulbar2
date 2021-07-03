@@ -11,6 +11,7 @@
 #include "search/tb2clusters.hpp"
 
 //#define PROPAGATE_CLIQUE_WITH_BINARIES
+
 int CliqueConstraint::nextid{0};
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
@@ -138,7 +139,6 @@ void CliqueConstraint::propagate_incremental()
         cout << "After propagate, state\n"
              << state{ this } << "\n";
     }
-
 }
 
 void CliqueConstraint::get_current_scope(std::vector<EnumeratedVariable*>& s,
@@ -626,4 +626,3 @@ void CliqueConstraint::read(istream& is)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

@@ -3837,7 +3837,6 @@ void WCSP::read_qpbo(const char* fileName)
     }
 }
 
-
 bool isInteger(string &s) {return string("0123456789+-").find(s[0]) != string::npos;}
 /// \param file: input file
 /// \param token: in: previous token, out: new token (read from file or from the end of the previous token)

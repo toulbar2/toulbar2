@@ -78,8 +78,7 @@ public:
     }
     void incConflictWeight(Constraint* from) override
     {
-        //assert(fromElim1==NULL);
-        //assert(fromElim2==NULL);
+        assert(from!=NULL);
         if (from==this) {
             Constraint::incConflictWeight(1);
         } else if (deconnected()) {
@@ -113,6 +112,8 @@ public:
             all0 = mult_ub;
     }
     void dump(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; } //TODO
+    void dump_CFN(ostream&, bool) override { cerr << "warning! clique constraint cannot be dump." << endl; } //TODO
+
 private:
     // ----------------------------------------------------------------------
     // definition
@@ -203,17 +204,18 @@ private:
     // binary constraints in scope
     vector<vector<BinaryConstraint*>> bc;
 
-
     std::ostream& printstate(std::ostream& os);
 
     int run{0};
     int id{0};
     static int nextid;
+
 public:
     struct state {
         CliqueConstraint* clq;
         std::ostream& print(std::ostream& os) { return clq->printstate(os); }
     };
+
     void print(ostream& os) override {printstate (os);}
 };
 
@@ -230,4 +232,3 @@ inline std::ostream& operator<<(std::ostream& os, CliqueConstraint::state s)
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

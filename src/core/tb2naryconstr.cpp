@@ -233,6 +233,7 @@ bool NaryConstraint::reviseEACGreedySolution(int index, Value support)
     }
     return result;
 }
+
 /// Set new default cost to df (df <= Top), keep existing costs SMALLER than this default cost in a Map or a table
 void NaryConstraint::keepAllowedTuples(Cost df)
 {
@@ -555,6 +556,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
         existZ = subscopeZ[0]->getConstr(subscopeZ[1]);
         naryz = wcsp->newBinaryConstr(subscopeZ[0], subscopeZ[1], costs);
     } else if (a == 4) {
+
         int size = subscopeZ[0]->getDomainInitSize() * subscopeZ[1]->getDomainInitSize() * subscopeZ[2]->getDomainInitSize();
         vector<Cost> costs(size, 0);
         existZ = subscopeZ[0]->getConstr(subscopeZ[1], subscopeZ[2]);
@@ -978,7 +980,6 @@ void NaryConstraint::project(EnumeratedVariable* x)
             markValue.clear();
             if (x->canbe(val)) {
             markValue.insert(val);
-
             }
             bool end = false;
             while (!end) {
@@ -1171,7 +1172,6 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
     TUPLES& fproj)
 {
     assert(CUT(default_cost, wcsp->getUb()));
-
     static Tuple t;
     Tuple txy(2, 0);
     Cost c;
@@ -1305,6 +1305,7 @@ double NaryConstraint::computeTightness()
 {
     int count = 0;
     double sum = 0;
+    double tight = -1;
     Cost* costs_ = new Cost[size()];
     if (pf) {
         TUPLES::iterator it = pf->begin();
@@ -1423,7 +1424,7 @@ void NaryConstraint::dump(ostream& os, bool original)
                 Cost c = it->second;
                 it++;
                 for (unsigned int i = 0; i < t.size(); i++) {
-                    os << t[i] << " ";
+                    os << scope[i]->toValue(t[i]) << " ";
                 }
                 os << c << endl;
             }
@@ -1432,7 +1433,7 @@ void NaryConstraint::dump(ostream& os, bool original)
             vector<unsigned int> t(a, 0);
             for (ptrdiff_t idx = 0; idx < costSize; idx++) {
                 for (int i = 0; i < a; i++) {
-                    os << t[i] << " ";
+                    os << scope[i]->toValue(t[i]) << " ";
                 }
                 os << costs[idx] << endl;
                 int i = a - 1;
@@ -1488,7 +1489,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
         for (int i = 0; i < arity_; i++) {
             if (printed)
                 os << ",";
-            os << scope[i]->getName();
+            os << "\"" << scope[i]->getName() << "\"";
             printed = true;
         }
         os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
@@ -1544,7 +1545,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             if (scope[i]->unassigned()) {
                 if (printed)
                     os << ",";
-                os << scope[i]->getCurrentVarId();
+                os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
         os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";

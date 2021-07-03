@@ -58,7 +58,6 @@ void VACVariable::init()
 //        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
 //    EnumeratedVariable::removeFast(value);
     //   }
-
 //
 //void VACVariable::increase(Value newInf)
 //{
@@ -75,7 +74,6 @@ void VACVariable::init()
 //            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
 //    EnumeratedVariable::decrease(newSup);
     //     }
-
 
 /******************************
  * min-sum diffusion algorithm
@@ -223,7 +221,6 @@ VACBinaryConstraint::~VACBinaryConstraint()
 void VACBinaryConstraint::VACproject(VACVariable* x, Value v, Cost c)
 {
     assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << v << "), " << c << ")" << endl), true));
-
     wcsp->revise(this);
     TreeDecomposition* td = wcsp->getTreeDec();
     if (td)
@@ -289,6 +286,7 @@ bool VACBinaryConstraint::revise(VACVariable* var, Value v)
             }
         }
     }
+
 #ifndef AC2001
     for (EnumeratedVariable::iterator it = xj->upper_bound(sup - 1); it != xj->rend(); --it) {
         Value w = *it;

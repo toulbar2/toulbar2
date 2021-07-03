@@ -99,6 +99,7 @@ public:
     void printTightMatrix();
 
     void minsumDiffusion(); /**< MinSumDiffusion implementation */
+
     Cost RASPSFindItThreshold();
 };
 

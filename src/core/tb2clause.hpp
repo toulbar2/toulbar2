@@ -7,6 +7,9 @@
 #include "tb2wcsp.hpp"
 #include <numeric>
 
+//TODO: avoid enumeration on all variables if they are already assigned and removed (using backtrackable domain data structure).
+//in order to speed-up propagate function if the support variable has a zero unary cost
+
 // warning! we assume binary variables
 class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
@@ -114,6 +117,7 @@ public:
             return 1;
         return getDomainSizeProduct();
     }
+
     void reconnect()
     {
         if (deconnected()) {
@@ -132,10 +136,17 @@ public:
     }
     void incConflictWeight(Constraint* from)
     {
-        //assert(fromElim1==NULL);
-        //assert(fromElim2==NULL);
+        assert(from!=NULL);
         if (from == this) {
+            if (deconnected() || nonassigned==arity_) {
             Constraint::incConflictWeight(1);
+            } else {
+                for (int i = 0; i < arity_; i++) {
+                    if (connected(i)) {
+                        conflictWeights[i]++;
+                    }
+                }
+            }
         } else if (deconnected()) {
             for (int i = 0; i < from->arity(); i++) {
                 int index = getIndex(from->getVar(i));
@@ -146,7 +157,6 @@ public:
             }
         }
     }
-
     void resetConflictWeight()
     {
         conflictWeights.assign(conflictWeights.size(), 0);
@@ -401,6 +411,7 @@ public:
         os << " arity: " << arity_;
         os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
     }
+
     void dump(ostream& os, bool original = true)
     {
         Cost maxdelta = MIN_COST;
@@ -416,7 +427,7 @@ public:
             if (maxdelta == MIN_COST) {
                 os << " " << 0 << " " << 1 << endl;
                 for (int i = 0; i < arity_; i++) {
-                    os << tuple[i] << " ";
+                    os << scope[i]->toValue(tuple[i]) << " ";
                 }
                 os << cost << endl;
             } else {
@@ -426,7 +437,7 @@ public:
                 firstlex();
                 while (nextlex(t, c)) {
                     for (int i = 0; i < arity_; i++) {
-                        os << t[i] << " ";
+                        os << scope[i]->toValue(t[i]) << " ";
                     }
                     os << c << endl;
                 }
@@ -484,7 +495,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << scope[i]->getName();
+                os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
             os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
@@ -528,7 +539,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << scope[i]->getName();
+                    os << "\"" << scope[i]->getName() << "\"";
                     printed = true;
                 }
             os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";

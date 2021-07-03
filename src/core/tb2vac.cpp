@@ -229,7 +229,6 @@ bool VACExtension::enqueueVAC(Cost threshold, Cost previousThreshold)
 
 bool VACExtension::propagate()
 {
-
     if (!ToulBar2::RASPS && Store::getDepth() >= abs(ToulBar2::vac)) {
         inconsistentVariable = -1;
         return false;
@@ -282,7 +281,6 @@ bool VACExtension::propagate()
             }
         enforcePass1();
         isvac = isVAC();
-
             assert(!isvac || checkPass1());
         if (!isvac && CSP(wcsp->getLb(), wcsp->getUb())) {
             if (ToulBar2::weightedDegree)
@@ -495,6 +493,7 @@ bool VACExtension::propagate()
             }
         }
     }
+
     return util;
 }
 
@@ -523,7 +522,6 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
                 xi->queueSeekSupport();
         }
     }
-
     return false;
 }
 
@@ -886,7 +884,6 @@ void VACExtension::queueVAC(DLink<VariableWithTimeStamp>* link)
     assert(ToulBar2::vac);
     VAC.push(link, wcsp->getNbNodes());
 }
-
 #ifdef INCREMENTALVAC
 void VACExtension::queueVAC2(DLink<VariableWithTimeStamp>* link)
 {
