@@ -41,6 +41,7 @@
 #include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
 #include "tb2clqcover.hpp"
+#include "tb2knapsack.hpp"
 
 /*
  * Global variables with their default value
@@ -111,6 +112,7 @@ bool ToulBar2::lastConflict;
 int ToulBar2::dichotomicBranching;
 unsigned int ToulBar2::dichotomicBranchingSize;
 bool ToulBar2::sortDomains;
+int ToulBar2::constrOrdering;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 bool ToulBar2::solutionBasedPhaseSaving;
 int ToulBar2::lds;
@@ -201,6 +203,7 @@ BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
 double ToulBar2::qpboQuadraticCoefMultiplier;
+bool ToulBar2::opb;
 
 char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
@@ -229,16 +232,14 @@ TLogProb ToulBar2::GlobalLogUbZ;
 TLogProb ToulBar2::GlobalLogLbZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
+bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 TProb ToulBar2::sigma;
 TrieNum* ToulBar2::trieZ;
 string ToulBar2::Trie_File;
 bool ToulBar2::isTrie_File = false;
 Seq* ToulBar2::seq;
-
 TLogProb ToulBar2::ubE;
 TLogProb ToulBar2::Normalizing_Constant;
-
-int ToulBar2::Berge_Dec = 0; // berge decomposition flag  > 0 if wregular found in the problem
 
 externalfunc ToulBar2::timeOut;
 bool ToulBar2::interrupted;
@@ -246,7 +247,9 @@ bool ToulBar2::interrupted;
 bool ToulBar2::learning;
 
 int ToulBar2::seed;
+
 string ToulBar2::incop_cmd;
+
 string ToulBar2::clusterFile;
 ofstream ToulBar2::vnsOutput;
 
@@ -289,6 +292,7 @@ void tb2init()
     ToulBar2::stdin_format = "";
     ToulBar2::externalUB = "";
     ToulBar2::verbose = 0;
+
     ToulBar2::FullEAC = false;
     ToulBar2::VACthreshold = false;
     ToulBar2::nbTimesIsVAC = 0;
@@ -302,6 +306,7 @@ void tb2init()
     ToulBar2::RASPSangle = 10;
     ToulBar2::RASPSnbBacktracks = 1000;
     ToulBar2::RASPSitThresholds.clear();
+
     ToulBar2::debug = 0;
     ToulBar2::showSolutions = 0;
     ToulBar2::showHidden = false;
@@ -331,6 +336,7 @@ void tb2init()
     ToulBar2::dichotomicBranching = 1;
     ToulBar2::dichotomicBranchingSize = 2;
     ToulBar2::sortDomains = false;
+    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
     ToulBar2::solutionBasedPhaseSaving = true;
     ToulBar2::lds = 0;
     ToulBar2::limited = false;
@@ -408,6 +414,7 @@ void tb2init()
     ToulBar2::wcnf = false;
     ToulBar2::qpbo = false;
     ToulBar2::qpboQuadraticCoefMultiplier = 2.;
+    ToulBar2::opb = false;
 
     ToulBar2::varOrder = NULL;
     ToulBar2::btdMode = 0;
@@ -435,9 +442,8 @@ void tb2init()
 
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::Berge_Dec = false;
     ToulBar2::sigma = 0;
-    ToulBar2::Berge_Dec = 0;
-
     ToulBar2::Normalizing_Constant = -numeric_limits<TLogProb>::infinity();
 
     ToulBar2::timeOut = NULL;
@@ -448,6 +454,7 @@ void tb2init()
     ToulBar2::seed = 1;
 
     ToulBar2::incop_cmd = "";
+
     ToulBar2::searchMethod = DFBB;
 
     ToulBar2::clusterFile = "";
@@ -496,7 +503,7 @@ void tb2checkOptions()
         ToulBar2::divNbSol = min((Long)ToulBar2::divNbSol, ToulBar2::allSolutions);
         ToulBar2::allSolutions = 0;
     }
-    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo)) {
+    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb)) {
         cerr << "Error: cost multiplier cannot be used with UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
         exit(1);
     }
@@ -619,6 +626,10 @@ void tb2checkOptions()
         cerr << "Error: VAC-based upper bound probing heuristic requires VAC at least in preprocessing (add -A option)." << endl;
         exit(1);
     }
+    if (ToulBar2::useRASPS && ToulBar2::divNbSol > 1) {
+        cerr << "Error: VAC-based upper bound probing heuristic is not compatible with diverse solutions (remove -rasps option)." << endl;
+        exit(1);
+    }
     if (ToulBar2::VACthreshold && !ToulBar2::vac) {
         cerr << "Error: VAC threshold heuristic requires VAC during search (add -A option)." << endl;
         exit(1);
@@ -697,15 +708,12 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
     , nbDEE(0)
     , lastConflictConstr(NULL)
     , maxdomainsize(0)
-    ,
 #ifdef NUMBERJACK
-    isDelayedNaryCtr(false)
-    ,
+    , isDelayedNaryCtr(false)
 #else
-    isDelayedNaryCtr(true)
-    ,
+    , isDelayedNaryCtr(true)
 #endif
-    isPartOfOptimalSolution(0)
+    , isPartOfOptimalSolution(0)
     , elimOrder(0)
     , elimBinOrder(0)
     , elimTernOrder(0)
@@ -815,7 +823,6 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
-
     if (ToulBar2::vac) {
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
@@ -1173,7 +1180,7 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
 // Dual representation, Hamming, the dual variables have 2 (divBound + 1) values
 // each value represent a (d,d) or (d,d+1) transition except for the last two
 // that means we are beyond divBound.
-void WCSP::addDivConstraint(const vector<Value> solution, int sol_j, Cost cost)
+void WCSP::addDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divVarsIdMap, bool incremental)
 {
     if (ToulBar2::verbose >= 1)
         cout << "adding diversity constraint (dual)" << endl;
@@ -1184,67 +1191,85 @@ void WCSP::addDivConstraint(const vector<Value> solution, int sol_j, Cost cost)
 
     EnumeratedVariable* c;
     EnumeratedVariable* cp = NULL;
-    int cId;
-    int cpId;
+    int cId = -1;
+    int cpId = -1;
 
     bool first_pos = true;
 
-    for (Variable* x : getDivVariables()) {
+    for (Variable* x : divVars) {
 
         ex = (EnumeratedVariable*)x;
         int xId = x->wcspIndex; //index of variable x
 
         // Add constraint between x and c_j_x
-        cId = divVarsId[sol_j][xId]; //index of variable c
+        cId = divVarsIdMap[xId]; //index of variable c
         c = (EnumeratedVariable*)getVar(cId);
         vc.clear();
         for (unsigned val_x = 0; val_x < ex->getDomainInitSize(); val_x++) { //val_x = value index ?
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) { // Si les domaines sont réduits, ça ne marche pas!
                 // val_c = delta(divBound+1) + qp
-                unsigned delta = val_c / (ToulBar2::divBound + 1); // the first divBound+1 values of c (delta = 0) are (d,d) transitions, the rest is (d,d+1)
-                vc.push_back(((val_x != (unsigned)solution[xId]) == delta) ? MIN_COST : getUb());
+                unsigned delta = val_c / (distance + 1); // the first divBound+1 values of c (delta = 0) are (d,d) transitions, the rest is (d,d+1)
+                vc.push_back(((ex->toValue(val_x) != solution[xId]) == delta) ? MIN_COST : getUb());
             }
         }
+        if (incremental) {
         postIncrementalBinaryConstraint(xId, cId, vc);
+        } else {
+            postBinaryConstraint(xId, cId, vc);
+        }
+        getListSuccessors()->at(xId).push_back(cId);
 
         // Add constraint between c_j_x and c_j_x-1
         vc.clear();
         if (first_pos) {
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-                vc.push_back(((val_c % (ToulBar2::divBound + 1)) == 0) ? MIN_COST : getUb()); // allow only (0,0) and (0,1)
+                vc.push_back(((val_c % (distance + 1)) == 0) ? MIN_COST : getUb()); // allow only (0,0) and (0,1)
             }
+            if (incremental) {
             postIncrementalUnaryConstraint(cId, vc);
+            } else {
+                postUnaryConstraint(cId, vc);
+            }
             first_pos = false;
         } else {
             // add binary constraint between cp and c
             for (unsigned val_cp = 0; val_cp < cp->getDomainInitSize(); val_cp++) {
                 for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-                    unsigned deltap = val_cp / (ToulBar2::divBound + 1); // 1 iff (d,d+1) on previous
-                    unsigned qp = val_cp % (ToulBar2::divBound + 1); // (d,.) on previous, so deltap+qp is (.,d/d+1)
-                    unsigned q = val_c % (ToulBar2::divBound + 1); // (d,.) on current
-                    vc.push_back((q == min(ToulBar2::divBound, qp + deltap)) ? MIN_COST : getUb()); // why min? (Thomas)
+                    unsigned deltap = val_cp / (distance + 1); // 1 iff (d,d+1) on previous
+                    unsigned qp = val_cp % (distance + 1); // (d,.) on previous, so deltap+qp is (.,d/d+1)
+                    unsigned q = val_c % (distance + 1); // (d,.) on current
+                    vc.push_back((q == min(distance, qp + deltap)) ? MIN_COST : getUb()); // why min? (Thomas)
                 }
             }
+            if (incremental) {
             postIncrementalBinaryConstraint(cpId, cId, vc);
+            } else {
+                postBinaryConstraint(cpId, cId, vc);
+            }
+            getListSuccessors()->at(cpId).push_back(xId); // link decision variables together
         }
         cp = c;
         cpId = cId;
     }
 
     //Unary constraint on last var_c to ensure diversity
-    if (!getDivVariables().empty()) {
+    if (!divVars.empty()) {
         vc.clear();
         for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-            unsigned q = val_c % (ToulBar2::divBound + 1);
-            unsigned delta = val_c / (ToulBar2::divBound + 1);
-            vc.push_back(q + delta >= ToulBar2::divBound ? MIN_COST : getUb());
+            unsigned q = val_c % (distance + 1);
+            unsigned delta = val_c / (distance + 1);
+            vc.push_back(q + delta >= distance ? MIN_COST : getUb());
         }
+        if (incremental) {
         postIncrementalUnaryConstraint(cId, vc);
+        } else {
+            postUnaryConstraint(cId, vc);
+        }
     }
 }
 
 // Hidden representation: dual + state variables
-void WCSP::addHDivConstraint(const vector<Value> solution, int sol_j, Cost cost)
+void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divVarsIdMap, map<int, int>& divHVarsIdMap, bool incremental)
 {
     if (ToulBar2::verbose >= 1)
         cout << "adding diversity constraint (hidden)" << endl;
@@ -1261,71 +1286,98 @@ void WCSP::addHDivConstraint(const vector<Value> solution, int sol_j, Cost cost)
     int hId = -1;
     int hpId = -1;
 
-    for (unsigned divVarPos = 0; divVarPos < divVariables.size(); divVarPos++) {
-        ex = (EnumeratedVariable*)divVariables[divVarPos];
+    for (unsigned divVarPos = 0; divVarPos < divVars.size(); divVarPos++) {
+        ex = (EnumeratedVariable*)divVars[divVarPos];
         int xId = ex->wcspIndex; //wcsp index of current divVariable
 
         // Add constraint between ex and c_j_x
-        cId = divVarsId[sol_j][xId]; //index of variable c
+        cId = divVarsIdMap[xId]; //index of variable c
         c = (EnumeratedVariable*)getVar(cId);
         vc.clear();
         for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) { // val_x = value index ?
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-                unsigned delta = val_c / (ToulBar2::divBound + 1);
-                vc.push_back(((val_ex != (unsigned)solution[xId]) == delta) ? MIN_COST : getUb());
+                unsigned delta = val_c / (distance + 1);
+                vc.push_back(((ex->toValue(val_ex) != solution[xId]) == delta) ? MIN_COST : getUb());
             }
         }
+        if (incremental) {
         postIncrementalBinaryConstraint(xId, cId, vc);
+        } else {
+            postBinaryConstraint(xId, cId, vc);
+        }
+        getListSuccessors()->at(xId).push_back(cId);
 
         // Add constraint between hp_j_x and c_j_x
         vc.clear();
         if (divVarPos == 0) {
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-                vc.push_back(((val_c % (ToulBar2::divBound + 1)) == 0) ? MIN_COST : getUb());
+                vc.push_back(((val_c % (distance + 1)) == 0) ? MIN_COST : getUb());
             }
+            if (incremental) {
             postIncrementalUnaryConstraint(cId, vc);
+        } else {
+                postUnaryConstraint(cId, vc);
+            }
         } else {
             // add binary constraint between previous hp_j_x and c_j_x
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
                 for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-                    unsigned q = val_c % (ToulBar2::divBound + 1);
+                    unsigned q = val_c % (distance + 1);
                     vc.push_back((val_hp == q) ? MIN_COST : getUb());
                 }
             }
+            if (incremental) {
             postIncrementalBinaryConstraint(hpId, cId, vc);
+            } else {
+                postBinaryConstraint(hpId, cId, vc);
+            }
+            getListSuccessors()->at(hpId).push_back(xId); // link decision variables together
         }
 
         // Add constraint between c_j_x and h_j_x a (except last var, done after loop)
         vc.clear();
-        if (divVarPos < divVariables.size() - 1) {
-            hId = divHVarsId[sol_j][xId]; //index of variable h
+        if (divVarPos < divVars.size() - 1) {
+            hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
                 for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
-                    unsigned q = val_c % (ToulBar2::divBound + 1);
-                    unsigned delta = val_c / (ToulBar2::divBound + 1);
-                    vc.push_back((val_h == min(ToulBar2::divBound, q + delta)) ? MIN_COST : getUb());
+                    unsigned q = val_c % (distance + 1);
+                    unsigned delta = val_c / (distance + 1);
+                    vc.push_back((val_h == min(distance, q + delta)) ? MIN_COST : getUb());
                 }
             }
+            if (incremental) {
             postIncrementalBinaryConstraint(cId, hId, vc);
+            } else {
+                postBinaryConstraint(cId, hId, vc);
+            }
+            getListSuccessors()->at(cId).push_back(hId);
+        } else {
+            hId = divHVarsIdMap[xId]; //index of variable h
+            h = (EnumeratedVariable*)getVar(hId);
+            assign(hId, h->getInf());  // h variable is unused and cannot be determined before sorting divVariables
         }
         hp = h;
         hpId = hId;
     }
     //Unary constraint on last var_c to ensure diversity
-    if (!divVariables.empty()) {
+    if (!divVars.empty()) {
         vc.clear();
         for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
-            unsigned q = val_c % (ToulBar2::divBound + 1);
-            unsigned delta = val_c / (ToulBar2::divBound + 1);
-            vc.push_back(q + delta >= ToulBar2::divBound ? MIN_COST : getUb());
+            unsigned q = val_c % (distance + 1);
+            unsigned delta = val_c / (distance + 1);
+            vc.push_back(q + delta >= distance ? MIN_COST : getUb());
         }
+        if (incremental) {
         postIncrementalUnaryConstraint(cId, vc);
+        } else {
+            postUnaryConstraint(cId, vc);
+        }
     }
 }
 
 // Ternary representation
-void WCSP::addTDivConstraint(const vector<Value> solution, int sol_j, Cost cost)
+void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divHVarsIdMap, bool incremental)
 {
     if (ToulBar2::verbose >= 1)
         cout << "adding diversity constraint (ternary decomposition)" << endl;
@@ -1340,40 +1392,60 @@ void WCSP::addTDivConstraint(const vector<Value> solution, int sol_j, Cost cost)
     int hId = -1;
     int hpId = -1;
 
-    for (unsigned divVarPos = 0; divVarPos < divVariables.size(); divVarPos++) {
-        ex = (EnumeratedVariable*)divVariables[divVarPos];
+    for (unsigned divVarPos = 0; divVarPos < divVars.size(); divVarPos++) { // follow divVars variable order (can be sorted by DAC order)
+        ex = (EnumeratedVariable*)divVars[divVarPos];
         int xId = ex->wcspIndex; //wcsp index of current divVariable
 
         // Add constraint between hp ex and h (except on extremities)
         vc.clear();
         if (divVarPos == 0) { // first position, no hp, only distance 0
-            hId = divHVarsId[sol_j][xId]; //index of variable h
+            hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
                 for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
-                    vc.push_back(((val_ex != (unsigned)solution[xId]) == val_h) ? MIN_COST : getUb());
+                    vc.push_back(((ex->toValue(val_ex) != solution[xId]) == val_h) ? MIN_COST : getUb());
                 }
             }
+            if (incremental) {
             postIncrementalBinaryConstraint(xId, hId, vc);
-        } else if (divVarPos + 1 == divVariables.size()) { // last position, no h
+            } else {
+
+                postBinaryConstraint(xId, hId, vc);
+            }
+            getListSuccessors()->at(xId).push_back(hId);
+        } else if (divVarPos + 1 == divVars.size()) { // last position
+            hId = divHVarsIdMap[xId]; //index of variable h
+            h = (EnumeratedVariable*)getVar(hId);
+            assign(hId, h->getInf()); // h variable is unused and cannot be determined before sorting divVariables
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
                 for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
-                    vc.push_back((val_hp + (val_ex != (unsigned)solution[xId]) >= ToulBar2::divBound) ? MIN_COST : getUb());
+                    vc.push_back((val_hp + (ex->toValue(val_ex) != solution[xId]) >= distance) ? MIN_COST : getUb());
                 }
             }
+            if (incremental) {
             postIncrementalBinaryConstraint(hpId, xId, vc);
         } else {
-            hId = divHVarsId[sol_j][xId]; //index of variable h
+                postBinaryConstraint(hpId, xId, vc);
+            }
+            getListSuccessors()->at(hpId).push_back(xId);
+        } else {
+            hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
                 for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
                     for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
                         //cout << "hp " << val_hp << " x " << val_ex << " h " << val_h << "(" << ((val_hp + (val_ex != (unsigned)solution[xId]) == val_h) ? MIN_COST : getUb()) << ")" << endl;
-                        vc.push_back((min(ToulBar2::divBound, val_hp + (val_ex != (unsigned)solution[xId])) == val_h) ? MIN_COST : getUb());
+                        vc.push_back((min(distance, val_hp + (ex->toValue(val_ex) != solution[xId])) == val_h) ? MIN_COST : getUb());
                     }
                 }
             }
+            if (incremental) {
             postIncrementalTernaryConstraint(hpId, xId, hId, vc);
+            } else {
+                postTernaryConstraint(hpId, xId, hId, vc);
+            }
+            getListSuccessors()->at(hpId).push_back(xId);
+            getListSuccessors()->at(xId).push_back(hId);
         }
         hp = h;
         hpId = hId;
@@ -1579,6 +1651,7 @@ void WCSP::addTMDDConstraint(Mdd mdd, int relaxed)
         hpId = hId;
     }
 }
+
 void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes)
 {
 #ifndef NDEBUG
@@ -1770,6 +1843,36 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
+void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, vector<Value>& values, int method)
+{
+#ifndef NDEBUG
+    for (unsigned int i = 0; i < scopeIndex.size(); i++)
+        for (unsigned int j = i + 1; j < scopeIndex.size(); j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    assert(scopeIndex.size() == values.size());
+    if (method==3) {
+        string parameters;
+        parameters.append(to_string(-((int)scopeIndex.size()-(int)distance)));
+        for (unsigned int i=0; i<scopeIndex.size(); i++) {
+            parameters.append(" 1 ");
+            parameters.append(to_string(values[i]));
+            parameters.append(" -1");
+        }
+        postKnapsackConstraint(scopeIndex, parameters, false, true);
+        return;
+    }
+    WeightedDiverse* decomposableGCF = new WeightedDiverse(scopeIndex.size(), &scopeIndex[0]);
+    decomposableGCF->setSemantics("hard");
+    decomposableGCF->setBaseCost(getUb());
+    decomposableGCF->setDistance(distance);
+    for (Value v: values) {
+        decomposableGCF->addValue(v);
+    }
+    decomposableGCF->setMethod(method);
+    decomposableGCF->addToCostFunctionNetwork(this);
+}
+
 /// \brief create a monolithic global cost function in intension with a particular semantic
 /// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
 /// \param arity size of scopeIndex
@@ -1867,11 +1970,161 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
         for (int j = i + 1; j < arity; j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
+#ifdef CLIQUE2KNAPSACK
+    return postKnapsackConstraint(scopeIndex,arity,file,true,true);
+#else
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto cc = new CliqueConstraint(this, scopeVars.data(), arity);
     cc->read(file);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        cc->propagate();
+    }
+    return cc->wcspIndex;
+#endif
+}
+
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp)
+{
+#ifndef NDEBUG
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    //Eliminate variable with weight 0
+    vector<int> Weightzero;
+    vector<Long> TempWeights;
+    vector<vector<Long>> weights;
+    Long readw;
+    int readv1;
+    Long capacity;
+    Long MaxWeight=0;
+    int skip;
+    unsigned int size;
+    int readnbval;
+    Long minweight;
+    vector<int> TempVarVal,TempNotVarVal;
+    vector<vector<int>> VarVal,NotVarVal;
+    vector<tValue> clausetuple(arity, 0);
+    bool isclause=0;
+    vector<EnumeratedVariable*> scopeVars(arity);
+    int ar=arity;
+    if (!isclique) {
+        file >> capacity;
+    } else {
+        capacity=-1;
+        file >> skip;
+    }
+    for (int i = 0; i < ar; i++)
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+    vector<int> tobedel;
+    for (int i = 0; i < ar; ++i) {
+        if (!kp) {
+            file >> readw;
+            TempVarVal.clear();
+            TempWeights.clear();
+            TempNotVarVal.clear();
+            minweight = 0;
+            if (readw != 0) {
+                if (readw < minweight)
+                    minweight = readw;
+                TempWeights.push_back(readw);
+                TempVarVal.push_back(1);
+            }
+        } else {
+            file >> readnbval;
+            TempVarVal.clear();
+            TempWeights.clear();
+            TempNotVarVal.clear();
+            minweight = 0;
+            for (int j = 0; j < readnbval; ++j) {
+                file >> readv1;
+                if(scopeVars[i]->canbe(readv1)){
+                    if (!isclique) {
+                        file >> readw;
+                        if (readw != 0) {
+                            if (readw < minweight)
+                                minweight = readw;
+                            TempVarVal.push_back(readv1);
+                            TempWeights.push_back(readw);
+                        }
+                    } else {
+                        minweight=-1;
+                        TempVarVal.push_back(readv1);
+                        TempWeights.push_back(-1);
+                    }
+                } else {
+                    if (!isclique) file>>skip;
+                }
+            }
+        }
+        size = scopeVars[i]->getDomainSize();
+        if (size != TempVarVal.size()) {
+            TempWeights.push_back(0);
+            Value *VV = new Value[size];
+            scopeVars[i]->getDomain(VV);
+            for (unsigned int j = 0; j < size; j++) {
+                if (find(TempVarVal.begin(), TempVarVal.end(), VV[j]) == TempVarVal.end())
+                    TempNotVarVal.push_back(VV[j]);
+            }
+            TempVarVal.push_back(TempNotVarVal[0]);
+            if (minweight < 0) {
+                for (unsigned int j = 0; j < TempWeights.size(); j++)
+                    TempWeights[j] -= minweight;
+                capacity -= minweight;
+            }
+        } else {
+            for (unsigned int j = 0; j < TempWeights.size(); j++)
+                TempWeights[j] -= minweight;
+            capacity -= minweight;
+        }
+        if (TempWeights.size() > 1) {
+            MaxWeight += *max_element(TempWeights.begin(), TempWeights.end());
+            assert(*max_element(TempWeights.begin(), TempWeights.end())>0);
+            weights.push_back(TempWeights);
+            VarVal.push_back(TempVarVal);
+            NotVarVal.push_back(TempNotVarVal);
+        } else {
+            tobedel.push_back(i);
+        }
+    }
+    sort(tobedel.begin(),tobedel.end(),greater<int>());
+    for (unsigned int i = 0; i < tobedel.size(); ++i) {
+        scopeVars.erase(scopeVars.begin() + tobedel[i]);
+        arity--;
+    }
+    if(capacity>0) {
+        for (unsigned int i = 0; i < weights.size(); ++i) {
+            for (unsigned int j = 0; j < weights[i].size(); ++j) {
+                if (weights[i][j] > capacity) {
+                    MaxWeight = MaxWeight - weights[i][j] + capacity;
+                    weights[i][j] = capacity;
+                }
+            }
+        }
+    }
+    TempVarVal.clear();
+    AbstractNaryConstraint* cc = NULL;
+    if (isclause) {
+        assert(arity == (int)clausetuple.size());
+        if (ToulBar2::verbose >= 3) cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
+        cc = new WeightedClause(this, scopeVars.data(), arity, getUb(), clausetuple);
+    } else{
+        cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight, VarVal, NotVarVal);
+    }
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
     else {
@@ -2237,6 +2490,7 @@ void WCSP::postNullaryConstraint(Double cost)
 {
     postNullaryConstraint((Cost)(round(cost * pow(10, ToulBar2::decimalPoint))));
 }
+
 /// \brief add unary costs to enumerated variable \e xIndex
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
 void WCSP::postUnary(int xIndex, vector<Cost>& costs)
@@ -2374,6 +2628,11 @@ void WCSP::sortConstraints()
             elimBinConstrs.push_back(bctr);
         }
     }
+    if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
+        shuffle(delayedNaryCtr.begin(), delayedNaryCtr.end(), myrandom_generator);
+    } else {
+        stable_sort(delayedNaryCtr.begin(), delayedNaryCtr.end(), [&](int idx1, int idx2){ return Constraint::cmpConstraint(getCtr(idx1), getCtr(idx2)); });
+    }
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         getCtr(*idctr)->propagate();
     }
@@ -2401,47 +2660,8 @@ void WCSP::sortConstraints()
         }
     }
 
-    if (ToulBar2::Berge_Dec > 0) {
-        // flag pour indiquer si une variable a deja ete visitee initialement a faux
-        vector<bool> marked(numberOfVariables(), false);
-        vector<int> revdac;
-        // nouvel ordre DAC inverse
-        //	for (int i = numberOfVariables()-1 ; i >= 0; i--) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-        //	for (unsigned int i = 0; i <  numberOfVariables(); i++) { if (!marked[i]){ visit(i,revdac,marked,listofsuccessors); }}
-
-        //	for (unsigned int i = 0; i< numberOfVariables(); i++) {
-        //		cout << "listofsuccessors(" << i << "):";
-        //		for (unsigned int a = 0; a < listofsuccessors[i].size(); a++) {
-        //			cout << " " << listofsuccessors[i][a];
-        //		}
-        //		cout << endl;
-        //	}
-
-        //Mark native variable
-        for (int i = ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : numberOfVariables()) - 1; i >= 0; i--) {
-            if (!marked[i] && getName(i)[0] != IMPLICIT_VAR_TAG[0]) {
-                visit(i, revdac, marked, listofsuccessors);
-            }
-        }
-        //Mark q variable only
-        for (int i = numberOfVariables() - 1; i >= 0; i--) {
-            if (!marked[i]) {
-                visit(i, revdac, marked, listofsuccessors);
-            }
-        }
-
-        // listofsuccessors.clear(); // appel a la methode clear de l'objet vector
-
-        if (ToulBar2::verbose >= 1) {
-            cout << "BERGE DAC reverse order:";
-            for (unsigned int i = 0; i < numberOfVariables(); i++) {
-                cout << " " << revdac[i];
-            }
-            cout << endl;
-        }
-
-        assert(revdac.size() == numberOfVariables());
-
+    if (ToulBar2::Berge_Dec) {
+        vector<int> revdac = getBergeDecElimOrder();
         setDACOrder(revdac);
     }
     // postpone costly variable elimination heuristics if too many variables
@@ -2655,7 +2875,6 @@ void WCSP::preprocessing()
     //		cout << " " << elimorder[i];
     //	}
     //	cout << endl;
-
     do {
         previouslb = getLb();
         setDACOrder(revelimorder);
@@ -2931,6 +3150,7 @@ unsigned int WCSP::getMaxCurrentDomainSize() const
     }
     return max;
 }
+
 unsigned int WCSP::getDomainSizeSum() const
 {
     unsigned int sum = 0;
@@ -2999,6 +3219,7 @@ unsigned int WCSP::medianArity() const
     assert(pos == numberOfConnectedConstraints() && pos == nb);
     return stochastic_selection<int>(arity, 0, nb - 1, nb / 2);
 }
+
 unsigned int WCSP::numberOfConnectedBinaryConstraints() const
 {
     unsigned int res = 0;
@@ -3097,6 +3318,7 @@ void WCSP::printNCBuckets()
 void WCSP::print(ostream& os)
 {
     os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -3156,7 +3378,7 @@ void WCSP::dump(ostream& os, bool original)
             exit(EXIT_FAILURE);
         }
         if (original) {
-            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->getDomainInitSize() : (vars[i]->getSup() + 1));
+            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->toValue(((EnumeratedVariable*)vars[i])->getDomainInitSize()) : (vars[i]->getSup() + 1));
             if (domsize > maxdomsize)
                 maxdomsize = domsize;
         } else {
@@ -3179,7 +3401,7 @@ void WCSP::dump(ostream& os, bool original)
         if (original) {
             if (!vars[i]->enumerated())
                 os << "-";
-            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->getDomainInitSize() : (vars[i]->getSup() + 1));
+            int domsize = (vars[i]->enumerated() ? ((EnumeratedVariable*)vars[i])->toValue(((EnumeratedVariable*)vars[i])->getDomainInitSize()) : (vars[i]->getSup() + 1));
             os << domsize;
             if (i < vars.size() - 1)
                 os << " ";
@@ -3304,7 +3526,6 @@ void WCSP::dump(ostream& os, bool original)
     }
 }
 
-// Warning! make the assumption that all initial domains start at zero!!!
 void WCSP::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;
@@ -3337,6 +3558,10 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
                 printed = true;
             }
+            os << "]";
+            if (i < vars.size() - 1)
+                os << ",";
+            os << "\n";
         } else if (s->unassigned()) {
             os << "\"" << s->getName() << "\":";
             int domsize = s->getDomainSize();
@@ -3350,11 +3575,11 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
                 printed = true;
             }
-        }
         os << "]";
         if (i < vars.size() - 1)
             os << ",";
         os << "\n";
+    }
     }
 
     os << "},\n\"functions\": {\n";
@@ -3372,8 +3597,8 @@ void WCSP::dump_CFN(ostream& os, bool original)
             int size = vars[i]->getDomainSize();
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
-            os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[";
-            os << vars[i]->getName() << "],\"defaultcost\":" << getDPrimalBound() - negCost << ",\n";
+            os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
+            os << vars[i]->getName() << "\"],\"defaultcost\":" << getDPrimalBound() - negCost << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
                 os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
@@ -3388,7 +3613,6 @@ void WCSP::dump_CFN(ostream& os, bool original)
     os << "\"F\":{\"scope\":[],\"costs\":[" << getDDualBound() << "]}\n}\n}" << endl;
     os.flags(f);
 }
-
 ostream& operator<<(ostream& os, WCSP& wcsp)
 {
     wcsp.print(os);
@@ -3596,6 +3820,7 @@ void WCSP::propagateTRWS()
     }
 
     assert(!td); // warning! tree decomposition must be done after TRW-S
+
     // Preprocessing: compute order
     if (ToulBar2::trwsOrder) {
         // Use monotonic chains
@@ -3638,6 +3863,7 @@ void WCSP::propagateTRWS()
             ranks[0][var->wcspIndex] = var->getDACOrder();
         }
     }
+
     orders[1] = orders[0];
     reverse(orders[1].begin(), orders[1].end());
     for (unsigned int i = 0; i < numberOfVariables(); ++i) {
@@ -3985,6 +4211,7 @@ void WCSP::propagateFEAC()
             x->reviseEACGreedySolution();
     }
 }
+
 /// \defgroup varelim Variable elimination
 /// - \e i-bounded variable elimination eliminates all variables with a degree less than or equal to \e i.
 ///		It can be done with arbitrary i-bound in preprocessing only and iff all their cost functions are in extension.
@@ -4051,7 +4278,6 @@ void WCSP::propagate()
     if (ToulBar2::interrupted)
         throw TimeOut();
     revise(NULL);
-
     if (ToulBar2::vac)
         vac->iniThreshold();
 
@@ -4886,6 +5112,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
     return added;
 }
 
+//TODO: add dummy binary cost functions to make the constraint graph chordal before creating dummy ternary cost functions
 void WCSP::ternaryCompletion()
 {
     if (numberOfUnassignedVariables() < 3)
@@ -4896,6 +5123,7 @@ void WCSP::ternaryCompletion()
     Double domsize = medianDomainSize();
     Double size = domsize;
     size = sizeof(StoreCost) * size * size * size * nbunvars * (nbunvars - 1) * (nbunvars - 2) * connectivity * connectivity * connectivity / 6;
+
     //if (ToulBar2::debug>=2) cout << "MAX ESTIMATED RPC SIZE: " << size << " (" << nbunvars << "," << connectivity <<")" << endl;
     //if (size > 1024. * 1024. * ToulBar2::preprocessTernaryRPC) {
     //cout << "Restricted path consistency disabled (" << size/1024./1024. << " >= " << ToulBar2::preprocessTernaryRPC << " MB)" << endl;
@@ -5139,6 +5367,13 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
             for (int i = numberOfVariables() - 1; i >= 0; i--)
                 order.push_back(i);
             break;
+        case ELIM_LEXICOGRAPHIC_ORDER:
+            order.clear();
+            order.reserve(vars.size());
+            for (int i = numberOfVariables() - 1; i >= 0; i--)
+                order.push_back(i);
+            sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
+            break;
         default: {
             cerr << "Variable elimination order " << reinterpret_cast<uintptr_t>(elimVarOrder) << " not implemented yet!" << endl;
             exit(EXIT_FAILURE);
@@ -5173,6 +5408,49 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
     }
 }
 
+vector<int> WCSP::getBergeDecElimOrder()
+{
+    vector<bool> marked(numberOfVariables(), false);
+    vector<int> revdac;
+
+    // start from current DAC order
+    vector<int> dacorder(numberOfVariables(), -1);
+    for (unsigned int idx = 0; idx < numberOfVariables(); idx++) {
+        dacorder[getDACOrder(idx)] = idx;
+    }
+    assert(all_of(dacorder.begin(), dacorder.end(), [](int idx) { return idx != -1; }));
+
+    //Mark native variable
+    for (int j = numberOfVariables() - 1; j >= 0; j--) {
+        int i = dacorder[j];
+        if (ToulBar2::nbDecisionVars == 0 || i < ToulBar2::nbDecisionVars) {
+            if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG,0) != 0 && getName(i).rfind(DIVERSE_VAR_TAG,0) != 0) {
+                visit(i, revdac, marked, listofsuccessors);
+            }
+        }
+    }
+    //Mark other variables
+    for (int j = numberOfVariables() - 1; j >= 0; j--) {
+        int i = dacorder[j];
+        if (!marked[i]) {
+            visit(i, revdac, marked, listofsuccessors);
+        }
+    }
+
+    // listofsuccessors.clear();
+
+    if (ToulBar2::verbose >= 1) {
+        cout << "BERGE DAC reverse order:";
+        for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            cout << " " << getName(revdac[i]);
+        }
+        cout << endl;
+    }
+
+    assert(revdac.size() == numberOfVariables());
+    return revdac;
+}
+
 /// \param order variable elimination order (reverse of DAC order)
 void WCSP::setDACOrder(vector<int>& order)
 {
@@ -5193,10 +5471,16 @@ void WCSP::setDACOrder(vector<int>& order)
     }
     if (ToulBar2::verbose >= 1)
         cout << endl;
+
     sort(divVariables.begin(), divVariables.end(),
         [](const Variable* v1, const Variable* v2) -> bool {
-            return (v1->getDACOrder() > v2->getDACOrder());
+            return (v1->getDACOrder() < v2->getDACOrder());
         });
+
+    // during search, must reorder allVars accordingly before propagate calls setvalue
+    if (solver && ((Solver *)solver)->numberOfUnassignedVariables() >= 0) {
+        ((Solver *)solver)->updateVarHeuristic();
+    }
 
     for (unsigned int i = 0; i < numberOfConstraints(); i++) {
         Constraint* ctr = getCtr(i);
@@ -5218,7 +5502,8 @@ void WCSP::setDACOrder(vector<int>& order)
             ctr->propagate();
     }
     propagate();
-    // recompute all tightness: too slow???
+
+    // recompute all tightness: too slow??? side-effect to reset weighted degrees???
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected())
             constrs[i]->computeTightness();
@@ -5233,8 +5518,9 @@ void WCSP::setDACOrder(vector<int>& order)
 // -----------------------------------------------------------
 // Functions for dealing with probabilities and decimal point numbers.
 // Warning: ToulBar2::NormFactor has to be initialized
+
 // Converts the decimal Token to a cost and a actual number of significant digit after the decimal
-// Should yell if unfeasible with recent GCC/CLang complier with builtins.
+// Should yell if unfeasible with recent GCC/CLang compiler with builtins.
 // The string is assumed to be space trimmed.The conversion uses the upper bound precision
 // and ToulBar2::costMultiplier for scaling but does not shift cost using negCost.
 

@@ -87,7 +87,6 @@ Solver::Solver(Cost initUpperBound)
     , nbBacktracks(0)
     , nbBacktracksLimit(LONGLONG_MAX)
     , wcsp(NULL)
-    , allVars(NULL)
     , unassignedVars(NULL)
     , lastConflictVar(-1)
     , nbSol(0.)
@@ -116,28 +115,41 @@ Solver::~Solver()
     delete cp;
     delete open;
     delete unassignedVars;
-    delete[] allVars;
+    for (unsigned int i=0; i<allVars.size(); i++) {
+        delete allVars[i];
+    }
     delete wcsp;
     delete ((StoreInt*)searchSize);
 }
 
 void Solver::initVarHeuristic()
 {
+    for (unsigned int j = 0; j < wcsp->numberOfVariables(); j++) {
+        allVars.push_back(new DLink<Value>());
+    }
     unassignedVars = new BTList<Value>(&Store::storeDomain);
-    allVars = new DLink<Value>[wcsp->numberOfVariables()];
     for (unsigned int j = 0; j < wcsp->numberOfVariables(); j++) {
         unsigned int i = wcsp->getDACOrder(j);
-        allVars[i].content = j;
+        allVars[i]->content = j;
     }
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-        unassignedVars->push_back(&allVars[i], false);
-        if (wcsp->assigned(allVars[i].content) || (ToulBar2::nbDecisionVars > 0 && allVars[i].content >= ToulBar2::nbDecisionVars))
-            unassignedVars->erase(&allVars[i], false);
+        unassignedVars->push_back(allVars[i], false);
+        if (wcsp->assigned(allVars[i]->content) || (ToulBar2::nbDecisionVars > 0 && allVars[i]->content >= ToulBar2::nbDecisionVars))
+            unassignedVars->erase(allVars[i], false);
         else
-            wcsp->resetWeightedDegree(allVars[i].content);
+            wcsp->resetWeightedDegree(allVars[i]->content);
     }
     // Now function setvalue can be called safely!
     ToulBar2::setvalue = setvalue;
+}
+
+// keep consistent order of allVars with getDACOrder, needed by setvalue function
+void Solver::updateVarHeuristic()
+{
+    sort(allVars.begin(), allVars.end(),
+            [this](const DLink<Value> *v1, const DLink<Value> *v2) -> bool {
+                  return (wcsp->getDACOrder(v1->content) < wcsp->getDACOrder(v2->content));
+               });
 }
 
 Cost Solver::read_wcsp(const char* fileName)
@@ -304,6 +316,7 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
         } else {
             value = atoi(token.c_str());
         }
+
         if (ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) {
             int j = wcsp->getDomainInitSize(i) - 1;
             while (j >= 0) {
@@ -411,6 +424,7 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
         certif2 = strstr(certif2, sep);
         if (certif2)
             certif2++;
+
         if (not isdigit(svar[0])) {
             var = wcsp->getVarIndex(to_string(svar));
             if ((unsigned int)var >= wcsp->numberOfVariables()) {
@@ -442,6 +456,7 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
             assert(j >= 0);
             value = j;
         }
+
         switch (operation) {
         case '=': {
             variables.push_back(var);
@@ -514,11 +529,9 @@ set<int> Solver::getUnassignedVars() const
     }
     return res;
 }
-
 unsigned int Solver::numberOfUnassignedVariables() const
 {
-    assert(unassignedVars);
-    return unassignedVars->getSize();
+    return ((unassignedVars)?unassignedVars->getSize():-1);
 }
 
 /*
@@ -531,8 +544,8 @@ void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
     //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
     Solver* solver = (Solver*)_solver_;
     unsigned int i = solver->getWCSP()->getDACOrder(varIndex);
-    if (!solver->allVars[i].removed) {
-        solver->unassignedVars->erase(&solver->allVars[i], true);
+    if (!solver->allVars[i]->removed) {
+        solver->unassignedVars->erase(solver->allVars[i], true);
     }
 }
 
@@ -1462,7 +1475,6 @@ void Solver::scheduleOrPostpone(int varIndex)
 
 void Solver::narySortedChoicePoint(int varIndex, Cost lb)
 {
-
     assert(wcsp->enumerated(varIndex));
     int size = wcsp->getDomainSize(varIndex);
     ValueCost sorted[size];
@@ -1593,13 +1605,11 @@ void Solver::newSolution()
         wcsp->updateUb(wcsp->getLb());
     } else if (!ToulBar2::btdMode)
         nbSol += 1.;
-
     if (ToulBar2::isZ) {
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, (Cost)(wcsp->getLb() + wcsp->getNegativeLb()));
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
             cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << endl;
     }
-
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
             if (ToulBar2::haplotype)
@@ -2002,17 +2012,14 @@ void Solver::beginSolve(Cost ub)
         if (ToulBar2::vnsKmax <= 0)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }
-
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
         cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
         exit(1);
     }
-
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
         ToulBar2::elimDegree_preprocessing = -1;
     }
-
     if (ToulBar2::incop_cmd.size() > 0) {
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
@@ -2022,7 +2029,6 @@ void Solver::beginSolve(Cost ub)
             }
         }
     }
-
     if (((WCSP*)wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
         if (ToulBar2::btdMode >= 3) {
             cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
@@ -2077,7 +2083,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 {
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // do not perform hbfs operations in preprocessing except for building tree decomposition
-
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
@@ -2144,6 +2149,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     }
 
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
+
     if (ToulBar2::verbose >= 0)
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxCurrentDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. arity:" << wcsp->medianArity() << ", med. degree:" << wcsp->medianDegree() << ")" << endl;
     if (ToulBar2::verbose >= 0) {
@@ -2200,6 +2206,8 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 bool Solver::solve(bool first)
 {
     beginSolve(wcsp->getUb());
+    int _DEE_ = ToulBar2::DEE;
+    int _elimDegree_ = ToulBar2::elimDegree;
 
     Cost initialUpperBound = wcsp->getUb();
 
@@ -2236,7 +2244,7 @@ bool Solver::solve(bool first)
             Long nbBacktracksLimitTop = 1;
             int storedepth = Store::getDepth();
             do {
-                //		  Store::store();
+                Store::store();
                 if (ToulBar2::restart >= 0) {
                     nbbacktracksout = false;
                     nbrestart++;
@@ -2462,26 +2470,44 @@ bool Solver::solve(bool first)
 
                                         //get solution from previous solve and add pairwise Hamming distance constraint
                                         if (energies.size() > 0 && !extrapolatedBound) {
+                                            vector<Value> solutionvec = wcsp->getSolution();
+                                            map<int,Value> solutionmap;
+                                            for (Variable *x: wcsp->getDivVariables()) {
+                                                solutionmap[x->wcspIndex] = solutionvec[x->wcspIndex];
+                                            }
+                                            int arity = wcsp->getDivVariables().size();
+                                            vector<int> scope;
+                                            string parameters;
                                             switch (ToulBar2::divMethod) {
                                             case 0:
-                                                wcsp->addDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
+                                                ((WCSP*)wcsp)->addDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divVarsId[energies.size() - 1], true);
                                                 break;
                                             case 1:
-                                                wcsp->addHDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
+                                                ((WCSP*)wcsp)->addHDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divVarsId[energies.size() - 1], ((WCSP*)wcsp)->divHVarsId[energies.size() - 1], true);
                                                 break;
                                             case 2:
-                                                wcsp->addTDivConstraint(wcsp->getSolution(), energies.size() - 1, initUb);
+                                                ((WCSP*)wcsp)->addTDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divHVarsId[energies.size() - 1], true);
+                                                break;
+                                            case 3:
+                                                parameters.append(to_string(-(arity-(int)ToulBar2::divBound)));
+                                                for (Variable *x: wcsp->getDivVariables()) {
+                                                    scope.push_back(x->wcspIndex);
+                                                    parameters.append(" 1 ");
+                                                    parameters.append(to_string(solutionmap[x->wcspIndex]));
+                                                    parameters.append(" -1");
+                                                }
+                                                ((WCSP*)wcsp)->postKnapsackConstraint(scope, parameters, false, true);
                                                 break;
                                             default:
                                                 cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
                                                 exit(EXIT_FAILURE);
                                             }
-                                            wcsp->propagate();
+                                            // wcsp->propagate(); it will propagate with a possibly modified DAC order at previous iterations resulting in undefined behavior
                                         }
 
                                         Cost eUpperBound = initUb;
                                         if (!extrapolatedBound) { // previous extrapolated bound was fine
-                                            if (false) { //(energies.size() >= 2) {
+                                            if (energies.size() >= 2) {
                                                 auto back = energies.end() - 1;
                                                 Cost maxDelta = *(back) - *(--back);
                                                 int maxCount = 5;
@@ -2515,29 +2541,32 @@ bool Solver::solve(bool first)
                                                     //os.close();
                                                     switch (ToulBar2::divMethod) {
                                                     case 0:
-                                                        wcsp->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
+                                                        ((WCSP*)wcsp)->addMDDConstraint(mdd, ToulBar2::divNbSol - 1); //ToulBar2::divNbSol = index of the relaxed constraint
                                                         break;
                                                     case 1:
-                                                        wcsp->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                        ((WCSP*)wcsp)->addHMDDConstraint(mdd, ToulBar2::divNbSol - 1);
                                                         break;
                                                     case 2:
-                                                        wcsp->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
+                                                        ((WCSP*)wcsp)->addTMDDConstraint(mdd, ToulBar2::divNbSol - 1);
                                                         break;
                                                     default:
-                                                        cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
+                                                        cerr << "Error: no such MDD diversity encoding method: " << ToulBar2::divMethod << endl;
                                                         exit(EXIT_FAILURE);
                                                     }
                                                 }
-                                                // reactivate on-the-fly variable elimination and dead-end elimination
+                                                // reactivate on-the-fly variable elimination and dead-end elimination (undone in preprocessing on diversity variables and later deactivated by endSolve call)
+                                                ToulBar2::DEE_ = _DEE_;
+                                                ToulBar2::elimDegree_ = _elimDegree_;
                                                 for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
                                                     if (wcsp->unassigned(i)) {
                                                         ((WCSP*)wcsp)->getVar(i)->queueEliminate();
                                                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                                                     }
                                                 }
+                                                vector<int> revdac = wcsp->getBergeDecElimOrder();
                                                 wcsp->enforceUb();
-                                                wcsp->propagate();
-                                                initialDepth = Store::getDepth();
+                                                wcsp->setDACOrder(revdac);
+                                                initGap(wcsp->getLb(), wcsp->getUb());
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
                                             } catch (const DivSolutionOut&) {
                                                 ToulBar2::limited = false;
@@ -2601,11 +2630,12 @@ bool Solver::solve(bool first)
         }
     } catch (const SolverOut&) {
     }
-
     Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()
+
     if (ToulBar2::divNbSol <= 1)
         endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);
+
     return (ToulBar2::isZ || ToulBar2::allSolutions || wcsp->getSolutionCost() < initialUpperBound);
 }
 
@@ -2668,7 +2698,6 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
             cout << "Size of sep            :    " << tailleSep << endl;
         }
-
         cout << "Time                   :    " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
         cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
         return;
@@ -2682,7 +2711,6 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
 
     if (isSolution) {
         if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {
-
             if (ToulBar2::haplotype)
                 cout << endl;
 

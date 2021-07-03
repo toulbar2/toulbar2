@@ -12,10 +12,11 @@
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
 #include "search/tb2solver.hpp"
-#include <limits>
+
+// Transforms clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
+#define CLIQUE2KNAPSACK
 
 class NaryConstraint;
-
 class GlobalConstraint;
 class FlowBasedGlobalConstraint;
 class AllDiffConstraint;
@@ -45,8 +46,6 @@ class WCSP FINAL : public WeightedCSP {
     StoreCost negCost; ///< shifting value to be added to problem lowerbound when computing the partition function
     vector<Variable*> vars; ///< list of all variables
     vector<Variable*> divVariables; ///< list of variables submitted to diversity requirements
-    vector<map<int, int>> divVarsId; // vector[j][idx] = index of the dual variable that encodes the diversity constraint on sol j at position idx
-    vector<map<int, int>> divHVarsId; // vector[j][idx] = index of the hidden variable that encodes the diversity constraint on sol j between idx/idx+1
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
     vector<Value> solution; ///< remember last solution found
     vector<pair<Double, vector<Value>>> solutions; ///< remember all solutions found
@@ -207,7 +206,6 @@ public:
 
     void decreaseLb(Cost cost)
     {
-        assert(cost <= MIN_COST);
         negCost += cost;
     } ///< \internal manages negative costs in probabilistic inference
     Cost getNegativeLb() const { return negCost; } ///< \internal manages negative costs in probabilistic inference
@@ -351,6 +349,28 @@ public:
         }
     }
 
+    //  set<int> lastConflictSet;
+    //  set<int> getLastConflicts(){
+    //      return lastConflictSet;
+    //  };
+    //  void registerConflicts(){
+    //      lastConflictSet=getConflictVars();
+    //  };
+    //  set<int> getConflictVars(){
+    //      set<int> conflictvar;
+    //      for(vector<Constraint*>::iterator it = constrs.begin();it!=constrs.end();++it)
+    //      {
+    //          if((*it)->getCost() > MIN_COST) // Warning!!! It should test initial costs (or without propagation)
+    //          {
+    //              TSCOPE s;
+    //              (*it)->getScope(s);
+    //              for(TSCOPE::iterator it2=s.begin(); it2!= s.end();++it2)
+    //                  conflictvar.insert((*it2).first);
+    //          }
+    //      }
+    //      return conflictvar;
+    //  }
+
     void whenContradiction(); ///< \brief after a contradiction, resets propagation queues and increases \ref WCSP::nbNodes
     void propagate(); ///< \brief propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
     bool verify(); ///< \brief checks the propagation fix point is reached \warning might change EAC supports
@@ -438,14 +458,16 @@ public:
     // Methods for diverse solutions
     // -----------------------------------------------------------
 
-    void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost); // to look for the (j+1)-th solution, with j = sol_id
-    void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost);
-    void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost);
+    vector<map<int, int>> divVarsId; // vector[j][idx] = index of the dual variable that encodes the diversity constraint on sol j at variable index idx
+    vector<map<int, int>> divHVarsId; // vector[j][idx] = index of the hidden variable that encodes the diversity constraint on sol j at variable index idx
+    void addDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divVarsIdMap, bool incremental = false); // to look for the (j+1)-th solution, with j = sol_id
+    void addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divVarsIdMap, map<int, int>& divHVarsIdMap, bool incremental = false);
+    void addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, map<int, Value>& solution, map<int, int>& divHVarsIdMap, bool incremental = false);
     void addMDDConstraint(Mdd mdd, int relaxed);
     void addHMDDConstraint(Mdd mdd, int relaxed);
     void addTMDDConstraint(Mdd mdd, int relaxed);
 
-    const vector<Variable*>& getDivVariables()
+    vector<Variable*>& getDivVariables()
     {
         return divVariables;
     }
@@ -457,6 +479,12 @@ public:
     }
     int postCliqueConstraint(int* scopeIndex, int arity, istream& file);
 
+    int postKnapsackConstraint(vector<int>& scope, const string& arguments, bool isclique = false, bool kp = false)
+    {
+        istringstream file(arguments);
+        return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp);
+    }
+    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp);
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
 
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);
@@ -495,6 +523,7 @@ public:
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
+    void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
 
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
 
@@ -503,6 +532,7 @@ public:
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = ""); ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
+    void read_opb(const char* fileName); ///< \brief load pseudo-Boolean optimization problem
     void read_legacy(const char* fileName); ///< \brief common ending section for all readers
 
     void read_XML(const char* fileName); ///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
@@ -521,7 +551,6 @@ public:
             *cost_ptr = solutionCost;
         return solution;
     }
-
     vector<pair<Double, vector<Value>>> getSolutions() const { return solutions; }
     void initSolutionCost() { solutionCost = MAX_COST; }
     void setSolution(Cost cost, TAssign* sol = NULL)
@@ -533,91 +562,113 @@ public:
                 setBestValue(i, v);
             solution[i] = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][toIndex(i, v)].value : v);
         }
+        if (!ToulBar2::allSolutions || ToulBar2::allSolutions < LONGLONG_MAX) {
         solutions.push_back(make_pair(Cost2ADCost(solutionCost), solution));
+    }
     }
     void printSolution()
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            bool printed = false;
             if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
                 Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
                 switch (ToulBar2::showSolutions) {
                 case 1:
+                        printed = true;
                     cout << myvalue;
                     break;
                 case 2:
+                        printed = true;
                     cout << valuelabel;
                     break;
                 case 3:
+                        printed = true;
                     cout << varlabel << "=" << valuelabel;
                     break;
                 default:
                     break;
                 }
+                }
             } else {
+                printed = true;
                 cout << solution[i];
             }
-            cout << (i < numberOfVariables() - 1 ? " " : "");
+            if (printed && i < numberOfVariables() - 1) cout << " ";
         }
     }
     void printSolution(ostream& os)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            bool printed = false;
             if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
                 Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
                 switch (ToulBar2::writeSolution) {
                 case 1:
+                        printed = true;
                     os << myvalue;
                     break;
                 case 2:
+                        printed = true;
                     os << valuelabel;
                     break;
                 case 3:
+                        printed = true;
                     os << varlabel << "=" << valuelabel;
                     break;
                 default:
                     break;
                 }
+                }
             } else {
+                printed = true;
                 os << solution[i];
             }
-            os << (i < numberOfVariables() - 1 ? " " : "");
+            if (printed && i < numberOfVariables() - 1) os << " ";
         }
     }
     void printSolution(FILE* f)
     {
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
+            bool printed = false;
             if (enumerated(i) && ((EnumeratedVariable*)getVar(i))->isValueNames()) {
                 EnumeratedVariable* myvar = (EnumeratedVariable*)getVar(i);
                 Value myvalue = solution[i];
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
+                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
                 switch (ToulBar2::writeSolution) {
                 case 1:
+                        printed = true;
                     fprintf(f, "%d", myvalue);
                     break;
                 case 2:
+                        printed = true;
                     fprintf(f, "%s", valuelabel.c_str());
                     break;
                 case 3:
+                        printed = true;
                     fprintf(f, "%s=%s", varlabel.c_str(), valuelabel.c_str());
                     break;
                 default:
                     break;
                 }
+                }
             } else {
+                printed = true;
                 fprintf(f, "%d", solution[i]);
             }
-            if (i < numberOfVariables() - 1)
-                fprintf(f, " ");
+            if (printed && i < numberOfVariables() - 1) fprintf(f, " ");
         }
     }
     void printSolutionMaxSAT(ostream& os)
@@ -687,7 +738,6 @@ public:
     void queueSeparator(DLink<Separator*>* link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator*>* link) { PendingSeparator.erase(link, true); }
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
-
     void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 
     void propagateNC(); ///< \brief removes forbidden values
@@ -759,6 +809,7 @@ public:
     void buildTreeDecomposition();
     void elimOrderFile2Vector(char* elimVarOrderFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a variable elimination order
     void treeDecFile2Vector(char* treeDecFilename, vector<int>& elimVarOrder); ///< \brief returns a reverse topological order from a tree decomposition
+    vector<int> getBergeDecElimOrder(); ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
     void setDACOrder(vector<int>& elimVarOrder); ///< \brief change DAC order and propagate from scratch
 
     // dac order reordering when Berge acyclic gobal constraint are present in the wcsp

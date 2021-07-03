@@ -113,6 +113,7 @@ public:
 
     virtual const vector<Variable*>& getVars() const = 0;
     virtual bool enumerated(int varIndex) const = 0; ///< \brief true if the variable has an enumerated domain
+
     virtual string getName(int varIndex) const = 0; ///< \note by default, variables names are integers, starting at zero
     virtual unsigned int getVarIndex(const string& s) const = 0; ///< return variable index from its name, or numberOfVariables() if not found
     virtual Value getInf(int varIndex) const = 0; ///< \brief minimum current domain value
@@ -246,10 +247,10 @@ public:
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL) = 0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
-
     virtual int postCliqueConstraint(vector<int>& scope, const string& arguments) = 0;
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
-
+    virtual int postKnapsackConstraint(vector<int>& scope, const string& arguments, bool isclique = false, bool kp = false) = 0;
+    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file,bool isclique = false, bool kp = false) = 0; /// \deprecated
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
 
     /// \brief post a soft among cost function
@@ -375,7 +376,17 @@ public:
     /// \param rightRes right-hand side value of the comparison
     virtual void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) = 0;
 
+    /// \brief post a diversity Hamming distance constraint between a list of variables and a given fixed assignment
+    /// \param scope a vector of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
+    /// \param distance the Hamming distance minimum bound
+    /// \param values a vector of values (same size as scope)
+    /// \param method the network decomposition method (0:Dual, 1:Hidden, 2:Ternary)
+    /// \note depending on the decomposition method, it adds dual and/or hidden variables
+    virtual void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
+
     virtual vector<vector<int>>* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
+    virtual vector<int> getBergeDecElimOrder() = 0; ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
+    virtual void setDACOrder(vector<int>& elimVarOrder) = 0; ///< \brief change DAC order and propagate from scratch
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 
@@ -385,6 +396,7 @@ public:
     virtual void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "") = 0; ///< \brief create a random WCSP with \e n variables, domain size \e m, array \e p where the first element is a percentage of tuples with a nonzero cost and next elements are the number of random cost functions for each different arity (starting with arity two), random seed, a flag to have a percentage (last element in the array \e p) of the binary cost functions being permutated submodular, and a string to use a specific global cost function instead of random cost functions in extension
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char* fileName) = 0; ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
+    virtual void read_opb(const char* fileName) = 0; ///< \brief load pseudo-Boolean optimization problem
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual Double getSolutionValue() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
@@ -404,6 +416,7 @@ public:
     // -----------------------------------------------------------
     // Functions dealing with all representations of Costs
     // warning: ToulBar2::NormFactor has to be initialized
+
     virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
     virtual Cost DoubletoCost(const Double& c) const = 0;
     virtual Double Cost2ADCost(const Cost& c) const = 0;
@@ -428,13 +441,8 @@ public:
     virtual void buildTreeDecomposition() = 0;
     virtual TreeDecomposition* getTreeDec() = 0;
 
-    virtual const vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
-    virtual void addDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
-    virtual void addHDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
-    virtual void addTDivConstraint(const vector<Value> solution, int sol_id, Cost cost) = 0;
-    virtual void addMDDConstraint(Mdd mdd, int relaxed) = 0;
-    virtual void addHMDDConstraint(Mdd mdd, int relaxed) = 0;
-    virtual void addTMDDConstraint(Mdd mdd, int relaxed) = 0;
+    virtual vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
+
     virtual void iniSingleton() = 0;
     virtual void updateSingleton() = 0;
     virtual void removeSingleton() = 0;
@@ -575,7 +583,7 @@ public:
     // Internal Solver functions DO NOT USE THEM
 
     virtual set<int> getUnassignedVars() const = 0; ///< \internal returns the set of unassigned variable indexes \warning not valid before the search (see WeightedCSPSolver::solve)
-    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (see WeightedCSPSolver::solve)
+    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (returns -1)
 };
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)

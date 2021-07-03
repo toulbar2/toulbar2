@@ -288,6 +288,31 @@ public:
     void display();
 };
 
+class WeightedDiverse : public DecomposableGlobalCostFunction {
+private:
+    vector<Value> values;
+    string semantics;
+    Cost baseCost;
+    unsigned int distance;
+    int method; //Dual=0, Hidden=1, Ternary=2
+
+public:
+    WeightedDiverse();
+    WeightedDiverse(unsigned int _arity, int* _scope);
+    WeightedDiverse(unsigned int _arity, int* _scope, istream& file, int _method, bool mult = true);
+    ~WeightedDiverse();
+
+    inline void addValue(Value _value) { values.push_back(_value); }
+    inline void setSemantics(string _semantics) { semantics = _semantics; }
+    inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
+    inline void setDistance(unsigned int dist) { distance = dist; }
+    inline void setMethod(int m) { method = m; }
+
+    Cost evaluate(int* tuple);
+    void addToCostFunctionNetwork(WCSP* wcsp);
+    void display();
+};
+
 #endif
 
 /* Local Variables: */

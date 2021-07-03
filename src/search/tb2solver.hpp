@@ -13,6 +13,7 @@ template <class T>
 class DLink;
 template <class T>
 class BTList;
+
 class NeighborhoodStructure;
 class RandomNeighborhoodChoice;
 class ClustersNeighborhoodStructure;
@@ -27,7 +28,6 @@ public:
         TLogProb logLbZ; // Lower bound on Z associated to the open node
         TLogProb logUbZ; // Upper bound on Z associated to the open node
         Cost cost; // global lower bound associated to the open node
-
     public:
         ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
         ptrdiff_t last; // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -46,7 +46,6 @@ public:
             , last(last_)
         {
         }
-
         bool operator<(const OpenNode& right) const { return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last))); } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const { return MAX(MIN_COST, cost - delta); }
@@ -169,6 +168,7 @@ public:
 
     Mdd computeMDD(SolutionTrie* solTrie, Cost cost);
     ostream& printLayers(ostream& os, Mdd mdd);
+
     typedef enum {
         CP_ASSIGN = 0,
         CP_REMOVE = 1,
@@ -227,11 +227,12 @@ protected:
     friend class RandomClusterChoice;
     friend class ParallelRandomClusterChoice;
     friend class VACExtension;
+
     Long nbNodes;
     Long nbBacktracks;
     Long nbBacktracksLimit;
     WeightedCSP* wcsp;
-    DLink<Value>* allVars;
+    vector<DLink<Value>*> allVars;
     BTList<Value>* unassignedVars;
     int lastConflictVar;
     void* searchSize;
@@ -335,8 +336,8 @@ public:
     Long getNbNodes() const FINAL { return nbNodes; }
     Long getNbBacktracks() const FINAL { return nbBacktracks; }
     set<int> getUnassignedVars() const;
-
-    unsigned int numberOfUnassignedVariables() const; // faster than its WCSP linear-time counterpart, but it is valid only during search
+    unsigned int numberOfUnassignedVariables() const; // faster than its WCSP linear-time counterpart, but it is valid only during search (otherwise returns -1)
+    void updateVarHeuristic(); /// \brief to be called if DAC order has been changed after preprocessing (initVarHeuristic call)
 
     virtual bool solve(bool first = true);
 

@@ -66,6 +66,7 @@ bool Constraint::reviseEACGreedySolution(int index, Value support)
     }
     return result;
 }
+
 /// \return size of the cartesian product of all domains in the constraint scope.
 /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
 Long Constraint::getDomainSizeProduct() const
@@ -73,7 +74,6 @@ Long Constraint::getDomainSizeProduct() const
     if (arity() == 0)
         return 1;
     Long cartesianProduct = 1;
-
     for (int i = 0; i < arity(); i++) {
 // trap overflow numbers
 #if __GNUC__ >= 5
@@ -99,22 +99,17 @@ void Constraint::projectLB(Cost cost)
 {
     if (cost == MIN_COST)
         return;
+    if (ToulBar2::verbose >= 2)
+        cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
     if (cost < MIN_COST) {
-        if (ToulBar2::verbose >= 1)
-            cout << "lower bound decreased " << wcsp->getNegativeLb() << " -> " << wcsp->getNegativeLb() + cost << endl;
         wcsp->decreaseLb(cost);
     } else {
-        if (ToulBar2::verbose >= 1)
-            cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
         wcsp->increaseLb(cost); // done before cluster LB because of #CSP (assuming a contradiction will occur here)
     }
     if (wcsp->td) {
         if (ToulBar2::verbose >= 2)
             cout << " in cluster C" << getCluster() << " (from " << wcsp->td->getCluster(getCluster())->getLb() << " to " << wcsp->td->getCluster(getCluster())->getLb() + cost << ")" << endl;
-        if (cost >= MIN_COST)
-            wcsp->td->getCluster(getCluster())->increaseLb(cost);
-        else
-            wcsp->td->getCluster(getCluster())->decreaseLb(cost);
+        wcsp->td->getCluster(getCluster())->increaseLb(cost);
     }
 }
 
@@ -360,10 +355,166 @@ Constraint* Constraint::copy()
     first();
     while (next(t, c)) {
         if (c != defcost)
-        wcsp->postNaryConstraintTuple(ctrIndex, t, c);
+            wcsp->postNaryConstraintTuple(ctrIndex, t, c);
     }
     wcsp->getCtr(ctrIndex)->deconnect(true);
     return wcsp->getCtr(ctrIndex);
+}
+
+bool Constraint::cmpConstraintId(Constraint* c1, Constraint* c2)
+{
+    int v1 = c1->getSmallestVarIndexInScope();
+    int v2 = c2->getSmallestVarIndexInScope();
+    return (v1 < v2);
+}
+
+bool Constraint::cmpConstraintId(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    int v1 = c1->content.constr->getSmallestVarIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestVarIndexInScope(c2->content.scopeIndex);
+    return (v1 < v2);
+}
+
+bool Constraint::cmpConstraintDAC(Constraint* c1, Constraint* c2)
+{
+    int v1 = c1->getDACVar(0)->getDACOrder();
+    int v2 = c2->getDACVar(0)->getDACOrder();
+    return (v1 > v2);
+}
+
+bool Constraint::cmpConstraintDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+    return (v1 > v2);
+}
+
+bool Constraint::cmpConstraintTightness(Constraint* c1, Constraint* c2)
+{
+    double v1 = c1->getTightness();
+    double v2 = c2->getTightness();
+    return (v1 > v2);
+}
+
+bool Constraint::cmpConstraintTightness(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    double v1 = c1->content.constr->getTightness();
+    double v2 = c2->content.constr->getTightness();
+    return (v1 > v2);
+}
+
+bool Constraint::cmpConstraintDACTightness(Constraint* c1, Constraint* c2)
+{
+    int v1 = c1->getDACVar(0)->getDACOrder();
+    int v2 = c2->getDACVar(0)->getDACOrder();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        double v1 = c1->getTightness();
+        double v2 = c2->getTightness();
+        return (v1 > v2);
+    }
+}
+
+bool Constraint::cmpConstraintDACTightness(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        double v1 = c1->content.constr->getTightness();
+        double v2 = c2->content.constr->getTightness();
+        return (v1 > v2);
+    }
+}
+
+bool Constraint::cmpConstraintTightnessDAC(Constraint* c1, Constraint* c2)
+{
+    double v1 = c1->getTightness();
+    double v2 = c2->getTightness();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        int v1 = c1->getDACVar(0)->getDACOrder();
+        int v2 = c2->getDACVar(0)->getDACOrder();
+        return (v1 > v2);
+    }
+}
+
+bool Constraint::cmpConstraintTightnessDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    double v1 = c1->content.constr->getTightness();
+    double v2 = c2->content.constr->getTightness();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+        int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+        return (v1 > v2);
+    }
+}
+
+// sort a list of constraints
+int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
+{
+    bool result = false;
+    switch (abs(ToulBar2::constrOrdering)) {
+    case CONSTR_ORDER_ID:
+        result = cmpConstraintId(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC:
+        result = cmpConstraintDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_TIGHTNESS:
+        result = cmpConstraintTightness(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC_TIGHTNESS:
+        result = cmpConstraintDACTightness(c1, c2);
+        break;
+    case CONSTR_ORDER_TIGHTNESS_DAC:
+        result = cmpConstraintTightnessDAC(c1, c2);
+        break;
+    default:
+        cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::constrOrdering >= 0) {
+        return result;
+    } else {
+        return (!result);
+    }
+}
+
+// sort a list of constraints related to a given variable
+int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    bool result = false;
+    switch (abs(ToulBar2::constrOrdering)) {
+    case CONSTR_ORDER_ID:
+        result = cmpConstraintId(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC:
+        result = cmpConstraintDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_TIGHTNESS:
+        result = cmpConstraintTightness(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC_TIGHTNESS:
+        result = cmpConstraintDACTightness(c1, c2);
+        break;
+    case CONSTR_ORDER_TIGHTNESS_DAC:
+        result = cmpConstraintTightnessDAC(c1, c2);
+        break;
+    default:
+        cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (ToulBar2::constrOrdering >= 0) {
+        return result;
+    } else {
+        return (!result);
+    }
 }
 
 /* Local Variables: */

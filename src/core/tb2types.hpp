@@ -36,6 +36,7 @@
 
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
+
 /// Special character value at the beginning of a variable's name to identify diverse extra variables corresponding to the current sequence of diverse solutions found so far
 const string DIVERSE_VAR_TAG = "^";
 /// List of special chars that tag variables that should be involved in diversity constraints.
@@ -50,6 +51,7 @@ typedef int16_t tValue;
 typedef int Value;
 typedef int16_t tValue;
 #endif
+
 /// Maximum domain value
 const Value MAX_VAL = (std::numeric_limits<Value>::max() / 2);
 /// Forbidden domain value
@@ -59,6 +61,7 @@ const Value MIN_VAL = -(std::numeric_limits<Value>::max() / 2);
 /// Maximum domain size
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
 const Value MAX_DOMAIN_SIZE = 2000;
+
 typedef vector<tValue> Tuple;
 
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
@@ -81,39 +84,18 @@ const Cost MAX_COST = (std::numeric_limits<Cost>::max() / MEDIUM_COST);
 
 #if defined __has_builtin
 #if __has_builtin(__builtin_sadd_overflow)
-inline bool Add(Cost a, Cost b, Cost* c)
-{
-    return __builtin_sadd_overflow(a, b, c);
-}
+inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
 #endif
 #if __has_builtin(__builtin_ssub_overflow)
-inline bool Sub(Cost a, Cost b, Cost* c)
-{
-    return __builtin_ssub_overflow(a, b, c);
-}
+inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
 #endif
 #if __has_builtin(__builtin_smul_overflow)
-inline bool Mul(Cost a, Cost b, Cost* c)
-{
-    return __builtin_smul_overflow(a, b, c);
-}
+inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
 #endif
 #else
-inline bool Add(Cost a, Cost b, Cost* c)
-{
-    *c = a + b;
-    return false;
-}
-inline bool Sub(Cost a, Cost b, Cost* c)
-{
-    *c = a - b;
-    return false;
-}
-inline bool Mul(Cost a, Cost b, Cost* c)
-{
-    *c = a * b;
-    return false;
-}
+inline bool Add(Cost a, Cost b, Cost* c) { *c = a + b; return false; }
+inline bool Sub(Cost a, Cost b, Cost* c) { *c = a - b; return false; }
+inline bool Mul(Cost a, Cost b, Cost* c) { *c = a * b; return false; }
 #endif
 
 //C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
@@ -187,6 +169,7 @@ inline bool SUPPORTTEST(Cost a, Cost b) { return false; }
 inline bool SUPPORTTEST(Cost a) { return false; }
 inline void initCosts() {}
 #endif
+
 #ifdef INT_COST
 const bool PARTIALORDER = false;
 typedef int Cost;
@@ -199,45 +182,21 @@ const Cost MAX_COST = ((std::numeric_limits<Cost>::max() / 2) / MEDIUM_COST / ME
 
 #if defined __has_builtin
 #if __has_builtin(__builtin_saddl_overflow)
-inline bool Add(Cost a, Cost b, Cost* c)
-{
-    return __builtin_saddl_overflow(a, b, c);
-}
+inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_saddl_overflow(a, b, c); }
 #endif
 #if __has_builtin(__builtin_ssubl_overflow)
-inline bool Sub(Cost a, Cost b, Cost* c)
-{
-    return __builtin_ssubl_overflow(a, b, c);
-}
+inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssubl_overflow(a, b, c); }
 #endif
 #if __has_builtin(__builtin_smull_overflow)
-inline bool Mul(Cost a, Cost b, Cost* c)
-{
-    return __builtin_smull_overflow(a, b, c);
-}
+inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smull_overflow(a, b, c); }
 #endif
 #else
-inline bool Add(Cost a, Cost b, Cost* c)
-{
-    *c = a + b;
-    return false;
-}
-inline bool Sub(Cost a, Cost b, Cost* c)
-{
-    *c = a - b;
-    return false;
-}
-inline bool Mul(Cost a, Cost b, Cost* c)
-{
-    *c = a * b;
-    return false;
-}
+inline bool Add(Cost a, Cost b, Cost* c) { *c = a + b; return false; }
+inline bool Sub(Cost a, Cost b, Cost* c) { *c = a - b; return false; }
+inline bool Mul(Cost a, Cost b, Cost* c) { *c = a * b; return false; }
 #endif
 
-inline Cost MIN(Cost a, Cost b)
-{
-    return min(a, b);
-}
+inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
@@ -297,7 +256,6 @@ struct DCost {
         return is;
     }
 };
-
 const Cost MIN_COST = 0;
 const Cost UNIT_COST = 1;
 const Cost SMALL_COST = 1;
@@ -307,45 +265,21 @@ const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
 
 #if defined __has_builtin
 #if __has_builtin(__builtin_saddll_overflow)
-inline bool Add(Cost a, Cost b, Cost* c)
-{
-    return __builtin_saddll_overflow(a, b, c);
-}
+inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_saddll_overflow(a, b, c); }
 #endif
 #if __has_builtin(__builtin_ssubll_overflow)
-inline bool Sub(Cost a, Cost b, Cost* c)
-{
-    return __builtin_ssubll_overflow(a, b, c);
-}
+inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssubll_overflow(a, b, c); }
 #endif
 #if __has_builtin(__builtin_smulll_overflow)
-inline bool Mul(Cost a, Cost b, Cost* c)
-{
-    return __builtin_smulll_overflow(a, b, c);
-}
+inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smulll_overflow(a, b, c); }
 #endif
 #else
-inline bool Add(Cost a, Cost b, Cost* c)
-{
-    *c = a + b;
-    return false;
-}
-inline bool Sub(Cost a, Cost b, Cost* c)
-{
-    *c = a - b;
-    return false;
-}
-inline bool Mul(Cost a, Cost b, Cost* c)
-{
-    *c = a * b;
-    return false;
-}
+inline bool Add(Cost a, Cost b, Cost* c) { *c = a + b; return false; }
+inline bool Sub(Cost a, Cost b, Cost* c) { *c = a - b; return false; }
+inline bool Mul(Cost a, Cost b, Cost* c) { *c = a * b; return false; }
 #endif
 
-inline Cost MIN(Cost a, Cost b)
-{
-    return min(a, b);
-}
+inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
@@ -442,7 +376,6 @@ inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) - exp(
         exit(0);
     }
 }
-
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8 * sizeof(Cost) - 2)
 
@@ -458,6 +391,7 @@ typedef map<int, int> TSCOPE;
 typedef map<int, Value> TAssign;
 
 typedef unsigned int uint;
+
 /*
  * Abstract data type that help post a global cost function
  *
@@ -539,8 +473,19 @@ typedef enum {
     CUTHILL_MCKEE = 5,
     APPROX_MIN_DEGREE = 6,
     ELIM_FILE_ORDER = 7,
+    ELIM_LEXICOGRAPHIC_ORDER = 8,
     ELIM_MAX
 } ElimOrderType;
+
+typedef enum {
+    CONSTR_ORDER_ID = 1,
+    CONSTR_ORDER_DAC = 2,
+    CONSTR_ORDER_TIGHTNESS = 3,
+    CONSTR_ORDER_DAC_TIGHTNESS = 4,
+    CONSTR_ORDER_TIGHTNESS_DAC = 5,
+    CONSTR_ORDER_RANDOM = 6,
+    CONSTR_ORDER_THEMAX
+} ConstrOrdering;
 
 class Pedigree;
 class Haplotype;
@@ -647,6 +592,7 @@ public:
     static Cost RASPSlastitThreshold;
     static bool RASPSsaveitThresholds;
     static vector<pair<Cost, double>> RASPSitThresholds;
+
     static int debug;
     static string externalUB;
     static int showSolutions;
@@ -661,7 +607,6 @@ public:
     static int dichotomicBranching;
     static unsigned int dichotomicBranchingSize;
     static bool sortDomains;
-
     static map<int, ValueCost*> sortedDomains;
     static bool solutionBasedPhaseSaving;
     static int elimDegree;
@@ -680,6 +625,7 @@ public:
     static bool lastConflict;
     static int weightedDegree;
     static int weightedTightness;
+    static int constrOrdering;
     static bool MSTDAC;
     static int DEE;
     static int DEE_;
@@ -741,11 +687,12 @@ public:
     static bool wcnf;
     static bool qpbo;
     static double qpboQuadraticCoefMultiplier;
+    static bool opb;
 
     static unsigned int divNbSol;
     static unsigned int divBound;
     static unsigned int divWidth;
-    static unsigned int divMethod; // 0: Dual, 1: Hidden, 2: Ternary
+    static unsigned int divMethod; // 0: Dual, 1: Hidden, 2: Ternary, 3: Knapsack
     static unsigned int divRelax; // 0: random, 1: high div, 2: small div, 3: high unary costs
 
     static char* varOrder;
@@ -794,7 +741,7 @@ public:
     static int minProperVarSize;
     static int smallSeparatorSize;
 
-    static int Berge_Dec; // flag for berge acyclic decomposition
+    static bool Berge_Dec; // flag for berge acyclic decomposition
     static bool learning; // if true, perform pseudoboolean learning
     static externalfunc timeOut;
     static bool interrupted;
@@ -953,6 +900,7 @@ public:
 };
 typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
+
 //For incremental diverse solution search - relaxed constraint
 typedef vector<vector<vector<vector<Cost>>>> Mdd; //mdd[layer][source][target][value] = label weight if source---val--->target exists, getUb otherwise
 

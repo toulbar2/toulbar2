@@ -62,6 +62,7 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
 // under gdb: p $2(constrs[13], myCout)
 ostream myCout(cout.rdbuf());
+
 void conflict() {}
 
 #ifdef PARETOPAIR_COST
@@ -157,6 +158,9 @@ enum {
     OPT_qpbo_ext,
     OPT_qpbogz_ext,
     OPT_qpboxz_ext,
+    OPT_opb_ext,
+    OPT_opbgz_ext,
+    OPT_opbxz_ext,
     OPT_treedec_ext,
     OPT_clusterdec_ext,
 
@@ -189,6 +193,7 @@ enum {
     NO_OPT_dichotomicBranching,
     OPT_sortDomains,
     NO_OPT_sortDomains,
+    OPT_constrOrdering,
     OPT_solutionBasedPhaseSaving,
     NO_OPT_solutionBasedPhaseSaving,
     OPT_weightedDegree,
@@ -234,6 +239,7 @@ enum {
     OPT_RASPSreset,
     NO_OPT_RASPSreset,
     OPT_RASPSlds,
+
     OPT_singletonConsistency,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
@@ -394,6 +400,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_qpbo_ext, (char*)"--qpbo_ext", SO_REQ_SEP },
     { OPT_qpbogz_ext, (char*)"--qpbogz_ext", SO_REQ_SEP },
     { OPT_qpboxz_ext, (char*)"--qpboxz_ext", SO_REQ_SEP },
+    { OPT_opb_ext, (char*)"--opb_ext", SO_REQ_SEP },
+    { OPT_opbgz_ext, (char*)"--opbgz_ext", SO_REQ_SEP },
+    { OPT_opbxz_ext, (char*)"--opbxz_ext", SO_REQ_SEP },
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
@@ -436,6 +445,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_dichotomicBranching, (char*)"-d:", SO_NONE },
     { OPT_sortDomains, (char*)"-sortd", SO_NONE },
     { NO_OPT_sortDomains, (char*)"-sortd:", SO_NONE },
+    { OPT_constrOrdering, (char*)"-sortc", SO_REQ_SEP },
     { OPT_solutionBasedPhaseSaving, (char*)"-solr", SO_NONE },
     { NO_OPT_solutionBasedPhaseSaving, (char*)"-solr:", SO_NONE },
     { OPT_weightedDegree, (char*)"-q", SO_OPT },
@@ -459,6 +469,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
+
     { OPT_VACINT, (char*)"-vacint", SO_OPT },
     { OPT_VACINT, (char*)"-strictAC", SO_OPT }, //deprecated
     { OPT_VACINT, (char*)"-sac", SO_OPT }, //deprecated
@@ -766,6 +777,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)" << endl;
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
+    cout << "   *.opb : pseudo-Boolean optimization format" << endl;
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
 #ifdef XMLFLAG
@@ -787,10 +799,9 @@ void help_msg(char* toulbar2filename)
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
 #ifdef BOOST
-    cout << "Note: cfn, cnf, LG, qpbo, uai, wcnf, wcsp formats can be read in gzip'd or xz compressed format, e.g., toulbar2 problem.cfn.xz" << endl;
+    cout << "Note: cfn, cnf, LG, qpbo, opb, uai, wcnf, wcsp formats can be read in gzip'd or xz compressed format, e.g., toulbar2 problem.cfn.xz" << endl;
 #endif
     cout << "Warning! File formats are recognized by filename extensions. To change the default file format extension, use option --old_ext=\".new\" Examples: --cfn_ext='.json' --wcspgz_ext='.wgz' --sol_ext='.sol2'  " << endl;
-
     cout << endl;
 #endif
     cout << "Available options are (use symbol \":\" after an option to remove a default option):" << endl;
@@ -851,6 +862,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::sortDomains)
         cout << " (default option)";
     cout << endl;
+    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6) or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
     cout << "   -solr : solution-based phase saving";
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
@@ -891,7 +903,6 @@ void help_msg(char* toulbar2filename)
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
     cout << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
     cout << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode" << endl;
-
 #ifdef BOOST
     cout << "   -vns : unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O)";
 #ifdef OPENMPI
@@ -965,6 +976,7 @@ void help_msg(char* toulbar2filename)
     cout << "                           (-" << MAX_CARD << ") maximum cardinality search ordering, (-" << MIN_DEGREE << ") minimum degree ordering, (-" << MIN_FILL << ") minimum fill-in ordering," << endl;
     cout << "                           (-" << ELIM_MST << ") maximum spanning tree ordering (see -mst), (-" << CUTHILL_MCKEE << ") reverse Cuthill-Mckee ordering, (-" << APPROX_MIN_DEGREE << ") approximate minimum degree ordering," << endl;
     cout << "                           (-" << ELIM_FILE_ORDER << ") default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)" << endl;
+    cout << "                           (-" << ELIM_LEXICOGRAPHIC_ORDER << ") lexicographic ordering of variable names." << endl;
 #endif
     cout << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
     cout << "                (use options \"-B=3 -j=1 -svo -k=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
@@ -979,7 +991,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default value is " << ToulBar2::allSolutions << ")";
     cout << endl;
     cout << "   -div=[integer] : minimum Hamming distance between diverse solutions (use in conjunction with -a=integer with a limit of " << maxdivnbsol << " solutions) (default value is " << ToulBar2::divBound << ")" << endl;
-    cout << "   -divm=[integer] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary (default value is " << ToulBar2::divMethod << ")" << endl;
+    cout << "   -divm=[integer] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary 3:Knapsack (default value is " << ToulBar2::divMethod << ")" << endl;
     cout << "   -mdd=[integer] : maximum relaxed MDD width for diverse solution global constraint (default value is " << ToulBar2::divWidth << ")" << endl;
     cout << "   -mddh=[integer] : MDD relaxation heuristic: 0: random, 1: high div, 2: small div, 3: high unary costs (default value is " << ToulBar2::divRelax << ")" << endl;
     cout << "   -D : approximate satisfiable solution count with BTD";
@@ -1027,6 +1039,7 @@ void help_msg(char* toulbar2filename)
     cout << "       bin-{n}-{d}-{t1}-{p2}-{seed}       :t1 is the tightness in percentage %of random binary cost functions" << endl;
     cout << "                                          :p2 is the num of binary cost functions to include" << endl;
     cout << "                                          :the seed parameter is optional (and will overwrite -seed)" << endl;
+
     cout << "   or:                                                                               " << endl;
     cout << "       binsub-{n}-{d}-{t1}-{p2}-{p3}-{seed} binary random & submodular cost functions" << endl;
     cout << "                                          t1 is the tightness in percentage % of random cost functions" << endl;
@@ -1050,6 +1063,7 @@ int _tmain(int argc, TCHAR* argv[])
 {
     //#pragma STDC FENV_ACCESS ON
     std::fesetround(FE_TONEAREST);
+
 #ifdef OPENMPI
     MPIEnv env0;
     MPI_Init(NULL, NULL);
@@ -1061,6 +1075,7 @@ int _tmain(int argc, TCHAR* argv[])
     if (env0.myrank != 0)
         ToulBar2::verbose = -1;
 #endif
+
     setlocale(LC_ALL, "C");
     bool certificate = false;
     bool mutate = false;
@@ -1119,12 +1134,16 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["qpbo_ext"] = ".qpbo";
     file_extension_map["qpbogz_ext"] = ".qpbo.gz";
     file_extension_map["qpboxz_ext"] = ".qpbo.xz";
+    file_extension_map["opb_ext"] = ".opb";
+    file_extension_map["opbgz_ext"] = ".opb.gz";
+    file_extension_map["opbxz_ext"] = ".opb.xz";
+    file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["seq_ext"] = ".seq";
     file_extension_map["trie_ext"] = ".trie";
-    file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["bow_ext"] = ".bow"; // bag of wcsp ^^
     file_extension_map["neg_ext"] = ".neg"; // sequences for negative design
     file_extension_map["clusterdec_ext"] = ".dec";
+
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
     if (ToulBar2::verbose >= 0) {
         cout << "c " << CurrentBinaryPath;
@@ -1178,6 +1197,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "Search Method used =  " << mode << endl;
             }
+
             // VNS
 #ifdef BOOST
             if (args.OptionId() == OPT_VNS_search) {
@@ -1340,6 +1360,7 @@ int _tmain(int argc, TCHAR* argv[])
                 }
                 //      cout << "pipe STDIN on waited FORMAT : " << ToulBar2::stdin_format<<endl;
             }
+
             // BTD root cluster
             if (args.OptionId() == OPT_btdRootCluster) {
                 int root = atoi(args.OptionArg());
@@ -1492,6 +1513,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             // approximate counting
+
             if (args.OptionId() == OPT_approximateCountingBTD) {
                 ToulBar2::approximateCountingBTD = true;
                 ToulBar2::allSolutions = LONGLONG_MAX;
@@ -1541,11 +1563,19 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::sortDomains = false;
             }
 
+            if (args.OptionId() == OPT_constrOrdering) {
+                int c = atoi(args.OptionArg());
+                if (abs(c) >= CONSTR_ORDER_ID || abs(c) < CONSTR_ORDER_THEMAX) {
+                    ToulBar2::constrOrdering = c;
+                }
+            }
+
             if (args.OptionId() == OPT_solutionBasedPhaseSaving) {
                 ToulBar2::solutionBasedPhaseSaving = true;
             } else if (args.OptionId() == NO_OPT_solutionBasedPhaseSaving) {
                 ToulBar2::solutionBasedPhaseSaving = false;
             }
+
             if (args.OptionId() == OPT_weightedTightness) {
                 if (args.OptionArg() != NULL) {
                     int weightedtight = atol(args.OptionArg());
@@ -1809,7 +1839,6 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "LDS ON #iter = " << ToulBar2::lds << comment << endl;
 
             } else if (args.OptionId() == NO_OPT_lds) {
-
                 ToulBar2::lds = 0;
                 if (ToulBar2::debug)
                     cout << "LDS OFF iter = " << ToulBar2::lds << endl;
@@ -1852,6 +1881,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "backtrack limit OFF" << endl;
                 ToulBar2::backtrackLimit = LONGLONG_MAX;
             }
+
             // hybrid BFS option
             if (args.OptionId() == OPT_hbfs) {
                 string comment;
@@ -2012,7 +2042,6 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "after " << ((ToulBar2::dumpWCSP % 2) ? "loading." : "preprocessing.") << endl;
                 }
             }
-
             //   Z: debug mode (save problem at each node if verbosity option set!)
             //		for (int j=0; argv[i][j] != 0; j++) if (argv[i][j]=='Z') ToulBar2::debug++;
 
@@ -2233,6 +2262,7 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::deltaUbRelativeGap = atof(args.OptionArg());
                 }
             }
+
             // CPU timer
             if (args.OptionId() == OPT_timer) {
                 if (args.OptionArg() != NULL) {
@@ -2346,6 +2376,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "VAC automatic threshold OFF" << endl;
             }
+
             if (args.OptionId() == OPT_RASPS) {
                 if (args.OptionArg() == NULL) {
                     if (ToulBar2::useRASPS == 0)
@@ -2389,6 +2420,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "RASPS reset OFF" << endl;
             }
+
             if (args.OptionId() == OPT_RASPSlds) {
                 if (args.OptionArg() == NULL)
                     ToulBar2::useRASPS = maxdiscrepancy + 1;
@@ -2654,7 +2686,34 @@ int _tmain(int argc, TCHAR* argv[])
                 strfile.push_back(problem);
                 ToulBar2::xz = true;
             }
+
+            // pseudo-Boolean optimization file
+            if (check_file_ext(problem, file_extension_map["opb_ext"]) || ToulBar2::stdin_format.compare("opb") == 0) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb");
+                strfile.push_back(problem);
+            }
+            if (check_file_ext(problem, file_extension_map["opbgz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading gzip'd pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb.gz");
+                strfile.push_back(problem);
+                ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["opbxz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading xz compressed pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb.xz");
+                strfile.push_back(problem);
+                ToulBar2::xz = true;
+            }
+
             // upperbound file
+
             if (check_file_ext(problem, file_extension_map["ub_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading upper bound from file: " << problem << endl;
@@ -2726,12 +2785,10 @@ int _tmain(int argc, TCHAR* argv[])
                 //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
                 ToulBar2::varOrder = new char[problem.length() + 1];
                 sprintf(ToulBar2::varOrder, "%s", problem.c_str());
-
                 if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
                     cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
                     exit(EXIT_FAILURE);
                 }
-
                 if (ToulBar2::btdMode == 0 && ToulBar2::searchMethod == DFBB)
                     ToulBar2::btdMode = 1;
                 ToulBar2::clusterFile = string(ToulBar2::varOrder);

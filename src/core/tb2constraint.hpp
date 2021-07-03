@@ -7,10 +7,10 @@
 #define TB2CONSTRAINT_HPP_
 
 #include "tb2types.hpp"
+#include "utils/tb2btlist.hpp"
 
 class Constraint : public WCSPLink {
     Long conflictWeight;
-
     string name;
     Constraint* fromElim1; // remember the original constraint(s) from which this constraint is derived
     Constraint* fromElim2; // it can be from variable elimination during search or n-ary constraint projection
@@ -50,7 +50,6 @@ public:
     virtual int arity() const = 0;
     virtual Variable* getVar(int scopeIndex) const = 0;
     virtual int getIndex(Variable* var) const = 0;
-
     string getName() { return this->name; };
     void setName(const string& name) { this->name = name; };
 
@@ -78,7 +77,8 @@ public:
     double getTightness()
     {
         if (tight < 0)
-            computeTightness();
+            tight = computeTightness();
+        assert(tight >= 0);
         return tight;
     }
     virtual double computeTightness() = 0;
@@ -316,6 +316,23 @@ public:
         c.print(os);
         return os;
     }
+
+    static bool cmpConstraintId(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintId(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintDAC(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintTightness(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintTightness(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintDACTightness(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintDACTightness(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintTightnessDAC(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintTightnessDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+
+    // sort a list of constraints
+    static int cmpConstraint(Constraint* c1, Constraint* c2);
+
+    // sort a list of constraints related to a given variable
+    static int cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
 };
 
 #endif /*TB2CONSTRAINT_HPP_*/
