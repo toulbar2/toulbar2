@@ -1,6 +1,6 @@
 #include "tb2grammarutils.hpp"
 
-void WCNFCFG::addVariableMeasure(int violationCost)
+void WCNFCFG::addVariableMeasure(Cost violationCost)
 {
 
     // Assume A_i -> a_i

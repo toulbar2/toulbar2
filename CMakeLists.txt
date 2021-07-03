@@ -3,7 +3,12 @@
 # version 0.9 -# David allouche 17/10/10
 ##########################################
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.9)
+IF(APPLE)
+    cmake_minimum_required(VERSION 3.13)
+ENDIF(APPLE)
+cmake_policy(SET CMP0054 NEW)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (My_cmake_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake-script") # location of cmake script needed 
 set (My_Source src)	# source location 
@@ -13,7 +18,9 @@ list(APPEND CMAKE_MODULE_PATH "${My_cmake_script}/Modules")
 
 set (MAINTAINER "David Allouche <david.allouche@inrae.fr>") #used in packaging 
 set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
-
+# default name for packaging
+SET(Toulbar2_NAME "toulbar2")
+SET(CMAKE_MACOSX_RPATH 1)
 ##########################################
 # PROJECT NAME
 ##########################################
@@ -27,22 +34,24 @@ MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
 include(CMakeDependentOption)
-
+#set(Python3_ROOT_DIR "/opt/python/cp39-cp39/")
 ##########################################
 # cmake option definition
 ##########################################
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
-OPTION(WIN32 "toulbar2 cross compilation flag [default: off]" OFF) 
 OPTION(MENDELSOFT "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 OPTION(PYTB2 "Python3 toulbar2 module compilation (MPI off) [default: off]" OFF)
 OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
-OPTION(WIDE_STRING  "use wide string to encode long domains in n-ary cost functions/separators [default:on]" ON)
 OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
-OPTION(MPI "MPI [default: on]" OFF)
+OPTION(MPI "MPI [default: off]" OFF)
 OPTION(LONG_COSTS  "use long long to encode costs [default:on]" ON)
+OPTION(SHORT_COSTS  "use short int to encode costs [default:off]" OFF)
+OPTION(BINARYWCSP  "do not store binary costs (only binary WCSP with no variable elimination during search) [default:off]" OFF)
+OPTION(TERNARYWCSP  "do not store ternary costs (only ternary WCSP can be expressed) [default:off]" OFF)
+OPTION(SHORT_VALUES  "use short int to encode domain values instead of int [default:off]" OFF)
 OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" ON)
 OPTION(QUAD_PROBABILITY  "use quadmath to encode probabilities [default:off]" OFF)
 OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
@@ -54,21 +63,31 @@ OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 
 MARK_AS_ADVANCED(FORCE BUILD_API_DOC_LATEX)
-MARK_AS_ADVANCED(FORCE CPLEX ILOG XML verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS WIDE_STRING)
+MARK_AS_ADVANCED(FORCE CPLEX ILOG XML verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS BINARYWCSP TERNARYWCSP)
 MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS GMP_LIBRARY MPI_LIBRARY MPI_EXTRA_LIBRARY)
 MARK_AS_ADVANCED(FORCE BENCH)
 
 ##########################################
 #Default profile for compilation
 ##########################################
+IF(APPLE) # Find homebrew libraries first
+  message(STATUS "Apple/MacOS system detected. Selecting homebrew libraries first.")
+  set(CMAKE_PREFIX_PATH /usr/local)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
+  SET(STATIC OFF)
+  SET(WITH_MEM_JEMALLOC OFF)
+ENDIF(APPLE)
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11" )
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17" )
+# -fsanitize=address -fsanitize=undefined
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
+#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
   SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1271")
@@ -88,17 +107,6 @@ ENDIF(CPLEX)
 if(verbose) 
   set (CMAKE_VERBOSE_MAKEFILE ON)
 endif(verbose)
-
-##########################################
-# Compile Options on recent 64 bytes Macs. 
-# thanks to alex rudnick 
-##########################################
-IF(APPLE)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
-  SET(CMAKE_SHARED_LINKER_FLAGS "-Wall -m64" )
-  SET(STATIC OFF)
-  SET(WITH_MEM_JEMALLOC OFF)
-ENDIF(APPLE)
 
 ##########################################
 # default OPTION for toulbar2 test  phase
@@ -127,9 +135,10 @@ IF(STATIC)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++") 
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --enable-static -static-libgcc -static-libstdc++")   # -flto 
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
 ENDIF(STATIC)
 
 ##########################################
@@ -161,11 +170,9 @@ ELSE(MENDELSOFT)
   MESSAGE(STATUS "###############################################")
 
   SET(TOULBAR2 ON)
-  #basename for packaging and versionning
-  SET(Toulbar2_NAME "toulbar2")
   #description used in the package building
   SET(Toulbar2_PACKAGE_DESCRIPTION "${Toulbar2_NAME} is an open source C++ exact solver and library for discrete graphical model optimization. It can solve MAP/Markov Random Fields or Cost Function Networks/Weighted CSPs/Weighted MaxSAT or Quadratic Pseudo-Boolean Optimization.")
-  SET(Toulbar2_PACKAGE_SUMMARY "${Toulbar2_NAME} exact solver for discrete graphical models.")
+  SET(Toulbar2_PACKAGE_SUMMARY "${Toulbar2_NAME} is an exact solver for discrete graphical models.")
 ENDIF(MENDELSOFT)
 
 IF(ILOG)
@@ -174,28 +181,6 @@ ENDIF(ILOG)
 
 SET(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_SYSTEM_NAME})
 SET(LIBRARY_OUTPUT_PATH lib/${CMAKE_SYSTEM_NAME})
-
-##########################################
-# Windows options
-##########################################
-IF(WIN32)
-  # option used for cross compilation 
-  set (EXE ".exe")
-  set(COST INT_COST)
-  set(LIBTB2 OFF)
-  set(XML OFF)
-  set(CPLEX OFF)
-  set(Boost OFF)
-  set(MPI OFF)
-  set(ILOG OFF)
-
-  # mingW32 env setup
-  include(${My_cmake_script}/mingw32-config.cmake) 
-  
-  MESSAGE(STATUS "WIN32 ON")
-ELSE(WIN32)
-  SET(COST LONGLONG_COST)
-ENDIF(WIN32)
 
 ##########################################
 # Find optional libs 
@@ -208,6 +193,14 @@ IF(PYTB2)
   SET(MPI OFF)
   SET(LIBTB2 ON)
   FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  if(NOT Python3_Interpreter_FOUND)
+    MESSAGE(STATUS "Python3_Interpreter NOT FOUND")
+    SET(Python3_EXECUTABLE /usr/bin/python3)
+  else()
+    MESSAGE(STATUS "Python3_Interpreter FOUND")
+  endif()
+  MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+### Old cmake, python and pybind11
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
     OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -216,6 +209,9 @@ IF(PYTB2)
     COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
     OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
   MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+### New cmake and python and pybind11
+#  FIND_PACKAGE(pybind11 CONFIG)
+###
 ENDIF(PYTB2)
 
 IF(WITH_MEM_JEMALLOC)
@@ -229,7 +225,7 @@ ENDIF(WITH_MEM_JEMALLOC)
 MESSAGE(STATUS "Search for GMP library")
 INCLUDE(FindPkgConfig)
 INCLUDE(${My_cmake_script}/FindGmp.cmake)
-SET(all_depends  ${all_depends} "gmp") 
+SET(all_depends  ${all_depends} ${GMP_LIBRARY}) 
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
 INCLUDE(FindPkgConfig)
@@ -265,6 +261,9 @@ INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 IF(TOULBAR2)
   ADD_LIBRARY(tb2-objects OBJECT ${LIBTB2FILES})
   ADD_EXECUTABLE(toulbar2${EXE} ${My_Source}/tb2main.cpp $<TARGET_OBJECTS:tb2-objects>)
+  IF(STATIC)
+    TARGET_LINK_LIBRARIES(toulbar2${EXE} PUBLIC "-static")
+  ENDIF(STATIC)
   ADD_LIBRARY(tb2-archive STATIC $<TARGET_OBJECTS:tb2-objects>)
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
@@ -301,25 +300,29 @@ ENDIF(MENDELSOFT)
 ##########################################
 
 IF(LIBTB2)
-  IF(WIN32 AND LONG_COSTS)
-    MESSAGE(STATUS "LIBTB2 not compliant with win32 if using LONG_COSTS!")
-  ENDIF(WIN32 AND LONG_COSTS)
-  IF(WIN32 AND LONG_PROBABILITY)
-    MESSAGE(STATUS "LIBTB2  not compliant with win32 if using LONG_PROBABILITY!")
-  ENDIF(WIN32 AND LONG_PROBABILITY)
-  
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
   ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
+  IF(WIN64)
+  ELSE(WIN64)
   SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
+  ENDIF(WIN64)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
+### Old cmake, python and pybind11
     ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytoulbar2")
+    SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytb2")
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+    IF(APPLE)
+        target_link_options(pytb2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
+    ENDIF(APPLE)
+
+### New cmake, python and pybind11
+#    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+###
   ENDIF(PYTB2)
   
   IF(MPI)
@@ -332,7 +335,7 @@ IF(LIBTB2)
     ENDIF(MPI_LINK_FLAGS)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
-    #TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+    TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
   ENDIF(MPI)
   
   INSTALL(TARGETS tb2
@@ -340,6 +343,8 @@ IF(LIBTB2)
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     )
+ELSE(LIBTB2)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWCSPFORMATONLY" )
 ENDIF(LIBTB2)
 
 ##########################################
@@ -409,14 +414,22 @@ ADD_CUSTOM_COMMAND(
 ##########################################
 # Doc installation
 ##########################################
-install(DIRECTORY ${My_doc} DESTINATION ${doc_destination}/${Toulbar2_NAME} PATTERN ".svn" EXCLUDE)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
+file(GLOB pdf_doc_files "doc/*.pdf*")
+file(GLOB txt_doc_files "doc/*.txt*")
+file(GLOB html_doc_files "doc/*.html*")
+install(FILES ${pdf_doc_files} DESTINATION ${doc_destination}/${Toulbar2_NAME}-doc)
+install(FILES ${txt_doc_files} DESTINATION ${doc_destination}/${Toulbar2_NAME}-doc)
+install(FILES ${html_doc_files} DESTINATION ${doc_destination}/${Toulbar2_NAME}-doc)
 
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1 DESTINATION share/man/man1)
 ##########################################
 # Examples installation
 ##########################################
-install(DIRECTORY ${Default_validation_dir} DESTINATION ${doc_destination}/${Toulbar2_NAME}/examples/ PATTERN ".svn" EXCLUDE)
-install(DIRECTORY ${Default_cover_dir} DESTINATION ${doc_destination}/${Toulbar2_NAME}/examples/ PATTERN ".svn" EXCLUDE)
+add_custom_target(create_validation_tar ALL COMMAND
+  ${CMAKE_COMMAND} -E tar "cfJ" "validation.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_validation_dir}")
+add_custom_target(create_cover_tar ALL COMMAND
+  ${CMAKE_COMMAND} -E tar "cfJ" "cover.txz" "${CMAKE_CURRENT_SOURCE_DIR}/${Default_cover_dir}")
+
 
 ##########################################
 #  PACKAGING 

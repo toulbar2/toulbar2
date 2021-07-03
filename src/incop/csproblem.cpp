@@ -281,7 +281,7 @@ int** csp_constraintdatastructure(int nbvar)
 }
 
 /* mise en place des structures du CSP */
-void CSProblem::set_domains_connections(int* dom, vector<int>* tabledom, vector<int>* connect)
+void CSProblem::set_domains_connections(int* dom, vector<Value>* tabledom, vector<int>* connect)
 {
     domains = dom;
     tabdomains = tabledom;

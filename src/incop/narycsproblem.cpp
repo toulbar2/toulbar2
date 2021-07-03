@@ -415,7 +415,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     int argc = 0;
 
     // remove leading space  from incop command line
-    cmd.erase(cmd.begin(), std::find_if(cmd.begin(), cmd.end(), std::bind1st(std::not_equal_to<char>(), ' ')));
+    cmd.erase(0, cmd.find_first_not_of(" \t\n\r\f\v"));
 
     // remove multiples space in cmd
     removeSpaces(cmd);

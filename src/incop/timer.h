@@ -5,7 +5,7 @@ typedef double Time;
 typedef enum type_timer { REAL,
     VIRTUAL } Timer;
 
-#ifndef WINDOWS // timer not supported under windows
+#ifndef __WIN32__
 void start_timers(void);
 void stop_timers(Timer type);
 extern Time real_lapse;

@@ -26,6 +26,7 @@ private:
         {
             delete[] transition;
         }
+
         void setNumStates(int size)
         {
             transition = new vector<pair<int, int>>[size];

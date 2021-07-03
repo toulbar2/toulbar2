@@ -213,6 +213,7 @@ bool VNSSolver::solve(bool first)
 
     return (bestUb < MAX_COST);
 }
+
 #endif
 
 /* Local Variables: */

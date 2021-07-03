@@ -162,6 +162,7 @@ int WCSP::diameter()
 {
     if (vars.size() >= LARGE_NB_VARS)
         return -1;
+
     IntWeightedGraph G;
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);

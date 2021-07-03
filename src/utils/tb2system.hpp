@@ -35,32 +35,37 @@ const Long LONGLONG_MAX = LLONG_MAX;
 
 typedef long double Double;
 
-#ifdef __WIN32__
+/* --------------------------------------------------------------------
+// Random numbers
+// -------------------------------------------------------------------- */
+
 #include <random>
-inline void mysrand(long) {};
-inline double mydrand() {
-    static std::ranlux48 source(std::random_device{}());
-    return std::uniform_real_distribution<double>(0,1)(source);
-}
-inline int myrand() {
-    return INT_MAX * mydrand();
-}
-inline Long myrandl() {
-    return LONG_MAX * mydrand();
-}
-inline Long myrandln() {
-    return LONG_MAX * 2. * (mydrand() - 0.5);
-}
-#else
-inline void mysrand(int seed)
+extern std::mt19937 myrandom_generator;
+
+inline void mysrand(int seed_)
 {
-    return srand48(seed);
+    myrandom_generator.seed(seed_);
 }
-inline int myrand() { return (int)lrand48(); }
-inline Long myrandl() { return (Long)((Long)lrand48() /**LONGLONG_MAX*/); }
-inline Long myrandln() { return (Long)((Long)mrand48() /**LONGLONG_MAX*/); }
-inline double mydrand() { return drand48(); }
-#endif
+inline int myrand()
+{
+    static std::uniform_int_distribution<int> myrandom_uidistribution(0,INT_MAX-1);
+    return myrandom_uidistribution(myrandom_generator);
+}
+inline Long myrandl()
+{
+    static std::uniform_int_distribution<Long> myrandom_uldistribution(0,LONG_MAX-1);
+    return myrandom_uldistribution(myrandom_generator);
+}
+inline Long myrandln()
+{
+    static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX,LONG_MAX-1);
+    return myrandom_umdistribution(myrandom_generator);
+}
+inline double mydrand()
+{
+    static std::uniform_real_distribution<double> myrandom_uddistribution(0.0,1.0);
+    return myrandom_uddistribution(myrandom_generator);
+}
 
 #ifdef DOUBLE_PROB
 inline double Pow(double x, double y)
@@ -186,6 +191,17 @@ inline Long randomCost(Long min, Long max) { return min + (myrandl() % (max - mi
 
 inline Long string2Cost(const char* ptr)
 {
+    try {
+        string s(ptr);
+        Double d = stold(s);
+        if ((d>=0 && d > LONGLONG_MAX) || (d<0 && d < -LONGLONG_MAX)) {
+            throw out_of_range("long long overflow!");
+        }
+    } catch (std::exception& e) {
+        cerr << "Overflow exception: cannot convert this number " << ptr << " into a cost!" << endl;
+        cerr << "\t" << e.what() << endl;
+        exit(EXIT_FAILURE);
+    }
     return atoll(ptr);
 }
 
@@ -200,10 +216,10 @@ inline int cost2log2(Long x)
     }
     return (l2);
 }
-
 inline int cost2log2glb(Long x) { return cost2log2(x); }
 inline int cost2log2gub(Long x) { return cost2log2(x); }
 #endif
+
 //luby(0)= N/A
 //luby(1)= 1
 //luby(2)= 1
@@ -232,7 +248,6 @@ inline Long luby(Long r)
 
 // function mkdir
 #include <sys/stat.h>
-
 
 #ifndef __WIN32__
 #include <signal.h>

@@ -1,3 +1,6 @@
+#ifndef INCOP_CSPROBLEM_H_
+#define  INCOP_CSPROBLEM_H_
+
 /* classe des problèmes de satisfaction de contraintes CSP*/
 /** Finite domain CSP class */
 class CSProblem : public OpProblem {
@@ -8,7 +11,7 @@ public:
 
     /* tableau des domaines : chaque domaine est un vecteur d'entiers */
     /** domain array : each domain is implemented by a vector of integers */
-    vector<int>* tabdomains;
+    vector<Value>* tabdomains;
     /* pour chaque variable, numéro de son domaine : indice dans le tableau tabdomains */
     /** for each variable, domain number : index in tabdomains array */
     int* domains;
@@ -58,7 +61,7 @@ public:
     void next_move(Configuration* configuration, Move* move, NeighborhoodSearch* nbhs);
     /* met en place les domaines et connexions d'un problème */
     /** set the domains and connections of a problem */
-    virtual void set_domains_connections(int* dom, vector<int>* tabledom, vector<int>* connect);
+    virtual void set_domains_connections(int* dom, vector<Value>* tabledom, vector<int>* connect);
     /* initialisation des domaines : appel de init_domains et init_tabdomains */
     /** initialization of the domains : call init_domains and init_tabdomains */
     virtual void init_domain_tabdomain();
@@ -83,3 +86,4 @@ public:
 };
 
 int** csp_constraintdatastructure(int nbvar);
+#endif /* INCOP_CSPROBLEM_H_*/

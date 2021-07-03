@@ -11,6 +11,7 @@
 #include "core/tb2wcsp.hpp"
 
 using namespace boost;
+
 void fusionCluster(TCDGraph::vertex_descriptor v, TCDGraph::vertex_descriptor p, TCDGraph& cg)
 {
     set<int> varsfusion;
@@ -356,6 +357,7 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
         }
     }
 }
+
 #endif
 
 /* Local Variables: */

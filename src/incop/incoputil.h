@@ -1,4 +1,5 @@
-
+#ifndef INCOP_UTIL_H_
+#define INCOP_UTIL_H_
 
 //---------------------------------------------------------------------------------------------
 //    trombe : les stats sous forme de classe (... enfin une struct quoi !)
@@ -30,6 +31,7 @@ public:
     // ofstream* stat_file;           // le fichier où s'affiche les stat
     int thresholdchanges; // nombre de changements de seuil pour l'ensemble des essais
     Stat_GWW(int number_pbs, int number_tries);
+    ~Stat_GWW();
     void init_pb(int t);
     void init_run();
     void init_try(int trynumber);
@@ -65,3 +67,5 @@ void ecriture_meilleure_valeur(string& method, Long valeur, Long seuil, int nbmo
 void ecriture_fin_lsrun(double avgnhtries, double avgsqnhtries);
 void ecriture_stat_essai();
 void ofile_name(char* filename, int argc, char** argv);
+
+#endif /* INCOP_UTIL_H_ */

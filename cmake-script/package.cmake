@@ -1,37 +1,42 @@
-##############################################################################"
+###################################################################################"
 #  PACKAGING 
-##############################################################################"
+###################################################################################"
+# --- Package generation
+#########################"
 
 INCLUDE(InstallRequiredSystemLibraries)
+
+SET( Toulbar_PACKAGE_DESCRIPTION "Exact combinatorial optimization for Graphical Models")
+SET(Toulbar_PACKAGE_SUMMARY "Toulbar2 is a Exact combinatorial optimization for Graphical Models solver based on cost function network ")
+SET(Toulbar2_NAME "toulbar2" )
 
 
 IF (APPLE)
   SET(CPACK_GENERATOR "OSXX11")
 ENDIF (APPLE)
 
-IF (WIN32)
-  SET(CPACK_GENERATOR "NSIS")
-  SET(CPACK_SOURCE_GENERATOR "ZIP")
-ELSE(WIN32)
+	MESSAGE(STATUS "#################################")
   MESSAGE(STATUS "project: ${PROJECT_NAME} packaging")
-  MESSAGE(STATUS "source: ${CMAKE_CURRENT_SOURCE_DIR} for Unix")
+	MESSAGE(STATUS " source:${CMAKE_CURRENT_SOURCE_DIR}")
+	MESSAGE(STATUS "#################################")
 
   SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libgcc1 (>= 1:3.4.2-12), boost (>=1.34.0), xml2, openmpi ")
   SET(CPACK_STRIP_FILES "bin/toulbar2;bin/iloglue;bin/mendelsoft")
   SET(CPACK_GENERATOR "STGZ;TGZ;DEB;TBZ2;RPM")
   SET(CPACK_SOURCE_GENERATOR "ZIP;TGZ;TBZ2;DEB")
-ENDIF (WIN32)
 
   SET(PACKAGE_DESCRIPTION "${Toulbar_PACKAGE_DESCRIPTION}")
   SET(PACKAGE_DESCRIPTION_SUMMARY "${Toulbar_PACKAGE_SUMMARY}" )
-  SET(CPACK_PACKAGE_NAME "${Toulbar_NAME}")
-  SET(CPACK_PACKAGE_VENDOR "${Toulbar_NAME} Development Team ")
+	SET(CPACK_PACKAGE_NAME "${Toulbar2_NAME}")
+	SET(CPACK_PACKAGE_VENDOR "${Toulbar2_NAME} Development Team : https://github.com/toulbar2/toulbar2")
   SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${Toulbar_PACKAGE_SUMMARY}")
   SET(CPACK_PACKAGE_CONTACT "${CONTACT}")
   SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-  SET(CPACK_PACKAGE_FILE_NAME "${Toulbar_NAME_COMPLETE}-${CMAKE_SYSTEM_PROCESSOR}")
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY ${Toulbar_NAME_COMPLETE})
+
+	SET(CPACK_PACKAGE_FILE_NAME "${Toulbar2_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+	SET(CPACK_PACKAGE_INSTALL_DIRECTORY ${Toulbar2_NAME})
   #SET(CPACK_PACKAGE_EXECUTABLES "toulbar2" "toulbar2" "iloglue" "ILOGLUE" "mendelsoft" "MENDELSOFTL")
   IF(MENDELSOLF_ONLY) 
     SET(CPACK_PACKAGE_EXECUTABLES "mendelsoft"  "MENDELSOFT" )
@@ -40,11 +45,11 @@ ENDIF (WIN32)
   ENDIF(MENDELSOLF_ONLY)
 
 # CPack source configuration
-SET(CPACK_SOURCE_PACKAGE_FILE_NAME ${Toulbar_NAME_COMPLETE}-sources)
+	SET(CPACK_SOURCE_PACKAGE_FILE_NAME ${Toulbar2_NAME}-sources)
 SET(CPACK_SOURCE_IGNORE_FILES "\\\\.swp$;/\\\\.gitignore;/build/;/\\\\.git/;/\\\\.svn/;/build;/bachckup;/_CPack_Packages/;/CMakeFiles/;/old/;\\\\.sh$;\\\\.zip$;\\\\.gz$;\\\\.bz2$")
 
 # CPack DEB configuration
-SET(CPACK_DEBIAN_PACKAGE_NAME ${Toulbar_NAME})
+	SET(CPACK_DEBIAN_PACKAGE_NAME ${Toulbar2_NAME})
 SET(CPACK_DEBIAN_PACKAGE_VERSION ${CPACK_PACKAGE_VERSION})
 
 IF(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
@@ -56,19 +61,24 @@ ENDIF(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "")
 SET(CPACK_DEBIAN_PACKAGE_BUILDS_DEPENDS "")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "${MAINTAINER}")
-SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "${Toulbar_NAME},${Toulbar_PACKAGE_DESCRIPTION}")
+	SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "${Toulbar2_NAME},${Toulbar_PACKAGE_DESCRIPTION}")
+
 SET(CPACK_DEBIAN_PACKAGE_SECTION "math")
+
 SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional") 
 
 # CPack RPM configuration
 SET(CPACK_RPM_PACKAGE_SUMMARY "${Toulbar_PACKAGE_SUMMARY}")
-SET(CPACK_RPM_PACKAGE_NAME ${Toulbar_NAME})
+	SET(CPACK_RPM_PACKAGE_NAME ${Toulbar2_NAME})
 SET(CPACK_RPM_PACKAGE_VERSION ${CPACK_PACKAGE_VERSION})
 #SET(CPACK_RPM_PACKAGE_ARCHITECTURE "i686")
 SET(CPACK_RPM_PACKAGE_RELEASE "1")
-SET(CPACK_RPM_PACKAGE_VENDOR "${Toulbar_NAME} Development Team")
+	SET(CPACK_RPM_PACKAGE_VENDOR "${Toulbar2_NAME} Development Team")
 SET(CPACK_RPM_PACKAGE_LICENSE "MIT")
 SET(CPACK_RPM_PACKAGE_DESCRIPTION "${Toulbar_PACKAGE_DESCRIPTION}")
+
+
+
 
 # CPack NSIS configuration
 IF (CPACK_GENERATOR MATCHES "NSIS")
@@ -77,9 +87,9 @@ IF (CPACK_GENERATOR MATCHES "NSIS")
 # INSTALL(FILES "${MINGW_BASE}/bin\\\\mingwm10.dll" DESTINATION bin)
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/misc/pixmaps/tb2.ico" DESTINATION bin)
   SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/misc/pixmaps/tb2.ico")
-  SET(CPACK_NSIS_MENU_LINKS "${Toulbar2_SHARE_DIRS}/doc/ToulBar2.txt" "Toulbar2" "http://www.inra.fr/mia/T/toulbar2" "${Toulbar_NAME} Web Site")
-  SET(CPACK_CREATE_DESKTOP_LINKS ${Toulbar_NAME})
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${Toulbar_NAME}.exe")
+	SET(CPACK_NSIS_MENU_LINKS "${Toulbar2_SHARE_DIRS}/doc/ToulBar2.txt" "Toulbar2" "https://miat.inrae.fr/toulbar2" "${Toulbar2_NAME} Web Site")
+	SET(CPACK_CREATE_DESKTOP_LINKS ${Toulbar2_NAME})
+	SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${Toulbar2_NAME}.exe")
   SET(CPACK_NSIS_DISPLAY_NAME "toulbar2 - solver for weighted CSP")
   SET(CPACK_NSIS_HELP_LINK "https://github.com/toulbar2/toulbar2")
   SET(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/toulbar2/toulbar2")

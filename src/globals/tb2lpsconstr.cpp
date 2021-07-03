@@ -220,7 +220,7 @@ void LPSConstraint::read(istream& file, bool mult)
     }
 }
 
-Cost LPSConstraint::evalOriginal(const String& s)
+Cost LPSConstraint::evalOriginal(const Tuple& s)
 {
 
     Cost cost = 0;
@@ -234,7 +234,7 @@ Cost LPSConstraint::evalOriginal(const String& s)
         } else if (strcmp(windowType[i].c_str(), "samong") == 0) {
             int appear = 0;
             for (int j = 0; j < windowSize[i]; j++) {
-                if (group[i][s[windowVars[i][j]] - CHAR_FIRST]) {
+                if (group[i][s[windowVars[i][j]]]) {
                     appear++;
                 }
             }
@@ -263,7 +263,7 @@ Cost LPSConstraint::evalOriginal(const String& s)
         } else if (strcmp(windowType[i].c_str(), "ssum") == 0) {
             int tmpSum = 0;
             for (int j = 0; j < windowSize[i]; j++) {
-                tmpSum += group[i][s[windowVars[i][j]] - CHAR_FIRST];
+                tmpSum += group[i][s[windowVars[i][j]]];
             }
             if (tmpSum < sumlow[i]) {
                 cost += subdef[i] * (sumlow[i] - tmpSum);
@@ -272,10 +272,10 @@ Cost LPSConstraint::evalOriginal(const String& s)
             }
         } else if (strcmp(windowType[i].c_str(), "segcc") == 0) {
             int appear = 0;
-            int tmpSum = s[windowVars[i][sumlow[i]]] - CHAR_FIRST; //abused the sumlow array
+            int tmpSum = s[windowVars[i][sumlow[i]]]; //abused the sumlow array
             for (int j = 0; j < windowSize[i]; j++) {
                 //cout << s[j];
-                if (group[i][s[windowVars[i][j]] - CHAR_FIRST]) {
+                if (group[i][s[windowVars[i][j]]]) {
                     appear++;
                 }
             }
@@ -290,7 +290,7 @@ Cost LPSConstraint::evalOriginal(const String& s)
                 tmpSum = 0;
 
                 for (int j = 0; j < sumlow[i]; j++) {
-                    if (k >= s[windowVars[i][group[i][j]]] - CHAR_FIRST && k < s[windowVars[i][group[i][j]]] - CHAR_FIRST + group[i][j + sumlow[i]]) {
+                    if (k >= s[windowVars[i][group[i][j]]] && k < s[windowVars[i][group[i][j]]] + group[i][j + sumlow[i]]) {
                         tmpSum++;
                     }
                 }

@@ -105,7 +105,6 @@ public:
 
         wcsp->updateUb(MAX_COST_XML);
         initialLowerBound = MIN_COST;
-
         nvars = 0;
         wcsp_nvars = wcsp->numberOfVariables();
     }

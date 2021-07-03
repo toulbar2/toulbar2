@@ -172,14 +172,12 @@ public:
     {
         *adr[x] = val[x];
     }
-
 #if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
     void restore(Cost** adr, Cost* val, ptrdiff_t x)
     {
         *adr[x] = val[x];
     }
 #endif
-
 #if defined(SHORT_VALUE) && !defined(INT_COST)
     void restore(int** adr, int* val, ptrdiff_t x)
     {

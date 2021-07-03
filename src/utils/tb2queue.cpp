@@ -170,6 +170,7 @@ void Queue::sort(bool increase)
     }
     delete[] sorted;
 }
+
 void Queue::print(ostream& os)
 {
     os << "Queue: ";

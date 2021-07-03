@@ -4,6 +4,7 @@
 
 #ifndef TB2GLOBALCARDCONSTR_HPP_
 #define TB2GLOBALCARDCONSTR_HPP_
+
 //#include "glpk.h"
 //#include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
@@ -23,7 +24,6 @@ private:
     map<Value, pair<Cost, Cost>> weights;
     int nDistinctDomainValue;
     //JP End//
-
 public:
     //JP Start// New type
     static const int EMPTY = -1;
@@ -67,6 +67,7 @@ public:
     //    void print(ostream& os);
     void dump(ostream& os, bool original = true);
 };
+
 #endif /*TB2GLOBALCARDCONSTR_HPP_*/
 
 /* Local Variables: */

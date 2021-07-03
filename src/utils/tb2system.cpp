@@ -13,6 +13,8 @@ const char* PrintFormatProb = "%Lf";
 const char* PrintFormatProb = "%lf";
 #endif
 
+std::mt19937 myrandom_generator{std::random_device{}()};
+
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */
@@ -58,6 +60,7 @@ void timeOut(int sig)
             exit(EXIT_FAILURE);
         fclose(ToulBar2::solution_uai_file);
     }
+
     if (ToulBar2::timeOut)
         ToulBar2::timeOut();
     else

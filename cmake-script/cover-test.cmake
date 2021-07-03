@@ -3,8 +3,6 @@
 # read a array of option include in $COVER_OPT_file 
 # and generate a new test for each entrie
 include(${My_cmake_script}/ManageString.cmake)
-SET (Boost_rev "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
-MESSAGE(STATUS "Cover tests: scanning directory ${Default_cover_dir}")
 
 IF (${Boost_rev} VERSION_GREATER "1.65.0")
   file(GLOB_RECURSE cover_file 
@@ -40,12 +38,13 @@ SET(COVER_OPT_file "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/cover-option.cmak
 
 IF (EXISTS ${COVER_OPT_file} ) 
   include (${COVER_OPT_file})
-  if ($verbose)
-    MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} found.")
-  endif($verbose)
 ELSE ()
   MESSAGE(STATUS "COVER option file : ${COVER_OPT_file} NOT found.")
 ENDIF()
+
+
+
+MESSAGE(STATUS "\n##############COVER  liste #############\n")
 
 FOREACH (UTEST ${cover_file})
   GET_FILENAME_COMPONENT(TPATH ${UTEST} PATH  ) # test path
@@ -55,13 +54,19 @@ FOREACH (UTEST ${cover_file})
   STRING(REPLACE ".wcsp" ".ub" UBF ${UTEST})
   STRING(REPLACE ".wcsp" ".enum" ENUM_file ${UTEST})
   
+
   IF (EXISTS ${TPATH}/${FOPT})
     include (${TPATH}/${FOPT})
   ELSE()
+	# init default value :
     set (test_timeout ${Default_test_timeout})
     set (test_regexp  ${Default_test_regexp})
   ENDIF()	
   
+#	MESSAGE(STATUS "file: ${TPATH}/${FOPT} not found  ==> default option used: command line : ${command_line_option} timeout=${test_timeout};regexp=${test_regexp} ")
+#	MESSAGE(STATUS "file: ${UTEST} used opt = ${command_line_option}")
+
+
   STRING(REPLACE "${PROJECT_SOURCE_DIR}/${Default_cover_dir}/" "" TMP ${UTEST})
   STRING(REPLACE ".wcsp" ""  TNAME ${TMP})
   
@@ -71,6 +76,7 @@ FOREACH (UTEST ${cover_file})
     MESSAGE(STATUS "TNAME: ${TNAME}")
   endif($verbose)
     
+
   SET (INDEX 0)
   FOREACH (COVERTEST ${${tfile}})
     #OPTION multiple space cleaning
@@ -79,16 +85,18 @@ FOREACH (UTEST ${cover_file})
     STRING(REGEX REPLACE " $" "" COVERTEST ${COVERTEST})
     
     STRING_SPLIT(ARGS " " ${COVERTEST})
-    SEPARATE_ARGUMENTS(ARGS)
-    ADD_TEST(cover_${TNAME}_${INDEX} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${ARGS})
-    SET_TESTS_PROPERTIES(
-      cover_${TNAME}_${INDEX}
+
+		add_test(Phase2_${TNAME}_${INDEX} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${ARGS})
+		set_tests_properties (
+			Phase2_${TNAME}_${INDEX}
       PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}"
       TIMEOUT "${test_timeout}"
       )	
     MATH(EXPR INDEX "1+${INDEX}")
     UNSET (ARGS)
   ENDFOREACH()
+
+
 ENDFOREACH(UTEST)
 
 ENABLE_TESTING()
