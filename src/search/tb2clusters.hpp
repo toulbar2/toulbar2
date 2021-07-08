@@ -57,9 +57,9 @@ private:
     TSols solutions;
     DLink<Separator*> linkSep; // link to insert the separator in PendingSeparator list
 
-    TFrees frees; // for managing freedom
-    TFreesSols freesSol; // for managing freedom
-    TFreesLimit freesLimit; // for managing freedom
+    TFrees frees; // freedom status of a given separator assignment
+    TFreesSols freesSol; // freedom status used when recording a solution for a given separator assignment (the status may change later, thus freesSol <> frees)
+    TFreesLimit freesLimit; // number of failed searches in the subproblem associated to a given separator assignment
 
     Tuple t; // temporary buffer for a separator tuple
     Tuple s; // temporary buffer for a solution tuple
@@ -79,10 +79,10 @@ public:
     void set(Cost clb, Cost cub, Solver::OpenList** open = NULL);
     bool get(Cost& clb, Cost& cub, Solver::OpenList** open = NULL);
 
-    void setF(bool free);
-    bool getF(bool& free); ///\brief return true if the corresponding freedom information is found, false otherwise
-    bool setFInc();
-    void freeIncS();
+    void setF(bool free); ///\brief update freedom status of a given separator assignment
+    bool getF(bool& free); ///\brief return true if the corresponding freedom status is found (and update free status), false otherwise
+    bool setFInc(); ///\brief initialize freedom counter if needed (freesLimit) and return true if it is below a given limit (\see ToulBar2::heuristicFreedomLimit)
+    void freeIncS(); ///\brief increase freedom counter
 
     void setSg(Cost c, BigInteger nb);
     BigInteger getSg(Cost& res, BigInteger& nb);
@@ -144,15 +144,13 @@ private:
     StoreBigInteger countElimVars;
     int num_part; //for approximation: number of the corresponding partition
 
-    // current freedom of variables choice
-    bool freedom_on;
-    bool freedom_init;
-    int freedom_limit;
+    bool freedom_on; // current freedom status for the cluster
+    bool freedom_init; // only used if heuristicFreedom == 1
+    int freedom_limit; // only used if heuristicFreedom == 1
 
-    bool isCurrentlyInTD;
-    int clusterInTD;
-    int depth;
-    bool interrupt;
+    bool isCurrentlyInTD; // true if the cluster is part of the current tree decomposition
+    int depth; // current depth of the cluster in the rooted tree decomposition
+    bool interrupt; // only used if heuristicFreedom == 3
 
 public:
     Cluster(TreeDecomposition* tdin);
@@ -291,15 +289,15 @@ public:
     int getPart() { return num_part; }
     void setPart(int num) { num_part = num; }
 
-    // for managing freedom of the cluster
+    // set freedom status for the cluster and the separator
     void freeRec(bool free)
     {
         if (sep)
             sep->setF(free);
         freedom_on = free;
     }
-    // the returned boolean says if the information is found or not
-    // return true if ok and false if limit is attained (number of true permitted for one separator assignment)
+    // the returned boolean says if the information (freedom status attached to the separator assignment) is found or not
+    // return true if found else false. update freedom status of the cluster
     bool freeGet()
     {
         bool free, found;
@@ -308,6 +306,7 @@ public:
             freedom_on = free;
         return found;
     }
+    // initialize freesLimit if new else checks if it does not overcome the freedom limit and update freedom status
     void freeRecInc()
     {
         bool ok;
@@ -317,6 +316,7 @@ public:
         else
             freedom_on = false;
     }
+    // increase freesLimit by one (every time we did not improve the search)
     void freeInc()
     {
         if (sep)
@@ -342,14 +342,13 @@ public:
         TVars::iterator it = varsTree.find(i);
         return it != varsTree.end();
     }
-    bool getFreedomInit() { return freedom_init; }
-    void setFreedomInit(bool f) { freedom_init = f; }
     bool getIsCurrInTD() { return isCurrentlyInTD; }
     void setIsCurrInTD(bool f) { isCurrentlyInTD = f; }
-    int getIdClusterInTD() { return clusterInTD; }
-    void setIdClusterInTD(int id) { clusterInTD = id; }
     int getDepth() { return depth; }
     void setDepth(int d) { depth = d; }
+
+    bool getFreedomInit() { return freedom_init; }
+    void setFreedomInit(bool f) { freedom_init = f; }
     int getFreedomLimit() { return freedom_limit; }
     void setFreedomLimit(int l) { freedom_limit = l; }
     void setInterrupt(bool b) { interrupt = b; }
@@ -497,9 +496,10 @@ public:
     void dump(Cluster* c = NULL);
 
     //manage freedom
-    void updateInTD(Cluster* c);
-    void updateInTD2(Cluster* c);
-    void computeDepths(Cluster* c, int parent_depth);
+    void updateInTD(Cluster* c); ///\brief deconnect cluster subtree and its separators according to the current tree decomposition
+    void updateInTD2(Cluster* c); ///\brief reconnect cluster subtree
+
+    void computeDepths(Cluster* c, int parent_depth); ///\brief recursively set depth of all clusters in a given cluster subtree
     int getMaxDepth() { return max_depth; }
 };
 

@@ -294,7 +294,7 @@ bool Separator::setFInc()
         nb = itsg->second;
         // later this should be used as global value
         if (cluster->sepSize() != 0) {
-            if (nb < 2 * ToulBar2::heuristicFreedomLimit) {
+            if (nb < 2 * ToulBar2::heuristicFreedomLimit) { // why using twice the budget if not at the root cluster?
                 return true;
             } else {
                 frees[t] = false;
@@ -652,7 +652,6 @@ Cluster::Cluster(TreeDecomposition* tdin)
     freedom_on = false;
     freedom_init = false;
     isCurrentlyInTD = true;
-    clusterInTD = -1;
     depth = -1;
     freedom_limit = 0;
     interrupt = false;

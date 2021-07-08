@@ -785,7 +785,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             }
                             pair<Cost, Cost> res = hybridSolve(c, bestlb, ubSon);
                             assert(res.first >= bestlb && res.second <= ubSon);
-                            if (c->getFreedom() && ((res.first == bestlb && res.second == ubSon) && res.first != res.second)) {
+                            if (c->getFreedom() && res.first == bestlb && res.second == ubSon && res.first != res.second) {
                                 if (ToulBar2::heuristicFreedom == 1)
                                     c->setFreedomLimit(c->getFreedomLimit() + 1);
 
