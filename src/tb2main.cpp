@@ -2405,6 +2405,7 @@ int _tmain(int argc, TCHAR* argv[])
                         exit(EXIT_FAILURE);
                     } else {
                         ToulBar2::externalUB = ubstring;
+                        rtrim(ToulBar2::externalUB);
                     }
                 } else {
                     cerr << "error reading UB in " << problem << endl;
