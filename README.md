@@ -55,7 +55,10 @@ For the most recent binary or the Python API, compile from source.
 
 An alpha-release Python interface can be tested through pip on Linux and MacOS:
 
+    python3 -m pip install --upgrade pip
     python3 -m pip install pytoulbar2
+
+The first line is only useful for Linux distributions that ship "old" versions of pip.
 
 Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
 
