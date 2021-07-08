@@ -466,6 +466,7 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
     return maxtight;
 }
 
+// take into account the current tree decomposition of adaptive BTD
 bool Variable::isSep()
 {
     if (ToulBar2::heuristicFreedom) {
