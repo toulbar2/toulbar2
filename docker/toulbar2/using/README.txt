@@ -2,7 +2,7 @@
 # 
 #         How to use toulbar2/toulbar2 Docker image of github Packages
 # 
-#                    ghcr.io/nrousse/toulbar2/toulbar2:master
+#                    ghcr.io/toulbar2/toulbar2/toulbar2:master
 # 
 ###############################################################################
 
@@ -16,7 +16,7 @@
  
   - Command :
 
-    docker run -v $PWD:/WORK -ti ghcr.io/nrousse/toulbar2/toulbar2:master /bin/bash /WORK/call_toulbar2.sh
+    docker run -v $PWD:/WORK -ti ghcr.io/toulbar2/toulbar2/toulbar2:master /bin/bash /WORK/call_toulbar2.sh
  
 # Call pytoulbar2 -------------------------------------------------------------
  
@@ -26,7 +26,7 @@
  
   - Command :
 
-    docker run -v $PWD:/WORK -ti ghcr.io/nrousse/toulbar2/toulbar2:master /bin/bash /WORK/call_pytoulbar2.sh
+    docker run -v $PWD:/WORK -ti ghcr.io/toulbar2/toulbar2/toulbar2:master /bin/bash /WORK/call_pytoulbar2.sh
  
 ###############################################################################
 
