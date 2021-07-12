@@ -1736,11 +1736,13 @@ int TreeDecomposition::makeRooted()
         makeRootedRec(root, visited);
         makeDescendants(root);
     }
-//    if (ToulBar2::searchMethod != DFBB)
-//        return 0;
+
+    if (ToulBar2::searchMethod != DFBB)
+        return 0;
 
     // if it is a forest then create a unique meta-root cluster with empty separators with its children
-    if (roots.size() >= 1) {
+    // if it is not a forest but adaptive BTD is used then always create a meta-root cluster
+    if (roots.size() > 1 || (ToulBar2::btdMode==1 && ToulBar2::heuristicFreedom)) {
         root = new Cluster(this);
         root->setId(clusters.size());
         clusters.push_back(root);

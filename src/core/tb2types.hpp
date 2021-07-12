@@ -578,6 +578,14 @@ typedef enum {
 } SearchMethod;
 
 typedef enum {
+    DFBB,
+    BTD,
+    RDSBTD,
+    RDS,
+    ADAPTBTD
+} BTDMethod;
+
+typedef enum {
     LS_INIT_RANDOM = -1,
     LS_INIT_INF = -2,
     LS_INIT_SUP = -3,
