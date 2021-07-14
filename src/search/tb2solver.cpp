@@ -1691,21 +1691,17 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 void Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
-    if (ub <= MIN_COST) {
-        cerr << "Error: wrong initial primal bound (negative or zero)." << endl;
-        exit(1);
-    }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
         cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
-        exit(1);
+        throw BadConfiguration();
     }
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub == 1 && ToulBar2::hbfs) {
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
-        exit(1);
+        throw BadConfiguration();
     }
     if (ToulBar2::FullEAC && ToulBar2::vac > 1 && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
         cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
-        exit(1);
+        throw BadConfiguration();
     }
 
     if (ToulBar2::searchMethod != DFBB) {
@@ -1718,7 +1714,7 @@ void Solver::beginSolve(Cost ub)
     }
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
         cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
-        exit(1);
+        throw BadConfiguration();        
     }
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
@@ -1899,7 +1895,7 @@ bool Solver::solve(bool first)
 
     Cost initialUpperBound = wcsp->getUb();
 
-    //        Store::store();       // if uncomment then solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
+    //        Store::store();   // if uncommented, solve() does not change the problem but all preprocessing operations will allocate in backtrackable memory
     int initdepth = Store::getDepth();
     try {
         try {
@@ -2075,7 +2071,7 @@ bool Solver::solve(bool first)
                             }
                             default: {
                                 cerr << "Unknown search method B" << ToulBar2::btdMode << endl;
-                                exit(EXIT_FAILURE);
+                                throw BadConfiguration();
                             }
                             }
                             if (ToulBar2::debug)
@@ -2161,7 +2157,7 @@ bool Solver::solve(bool first)
                                                 break;
                                             default:
                                                 cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
-                                                exit(EXIT_FAILURE);
+                                                throw BadConfiguration();
                                             }
                                             // wcsp->propagate(); it will propagate with a possibly modified DAC order at previous iterations resulting in undefined behavior
                                         }
@@ -2212,7 +2208,7 @@ bool Solver::solve(bool first)
                                                         break;
                                                     default:
                                                         cerr << "Error: no such MDD diversity encoding method: " << ToulBar2::divMethod << endl;
-                                                        exit(EXIT_FAILURE);
+                                                        throw BadConfiguration();
                                                     }
                                                 }
                                                 // reactivate on-the-fly variable elimination and dead-end elimination (undone in preprocessing on diversity variables and later deactivated by endSolve call)
