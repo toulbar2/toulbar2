@@ -9,9 +9,12 @@ name: Docker
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 
 on:
-  workflow_dispatch
-  #push:
-  #  branches: [ master ]
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+    #branches:
+      #- 'master'
   #pull_request:
   #  branches: [ master ]
 
@@ -62,7 +65,9 @@ jobs:
           file: ./docker/toulbar2/Dockerfile_toulbar2
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.description=Docker image containing toulbar2 and its pytoulbar2 Python API (installed from sources with cmake options -DPYTB2=ON and -DXML=ON)
 
   build-and-push-image-pytoulbar2:
 
@@ -103,5 +108,7 @@ jobs:
           file: ./docker/pytoulbar2/Dockerfile_pytoulbar2
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.description=Docker image containing pytoulbar2 the Python API of toulbar2 (installed with python3 -m pip install pytoulbar2)
 

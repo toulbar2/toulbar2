@@ -6,7 +6,7 @@
 # 
 # Desc ------------------------------------------------------------------------
 # 
-# Installation from sources with cmake option -DPYTB2=ON
+# Installation from sources with cmake options -DPYTB2=ON and -DXML=ON
 # 
 # Build -----------------------------------------------------------------------
 #
