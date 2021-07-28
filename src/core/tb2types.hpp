@@ -578,7 +578,7 @@ typedef enum {
 } SearchMethod;
 
 typedef enum {
-    DFBB,
+    NOBTD,
     BTD,
     RDSBTD,
     RDS,
