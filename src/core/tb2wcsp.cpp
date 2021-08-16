@@ -5201,16 +5201,14 @@ bool WCSP::isAlreadyTreeDec(char* filename)
 
 void WCSP::buildTreeDecomposition()
 {
-    td = new TreeDecomposition(this);
     double time = cpuTime();
+    td = new TreeDecomposition(this);
     if (isAlreadyTreeDec(ToulBar2::varOrder))
         td->buildFromCovering(ToulBar2::varOrder);
     else if (ToulBar2::approximateCountingBTD)
         td->buildFromOrderForApprox();
     else
         td->buildFromOrder();
-    if (ToulBar2::verbose >= 0)
-        cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
     if (!ToulBar2::approximateCountingBTD) {
         vector<int> order;
         td->getElimVarOrder(order);
@@ -5253,6 +5251,8 @@ void WCSP::buildTreeDecomposition()
                 }
             }
     }
+    if (ToulBar2::verbose >= 0)
+        cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
 }
 
 void WCSP::treeDecFile2Vector(char* filename, vector<int>& order)
