@@ -1253,7 +1253,7 @@ int _tmain(int argc, TCHAR* argv[])
             // BTD root cluster
             if (args.OptionId() == OPT_btdRootCluster) {
                 int root = atoi(args.OptionArg());
-                if (root > 0)
+                if (root > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==NULL))
                     ToulBar2::btdRootCluster = root;
             }
             // btd SubTree initialisation sub cluster
