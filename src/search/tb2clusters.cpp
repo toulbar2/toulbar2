@@ -1331,42 +1331,49 @@ void TreeDecomposition::pathFusions(vector<int>& order)
 }
 
 // Minimize tree height when the separators are included
-bool TreeDecomposition::reduceHeight(Cluster* c, Cluster* cparent)
+// path contains the ordered list of clusters from the root to the parent cluster of c
+// time complexity in O(n) using DFS
+void TreeDecomposition::reduceHeight(Cluster* c, vector<Cluster*> path)
 {
+    Cluster *cparent = NULL;
+    if (path.size() > 0) cparent = path.back();
     assert(c != cparent);
     TClusters::iterator itj;
     itj = c->beginEdges();
     while (itj != c->endEdges()) {
         Cluster* cj = *itj;
-        ++itj;
-        if (cj != cparent) {
+        ++itj; // warning! done before removing the corresponding edge (c -> cj) so that the iterator remains valid
+        if (cj != cparent) { // warning! the current tree decomposition is undirected
             TVars cjsep;
             intersection(c->getVars(), cj->getVars(), cjsep);
             if (cparent && included(cjsep, cparent->getVars())) {
-                // replacing the cluster higher in the tree
-                //				cout << "move " << cj->getId() << " from " << c->getId() << " to " << cparent->getId() << endl;
+                // reconnect the child cluster closest to the root of the tree decomposition following path information
+                int pos = path.size() - 1;
+                assert(pos >= 0 && path[pos] == cparent);
+                while (pos >= 1 && included(cjsep, path[pos-1]->getVars())) {
+                    pos--;
+                }
+                assert(pos >= 0 && path[pos] != c);
+//                cout << "move " << cj->getId() << " from " << c->getId() << " to " << path[pos]->getId() << endl;
+//                cout << "with path:";
+//                for (int i=0; i<path.size(); i++) cout << " " << path[i]->getId();
+//                cout << endl;
                 c->removeEdge(cj);
-                cparent->addEdge(cj);
+                path[pos]->addEdge(cj);
                 cj->removeEdge(c);
-                cj->addEdge(cparent);
-                return true;
-            } else if (!cparent && cjsep.size() == 0) {
+                cj->addEdge(path[pos]);
+                reduceHeight(cj, vector<Cluster*>(path.begin(), path.begin()+pos+1)); // continue recursively on cj with an updated path to the root
+            } else if (!cparent && cjsep.size() == 0) { // warning! it is done before a meta-root is created with connected components as its children
                 c->removeEdge(cj);
                 cj->removeEdge(c);
-                return true;
+                reduceHeight(cj, vector<Cluster*>()); // cj becomes a root
+            } else {
+                vector<Cluster*> newpath = path;
+                newpath.push_back(c); // add current cluster c in the path as father of cj
+                reduceHeight(cj, newpath); // continue recursively on cj
             }
         }
     }
-    itj = c->beginEdges();
-    while (itj != c->endEdges()) {
-        Cluster* cj = *itj;
-        ++itj;
-        if (cj != cparent) {
-            if (reduceHeight(cj, c))
-                return true;
-        }
-    }
-    return false;
 }
 
 int TreeDecomposition::getNextUnassignedVar(TVars* vars)
@@ -1721,16 +1728,14 @@ int TreeDecomposition::makeRooted()
             } else
                 root = getBiggerCluster(visited);
             roots.push_back(root);
-            while (reduceHeight(root, NULL))
-                ;
+            reduceHeight(root, vector<Cluster *>());
             if (ToulBar2::splitClusterMaxSize >= 1)
                 splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize);
             if (ToulBar2::maxSeparatorSize >= 0 || ToulBar2::minProperVarSize >= 2)
                 mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize);
             if (ToulBar2::boostingBTD > 0. && ToulBar2::elimDegree >= 1)
                 boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree);
-            while (reduceHeight(root, NULL))
-                ;
+            reduceHeight(root, vector<Cluster *>());
         }
         visited.insert(root);
         makeRootedRec(root, visited);

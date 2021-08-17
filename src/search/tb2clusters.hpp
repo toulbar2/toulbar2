@@ -448,7 +448,7 @@ public:
     void insert(int sizepart, vector<Variable*> currentRevElimOrder, ConstraintSet currentusedctrs);
 
     void fusion(Cluster* ci, Cluster* cj);
-    bool reduceHeight(Cluster* c, Cluster* father);
+    void reduceHeight(Cluster* c, vector<Cluster*> path);
     int getNextUnassignedVar(TVars* vars);
     int getVarMinDomainDivMaxWeightedDegree(TVars* vars);
     void splitClusterRec(Cluster* c, Cluster* father, unsigned int maxsize);
