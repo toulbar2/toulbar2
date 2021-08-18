@@ -57,9 +57,9 @@ private:
     TSols solutions;
     DLink<Separator*> linkSep; // link to insert the separator in PendingSeparator list
 
-    TFrees frees; // freedom status of a given separator assignment
+    TFrees frees; // remember freedom status of a given separator assignment
+    TFreesLimit freesLimit; // and the corresponding number of failed searches in the subproblem associated to the given separator assignment
     TFreesSols freesSol; // freedom status used when recording a solution for a given separator assignment (the status may change later, thus freesSol <> frees)
-    TFreesLimit freesLimit; // number of failed searches in the subproblem associated to a given separator assignment
 
     Tuple t; // temporary buffer for a separator tuple
     Tuple s; // temporary buffer for a solution tuple

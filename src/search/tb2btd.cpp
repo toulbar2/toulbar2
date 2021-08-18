@@ -439,7 +439,7 @@ void Solver::Manage_Freedom(Cluster* c, bool is_root)
         if (c->isLeaf()) {
             c->freeRec(false);
         } else {
-            if (!(recorded && !c->getFreedom())) {
+            if (!recorded || c->getFreedom()) {
                 bool found = false;
                 for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants() && !found; ++iter) {
                     if ((*iter)->getId() != c->getId()) {
@@ -448,7 +448,7 @@ void Solver::Manage_Freedom(Cluster* c, bool is_root)
                         }
                     }
                 }
-                if (found) {
+                if (found) { // some separator inside the current subtree has been used to compute the current lower bound
                     if (recorded && c->getFreedom()) {
                         if (c->open) {
                             *(c->open) = OpenList();

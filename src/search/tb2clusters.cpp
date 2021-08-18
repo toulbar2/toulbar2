@@ -296,6 +296,7 @@ bool Separator::setFInc()
         // later this should be used as global value
         if (cluster->sepSize() != 0) {
             if (nb < 2 * ToulBar2::heuristicFreedomLimit) { // why using twice the budget if not at the root cluster?
+                assert(frees.find(t) != frees.end() && frees[t] == true);
                 return true;
             } else {
                 frees[t] = false;
@@ -303,6 +304,7 @@ bool Separator::setFInc()
             }
         } else {
             if (nb < ToulBar2::heuristicFreedomLimit) {
+                assert(frees.find(t) != frees.end() && frees[t] == true);
                 return true;
             } else {
                 frees[t] = false;
