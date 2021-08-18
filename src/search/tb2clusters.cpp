@@ -86,13 +86,14 @@ void Separator::setup(Cluster* cluster_in)
     if (!nvars)
         return;
 
-    int nproper = 0;
-    it = cluster->beginVarsTree();
-    while (it != cluster->endVarsTree()) {
-        if (!cluster->isSepVar(*it))
-            nproper++;
-        ++it;
-    }
+//    int nproper = 0;
+//    it = cluster->beginVarsTree();
+//    while (it != cluster->endVarsTree()) {
+//        if (!cluster->isSepVar(*it))
+//            nproper++;
+//        ++it;
+//    }
+
     s = Tuple(cluster->getNbVarsTree(), 0);
 }
 
@@ -505,11 +506,9 @@ bool Separator::solGet(TAssign& a, Tuple& sol, bool& free)
         }
 
         // update the freedom status
-        if (getNbVars() != 0) {
-            TFrees::iterator itsg = freesSol.find(t);
-            assert(itsg != freesSol.end());
-            free = itsg->second;
-        }
+        TFrees::iterator itsg = freesSol.find(t);
+        assert(itsg != freesSol.end());
+        free = itsg->second;
 
         return true;
     }
@@ -536,7 +535,7 @@ void Separator::solRec(Cost ub)
     //  	TSols::iterator itsol = solutions.find(t);
     //  	if(itsol != solutions.end()) {
     //  		p = itsol->second;
-    //  	    assert(p.first > ub + deltares);
+    //  	    assert(p.first > ub + deltares); // previous known solution must be worse
     //  	}
 
     wcsp->restoreSolution(cluster);
@@ -563,7 +562,7 @@ void Separator::solRec(Cost ub)
         ++it;
     }
 
-    solutions[t] = TPairSol(ub + deltares, s);
+    solutions[t] = TPairSol(ub + deltares, Tuple(s.begin(), s.begin()+i)); // remember only proper variables
     freesSol[t] = cluster->getFreedom();
 
     if (ToulBar2::verbose >= 1) {
@@ -901,10 +900,6 @@ void Cluster::getSolution(TAssign& sol)
         sep->solGet(sol, s, free);
 #endif
 
-        if (sep->getNbVars() == 0)
-            free = getFreedom();
-
-        int i = 0;
         if (free) {
             iter_begin = beginVarsTree();
             iter_end = endVarsTree();
@@ -913,6 +908,7 @@ void Cluster::getSolution(TAssign& sol)
             iter_end = endVars();
         }
 
+        int i = 0;
         it = iter_begin;
         while (it != iter_end) {
             if (!isSepVar(*it)) {
