@@ -451,17 +451,17 @@ public:
     void reduceHeight(Cluster* c, vector<Cluster*> path);
     int getNextUnassignedVar(TVars* vars);
     int getVarMinDomainDivMaxWeightedDegree(TVars* vars);
-    void splitClusterRec(Cluster* c, Cluster* father, unsigned int maxsize);
-    TVars boostingVarElimRec(Cluster* c, Cluster* father, Cluster* grandfather, unsigned int maxsize);
-    void mergeClusterRec(Cluster* c, Cluster* father, unsigned int maxsepsize, unsigned int minpropervar);
+    void splitClusterRec(Cluster* c, Cluster* father, unsigned int maxsize, TClusters& unvisited);
+    TVars boostingVarElimRec(Cluster* c, Cluster* father, Cluster* grandfather, unsigned int maxsize, TClusters& unvisited);
+    void mergeClusterRec(Cluster* c, Cluster* father, unsigned int maxsepsize, unsigned int minpropervar, TClusters& unvisited);
     void heuristicFusionRec(Cluster* c, Cluster* noc);
 
     void makeDescendants(Cluster* c);
     bool isDescendant(Variable* x, Variable* y) { return getCluster(x->getCluster())->isDescendant(getCluster(y->getCluster())); }
 
     int makeRooted(); // defines a rooted cluster tree decomposition from an undirected one
-    void makeRootedRec(Cluster* c, TClusters& visited);
-    Cluster* getBiggerCluster(TClusters& visited);
+    void makeRootedRec(Cluster* c, TClusters& visited, TClusters& unvisited);
+    Cluster* getBiggerCluster(TClusters& unvisited);
     Cluster* getRoot() { return roots.front(); }
     Cluster* getRootRDS() { return rootRDS; }
     void setRootRDS(Cluster* rdsroot) { rootRDS = rdsroot; }
