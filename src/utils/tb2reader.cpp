@@ -614,7 +614,13 @@ Cost CFNStreamReader::readHeader()
         cout << "Read bound: " << pbBound << " with precision " << ToulBar2::decimalPoint << endl;
     skipCBrace();
 
-    return pbBound;
+    long double fbound = pbBound * ToulBar2::costMultiplier;
+
+    if (fbound > MAX_COST) {
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " )" << endl;
+        exit(EXIT_FAILURE);
+    }
+    return fbound;
 }
 
 // Reads the variables and domains and creates them.
@@ -859,23 +865,16 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     return costVector;
 }
 
-// this->upperBound is the raw bound from the header (unshifted, unscaled)
+// this->upperBound is the raw bound from the header (unshifted, rescaled)
 void CFNStreamReader::enforceUB()
 {
-
-    Cost shifted = this->upperBound + (wcsp->negCost / ToulBar2::costMultiplier);
-    if (ToulBar2::costMultiplier < 0.0)
-        shifted = -shifted; // shifted unscaled upper bound
-
-    if (shifted <= (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
-        this->upperBound = (this->upperBound * ToulBar2::costMultiplier) + wcsp->negCost;
-    else {
+    if (Add(this->upperBound, wcsp->negCost, &this->upperBound)) {
         cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " " << wcsp->negCost << " )" << endl;
         exit(EXIT_FAILURE);
     }
 
     // if the shifted/scaled bound is less than zero, we equivalently set it to zero
-    if (shifted < MIN_COST)
+    if (this->upperBound < MIN_COST)
         this->upperBound = MIN_COST;
     if (ToulBar2::externalUB.length() != 0) {
         this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
