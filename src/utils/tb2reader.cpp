@@ -331,7 +331,7 @@ public:
 
     void readIntervalUnaryTable(int varIdx, vector<Value>& authorized);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
-    void enforceUB(Cost ub);
+    void enforceUB();
 
     std::map<std::string, int> varNameToIdx;
     std::vector<std::map<std::string, int>> varValNameToIdx;
@@ -348,6 +348,7 @@ private:
     boost::tokenizer<boost::char_separator<char>>* tok;
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
+    Cost upperBound;
 };
 
 CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
@@ -358,7 +359,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     this->JSONMode = false;
     this->tok = nullptr;
     this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
-    Cost upperBound = readHeader();
+    this->upperBound = readHeader();
     if (ToulBar2::costThresholdS.size())
         ToulBar2::costThreshold = wcsp->decimalToCost(ToulBar2::costThresholdS, 0);
     if (ToulBar2::costThresholdPreS.size())
@@ -369,7 +370,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     tie(ncf, maxarity) = readCostFunctions();
 
     // all negCosts are collected. We should be fine enforcing the UB
-    enforceUB(upperBound);
+    enforceUB();
     if (ToulBar2::vnsOptimumS.size())
         ToulBar2::vnsOptimum = wcsp->decimalToCost(ToulBar2::vnsOptimumS, 0) + wcsp->getNegativeLb();
 
@@ -674,22 +675,22 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         }
     }
 
-    unsigned int  varIndex = wcsp->getVarIndex(varName);
+    unsigned int varIndex = wcsp->getVarIndex(varName);
     bool newvar = (varIndex == wcsp->numberOfVariables());
     if (ToulBar2::verbose >= 1)
-        cout << "Variable " << varName << ((newvar)?" new ":" known ") << "with domain size " << domainSize << " read";
+        cout << "Variable " << varName << ((newvar) ? " new " : " known ") << "with domain size " << domainSize << " read";
     // Create the toulbar2 variable and store its name in the variable map.
     if (newvar) {
         varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
     }
     if (ToulBar2::verbose >= 1)
-        cout  << " # " << varIndex << endl;
+        cout << " # " << varIndex << endl;
     if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
         cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
         exit(EXIT_FAILURE);
     }
     // set the value names (if any) in the Variable.values map
-    varValNameToIdx.resize(max((size_t) varIndex + 1, varValNameToIdx.size() + 1));
+    varValNameToIdx.resize(max((size_t)varIndex + 1, varValNameToIdx.size() + 1));
     assert(varValNameToIdx.size() >= varIndex + 1);
     for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
         if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[ii], ii)).second) {
@@ -701,8 +702,8 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         for (unsigned int ii = 0; ii < valueNames.size(); ++ii)
             wcsp->addValueName(varIndex, valueNames[ii]);
     } else {
-        if (((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() != (unsigned int) domainSize) {
-            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable *)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << " for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
+        if (((EnumeratedVariable*)wcsp->getVar(varIndex))->getDomainInitSize() != (unsigned int)domainSize) {
+            cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable*)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << " for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
             exit(EXIT_FAILURE);
         }
         for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
@@ -765,7 +766,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     string token;
     minCost = MAX_COST;
 
-    if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
     // Create a vector filled with defaultCost values
@@ -788,7 +789,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
             // if we have read a full tuple and cost
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
-                if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
                 // the same tuple has already been defined.
                 if (costVector[tableIdx] != defaultCost) {
@@ -858,37 +859,37 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     return costVector;
 }
 
-// bound is the raw bound from the header (unshifted, unscaled)
-void CFNStreamReader::enforceUB(Cost bound)
+// this->upperBound is the raw bound from the header (unshifted, unscaled)
+void CFNStreamReader::enforceUB()
 {
 
-    Cost shifted = bound + (wcsp->negCost / ToulBar2::costMultiplier);
+    Cost shifted = this->upperBound + (wcsp->negCost / ToulBar2::costMultiplier);
     if (ToulBar2::costMultiplier < 0.0)
         shifted = -shifted; // shifted unscaled upper bound
 
     if (shifted <= (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
-        bound = (bound * ToulBar2::costMultiplier) + wcsp->negCost;
+        this->upperBound = (this->upperBound * ToulBar2::costMultiplier) + wcsp->negCost;
     else {
-        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << bound << " " << wcsp->negCost << " )" << endl;
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " " << wcsp->negCost << " )" << endl;
         exit(EXIT_FAILURE);
     }
 
     // if the shifted/scaled bound is less than zero, we equivalently set it to zero
     if (shifted < MIN_COST)
-        bound = MIN_COST;
+        this->upperBound = MIN_COST;
     if (ToulBar2::externalUB.length() != 0) {
-        bound = min(bound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
+        this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
     }
     if (ToulBar2::deltaUbS.length() != 0) {
         ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(bound, wcsp->getUb())));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(this->upperBound, wcsp->getUb())));
         if (ToulBar2::deltaUb > MIN_COST) {
             // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-            bound += ToulBar2::deltaUb;
+            this->upperBound += ToulBar2::deltaUb;
         }
     }
 
-    wcsp->updateUb(bound);
+    wcsp->updateUb(this->upperBound);
 }
 
 // Returns the index of the value name for the given variable
@@ -1232,7 +1233,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         card *= wcsp->getDomainInitSize(i);
     }
 
-    if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
     unsigned int arity = scope.size();
@@ -1252,7 +1253,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             // We have read a full tuple: finish the tuple
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
-                if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
 
                 if (not costFunction.insert(pair<Tuple, Cost>(tup, cost)).second) {
@@ -2369,7 +2370,7 @@ void WCSP::read_legacy(const char* fileName)
                     postCliqueConstraint(scopeIndex, arity, file);
                 } else if (gcname == "knapsackp") {
                     postKnapsackConstraint(scopeIndex, arity, file, false, true);
-                }else if (gcname == "knapsack") {
+                } else if (gcname == "knapsack") {
                     postKnapsackConstraint(scopeIndex, arity, file, false, false);
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
@@ -2533,13 +2534,13 @@ void WCSP::read_legacy(const char* fileName)
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
                     scopeIndex[2] = k;
-                    postKnapsackConstraint(scopeIndex,arity,file, false, true);
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true);
                 } else if (gcname == "knapsack") {
                     int scopeIndex[3];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
                     scopeIndex[2] = k;
-                    postKnapsackConstraint(scopeIndex,arity,file, false, false);
+                    postKnapsackConstraint(scopeIndex, arity, file, false, false);
                 } else { // monolithic global cost functions
                     postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                 }
@@ -2642,17 +2643,17 @@ void WCSP::read_legacy(const char* fileName)
                     file >> funcparam5;
                     file >> funcparam6;
                     postSpecialDisjunction(i, j, funcparam1, funcparam2, funcparam3, funcparam4, MULT(funcparam5, K), MULT(funcparam6, K));
-                } else if(funcname=="knapsackp"){
+                } else if (funcname == "knapsackp") {
                     int scopeIndex[2];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
-                    postKnapsackConstraint(scopeIndex,arity,file, false, true);
-                } else if(funcname=="knapsack"){
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true);
+                } else if (funcname == "knapsack") {
                     int scopeIndex[2];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
-                    postKnapsackConstraint(scopeIndex,arity,file, false, false);
-                } else{
+                    postKnapsackConstraint(scopeIndex, arity, file, false, false);
+                } else {
                     int scopeIndex[2];
                     scopeIndex[0] = i;
                     scopeIndex[1] = j;
@@ -2681,14 +2682,14 @@ void WCSP::read_legacy(const char* fileName)
                     if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
                         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file);
                         decomposableGCF->addToCostFunctionNetwork(this);
-                    } else if(gcname=="knapsackp"){
+                    } else if (gcname == "knapsackp") {
                         int scopeIndex[1];
                         scopeIndex[0] = i;
-                        postKnapsackConstraint(scopeIndex,arity,file,false,true);
-                    } else if(gcname=="knapsack"){
+                        postKnapsackConstraint(scopeIndex, arity, file, false, true);
+                    } else if (gcname == "knapsack") {
                         int scopeIndex[1];
                         scopeIndex[0] = i;
-                        postKnapsackConstraint(scopeIndex,arity,file,false,false);
+                        postKnapsackConstraint(scopeIndex, arity, file, false, false);
                     } else { // monolithic global cost functions
                         postGlobalConstraint(scopeIndex, arity, gcname, file, &nbconstr);
                     }
@@ -3746,26 +3747,26 @@ void WCSP::read_qpbo(const char* fileName)
     }
 }
 
-bool isInteger(string &s) {return string("0123456789+-").find(s[0]) != string::npos;}
+bool isInteger(string& s) { return string("0123456789+-").find(s[0]) != string::npos; }
 /// \param file: input file
 /// \param token: in: previous token, out: new token (read from file or from the end of the previous token)
 /// \param keep: in: relative position to start reading from the previous token (if positive and greater or equal to previous token size then reads from file else if negative subtracts from the end), out: size of the new token
 /// \warning if new token is + or - then replace to +1 or -1
 /// \warning if new token is +varname or -varname then split into +1 varname or -1 varname
-void readToken(istream &file, string &token, int *keep = NULL)
+void readToken(istream& file, string& token, int* keep = NULL)
 {
-    if (keep==NULL || *keep >= (int)token.size()) {
+    if (keep == NULL || *keep >= (int)token.size()) {
         file >> token;
-    } else if (*keep>=0) {
+    } else if (*keep >= 0) {
         token = token.substr(*keep);
-    }  else {
+    } else {
         assert(-(*keep) <= (int)token.size());
-        token = token.substr(token.size()+(*keep));
+        token = token.substr(token.size() + (*keep));
     }
     bool twotokens = false;
-    if (token=="+" || token=="-") {
+    if (token == "+" || token == "-") {
         token = token + "1";
-    } else if (token.size()>=2 && (token[0]=='+' || token[0]=='-') && string("0123456789").find(token[1]) == string::npos) {
+    } else if (token.size() >= 2 && (token[0] == '+' || token[0] == '-') && string("0123456789").find(token[1]) == string::npos) {
         twotokens = true;
         token = to_string(token[0]) + "1" + token.substr(1);
     }
@@ -3824,7 +3825,7 @@ void WCSP::read_opb(const char* fileName)
     int nblinear = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
 
-    map<string,int> varnames;
+    map<string, int> varnames;
     string dummy, token;
     streampos prev;
 
@@ -3835,7 +3836,7 @@ void WCSP::read_opb(const char* fileName)
         if (dummy.find("#variable=") != string::npos) {
             int n = atoi(dummy.substr(dummy.find("#variable=") + 10).c_str());
             if (n > 0) {
-                for (int i=1; i<=n; i++) {
+                for (int i = 1; i <= n; i++) {
                     string varname = "x";
                     varname += to_string(i);
                     int var = makeEnumeratedVariable(varname, 0, 1);
@@ -3854,9 +3855,9 @@ void WCSP::read_opb(const char* fileName)
     int opsize = 4;
     Double multiplier = Exp10((Double)ToulBar2::resolution);
     ToulBar2::costMultiplier = multiplier;
-    if (token.substr(0,4) == "max:") {
+    if (token.substr(0, 4) == "max:") {
         ToulBar2::costMultiplier *= -1.0;
-    } else if (token.substr(0,4) != "min:") {
+    } else if (token.substr(0, 4) != "min:") {
         opt = false;
         opsize = 0;
         updateUb(UNIT_COST * multiplier);
@@ -3866,18 +3867,18 @@ void WCSP::read_opb(const char* fileName)
         do {
             Cost cost; // cost can be negative or decimal
             readToken(file, token, &opsize); // read cost or varname
-            if (!file) break;
+            if (!file)
+                break;
             if (isInteger(token)) {
-                cost = string2Cost((const char *)token.c_str());
-                if (opsize!=(int)token.size() || token.back() != ';') {
+                cost = string2Cost((const char*)token.c_str());
+                if (opsize != (int)token.size() || token.back() != ';') {
                     readToken(file, token, &opsize); // read varname
                     assert(!isInteger(token));
                 }
             } else {
                 cost = UNIT_COST;
             }
-            if ((cost >= MIN_COST && multiplier * cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) ||
-                (cost < MIN_COST && multiplier * -cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST)) {
+            if ((cost >= MIN_COST && multiplier * cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) || (cost < MIN_COST && multiplier * -cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST)) {
                 cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
                 exit(EXIT_FAILURE);
             }
@@ -3885,7 +3886,7 @@ void WCSP::read_opb(const char* fileName)
             if (token != ";") {
                 vector<int> scopeIndex;
                 while (!isInteger(token)) {
-                    string varname = token.substr(0,token.size()-((token.back()==';')?1:0));
+                    string varname = token.substr(0, token.size() - ((token.back() == ';') ? 1 : 0));
                     if (varname.rfind("~", 0) == 0) {
                         cerr << "Sorry, negative literals in opb format not implemented in this version!" << endl;
                         exit(EXIT_FAILURE);
@@ -3903,7 +3904,8 @@ void WCSP::read_opb(const char* fileName)
                     if (find(scopeIndex.begin(), scopeIndex.end(), var) == scopeIndex.end()) {
                         scopeIndex.push_back(var);
                     }
-                    if (token.back() == ';') break;
+                    if (token.back() == ';')
+                        break;
                     readToken(file, token, &opsize);
                     if (isInteger(token) || token == ";") {
                         opsize = 0;
@@ -3922,7 +3924,7 @@ void WCSP::read_opb(const char* fileName)
                     }
                     postNaryConstraintEnd(ctr);
                 } else if (scopeIndex.size() == 3) {
-                    vector<Cost> costs(2*2*2, max(MIN_COST, -cost));
+                    vector<Cost> costs(2 * 2 * 2, max(MIN_COST, -cost));
                     if (cost < MIN_COST) {
                         costs[7] = MIN_COST;
                         negCost -= cost;
@@ -3931,7 +3933,7 @@ void WCSP::read_opb(const char* fileName)
                     }
                     postTernaryConstraint(scopeIndex[0], scopeIndex[1], scopeIndex[2], costs);
                 } else if (scopeIndex.size() == 2) {
-                    vector<Cost> costs(2*2, max(MIN_COST, -cost));
+                    vector<Cost> costs(2 * 2, max(MIN_COST, -cost));
                     if (cost < MIN_COST) {
                         costs[3] = MIN_COST;
                         negCost -= cost;
@@ -3976,14 +3978,15 @@ void WCSP::read_opb(const char* fileName)
                 getline(file, dummy);
                 readToken(file, token, &opsize);
             }
-            if (!file || token == ";") break;
-            if (token.substr(0,2) == "<=" || token.substr(0,1) == "=" || token.substr(0,2) == ">=") {
+            if (!file || token == ";")
+                break;
+            if (token.substr(0, 2) == "<=" || token.substr(0, 1) == "=" || token.substr(0, 2) == ">=") {
                 if (first) {
                     cerr << "Wrong constraint definition with empty left-hand side! " << token << endl;
                     exit(EXIT_FAILURE);
                 }
-                opsize = (token[0] == '=')?1:2;
-                string op = token.substr(0,opsize);
+                opsize = (token[0] == '=') ? 1 : 2;
+                string op = token.substr(0, opsize);
                 readToken(file, token, &opsize); // read right coef
                 assert(isInteger(token));
                 coef = string2Cost((char*)token.c_str());
@@ -3991,14 +3994,14 @@ void WCSP::read_opb(const char* fileName)
                 nblinear++;
                 if (op == ">=" || op == "=") {
                     params = to_string(coef);
-                    for (unsigned int i=0; i<scopeIndex.size(); i++) {
+                    for (unsigned int i = 0; i < scopeIndex.size(); i++) {
                         params += " " + to_string(coefs[i]);
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
                 if (op == "<=" || op == "=") {
                     params = to_string(-coef);
-                    for (unsigned int i=0; i<scopeIndex.size(); i++) {
+                    for (unsigned int i = 0; i < scopeIndex.size(); i++) {
                         params += " " + to_string(-coefs[i]);
                     }
                     postKnapsackConstraint(scopeIndex, params);
@@ -4018,7 +4021,7 @@ void WCSP::read_opb(const char* fileName)
                 assert(token.back() != ';');
                 assert(!isInteger(token));
                 if (token.back() == '=') {
-                    opsize = (token[token.size()-2] == '<' || token[token.size()-2] == '>')?-2:-1;
+                    opsize = (token[token.size() - 2] == '<' || token[token.size() - 2] == '>') ? -2 : -1;
                 }
                 string varname = token.substr(0, token.size() + opsize);
                 if (varname.rfind("~", 0) == 0) {
