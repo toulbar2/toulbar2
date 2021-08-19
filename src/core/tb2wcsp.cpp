@@ -1288,7 +1288,7 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
         } else {
             hId = divHVarsIdMap[xId]; //index of variable h
             h = (EnumeratedVariable*)getVar(hId);
-            assign(hId, h->getInf());  // h variable is unused and cannot be determined before sorting divVariables
+            assign(hId, h->getInf()); // h variable is unused and cannot be determined before sorting divVariables
         }
         hp = h;
         hpId = hId;
@@ -1784,10 +1784,10 @@ void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, ve
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
     assert(scopeIndex.size() == values.size());
-    if (method==3) {
+    if (method == 3) {
         string parameters;
-        parameters.append(to_string(-((int)scopeIndex.size()-(int)distance)));
-        for (unsigned int i=0; i<scopeIndex.size(); i++) {
+        parameters.append(to_string(-((int)scopeIndex.size() - (int)distance)));
+        for (unsigned int i = 0; i < scopeIndex.size(); i++) {
             parameters.append(" 1 ");
             parameters.append(to_string(values[i]));
             parameters.append(" -1");
@@ -1799,7 +1799,7 @@ void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, ve
     decomposableGCF->setSemantics("hard");
     decomposableGCF->setBaseCost(getUb());
     decomposableGCF->setDistance(distance);
-    for (Value v: values) {
+    for (Value v : values) {
         decomposableGCF->addValue(v);
     }
     decomposableGCF->setMethod(method);
@@ -1904,7 +1904,7 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
 #ifdef CLIQUE2KNAPSACK
-    return postKnapsackConstraint(scopeIndex,arity,file,true,true);
+    return postKnapsackConstraint(scopeIndex, arity, file, true, true);
 #else
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
@@ -1944,21 +1944,21 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     Long readw;
     int readv1;
     Long capacity;
-    Long MaxWeight=0;
+    Long MaxWeight = 0;
     int skip;
     unsigned int size;
     int readnbval;
     Long minweight;
-    vector<int> TempVarVal,TempNotVarVal;
-    vector<vector<int>> VarVal,NotVarVal;
+    vector<int> TempVarVal, TempNotVarVal;
+    vector<vector<int>> VarVal, NotVarVal;
     vector<tValue> clausetuple(arity, 0);
-    bool isclause=0;
+    bool isclause = 0;
     vector<EnumeratedVariable*> scopeVars(arity);
-    int ar=arity;
+    int ar = arity;
     if (!isclique) {
         file >> capacity;
     } else {
-        capacity=-1;
+        capacity = -1;
         file >> skip;
     }
     for (int i = 0; i < ar; i++)
@@ -1985,7 +1985,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             minweight = 0;
             for (int j = 0; j < readnbval; ++j) {
                 file >> readv1;
-                if(scopeVars[i]->canbe(readv1)){
+                if (scopeVars[i]->canbe(readv1)) {
                     if (!isclique) {
                         file >> readw;
                         if (readw != 0) {
@@ -1995,19 +1995,20 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                             TempWeights.push_back(readw);
                         }
                     } else {
-                        minweight=-1;
+                        minweight = -1;
                         TempVarVal.push_back(readv1);
                         TempWeights.push_back(-1);
                     }
                 } else {
-                    if (!isclique) file>>skip;
+                    if (!isclique)
+                        file >> skip;
                 }
             }
         }
         size = scopeVars[i]->getDomainSize();
         if (size != TempVarVal.size()) {
             TempWeights.push_back(0);
-            Value *VV = new Value[size];
+            Value* VV = new Value[size];
             scopeVars[i]->getDomain(VV);
             for (unsigned int j = 0; j < size; j++) {
                 if (find(TempVarVal.begin(), TempVarVal.end(), VV[j]) == TempVarVal.end())
@@ -2026,7 +2027,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         }
         if (TempWeights.size() > 1) {
             MaxWeight += *max_element(TempWeights.begin(), TempWeights.end());
-            assert(*max_element(TempWeights.begin(), TempWeights.end())>0);
+            assert(*max_element(TempWeights.begin(), TempWeights.end()) > 0);
             weights.push_back(TempWeights);
             VarVal.push_back(TempVarVal);
             NotVarVal.push_back(TempNotVarVal);
@@ -2034,12 +2035,12 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             tobedel.push_back(i);
         }
     }
-    sort(tobedel.begin(),tobedel.end(),greater<int>());
+    sort(tobedel.begin(), tobedel.end(), greater<int>());
     for (unsigned int i = 0; i < tobedel.size(); ++i) {
         scopeVars.erase(scopeVars.begin() + tobedel[i]);
         arity--;
     }
-    if(capacity>0) {
+    if (capacity > 0) {
         for (unsigned int i = 0; i < weights.size(); ++i) {
             for (unsigned int j = 0; j < weights[i].size(); ++j) {
                 if (weights[i][j] > capacity) {
@@ -2053,9 +2054,10 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     AbstractNaryConstraint* cc = NULL;
     if (isclause) {
         assert(arity == (int)clausetuple.size());
-        if (ToulBar2::verbose >= 3) cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
+        if (ToulBar2::verbose >= 3)
+            cout << "Knapsack constraint of arity " << arity << " transformed into clause!" << endl;
         cc = new WeightedClause(this, scopeVars.data(), arity, getUb(), clausetuple);
-    } else{
+    } else {
         cc = new KnapsackConstraint(this, scopeVars.data(), arity, capacity, weights, MaxWeight, VarVal, NotVarVal);
     }
     if (isDelayedNaryCtr)
@@ -2564,7 +2566,7 @@ void WCSP::sortConstraints()
     if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
         shuffle(delayedNaryCtr.begin(), delayedNaryCtr.end(), myrandom_generator);
     } else {
-        stable_sort(delayedNaryCtr.begin(), delayedNaryCtr.end(), [&](int idx1, int idx2){ return Constraint::cmpConstraint(getCtr(idx1), getCtr(idx2)); });
+        stable_sort(delayedNaryCtr.begin(), delayedNaryCtr.end(), [&](int idx1, int idx2) { return Constraint::cmpConstraint(getCtr(idx1), getCtr(idx2)); });
     }
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         getCtr(*idctr)->propagate();
@@ -5357,7 +5359,7 @@ vector<int> WCSP::getBergeDecElimOrder()
     for (int j = numberOfVariables() - 1; j >= 0; j--) {
         int i = dacorder[j];
         if (ToulBar2::nbDecisionVars == 0 || i < ToulBar2::nbDecisionVars) {
-            if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG,0) != 0 && getName(i).rfind(DIVERSE_VAR_TAG,0) != 0) {
+            if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0 && getName(i).rfind(DIVERSE_VAR_TAG, 0) != 0) {
                 visit(i, revdac, marked, listofsuccessors);
             }
         }
@@ -5411,8 +5413,8 @@ void WCSP::setDACOrder(vector<int>& order)
         });
 
     // during search, must reorder allVars accordingly before propagate calls setvalue
-    if (solver && ((Solver *)solver)->numberOfUnassignedVariables() >= 0) {
-        ((Solver *)solver)->updateVarHeuristic();
+    if (solver && ((Solver*)solver)->numberOfUnassignedVariables() >= 0) {
+        ((Solver*)solver)->updateVarHeuristic();
     }
 
     for (unsigned int i = 0; i < numberOfConstraints(); i++) {
@@ -5452,7 +5454,7 @@ void WCSP::setDACOrder(vector<int>& order)
 // Functions for dealing with probabilities and decimal point numbers.
 // Warning: ToulBar2::NormFactor has to be initialized
 
-// Converts the decimal Token to a cost and a actual number of significant digit after the decimal
+// Converts the decimal Token to a cost and the actual number of significant digit after the decimal point
 // Should yell if unfeasible with recent GCC/CLang compiler with builtins.
 // The string is assumed to be space trimmed.The conversion uses the upper bound precision
 // and ToulBar2::costMultiplier for scaling but does not shift cost using negCost.
@@ -5475,6 +5477,11 @@ inline pair<Cost, int> WCSP::Decimal2Cost(const string& decimalToken, const unsi
         pos = 1;
     } else if (decimalToken[pos] == '+') {
         pos = 1;
+    } else if ((dot == 2) && decimalToken == "inf") {
+        if (ToulBar2::costMultiplier < 0.0)
+            return pair<Cost, size_t>(-MAX_COST, 0);
+        else
+            return pair<Cost, size_t>(MAX_COST, 0);
     }
 
     while ((pos < decimalToken.length()) && (pos <= ToulBar2::decimalPoint + dot)) {
