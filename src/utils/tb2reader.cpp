@@ -334,7 +334,7 @@ public:
 
     void readIntervalUnaryTable(int varIdx, vector<Value>& authorized);
     std::vector<Cost> readFunctionCostTable(vector<int> scope, bool all, Cost defaultCost, Cost& minCost);
-    void enforceUB(Cost ub);
+    void enforceUB();
 
     std::map<std::string, int> varNameToIdx;
     std::vector<std::map<std::string, int>> varValNameToIdx;
@@ -351,6 +351,7 @@ private:
     boost::tokenizer<boost::char_separator<char>>* tok;
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
+    Cost upperBound;
 };
 
 CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
@@ -361,7 +362,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     this->JSONMode = false;
     this->tok = nullptr;
     this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
-    Cost upperBound = readHeader();
+    this->upperBound = readHeader();
     if (ToulBar2::costThresholdS.size())
         ToulBar2::costThreshold = wcsp->decimalToCost(ToulBar2::costThresholdS, 0);
     if (ToulBar2::costThresholdPreS.size())
@@ -372,7 +373,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     tie(ncf, maxarity) = readCostFunctions();
 
     // all negCosts are collected. We should be fine enforcing the UB
-    enforceUB(upperBound);
+    enforceUB();
     if (ToulBar2::vnsOptimumS.size())
         ToulBar2::vnsOptimum = wcsp->decimalToCost(ToulBar2::vnsOptimumS, 0) + wcsp->getNegativeLb();
 
@@ -616,7 +617,13 @@ Cost CFNStreamReader::readHeader()
         cout << "Read bound: " << pbBound << " with precision " << ToulBar2::decimalPoint << endl;
     skipCBrace();
 
-    return pbBound;
+    long double fbound = pbBound * ToulBar2::costMultiplier;
+
+    if (fbound > MAX_COST) {
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " )" << endl;
+        exit(EXIT_FAILURE);
+    }
+    return fbound;
 }
 
 // Reads the variables and domains and creates them.
@@ -780,7 +787,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     string token;
     minCost = MAX_COST;
 
-    if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
     // Create a vector filled with defaultCost values
@@ -803,7 +810,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
             // if we have read a full tuple and cost
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
-                if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
                 // the same tuple has already been defined.
                 if (costVector[tableIdx] != defaultCost) {
@@ -873,38 +880,31 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     return costVector;
 }
 
-// bound is the raw bound from the header (unshifted, unscaled)
-void CFNStreamReader::enforceUB(Cost bound)
+// this->upperBound is the raw bound from the header (unshifted, rescaled)
+void CFNStreamReader::enforceUB()
 {
-
-    Cost shifted = bound + (wcsp->negCost / ToulBar2::costMultiplier);
-    if (ToulBar2::costMultiplier < 0.0)
-        shifted = -shifted; // shifted unscaled upper bound
-
-    if (shifted <= (MAX_COST - wcsp->negCost) / fabs(ToulBar2::costMultiplier))
-        bound = (bound * ToulBar2::costMultiplier) + wcsp->negCost;
-    else {
-        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << bound << " " << wcsp->negCost << " )" << endl;
+    if (Add(this->upperBound, wcsp->negCost, &this->upperBound)) {
+        cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " " << wcsp->negCost << " )" << endl;
         exit(EXIT_FAILURE);
     }
 
     // if the shifted/scaled bound is less than zero, we equivalently set it to zero
-    if (shifted < MIN_COST)
-        bound = MIN_COST;
+    if (this->upperBound < MIN_COST)
+        this->upperBound = MIN_COST;
     if (ToulBar2::externalUB.length() != 0) {
-        bound = min(bound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
+        this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
     }
     if (ToulBar2::deltaUbS.length() != 0) {
         ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(bound, wcsp->getUb())));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(this->upperBound, wcsp->getUb())));
         if (ToulBar2::deltaUb > MIN_COST) {
             // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-            bound += ToulBar2::deltaUb;
+            this->upperBound += ToulBar2::deltaUb;
         }
     }
     if (ToulBar2::bestconf)
-        ToulBar2::enumUB = bound;
-    wcsp->updateUb(bound);
+        ToulBar2::enumUB = this->upperBound;
+    wcsp->updateUb(this->upperBound);
 }
 
 // Returns the index of the value name for the given variable
@@ -1248,7 +1248,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         card *= wcsp->getDomainInitSize(i);
     }
 
-    if (CUT(defaultCost, wcsp->getUb()) && (defaultCost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
         defaultCost *= MEDIUM_COST;
 
     unsigned int arity = scope.size();
@@ -1268,7 +1268,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             // We have read a full tuple: finish the tuple
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
-                if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
                     cost *= MEDIUM_COST;
 
                 if (not costFunction.insert(pair<Tuple, Cost>(tup, cost)).second) {
