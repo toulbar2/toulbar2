@@ -64,6 +64,10 @@ AminoMRF::AminoMRF(const char* filename)
             ss >> LP;
             unaries[nv].push_back(-LP);
         }
+        if (ss.bad()) {
+            cerr << "Improper eMRF file - could not read term for residue " << nv+1;
+            exit(EXIT_FAILURE);
+        }
         if (debug)
             std::cout << "Read var " << nv << endl;
         nv++;
@@ -87,6 +91,10 @@ AminoMRF::AminoMRF(const char* filename)
         ss >> n;
         ss >> m;
 
+        if (ss.bad()) {
+            cerr << "Improper eMRF file - could not read residue numbers\n";
+            exit(EXIT_FAILURE);
+        }
         if (debug)
             cout << n << ", " << m << " ";
         // we just ignore the gap
@@ -106,6 +114,10 @@ AminoMRF::AminoMRF(const char* filename)
             }
         }
 
+        if (file.bad()) {
+            cerr << "Improper eMRF file - could not read pairwise interaction terms for " << n << " " << m << endl;;
+            exit(EXIT_FAILURE);
+        }
         // renormalize globally
         maxscore -= minscore;
         for (int i = 0; i < NumNatAA; i++) {
@@ -117,7 +129,7 @@ AminoMRF::AminoMRF(const char* filename)
         if (maxscore > 1e-1)
             nPot++;
         if (debug)
-            cout << "Maxscore " << maxscore << endl;
+            cout << "Pot " << nPot << "Maxscore " << maxscore << endl;
     } while (!file.eof());
     cout << "Loaded evolutionary MRF with " << nVar << " residues and " << nPot << " coupled pairs (dev > 1e-1)\n";
 }
