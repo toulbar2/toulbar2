@@ -48,7 +48,7 @@ public:
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
     string getMutationDomain(size_t varIdx) { return mutationDomains[varIdx]; }
     bool isAAVariable(const Variable* var) { return (std::count(NotAnAA.begin(), NotAnAA.end(), var->getName()[0]) == 0); }
-    bool isSeqVariable(const Variable* var) { return (std::count(seqVarPrefixes.begin(), seqVarPrefixes.end(), var->getName()[0]) != 0); }
+    bool isSeqVariable(const Variable* var) { return ((std::count(seqVarPrefixes.begin(), seqVarPrefixes.end(), var->getName()[0]) != 0) && isdigit(var->getName()[1])); }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
     Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value]; }
     Value getRight(int varIndex, Value value) { return RightAA[varIndex][value]; }
