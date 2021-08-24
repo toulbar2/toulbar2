@@ -60,8 +60,12 @@ void BinaryConstraint::print(ostream& os)
     os << this << " BinaryConstraint(" << x->getName() << "," << y->getName() << ")";
     if (ToulBar2::weightedDegree)
         os << "/" << getConflictWeight();
-    if (wcsp->getTreeDec())
+    if (wcsp->getTreeDec()) {
         os << "   cluster: " << getCluster();
+        if (ToulBar2::heuristicFreedom && getCluster() != -1) {
+            cout << "  freedom: " << wcsp->getTreeDec()->getCluster(getCluster())->getFreedom() << " isinTD: " << wcsp->getTreeDec()->getCluster(getCluster())->getIsCurrInTD();
+        }
+    }
     if (ToulBar2::verbose >= 8) {
         os << "supportX:[";
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {

@@ -1,6 +1,6 @@
 /** \file tb2binconstr.hpp
  *  \brief Binary constraint applied on variables with enumerated domains.
- *
+ *  \warning EAC is not applied on duplicated binary constraints
  */
 
 #ifndef TB2BINCONSTR_HPP_

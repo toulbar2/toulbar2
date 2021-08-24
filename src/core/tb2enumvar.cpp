@@ -942,8 +942,9 @@ bool EnumeratedVariable::elimVar(BinaryConstraint* ctr)
     EnumeratedVariable* x = (EnumeratedVariable*)ctr->getVarDiffFrom(this);
 
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (td && cluster != ctr->getCluster())
+    if (td && !td->isSameCluster(cluster, ctr->getCluster())) {
         return false;
+    }
 
     if (ToulBar2::verbose >= 2)
         cout << "   elim linked to one binary " << ctr << endl;
@@ -1018,8 +1019,10 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
     if (td) {
         if (y->isSep() && z->isSep())
             return false;
-        if ((cluster != xylink.constr->getCluster()) || (cluster != xzlink.constr->getCluster()) || (xylink.constr->getCluster() != xzlink.constr->getCluster()))
+        if (!td->isSameCluster(cluster, xylink.constr->getCluster()) || !td->isSameCluster(cluster, xzlink.constr->getCluster())) {
+            assert(!td->isSameCluster(xylink.constr->getCluster(), xzlink.constr->getCluster()));
             return false;
+        }
     }
 
     assert(getDegree() == 2);
@@ -1028,7 +1031,7 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
 
     BinaryConstraint* yz = y->getConstr(z);
 
-    if (td && yz && (getCluster() != yz->getCluster())) {
+    if (td && yz && !td->isSameCluster(getCluster(), yz->getCluster())) {
         BinaryConstraint* yz_ = y->getConstr(z, getCluster());
         if (yz_) {
             yz = yz_;
@@ -1069,9 +1072,10 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
     }
 
     if (yz) {
-        if (td && yz->getCluster() != cluster) {
+        if (td && !td->isSameCluster(yz->getCluster(), cluster)) {
             yz = yznew;
             yz->reconnect();
+            yz->setCluster(getCluster());
             yz->setDuplicate();
         } else {
             yz->addCosts(yznew);
@@ -1080,11 +1084,12 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
         }
     } else {
         yz = yznew;
+        yz->setCluster(getCluster());
         yz->reconnect();
     }
 
-    if (td)
-        yz->setCluster(getCluster());
+    assert(!td || td->isSameCluster(yz->getCluster(), cluster));
+
     // to be done before propagation
     WCSP::elimInfo ei = { this, y, z, (BinaryConstraint*)xylink.constr, (BinaryConstraint*)xzlink.constr, NULL, NULL };
     wcsp->elimInfos[wcsp->getElimOrder()] = ei;
@@ -1125,12 +1130,11 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
     if (n3links > 1)
         return false;
 
-    if (wcsp->getTreeDec()) {
-        if (cluster != xyz->getCluster() ||
-            (n2links > 0 && cluster != links[0].constr->getCluster()) ||
-            (n2links > 1 && cluster != links[1].constr->getCluster())) {
-            return false;
-        }
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if (td && (!td->isSameCluster(cluster, xyz->getCluster()) ||
+               (n2links > 0 && !td->isSameCluster(cluster, links[0].constr->getCluster())) ||
+               (n2links > 1 && !td->isSameCluster(cluster, links[1].constr->getCluster())))) {
+        return false;
     }
 
     for (int i = 0; i < n2links; i++) {
@@ -1205,6 +1209,8 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
     if (y->unassigned() && z->unassigned())
         yz->reconnect();
 
+    assert(!td || td->isSameCluster(yz->getCluster(), cluster));
+
     // to be done before propagation
     WCSP::elimInfo ei = { this, y, z, (BinaryConstraint*)links[(flag_rev) ? 1 : 0].constr, (BinaryConstraint*)links[(flag_rev) ? 0 : 1].constr, xyz, NULL };
     wcsp->elimInfos[wcsp->getElimOrder()] = ei;
@@ -1273,12 +1279,12 @@ void EnumeratedVariable::eliminate()
                 ConstraintLink xylink = *constrs.begin();
                 ConstraintLink xzlink = { NULL, 0 };
 
-                if (xylink.constr->arity() > 2 || !(xylink.constr->extension()))
+                if (!xylink.constr->isBinary())
                     return;
 
                 if (getDegree() == 2) {
                     xzlink = *constrs.rbegin();
-                    if (xzlink.constr->arity() > 2 || !(xzlink.constr->extension()))
+                    if (!xzlink.constr->isBinary())
                         return;
 
 #ifndef NO_STORE_BINARY_COSTS
@@ -1673,7 +1679,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
 bool EnumeratedVariable::verify()
 {
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (!td)
+    if (!td || (ToulBar2::heuristicFreedom && Store::getDepth > 0))
         return true;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr1 = (*iter).constr;

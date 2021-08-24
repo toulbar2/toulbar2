@@ -137,8 +137,8 @@ public:
 
     /**********************************************************************/
     //   added for tree decomposition stuff
-    StoreInt cluster;
-    void setCluster(int c) { cluster = c; }
+    int cluster;
+    void setCluster(int c) { assert(cluster==-1 || Store::getDepth()==0); cluster = c; }
     int getCluster() { return cluster; }
 
     BinaryConstraint* getConstr(Variable* x, int cid);

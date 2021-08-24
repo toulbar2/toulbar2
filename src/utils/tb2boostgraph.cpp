@@ -599,7 +599,7 @@ void WCSP::minimumFillInOrdering(vector<int>& order_inv)
     if (ToulBar2::verbose >= 1) {
         cout << "Min-fill ordering:";
         for (int j = 0; j < n; ++j) {
-            cout << " " << order_inv[j];
+            cout << " " << getName(order_inv[j]);
         }
         cout << endl;
     }

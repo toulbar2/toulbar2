@@ -28,7 +28,6 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     maxCost(MIN_COST)
     , maxCostValue(iinf)
     , NCBucket(-1)
-    , cluster(-1)
 {
     if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
@@ -44,6 +43,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     linkIncDecQueue.content.incdec = NOTHING_EVENT;
     linkEliminateQueue.content.var = this;
     linkEliminateQueue.content.timeStamp = -1;
+    cluster = -1;
     isSep_ = false;
 }
 

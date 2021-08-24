@@ -807,8 +807,12 @@ void Solver::increase(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->increase(varIndex, value);
@@ -831,8 +835,12 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->decrease(varIndex, value);
@@ -880,8 +888,12 @@ void Solver::assign(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
     }
     wcsp->assign(varIndex, value);
@@ -904,8 +916,12 @@ void Solver::remove(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
     }
     wcsp->remove(varIndex, value);
@@ -928,8 +944,12 @@ void Solver::remove(int varIndex, ValueCost* array, int first, int last, bool re
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " !=";
         for (int i = first; i <= last; i++)
             cout << " " << array[i].value;
@@ -1605,8 +1625,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         if (ToulBar2::verbose >= 1 && cluster)
             cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
         while (clb < cub && !open_->finished() &&
-                (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit)) &&
-                !(cluster && cluster->getFreedom() && cluster->getInterrupt())) {
+                (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
             if (cluster) {
                 cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);

@@ -25,6 +25,18 @@ bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
 }
 
 /*
+ * Comparison between variables (used for tie breaking)
+ *
+ */
+
+WCSP *CmpVarStruct::wcsp = NULL;
+
+bool CmpVarStruct::operator()(const int lhs, const int rhs) const
+{
+    return CmpVarStruct::wcsp->getDACOrder(lhs) < CmpVarStruct::wcsp->getDACOrder(rhs);
+}
+
+/*
  * Separator class derived from NaryConstraint
  *
  */
@@ -330,12 +342,7 @@ void Separator::freeIncS()
         ++it;
         i++;
     }
-
     freesLimit[t] += 1;
-
-    if (ToulBar2::heuristicFreedom == 3 && freesLimit[t] >= ToulBar2::heuristicFreedomLimit) {
-        cluster->setInterrupt(true);
-    }
 }
 
 Cost Separator::getCurrentDelta()
@@ -643,6 +650,10 @@ Cluster::Cluster(TreeDecomposition* tdin)
     , lbRDS(MIN_COST)
     , active(true)
     , countElimVars(1)
+    , num_part(-1)
+    , freedom_on(false)
+    , isCurrentlyInTD(true)
+    , depth(-1)
     , cp(NULL)
     , open(NULL)
     , hbfsGlobalLimit(LONGLONG_MAX)
@@ -650,12 +661,6 @@ Cluster::Cluster(TreeDecomposition* tdin)
     , nbBacktracks(0)
 {
     instance = clusterCounter++;
-    freedom_on = false;
-    freedom_init = false;
-    isCurrentlyInTD = true;
-    depth = -1;
-    freedom_limit = 0;
-    interrupt = false;
 }
 
 Cluster::~Cluster()
@@ -844,11 +849,11 @@ void Cluster::setWCSP2Cluster()
 
 void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 {
-    for (TClusters::reverse_iterator iter = edges.rbegin(); iter != edges.rend(); ++iter) {
+    for (TClustersSorted::reverse_iterator iter = sortedEdges.rbegin(); iter != sortedEdges.rend(); ++iter) {
         Cluster* cluster = *iter;
         cluster->getElimVarOrder(elimVarOrder);
     }
-    for (TVars::reverse_iterator itp = vars.rbegin(); itp != vars.rend(); ++itp) {
+    for (TVarsSorted::reverse_iterator itp = sortedVars.rbegin(); itp != sortedVars.rend(); ++itp) {
         if (!isSepVar(*itp)) {
             elimVarOrder.push_back(*itp);
         }
@@ -955,9 +960,34 @@ void Cluster::setup()
 
 void Cluster::accelerateDescendants()
 {
-    quickdescendants.clear();
-    for (int j = 0; j < td->getNbOfClusters(); j++) {
-        quickdescendants.push_back(descendants.find(td->getCluster(j)) != descendants.end());
+    quickdescendants = vector<bool>(td->getNbOfClusters(), false);
+    for (auto itc = beginDescendants(); itc != endDescendants(); ++itc) {
+        Cluster *c = *itc;
+        quickdescendants[c->getId()] = true;
+    }
+}
+
+void Cluster::accelerateIntersections()
+{
+    quickIntersections.clear();
+    for (TClusters::iterator itc = beginEdges(); itc != endEdges(); ++itc) {
+        Cluster *cj = *itc;
+        TVars cjsep;
+        td->intersection(getVars(), cj->getVars(), cjsep);
+        quickIntersections[cj] = cjsep;
+    }
+}
+
+void Cluster::quickIntersection(Cluster *cj, TVars& cjsep)
+{
+    map<Cluster *, TVars>::iterator itcj = quickIntersections.find(cj);
+    if (itcj != quickIntersections.end()) {
+        cjsep = itcj->second;
+    } else {
+        TVars cjsep2;
+        td->intersection(getVars(), cj->getVars(), cjsep2);
+        quickIntersections[cj] = cjsep2; // warning! copy constructor
+        cjsep = quickIntersections[cj]; // warning! copy by reference only
     }
 }
 
@@ -1343,7 +1373,7 @@ void TreeDecomposition::reduceHeight(Cluster* c, vector<Cluster*> path)
         ++itj; // warning! done before removing the corresponding edge (c -> cj) so that the iterator remains valid
         if (cj != cparent) { // warning! the current tree decomposition is undirected
             TVars cjsep;
-            intersection(c->getVars(), cj->getVars(), cjsep);
+            intersection(c, cj, cjsep);
             if (cparent && included(cjsep, cparent->getVars())) {
                 // reconnect the child cluster closest to the root of the tree decomposition following path information
                 int pos = path.size() - 1;
@@ -1410,7 +1440,7 @@ void TreeDecomposition::splitClusterRec(Cluster* c, Cluster* father, unsigned in
     //  cout << c->getId() << " " << cvars.size() << endl;
     TVars csep;
     if (father) {
-        intersection(father->getVars(), c->getVars(), csep);
+        intersection(father, c, csep);
     }
     TVars cproper;
     difference(cvars, csep, cproper);
@@ -1494,7 +1524,7 @@ TVars TreeDecomposition::boostingVarElimRec(Cluster* c, Cluster* father, Cluster
     if (father && c->getEdges().size() == 1) {
         TVars fathersep;
         if (grandfather) {
-            intersection(father->getVars(), grandfather->getVars(), fathersep);
+            intersection(father, grandfather, fathersep);
         }
         TVars cvars;
         sum(fathersep, addedVarBySons);
@@ -1502,7 +1532,7 @@ TVars TreeDecomposition::boostingVarElimRec(Cluster* c, Cluster* father, Cluster
         if (cvars.size() <= maxsize) {
             //	  	  cout << c->getId() << " which has " << cvars.size() << " vars (except whose from " << ((grandfather)?grandfather->getId():-1) << ") is merged into " << father->getId() << endl;
             TVars csep;
-            intersection(c->getVars(), father->getVars(), csep);
+            intersection(c, father, csep);
             TVars cproper;
             difference(c->getVars(), csep, cproper);
             father->addVars(cproper);
@@ -1530,7 +1560,7 @@ void TreeDecomposition::mergeClusterRec(Cluster* c, Cluster* father, unsigned in
     }
     if (father) {
         TVars csep;
-        intersection(c->getVars(), father->getVars(), csep);
+        intersection(c, father, csep);
         assert(csep.size() > 0);
         if ((csep.size() > maxsepsize) || (c->getVars().size() - csep.size() < minpropervar)) {
             father->addVars(c->getVars());
@@ -1621,7 +1651,7 @@ int TreeDecomposition::height(Cluster* r, Cluster* father)
         ++it;
     }
     TVars rsep;
-    intersection(r->getVars(), father->getVars(), rsep);
+    intersection(r, father, rsep);
     return maxh + r->getNbVars() - rsep.size();
 }
 
@@ -1664,7 +1694,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited, TClusters&
 
 //        if (ToulBar2::searchMethod == DFBB) {
             TVars cjsep;
-            intersection(c->getVars(), cj->getVars(), cjsep);
+            intersection(c, cj, cjsep);
 
             //------- Add the constraint separator
             int i = 0;
@@ -1708,6 +1738,11 @@ int TreeDecomposition::makeRooted()
     list<Cluster*> temproots;
     if (isalreadyrooted) {
         temproots = roots;
+    }
+
+    for (unsigned int i = 0; i < clusters.size(); i++) {
+        Cluster* c = clusters[i];
+        c->accelerateIntersections();
     }
 
     bool selected = false;
@@ -1798,6 +1833,8 @@ int TreeDecomposition::makeRooted()
     }
     rootRDS = NULL;
     root->sortEdgesRec();
+    root->sortVarsRec();
+    root->sortVarsTreeRec();
 
     int treewidth = 0;
     for (unsigned int i = 0; i < clusters.size(); i++) {
@@ -1812,6 +1849,62 @@ int TreeDecomposition::makeRooted()
     computeDepths(getRoot(), -1);
 
     return height(root);
+}
+
+void TreeDecomposition::setDuplicates()
+{
+    if (!ToulBar2::approximateCountingBTD) {
+        // assign constraints to clusters and check for duplicate ternary constraints
+        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
+            Constraint* ctr = wcsp->getCtr(i);
+            ctr->assignCluster();
+            if (ctr->connected() && !ctr->isSep()) {
+                if (ctr->isTernary()) {
+                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+                    tctr->xy->setCluster(tctr->getCluster());
+                    tctr->xz->setCluster(tctr->getCluster());
+                    tctr->yz->setCluster(tctr->getCluster());
+                }
+            }
+        }
+        for (int i = 0; i < wcsp->elimBinOrder; i++)
+            if (wcsp->elimBinConstrs[i]->connected()) {
+                Constraint* ctr = wcsp->elimBinConstrs[i];
+                ctr->assignCluster();
+            }
+        for (int i = 0; i < wcsp->elimTernOrder; i++)
+            if (wcsp->elimTernConstrs[i]->connected()) {
+                Constraint* ctr = wcsp->elimTernConstrs[i];
+                ctr->assignCluster();
+                if (ctr->connected() && !ctr->isSep()) {
+                    assert(ctr->isTernary());
+                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+                    tctr->xy->setCluster(tctr->getCluster());
+                    tctr->xz->setCluster(tctr->getCluster());
+                    tctr->yz->setCluster(tctr->getCluster());
+                }
+            }
+
+        // check if ternary constraint cluster assignments are valid and do corrections if needed
+        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
+            Constraint* ctr = wcsp->getCtr(i);
+            if (ctr->connected() && !ctr->isSep()) {
+                if (ctr->isTernary()) {
+                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+                    tctr->setDuplicates();
+                }
+            }
+        }
+        for (int i = 0; i < wcsp->elimTernOrder; i++)
+            if (wcsp->elimTernConstrs[i]->connected()) {
+                Constraint* ctr = wcsp->elimTernConstrs[i];
+                if (ctr->connected() && !ctr->isSep()) {
+                    assert(ctr->isTernary());
+                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+                    tctr->setDuplicates();
+                }
+            }
+    }
 }
 
 void TreeDecomposition::buildFromCovering(string filename)
@@ -1903,69 +1996,7 @@ void TreeDecomposition::buildFromCovering(string filename)
 
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
-    if (!ToulBar2::approximateCountingBTD) {
-        // assign constraints to clusters and check for duplicate ternary constraints
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-            Constraint* ctr = wcsp->getCtr(i);
-            ctr->assignCluster();
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->xy->setCluster(tctr->getCluster());
-                    tctr->xz->setCluster(tctr->getCluster());
-                    tctr->yz->setCluster(tctr->getCluster());
-                }
-            }
-        }
-        for (int i = 0; i < wcsp->elimBinOrder; i++)
-            if (wcsp->elimBinConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimBinConstrs[i];
-                ctr->assignCluster();
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->xy->setCluster(tctr->getCluster());
-                        tctr->xz->setCluster(tctr->getCluster());
-                        tctr->yz->setCluster(tctr->getCluster());
-                    }
-                }
-            }
-        for (int i = 0; i < wcsp->elimTernOrder; i++)
-            if (wcsp->elimTernConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimTernConstrs[i];
-                ctr->assignCluster();
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->xy->setCluster(tctr->getCluster());
-                        tctr->xz->setCluster(tctr->getCluster());
-                        tctr->yz->setCluster(tctr->getCluster());
-                    }
-                }
-            }
-
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-            Constraint* ctr = wcsp->getCtr(i);
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->setDuplicates();
-                    assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                }
-            }
-        }
-        for (int i = 0; i < wcsp->elimTernOrder; i++)
-            if (wcsp->elimTernConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimTernConstrs[i];
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->setDuplicates();
-                        assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                    }
-                }
-            }
-    }
+    setDuplicates();
     if (ToulBar2::verbose >= 0)
         cout << "Number of clusters         : " << clusters.size() << endl;
     if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 1)
@@ -2172,69 +2203,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
 //        return;
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
-    if (!ToulBar2::approximateCountingBTD) {
-        // assign constraints to clusters and check for duplicate ternary constraints
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-            Constraint* ctr = wcsp->getCtr(i);
-            ctr->assignCluster();
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->xy->setCluster(tctr->getCluster());
-                    tctr->xz->setCluster(tctr->getCluster());
-                    tctr->yz->setCluster(tctr->getCluster());
-                }
-            }
-        }
-        for (int i = 0; i < wcsp->elimBinOrder; i++)
-            if (wcsp->elimBinConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimBinConstrs[i];
-                ctr->assignCluster();
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->xy->setCluster(tctr->getCluster());
-                        tctr->xz->setCluster(tctr->getCluster());
-                        tctr->yz->setCluster(tctr->getCluster());
-                    }
-                }
-            }
-        for (int i = 0; i < wcsp->elimTernOrder; i++)
-            if (wcsp->elimTernConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimTernConstrs[i];
-                ctr->assignCluster();
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->xy->setCluster(tctr->getCluster());
-                        tctr->xz->setCluster(tctr->getCluster());
-                        tctr->yz->setCluster(tctr->getCluster());
-                    }
-                }
-            }
-
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-            Constraint* ctr = wcsp->getCtr(i);
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->setDuplicates();
-                    assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                }
-            }
-        }
-        for (int i = 0; i < wcsp->elimTernOrder; i++)
-            if (wcsp->elimTernConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimTernConstrs[i];
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->setDuplicates();
-                        assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                    }
-                }
-            }
-    }
+    setDuplicates();
     if (ToulBar2::verbose >= 0)
         cout << "Number of clusters        : " << clusters.size() << endl;
     if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 1)
@@ -2375,7 +2344,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable* x, Value value, C
 {
     Cluster* cy = getCluster(cyid);
     Cluster* cx = getCluster(x->getCluster());
-    if (!cy->isDescendant(cx)) {
+    if (!cy->isDescendant(cx) && !isSameCluster(cy, cx)) {
         int ckid, posx;
         assert(x->clusters.size() > 0);
         if (cost != MIN_COST && !deltaModified[x->wcspIndex])
@@ -2383,7 +2352,7 @@ void TreeDecomposition::addDelta(int cyid, EnumeratedVariable* x, Value value, C
         x->beginCluster();
         while (x->nextCluster(ckid, posx)) {
             Cluster* ck = getCluster(ckid);
-            if (ck->isDescendant(cy)) {
+            if (ck->isDescendant(cy) || isSameCluster(ck, cy)) {
                 if (ToulBar2::verbose >= 2)
                     cout << "add delta " << cost << " to var " << x->wcspIndex << " (cluster " << cx->getId() << ") value " << value << " from subtree " << ck->getId() << " (cluster " << cyid << ")" << endl;
                 ck->addDelta(posx, value, cost);
@@ -2463,6 +2432,17 @@ void TreeDecomposition::intersection(TVars& v1, TVars& v2, TVars& vout)
     set_intersection(v1.begin(), v1.end(),
         v2.begin(), v2.end(),
         inserter(vout, vout.begin()));
+}
+
+// returns precomputed intersection if available or compute it
+void TreeDecomposition::intersection(Cluster *c, Cluster *cj, TVars& vout)
+{
+    c->quickIntersection(cj, vout);
+#ifndef NDEBUG
+    TVars vcompare;
+    intersection(c->getVars(), cj->getVars(), vcompare);
+    assert(vcompare == vout);
+#endif
 }
 
 void TreeDecomposition::difference(TVars& v1, TVars& v2, TVars& vout)
@@ -2634,15 +2614,35 @@ void TreeDecomposition::updateInTD(Cluster* c)
     }
 }
 
-// reconnect cluster subtree rooted at c
-void TreeDecomposition::updateInTD2(Cluster* c)
+Cluster *TreeDecomposition::lowestCommonAncestor(Cluster *c1, Cluster *c2)
 {
-    if (c->getFreedom()) {
-        for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants(); ++iter)
-            if ((*iter)->getId() != c->getId()) {
-                (*iter)->setIsCurrInTD(true);
-            }
+  if (c1->getDepth() < c2->getDepth()) {
+      while (!c1->isDescendant(c2)) {
+          c1 = c1->getParent();
+          assert(c1 != NULL);
+      }
+      return c1;
+  } else {
+      while (!c2->isDescendant(c1)) {
+          c2 = c2->getParent();
+          assert(c2 != NULL);
+      }
+      return c2;
+  }
+}
+
+bool TreeDecomposition::isSameCluster(Cluster *c1, Cluster *c2)
+{
+    if (c1 == c2) return true;
+    if (ToulBar2::heuristicFreedom) {
+        if (c1->getIsCurrInTD() && c2->getIsCurrInTD()) return false;
+        if ((c1->getFreedom() || !c1->getIsCurrInTD()) && c1->isDescendant(c2)) return true;
+        if ((c2->getFreedom() || !c2->getIsCurrInTD()) && c2->isDescendant(c1)) return true;
+        Cluster *lca = lowestCommonAncestor(c1,c2);
+        assert(getRoot() != lca || (!lca->getFreedom() && lca->getIsCurrInTD()));
+        if (lca->getFreedom() || !lca->getIsCurrInTD()) return true;
     }
+    return false;
 }
 
 /* Local Variables: */

@@ -1306,7 +1306,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (freedom >= 0) {
                     ToulBar2::heuristicFreedom = freedom;
                 } else {
-                    ToulBar2::heuristicFreedom = 1;
+                    ToulBar2::heuristicFreedom = 2;
                 }
             }
 

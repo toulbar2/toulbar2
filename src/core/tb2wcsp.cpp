@@ -4472,6 +4472,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
     if (ToulBar2::vac)
         ((VACBinaryConstraint*)ctr)->VACfillElimConstr();
     ctr->isDuplicate_ = false;
+    ctr->cluster = -1;
     return ctr;
 }
 
@@ -4494,6 +4495,7 @@ TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVaria
     TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[newIndex];
     ctr->fillElimConstr(x, y, z, from1);
     ctr->isDuplicate_ = false;
+    ctr->cluster = -1;
     return ctr;
 }
 
@@ -5202,6 +5204,7 @@ bool WCSP::isAlreadyTreeDec(char* filename)
 void WCSP::buildTreeDecomposition()
 {
     double time = cpuTime();
+    CmpVarStruct::wcsp = this; // hook pointer for connection between TVarsSorted and current WCSP
     td = new TreeDecomposition(this);
     if (isAlreadyTreeDec(ToulBar2::varOrder))
         td->buildFromCovering(ToulBar2::varOrder);
@@ -5214,42 +5217,13 @@ void WCSP::buildTreeDecomposition()
         td->getElimVarOrder(order);
         // allows propagation to operate on the whole problem without modifying tree decomposition local lower bounds and delta costs
         // it is important for RDS-BTD which assumes zero cluster lower bounds and no delta cost moves
+        // note: uncomment these four lines if you want the same DAC order between HBFS and adaptive BTD-HBFS
         TreeDecomposition* tmptd = td;
         td = NULL;
         setDACOrder(order);
         td = tmptd;
         // new constraints may be produced by variable elimination that must be correctly assigned to a cluster
-        for (unsigned int i = 0; i < numberOfConstraints(); i++)
-            if (constrs[i]->getCluster() == -1)
-                constrs[i]->assignCluster();
-        for (int i = 0; i < elimBinOrder; i++)
-            if (elimBinConstrs[i]->connected() && elimBinConstrs[i]->getCluster() == -1)
-                elimBinConstrs[i]->assignCluster();
-        for (int i = 0; i < elimTernOrder; i++)
-            if (elimTernConstrs[i]->connected() && elimTernConstrs[i]->getCluster() == -1)
-                elimTernConstrs[i]->assignCluster();
-        // check if ternary constraint cluster assignments are valid and do corrections if needed
-        for (unsigned int i = 0; i < numberOfConstraints(); i++) {
-            Constraint* ctr = getCtr(i);
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->setDuplicates();
-                    assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                }
-            }
-        }
-        for (int i = 0; i < elimTernOrder; i++)
-            if (elimTernConstrs[i]->connected()) {
-                Constraint* ctr = elimTernConstrs[i];
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->setDuplicates();
-                        assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                    }
-                }
-            }
+        td->setDuplicates();
     }
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;

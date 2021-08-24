@@ -251,10 +251,13 @@ void TernaryConstraint::print(ostream& os)
     os << this << " TernaryConstraint(" << x->getName() << ((functionalX) ? "!" : "") << "," << y->getName() << ((functionalY) ? "!" : "") << "," << z->getName() << ((functionalZ) ? "!" : "") << ")";
     if (ToulBar2::weightedDegree)
         os << "/" << getConflictWeight();
-    if (wcsp->getTreeDec())
-        cout << "   cluster: " << getCluster() << endl;
-    else
-        cout << endl;
+    if (wcsp->getTreeDec()) {
+        cout << "   cluster: " << getCluster();
+        if (ToulBar2::heuristicFreedom && getCluster() != -1) {
+            cout << "  freedom: " << wcsp->getTreeDec()->getCluster(getCluster())->getFreedom() << " isinTD: " << wcsp->getTreeDec()->getCluster(getCluster())->getIsCurrInTD();
+        }
+    }
+    cout << endl;
 
     if (ToulBar2::verbose >= 5) {
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
@@ -604,15 +607,15 @@ void TernaryConstraint::fillxy()
     TreeDecomposition* td = wcsp->getTreeDec();
     BinaryConstraint* xy_ = NULL;
     xy_ = x->getConstr(y);
-    if (td && xy_ && (getCluster() != xy_->getCluster())) {
+    if (td && xy_ && !td->isSameCluster(getCluster(), xy_->getCluster())) {
         BinaryConstraint* xy__ = x->getConstr(y, getCluster());
         if (xy__)
             xy_ = xy__; // we have found another constraint of the same cluster
     }
-    if (!xy_ || (xy_ && td && (getCluster() != xy_->getCluster()))) {
+    if (!xy_ || (xy_ && td && !td->isSameCluster(getCluster(), xy_->getCluster()))) {
         xy = wcsp->newBinaryConstr(x, y, this);
         xy->setCluster(getCluster());
-        if (td && xy_ && (getCluster() != xy_->getCluster()))
+        if (td && xy_ && !td->isSameCluster(getCluster(), xy_->getCluster()))
             xy->setDuplicate();
         wcsp->elimBinOrderInc();
     } else
@@ -626,19 +629,17 @@ void TernaryConstraint::fillxz()
     TreeDecomposition* td = wcsp->getTreeDec();
     BinaryConstraint* xz_ = NULL;
     xz_ = x->getConstr(z);
-    if (td && xz_ && (getCluster() != xz_->getCluster())) {
+    if (td && xz_ && !td->isSameCluster(getCluster(), xz_->getCluster())) {
         BinaryConstraint* xz__ = x->getConstr(z, getCluster());
         if (xz__)
             xz_ = xz__; // we have found another constraint of the same cluster
     }
-    if (!xz_ || (xz_ && td && getCluster() != xz_->getCluster())) {
+    if (!xz_ || (xz_ && td && !td->isSameCluster(getCluster(), xz_->getCluster()))) {
         xz = wcsp->newBinaryConstr(x, z, this);
-        xy->setCluster(getCluster());
-        if (td && xz_ && (getCluster() != xz_->getCluster()))
+        xz->setCluster(getCluster());
+        if (td && xz_ && !td->isSameCluster(getCluster(), xz_->getCluster()))
             xz->setDuplicate();
         wcsp->elimBinOrderInc();
-        if (td)
-            xz->setCluster(getCluster());
     } else
         xz = xz_;
     if (xz->isDuplicate())
@@ -650,15 +651,15 @@ void TernaryConstraint::fillyz()
     TreeDecomposition* td = wcsp->getTreeDec();
     BinaryConstraint* yz_ = NULL;
     yz_ = y->getConstr(z);
-    if (td && yz_ && (getCluster() != yz_->getCluster())) {
+    if (td && yz_ && !td->isSameCluster(getCluster(), yz_->getCluster())) {
         BinaryConstraint* yz__ = y->getConstr(z, getCluster());
         if (yz__)
             yz_ = yz__;
     }
-    if (!yz_ || (yz_ && td && getCluster() != yz_->getCluster())) {
+    if (!yz_ || (yz_ && td && !td->isSameCluster(getCluster(), yz_->getCluster()))) {
         yz = wcsp->newBinaryConstr(y, z, this);
         yz->setCluster(getCluster());
-        if (td && yz_ && (getCluster() != yz_->getCluster()))
+        if (td && yz_ && !td->isSameCluster(getCluster(), yz_->getCluster()))
             yz->setDuplicate();
         wcsp->elimBinOrderInc();
     } else
@@ -725,6 +726,7 @@ void TernaryConstraint::setDuplicates()
             setDuplicate();
         }
     }
+    assert(xy->getCluster() == getCluster() && xz->getCluster() == getCluster() && yz->getCluster() == getCluster());
 }
 
 bool TernaryConstraint::verify(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z)
@@ -754,8 +756,18 @@ bool TernaryConstraint::verify()
     TreeDecomposition* td = wcsp->getTreeDec();
 
     if (td) {
-        if (cluster != xy->getCluster() || cluster != xz->getCluster() || cluster != yz->getCluster())
+        if (!td->isSameCluster(cluster, xy->getCluster()) || !td->isSameCluster(cluster, xz->getCluster()) || !td->isSameCluster(cluster, yz->getCluster())) {
+            if (ToulBar2::heuristicFreedom) {
+                cout << " different cluster assignment for ternary: " << cluster  << "(" << td->getCluster(cluster)->getFreedom() << ") xy: " << xy->getCluster() << "(" << td->getCluster(xy->getCluster())->getFreedom() << ") xz: " << xz->getCluster() << "(" << td->getCluster(xz->getCluster())->getFreedom() << ") yz: " << yz->getCluster() << "(" << td->getCluster(yz->getCluster())->getFreedom() << ")" << endl;
+            } else {
+                cout << " different cluster assignment for ternary: " << cluster << " xy: " << xy->getCluster() << " xz: " << xz->getCluster() << " yz: " << yz->getCluster() << endl;
+            }
+            cout << *this;
+            cout << *xy;
+            cout << *xz;
+            cout << *yz;
             return false;
+        }
     }
 
     if (ToulBar2::LcLevel == LC_DAC) {
@@ -775,6 +787,11 @@ bool TernaryConstraint::verify()
     } else {
         return verifyX() && verifyY() && verifyZ();
     }
+}
+
+bool TernaryConstraint::checkTreeDecomposition()
+{
+    return (!wcsp->getTreeDec() || (wcsp->getTreeDec()->isSameCluster(cluster, xy->getCluster()) && wcsp->getTreeDec()->isSameCluster(cluster, xz->getCluster()) && wcsp->getTreeDec()->isSameCluster(cluster, yz->getCluster())));
 }
 
 //Triangle::Triangle(WCSP *wcsp,

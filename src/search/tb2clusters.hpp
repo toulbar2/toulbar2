@@ -17,6 +17,13 @@ typedef set<int> TVars;
 typedef ConstraintSet TCtrs;
 //typedef map<int,Value>     TAssign;
 
+// sort variables by their DAC order
+struct CmpVarStruct {
+    static WCSP *wcsp;
+    bool operator()(const int lhs, const int rhs) const;
+};
+typedef set<int, CmpVarStruct> TVarsSorted;
+
 // sort clusters by their id if non-negative else by pointer addresses (warning! stochastic behavior!!)
 struct CmpClusterStructBasic {
     bool operator()(const Cluster* lhs, const Cluster* rhs) const;
@@ -126,6 +133,7 @@ private:
     WCSP* wcsp;
     int id; // corresponding to the vector index of the cluster in the tree decomposition
     TVars vars; // contains all variables inside a cluster including separator variables
+    TVarsSorted sortedVars; // contains all cluster's variables sorted by DAC order after makeRooted is done
     TCtrs ctrs; // intermediate usage by bucket elimination (DO NOT USE)
     TClusters edges; // adjacent clusters (includes parent cluster before makeRooted is done)
     TClustersSorted sortedEdges; // cluster sons are sorted after makeRooted is done
@@ -133,7 +141,9 @@ private:
     Cluster* parent; // parent cluster
     TClusters descendants; // set of cluster descendants (including itself)
     TVars varsTree; // set of variables in cluster descendants (including itself)
+    TVarsSorted sortedVarsTree; // set of cluster's tree variables sorted by DAC order after makeRooted is done
     vector<bool> quickdescendants;
+    map<Cluster *, TVars> quickIntersections; // set of variables corresponding to the intersection between a neighbor cluster and itself
 
     Separator* sep; // associated separator with parent cluster
     StoreCost lb; // current cluster lower bound deduced by propagation
@@ -144,13 +154,9 @@ private:
     StoreBigInteger countElimVars;
     int num_part; //for approximation: number of the corresponding partition
 
-    bool freedom_on; // current freedom status for the cluster
-    bool freedom_init; // only used if heuristicFreedom == 1
-    int freedom_limit; // only used if heuristicFreedom == 1
-
-    bool isCurrentlyInTD; // true if the cluster is part of the current tree decomposition
+    StoreInt freedom_on; // current freedom status for the cluster
+    StoreInt isCurrentlyInTD; // true if the cluster is part of the current tree decomposition
     int depth; // current depth of the cluster in the rooted tree decomposition
-    bool interrupt; // only used if heuristicFreedom == 3
 
 public:
     Cluster(TreeDecomposition* tdin);
@@ -222,6 +228,9 @@ public:
     bool isEdge(Cluster* c);
     void accelerateDescendants();
     bool isDescendant(Cluster* c) { return quickdescendants[c->getId()]; }
+
+    void accelerateIntersections();
+    void quickIntersection(Cluster *cj, TVars& cjsep);
 
     TCtrs& getCtrs() { return ctrs; }
     void addCtrs(TCtrs& ctrsin);
@@ -347,13 +356,6 @@ public:
     int getDepth() { return depth; }
     void setDepth(int d) { depth = d; }
 
-    bool getFreedomInit() { return freedom_init; }
-    void setFreedomInit(bool f) { freedom_init = f; }
-    int getFreedomLimit() { return freedom_limit; }
-    void setFreedomLimit(int l) { freedom_limit = l; }
-    void setInterrupt(bool b) { interrupt = b; }
-    bool getInterrupt() { return interrupt; }
-
     TVars::iterator beginVars() { return vars.begin(); }
     TVars::iterator endVars() { return vars.end(); }
     TVars::iterator beginVarsTree() { return varsTree.begin(); }
@@ -376,6 +378,26 @@ public:
     }
     TClusters::iterator beginSortedEdges() const { return sortedEdges.begin(); }
     TClusters::iterator endSortedEdges() const { return sortedEdges.end(); }
+
+    void sortVarsRec()
+    {
+        for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter)
+            (*iter)->sortVarsRec();
+        TVarsSorted tmpset(vars.begin(), vars.end(), CmpVarStruct());
+        sortedVars = tmpset;
+    }
+    TVarsSorted::iterator beginSortedVars() { return sortedVars.begin(); }
+    TVarsSorted::iterator endSortedVars() { return sortedVars.end(); }
+
+    void sortVarsTreeRec()
+    {
+        for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter)
+            (*iter)->sortVarsTreeRec();
+        TVarsSorted tmpset(varsTree.begin(), varsTree.end(), CmpVarStruct());
+        sortedVarsTree = tmpset;
+    }
+    TVarsSorted::iterator beginSortedVarsTree() { return sortedVarsTree.begin(); }
+    TVarsSorted::iterator endSortedVarsTree() { return sortedVarsTree.end(); }
 
     void print();
     void dump();
@@ -465,11 +487,13 @@ public:
     Cluster* getRoot() { return roots.front(); }
     Cluster* getRootRDS() { return rootRDS; }
     void setRootRDS(Cluster* rdsroot) { rootRDS = rdsroot; }
+    void setDuplicates(); // deal with two or more ternary constraints having the same included binary constraint belonging to different clusters
 
     int height(Cluster* r);
     int height(Cluster* r, Cluster* father);
 
     void intersection(TVars& v1, TVars& v2, TVars& vout);
+    void intersection(Cluster *c, Cluster *cj, TVars& vout);
     void difference(TVars& v1, TVars& v2, TVars& vout);
     void sum(TVars v1, TVars v2, TVars& vout); // copy inputs to avoid any overlap issues with output
     void sum(TVars& v1, TVars& v2); // it assumes vout = v1
@@ -497,10 +521,12 @@ public:
 
     //manage freedom
     void updateInTD(Cluster* c); ///\brief deconnect cluster subtree and its separators according to the current tree decomposition
-    void updateInTD2(Cluster* c); ///\brief reconnect cluster subtree
 
     void computeDepths(Cluster* c, int parent_depth); ///\brief recursively set depth of all clusters in a given cluster subtree
     int getMaxDepth() { return max_depth; }
+    Cluster *lowestCommonAncestor(Cluster *c1, Cluster *c2); ///\brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
+    bool isSameCluster(Cluster *c1, Cluster *c2); ///\brief return true if both clusters are the same or they have been merged together by adaptive BTD
+    bool isSameCluster(int c1, int c2) { return isSameCluster(getCluster(c1), getCluster(c2)); }
 };
 
 #endif
