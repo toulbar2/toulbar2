@@ -321,13 +321,14 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
     // check residue numbers
     if (ToulBar2::cpd->nativeSequence.size() != nVar) {
-        cerr << "Error: the loaded evolutionary MRF size (" << nVar << ") has not the size of the native sequence (" << ToulBar2::cpd->nativeSequence.size() << endl;
+        cerr << "Error: the loaded evolutionary MRF size (" << nVar << ") has not the size of the native sequence (" << ToulBar2::cpd->nativeSequence.size() << ").\n";
         exit(1);
     }
 
-    // project and process binaries
-    map<int, size_t> posList; // map of designed position to AA varIdx
+    // classify variables
+    map<int, size_t> posList; // map of residue position to AA varIdx
     map<int, size_t> posSeqList; // map of designed position to sequence varIdx
+
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
         if (pb->getVars()[varIdx]->getState()) // Skip non first (0) states in MSD
             continue;
@@ -345,8 +346,24 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             posList[pos] = varIdx;
         if (isSeq)
             posSeqList[pos] = varIdx;
+
         if (debug)
             cout << "Position " << pb->getVars()[varIdx]->getPosition() << " on var " << varIdx << endl;
+    }
+
+    // Sanity check: AA variable with not seq variable cannot be mutable
+    for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
+        if (pb->getVars()[varIdx]->getState()) // Skip non first (0) states in MSD
+            continue;
+        int pos = pb->getVars()[varIdx]->getPosition();
+        bool isAA = ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]);
+
+        if (isAA && posSeqList.find(pos) == posSeqList.end()) {
+            if (ToulBar2::cpd->getMutationDomain(varIdx).size() > 1) {
+                cerr << "Mutable residue " << pb->getVars()[varIdx]->getName() << " has no associated sequence variable" << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
     }
 
     // parse all binaries with one non mutable variable and project on the corresponding unary
@@ -357,19 +374,32 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         if (debug)
             cout << "MRF pair " << pos1 << "-" << pos2 << " ";
 
-        if (posList.count(pos1) + posList.count(pos2) == 1) { // different types (designable/absent)
+        if (posSeqList.count(pos1) + posSeqList.count(pos2) == 1) { // different types (mutable/absent or flexible)
             if (debug)
                 cout << "must be projected (if not masked)." << endl;
-            if (posList.count(pos2) && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // project on second
-                char natAA = ToulBar2::cpd->nativeSequence[pos1];
+            if (posSeqList.count(pos2) && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // project on second
+                char natAA;
+                if (posList.count(pos1)) { // This is a flexible var. We just take the AA identity of the 1st rotamer
+                    natAA = ToulBar2::cpd->getRotamers2AA()[posList[pos1]][0];
+                } else { // this is a missing residue (assumed NATRO to native)
+                    natAA = ToulBar2::cpd->nativeSequence[pos1];
+                }
+
                 int natIdx = AminoMRFIdx.find(natAA)->second;
                 if (debug)
                     cout << "Projecting on position " << pos2 << " using AA " << natAA << " for position " << pos1 << endl;
                 for (size_t i = 0; i < NumNatAA; i++) {
                     unaries[pos2][i] += bincf.second[natIdx][i];
                 }
-            } else if (!pb->getVars()[posList[pos1]]->isEvolutionMasked()) { // project on first
-                char natAA = ToulBar2::cpd->nativeSequence[pos2];
+            }
+            if (posList.count(pos1) && !pb->getVars()[posList[pos1]]->isEvolutionMasked()) { // project on first
+                char natAA;
+                if (posList.count(pos2)) { // This is a flexible var. We just take the AA identity of the 1st rotamer
+                    natAA = ToulBar2::cpd->getRotamers2AA()[posList[pos2]][0];
+                } else { // this is a missing residue (assumed NATRO to native)
+                    natAA = ToulBar2::cpd->nativeSequence[pos2];
+                }
+
                 int natIdx = AminoMRFIdx.find(natAA)->second;
                 if (debug)
                     cout << "Projecting on position " << pos1 << " using " << natAA << " for position " << pos2 << endl;
@@ -379,28 +409,20 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             }
         }
 
-        if ((posList.count(pos1) + posList.count(pos2) == 2) && !pb->getVars()[posList[pos1]]->isEvolutionMasked() && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // both designable and not Masked
+        if ((posSeqList.count(pos1) + posSeqList.count(pos2) == 2) && !pb->getVars()[posList[pos1]]->isEvolutionMasked() && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // both designable and not Masked
 
             bool warn = true;
             vector<Cost> biases;
             int varIdx1 = posList[pos1];
             int varIdx2 = posList[pos2];
-            int seqVarIdx1;
-            int seqVarIdx2;
-
-            try {
-                seqVarIdx1 = posSeqList.at(pos1);
-                seqVarIdx2 = posSeqList.at(pos2);
-            } catch (const std::out_of_range& oor) {
-                std::cerr << "Missing sequence variable for mutable positions " << pos1 << " or " << pos2 << " :" << oor.what() << '\n';
-                exit(EXIT_FAILURE);
-            }
+            int seqVarIdx1 = posSeqList.at(pos1); // safety: use at to detect absence and raise exception
+            int seqVarIdx2 = posSeqList.at(pos2); // should never occurr
 
             if (debug)
                 cout << "will be normalized and posted on " << seqVarIdx1 << "-" << seqVarIdx2 << endl;
 
-            for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
-                for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx2]) {
+            for (char c1 : ToulBar2::cpd->getMutationDomain(varIdx1)) {
+                for (char c2 : ToulBar2::cpd->getMutationDomain(varIdx2)) {
                     int valIdx1 = AminoMRFIdx.find(c1)->second;
                     int valIdx2 = AminoMRFIdx.find(c2)->second;
                     if (bincf.second[valIdx1][valIdx2] == 0.0)
@@ -421,6 +443,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         }
         if (debug && ((posList.count(pos1) + posList.count(pos2) == 0)))
             cout << " will be ignored" << endl;
+        // Best would be to add to a constant cost to make evol. energy comparable.
     }
 
     // process unaries
@@ -431,13 +454,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         bool warn = true;
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
-        size_t seqVarIdx;
-        try {
-            seqVarIdx = posSeqList.at(pos);
-        } catch (const std::out_of_range& oor) {
-            std::cerr << "Missing sequence variable for mutable positions " << pos << " :" << oor.what() << '\n';
-            exit(EXIT_FAILURE);
-        }
+
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
 
@@ -453,7 +470,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             cout << "Normalized." << endl;
 
         // Insert in the CFN model
-        for (char c : ToulBar2::cpd->getRotamers2AA()[varIdx]) {
+        for (char c : ToulBar2::cpd->getMutationDomain(varIdx)) {
             int valIdx = AminoMRFIdx.find(c)->second;
             if (unaries[pos][valIdx] == 0.0)
                 warn = false;
@@ -469,7 +486,11 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             }
             cout << ") has been excluded from design at residue " << varIdx + 1 << endl;
         }
-        pb->postUnaryConstraint(seqVarIdx, biases);
+        if (ToulBar2::cpd->getMutationDomain(varIdx).size() > 1) {
+            pb->postUnaryConstraint(posSeqList[pos], biases);
+        } else {
+            pb->increaseLb(biases[0]);
+        }
         if (debug)
             cout << "Posted." << endl;
     }
@@ -487,6 +508,7 @@ Cpd::~Cpd()
 void Cpd::init()
 {
     rotamers2aa.clear();
+    mutationDomains.clear();
     LeftAA.clear();
     RightAA.clear();
     cpdtrie.init();
@@ -550,13 +572,16 @@ void Cpd::computeAAbounds()
         char prev_char = '0';
         size_t pos = 0;
 
+        string mutationDomain = "";
         for (size_t i = 0; i < rv.size(); i++) {
             if (rv[i] != prev_char) {
                 prev_char = rv[i];
                 pos = i;
+                mutationDomain.push_back(rv[i]);
             }
             leftidx_var.push_back(pos);
         }
+        mutationDomains.push_back(mutationDomain);
 
         prev_char = '0';
         for (int i = rv.size() - 1; i >= 0; i--) {

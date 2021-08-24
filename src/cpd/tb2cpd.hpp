@@ -46,6 +46,7 @@ public:
     void printSequence(TAssign& assig, const vector<Variable*>& vars);
     int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
+    string getMutationDomain(size_t varIdx) { return mutationDomains[varIdx]; }
     bool isAAVariable(const Variable* var) { return (std::count(NotAnAA.begin(), NotAnAA.end(), var->getName()[0]) == 0); }
     bool isSeqVariable(const Variable* var) { return (std::count(seqVarPrefixes.begin(), seqVarPrefixes.end(), var->getName()[0]) != 0); }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
@@ -67,6 +68,7 @@ private:
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
     const static map<char, int> PSSMIdx; // converts AA char to indices in PsiBlast PSSMatrix
     TrieCpd cpdtrie;
+    vector<string> mutationDomains;
     vector<vector<char>> rotamers2aa;
     vector<vector<Value>> LeftAA;
     vector<vector<Value>> RightAA;
