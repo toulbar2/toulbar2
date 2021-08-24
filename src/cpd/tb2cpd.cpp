@@ -65,7 +65,7 @@ AminoMRF::AminoMRF(const char* filename)
             unaries[nv].push_back(-LP);
         }
         if (ss.bad()) {
-            cerr << "Improper eMRF file - could not read term for residue " << nv+1;
+            cerr << "Improper eMRF file - could not read term for residue " << nv + 1;
             exit(EXIT_FAILURE);
         }
         if (debug)
@@ -115,7 +115,8 @@ AminoMRF::AminoMRF(const char* filename)
         }
 
         if (file.bad()) {
-            cerr << "Improper eMRF file - could not read pairwise interaction terms for " << n << " " << m << endl;;
+            cerr << "Improper eMRF file - could not read pairwise interaction terms for " << n << " " << m << endl;
+            ;
             exit(EXIT_FAILURE);
         }
         // renormalize globally
@@ -320,17 +321,19 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
     // check residue numbers
     if (ToulBar2::cpd->nativeSequence.size() != nVar) {
-        cerr << "Error: the loaded evolutionary MRF has not the size of the native protein.\n";
+        cerr << "Error: the loaded evolutionary MRF size (" << nVar << ") has not the size of the native sequence (" << ToulBar2::cpd->nativeSequence.size() << endl;
         exit(1);
     }
 
     // project and process binaries
-    map<int, size_t> posList; // map of designed position to varIdx
+    map<int, size_t> posList; // map of designed position to AA varIdx
+    map<int, size_t> posSeqList; // map of designed position to sequence varIdx
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
-        if (pb->getVars()[varIdx]->getState())
+        if (pb->getVars()[varIdx]->getState()) // Skip non first (0) states in MSD
             continue;
         int pos = pb->getVars()[varIdx]->getPosition();
         bool isAA = ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]);
+        bool isSeq = ToulBar2::cpd->isSeqVariable(pb->getVars()[varIdx]);
 
         if (debug)
             cout << "Variable " << pb->getVars()[varIdx]->getName() << " has position " << pos << endl;
@@ -340,6 +343,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         }
         if (isAA)
             posList[pos] = varIdx;
+        if (isSeq)
+            posSeqList[pos] = varIdx;
         if (debug)
             cout << "Position " << pb->getVars()[varIdx]->getPosition() << " on var " << varIdx << endl;
     }
@@ -380,9 +385,19 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             vector<Cost> biases;
             int varIdx1 = posList[pos1];
             int varIdx2 = posList[pos2];
+            int seqVarIdx1;
+            int seqVarIdx2;
+
+            try {
+                seqVarIdx1 = posSeqList.at(pos1);
+                seqVarIdx2 = posSeqList.at(pos2);
+            } catch (const std::out_of_range& oor) {
+                std::cerr << "Missing sequence variable for mutable positions " << pos1 << " or " << pos2 << " :" << oor.what() << '\n';
+                exit(EXIT_FAILURE);
+            }
 
             if (debug)
-                cout << "will be normalized and posted on " << varIdx1 << "-" << varIdx2 << endl;
+                cout << "will be normalized and posted on " << seqVarIdx1 << "-" << seqVarIdx2 << endl;
 
             for (char c1 : ToulBar2::cpd->getRotamers2AA()[varIdx1]) {
                 for (char c2 : ToulBar2::cpd->getRotamers2AA()[varIdx2]) {
@@ -402,7 +417,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
                             cout << "[" << AminoMRFs[i] << AminoMRFs[j] << "]";
                 cout << ") has been excluded from design at residues " << varIdx1 + 1 << "-" << varIdx2 + 1 << endl;
             }
-            pb->postBinaryConstraint(varIdx1, varIdx2, biases);
+            pb->postBinaryConstraint(seqVarIdx1, seqVarIdx2, biases);
         }
         if (debug && ((posList.count(pos1) + posList.count(pos2) == 0)))
             cout << " will be ignored" << endl;
@@ -412,10 +427,17 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
         if (pb->getVars()[varIdx]->getState() || !ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]) || pb->getVars()[varIdx]->isEvolutionMasked())
             continue;
+
         bool warn = true;
         vector<Cost> biases;
         int pos = pb->getVars()[varIdx]->getPosition();
-
+        size_t seqVarIdx;
+        try {
+            seqVarIdx = posSeqList.at(pos);
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Missing sequence variable for mutable positions " << pos << " :" << oor.what() << '\n';
+            exit(EXIT_FAILURE);
+        }
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
 
@@ -447,7 +469,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             }
             cout << ") has been excluded from design at residue " << varIdx + 1 << endl;
         }
-        pb->postUnaryConstraint(varIdx, biases);
+        pb->postUnaryConstraint(seqVarIdx, biases);
         if (debug)
             cout << "Posted." << endl;
     }

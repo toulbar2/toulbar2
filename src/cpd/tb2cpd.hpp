@@ -47,6 +47,7 @@ public:
     int getTotalSequences() { return cpdtrie.getTotalSequences(); }
     vector<vector<char>>& getRotamers2AA() { return rotamers2aa; }
     bool isAAVariable(const Variable* var) { return (std::count(NotAnAA.begin(), NotAnAA.end(), var->getName()[0]) == 0); }
+    bool isSeqVariable(const Variable* var) { return (std::count(seqVarPrefixes.begin(), seqVarPrefixes.end(), var->getName()[0]) != 0); }
     char getAA(int varIndex, Value value) { return rotamers2aa[varIndex][value]; }
     Value getLeft(int varIndex, Value value) { return LeftAA[varIndex][value]; }
     Value getRight(int varIndex, Value value) { return RightAA[varIndex][value]; }
@@ -59,7 +60,10 @@ public:
     float AminoMRFBias = 0.0;
 
 private:
-    const string NotAnAA = "Z" + HIDEABLE_VAR_TAGS; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
+    const string seqVarPrefix1 = "Z";
+    const string seqVarPrefix2 = DIVERSIFIED_VAR_TAG; // We use diversity on sequence variables.
+    const string seqVarPrefixes = seqVarPrefix1 + seqVarPrefix2;
+    const string NotAnAA = seqVarPrefix1 + HIDEABLE_VAR_TAGS; // A list of chars indicating a variable that does not define an AA identiy (as first char of the variable name).
     const static map<char, int> PSMIdx; // converts AA char to indices in PSMatrix
     const static map<char, int> PSSMIdx; // converts AA char to indices in PsiBlast PSSMatrix
     TrieCpd cpdtrie;

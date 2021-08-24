@@ -36,7 +36,6 @@
 
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
-
 /// Special character value at the beginning of a variable's name to identify diverse extra variables corresponding to the current sequence of diverse solutions found so far
 const string DIVERSE_VAR_TAG = "^";
 /// List of special chars that tag variables that should be involved in diversity constraints.
@@ -84,18 +83,39 @@ const Cost MAX_COST = (std::numeric_limits<Cost>::max() / MEDIUM_COST);
 
 #if defined __has_builtin
 #if __has_builtin(__builtin_sadd_overflow)
-inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_sadd_overflow(a, b, c); }
+inline bool Add(Cost a, Cost b, Cost* c)
+{
+    return __builtin_sadd_overflow(a, b, c);
+}
 #endif
 #if __has_builtin(__builtin_ssub_overflow)
-inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssub_overflow(a, b, c); }
+inline bool Sub(Cost a, Cost b, Cost* c)
+{
+    return __builtin_ssub_overflow(a, b, c);
+}
 #endif
 #if __has_builtin(__builtin_smul_overflow)
-inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smul_overflow(a, b, c); }
+inline bool Mul(Cost a, Cost b, Cost* c)
+{
+    return __builtin_smul_overflow(a, b, c);
+}
 #endif
 #else
-inline bool Add(Cost a, Cost b, Cost* c) { *c = a + b; return false; }
-inline bool Sub(Cost a, Cost b, Cost* c) { *c = a - b; return false; }
-inline bool Mul(Cost a, Cost b, Cost* c) { *c = a * b; return false; }
+inline bool Add(Cost a, Cost b, Cost* c)
+{
+    *c = a + b;
+    return false;
+}
+inline bool Sub(Cost a, Cost b, Cost* c)
+{
+    *c = a - b;
+    return false;
+}
+inline bool Mul(Cost a, Cost b, Cost* c)
+{
+    *c = a * b;
+    return false;
+}
 #endif
 
 //C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
@@ -182,21 +202,45 @@ const Cost MAX_COST = ((std::numeric_limits<Cost>::max() / 2) / MEDIUM_COST / ME
 
 #if defined __has_builtin
 #if __has_builtin(__builtin_saddl_overflow)
-inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_saddl_overflow(a, b, c); }
+inline bool Add(Cost a, Cost b, Cost* c)
+{
+    return __builtin_saddl_overflow(a, b, c);
+}
 #endif
 #if __has_builtin(__builtin_ssubl_overflow)
-inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssubl_overflow(a, b, c); }
+inline bool Sub(Cost a, Cost b, Cost* c)
+{
+    return __builtin_ssubl_overflow(a, b, c);
+}
 #endif
 #if __has_builtin(__builtin_smull_overflow)
-inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smull_overflow(a, b, c); }
+inline bool Mul(Cost a, Cost b, Cost* c)
+{
+    return __builtin_smull_overflow(a, b, c);
+}
 #endif
 #else
-inline bool Add(Cost a, Cost b, Cost* c) { *c = a + b; return false; }
-inline bool Sub(Cost a, Cost b, Cost* c) { *c = a - b; return false; }
-inline bool Mul(Cost a, Cost b, Cost* c) { *c = a * b; return false; }
+inline bool Add(Cost a, Cost b, Cost* c)
+{
+    *c = a + b;
+    return false;
+}
+inline bool Sub(Cost a, Cost b, Cost* c)
+{
+    *c = a - b;
+    return false;
+}
+inline bool Mul(Cost a, Cost b, Cost* c)
+{
+    *c = a * b;
+    return false;
+}
 #endif
 
-inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MIN(Cost a, Cost b)
+{
+    return min(a, b);
+}
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
@@ -265,21 +309,45 @@ const Cost MAX_COST = ((LONGLONG_MAX / 2) / MEDIUM_COST / MEDIUM_COST);
 
 #if defined __has_builtin
 #if __has_builtin(__builtin_saddll_overflow)
-inline bool Add(Cost a, Cost b, Cost* c) { return __builtin_saddll_overflow(a, b, c); }
+inline bool Add(Cost a, Cost b, Cost* c)
+{
+    return __builtin_saddll_overflow(a, b, c);
+}
 #endif
 #if __has_builtin(__builtin_ssubll_overflow)
-inline bool Sub(Cost a, Cost b, Cost* c) { return __builtin_ssubll_overflow(a, b, c); }
+inline bool Sub(Cost a, Cost b, Cost* c)
+{
+    return __builtin_ssubll_overflow(a, b, c);
+}
 #endif
 #if __has_builtin(__builtin_smulll_overflow)
-inline bool Mul(Cost a, Cost b, Cost* c) { return __builtin_smulll_overflow(a, b, c); }
+inline bool Mul(Cost a, Cost b, Cost* c)
+{
+    return __builtin_smulll_overflow(a, b, c);
+}
 #endif
 #else
-inline bool Add(Cost a, Cost b, Cost* c) { *c = a + b; return false; }
-inline bool Sub(Cost a, Cost b, Cost* c) { *c = a - b; return false; }
-inline bool Mul(Cost a, Cost b, Cost* c) { *c = a * b; return false; }
+inline bool Add(Cost a, Cost b, Cost* c)
+{
+    *c = a + b;
+    return false;
+}
+inline bool Sub(Cost a, Cost b, Cost* c)
+{
+    *c = a - b;
+    return false;
+}
+inline bool Mul(Cost a, Cost b, Cost* c)
+{
+    *c = a * b;
+    return false;
+}
 #endif
 
-inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MIN(Cost a, Cost b)
+{
+    return min(a, b);
+}
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
