@@ -329,7 +329,12 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     map<int, size_t> posList; // map of residue position to AA varIdx
     map<int, size_t> posSeqList; // map of designed position to sequence varIdx
 
+    if (debug)
+        cout << "Number of variables: " << pb->numberOfVariables() << endl;
+
     for (size_t varIdx = 0; varIdx < pb->numberOfVariables(); varIdx++) {
+        if (debug)
+            cout << "Var " << pb->getVars()[varIdx]->getName() << " " << pb->getVars()[varIdx]->getState() << endl;
         if (pb->getVars()[varIdx]->getState()) // Skip non first (0) states in MSD
             continue;
         int pos = pb->getVars()[varIdx]->getPosition();
@@ -339,14 +344,19 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         if (debug)
             cout << "Variable " << pb->getVars()[varIdx]->getName() << " has position " << pos << endl;
 
-        if ((pos < 0 || (unsigned int)pos >= nVar) && isAA) {
+        if ((pos < 0 || (unsigned int)pos >= nVar) && (isAA || isSeq)) {
             cerr << "Variable " << pb->getVars()[varIdx]->getName() << " has an out-of-range sequence position (wrt. native)" << endl;
         }
-        if (isAA)
+        if (isAA) {
             posList[pos] = varIdx;
-        if (isSeq)
+            if (debug)
+                cout << "Counted as AA variable for pos " << pos << endl;
+        }
+        if (isSeq) {
             posSeqList[pos] = varIdx;
-
+            if (debug)
+                cout << "Counted as Seq variable for pos " << pos << endl;
+        }
         if (debug)
             cout << "Position " << pb->getVars()[varIdx]->getPosition() << " on var " << varIdx << endl;
     }
@@ -358,11 +368,9 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         int pos = pb->getVars()[varIdx]->getPosition();
         bool isAA = ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]);
 
-        if (isAA && posSeqList.find(pos) == posSeqList.end()) {
-            if (ToulBar2::cpd->getMutationDomain(varIdx).size() > 1) {
-                cerr << "Mutable residue " << pb->getVars()[varIdx]->getName() << " has no associated sequence variable" << endl;
-                exit(EXIT_FAILURE);
-            }
+        if (isAA && posSeqList.find(pos) == posSeqList.end() && ToulBar2::cpd->getMutationDomain(varIdx).size() > 1) {
+            cerr << "Mutable residue " << pb->getVars()[varIdx]->getName() << " has no associated sequence variable" << endl;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -372,11 +380,12 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         int pos2 = bincf.first.second;
 
         if (debug)
-            cout << "MRF pair " << pos1 << "-" << pos2 << " ";
+            cout << "MRF pair " << pos1 << "-" << pos2 << endl;
 
         if (posSeqList.count(pos1) + posSeqList.count(pos2) == 1) { // different types (mutable/absent or flexible)
             if (debug)
-                cout << "must be projected (if not masked)." << endl;
+                cout << "must be projected (if not masked): " << posSeqList.count(pos1) << " " << posSeqList.count(pos2) << endl;
+
             if (posSeqList.count(pos2) && !pb->getVars()[posList[pos2]]->isEvolutionMasked()) { // project on second
                 char natAA;
                 if (posList.count(pos1)) { // This is a flexible var. We just take the AA identity of the 1st rotamer
@@ -392,7 +401,8 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
                     unaries[pos2][i] += bincf.second[natIdx][i];
                 }
             }
-            if (posList.count(pos1) && !pb->getVars()[posList[pos1]]->isEvolutionMasked()) { // project on first
+
+            if (posSeqList.count(pos1) && !pb->getVars()[posList[pos1]]->isEvolutionMasked()) { // project on first
                 char natAA;
                 if (posList.count(pos2)) { // This is a flexible var. We just take the AA identity of the 1st rotamer
                     natAA = ToulBar2::cpd->getRotamers2AA()[posList[pos2]][0];
@@ -402,7 +412,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
 
                 int natIdx = AminoMRFIdx.find(natAA)->second;
                 if (debug)
-                    cout << "Projecting on position " << pos1 << " using " << natAA << " for position " << pos2 << endl;
+                    cout << "Projecting on position " << pos1 << " using AA " << natAA << " for position " << pos2 << endl;
                 for (size_t i = 0; i < NumNatAA; i++) {
                     unaries[pos1][i] += bincf.second[i][natIdx];
                 }

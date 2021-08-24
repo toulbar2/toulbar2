@@ -56,7 +56,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     isSep_ = false;
 
     if (ToulBar2::cfn && ToulBar2::cpd) {
-        if (ToulBar2::cpd->isAAVariable(this)) { // usual AA variable
+        if (ToulBar2::cpd->isAAVariable(this) || ToulBar2::cpd->isSeqVariable(this)) { // AA or Seq variable
             size_t separatorPos = name.find('-');
             size_t multiStatePos = name.find('_');
 
@@ -67,7 +67,8 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
             try {
                 if (multiStatePos != string::npos) {
                     state = stoi(name.substr(multiStatePos + 1));
-                }
+                } else
+                    state = 0;
                 position = stoi(name.substr(1, min(separatorPos, multiStatePos) - 1)) - 1; // we start at 0 internally
             } catch (const std::invalid_argument&) {
                 cerr << "Error: invalid position or state number in variable '" << name << "'" << endl;
