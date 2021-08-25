@@ -1740,7 +1740,7 @@ void Solver::beginSolve(Cost ub)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
-        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
+        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B or -F options)." << endl;
         throw BadConfiguration();
     }
 #ifdef ILOGCPLEX
@@ -2372,7 +2372,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
-    if (ToulBar2::verbose >= 0 && ToulBar2::heuristicFreedom) {
+    if (ToulBar2::verbose >= 0 && ToulBar2::heuristicFreedom && wcsp->getTreeDec()) {
         cout << "Summary freedom management: " << endl;
         double sum = nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
         if (sum != 0)
