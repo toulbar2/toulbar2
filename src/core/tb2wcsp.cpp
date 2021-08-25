@@ -474,6 +474,13 @@ void tb2checkOptions()
         cerr << "Error: cost multiplier not implemented for this file format." << endl;
         exit(1);
     }
+    if (ToulBar2::heuristicFreedom && ToulBar2::btdMode == 0) {
+        ToulBar2::btdMode = 1;
+    }
+    if (ToulBar2::heuristicFreedom && ToulBar2::btdMode >= 2) {
+        cout << "Warning! adaptive BTD not compatible with RDS-like search methods." << endl;
+        ToulBar2::heuristicFreedom = 0;
+    }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
         cerr << "Error: BTD-like search methods are compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
         exit(1);
@@ -630,6 +637,10 @@ void tb2checkOptions()
     if (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
+    }
+    if (ToulBar2::heuristicFreedom && !ToulBar2::hbfs) {
+        cout << "Warning! adaptive BTD requires HBFS (remove -hbfs: option)." << endl;
+        ToulBar2::heuristicFreedom = 0;
     }
 }
 

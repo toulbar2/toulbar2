@@ -370,7 +370,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_maxSeparatorSize, (char*)"-r", SO_REQ_SEP },
     { OPT_maxSeparatorSize, (char*)"--maxSepSize", SO_REQ_CMB },
     { OPT_minProperVarSize, (char*)"-X", SO_REQ_SEP },
-    { OPT_BTD_freedom, (char*) "-F", SO_REQ_SEP },
+    { OPT_BTD_freedom, (char*) "-F", SO_OPT },
     { OPT_BTD_freedom_limit, (char*) "-LF", SO_REQ_SEP },
     { OPT_PARTIAL_ASSIGNMENT, (char*)"-x", SO_OPT },
     { NO_OPT_PARTIAL_ASSIGNMENT, (char*)"-x:", SO_NONE },
@@ -910,7 +910,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
     cout << "   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
     cout << "   -E=[float] : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option \"-vns\") (default value is " << ToulBar2::boostingBTD << ")" << endl;
-    cout << "   -F=[integer] : merge clusters automatically to give more freedom to variable ordering heuristic in BTD-like methods (0:no freedom, 1:normal, 2:separator, 3:+restart) (default value is " << ToulBar2::heuristicFreedom << ")" << endl;
+    cout << "   -F=[integer] : merge clusters automatically to give more freedom to variable ordering heuristic in BTD-HBFS (0:no freedom, 1:adaptive) (default value is " << ToulBar2::heuristicFreedom << ")" << endl;
     cout << "   -LF=[integer] : separator count limit for switching from cluster descendant merging to cluster decomposition (default value is " << ToulBar2::heuristicFreedomLimit << ")" << endl;
     cout << "   -R=[integer] : choice for a specific root cluster number" << endl;
     cout << "   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)" << endl
@@ -1306,7 +1306,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (freedom >= 0) {
                     ToulBar2::heuristicFreedom = freedom;
                 } else {
-                    ToulBar2::heuristicFreedom = 2;
+                    ToulBar2::heuristicFreedom = 1;
                 }
             }
 
