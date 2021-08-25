@@ -148,7 +148,7 @@ public:
     bool reviseEACGreedySolution();
 
     void eliminate() FINAL;
-    bool elimVar(BinaryConstraint* xy);
+    bool elimVar(BinaryConstraint* xy, BinaryConstraint* xy_duplicate = NULL);
     bool elimVar(ConstraintLink xylink, ConstraintLink xzlink);
     bool elimVar(TernaryConstraint* xyz);
 
