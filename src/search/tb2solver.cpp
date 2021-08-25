@@ -2373,29 +2373,29 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
     if (ToulBar2::verbose >= 0 && ToulBar2::heuristicFreedom && wcsp->getTreeDec()) {
-        cout << "Summary freedom management: " << endl;
+        cout << "Summary of adaptive BTD: " << endl;
         double sum = nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
         if (sum != 0)
-            cout << "% of choices: " << (nbChoices / sum ) * 100.0 << endl;
-        else cout << "% of choices: NA" << endl;
+            cout << "% of new positive choices (i.e. cluster subtree is merged): " << (nbChoices / sum ) * 100.0 << endl;
+        else cout << "% of new positive choices: NA" << endl;
 
         if (nbChoices != 0)
-            cout << "% of stopping merging (w.r.t true choices): " << (nbChoiceChange / nbChoices) * 100.0 << endl;
-        else cout << "% of stopping merging (w.r.t true choices): NA" << endl;
+            cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): " << (nbChoiceChange / nbChoices) * 100.0 << endl;
+        else cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): NA" << endl;
 
         if (sum != 0)
-            cout << "% of forced stopping merging: " << (nbForcedChoiceChange / sum) * 100.0 << endl;
-        else cout << "% of forced stopping merging: NA" << endl;
+            cout << "% of transitions due to nogood propagation: " << (nbForcedChoiceChange / sum) * 100.0 << endl;
+        else cout << "% of transitions due to nogood propagation: NA" << endl;
 
         if (sum != 0)
-            cout << "% of forced choices: " << (nbForcedChoices / sum) * 100.0 << endl;
-        else cout << "% of forced choices: NA" << endl;
+            cout << "% of forced negative choices due to nogood propagation: " << (nbForcedChoices / sum) * 100.0 << endl;
+        else cout << "% of forced negative choices due to nogood propagation: NA" << endl;
 
         if (sum != 0)
-            cout << "% of read only: " << (nbReadOnly / sum) * 100.0 << endl;
-        else cout << "% of read only: NA" << endl;
+            cout << "% of choices without change: " << (nbReadOnly / sum) * 100.0 << endl;
+        else cout << "% of choices without change: NA" << endl;
 
-        cout << "Depth: " << solveDepth << " / " << wcsp->getTreeDec()->getMaxDepth() << endl;;
+        cout << "Maximum cluster depth visited during search / maximum cluster depth of the original tree decomposition (except the root): " << solveDepth << " / " << wcsp->getTreeDec()->getMaxDepth() << endl;;
     }
 
     if (isSolution) {

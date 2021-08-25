@@ -343,6 +343,9 @@ void Separator::freeIncS()
         i++;
     }
     freesLimit[t] += 1;
+    if (ToulBar2::verbose >= 1) {
+        cout << " hybridSolve ends without any improvement for cluster " << cluster->getId() << " (separator limit: " << freesLimit[t] << " for assignment " << t << endl;
+    }
 }
 
 Cost Separator::getCurrentDelta()
@@ -481,7 +484,7 @@ bool Separator::getF(bool& free)
     TFrees::iterator itsg = frees.find(t);
     if (itsg != frees.end()) {
         if (ToulBar2::verbose >= 1)
-            cout << ") Use freedom with value = " << itsg->second << "on cluster " << cluster->getId() << endl;
+            cout << ") Use freedom with value = " << itsg->second << " on cluster " << cluster->getId() << endl;
         free = itsg->second;
         return true;
     } else {
