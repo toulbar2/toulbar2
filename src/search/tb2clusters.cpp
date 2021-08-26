@@ -305,25 +305,16 @@ bool Separator::setFInc()
     TFreesLimit::iterator itsg = freesLimit.find(t);
     if (itsg != freesLimit.end()) {
         nb = itsg->second;
-        // later this should be used as global value
-        if (cluster->sepSize() != 0) {
-            if (nb < 2 * ToulBar2::heuristicFreedomLimit) { // why using twice the budget if not at the root cluster?
-                assert(frees.find(t) != frees.end() && frees[t] == true);
-                return true;
-            } else {
-                frees[t] = false;
-                return false;
-            }
+        if (nb < ToulBar2::heuristicFreedomLimit) {
+            assert(frees.find(t) != frees.end() && frees[t] == true);
+            return true;
         } else {
-            if (nb < ToulBar2::heuristicFreedomLimit) {
-                assert(frees.find(t) != frees.end() && frees[t] == true);
-                return true;
-            } else {
-                frees[t] = false;
-                return false;
+            if (ToulBar2::verbose >= 1) {
+                cout << " limit of " << nb << " reached for cluster " << cluster->getId() << " with separator assignment " << t << endl;
             }
+            frees[t] = false;
+            return false;
         }
-
     } else {
         freesLimit[t] = 0;
         frees[t] = true;

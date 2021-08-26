@@ -303,27 +303,29 @@ public:
     {
         if (sep)
             sep->setF(free);
-        freedom_on = free;
+        setFreedom(free);
     }
     // the returned boolean says if the information (freedom status attached to the separator assignment) is found or not
     // return true if found else false. update freedom status of the cluster
     bool freeGet()
     {
+        if (!sep)
+            return false;
         bool free, found;
         found = sep->getF(free);
         if (found)
-            freedom_on = free;
+            setFreedom(free);
         return found;
     }
     // initialize freesLimit if new else checks if it does not overcome the freedom limit and update freedom status
     void freeRecInc()
     {
         bool ok;
-        ok = sep->setFInc();
+        ok = sep && sep->setFInc();
         if (ok)
-            freedom_on = true;
+            setFreedom(true);
         else
-            freedom_on = false;
+            setFreedom(false);
     }
     // increase freesLimit by one (every time we did not improve the search)
     void freeInc()
@@ -345,7 +347,7 @@ public:
 
     // freedom of variables choice
     bool getFreedom() { return freedom_on; }
-    void setFreedom(bool f) { freedom_on = f; }
+    void setFreedom(bool f) {  freedom_on = f; }  // { if (ToulBar2::verbose >= 1 && freedom_on != f) cout << " status of cluster " << getId() << " changed from " << freedom_on << " to " << f << endl;  freedom_on = f; }
     bool isVarTree(int i)
     {
         TVars::iterator it = varsTree.find(i);

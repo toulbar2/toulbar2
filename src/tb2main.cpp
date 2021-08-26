@@ -1253,7 +1253,7 @@ int _tmain(int argc, TCHAR* argv[])
             // BTD root cluster
             if (args.OptionId() == OPT_btdRootCluster) {
                 int root = atoi(args.OptionArg());
-                if (root > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
+                if (root > 0 || (root==0 && args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
                     ToulBar2::btdRootCluster = root;
             }
             // btd SubTree initialisation sub cluster
@@ -1314,10 +1314,10 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_BTD_freedom_limit) {
                 int limit = 0;
                 if(args.OptionArg() != NULL ) limit = atoi(args.OptionArg());
-                if (limit >= 1) {
+                if (limit > 0 || (limit==0 && args.OptionArg()[0]=='0' && args.OptionArg()[1]==0)) {
                     ToulBar2::heuristicFreedomLimit = limit;
                 } else {
-                    ToulBar2::heuristicFreedomLimit = 1;
+                    ToulBar2::heuristicFreedomLimit = 5;
                 }
             }
 
