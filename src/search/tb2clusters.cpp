@@ -1628,8 +1628,89 @@ Cluster* TreeDecomposition::getBiggerCluster(TClusters& unvisited)
                 break;
         }
     }
+    cout<<"Max size root : "<<maxsize<<endl;
     return cmax;
 }
+
+Cluster* TreeDecomposition::getClusterMinHeight(TClusters& unvisited){
+
+    TClusters::iterator itc = unvisited.begin();
+    Cluster*c_start = *itc;
+    assert(c_start);
+    int minheight = height(c_start);
+    Cluster* cmin_height = c_start;
+    ++itc;
+    while(itc != unvisited.end()){
+        Cluster* c = *itc;
+        assert(c);
+        if(ToulBar2::ReduceHeight==1){
+            //cout<<"Applying reduceheight then calculate ratio"<<endl;
+            reduceHeight(c, vector<Cluster *>());
+        }   
+        if (height(c) < minheight){
+            minheight=height(c);
+            cmin_height = c;
+            if (ToulBar2::btdMode == 3)
+                break;
+        }
+        ++itc;
+    }
+    cout<<"Min height : "<<minheight<<endl;
+    return cmin_height;
+    
+}
+
+Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited){
+    Cluster* cmax_ratio = NULL;
+    float maxratio = 0;
+    for (TClusters::iterator itc = unvisited.begin(); itc != unvisited.end(); ++itc){
+        Cluster* c = *itc;
+        assert(c);
+        if(ToulBar2::ReduceHeight==1){
+            // cout<<"Applying reduceheight then calculate ratio"<<endl;
+            reduceHeight(c, vector<Cluster *>());
+        }
+        if (float(c->getNbVars())/float((height(c)-c->getNbVars())) >= maxratio){
+            maxratio = float(c->getNbVars())/float(height(c)-c->getNbVars());
+            cmax_ratio = c;
+            if (ToulBar2::btdMode == 3)
+                break;
+        }
+    }
+    cout<<"Max ratio : "<<maxratio<<endl;
+    return cmax_ratio;
+}
+
+
+
+
+Cluster* TreeDecomposition::getCluster_height_rootsize_min(TClusters& unvisited){
+    TClusters::iterator itc = unvisited.begin();
+    Cluster*c_start = *itc;
+    assert(c_start);
+    float minratio = float(c_start->getNbVars())/float(height(c_start)-c_start->getNbVars());
+    Cluster* cmin_ratio = c_start;
+    ++itc;
+    while(itc != unvisited.end()){
+        Cluster* c = *itc;
+        assert(c);
+        if(ToulBar2::ReduceHeight==1){
+            //cout<<"Applying reduceheight then calculate ratio"<<endl;
+            reduceHeight(c, vector<Cluster *>());
+        }   
+        if (float(c->getNbVars())/float((height(c)-c->getNbVars())) < minratio){
+            minratio = float(c->getNbVars())/float(height(c)-c->getNbVars());
+            cmin_ratio = c;
+            if (ToulBar2::btdMode == 3)
+                break;
+        }
+        ++itc;
+    }
+    cout<<"Min ratio : "<<minratio<<endl;
+    return cmin_ratio;
+}
+
+
 
 int TreeDecomposition::height(Cluster* r, Cluster* father)
 {
@@ -1724,7 +1805,7 @@ void TreeDecomposition::computeDepths(Cluster* c, int parent_depth)
 }
 
 int TreeDecomposition::makeRooted()
-{
+{   
     TClusters visited;
     TClusters unvisited(clusters.begin(), clusters.end());
     bool isalreadyrooted = (roots.size() > 0);
@@ -1753,9 +1834,38 @@ int TreeDecomposition::makeRooted()
         } else {
             if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)clusters.size()) {
                 root = getCluster(ToulBar2::btdRootCluster);
+                cout<<"ratio : " << float(root->getNbVars())/float(height(root)-root->getNbVars())<<endl;
+                
                 selected = true;
             } else {
-                root = getBiggerCluster(unvisited);
+
+
+                if(ToulBar2::RootHeu == 0){
+                    cout<<"Get biggest cluster"<<endl;
+                    root = getBiggerCluster(unvisited);}
+                if(ToulBar2::RootHeu==1){
+                    cout <<"Get max ratio" <<endl;
+                    root=getCluster_height_rootsize_max(unvisited);
+                    //cout<<"Ratio : " << float(root->getNbVars())/float(height(root)-root->getNbVars())<<endl;
+
+                }
+                if (ToulBar2::RootHeu == 2){
+                    cout <<"Get min ratio" <<endl;
+                    root = getCluster_height_rootsize_min(unvisited);
+                    //cout<<"Ratio : " << float(root->getNbVars())/float(height(root)-root->getNbVars())<<endl;
+                } 
+
+                 if (ToulBar2::RootHeu == 3){
+                    cout <<"Get min height" <<endl;
+                    root = getClusterMinHeight(unvisited);
+                    //cout<<"Ratio : " << float(root->getNbVars())/float(height(root)-root->getNbVars())<<endl;
+                }
+
+
+
+
+
+
             }
             roots.push_back(root);
             reduceHeight(root, vector<Cluster *>());
@@ -1774,6 +1884,7 @@ int TreeDecomposition::makeRooted()
     }
     assert(visited.size() == clusters.size());
     assert(unvisited.size() == 0);
+
 
     if (ToulBar2::searchMethod != DFBB)
         return 0;
@@ -1842,7 +1953,9 @@ int TreeDecomposition::makeRooted()
     // compute the depth of each cluster
     computeDepths(getRoot(), -1);
 
-    return height(root);
+    int h = height(root);
+
+    return h;
 }
 
 void TreeDecomposition::setDuplicates()

@@ -486,6 +486,9 @@ public:
     int makeRooted(); // defines a rooted cluster tree decomposition from an undirected one
     void makeRootedRec(Cluster* c, TClusters& visited, TClusters& unvisited);
     Cluster* getBiggerCluster(TClusters& unvisited);
+    Cluster* getCluster_height_rootsize_min(TClusters& unvisited);
+    Cluster* getCluster_height_rootsize_max(TClusters& unvisited);
+    Cluster* getClusterMinHeight(TClusters& unvisited);
     Cluster* getRoot() { return roots.front(); }
     Cluster* getRootRDS() { return rootRDS; }
     void setRootRDS(Cluster* rdsroot) { rootRDS = rdsroot; }

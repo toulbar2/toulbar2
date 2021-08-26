@@ -154,6 +154,8 @@ enum {
     // search option
     OPT_SEARCH_METHOD,
     OPT_btdRootCluster,
+    OPT_RootHeu,
+    OPT_ReduceHeight,
     OPT_btdSubTree,
     OPT_splitClusterMaxSize,
     OPT_maxSeparatorSize,
@@ -365,6 +367,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_SEARCH_METHOD, (char*)"--search", SO_REQ_SEP },
     { OPT_btdRootCluster, (char*)"-R", SO_REQ_SEP }, // root cluster used in BTD
     { OPT_btdRootCluster, (char*)"--RootCluster", SO_REQ_CMB },
+    { OPT_RootHeu, (char*)"-RootHeu",SO_REQ_CMB},
+    { OPT_ReduceHeight, (char*)"-ReHeight",SO_REQ_CMB},
     { OPT_btdSubTree, (char*)"-I", SO_REQ_SEP }, // btd sub tree
     { OPT_splitClusterMaxSize, (char*)"-j", SO_REQ_SEP },
     { OPT_maxSeparatorSize, (char*)"-r", SO_REQ_SEP },
@@ -1256,6 +1260,29 @@ int _tmain(int argc, TCHAR* argv[])
                 if (root > 0 || (root==0 && args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
                     ToulBar2::btdRootCluster = root;
             }
+
+            
+
+            //choose root heuristically 
+
+
+            if (args.OptionId() == OPT_RootHeu) {
+                int root = atoi(args.OptionArg());
+                if (root > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
+                    ToulBar2::RootHeu = root;
+            } 
+            // ReduceHeight before or after to compute the ratio
+            if (args.OptionId() == OPT_ReduceHeight) {
+                int ReHeight = atoi(args.OptionArg());
+                if (ReHeight > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
+                    ToulBar2::ReduceHeight = ReHeight;
+            }
+
+
+
+            
+
+
             // btd SubTree initialisation sub cluster
 
             if (args.OptionId() == OPT_btdSubTree) {
