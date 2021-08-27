@@ -196,7 +196,7 @@ public:
 #ifndef TB2ILOGMIPSOLVER_HPP_
 #define TB2ILOGMIPSOLVER_HPP_
 
-#include "tb2types.hpp"
+#include "core/tb2types.hpp"
 #include <ilcplex/ilocplex.h>
 
 class IlogMIP : public MIP {

@@ -27,15 +27,18 @@ file(
   ${My_Source}/globals/tb2grammarutils.*pp
   ${My_Source}/globals/tb2maxconstr.*pp
   ${My_Source}/globals/tb2treeconstr.*pp
-  #                        ${My_Source}/globals/tb2linearconstr.*pp
-  #                        ${My_Source}/globals/tb2lpsconstr.*pp
-  #                        ${My_Source}/globals/tb2mipsolver.*pp
   ${My_Source}/incop/*.cpp 
   ${My_Source}/search/*.*pp
   ${My_Source}/utils/*.*pp
   ${My_Source}/vns/*.*pp 
   ${My_Source}/ToulbarVersion.*pp
   )
+
+IF(CPLEX)
+  set(LIBTB2FILES ${LIBTB2FILES} ${My_Source}/globals/tb2linearconstr.cpp)
+  set(LIBTB2FILES ${LIBTB2FILES} ${My_Source}/globals/tb2lpsconstr.cpp)
+  set(LIBTB2FILES ${LIBTB2FILES} ${My_Source}/globals/tb2mipsolver.cpp)  
+ENDIF(CPLEX)
 
 set(source_files ${LIBTB2FILES} ${My_Source}/tb2main.cpp)
 set(pysource_files ${LIBTB2FILES} ${My_Source}/pytoulbar2.cpp)

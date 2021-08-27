@@ -39,7 +39,7 @@ CC = g++
 #ILOGLIBS = -L/usr/local/ILOG/solver65/lib/x86-64_rhel4.0_3.4/static_pic -L/usr/local/ILOG/concert25/lib/x86-64_rhel4.0_3.4/static_pic -lsolverfloat -lsolver -lconcert
 
 ## PLPS cost functions needs CPLEX installed (update the following path depending on your configuration and uncomment the following three lines) *** Warning! Beta untested version for PLPS ***
-##CPLEX_LOCATION = /opt/ibm/ILOG/CPLEX_Studio126
+##CPLEX_LOCATION = /opt/ibm/ILOG/CPLEX_Studio1210
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -pthread -rdynamic 
 

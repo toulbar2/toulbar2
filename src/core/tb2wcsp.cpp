@@ -19,7 +19,7 @@
 #include "tb2globaldecomposable.hpp"
 #include "globals/tb2globalconstr.hpp"
 #ifdef ILOGCPLEX
-#include "global/tb2lpsconstr.hpp"
+#include "globals/tb2lpsconstr.hpp"
 #endif
 #include "globals/tb2flowbasedconstr.hpp"
 #include "globals/tb2alldiffconstr.hpp"
