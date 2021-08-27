@@ -1,46 +1,27 @@
 #include "tb2mipsolver.hpp"
 
-MIP::MIP()
-    : solver(NULL)
-{
 #ifdef ILOGCPLEX
-    solver = new IlogMIP();
-#endif
-    if (solver == this) {
-        cout << "Error: Looping In IlogMIP\n";
-        exit(1);
-    }
-}
 
-MIP::~MIP()
+MIP *MIP::makeMIP()
 {
-    delete solver;
+   return new IlogMIP();
 }
-
-#ifdef ILOGCPLEX
 
 IlogMIP::IlogMIP()
 {
-    model = (IloModel*)malloc(sizeof(IloModel));
-    *model = IloModel(env);
+    model = new IloModel(env);
 
-    var = (IloNumVarArray*)malloc(sizeof(IloNumVarArray));
-    *var = IloNumVarArray(env);
+    var = new IloNumVarArray(env);
 
-    obj = (IloObjective*)malloc(sizeof(IloObjective));
-    *obj = IloObjective(env, 0, IloObjective::Minimize);
+    obj = new IloObjective(env, 0, IloObjective::Minimize);
 
-    con = (IloRangeArray*)malloc(sizeof(IloRangeArray));
-    *con = IloRangeArray(env);
+    con = new IloRangeArray(env);
 
-    cplex = (IloCplex*)malloc(sizeof(IloCplex));
-    *cplex = IloCplex(env);
+    cplex = new IloCplex(env);
 
-    sols = (IloNumArray*)malloc(sizeof(IloNumArray));
-    *sols = IloNumArray(env);
+    sols = new IloNumArray(env);
 
-    buObjExpr = (IloNumExprArg*)malloc(sizeof(IloNumExprArg));
-    *buObjExpr = IloNumExprArg();
+    buObjExpr = new IloNumExprArg();
 
     cols.clear();
     rowCount = 0;

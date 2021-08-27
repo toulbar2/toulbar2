@@ -8,198 +8,70 @@
 #include "core/tb2types.hpp"
 
 class MIP { //Wrapper Interface for MIP solver
-
-private:
-    MIP* solver;
-
 public:
-    MIP();
+    static MIP *makeMIP();
 
-    virtual ~MIP();
+    virtual ~MIP() {}
 
-    virtual unsigned called_time()
-    {
-        if (solver)
-            return solver->called_time();
-        return 0;
-    }
+    virtual unsigned called_time() = 0;
 
-    virtual void clear()
-    {
-        if (solver)
-            solver->clear();
-    }
+    virtual void clear() = 0;
 
-    virtual void end()
-    {
-        if (solver)
-            solver->end();
-    }
+    virtual void end() = 0;
 
-    virtual void addRows(int n)
-    {
-        if (solver)
-            solver->addRows(n);
-    }
+    virtual void addRows(int n) = 0;
 
-    virtual void addInt(int n)
-    {
-        if (solver)
-            solver->addInt(n);
-    }
+    virtual void addInt(int n) = 0;
 
-    virtual void addBool(int n)
-    {
-        if (solver)
-            solver->addBool(n);
-    }
+    virtual void addBool(int n) = 0;
 
-    virtual void addCols(int n)
-    {
-        if (solver)
-            solver->addCols(n);
-    }
+    virtual void addCols(int n) = 0;
 
-    virtual void rowBound(int n, int upper, int lower)
-    {
-        if (solver)
-            solver->rowBound(n, upper, lower);
-    }
+    virtual void rowBound(int n, int upper, int lower) = 0;
 
-    virtual void rowLowerBound(int n, int lower)
-    {
-        if (solver)
-            solver->rowLowerBound(n, lower);
-    }
+    virtual void rowLowerBound(int n, int lower) = 0;
 
-    virtual void rowUpperBound(int n, int upper)
-    {
-        if (solver)
-            solver->rowUpperBound(n, upper);
-    }
+    virtual void rowUpperBound(int n, int upper) = 0;
 
-    virtual void rowCoeff(int n, int count, int indexes[], double values[])
-    {
-        if (solver)
-            solver->rowCoeff(n, count, indexes, values);
-    }
+    virtual void rowCoeff(int n, int count, int indexes[], double values[]) = 0;
 
-    virtual int solValue()
-    {
-        if (solver)
-            return solver->solValue();
-        return 0;
-    }
+    virtual int solValue() = 0;
 
-    virtual int sol(int var1)
-    {
-        if (solver)
-            return solver->sol(var1);
-        return 0;
-    }
+    virtual int sol(int var1) = 0;
 
-    virtual int colUpperBound(int var1)
-    {
-        if (solver)
-            return solver->colUpperBound(var1);
-        return 0;
-    }
+    virtual int colUpperBound(int var1) = 0;
 
-    virtual void colUpperBound(int var1, int i)
-    {
-        if (solver)
-            return solver->colUpperBound(var1, i);
-    }
+    virtual void colUpperBound(int var1, int i) = 0;
 
-    virtual int augment(int var1)
-    {
-        if (solver)
-            return solver->augment(var1);
-        return 0;
-    }
+    virtual int augment(int var1) = 0;
 
-    virtual int objCoeff(int var1)
-    { //Get the coefficient of the variable from the MIP
-        if (solver)
-            return solver->objCoeff(var1);
-        return 0;
-    }
+    virtual int objCoeff(int var1) = 0;
 
-    virtual void objCoeff(int var1, int i)
-    { // Set the coefficient of the variable
-        if (solver)
-            solver->objCoeff(var1, i);
-    }
+    virtual void objCoeff(int var1, int i) = 0;
 
-    virtual int solve()
-    { //return the optimal value from the MIP
-        if (solver)
-            solver->solve();
-        return 0;
-    }
+    virtual int solve() = 0;
 
-    virtual int sol(int varindex, int value)
-    {
-        if (solver)
-            solver->sol(varindex, value);
-        return 0;
-    }
+    virtual int sol(int varindex, int value) = 0;
 
-    virtual void removeValue(int varindex, int value)
-    {
-        if (solver)
-            solver->removeValue(varindex, value);
-    }
+    virtual void removeValue(int varindex, int value) = 0;
 
-    virtual int augment(int varindex, int value)
-    {
-        if (solver)
-            return solver->augment(varindex, value);
-        return 0;
-    }
-    virtual int coeff(int varindex, int value)
-    {
-        if (solver)
-            return solver->coeff(varindex, value);
-        return 0;
-    }
+    virtual int augment(int varindex, int value) = 0;
 
-    virtual void increaseCoeff(int varindex, int value, int newCoeff)
-    {
-        if (solver)
-            return solver->increaseCoeff(varindex, value, newCoeff);
-    }
+    virtual int coeff(int varindex, int value) = 0;
 
-    virtual void getDomain(int varindex, vector<int>& domain)
-    {
-        if (solver)
-            return solver->getDomain(varindex, domain);
-    }
+    virtual void increaseCoeff(int varindex, int value, int newCoeff) = 0;
 
-    virtual void backup()
-    {
-        if (solver)
-            solver->backup();
-    }
+    virtual void getDomain(int varindex, vector<int>& domain) = 0;
 
-    virtual int restore()
-    {
-        if (solver)
-            return solver->restore();
-        return 0;
-    }
+    virtual void backup() = 0;
+
+    virtual int restore() = 0;
 };
 
-#endif /*TB2MIPSOLVER_HPP_*/
-
 #ifdef ILOGCPLEX
-#ifndef TB2ILOGMIPSOLVER_HPP_
-#define TB2ILOGMIPSOLVER_HPP_
-
-#include "core/tb2types.hpp"
 #include <ilcplex/ilocplex.h>
 
-class IlogMIP : public MIP {
+class IlogMIP FINAL : public MIP {
 private:
     IloEnv env;
     IloModel* model;
@@ -286,9 +158,9 @@ public:
     virtual int restore();
 };
 
-#endif /*TB2ILOGMIPSOLVER_HPP_*/
-
 #endif
+
+#endif /*TB2MIPSOLVER_HPP_*/
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

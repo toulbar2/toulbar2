@@ -3,11 +3,12 @@
 
 #define verify
 
-LinearConstraint::LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
-    int arity_in)
+LinearConstraint::LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : GlobalConstraint(wcsp, scope_in, arity_in, 0)
+    , initTest(false)
+    , mip(NULL)
 {
-    initTest = false;
+    mip = MIP::makeMIP();
 }
 
 Cost LinearConstraint::solveMIP(MIP& mip)
@@ -18,7 +19,7 @@ Cost LinearConstraint::solveMIP(MIP& mip)
 void LinearConstraint::initStructure()
 {
 
-    cost = buildMIP(mip);
+    cost = buildMIP();
 
     buObj = new int[count];
 
@@ -27,7 +28,7 @@ void LinearConstraint::initStructure()
 
 void LinearConstraint::end()
 {
-    mip.called_time();
+    mip->called_time();
     if (deconnected())
         return;
 }
@@ -120,22 +121,22 @@ void LinearConstraint::changeAfterExtend(vector<int>& supports, vector<map<Value
         buObj = new int[count];
     }
     for (int i = 0; i < count; i++) {
-        buObj[i] = mip.objCoeff(i); // retrieve unary cost
+        buObj[i] = mip->objCoeff(i); // retrieve unary cost
     }
     for (unsigned int i = 0; i < supports.size(); i++) {
         for (map<Value, Cost>::iterator v = deltas[i].begin(); v != deltas[i].end(); v++)
             v->second *= -1;
-        augmentStructure(mip, cost, supports[i], deltas[i]);
+        augmentStructure(*mip, cost, supports[i], deltas[i]);
         for (map<Value, Cost>::iterator v = deltas[i].begin(); v != deltas[i].end(); v++)
             v->second *= -1;
     }
-    cost = solveMIP(mip); // solve
+    cost = solveMIP(); // solve
 }
 
 void LinearConstraint::changeAfterProject(vector<int>& supports, vector<map<Value, Cost>>& deltas)
 {
     for (unsigned int i = 0; i < supports.size(); i++) {
-        augmentStructure(mip, cost, supports[i], deltas[i]);
+        augmentStructure(*mip, cost, supports[i], deltas[i]);
     }
 }
 
@@ -152,7 +153,7 @@ void LinearConstraint::getDomainFromMIP(MIP& mip, int varindex, vector<int>& dom
 
 unsigned LinearConstraint::called_time()
 {
-    return mip.called_time();
+    return mip->called_time();
 }
 
 /* Local Variables: */

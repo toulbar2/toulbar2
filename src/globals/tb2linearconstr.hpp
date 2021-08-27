@@ -12,7 +12,7 @@
 class LinearConstraint : public GlobalConstraint {
 protected:
     bool initTest;
-    MIP mip;
+    MIP *mip;
 
     int* buObj;
 
@@ -29,7 +29,7 @@ protected:
     virtual void findProjection(MIP& mip, Cost& cost, int varindex, map<Value, Cost>& delta);
     void findProjection(int varindex, map<Value, Cost>& delta)
     {
-        findProjection(mip, cost, varindex, delta);
+        findProjection(*mip, cost, varindex, delta);
     }
 
     // check whether the linear program corresponding to the current domains
@@ -37,7 +37,7 @@ protected:
     virtual void checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv);
     void checkRemoved(vector<int>& rmv)
     {
-        checkRemoved(mip, cost, rmv);
+        checkRemoved(*mip, cost, rmv);
     }
 
     virtual void changeAfterExtend(vector<int>& supports, vector<map<Value, Cost>>& deltas);
@@ -46,22 +46,22 @@ protected:
     {
         cost = bucost;
         for (int i = 0; i < count; i++) {
-            mip.objCoeff(i, buObj[i]);
+            mip->objCoeff(i, buObj[i]);
         }
     }
 
     // construct the linear program
     virtual Cost buildMIP(MIP& mip) { return 0; }
-    inline Cost buildMIP() { return buildMIP(mip); }
+    inline Cost buildMIP() { return buildMIP(*mip); }
 
     inline void augmentMIP(int varindex, map<Value, Cost>& delta)
     {
-        augmentStructure(mip, cost, varindex, delta);
+        augmentStructure(*mip, cost, varindex, delta);
     }
 
     // compute the minimal of the linear program
     virtual Cost solveMIP(MIP& mip);
-    inline Cost solveMIP() { return solveMIP(mip); }
+    inline Cost solveMIP() { return solveMIP(*mip); }
 
     // compute the domains of a variable from the linear program
     virtual void getDomainFromMIP(MIP& mip, int varindex, vector<int>& domain);
@@ -69,7 +69,7 @@ protected:
     // augment the cost to the linear program
     virtual void augmentStructure(MIP& mip, Cost& cost, int varindex, map<Value, Cost>& delta);
 
-    // compute the cost according to the original cost struture
+    // compute the cost according to the original cost structure
     virtual Cost evalOriginal(const Tuple& s) { return MIN_COST; }
     virtual Cost getMinCost()
     {
@@ -77,8 +77,7 @@ protected:
     }
 
 public:
-    LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                    arity_in);
+    LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
     ~LinearConstraint() {}
 
