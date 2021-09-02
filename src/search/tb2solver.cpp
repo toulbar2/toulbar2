@@ -1868,10 +1868,13 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 
     if (ToulBar2::btdMode) {
-        if (wcsp->numberOfUnassignedVariables() == 0 || wcsp->numberOfConnectedConstraints() == 0)
+        if (wcsp->numberOfUnassignedVariables() == 0 || wcsp->numberOfConnectedConstraints() == 0) {
             ToulBar2::approximateCountingBTD = 0;
-        ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
-        wcsp->buildTreeDecomposition();
+            ToulBar2::btdMode = 0;
+        } else {
+            ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
+            wcsp->buildTreeDecomposition();
+        }
     } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)ToulBar2::weightedDegree))) {
         if (ToulBar2::verbose >= 0)
             cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;

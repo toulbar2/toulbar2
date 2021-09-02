@@ -5275,6 +5275,8 @@ void WCSP::treeDecFile2Vector(char* filename, vector<int>& order)
 
 void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
 {
+    if (numberOfVariables()==0)
+        return;
 #ifdef BOOST
     if (reinterpret_cast<uintptr_t>(elimVarOrder) > ELIM_NONE && reinterpret_cast<uintptr_t>(elimVarOrder) < ELIM_MAX) {
         switch (reinterpret_cast<uintptr_t>(elimVarOrder)) {
