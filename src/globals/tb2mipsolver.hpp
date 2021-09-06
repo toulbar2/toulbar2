@@ -80,7 +80,6 @@ private:
     IloObjective* obj;
     IloNumExprArg* buObjExpr;
     IloRangeArray* con;
-    IloNumArray* sols;
     vector<int> cols;
     int rowCount;
     int colCount;
@@ -89,6 +88,7 @@ private:
 
 public:
     map<Value, int>* mapvar;
+    IloNumArray* sols;
 
     IlogMIP();
 

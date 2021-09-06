@@ -20,7 +20,7 @@ protected:
 
     int domainSize;
 
-    int count;
+    int count; // total number of domain values in the scope of the global cost function
 
     map<Value, int>* mapvar;
 

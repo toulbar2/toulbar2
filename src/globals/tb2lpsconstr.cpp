@@ -51,6 +51,7 @@ void LPSConstraint::read(istream& file, bool mult)
     nslacks = 0;
     windowVars = (int**)malloc(sizeof(int*) * nwindows);
     group = (int**)malloc(sizeof(int*) * nwindows);
+    kpcoefs = (int***)malloc(sizeof(int**) * nwindows);
 
     string typeID, defstr;
     for (int i = 0; i < nwindows; i++) {
@@ -68,13 +69,15 @@ void LPSConstraint::read(istream& file, bool mult)
         } else {
             file >> typeID;
             windowType.push_back(typeID);
-            file >> defstr;
-            if (strcmp(defstr.c_str(), "def") == 0 || strcmp(defstr.c_str(), "var") == 0) {
-                file >> d;
-                subdef.push_back(d);
-            } else {
-                cerr << "Error occurred in reading slinear def|var" << endl;
-                exit(1);
+            if (strcmp(windowType[i].c_str(), "knapsack") != 0 && strcmp(windowType[i].c_str(), "knapsackp") != 0) {
+                file >> defstr;
+                if (strcmp(defstr.c_str(), "def") == 0 || strcmp(defstr.c_str(), "var") == 0) {
+                    file >> d;
+                    subdef.push_back(d);
+                } else {
+                    cerr << "Error occurred in reading slinear def|var" << endl;
+                    exit(1);
+                }
             }
             if (strcmp(windowType[i].c_str(), "salldiff") == 0) {
                 nrows += domainSize;
@@ -186,6 +189,23 @@ void LPSConstraint::read(istream& file, bool mult)
                     file >> d;
                     group[i][j] = d;
                 }
+            } else if (strcmp(windowType[i].c_str(), "knapsack") == 0) {
+                nrows += 1;
+                file >> low;
+                sumlow.push_back(low);
+                sumhigh.push_back(std::numeric_limits<int>::max());
+                group[i] = NULL;
+                kpcoefs[i] = (int**)malloc(sizeof(int*) * windowSize[i]);
+                for (int j = 0; j < windowSize[i]; j++) {
+                    kpcoefs[i][j] = (int*)malloc(sizeof(int) * count2);
+                    for (int d = 0; d < count2; d++) {
+                        kpcoefs[i][j][d] = 0;
+                    }
+                }
+                for (int j = 0; j < windowSize[i]; j++) {
+                    file >> d;
+                    kpcoefs[i][j][1] = d;
+                }
             } else if (strcmp(windowType[i].c_str(), "segcc") == 0) {
                 nrows += 1;
                 nslacks += 2;
@@ -269,6 +289,14 @@ Cost LPSConstraint::evalOriginal(const Tuple& s)
                 cost += subdef[i] * (sumlow[i] - tmpSum);
             } else if (tmpSum > sumhigh[i]) {
                 cost += subdef[i] * (tmpSum - sumhigh[i]);
+            }
+        } else if (strcmp(windowType[i].c_str(), "knapsack") == 0) {
+            int tmpSum = 0;
+            for (int j = 0; j < windowSize[i]; j++) {
+                tmpSum += kpcoefs[i][j][s[windowVars[i][j]]];
+            }
+            if (tmpSum < sumlow[i]) {
+                cost = wcsp->getUb();
             }
         } else if (strcmp(windowType[i].c_str(), "segcc") == 0) {
             int appear = 0;
@@ -415,6 +443,19 @@ Cost LPSConstraint::buildMIP(MIP& mip)
             mip.rowCoeff(rowCount, count + nslacks, idxs, vars);
             mip.rowBound(rowCount, sumlow[i], sumhigh[i]);
             rowCount++;
+        } else if (strcmp(windowType[i].c_str(), "knapsack") == 0) {
+            for (int j = 0; j < count + nslacks; j++) {
+                vars[j] = 0;
+            }
+            for (int j = 0; j < windowSize[i]; j++) {
+                EnumeratedVariable* x = (EnumeratedVariable*)getVar(windowVars[i][j]);
+                for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
+                    vars[mapvar[windowVars[i][j]][*v]] = kpcoefs[i][j][x->toIndex(*v)];
+                }
+            }
+            mip.rowCoeff(rowCount, count + nslacks, idxs, vars);
+            mip.rowBound(rowCount, sumlow[i], sumhigh[i]);
+            rowCount++;
         } else if (strcmp(windowType[i].c_str(), "segcc") == 0) {
             for (int j = 0; j < count + nslacks; j++) {
                 vars[j] = 0;
@@ -517,10 +558,25 @@ void LPSConstraint::dump(ostream& os, bool original)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();
     }
-    os << " -1 slinear" << endl
-       << ((mode == VAR) ? "var" : "dec") << " " << def << " " << nvalues << endl;
-
-    os << "bounds " << sumlow[0] << " " << sumhigh[0] << endl;
+    os << " -1 slinear " << nwindows << endl;
+    for (int i = 0; i< nwindows; i++) {
+        os << windowSize[i];
+        for (int j = 0; j< windowSize[i]; j++) {
+            os << " " << windowVars[i][j];
+        }
+        os << " -1 " << windowType[i];
+        if (windowType[i]=="knapsack") {
+            os << " " << sumlow[i];
+            for (int j = 0; j< windowSize[i]; j++) {
+                os << " " << kpcoefs[i][j][1];
+            }
+        } else {
+            os << " " << subdef[i] << " " << sumlow[i] << " " << sumhigh[i];
+            cerr << endl << "sorry, dump function for slinear not fully implemented!!!" << endl;
+            exit(EXIT_FAILURE);
+        }
+        os << endl;
+    }
 }
 
 void LPSConstraint::print(ostream& os)
@@ -538,6 +594,8 @@ void LPSConstraint::print(ostream& os)
     os << ","
        << "bounds"
        << "," << sumlow[0] << "," << sumhigh[0];
+
+    os << "," << nwindows << "," << nrows << "," << nslacks;
 
     os << "]";
 }

@@ -5641,6 +5641,13 @@ void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<
     revdac.push_back(i);
 }
 
+#ifdef ILOGCPLEX
+bool WCSP::isPLPS()
+{
+    return isGlobal() && find_if(globalconstrs.begin(), globalconstrs.end(), [&](const auto& val){ return val->getName().find("slinear") != std::string::npos; }) != globalconstrs.end();
+}
+#endif
+
 /* Local Variables: */
 /* c-basic-offset: 4 */
 /* tab-width: 4 */

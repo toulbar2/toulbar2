@@ -515,6 +515,9 @@ public:
     void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
 
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
+#ifdef ILOGCPLEX
+    bool isPLPS();
+#endif
 
     Cost read_wcsp(const char* fileName); ///< \brief load problem in any of all formats managed by tb2. Return the global UB known to the solver at start (file and command line).
     void read_uai2008(const char* fileName); ///< \brief load problem in UAI 2008 format (see http://graphmod.ics.uci.edu/uai08/FileFormat and http://www.cs.huji.ac.il/project/UAI10/fileFormat.php) \warning UAI10 evidence file format not recognized by toulbar2 as it does not allow multiple evidence (you should remove the first value in the file)

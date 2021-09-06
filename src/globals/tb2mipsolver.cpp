@@ -152,7 +152,7 @@ int IlogMIP::augment(int var1)
     (*var)[var1].setLB(1);
     solve();
     int cost = solValue();
-    assert(sol(var1) == 1);
+    assert(sols->getSize() ==0 || sol(var1) == 1);
     (*var)[var1].setLB(0);
     return cost;
 } // compute the minimal when a value is used
@@ -174,14 +174,17 @@ int IlogMIP::solve()
     unsigned t0 = clock();
     cplex->solve();
     called += clock() - t0;
+    if (cplex->getStatus() == IloAlgorithm::Infeasible) {
+        throw Contradiction(); //cannot call THROWCONTRADICTION because no conflict function for weighted degree heuristic
+    }
     if (cplex->getStatus() != IloAlgorithm::Optimal) {
-        std::cout << "Solution status = " << cplex->getStatus() << std::endl;
-        cout << "IlogMIP solver error." << endl;
-        cout << *con << endl;
-        cout << *obj << endl;
-        cout << *sols << endl;
-        cout << "cost = " << objValue << endl;
-        exit(0);
+        cerr << "Solution status = " << cplex->getStatus() << std::endl;
+        cerr << "IlogMIP solver error." << endl;
+        cerr << *con << endl;
+        cerr << *obj << endl;
+        cerr << *sols << endl;
+        cerr << "cost = " << objValue << endl;
+        exit(EXIT_FAILURE);
     }
 
     if (cplex->getObjValue() - floor(cplex->getObjValue()) < 0.000001) {
@@ -211,7 +214,7 @@ void IlogMIP::removeValue(int varindex, int value)
 
 int IlogMIP::augment(int varindex, int value)
 {
-    if (sol(varindex, value) == 1) {
+    if (sols->getSize() > 0 && sol(varindex, value) == 1) {
         return solValue();
     } else {
         return augment(mapvar[varindex][value]);

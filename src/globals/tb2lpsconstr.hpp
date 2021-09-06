@@ -1,5 +1,5 @@
 /** \file tb2lpsconstr.hpp
- *  \brief Linear programming based global cost function : ssum, samong, sgcc, ssame, segcc, sdisjunction
+ *  \brief Linear programming based global cost function : ssum, samong, sgcc, ssame, segcc, sdisjunction, knapsack, knapsackp
  */
 
 #ifndef TB2LPSCONSTR_HPP_
@@ -18,7 +18,8 @@ private:
     vector<string> windowType;
     int** windowVars;
     int** group;
-    int count2;
+    int*** kpcoefs;
+    int count2; // number of different domain values
     int* wcspconstrcounter;
     void buildIndex();
     Cost buildMIP(MIP& mip);
@@ -35,7 +36,7 @@ public:
     {
     }
 
-    string getName() { return "LPS constraint"; }
+    string getName() { return "slinear_" + to_string(nwindows) + "_" + to_string(nrows) + "_" + to_string(nslacks) ; }
     Cost evalOriginal(const Tuple& s);
     virtual void read(istream& file, bool mult = true);
 

@@ -1716,6 +1716,12 @@ void Solver::beginSolve(Cost ub)
         cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
         throw BadConfiguration();        
     }
+#ifdef ILOGCPLEX
+    if (wcsp->isPLPS() && ToulBar2::hbfs) {
+        cout << "Error: cannot use Hybrid best-first search with PLPS slinear global cost functions (add -hbfs: option)." << endl;
+        throw BadConfiguration();
+    }
+#endif
     if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
         cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
         ToulBar2::elimDegree_preprocessing = -1;

@@ -388,6 +388,9 @@ public:
     virtual void setDACOrder(vector<int>& elimVarOrder) = 0; ///< \brief change DAC order and propagate from scratch
 
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
+#ifdef ILOGCPLEX
+    virtual bool isPLPS() = 0; ///< \brief true if there are Polytime Linear Projection-Safe global cost functions (slinear)
+#endif
 
     virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief load problem in all format supported by toulbar2. Returns the UB known to the solver before solving (file and command line).
     virtual void read_legacy(const char* fileName) = 0; ///< \brief load problem in wcsp legacy format
