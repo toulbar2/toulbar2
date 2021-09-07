@@ -54,6 +54,13 @@ AminoMRF::AminoMRF(const char* filename)
         if (debug)
             cout << s << endl;
 
+        if (s.find(",") != string::npos)
+            {
+                cerr << "Your eMRF file does not use decimal point floating point numbers.\n";
+                cerr << "Do 'sed -i -e s/,/./g " << filename << "'.\n";
+                exit(EXIT_FAILURE);
+            }
+        
         if (s[0] == '#') {
             binariesReached = true;
             break;
