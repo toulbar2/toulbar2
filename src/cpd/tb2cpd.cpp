@@ -54,13 +54,12 @@ AminoMRF::AminoMRF(const char* filename)
         if (debug)
             cout << s << endl;
 
-        if (s.find(",") != string::npos)
-            {
-                cerr << "Your eMRF file does not use decimal point floating point numbers.\n";
-                cerr << "Do 'sed -i -e s/,/./g " << filename << "'.\n";
-                exit(EXIT_FAILURE);
-            }
-        
+        if (s.find(",") != string::npos) {
+            cerr << "Your eMRF file does not use decimal point floating point numbers.\n";
+            cerr << "Do 'sed -i -e s/,/./g " << filename << "'.\n";
+            exit(EXIT_FAILURE);
+        }
+
         if (s[0] == '#') {
             binariesReached = true;
             break;
@@ -335,6 +334,7 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
     // classify variables
     map<int, size_t> posList; // map of residue position to AA varIdx
     map<int, size_t> posSeqList; // map of designed position to sequence varIdx
+    set<size_t> skipMe; // set of positions to skip - out of native
 
     if (debug)
         cout << "Number of variables: " << pb->numberOfVariables() << endl;
@@ -352,7 +352,9 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
             cout << "Variable " << pb->getVars()[varIdx]->getName() << " has position " << pos << endl;
 
         if ((pos < 0 || (unsigned int)pos >= nVar) && (isAA || isSeq)) {
-            cerr << "Variable " << pb->getVars()[varIdx]->getName() << " has an out-of-range sequence position (wrt. native)" << endl;
+            cout << "Variable " << pb->getVars()[varIdx]->getName() << " has an out-of-range sequence position (wrt. native) and will be ignored" << endl;
+            skipMe.insert(pos);
+            continue;
         }
         if (isAA) {
             posList[pos] = varIdx;
@@ -468,9 +470,13 @@ void AminoMRF::Penalize(WeightedCSP* pb, TLogProb CMRFBias)
         if (pb->getVars()[varIdx]->getState() || !ToulBar2::cpd->isAAVariable(pb->getVars()[varIdx]) || pb->getVars()[varIdx]->isEvolutionMasked())
             continue;
 
+        int pos = pb->getVars()[varIdx]->getPosition();
+        if (skipMe.count(pos) > 0) {
+            continue;
+        }
+
         bool warn = true;
         vector<Cost> biases;
-        int pos = pb->getVars()[varIdx]->getPosition();
 
         if (debug)
             cout << "Processing unary MRF potential on position " << pos << ", variable " << varIdx << endl;
