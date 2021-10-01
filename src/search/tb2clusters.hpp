@@ -29,6 +29,11 @@ struct CmpClusterStructBasic {
     bool operator()(const Cluster* lhs, const Cluster* rhs) const;
 };
 typedef set<Cluster*, CmpClusterStructBasic> TClusters;
+
+// data structure for connected components
+typedef set<TClusters> component;
+//cluster visited or not 
+typedef map<Cluster*, bool> cluster_visited;
 // sort cluster sons by mean separator size first and by number of variables in their subtree next
 struct CmpClusterStruct {
     bool operator()(const Cluster* lhs, const Cluster* rhs) const;
@@ -436,7 +441,13 @@ private:
 
     int max_depth;
 
-public:
+public: 
+
+    //connected component of the tree
+    component tree_component; 
+    // provisoire components
+    TClusters comp;
+    
     TreeDecomposition(WCSP* wcsp_in);
 
     WCSP* getWCSP() { return wcsp; }
@@ -484,6 +495,15 @@ public:
     bool isDescendant(Variable* x, Variable* y) { return getCluster(x->getCluster())->isDescendant(getCluster(y->getCluster())); }
 
     int makeRooted(); // defines a rooted cluster tree decomposition from an undirected one
+
+    //reachable clusters from a cluster
+    void DFSUtil(Cluster* c, cluster_visited& c_visited);
+
+    //all connectec components of tree decomposition. 
+
+    int connectedComponents();
+
+
     void makeRootedRec(Cluster* c, TClusters& visited, TClusters& unvisited);
     Cluster* getBiggerCluster(TClusters& unvisited);
     Cluster* getCluster_height_rootsize_min(TClusters& unvisited);

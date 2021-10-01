@@ -2372,6 +2372,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
+
+    
+
+
     if (ToulBar2::verbose >= 0 && ToulBar2::heuristicFreedom && wcsp->getTreeDec()) {
         cout << "Summary of adaptive BTD: " << endl;
         double sum = nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
@@ -2408,7 +2412,28 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             if (ToulBar2::haplotype)
                 cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
             else if (!ToulBar2::bayesian)
-                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+            {
+
+                if(ToulBar2::heuristicFreedom && wcsp->getTreeDec()){ 
+
+                double allsum =  nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
+                double per_newpositivechoices = (nbChoices / allsum ) * 100.0;
+                double per_trans_pos2nega = (nbChoiceChange / nbChoices) * 100.0;
+                double per_trans_transnogood = (nbForcedChoiceChange / allsum) * 100.0;
+                double per_forcednegativechoices = (nbForcedChoices / allsum) * 100.0 ;
+                double per_choiceswithoutchange  = (nbReadOnly / allsum) * 100.0;
+                int denominator_depth = wcsp->getTreeDec()->getMaxDepth();
+            
+            
+                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds "<<" depth "<< solveDepth << "/" << denominator_depth <<" %newpositivechoices "<< per_newpositivechoices<<" transitions(pos2neg) "<<per_trans_pos2nega<<" transduetonogood "<<per_trans_transnogood<<" forcednegativechoices "<<per_forcednegativechoices<<" choiceswithoutchange "<<per_choiceswithoutchange<< endl;
+
+                }
+
+                else{
+
+                     cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
+                }
+            }    
             else
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
         } else {

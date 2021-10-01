@@ -1665,7 +1665,10 @@ Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited)
     float maxratio = 0;
     for (TClusters::iterator itc = unvisited.begin(); itc != unvisited.end(); ++itc){
         Cluster* c = *itc;
-        assert(c);
+        assert(c); 
+
+        //if (c->getEdges().size()==0){continue;}
+        
         if(ToulBar2::ReduceHeight==1){
             // cout<<"Applying reduceheight then calculate ratio"<<endl;
             reduceHeight(c, vector<Cluster *>());
@@ -1678,6 +1681,7 @@ Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited)
         }
     }
     cout<<"Max ratio : "<<maxratio<<endl;
+    //cout<<"neigbors : "<<cmax_ratio->getEdges().size()<<endl;
     return cmax_ratio;
 }
 
@@ -1804,24 +1808,71 @@ void TreeDecomposition::computeDepths(Cluster* c, int parent_depth)
     }
 }
 
+
+void TreeDecomposition::DFSUtil(Cluster* c, cluster_visited& c_visited){ 
+    c_visited[c] = true;  
+    comp.insert(c);
+    for (TClusters::iterator itc = c->getEdges().begin(); itc != c->getEdges().end();++itc){
+        if (!c_visited[*itc]){
+            
+          DFSUtil(*itc,c_visited);
+
+        }
+    }
+
+}
+
+int TreeDecomposition::connectedComponents(){
+
+    cluster_visited c_visited; 
+    // Mark all the clusters as not visited 
+    for (vector<Cluster*>::iterator itc = clusters.begin(); itc != clusters.end();++itc){
+        c_visited[*itc] = false;
+    }
+
+    for (vector<Cluster*>::iterator it = clusters.begin(); it != clusters.end();++it){
+        if (c_visited[*it] == false) { 
+            comp.clear();
+            DFSUtil(*it,c_visited);
+            //cout << "Component:" <<endl;
+            tree_component.insert(comp);
+    }
+
+    }
+    cout<<"number of connect componet : "<< tree_component.size()<<endl;
+    return tree_component.size();
+}
+
+
+
+
 int TreeDecomposition::makeRooted()
+
 {   
-    TClusters visited;
-    TClusters unvisited(clusters.begin(), clusters.end());
+   
+    cout << "root size before :"<<roots.size()<<endl;
     bool isalreadyrooted = (roots.size() > 0);
     Cluster* root = NULL;
     list<Cluster*> temproots;
     if (isalreadyrooted) {
         temproots = roots;
-    }
+    } 
+
+    int n = connectedComponents(); 
+    cout << "Number of Components "<<n<< endl;                                                                                                                                                                                                                                                                              
 
     for (unsigned int i = 0; i < clusters.size(); i++) {
         Cluster* c = clusters[i];
         c->accelerateIntersections();
     }
 
+    for(auto it = tree_component.begin(); it != tree_component.end();++it){
+
+    TClusters visited;
+    TClusters unvisited(*it);
+
     bool selected = false;
-    while (visited.size() < clusters.size()) {
+    while (visited.size() < (*it).size()) {
         if (isalreadyrooted) {
             if (temproots.size() > 0) {
                 root = temproots.front();
@@ -1832,7 +1883,7 @@ int TreeDecomposition::makeRooted()
                 exit(EXIT_FAILURE);
             }
         } else {
-            if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)clusters.size()) {
+            if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)(*it).size()) {
                 root = getCluster(ToulBar2::btdRootCluster);
                 cout<<"ratio : " << float(root->getNbVars())/float(height(root)-root->getNbVars())<<endl;
                 
@@ -1881,9 +1932,9 @@ int TreeDecomposition::makeRooted()
         unvisited.erase(root);
         makeRootedRec(root, visited, unvisited);
         makeDescendants(root);
-    }
-    assert(visited.size() == clusters.size());
-    assert(unvisited.size() == 0);
+    }}
+    //assert(visited.size() == (*it).size());
+    //assert(unvisited.size() == 0);
 
 
     if (ToulBar2::searchMethod != DFBB)
@@ -1892,6 +1943,7 @@ int TreeDecomposition::makeRooted()
     // if it is a forest then create a unique meta-root cluster with empty separators with its children
     // if it is not a forest but adaptive BTD is used then always create a meta-root cluster
     if (roots.size() > 1 || (ToulBar2::btdMode==1 && ToulBar2::heuristicFreedom)) {
+        cout <<"root size now is : "<<roots.size()<<endl;
         root = new Cluster(this);
         root->setId(clusters.size());
         clusters.push_back(root);
@@ -1957,6 +2009,7 @@ int TreeDecomposition::makeRooted()
 
     return h;
 }
+
 
 void TreeDecomposition::setDuplicates()
 {
