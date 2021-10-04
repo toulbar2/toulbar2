@@ -269,8 +269,8 @@ or if no integer is given, finds all solutions (or counts the number of zero-cos
 \item[{-hbfs=[integer]}] hybrid best-first search~\cite{Katsirelos15a}, restarting from the
   root after a given number of backtracks (default value is 10000)
 \item[{-open=[integer]}] hybrid best-first search limit on the number
-  of stored open nodes (default value is -1)
-\item[{-B=[integer]}] (0) DFBB, (1) BTD~\cite{Schiex06a}, (2) RDS-BTD~\cite{Sanchez09a}, (3) RDS-BTD with
+  of stored open nodes (default value is -1, i.e., no limit)
+\item[{-B=[integer]}] (0) HBFS, (1) BTD-HBFS~\cite{Schiex06a,Katsirelos15a}, (2) RDS-BTD~\cite{Sanchez09a}, (3) RDS-BTD with
   path decomposition instead of tree decomposition~\cite{Sanchez09a} (default value is
   0)
 \item[{-O=[filename]}] reads either a reverse variable elimination order (given by a list of variable indexes) from a file

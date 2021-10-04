@@ -3751,6 +3751,8 @@ void WCSP::propagateAC()
     if (Store::getDepth() == 0)
         AC.sort(false);
     while (!AC.empty()) {
+        if (ToulBar2::interrupted)
+            throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
         if (x->unassigned())
             x->propagateAC();
