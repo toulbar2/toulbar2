@@ -1,2 +1,2 @@
 // Cmake generated version
-#define Toulbar_VERSION "1.1.1-175-g0fd12ebb-btdfree (1633358592)"
+#define Toulbar_VERSION "1.1.1-176-g3b2a4fc-btdfree-tainted (1633364705)"

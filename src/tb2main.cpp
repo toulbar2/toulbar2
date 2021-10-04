@@ -368,7 +368,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_btdRootCluster, (char*)"-R", SO_REQ_SEP }, // root cluster used in BTD
     { OPT_btdRootCluster, (char*)"--RootCluster", SO_REQ_CMB },
     { OPT_RootHeu, (char*)"-RootHeu",SO_REQ_CMB},
+    { OPT_RootHeu, (char*)"-root",SO_REQ_CMB},
     { OPT_ReduceHeight, (char*)"-ReHeight",SO_REQ_CMB},
+    { OPT_ReduceHeight, (char*)"-minheight",SO_REQ_CMB},
     { OPT_btdSubTree, (char*)"-I", SO_REQ_SEP }, // btd sub tree
     { OPT_splitClusterMaxSize, (char*)"-j", SO_REQ_SEP },
     { OPT_maxSeparatorSize, (char*)"-r", SO_REQ_SEP },
@@ -916,6 +918,8 @@ void help_msg(char* toulbar2filename)
     cout << "   -E=[float] : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option \"-vns\") (default value is " << ToulBar2::boostingBTD << ")" << endl;
     cout << "   -F=[integer] : merge clusters automatically to give more freedom to variable ordering heuristic in BTD-HBFS (0:no freedom, 1:adaptive) (default value is " << ToulBar2::heuristicFreedom << ")" << endl;
     cout << "   -LF=[integer] : separator count limit for switching from cluster descendant merging to cluster decomposition (default value is " << ToulBar2::heuristicFreedomLimit << ")" << endl;
+    cout << "   -root=[integer] : root cluster heuristic (0:largest, 1:max. size/(height-size), 2:min. size/(height-size), 3:min. height) (default value is " << ToulBar2::rootHeuristic << ")" << endl;
+    cout << "   -minheight=[0|1] : minimize cluster tree height when searching for the root cluster (0:no, 1:yes) (default value is " << ToulBar2::reduceHeight << ")" << endl;
     cout << "   -R=[integer] : choice for a specific root cluster number" << endl;
     cout << "   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)" << endl
          << endl;
@@ -1269,13 +1273,13 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_RootHeu) {
                 int root = atoi(args.OptionArg());
                 if (root > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
-                    ToulBar2::RootHeu = root;
+                    ToulBar2::rootHeuristic = root;
             } 
             // ReduceHeight before or after to compute the ratio
             if (args.OptionId() == OPT_ReduceHeight) {
                 int ReHeight = atoi(args.OptionArg());
                 if (ReHeight > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
-                    ToulBar2::ReduceHeight = ReHeight;
+                    ToulBar2::reduceHeight = ReHeight;
             }
 
 

@@ -499,8 +499,7 @@ public:
     //reachable clusters from a cluster
     void DFSUtil(Cluster* c, cluster_visited& c_visited);
 
-    //all connectec components of tree decomposition. 
-
+    //all cluster connected components of the tree decomposition
     int connectedComponents();
 
 

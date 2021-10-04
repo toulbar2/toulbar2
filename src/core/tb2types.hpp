@@ -756,8 +756,8 @@ public:
     static int btdMode;
     static int btdSubTree;
     static int btdRootCluster;
-    static int RootHeu;
-    static int ReduceHeight;
+    static int rootHeuristic;
+    static int reduceHeight;
 
     static bool maxsateval;
     static bool xmlflag;

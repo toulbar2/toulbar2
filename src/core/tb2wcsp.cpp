@@ -194,8 +194,8 @@ char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
 int ToulBar2::btdSubTree;
 int ToulBar2::btdRootCluster;
-int ToulBar2::RootHeu;
-int ToulBar2::ReduceHeight;
+int ToulBar2::rootHeuristic;
+int ToulBar2::reduceHeight;
 
 double ToulBar2::startCpuTime;
 
@@ -392,8 +392,8 @@ void tb2init()
     ToulBar2::btdMode = 0;
     ToulBar2::btdSubTree = -1;
     ToulBar2::btdRootCluster = -1;
-    ToulBar2::RootHeu = 0;
-    ToulBar2::ReduceHeight=0;
+    ToulBar2::rootHeuristic = 0;
+    ToulBar2::reduceHeight=0;
 
     ToulBar2::startCpuTime = 0;
 
