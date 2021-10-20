@@ -140,7 +140,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
             params.append(to_string(lb) + " ");
             for (int i = 0; i < arity; i++) {
                 params.append(to_string(values.size()) + " ");
-                for (int e : values) {
+                for (Value e : values) {
                     params.append(to_string(e) + " 1 ");
                 }
             }
@@ -153,7 +153,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
             params.append("-" + to_string(ub) + " ");
             for (int i = 0; i < arity; i++) {
                 params.append(to_string(values.size()) + " ");
-                for (int e : values) {
+                for (Value e : values) {
                     params.append(to_string(e) + " -1 ");
                 }
             }
@@ -258,7 +258,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
     wcsp->postUnary(addVariablesIndex[arity], unaryCosts);
 }
 
-Cost WeightedAmong::evaluate(int* tuple)
+Cost WeightedAmong::evaluate(Value* tuple)
 {
     int occurency = 0;
     for (int var = 0; var < arity; var++) {
@@ -286,7 +286,7 @@ void WeightedAmong::display()
     cout << endl;
     cout << "sem : " << semantics << " " << baseCost << endl;
     cout << "val : ";
-    for (set<int>::iterator value = values.begin(); value != values.end(); value++) {
+    for (set<Value>::iterator value = values.begin(); value != values.end(); value++) {
         cout << *value << " ";
     }
     cout << endl;
@@ -646,7 +646,7 @@ void WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
     //cout << "after  adding to CFN" << endl;
 }
 
-Cost WeightedSum::evaluate(int* tuple)
+Cost WeightedSum::evaluate(Value* tuple)
 {
     int sum = 0;
     for (int var = 0; var < arity; var++) {
@@ -1041,7 +1041,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
     wcsp->postUnary(addVariablesAmong[arity / 2], unaryCosts);
 }
 
-Cost WeightedOverlap::evaluate(int* tuple)
+Cost WeightedOverlap::evaluate(Value* tuple)
 {
     int occurency = 0;
     for (int var = 0; var < arity / 2; var++) {
@@ -1250,7 +1250,7 @@ void WeightedVarAmong::display()
     cout << " == " << scope[arity - 1] << endl;
     cout << "sem : " << semantics << " " << baseCost << endl;
     cout << "val : ";
-    for (set<int>::iterator value = values.begin(); value != values.end(); value++) {
+    for (set<Value>::iterator value = values.begin(); value != values.end(); value++) {
         cout << *value << " ";
     }
     cout << endl;

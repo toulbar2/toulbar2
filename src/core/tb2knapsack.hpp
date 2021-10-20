@@ -198,7 +198,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
-        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<int>> VarVal_in, vector<vector<int>> NotVarVal_in)
+        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , carity(arity_in)
         , Original_capacity(capacity_in)

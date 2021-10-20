@@ -1977,15 +1977,15 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<Long> TempWeights;
     vector<vector<Long>> weights;
     Long readw;
-    int readv1;
+    Value readv1;
     Long capacity;
     Long MaxWeight = 0;
     int skip;
     unsigned int size;
     int readnbval;
     Long minweight;
-    vector<int> TempVarVal, TempNotVarVal;
-    vector<vector<int>> VarVal, NotVarVal;
+    vector<Value> TempVarVal, TempNotVarVal;
+    vector<vector<Value>> VarVal, NotVarVal;
     vector<tValue> clausetuple(arity, 0);
     bool isclause = 0;
     vector<EnumeratedVariable*> scopeVars(arity);

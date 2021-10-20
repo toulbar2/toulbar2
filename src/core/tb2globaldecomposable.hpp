@@ -26,7 +26,7 @@ public:
     void setLabel(string _label) { label = _label; }
     string getLabel() { return label; }
 
-    virtual Cost evaluate(int* tuple) = 0;
+    virtual Cost evaluate(Value* tuple) = 0;
     virtual void addToCostFunctionNetwork(WCSP* wcsp) = 0;
     virtual void display() = 0;
 
@@ -35,7 +35,7 @@ public:
 
 class WeightedAmong : public DecomposableGlobalCostFunction {
 private:
-    set<int> values;
+    set<Value> values;
     string semantics;
     Cost baseCost;
     unsigned int lb;
@@ -47,7 +47,7 @@ public:
     WeightedAmong(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedAmong();
 
-    inline void addValue(int _value) { values.insert(_value); }
+    inline void addValue(Value _value) { values.insert(_value); }
     inline void setSemantics(string _semantics) { semantics = _semantics; }
     inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
     inline void setBounds(unsigned int _lb, unsigned int _ub)
@@ -56,7 +56,7 @@ public:
         ub = _ub;
     }
 
-    Cost evaluate(int* tuple);
+    Cost evaluate(Value* tuple);
     void addToCostFunctionNetwork(WCSP* wcsp);
     void display();
 };
@@ -73,7 +73,7 @@ public:
 
     inline void setWFA(WFA* _automaton) { automaton = _automaton; }
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cout << "WeightedRegular::evaluate => no yet implemented" << endl;
         return 0;
@@ -100,7 +100,7 @@ public:
     inline void setComparator(string _comparator) { comparator = _comparator; }
     inline void setRightRes(int _rightRes) { rightRes = _rightRes; }
 
-    Cost evaluate(int* tuple);
+    Cost evaluate(Value* tuple);
     void addToCostFunctionNetwork(WCSP* wcsp);
     void display();
 };
@@ -123,7 +123,7 @@ public:
     inline void setComparator(string _comparator) { comparator = _comparator; }
     inline void setRightRes(int _rightRes) { rightRes = _rightRes; }
 
-    Cost evaluate(int* tuple);
+    Cost evaluate(Value* tuple);
     void addToCostFunctionNetwork(WCSP* wcsp);
     void display();
 };
@@ -131,7 +131,7 @@ public:
 // WeightedAmong with a Variable as right member
 class WeightedVarAmong : public DecomposableGlobalCostFunction {
 private:
-    set<int> values;
+    set<Value> values;
     string semantics;
     Cost baseCost;
     unsigned int index;
@@ -142,12 +142,12 @@ public:
     WeightedVarAmong(unsigned int _arity, int* _scope, istream& file, bool mult = true);
     ~WeightedVarAmong();
 
-    inline void addValue(int _value) { values.insert(_value); }
+    inline void addValue(Value _value) { values.insert(_value); }
     inline void setSemantics(string _semantics) { semantics = _semantics; }
     inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
     inline void setIndex(unsigned int _index) { index = _index; }
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cerr << "Not yet implemented" << endl;
         return 0;
@@ -174,7 +174,7 @@ public:
     inline void setComparator(string _comparator) { comparator = _comparator; }
     inline void setIndex(unsigned int _index) { index = _index; }
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cerr << "Not yet implemented" << endl;
         return 0;
@@ -198,7 +198,7 @@ public:
     inline void setSemantics(string _semantics) { semantics = _semantics; }
     inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cerr << "Not yet implemented" << endl;
         return 0;
@@ -226,7 +226,7 @@ public:
     inline void setNbValue(int _nbValue) { nbValueToWatch = _nbValue; }
     void setBounds(Value value, unsigned int lb, unsigned int ub);
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cerr << "Not yet implemented" << endl;
         return 0;
@@ -251,7 +251,7 @@ public:
     inline void setSemantics(string _semantics) { semantics = _semantics; }
     inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cerr << "Not yet implemented" << endl;
         return 0;
@@ -279,7 +279,7 @@ public:
     inline void setNbValue(int _nbValue) { nbValueToWatch = _nbValue; }
     void setBounds(Value value, unsigned int lb, unsigned int ub);
 
-    Cost evaluate(int* tuple)
+    Cost evaluate(Value* tuple)
     {
         cerr << "Not yet implemented" << endl;
         return 0;
@@ -308,7 +308,7 @@ public:
     inline void setDistance(unsigned int dist) { distance = dist; }
     inline void setMethod(int m) { method = m; }
 
-    Cost evaluate(int* tuple);
+    Cost evaluate(Value* tuple);
     void addToCostFunctionNetwork(WCSP* wcsp);
     void display();
 };
