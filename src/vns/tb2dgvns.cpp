@@ -59,10 +59,10 @@ bool VNSSolver::solve(bool first)
         return (bestUb < MAX_COST);
     }
 
-    assert((int)wcsp->numberOfUnassignedVariables() == unassignedVars->getSize());
+    assert((int)wcsp->numberOfUnassignedVariables() >= unassignedVars->getSize());
     ToulBar2::vnsLDSmax = min(ToulBar2::vnsLDSmax, (int)wcsp->getDomainSizeSum() - (int)wcsp->numberOfUnassignedVariables());
     ToulBar2::vnsLDSmin = min(ToulBar2::vnsLDSmin, ToulBar2::vnsLDSmax);
-    ToulBar2::vnsKmax = min(ToulBar2::vnsKmax, (int)wcsp->numberOfUnassignedVariables());
+    ToulBar2::vnsKmax = min(ToulBar2::vnsKmax, unassignedVars->getSize());
     ToulBar2::vnsKmin = min(ToulBar2::vnsKmin, ToulBar2::vnsKmax);
     assert(ToulBar2::vnsLDSmin >= 0);
     assert(ToulBar2::vnsLDSmax >= 0);
