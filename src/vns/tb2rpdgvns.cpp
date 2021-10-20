@@ -489,7 +489,7 @@ bool ReplicatedParallelDGVNS::VnsLdsCP(MPIEnv& env0, ParallelRandomClusterChoice
     set<int> neighborhood = h->SlaveGetNeighborhood(cluster, k); // based shuffle
     vector<int> variables;
     variables.reserve(unassignedVars->getSize());
-    vector<int> values;
+    vector<Value> values;
     values.reserve(unassignedVars->getSize());
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         int v = *iter;

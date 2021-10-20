@@ -70,8 +70,8 @@ public:
     uint getCluster();
 
     // Conversions tools
-    void SolToMsg(MPIEnv& env0, uint cluster, uint numberclu, int kinit, int kmax, Cost bestUb, int sec, int msec, map<int, int>& bestSolution);
-    void MsgToSol(MPIEnv& env0, int nov, uint& cluster, uint& numberclu, int& k, int& kmax, Cost& bestUb, int& sec, int& msec, map<int, int>& bestSolution);
+    void SolToMsg(MPIEnv& env0, uint cluster, uint numberclu, int kinit, int kmax, Cost bestUb, int sec, int msec, map<int, Value>& bestSolution);
+    void MsgToSol(MPIEnv& env0, int nov, uint& cluster, uint& numberclu, int& k, int& kmax, Cost& bestUb, int& sec, int& msec, map<int, Value>& bestSolution);
 };
 
 #endif

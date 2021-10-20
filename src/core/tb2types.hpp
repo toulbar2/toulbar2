@@ -69,6 +69,38 @@ const int MAX_BRANCH_SIZE = 1000000;
 const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
 const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
 
+#if (defined(SHORT_COST) || defined(SHORT_VALUE))
+//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
+inline int16_t min(int16_t x, int y)
+{
+    if (x < y)
+        return x;
+    else
+        return y;
+}
+inline int16_t min(int x, int16_t y)
+{
+    if (x < y)
+        return x;
+    else
+        return y;
+}
+inline int16_t max(int16_t x, int y)
+{
+    if (x > y)
+        return x;
+    else
+        return y;
+}
+inline int16_t max(int x, int16_t y)
+{
+    if (x > y)
+        return x;
+    else
+        return y;
+}
+#endif
+
 #ifdef SHORT_COST
 const bool PARTIALORDER = false;
 typedef int16_t Cost;
@@ -115,36 +147,6 @@ inline bool Mul(Cost a, Cost b, Cost* c)
     return false;
 }
 #endif
-
-//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
-inline int16_t min(int16_t x, int y)
-{
-    if (x < y)
-        return x;
-    else
-        return y;
-}
-inline int16_t min(int x, int16_t y)
-{
-    if (x < y)
-        return x;
-    else
-        return y;
-}
-inline int16_t max(int16_t x, int y)
-{
-    if (x > y)
-        return x;
-    else
-        return y;
-}
-inline int16_t max(int x, int16_t y)
-{
-    if (x > y)
-        return x;
-    else
-        return y;
-}
 
 inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
