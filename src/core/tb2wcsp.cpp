@@ -3305,7 +3305,7 @@ void WCSP::dump(ostream& os, bool original)
     strcpy(Pb_graph, Pb_basename);
     strcpy(Pb_degree, Pb_basename);
 
-    if (getLb() > MIN_COST)
+    if (getLb() > MIN_COST || getNegativeLb() != MIN_COST)
         xcosts++;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (original && vars[i]->getInf() < 0) {
@@ -3372,8 +3372,12 @@ void WCSP::dump(ostream& os, bool original)
             }
         }
     }
-    if (getLb() > MIN_COST)
-        os << "0 " << getLb() << " 0" << endl;
+    if (getLb() > MIN_COST || getNegativeLb() != MIN_COST) {
+        if (getLb() < getNegativeLb()) {
+            cerr << "Warning! Negative problem lower bound cannot be represented in wcp format! (fixed to zero)" << endl;
+        }
+        os << "0 " << max(MIN_COST, getLb() - getNegativeLb()) << " 0" << endl;
+    }
 
     if (!ToulBar2::uaieval && ToulBar2::verbose >= 0) {
         //####################" dump dot file ###############################""
