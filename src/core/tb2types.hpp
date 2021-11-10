@@ -759,7 +759,7 @@ public:
     static int btdSubTree;
     static int btdRootCluster;
     static int rootHeuristic;
-    static int reduceHeight;
+    static bool reduceHeight;
 
     static bool maxsateval;
     static bool xmlflag;
@@ -783,7 +783,7 @@ public:
     static int minProperVarSize;
     static int smallSeparatorSize;
 
-    static int heuristicFreedom; // the freedom heuristic used for BTD-like algorithms (if one is used)
+    static bool heuristicFreedom; // the freedom heuristic used for BTD-like algorithms (if one is used)
     static int heuristicFreedomLimit; // the freedom limit
 
     static bool Berge_Dec; // flag for berge acyclic decomposition

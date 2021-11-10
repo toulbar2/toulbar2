@@ -25,6 +25,7 @@ const int raspsangle = 10;
 const Long raspsbacktracks = 1000;
 const double relativegap = 0.0001;
 const int maxdivnbsol = 1000;
+const int heuristicfreedomlimit = 5;
 
 // INCOP default command line option
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -156,6 +157,7 @@ enum {
     OPT_btdRootCluster,
     OPT_RootHeu,
     OPT_ReduceHeight,
+    NO_OPT_ReduceHeight,
     OPT_btdSubTree,
     OPT_splitClusterMaxSize,
     OPT_maxSeparatorSize,
@@ -163,6 +165,7 @@ enum {
     NO_OPT_boostingBTD,
     OPT_minProperVarSize,
     OPT_BTD_freedom,
+    NO_OPT_BTD_freedom,
     OPT_BTD_freedom_limit,
     OPT_varOrder,
     OPT_problemsaved_filename,
@@ -369,14 +372,16 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_btdRootCluster, (char*)"--RootCluster", SO_REQ_CMB },
     { OPT_RootHeu, (char*)"-RootHeu",SO_REQ_CMB},
     { OPT_RootHeu, (char*)"-root",SO_REQ_CMB},
-    { OPT_ReduceHeight, (char*)"-ReHeight",SO_REQ_CMB},
-    { OPT_ReduceHeight, (char*)"-minheight",SO_REQ_CMB},
+    { OPT_ReduceHeight, (char*)"-ReHeight",SO_NONE},
+    { OPT_ReduceHeight, (char*)"-minheight",SO_NONE},
+    { NO_OPT_ReduceHeight, (char*)"-minheight:",SO_NONE},
     { OPT_btdSubTree, (char*)"-I", SO_REQ_SEP }, // btd sub tree
     { OPT_splitClusterMaxSize, (char*)"-j", SO_REQ_SEP },
     { OPT_maxSeparatorSize, (char*)"-r", SO_REQ_SEP },
     { OPT_maxSeparatorSize, (char*)"--maxSepSize", SO_REQ_CMB },
     { OPT_minProperVarSize, (char*)"-X", SO_REQ_SEP },
     { OPT_BTD_freedom, (char*) "-F", SO_OPT },
+    { NO_OPT_BTD_freedom, (char*) "-F:", SO_OPT },
     { OPT_BTD_freedom_limit, (char*) "-LF", SO_REQ_SEP },
     { OPT_PARTIAL_ASSIGNMENT, (char*)"-x", SO_OPT },
     { NO_OPT_PARTIAL_ASSIGNMENT, (char*)"-x:", SO_NONE },
@@ -916,10 +921,12 @@ void help_msg(char* toulbar2filename)
     cout << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
     cout << "   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is " << ToulBar2::minProperVarSize << ")" << endl;
     cout << "   -E=[float] : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option \"-vns\") (default value is " << ToulBar2::boostingBTD << ")" << endl;
-    cout << "   -F=[integer] : merge clusters automatically to give more freedom to variable ordering heuristic in BTD-HBFS (0:no freedom, 1:adaptive) (default value is " << ToulBar2::heuristicFreedom << ")" << endl;
-    cout << "   -LF=[integer] : separator count limit for switching from cluster descendant merging to cluster decomposition (default value is " << ToulBar2::heuristicFreedomLimit << ")" << endl;
+    cout << "   -F=[integer] : merge clusters automatically to give more freedom to variable ordering heuristic in BTD-HBFS (-1: no merging, positive value: maximum iteration value for trying to solve the same subtree given its separator assignment before considering it as unmerged) (default value is " << ((ToulBar2::heuristicFreedom)?ToulBar2::heuristicFreedomLimit:-1) << ")" << endl;
+//    cout << "   -LF=[integer] : separator count limit for switching from cluster descendant merging to cluster decomposition (default value is " << ToulBar2::heuristicFreedomLimit << ")" << endl;
     cout << "   -root=[integer] : root cluster heuristic (0:largest, 1:max. size/(height-size), 2:min. size/(height-size), 3:min. height) (default value is " << ToulBar2::rootHeuristic << ")" << endl;
-    cout << "   -minheight=[0|1] : minimize cluster tree height when searching for the root cluster (0:no, 1:yes) (default value is " << ToulBar2::reduceHeight << ")" << endl;
+    cout << "   -minheight : minimize cluster tree height when searching for the root cluster";
+    if (ToulBar2::reduceHeight) cout << " (default option)";
+    cout << endl;
     cout << "   -R=[integer] : choice for a specific root cluster number" << endl;
     cout << "   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)" << endl
          << endl;
@@ -1265,11 +1272,7 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::btdRootCluster = root;
             }
 
-            
-
-            //choose root heuristically 
-
-
+            //Choose root heuristically
             if (args.OptionId() == OPT_RootHeu) {
                 int root = atoi(args.OptionArg());
                 if (root > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
@@ -1277,15 +1280,10 @@ int _tmain(int argc, TCHAR* argv[])
             } 
             // ReduceHeight before or after to compute the ratio
             if (args.OptionId() == OPT_ReduceHeight) {
-                int ReHeight = atoi(args.OptionArg());
-                if (ReHeight > 0 || (args.OptionArg()[0]=='0' && args.OptionArg()[1]==0))
-                    ToulBar2::reduceHeight = ReHeight;
+                ToulBar2::reduceHeight = true;
+            } else if (args.OptionId() == NO_OPT_ReduceHeight) {
+                ToulBar2::reduceHeight = false;
             }
-
-
-
-            
-
 
             // btd SubTree initialisation sub cluster
 
@@ -1332,14 +1330,18 @@ int _tmain(int argc, TCHAR* argv[])
 
             // choice of freedom heuristic
             if (args.OptionId() == OPT_BTD_freedom) {
-                int freedom = 1;
-                if(args.OptionArg() != NULL ) freedom = atoi(args.OptionArg());
-                if (freedom >= 0) {
-                    ToulBar2::heuristicFreedom = freedom;
+                ToulBar2::heuristicFreedom = true;
+                int freedomlimit = heuristicfreedomlimit;
+                if(args.OptionArg() != NULL) freedomlimit = atoi(args.OptionArg());
+                if (freedomlimit >= 0) {
+                    ToulBar2::heuristicFreedomLimit = freedomlimit;
                 } else {
-                    ToulBar2::heuristicFreedom = 1;
+                    ToulBar2::heuristicFreedomLimit = heuristicfreedomlimit;
                 }
+            } else if (args.OptionId() == NO_OPT_BTD_freedom) {
+                ToulBar2::heuristicFreedom = false;
             }
+
 
             // choice of freedom heuristic limit
             if (args.OptionId() == OPT_BTD_freedom_limit) {
@@ -1348,7 +1350,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (limit > 0 || (limit==0 && args.OptionArg()[0]=='0' && args.OptionArg()[1]==0)) {
                     ToulBar2::heuristicFreedomLimit = limit;
                 } else {
-                    ToulBar2::heuristicFreedomLimit = 5;
+                    ToulBar2::heuristicFreedomLimit = heuristicfreedomlimit;
                 }
             }
 

@@ -1642,7 +1642,7 @@ Cluster* TreeDecomposition::getClusterMinHeight(TClusters& unvisited){
     while(itc != unvisited.end()){
         Cluster* c = *itc;
         assert(c);
-        if(ToulBar2::reduceHeight==1){
+        if(ToulBar2::reduceHeight){
             reduceHeight(c, vector<Cluster *>());
         }   
         if (height(c) < minheight){
@@ -1663,7 +1663,7 @@ Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited)
     for (TClusters::iterator itc = unvisited.begin(); itc != unvisited.end(); ++itc){
         Cluster* c = *itc;
         assert(c);
-        if(ToulBar2::reduceHeight==1){
+        if(ToulBar2::reduceHeight){
             reduceHeight(c, vector<Cluster *>());
         }
         if (float(c->getNbVars())/float((height(c)-c->getNbVars())) >= maxratio){
@@ -1689,7 +1689,7 @@ Cluster* TreeDecomposition::getCluster_height_rootsize_min(TClusters& unvisited)
     while(itc != unvisited.end()){
         Cluster* c = *itc;
         assert(c);
-        if(ToulBar2::reduceHeight==1){
+        if(ToulBar2::reduceHeight){
             reduceHeight(c, vector<Cluster *>());
         }   
         if (float(c->getNbVars())/float((height(c)-c->getNbVars())) < minratio){
@@ -1760,7 +1760,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited, TClusters&
         visited.insert(cj);
         unvisited.erase(cj);
 
-//        if (ToulBar2::searchMethod == DFBB) {
+        if (ToulBar2::searchMethod == DFBB) {
             TVars cjsep;
             intersection(c, cj, cjsep);
 
@@ -1779,7 +1779,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited, TClusters&
                 cj->addCtr(cj->getSep());
             delete[] scopeVars;
             //-------
-//        }
+        }
 
         makeRootedRec(cj, visited, unvisited);
         ++itj;
@@ -1870,19 +1870,19 @@ int TreeDecomposition::makeRooted()
                     switch(ToulBar2::rootHeuristic) {
                     case 0:
                         root = getBiggerCluster(unvisited);
-                        if (ToulBar2::verbose >= 0 && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with max. size: " << root->getNbVars() << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with max. size: " << root->getNbVars() << endl;
                         break;
                     case 1:
                         root=getCluster_height_rootsize_max(unvisited);
-                        if (ToulBar2::verbose >= 0 && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with max. ratio size/(height-size): " << float(root->getNbVars())/float(height(root)-root->getNbVars()) << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with max. ratio size/(height-size): " << float(root->getNbVars())/float(height(root)-root->getNbVars()) << endl;
                         break;
                     case 2:
                         root = getCluster_height_rootsize_min(unvisited);
-                        if (ToulBar2::verbose >= 0 && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with min. ratio size/(height-size): " << float(root->getNbVars())/float(height(root)-root->getNbVars()) << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with min. ratio size/(height-size): " << float(root->getNbVars())/float(height(root)-root->getNbVars()) << endl;
                         break;
                     case 3:
                         root = getClusterMinHeight(unvisited);
-                        if (ToulBar2::verbose >= 0 && (*it).size() > 1) cout <<"Get root cluster C" << root->getId() << " with min. height: " << height(root) << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout <<"Get root cluster C" << root->getId() << " with min. height: " << height(root) << endl;
                         break;
                     default:
                         cerr << "Unknown root cluster heuristic " << ToulBar2::rootHeuristic << endl;
@@ -2329,8 +2329,8 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
 
     roots.clear();
     int h = makeRooted();
-//    if (ToulBar2::searchMethod != DFBB)
-//        return;
+    if (ToulBar2::searchMethod != DFBB)
+        return;
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
     setDuplicates();

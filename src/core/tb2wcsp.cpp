@@ -195,7 +195,7 @@ int ToulBar2::btdMode;
 int ToulBar2::btdSubTree;
 int ToulBar2::btdRootCluster;
 int ToulBar2::rootHeuristic;
-int ToulBar2::reduceHeight;
+bool ToulBar2::reduceHeight;
 
 double ToulBar2::startCpuTime;
 
@@ -206,7 +206,7 @@ int ToulBar2::minProperVarSize;
 
 int ToulBar2::smallSeparatorSize;
 
-int ToulBar2::heuristicFreedom;
+bool ToulBar2::heuristicFreedom;
 int ToulBar2::heuristicFreedomLimit;
 
 bool ToulBar2::isZ;
@@ -393,7 +393,7 @@ void tb2init()
     ToulBar2::btdSubTree = -1;
     ToulBar2::btdRootCluster = -1;
     ToulBar2::rootHeuristic = 0;
-    ToulBar2::reduceHeight=0;
+    ToulBar2::reduceHeight=false;
 
     ToulBar2::startCpuTime = 0;
 
@@ -404,8 +404,8 @@ void tb2init()
 
     ToulBar2::smallSeparatorSize = 4;
 
-    ToulBar2::heuristicFreedom = 0;
-    ToulBar2::heuristicFreedomLimit = 0;
+    ToulBar2::heuristicFreedom = false;
+    ToulBar2::heuristicFreedomLimit = 5;
 
     ToulBar2::isZ = false;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
@@ -483,7 +483,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::heuristicFreedom && ToulBar2::btdMode >= 2) {
         cout << "Warning! adaptive BTD not compatible with RDS-like search methods." << endl;
-        ToulBar2::heuristicFreedom = 0;
+        ToulBar2::heuristicFreedom = false;
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
         cerr << "Error: BTD-like search methods are compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
@@ -644,7 +644,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::heuristicFreedom && !ToulBar2::hbfs) {
         cout << "Warning! adaptive BTD requires HBFS (remove -hbfs: option)." << endl;
-        ToulBar2::heuristicFreedom = 0;
+        ToulBar2::heuristicFreedom = false;
     }
 }
 
