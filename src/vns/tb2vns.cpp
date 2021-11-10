@@ -36,7 +36,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
                     ss >> clusterid;
                     ss >> parentid;
                 }
-                do {
+                while (ss.good()) {
                     unsigned int var;
                     ss >> var;
                     nbvars.insert(var);
@@ -48,7 +48,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
                         tmp.insert(var);
                         nbunvars.insert(var);
                     }
-                } while (ss.good());
+                } ;
                 if (tmp.size() > 0) {
                     TDCluster c = add_vertex(m_graph);
                     m_graph[c].vars = tmp;
@@ -56,9 +56,9 @@ void ClustersNeighborhoodStructure::load_decomposition()
             }
         }
         file.close();
-        if (nbvars.size() != wcsp->numberOfVariables()) {
-            cerr << "Error: cluster decomposition has missing variables! (" << nbvars.size() << "!=" << wcsp->numberOfVariables() << ")" << endl;
-            exit(EXIT_FAILURE);
+        if (nbvars.size() < wcsp->numberOfVariables()) {
+            cout << "Warning: cluster decomposition has missing variables! (" << nbvars.size() << "!=" << wcsp->numberOfVariables() << ")" << endl;
+            //exit(EXIT_FAILURE);
         }
         assert(nbunvars.size() == wcsp->numberOfUnassignedVariables());
         TCDGraph::vertex_iterator v, vend, v2;

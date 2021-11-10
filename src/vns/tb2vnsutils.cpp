@@ -182,7 +182,7 @@ void TreeDecRefinement::load_decomposition()
                     ss >> clusterid;
                     ss >> parentid;
                 }
-                do {
+                while (ss.good()) {
                     unsigned int var;
                     ss >> var;
                     tmp.insert(var);
@@ -191,14 +191,14 @@ void TreeDecRefinement::load_decomposition()
                         cerr << "Error: cluster decomposition contains bad variable index!" << endl;
                         exit(EXIT_FAILURE);
                     }
-                } while (ss.good());
+                };
                 m_graph[c].vars = tmp;
             }
         }
         file.close();
-        if (nbvars.size() != wcsp->numberOfVariables()) {
-            cerr << "Error: cluster decomposition has missing variables! (" << nbvars.size() << "!=" << wcsp->numberOfVariables() << ")" << endl;
-            exit(EXIT_FAILURE);
+        if (nbvars.size() < wcsp->numberOfVariables()) {
+            cout << "Warning: cluster decomposition has missing variables! (" << nbvars.size() << "!=" << wcsp->numberOfVariables() << ")" << endl;
+            //exit(EXIT_FAILURE);
         }
         TCDGraph::vertex_iterator v, vend, v2;
         int num = 0;
