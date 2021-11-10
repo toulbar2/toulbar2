@@ -147,6 +147,12 @@ public:
 
     void addcost(Value vx, Value vy, Cost mincost)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(mincost >= MIN_COST || !LUBTEST(getCost(vx, vy), -mincost) || ToulBar2::isZ); // Warning! negative costs can be added temporally by variable elimination on the fly
         unsigned int ix = x->toIndex(vx);
@@ -156,6 +162,12 @@ public:
 
     void addcost(EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
         if (xin == x) {
@@ -167,6 +179,12 @@ public:
 
     void setCost(Cost c)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         for (unsigned int a = 0; a < sizeX; a++)
             for (unsigned int b = 0; b < sizeY; b++)
                 costs[a * sizeY + b] = c;
@@ -174,6 +192,12 @@ public:
 
     void setcost(EnumeratedVariable* xin, EnumeratedVariable* yin, Value vx, Value vy, Cost mincost)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         if (xin == x)
             costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
@@ -183,12 +207,24 @@ public:
 
     void setcost(Value vx, Value vy, Cost mincost)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
     }
 
     void addCosts(EnumeratedVariable* xin, EnumeratedVariable* yin, vector<Cost>& costsin)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
         assert(costsin.size() <= costs.size());
         unsigned int ix, iy;
@@ -206,6 +242,12 @@ public:
 
     void addCosts(BinaryConstraint* xy)
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         assert(((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)));
         unsigned int ix, iy;
@@ -224,6 +266,12 @@ public:
 
     void clearCosts()
     {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in binary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(ToulBar2::verbose < 4 || ((cout << "clear cost (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         for (unsigned int i = 0; i < sizeX; i++)
             deltaCostsX[i] = MIN_COST;

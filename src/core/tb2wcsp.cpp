@@ -551,6 +551,12 @@ void tb2checkOptions()
         cerr << "Error: cannot restrict solving to a problem rooted at a subtree, use RDS (-B=2)." << endl;
         exit(1);
     }
+#ifdef NO_STORE_BINARY_COSTS
+    if (abs(ToulBar2::vac) > 1) {
+        cerr << "Error: VAC during search not possible if compiled with BINARYWCSP option." << endl;
+        exit(1);
+    }
+#endif
     if (abs(ToulBar2::vac) > 1 && ToulBar2::btdMode >= 1) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
         cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
         exit(1);
@@ -1054,15 +1060,19 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
             xynew->setcost(*iterx, *itery, costs[x->toIndex(*iterx) * y->getDomainInitSize() + y->toIndex(*itery)]);
         }
     }
+#ifndef NO_STORE_BINARY_COSTS
     if (xy) {
         xy->addCosts(xynew);
         assert(xynew->deconnected());
         if (x->unassigned() && y->unassigned())
             xy->reconnect();
     } else {
+#endif
         xy = xynew;
         xy->reconnect();
+#ifndef NO_STORE_BINARY_COSTS
     }
+#endif
     xy->propagate();
     return xy->wcspIndex;
 }
@@ -1096,16 +1106,20 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
         }
     }
 
+#ifndef NO_STORE_TERNARY_COSTS
     TernaryConstraint* ctr = x->getConstr(y, z);
     if (!ctr) {
+#endif
         xyz->fillElimConstrBinaries();
         xyz->reconnect();
+#ifndef NO_STORE_TERNARY_COSTS
     } else {
         ctr->addCosts(xyz);
         assert(ctr->connected());
         assert(xyz->deconnected());
         xyz = ctr;
     }
+#endif
     xyz->propagate();
     return xyz->wcspIndex;
 }

@@ -273,6 +273,12 @@ protected:
     void findSupportZ() { findSupport(Functor_getCostZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z, x, y, 2, 0, 1, supportZ, deltaCostsZ, supportX, supportY); }
     void findFullSupportX()
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            findSupportX();
+            return;
+        }
+#endif
         if (y->wcspIndex < z->wcspIndex)
             findFullSupport(Functor_getCostXYZ(*this), Functor_getCostXZY(*this), Functor_getCostYZX(*this), Functor_getCostWithBinariesXYZ(*this), Functor_addCostXYZ(*this), Functor_addCostXZY(*this), Functor_addCostYZX(*this), functionalX, Functor_getFunctionXYZ(*this), functionalY, Functor_getFunctionYXZ(*this), functionalZ, Functor_getFunctionZXY(*this), x, y, z, 0, 1, 2, supportX, deltaCostsX, supportY, deltaCostsY, supportZ, deltaCostsZ, xy, xz, yz);
         else
@@ -280,6 +286,12 @@ protected:
     }
     void findFullSupportY()
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            findSupportY();
+            return;
+        }
+#endif
         if (x->wcspIndex < z->wcspIndex)
             findFullSupport(Functor_getCostYXZ(*this), Functor_getCostYZX(*this), Functor_getCostXZY(*this), Functor_getCostWithBinariesYXZ(*this), Functor_addCostYXZ(*this), Functor_addCostYZX(*this), Functor_addCostXZY(*this), functionalY, Functor_getFunctionYXZ(*this), functionalX, Functor_getFunctionXYZ(*this), functionalZ, Functor_getFunctionZYX(*this), y, x, z, 1, 0, 2, supportY, deltaCostsY, supportX, deltaCostsX, supportZ, deltaCostsZ, xy, yz, xz);
         else
@@ -287,6 +299,12 @@ protected:
     }
     void findFullSupportZ()
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            findSupportZ();
+            return;
+        }
+#endif
         if (x->wcspIndex < y->wcspIndex)
             findFullSupport(Functor_getCostZXY(*this), Functor_getCostZYX(*this), Functor_getCostXYZ(*this), Functor_getCostWithBinariesZXY(*this), Functor_addCostZXY(*this), Functor_addCostZYX(*this), Functor_addCostXYZ(*this), functionalZ, Functor_getFunctionZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z, x, y, 2, 0, 1, supportZ, deltaCostsZ, supportX, deltaCostsX, supportY, deltaCostsY, xz, yz, xy);
         else
@@ -388,6 +406,12 @@ public:
 
     void addCosts(TernaryConstraint* xyz)
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         unsigned int ix, iy, iz;
         for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
             for (EnumeratedVariable::iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
@@ -408,6 +432,12 @@ public:
 
     void addCosts(EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, vector<Cost>& costsin)
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(costsin.size() <= costs.size() || functionalX);
 
         unsigned int vindex[3];
@@ -439,6 +469,12 @@ public:
 
     void addCost(Value vxi, Value vyi, Value vzi, Cost c)
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(c >= MIN_COST || !LUBTEST(getCost(vxi, vyi, vzi), -c));
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
@@ -459,6 +495,12 @@ public:
 
     void addCost(EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c)
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         assert(c >= MIN_COST || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
 
         unsigned int vindex[3];
@@ -489,6 +531,12 @@ public:
 
     void setcost(Value vxi, Value vyi, Value vzi, Cost c)
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
         unsigned int vz = z->toIndex(vzi);
@@ -505,6 +553,12 @@ public:
 
     void setcost(EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c)
     {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            exit(EXIT_FAILURE);
+        }
+#endif
         unsigned int vindex[3];
         unsigned int vx = xin->toIndex(vxi);
         unsigned int vy = yin->toIndex(vyi);
@@ -1366,11 +1420,13 @@ void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 get
     // 	}
     //   }
     // } else {
+#ifndef NO_STORE_TERNARY_COSTS
     for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
         if (!CUT(getCost(x, y, z, valx, valy, *iterZ), wcsp->getUb())) { // keeps forbidden costs into ternaries to get strong GAC3
             addCost(x, y, z, valx, valy, *iterZ, -cost);
         }
     }
+#endif
     // }
     xy->addcost(x, y, valx, valy, cost);
 #ifdef DEECOMPLETE
