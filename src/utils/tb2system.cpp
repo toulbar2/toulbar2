@@ -6,6 +6,10 @@
 
 //Must be included after tb2types.hpp
 #include "tb2system.hpp"
+#include "tb2utils.hpp"
+#include "tb2btlist.hpp"
+#include "tb2store.hpp"
+#include "search/tb2solver.hpp"
 
 #ifdef LONGDOUBLE_PROB
 const char* PrintFormatProb = "%Lf";
@@ -64,7 +68,7 @@ void timeOut(int sig)
     if (ToulBar2::timeOut)
         ToulBar2::timeOut();
     else
-        exit(0);
+        throw TimeOut(); //exit(0);
 }
 
 static struct itimerval thetimer = { { 0, 0 }, { 0, 0 } };
