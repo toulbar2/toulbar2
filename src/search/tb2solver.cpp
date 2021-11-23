@@ -2709,9 +2709,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
         ChoicePoint* cp_ptr = ((randomOrder) ? permute[idx - nd.first] : &cp[idx]);
-        assert(!wcsp->getTreeDec() ||
-                wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex) ||
-                (wcsp->getTreeDec()->getCurrentCluster()->getFreedom() && wcsp->getTreeDec()->getCurrentCluster()->isVarTree(cp_ptr->varIndex)));
+        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex) || (wcsp->getTreeDec()->getCurrentCluster()->getFreedom() && wcsp->getTreeDec()->getCurrentCluster()->isVarTree(cp_ptr->varIndex)));
         if ((cp_ptr->op == CP_ASSIGN && !(cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) || (cp_ptr->op == CP_REMOVE && cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) {
             assignLS[size] = cp_ptr->varIndex;
             valueLS[size] = cp_ptr->value;
