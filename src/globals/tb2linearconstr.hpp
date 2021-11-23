@@ -12,7 +12,7 @@
 class LinearConstraint : public GlobalConstraint {
 protected:
     bool initTest;
-    MIP *mip;
+    MIP* mip;
 
     int* buObj;
 

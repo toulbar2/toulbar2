@@ -9,7 +9,7 @@
 
 class MIP { //Wrapper Interface for MIP solver
 public:
-    static MIP *makeMIP();
+    static MIP* makeMIP();
 
     virtual ~MIP() {}
 

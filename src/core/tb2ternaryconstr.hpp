@@ -234,7 +234,10 @@ protected:
 #else
     vector<StoreCost> costsYZ;
 #endif
-    inline Value getFunctionX(Value vy, Value vz) const { return functionX[y->toIndex(vy) * sizeZ + z->toIndex(vz)]; }
+    inline Value getFunctionX(Value vy, Value vz) const
+    {
+        return functionX[y->toIndex(vy) * sizeZ + z->toIndex(vz)];
+    }
     inline Value getFunctionY(Value vx, Value vz) const { return functionY[x->toIndex(vx) * sizeZ + z->toIndex(vz)]; }
     inline Value getFunctionZ(Value vx, Value vy) const { return functionZ[x->toIndex(vx) * sizeY + y->toIndex(vy)]; }
 
@@ -1207,9 +1210,15 @@ public:
     void dump_CFN(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY * sizeZ; }
 #ifdef NO_STORE_TERNARY_COSTS
-    Long space() const FINAL { return (Long)sizeof(Cost) * sizeX * sizeY * sizeZ; }
+    Long space() const FINAL
+    {
+        return (Long)sizeof(Cost) * sizeX * sizeY * sizeZ;
+    }
 #else
-    Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY * sizeZ; }
+    Long space() const FINAL
+    {
+        return (Long)sizeof(StoreCost) * sizeX * sizeY * sizeZ;
+    }
 #endif
     friend struct Functor_getCostXYZ;
     friend struct Functor_getCostXZY;
@@ -1411,15 +1420,15 @@ void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 get
 {
     assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
     assert(cost >= MIN_COST);
-    // BUG!
-    // if (functionalZ) {
-    //   Value valz = getFunctionZ(x,y, valx, valy);
-    //   if (valz != WRONG_VAL && z->canbe(valz)) {
-    // 	if (!CUT(getCost(x,y,z, valx,valy,valz), wcsp->getUb())) { // keeps forbidden costs into ternaries to get strong GAC3
-    // 	  addCost(x,y,z,valx,valy,valz,-cost);
-    // 	}
-    //   }
-    // } else {
+// BUG!
+// if (functionalZ) {
+//   Value valz = getFunctionZ(x,y, valx, valy);
+//   if (valz != WRONG_VAL && z->canbe(valz)) {
+// 	if (!CUT(getCost(x,y,z, valx,valy,valz), wcsp->getUb())) { // keeps forbidden costs into ternaries to get strong GAC3
+// 	  addCost(x,y,z,valx,valy,valz,-cost);
+// 	}
+//   }
+// } else {
 #ifndef NO_STORE_TERNARY_COSTS
     for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
         if (!CUT(getCost(x, y, z, valx, valy, *iterZ), wcsp->getUb())) { // keeps forbidden costs into ternaries to get strong GAC3

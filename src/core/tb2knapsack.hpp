@@ -376,7 +376,7 @@ public:
         Cost ucost = UNIT_COST;
         for (int i = 0; i < arity_; i++) {
             Cost maxcost = MIN_COST;
-            EnumeratedVariable * var = (EnumeratedVariable *)getVar(i);
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
             for (auto iter = var->begin(); iter != var->end(); ++iter) {
                 if (getVar(i)->getCost(*iter) > maxcost) {
                     maxcost = getVar(i)->getCost(*iter);
@@ -633,7 +633,7 @@ public:
     }
 
     //Find the optimal solution. Follow the order of the slopes and modify OptSol until we fill the constraint
-    void FindOpt(vector<array<Double, 4>> &Slopes, Long* W, Cost* c, Double* xk, int* iter)
+    void FindOpt(vector<array<Double, 4>>& Slopes, Long* W, Cost* c, Double* xk, int* iter)
     {
         int currentVar;
         Long capacityLeft;
@@ -659,7 +659,7 @@ public:
     }
 
     //Do the Extension/Projection
-    void ExtensionProjection(vector<Double> &y_i, Double y_cc)
+    void ExtensionProjection(vector<Double>& y_i, Double y_cc)
     {
         for (int i = 0; i < carity; i++) {
             for (int j = 0; j < nbValue[i]; ++j) {
@@ -780,7 +780,7 @@ public:
                             if (W < capacity) {
                                 //Sort the Slopes
                                 sort(Slopes.begin(), Slopes.end(),
-                                    [&](array<Double, 4> &x, array<Double, 4> &y) {
+                                    [&](array<Double, 4>& x, array<Double, 4>& y) {
                                         if (x[3] == y[3]) {
                                             if (x[0] == y[0])
                                                 return weights[int(x[0])][int(x[1])] <= weights[int(y[0])][int(y[1])];
@@ -976,9 +976,9 @@ public:
             if (i < arity_ - 1)
                 os << ",";
         }
-        os << ") " << MinWeight << " <= " << capacity <<  " <= " << MaxWeight << " / " << lb << " - " << assigneddeltas << " (";
+        os << ") " << MinWeight << " <= " << capacity << " <= " << MaxWeight << " / " << lb << " - " << assigneddeltas << " (";
         for (int i = 0; i < arity_; i++) {
-            for (unsigned int j = 0; j < deltaCosts[i].size() ; j++) {
+            for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
                 os << VarVal[i][j];
                 os << ":";
                 os << weights[i][j];
@@ -986,7 +986,7 @@ public:
                 os << deltaCosts[i][j];
                 if (j < deltaCosts[i].size() - 1)
                     os << "|";
-           }
+            }
             if (i < arity_ - 1)
                 os << ",";
         }

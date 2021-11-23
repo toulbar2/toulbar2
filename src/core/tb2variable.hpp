@@ -67,7 +67,11 @@ public:
         assert(assigned());
         return inf;
     }
-    virtual const string& getValueName(int index) const { static const string None = std::string(""); return None; }
+    virtual const string& getValueName(int index) const
+    {
+        static const string None = std::string("");
+        return None;
+    }
     virtual unsigned int getDomainSize() const = 0;
     int getCurrentVarId();
     void setCurrentVarId(int idx);

@@ -48,22 +48,22 @@ inline void mysrand(int seed_)
 }
 inline int myrand()
 {
-    static std::uniform_int_distribution<int> myrandom_uidistribution(0,INT_MAX-1);
+    static std::uniform_int_distribution<int> myrandom_uidistribution(0, INT_MAX - 1);
     return myrandom_uidistribution(myrandom_generator);
 }
 inline Long myrandl()
 {
-    static std::uniform_int_distribution<Long> myrandom_uldistribution(0,LONG_MAX-1);
+    static std::uniform_int_distribution<Long> myrandom_uldistribution(0, LONG_MAX - 1);
     return myrandom_uldistribution(myrandom_generator);
 }
 inline Long myrandln()
 {
-    static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX,LONG_MAX-1);
+    static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX, LONG_MAX - 1);
     return myrandom_umdistribution(myrandom_generator);
 }
 inline double mydrand()
 {
-    static std::uniform_real_distribution<double> myrandom_uddistribution(0.0,1.0);
+    static std::uniform_real_distribution<double> myrandom_uddistribution(0.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 
@@ -194,7 +194,7 @@ inline Long string2Cost(const char* ptr)
     try {
         string s(ptr);
         Double d = stold(s);
-        if ((d>=0 && d > LONGLONG_MAX) || (d<0 && d < -LONGLONG_MAX)) {
+        if ((d >= 0 && d > LONGLONG_MAX) || (d < 0 && d < -LONGLONG_MAX)) {
             throw out_of_range("long long overflow!");
         }
     } catch (std::exception& e) {

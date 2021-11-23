@@ -336,7 +336,6 @@ public:
     const char* what() const throw() FINAL { return "... bad solver configuration!"; }
 };
 
-
 class TimeOut : public SolverOut {
 public:
     const char* what() const throw() FINAL { return "... time limit reached!"; }

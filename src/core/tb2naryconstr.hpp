@@ -43,9 +43,9 @@ public:
     }
     void incConflictWeight(Constraint* from)
     {
-        assert(from!=NULL);
+        assert(from != NULL);
         if (from == this) {
-            if (deconnected() || nonassigned==arity_) {
+            if (deconnected() || nonassigned == arity_) {
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {

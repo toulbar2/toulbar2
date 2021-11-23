@@ -13,7 +13,7 @@ const char* PrintFormatProb = "%Lf";
 const char* PrintFormatProb = "%lf";
 #endif
 
-std::mt19937 myrandom_generator{std::random_device{}()};
+std::mt19937 myrandom_generator{ std::random_device{}() };
 
 /* --------------------------------------------------------------------
 // Timer management functions
@@ -91,7 +91,9 @@ void timerStop()
 }
 
 #else
-void timeOut(int sig) {}
+void timeOut(int sig)
+{
+}
 double cpuTime()
 {
     return (double)(clock() / CLOCKS_PER_SEC);

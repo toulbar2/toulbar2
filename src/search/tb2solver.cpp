@@ -111,7 +111,7 @@ Solver::~Solver()
     delete cp;
     delete open;
     delete unassignedVars;
-    for (unsigned int i=0; i<allVars.size(); i++) {
+    for (unsigned int i = 0; i < allVars.size(); i++) {
         delete allVars[i];
     }
     delete wcsp;
@@ -143,9 +143,9 @@ void Solver::initVarHeuristic()
 void Solver::updateVarHeuristic()
 {
     sort(allVars.begin(), allVars.end(),
-            [this](const DLink<Value> *v1, const DLink<Value> *v2) -> bool {
-                  return (wcsp->getDACOrder(v1->content) < wcsp->getDACOrder(v2->content));
-               });
+        [this](const DLink<Value>* v1, const DLink<Value>* v2) -> bool {
+            return (wcsp->getDACOrder(v1->content) < wcsp->getDACOrder(v2->content));
+        });
 }
 
 Cost Solver::read_wcsp(const char* fileName)
@@ -426,7 +426,7 @@ set<int> Solver::getUnassignedVars() const
 }
 unsigned int Solver::numberOfUnassignedVariables() const
 {
-    return ((unassignedVars)?unassignedVars->getSize():-1);
+    return ((unassignedVars) ? unassignedVars->getSize() : -1);
 }
 
 /*
@@ -640,8 +640,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
             EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
             if (!var->isFullEAC()
                 && ((varIndex < 0)
-                    || (heuristic < best - epsilon * best)
-                    || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {
+                       || (heuristic < best - epsilon * best)
+                       || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {
                 best = heuristic;
                 varIndex = *iter;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1350,16 +1350,16 @@ void Solver::newSolution()
     if (ToulBar2::isZ) {
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, (Cost)(wcsp->getLb() + wcsp->getNegativeLb()));
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
-            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log)  << " in " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
+            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
     }
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
             if (ToulBar2::haplotype)
                 cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
             else if (!ToulBar2::bayesian)
-                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth()  << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
+                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
             else
-                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth()  << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
+                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
         }
     }
 
@@ -1714,7 +1714,7 @@ void Solver::beginSolve(Cost ub)
     }
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
         cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
-        throw BadConfiguration();        
+        throw BadConfiguration();
     }
 #ifdef ILOGCPLEX
     if (wcsp->isPLPS() && ToulBar2::hbfs) {
@@ -2137,8 +2137,8 @@ bool Solver::solve(bool first)
                                         //get solution from previous solve and add pairwise Hamming distance constraint
                                         if (energies.size() > 0 && !extrapolatedBound) {
                                             vector<Value> solutionvec = wcsp->getSolution();
-                                            map<int,Value> solutionmap;
-                                            for (Variable *x: wcsp->getDivVariables()) {
+                                            map<int, Value> solutionmap;
+                                            for (Variable* x : wcsp->getDivVariables()) {
                                                 solutionmap[x->wcspIndex] = solutionvec[x->wcspIndex];
                                             }
                                             int arity = wcsp->getDivVariables().size();
@@ -2155,8 +2155,8 @@ bool Solver::solve(bool first)
                                                 ((WCSP*)wcsp)->addTDivConstraint(wcsp->getDivVariables(), ToulBar2::divBound, solutionmap, ((WCSP*)wcsp)->divHVarsId[energies.size() - 1], true);
                                                 break;
                                             case 3:
-                                                parameters.append(to_string(-(arity-(int)ToulBar2::divBound)));
-                                                for (Variable *x: wcsp->getDivVariables()) {
+                                                parameters.append(to_string(-(arity - (int)ToulBar2::divBound)));
+                                                for (Variable* x : wcsp->getDivVariables()) {
                                                     scope.push_back(x->wcspIndex);
                                                     parameters.append(" 1 ");
                                                     parameters.append(to_string(solutionmap[x->wcspIndex]));
@@ -2319,7 +2319,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         return;
     }
     if (ToulBar2::allSolutions) {
-        if (ToulBar2::verbose >=0) {
+        if (ToulBar2::verbose >= 0) {
             if (ToulBar2::approximateCountingBTD)
                 cout << "Number of solutions    : ~= " << std::fixed << std::setprecision(0) << nbSol << std::setprecision(DECIMAL_POINT) << endl;
             else {
@@ -2627,13 +2627,13 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     assert(nd.last >= nd.first);
 
     ptrdiff_t maxsize = nd.last - nd.first;
-    if (maxsize==0) {
+    if (maxsize == 0) {
         wcsp->enforceUb();
         wcsp->propagate();
         return;
     }
     nbRecomputationNodes += maxsize;
-    ChoicePoint *permute[maxsize];
+    ChoicePoint* permute[maxsize];
     int assignLS[maxsize];
     Value valueLS[maxsize];
     unsigned int size = 0;
@@ -2644,12 +2644,12 @@ void Solver::restore(CPStore& cp, OpenNode nd)
             permute[pos] = &cp[idx];
             ++pos;
         }
-        assert(pos==maxsize);
+        assert(pos == maxsize);
         shuffle(&permute[0], &permute[maxsize], myrandom_generator);
     }
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
-        ChoicePoint *cp_ptr = ((randomOrder)? permute[idx - nd.first] : &cp[idx]);
+        ChoicePoint* cp_ptr = ((randomOrder) ? permute[idx - nd.first] : &cp[idx]);
         assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex));
         if ((cp_ptr->op == CP_ASSIGN && !(cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) || (cp_ptr->op == CP_REMOVE && cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) {
             assignLS[size] = cp_ptr->varIndex;
@@ -2661,7 +2661,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     wcsp->assignLS(assignLS, valueLS, size, false); // fast multiple assignments
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
-        ChoicePoint *cp_ptr = ((randomOrder)? permute[idx - nd.first] : &cp[idx]);
+        ChoicePoint* cp_ptr = ((randomOrder) ? permute[idx - nd.first] : &cp[idx]);
         if (ToulBar2::verbose >= 1)
             cout << "retrieve choice point " << CPOperation[cp_ptr->op] << ((cp_ptr->reverse) ? "*" : "") << " (" << wcsp->getName(cp_ptr->varIndex) << ", " << cp_ptr->value << ") at position " << (cp_ptr - &cp[nd.first]) << endl;
         if (ToulBar2::verbose >= 1)

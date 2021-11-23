@@ -69,7 +69,7 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
             rmv.push_back(i);
             for (vector<int>::iterator v = cDomain.begin(); v != cDomain.end(); v++) {
                 int var1 = mapvar[i][*v];
-                if (((IlogMIP&)mip).sols->getSize()>0 && mip.sol(var1) == 1) { // checking if this value is being used
+                if (((IlogMIP&)mip).sols->getSize() > 0 && mip.sol(var1) == 1) { // checking if this value is being used
                     flag = true;
                 }
                 mip.colUpperBound(var1, 0); // removeDomain
@@ -106,7 +106,7 @@ void LinearConstraint::augmentStructure(MIP& mip, Cost& cost, int varindex, map<
 
         int var1 = mapvar[varindex][i->first];
         mip.objCoeff(var1, mip.objCoeff(var1) - i->second); // update unary cost
-        if (((IlogMIP&)mip).sols->getSize()>0 && mip.sol(var1) == 1) { // using this value?
+        if (((IlogMIP&)mip).sols->getSize() > 0 && mip.sol(var1) == 1) { // using this value?
             cost -= i->second;
         }
     }

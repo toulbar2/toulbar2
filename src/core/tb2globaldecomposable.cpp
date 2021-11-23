@@ -130,33 +130,35 @@ WeightedAmong::~WeightedAmong()
 
 void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
 {
-    if (semantics=="hard" || baseCost >= wcsp->getUb()) {
+    if (semantics == "hard" || baseCost >= wcsp->getUb()) {
         vector<int> scopevec;
-        for (int i=0; i<arity; i++) {
+        for (int i = 0; i < arity; i++) {
             scopevec.push_back(scope[i]);
         }
-        if (lb>0) {
+        if (lb > 0) {
             string params;
-            params.append(to_string(lb)+ " ");
-            for (int i=0; i<arity; i++) {
-                params.append(to_string(values.size())+" ");
-                for (int e: values) {
-                    params.append( to_string(e) + " 1 ");
+            params.append(to_string(lb) + " ");
+            for (int i = 0; i < arity; i++) {
+                params.append(to_string(values.size()) + " ");
+                for (int e : values) {
+                    params.append(to_string(e) + " 1 ");
                 }
             }
-            if (ToulBar2::verbose >= 1) cout  << "wamong => knapsackp " << params << endl;
+            if (ToulBar2::verbose >= 1)
+                cout << "wamong => knapsackp " << params << endl;
             wcsp->postKnapsackConstraint(scopevec, params, false, true);
         }
-        if ((int)ub<arity) {
+        if ((int)ub < arity) {
             string params;
-            params.append("-" + to_string(ub)+ " ");
-            for (int i=0; i<arity; i++) {
-                params.append( to_string(values.size()) + " ");
-                for (int e: values) {
-                    params.append( to_string(e)+" -1 ");
+            params.append("-" + to_string(ub) + " ");
+            for (int i = 0; i < arity; i++) {
+                params.append(to_string(values.size()) + " ");
+                for (int e : values) {
+                    params.append(to_string(e) + " -1 ");
                 }
             }
-            if (ToulBar2::verbose >= 1) cout  << "wamong => knapsackp " << params << endl;
+            if (ToulBar2::verbose >= 1)
+                cout << "wamong => knapsackp " << params << endl;
             wcsp->postKnapsackConstraint(scopevec, params, false, true);
         }
         return;
@@ -1770,7 +1772,6 @@ void WeightedSameGcc::display()
     }
 }
 
-
 /// WEIGHTED AMONG /////////////////////////////////////////////////////
 
 WeightedDiverse::WeightedDiverse()
@@ -1809,8 +1810,8 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
 {
     baseCost = wcsp->getUb();
     int nbVariableCFN = wcsp->numberOfVariables();
-    vector<Variable *> divVars;
-    map<int,Value> solutionmap;
+    vector<Variable*> divVars;
+    map<int, Value> solutionmap;
     for (int var = 0; var < arity; var++) {
         divVars.push_back(wcsp->getVar(scope[var]));
         solutionmap[scope[var]] = values[var];
@@ -1829,7 +1830,7 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("q" + std::to_string(val % (distance + 1)) + "_"
-                        + std::to_string(val / (distance + 1)));
+                    + std::to_string(val / (distance + 1)));
             }
         }
         wcsp->addDivConstraint(divVars, distance, solutionmap, divVarsIdMap);
@@ -1841,7 +1842,7 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("q" + std::to_string(val % (distance + 1)) + "_"
-                        + std::to_string(val / (distance + 1)));
+                    + std::to_string(val / (distance + 1)));
             }
         }
         for (Variable* x : divVars) {
@@ -1887,7 +1888,7 @@ Cost WeightedDiverse::evaluate(Value* tuple)
 
 void WeightedDiverse::display()
 {
-    cout << "W" << ((method==1)?"H":((method==2)?"T":"")) << "Diverse (" << arity << ") : ";
+    cout << "W" << ((method == 1) ? "H" : ((method == 2) ? "T" : "")) << "Diverse (" << arity << ") : ";
     for (int variable = 0; variable < arity; ++variable) {
         cout << scope[variable] << " ";
     }
@@ -1895,7 +1896,7 @@ void WeightedDiverse::display()
     cout << "sem : " << semantics << " " << baseCost << endl;
     cout << "distance: " << distance << endl;
     cout << "values: ";
-    for (Value v: values) {
+    for (Value v : values) {
         cout << v << " ";
     }
     cout << endl;

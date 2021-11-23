@@ -308,15 +308,13 @@ PYBIND11_MODULE(pytb2, m)
                 return s.postUnaryConstraint(xIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def(
-            "postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
-                return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
-            },
+        .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
+            return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
+        },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def(
-            "postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
-                return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
-            },
+        .def("postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
+            return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
+        },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int> & scope, Cost defval, Long nbtuples, bool forcenary)) & WeightedCSP::postNaryConstraintBegin)
         .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
@@ -325,9 +323,10 @@ PYBIND11_MODULE(pytb2, m)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
         .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> & scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
-        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> & scope, const string& arguments, bool isclique, bool kp) {
+        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int>& scope, const string& arguments, bool isclique, bool kp) {
             return s.postKnapsackConstraint(scope, arguments, isclique, kp);
-        }, py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false)
+        },
+            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
@@ -341,7 +340,7 @@ PYBIND11_MODULE(pytb2, m)
         //        .def("postWSum", &WeightedCSP::postWSum)
         //        .def("postWVarSum", &WeightedCSP::postWVarSum)
         //        .def("postWOverlap", &WeightedCSP::postWOverlap)
-        .def("postWDivConstraint", & WeightedCSP::postWDivConstraint)
+        .def("postWDivConstraint", &WeightedCSP::postWDivConstraint)
         .def("isGlobal", &WeightedCSP::isGlobal)
         .def("getSolution", (const vector<Value> (WeightedCSP::*)()) & WeightedCSP::getSolution)
         .def("initSolutionCost", &WeightedCSP::initSolutionCost)
@@ -420,8 +419,7 @@ PYBIND11_MODULE(pytb2, m)
                 timer(timeout);
         })
 #endif
-        .def(
-            "solve", [](WeightedCSPSolver& s, bool first) {
+        .def("solve", [](WeightedCSPSolver& s, bool first) {
             bool res = false;
             try {
                 res = s.solve(first);

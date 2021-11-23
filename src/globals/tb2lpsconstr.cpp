@@ -559,20 +559,21 @@ void LPSConstraint::dump(ostream& os, bool original)
                 os << " " << scope[i]->getCurrentVarId();
     }
     os << " -1 slinear " << nwindows << endl;
-    for (int i = 0; i< nwindows; i++) {
+    for (int i = 0; i < nwindows; i++) {
         os << windowSize[i];
-        for (int j = 0; j< windowSize[i]; j++) {
+        for (int j = 0; j < windowSize[i]; j++) {
             os << " " << windowVars[i][j];
         }
         os << " -1 " << windowType[i];
-        if (windowType[i]=="knapsack") {
+        if (windowType[i] == "knapsack") {
             os << " " << sumlow[i];
-            for (int j = 0; j< windowSize[i]; j++) {
+            for (int j = 0; j < windowSize[i]; j++) {
                 os << " " << kpcoefs[i][j][1];
             }
         } else {
             os << " " << subdef[i] << " " << sumlow[i] << " " << sumhigh[i];
-            cerr << endl << "sorry, dump function for slinear not fully implemented!!!" << endl;
+            cerr << endl
+                 << "sorry, dump function for slinear not fully implemented!!!" << endl;
             exit(EXIT_FAILURE);
         }
         os << endl;

@@ -48,7 +48,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
                         tmp.insert(var);
                         nbunvars.insert(var);
                     }
-                } ;
+                };
                 if (tmp.size() > 0) {
                     TDCluster c = add_vertex(m_graph);
                     m_graph[c].vars = tmp;

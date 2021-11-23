@@ -4254,7 +4254,7 @@ void WCSP::propagate()
                     int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
-                            && !DAC.empty())
+                               && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
                         eac_iter++;
                         propagateIncDec();
@@ -5293,7 +5293,7 @@ void WCSP::treeDecFile2Vector(char* filename, vector<int>& order)
 
 void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
 {
-    if (numberOfVariables()==0)
+    if (numberOfVariables() == 0)
         return;
 #ifdef BOOST
     if (reinterpret_cast<uintptr_t>(elimVarOrder) > ELIM_NONE && reinterpret_cast<uintptr_t>(elimVarOrder) < ELIM_MAX) {
@@ -5662,7 +5662,7 @@ void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<
 #ifdef ILOGCPLEX
 bool WCSP::isPLPS()
 {
-    return isGlobal() && find_if(globalconstrs.begin(), globalconstrs.end(), [&](const auto& val){ return val->getName().find("slinear") != std::string::npos; }) != globalconstrs.end();
+    return isGlobal() && find_if(globalconstrs.begin(), globalconstrs.end(), [&](const auto& val) { return val->getName().find("slinear") != std::string::npos; }) != globalconstrs.end();
 }
 #endif
 

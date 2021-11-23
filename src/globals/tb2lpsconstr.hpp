@@ -36,7 +36,7 @@ public:
     {
     }
 
-    string getName() { return "slinear_" + to_string(nwindows) + "_" + to_string(nrows) + "_" + to_string(nslacks) ; }
+    string getName() { return "slinear_" + to_string(nwindows) + "_" + to_string(nrows) + "_" + to_string(nslacks); }
     Cost evalOriginal(const Tuple& s);
     virtual void read(istream& file, bool mult = true);
 

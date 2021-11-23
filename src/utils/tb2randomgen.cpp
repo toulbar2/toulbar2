@@ -19,7 +19,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
     EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
     int* scopeIndexs = new int[arity];
     Cost Top = wcsp.getUb();
-    
+
     if (costMax < Top)
         Top = ToulBar2::costMultiplier * costMax;
 
@@ -32,8 +32,8 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
 
     if (globalname == "knapsackp") {
         string arguments;
-        Long capacity = (myrandln() % (Long) costMax);
-        if (capacity==0)
+        Long capacity = (myrandln() % (Long)costMax);
+        if (capacity == 0)
             capacity++;
         arguments.append(to_string(capacity));
         string kparguments;
@@ -41,33 +41,33 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         int domsize;
         Long weight;
         for (i = 0; i < arity; i++) {
-            kparguments="";
-            int countone=0;
-            domsize=scopeVars[i]->getDomainSize();
-            VV= new Value[domsize];
+            kparguments = "";
+            int countone = 0;
+            domsize = scopeVars[i]->getDomainSize();
+            VV = new Value[domsize];
             scopeVars[i]->getDomain(VV);
-            for(int j=0;j<domsize;j++){
+            for (int j = 0; j < domsize; j++) {
                 if ((rand() % 100) < 50) {
                     kparguments.append(" ");
                     kparguments.append(to_string(VV[j]));
                     if ((rand() % 100) < 50) {
-                         weight = (myrandl() % capacity + 1);
+                        weight = (myrandl() % capacity + 1);
                     } else {
-                         weight = (-myrandl() % capacity - 1);
+                        weight = (-myrandl() % capacity - 1);
                     }
-                    kparguments.append(" "+to_string(weight));
+                    kparguments.append(" " + to_string(weight));
                     countone++;
                 }
-           }
-            arguments.append(" "+to_string(countone)+kparguments);
+            }
+            arguments.append(" " + to_string(countone) + kparguments);
         }
         istringstream file(arguments);
-        cout<<arguments<<endl;
+        cout << arguments << endl;
         wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true);
     } else if (globalname == "knapsack") {
         string arguments;
-        Long capacity = (myrandln() % (Long) costMax);
-        if (capacity==0)
+        Long capacity = (myrandln() % (Long)costMax);
+        if (capacity == 0)
             capacity++;
         arguments.append(to_string(capacity));
         for (i = 0; i < arity; i++) {
@@ -82,7 +82,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         }
         istringstream file(arguments);
         wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false);
-    }else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
+    } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
         // soft alldiff
@@ -272,7 +272,7 @@ long long naryRandom::toIndex(vector<int>& index)
 void naryRandom::ini(vector<int>& index, int arity, int n)
 {
     index.clear();
-    int dec = (arity>10)?(myrand()%(n-arity)):0;
+    int dec = (arity > 10) ? (myrand() % (n - arity)) : 0;
     for (int i = 0; i < arity; i++)
         index.push_back(i + dec);
 }
@@ -337,7 +337,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     for (arity = maxa; arity > 1; arity--) {
         long nogoods = (long)(((double)p[0] / 100.) * pow((double)m, arity) + 0.5);
         //long totalarraysize = (long) pow( (double)n, arity);
-        long long tCtrs = static_cast<long long>(n)*static_cast<long long>(n-1);
+        long long tCtrs = static_cast<long long>(n) * static_cast<long long>(n - 1);
         set<long long> scopes;
         for (i = 2; i < arity; i++) {
             tCtrs *= (n - i);
@@ -350,7 +350,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         }
         while (numCtrs[arity]) {
             bool oneadded = false;
-            long long dice = max(0LL,min(static_cast<long long>(MAX_ARITY)*static_cast<long long>(MAX_ARITY)*static_cast<long long>(MAX_ARITY), myrandl() % tCtrs));
+            long long dice = max(0LL, min(static_cast<long long>(MAX_ARITY) * static_cast<long long>(MAX_ARITY) * static_cast<long long>(MAX_ARITY), myrandl() % tCtrs));
             ini(indexs, arity, n);
             do {
                 if (scopes.end() == scopes.find(toIndex(indexs))) {

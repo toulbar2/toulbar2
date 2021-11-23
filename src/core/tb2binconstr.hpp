@@ -713,9 +713,15 @@ public:
     void dump_CFN(ostream& os, bool original = true);
     Long size() const FINAL { return (Long)sizeX * sizeY; }
 #ifdef NO_STORE_BINARY_COSTS
-    Long space() const FINAL { return (Long)sizeof(Cost) * sizeX * sizeY; }
+    Long space() const FINAL
+    {
+        return (Long)sizeof(Cost) * sizeX * sizeY;
+    }
 #else
-    Long space() const FINAL { return (Long)sizeof(StoreCost) * sizeX * sizeY; }
+    Long space() const FINAL
+    {
+        return (Long)sizeof(StoreCost) * sizeX * sizeY;
+    }
 #endif
 
     friend struct Functor_getCost;

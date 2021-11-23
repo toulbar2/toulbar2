@@ -2,9 +2,9 @@
 
 #ifdef ILOGCPLEX
 
-MIP *MIP::makeMIP()
+MIP* MIP::makeMIP()
 {
-   return new IlogMIP();
+    return new IlogMIP();
 }
 
 IlogMIP::IlogMIP()
@@ -152,7 +152,7 @@ int IlogMIP::augment(int var1)
     (*var)[var1].setLB(1);
     solve();
     int cost = solValue();
-    assert(sols->getSize() ==0 || sol(var1) == 1);
+    assert(sols->getSize() == 0 || sol(var1) == 1);
     (*var)[var1].setLB(0);
     return cost;
 } // compute the minimal when a value is used

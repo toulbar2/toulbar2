@@ -587,7 +587,8 @@ public:
                 printed = true;
                 cout << solution[i];
             }
-            if (printed && i < numberOfVariables() - 1) cout << " ";
+            if (printed && i < numberOfVariables() - 1)
+                cout << " ";
         }
     }
     void printSolution(ostream& os)
@@ -622,7 +623,8 @@ public:
                 printed = true;
                 os << solution[i];
             }
-            if (printed && i < numberOfVariables() - 1) os << " ";
+            if (printed && i < numberOfVariables() - 1)
+                os << " ";
         }
     }
     void printSolution(FILE* f)
@@ -657,7 +659,8 @@ public:
                 printed = true;
                 fprintf(f, "%d", solution[i]);
             }
-            if (printed && i < numberOfVariables() - 1) fprintf(f, " ");
+            if (printed && i < numberOfVariables() - 1)
+                fprintf(f, " ");
         }
     }
     void printSolutionMaxSAT(ostream& os)
