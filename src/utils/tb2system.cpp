@@ -68,7 +68,7 @@ void timeOut(int sig)
     if (ToulBar2::timeOut)
         ToulBar2::timeOut();
     else
-        throw TimeOut(); //exit(0);
+        throw TimeOut();
 }
 
 static struct itimerval thetimer = { { 0, 0 }, { 0, 0 } };

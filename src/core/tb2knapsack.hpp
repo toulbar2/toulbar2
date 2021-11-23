@@ -335,10 +335,10 @@ public:
             }
         }
         if (W < Original_capacity || res > wcsp->getUb()) {
-            if (W < Original_capacity && Original_ub < wcsp->getUb() && 1.0 * Original_ub * (Original_capacity-W) < wcsp->getUb()) {
-               res = Original_ub * (Original_capacity-W);    // VNS-like methods may exploit a relaxation of the constraint
+            if (W < Original_capacity && Original_ub < wcsp->getUb() && 1.0 * Original_ub * (Original_capacity - W) < wcsp->getUb()) {
+                res = Original_ub * (Original_capacity - W); // VNS-like methods may exploit a relaxation of the constraint
             } else {
-               res = wcsp->getUb();
+                res = wcsp->getUb();
             }
         }
         assert(res <= wcsp->getUb());

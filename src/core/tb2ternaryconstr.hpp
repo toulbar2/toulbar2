@@ -1782,7 +1782,7 @@ void TernaryConstraint::projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCo
         }
     }
 
-    assert((yzin==xy || yzin==xz || yzin==yz) && checkTreeDecomposition());
+    assert((yzin == xy || yzin == xz || yzin == yz) && checkTreeDecomposition());
 
     if (flag) {
         if (y->unassigned() && z->unassigned())

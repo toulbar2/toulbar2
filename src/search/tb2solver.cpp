@@ -1624,8 +1624,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         clb = MAX(clb, open_->getLb(delta));
         if (ToulBar2::verbose >= 1 && cluster)
             cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
-        while (clb < cub && !open_->finished() &&
-                (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
+        while (clb < cub && !open_->finished() && (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
             if (cluster) {
                 cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -1718,6 +1717,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 void Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
+    assert(ub > MIN_COST);
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
         cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
         throw BadConfiguration();
@@ -2376,26 +2376,32 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         cout << "Summary of adaptive BTD: " << endl;
         double sum = nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
         if (sum != 0)
-            cout << "% of new positive choices (i.e. cluster subtree is merged): " << (nbChoices / sum ) * 100.0 << endl;
-        else cout << "% of new positive choices: NA" << endl;
+            cout << "% of new positive choices (i.e. cluster subtree is merged): " << (nbChoices / sum) * 100.0 << endl;
+        else
+            cout << "% of new positive choices: NA" << endl;
 
         if (nbChoices != 0)
             cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): " << (nbChoiceChange / nbChoices) * 100.0 << endl;
-        else cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): NA" << endl;
+        else
+            cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): NA" << endl;
 
         if (sum != 0)
             cout << "% of transitions due to nogood propagation: " << (nbForcedChoiceChange / sum) * 100.0 << endl;
-        else cout << "% of transitions due to nogood propagation: NA" << endl;
+        else
+            cout << "% of transitions due to nogood propagation: NA" << endl;
 
         if (sum != 0)
             cout << "% of forced negative choices due to nogood propagation: " << (nbForcedChoices / sum) * 100.0 << endl;
-        else cout << "% of forced negative choices due to nogood propagation: NA" << endl;
+        else
+            cout << "% of forced negative choices due to nogood propagation: NA" << endl;
 
         if (sum != 0)
             cout << "% of choices without change: " << (nbReadOnly / sum) * 100.0 << endl;
-        else cout << "% of choices without change: NA" << endl;
+        else
+            cout << "% of choices without change: NA" << endl;
 
-        cout << "Maximum cluster depth visited during search / maximum cluster depth of the original tree decomposition (except the root): " << solveDepth << " / " << wcsp->getTreeDec()->getMaxDepth() << endl;;
+        cout << "Maximum cluster depth visited during search / maximum cluster depth of the original tree decomposition (except the root): " << solveDepth << " / " << wcsp->getTreeDec()->getMaxDepth() << endl;
+        ;
     }
 
     if (isSolution) {
@@ -2405,23 +2411,12 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
 
             if (isLimited == 2)
                 cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
-            if (ToulBar2::haplotype) {
+            if (ToulBar2::haplotype)
                 cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-            } else if (!ToulBar2::bayesian) {
-//                if(ToulBar2::heuristicFreedom && wcsp->getTreeDec()) {
-//                    double allsum =  nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
-//                    double per_newpositivechoices = (nbChoices / allsum ) * 100.0;
-//                    double per_trans_pos2nega = (nbChoiceChange / nbChoices) * 100.0;
-//                    double per_trans_transnogood = (nbForcedChoiceChange / allsum) * 100.0;
-//                    double per_forcednegativechoices = (nbForcedChoices / allsum) * 100.0 ;
-//                    double per_choiceswithoutchange  = (nbReadOnly / allsum) * 100.0;
-//                    int denominator_depth = wcsp->getTreeDec()->getMaxDepth();
-//                    cout << " depth "<< solveDepth << "/" << denominator_depth <<" %newpositivechoices "<< per_newpositivechoices<<" transitions(pos2neg) "<<per_trans_pos2nega<<" transduetonogood "<<per_trans_transnogood<<" forcednegativechoices "<<per_forcednegativechoices<<" choiceswithoutchange "<<per_choiceswithoutchange<< endl;
-//                }
+            else if (!ToulBar2::bayesian)
                 cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-            } else {
+            else
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
-            }
         } else {
             if (ToulBar2::xmlflag) {
                 ((WCSP*)wcsp)->solution_XML(true);

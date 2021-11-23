@@ -29,7 +29,7 @@ bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
  *
  */
 
-WCSP *CmpVarStruct::wcsp = NULL;
+WCSP* CmpVarStruct::wcsp = NULL;
 
 bool CmpVarStruct::operator()(const int lhs, const int rhs) const
 {
@@ -93,18 +93,10 @@ void Separator::setup(Cluster* cluster_in)
         ++it;
     }
 
-    // take into account the fact that the cluster may be used as it descendant
+    // take into account the fact that the cluster may be used as its descendants
     int nvars = cluster->getNbVarsTree();
     if (!nvars)
         return;
-
-//    int nproper = 0;
-//    it = cluster->beginVarsTree();
-//    while (it != cluster->endVarsTree()) {
-//        if (!cluster->isSepVar(*it))
-//            nproper++;
-//        ++it;
-//    }
 
     s = Tuple(cluster->getNbVarsTree(), 0);
 }
@@ -565,7 +557,7 @@ void Separator::solRec(Cost ub)
         ++it;
     }
 
-    solutions[t] = TPairSol(ub + deltares, Tuple(s.begin(), s.begin()+i)); // remember only proper variables
+    solutions[t] = TPairSol(ub + deltares, Tuple(s.begin(), s.begin() + i)); // remember only proper variables
     freesSol[t] = cluster->getFreedom();
 
     if (ToulBar2::verbose >= 1) {
@@ -859,7 +851,6 @@ void Cluster::getSolution(TAssign& sol)
 {
     static Tuple s; //FIXME: unsafe???
 
-
     TVars::iterator it, iter_begin, iter_end;
 
     bool free = getFreedom();
@@ -956,7 +947,7 @@ void Cluster::accelerateDescendants()
 {
     quickdescendants = vector<bool>(td->getNbOfClusters(), false);
     for (auto itc = beginDescendants(); itc != endDescendants(); ++itc) {
-        Cluster *c = *itc;
+        Cluster* c = *itc;
         quickdescendants[c->getId()] = true;
     }
 }
@@ -965,16 +956,16 @@ void Cluster::accelerateIntersections()
 {
     quickIntersections.clear();
     for (TClusters::iterator itc = beginEdges(); itc != endEdges(); ++itc) {
-        Cluster *cj = *itc;
+        Cluster* cj = *itc;
         TVars cjsep;
         td->intersection(getVars(), cj->getVars(), cjsep);
         quickIntersections[cj] = cjsep;
     }
 }
 
-void Cluster::quickIntersection(Cluster *cj, TVars& cjsep)
+void Cluster::quickIntersection(Cluster* cj, TVars& cjsep)
 {
-    map<Cluster *, TVars>::iterator itcj = quickIntersections.find(cj);
+    map<Cluster*, TVars>::iterator itcj = quickIntersections.find(cj);
     if (itcj != quickIntersections.end()) {
         cjsep = itcj->second;
     } else {
@@ -1357,8 +1348,9 @@ void TreeDecomposition::pathFusions(vector<int>& order)
 // time complexity in O(n) using DFS
 void TreeDecomposition::reduceHeight(Cluster* c, vector<Cluster*> path)
 {
-    Cluster *cparent = NULL;
-    if (path.size() > 0) cparent = path.back();
+    Cluster* cparent = NULL;
+    if (path.size() > 0)
+        cparent = path.back();
     assert(c != cparent);
     TClusters::iterator itj;
     itj = c->beginEdges();
@@ -1372,19 +1364,19 @@ void TreeDecomposition::reduceHeight(Cluster* c, vector<Cluster*> path)
                 // reconnect the child cluster closest to the root of the tree decomposition following path information
                 int pos = path.size() - 1;
                 assert(pos >= 0 && path[pos] == cparent);
-                while (pos >= 1 && included(cjsep, path[pos-1]->getVars())) {
+                while (pos >= 1 && included(cjsep, path[pos - 1]->getVars())) {
                     pos--;
                 }
                 assert(pos >= 0 && path[pos] != c);
-//                cout << "move " << cj->getId() << " from " << c->getId() << " to " << path[pos]->getId() << endl;
-//                cout << "with path:";
-//                for (int i=0; i<path.size(); i++) cout << " " << path[i]->getId();
-//                cout << endl;
+                //                cout << "move " << cj->getId() << " from " << c->getId() << " to " << path[pos]->getId() << endl;
+                //                cout << "with path:";
+                //                for (int i=0; i<path.size(); i++) cout << " " << path[i]->getId();
+                //                cout << endl;
                 c->removeEdge(cj);
                 path[pos]->addEdge(cj);
                 cj->removeEdge(c);
                 cj->addEdge(path[pos]);
-                reduceHeight(cj, vector<Cluster*>(path.begin(), path.begin()+pos+1)); // continue recursively on cj with an updated path to the root
+                reduceHeight(cj, vector<Cluster*>(path.begin(), path.begin() + pos + 1)); // continue recursively on cj with an updated path to the root
             } else if (!cparent && cjsep.size() == 0) { // warning! it is done before a meta-root is created with connected components as its children
                 c->removeEdge(cj);
                 cj->removeEdge(c);
@@ -1631,22 +1623,23 @@ Cluster* TreeDecomposition::getBiggerCluster(TClusters& unvisited)
     return cmax;
 }
 
-Cluster* TreeDecomposition::getClusterMinHeight(TClusters& unvisited){
+Cluster* TreeDecomposition::getClusterMinHeight(TClusters& unvisited)
+{
 
     TClusters::iterator itc = unvisited.begin();
-    Cluster*c_start = *itc;
+    Cluster* c_start = *itc;
     assert(c_start);
     int minheight = height(c_start);
     Cluster* cmin_height = c_start;
     ++itc;
-    while(itc != unvisited.end()){
+    while (itc != unvisited.end()) {
         Cluster* c = *itc;
         assert(c);
-        if(ToulBar2::reduceHeight){
-            reduceHeight(c, vector<Cluster *>());
-        }   
-        if (height(c) < minheight){
-            minheight=height(c);
+        if (ToulBar2::reduceHeight) {
+            reduceHeight(c, vector<Cluster*>());
+        }
+        if (height(c) < minheight) {
+            minheight = height(c);
             cmin_height = c;
             if (ToulBar2::btdMode == 3)
                 break;
@@ -1654,20 +1647,20 @@ Cluster* TreeDecomposition::getClusterMinHeight(TClusters& unvisited){
         ++itc;
     }
     return cmin_height;
-    
 }
 
-Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited){
+Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited)
+{
     Cluster* cmax_ratio = NULL;
     float maxratio = 0;
-    for (TClusters::iterator itc = unvisited.begin(); itc != unvisited.end(); ++itc){
+    for (TClusters::iterator itc = unvisited.begin(); itc != unvisited.end(); ++itc) {
         Cluster* c = *itc;
         assert(c);
-        if(ToulBar2::reduceHeight){
-            reduceHeight(c, vector<Cluster *>());
+        if (ToulBar2::reduceHeight) {
+            reduceHeight(c, vector<Cluster*>());
         }
-        if (float(c->getNbVars())/float((height(c)-c->getNbVars())) >= maxratio){
-            maxratio = float(c->getNbVars())/float(height(c)-c->getNbVars());
+        if (float(c->getNbVars()) / float((height(c) - c->getNbVars())) >= maxratio) {
+            maxratio = float(c->getNbVars()) / float(height(c) - c->getNbVars());
             cmax_ratio = c;
             if (ToulBar2::btdMode == 3)
                 break;
@@ -1676,24 +1669,22 @@ Cluster* TreeDecomposition::getCluster_height_rootsize_max(TClusters& unvisited)
     return cmax_ratio;
 }
 
-
-
-
-Cluster* TreeDecomposition::getCluster_height_rootsize_min(TClusters& unvisited){
+Cluster* TreeDecomposition::getCluster_height_rootsize_min(TClusters& unvisited)
+{
     TClusters::iterator itc = unvisited.begin();
-    Cluster*c_start = *itc;
+    Cluster* c_start = *itc;
     assert(c_start);
-    float minratio = float(c_start->getNbVars())/float(height(c_start)-c_start->getNbVars());
+    float minratio = float(c_start->getNbVars()) / float(height(c_start) - c_start->getNbVars());
     Cluster* cmin_ratio = c_start;
     ++itc;
-    while(itc != unvisited.end()){
+    while (itc != unvisited.end()) {
         Cluster* c = *itc;
         assert(c);
-        if(ToulBar2::reduceHeight){
-            reduceHeight(c, vector<Cluster *>());
-        }   
-        if (float(c->getNbVars())/float((height(c)-c->getNbVars())) < minratio){
-            minratio = float(c->getNbVars())/float(height(c)-c->getNbVars());
+        if (ToulBar2::reduceHeight) {
+            reduceHeight(c, vector<Cluster*>());
+        }
+        if (float(c->getNbVars()) / float((height(c) - c->getNbVars())) < minratio) {
+            minratio = float(c->getNbVars()) / float(height(c) - c->getNbVars());
             cmin_ratio = c;
             if (ToulBar2::btdMode == 3)
                 break;
@@ -1702,8 +1693,6 @@ Cluster* TreeDecomposition::getCluster_height_rootsize_min(TClusters& unvisited)
     }
     return cmin_ratio;
 }
-
-
 
 int TreeDecomposition::height(Cluster* r, Cluster* father)
 {
@@ -1799,32 +1788,31 @@ void TreeDecomposition::computeDepths(Cluster* c, int parent_depth)
 
 void TreeDecomposition::DFSUtil(Cluster* c, cluster_visited& c_visited)
 {
-    c_visited[c] = true;  
+    c_visited[c] = true;
     comp.insert(c);
-    for (TClusters::iterator itc = c->getEdges().begin(); itc != c->getEdges().end();++itc) {
+    for (TClusters::iterator itc = c->getEdges().begin(); itc != c->getEdges().end(); ++itc) {
         if (!c_visited[*itc]) {
-          DFSUtil(*itc,c_visited);
+            DFSUtil(*itc, c_visited);
         }
     }
-
 }
 
 int TreeDecomposition::connectedComponents()
 {
-    cluster_visited c_visited; 
-    // Mark all the clusters as not visited 
-    for (vector<Cluster*>::iterator itc = clusters.begin(); itc != clusters.end();++itc) {
+    cluster_visited c_visited;
+    // Mark all the clusters as not visited
+    for (vector<Cluster*>::iterator itc = clusters.begin(); itc != clusters.end(); ++itc) {
         c_visited[*itc] = false;
     }
 
-    for (vector<Cluster*>::iterator it = clusters.begin(); it != clusters.end();++it) {
-        if (c_visited[*it] == false) { 
+    for (vector<Cluster*>::iterator it = clusters.begin(); it != clusters.end(); ++it) {
+        if (c_visited[*it] == false) {
             comp.clear();
-            DFSUtil(*it,c_visited);
+            DFSUtil(*it, c_visited);
             tree_component.insert(comp);
         }
     }
-    if (ToulBar2::verbose >=1) {
+    if (ToulBar2::verbose >= 1) {
         cout << "Number of connect components : " << tree_component.size() << endl;
     }
     return tree_component.size();
@@ -1832,13 +1820,13 @@ int TreeDecomposition::connectedComponents()
 
 int TreeDecomposition::makeRooted()
 
-{   
+{
     bool isalreadyrooted = (roots.size() > 0);
     Cluster* root = NULL;
     list<Cluster*> temproots;
     if (isalreadyrooted) {
         temproots = roots;
-    } 
+    }
 
     connectedComponents();
 
@@ -1847,7 +1835,7 @@ int TreeDecomposition::makeRooted()
         c->accelerateIntersections();
     }
 
-    for(auto it = tree_component.begin(); it != tree_component.end();++it) {
+    for (auto it = tree_component.begin(); it != tree_component.end(); ++it) {
         TClusters visited;
         TClusters unvisited(*it);
 
@@ -1867,22 +1855,26 @@ int TreeDecomposition::makeRooted()
                     root = getCluster(ToulBar2::btdRootCluster);
                     selected = true;
                 } else {
-                    switch(ToulBar2::rootHeuristic) {
+                    switch (ToulBar2::rootHeuristic) {
                     case 0:
                         root = getBiggerCluster(unvisited);
-                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with max. size: " << root->getNbVars() << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1)
+                            cout << "Get root cluster C" << root->getId() << " with max. size: " << root->getNbVars() << endl;
                         break;
                     case 1:
-                        root=getCluster_height_rootsize_max(unvisited);
-                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with max. ratio size/(height-size): " << float(root->getNbVars())/float(height(root)-root->getNbVars()) << endl;
+                        root = getCluster_height_rootsize_max(unvisited);
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1)
+                            cout << "Get root cluster C" << root->getId() << " with max. ratio size/(height-size): " << float(root->getNbVars()) / float(height(root) - root->getNbVars()) << endl;
                         break;
                     case 2:
                         root = getCluster_height_rootsize_min(unvisited);
-                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout << "Get root cluster C" << root->getId() << " with min. ratio size/(height-size): " << float(root->getNbVars())/float(height(root)-root->getNbVars()) << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1)
+                            cout << "Get root cluster C" << root->getId() << " with min. ratio size/(height-size): " << float(root->getNbVars()) / float(height(root) - root->getNbVars()) << endl;
                         break;
                     case 3:
                         root = getClusterMinHeight(unvisited);
-                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1) cout <<"Get root cluster C" << root->getId() << " with min. height: " << height(root) << endl;
+                        if (ToulBar2::verbose >= 0 && ToulBar2::searchMethod == DFBB && (*it).size() > 1)
+                            cout << "Get root cluster C" << root->getId() << " with min. height: " << height(root) << endl;
                         break;
                     default:
                         cerr << "Unknown root cluster heuristic " << ToulBar2::rootHeuristic << endl;
@@ -1890,14 +1882,14 @@ int TreeDecomposition::makeRooted()
                     }
                 }
                 roots.push_back(root);
-                reduceHeight(root, vector<Cluster *>());
+                reduceHeight(root, vector<Cluster*>());
                 if (ToulBar2::splitClusterMaxSize >= 1)
                     splitClusterRec(root, NULL, ToulBar2::splitClusterMaxSize, unvisited);
                 if (ToulBar2::maxSeparatorSize >= 0 || ToulBar2::minProperVarSize >= 2)
                     mergeClusterRec(root, NULL, ToulBar2::maxSeparatorSize, ToulBar2::minProperVarSize, unvisited);
                 if (ToulBar2::boostingBTD > 0. && ToulBar2::elimDegree >= 1)
                     boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree, unvisited);
-                reduceHeight(root, vector<Cluster *>());
+                reduceHeight(root, vector<Cluster*>());
             }
             visited.insert(root);
             unvisited.erase(root);
@@ -1913,7 +1905,7 @@ int TreeDecomposition::makeRooted()
 
     // if it is a forest then create a unique meta-root cluster with empty separators with its children
     // if it is not a forest but adaptive BTD is used then always create a meta-root cluster
-    if (roots.size() > 1 || (ToulBar2::btdMode==1 && ToulBar2::heuristicFreedom)) {
+    if (roots.size() > 1 || (ToulBar2::btdMode == 1 && ToulBar2::heuristicFreedom)) {
         root = new Cluster(this);
         root->setId(clusters.size());
         clusters.push_back(root);
@@ -1929,7 +1921,7 @@ int TreeDecomposition::makeRooted()
             root->addEdge(oneroot);
             oneroot->setParent(root);
             root->getDescendants().insert(root);
-            
+
             clusterSum(root->getDescendants(), oneroot->getDescendants());
             sum(root->getVarsTree(), oneroot->getVarsTree()); // the variables of varsTree should also be updated
         }
@@ -1979,7 +1971,6 @@ int TreeDecomposition::makeRooted()
 
     return h;
 }
-
 
 void TreeDecomposition::setDuplicates()
 {
@@ -2565,7 +2556,7 @@ void TreeDecomposition::intersection(TVars& v1, TVars& v2, TVars& vout)
 }
 
 // returns precomputed intersection if available or compute it
-void TreeDecomposition::intersection(Cluster *c, Cluster *cj, TVars& vout)
+void TreeDecomposition::intersection(Cluster* c, Cluster* cj, TVars& vout)
 {
     c->quickIntersection(cj, vout);
 #ifndef NDEBUG
@@ -2744,33 +2735,38 @@ void TreeDecomposition::updateInTD(Cluster* c)
     }
 }
 
-Cluster *TreeDecomposition::lowestCommonAncestor(Cluster *c1, Cluster *c2)
+Cluster* TreeDecomposition::lowestCommonAncestor(Cluster* c1, Cluster* c2)
 {
-  if (c1->getDepth() < c2->getDepth()) {
-      while (!c1->isDescendant(c2)) {
-          c1 = c1->getParent();
-          assert(c1 != NULL);
-      }
-      return c1;
-  } else {
-      while (!c2->isDescendant(c1)) {
-          c2 = c2->getParent();
-          assert(c2 != NULL);
-      }
-      return c2;
-  }
+    if (c1->getDepth() < c2->getDepth()) {
+        while (!c1->isDescendant(c2)) {
+            c1 = c1->getParent();
+            assert(c1 != NULL);
+        }
+        return c1;
+    } else {
+        while (!c2->isDescendant(c1)) {
+            c2 = c2->getParent();
+            assert(c2 != NULL);
+        }
+        return c2;
+    }
 }
 
-bool TreeDecomposition::isSameCluster(Cluster *c1, Cluster *c2)
+bool TreeDecomposition::isSameCluster(Cluster* c1, Cluster* c2)
 {
-    if (c1 == c2) return true;
+    if (c1 == c2)
+        return true;
     if (ToulBar2::heuristicFreedom) {
-        if (c1->getIsCurrInTD() && c2->getIsCurrInTD()) return false;
-        if ((c1->getFreedom() || !c1->getIsCurrInTD()) && c1->isDescendant(c2)) return true;
-        if ((c2->getFreedom() || !c2->getIsCurrInTD()) && c2->isDescendant(c1)) return true;
-        Cluster *lca = lowestCommonAncestor(c1,c2);
+        if (c1->getIsCurrInTD() && c2->getIsCurrInTD())
+            return false;
+        if ((c1->getFreedom() || !c1->getIsCurrInTD()) && c1->isDescendant(c2))
+            return true;
+        if ((c2->getFreedom() || !c2->getIsCurrInTD()) && c2->isDescendant(c1))
+            return true;
+        Cluster* lca = lowestCommonAncestor(c1, c2);
         assert(getRoot() != lca || (!lca->getFreedom() && lca->getIsCurrInTD()));
-        if (lca->getFreedom() || !lca->getIsCurrInTD()) return true;
+        if (lca->getFreedom() || !lca->getIsCurrInTD())
+            return true;
     }
     return false;
 }

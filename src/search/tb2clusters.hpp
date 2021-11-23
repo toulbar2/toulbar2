@@ -19,7 +19,7 @@ typedef ConstraintSet TCtrs;
 
 // sort variables by their DAC order
 struct CmpVarStruct {
-    static WCSP *wcsp;
+    static WCSP* wcsp;
     bool operator()(const int lhs, const int rhs) const;
 };
 typedef set<int, CmpVarStruct> TVarsSorted;
@@ -32,7 +32,7 @@ typedef set<Cluster*, CmpClusterStructBasic> TClusters;
 
 // data structure for connected components
 typedef set<TClusters> component;
-//cluster visited or not 
+//cluster visited or not
 typedef map<Cluster*, bool> cluster_visited;
 // sort cluster sons by mean separator size first and by number of variables in their subtree next
 struct CmpClusterStruct {
@@ -148,7 +148,7 @@ private:
     TVars varsTree; // set of variables in cluster descendants (including itself)
     TVarsSorted sortedVarsTree; // set of cluster's tree variables sorted by DAC order after makeRooted is done
     vector<bool> quickdescendants;
-    map<Cluster *, TVars> quickIntersections; // set of variables corresponding to the intersection between a neighbor cluster and itself
+    map<Cluster*, TVars> quickIntersections; // set of variables corresponding to the intersection between a neighbor cluster and itself
 
     Separator* sep; // associated separator with parent cluster
     StoreCost lb; // current cluster lower bound deduced by propagation
@@ -235,7 +235,7 @@ public:
     bool isDescendant(Cluster* c) { return quickdescendants[c->getId()]; }
 
     void accelerateIntersections();
-    void quickIntersection(Cluster *cj, TVars& cjsep);
+    void quickIntersection(Cluster* cj, TVars& cjsep);
 
     TCtrs& getCtrs() { return ctrs; }
     void addCtrs(TCtrs& ctrsin);
@@ -352,7 +352,7 @@ public:
 
     // freedom of variables choice
     bool getFreedom() { return freedom_on; }
-    void setFreedom(bool f) {  freedom_on = f; }  // { if (ToulBar2::verbose >= 1 && freedom_on != f) cout << " status of cluster " << getId() << " changed from " << freedom_on << " to " << f << endl;  freedom_on = f; }
+    void setFreedom(bool f) { freedom_on = f; } // { if (ToulBar2::verbose >= 1 && freedom_on != f) cout << " status of cluster " << getId() << " changed from " << freedom_on << " to " << f << endl;  freedom_on = f; }
     bool isVarTree(int i)
     {
         TVars::iterator it = varsTree.find(i);
@@ -441,13 +441,12 @@ private:
 
     int max_depth;
 
-public: 
-
+public:
     //connected component of the tree
-    component tree_component; 
+    component tree_component;
     // provisoire components
     TClusters comp;
-    
+
     TreeDecomposition(WCSP* wcsp_in);
 
     WCSP* getWCSP() { return wcsp; }
@@ -502,7 +501,6 @@ public:
     //all cluster connected components of the tree decomposition
     int connectedComponents();
 
-
     void makeRootedRec(Cluster* c, TClusters& visited, TClusters& unvisited);
     Cluster* getBiggerCluster(TClusters& unvisited);
     Cluster* getCluster_height_rootsize_min(TClusters& unvisited);
@@ -517,7 +515,7 @@ public:
     int height(Cluster* r, Cluster* father);
 
     void intersection(TVars& v1, TVars& v2, TVars& vout);
-    void intersection(Cluster *c, Cluster *cj, TVars& vout);
+    void intersection(Cluster* c, Cluster* cj, TVars& vout);
     void difference(TVars& v1, TVars& v2, TVars& vout);
     void sum(TVars v1, TVars v2, TVars& vout); // copy inputs to avoid any overlap issues with output
     void sum(TVars& v1, TVars& v2); // it assumes vout = v1
@@ -548,8 +546,8 @@ public:
 
     void computeDepths(Cluster* c, int parent_depth); ///\brief recursively set depth of all clusters in a given cluster subtree
     int getMaxDepth() { return max_depth; }
-    Cluster *lowestCommonAncestor(Cluster *c1, Cluster *c2); ///\brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
-    bool isSameCluster(Cluster *c1, Cluster *c2); ///\brief return true if both clusters are the same or they have been merged together by adaptive BTD
+    Cluster* lowestCommonAncestor(Cluster* c1, Cluster* c2); ///\brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
+    bool isSameCluster(Cluster* c1, Cluster* c2); ///\brief return true if both clusters are the same or they have been merged together by adaptive BTD
     bool isSameCluster(int c1, int c2) { return isSameCluster(getCluster(c1), getCluster(c2)); }
 };
 

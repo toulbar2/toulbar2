@@ -148,7 +148,10 @@ inline bool Mul(Cost a, Cost b, Cost* c)
 }
 #endif
 
-inline Cost MIN(Cost a, Cost b) { return min(a, b); }
+inline Cost MIN(Cost a, Cost b)
+{
+    return min(a, b);
+}
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {

@@ -223,7 +223,7 @@ protected:
     int getNextUnassignedVar();
     int getMostUrgent();
 
-    void Manage_Freedom(Cluster * cluster);
+    void Manage_Freedom(Cluster* cluster);
     double nbChoices;
     double nbForcedChoices;
     double nbForcedChoiceChange;

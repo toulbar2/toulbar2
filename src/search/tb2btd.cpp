@@ -396,7 +396,8 @@ void Solver::Manage_Freedom(Cluster* c)
                 }
             }
             if (found) { // some separator inside the current subtree has been used to compute the current lower bound
-                if (ToulBar2::verbose >= 1) cout << " propagation has already used some separator nogood inside the current subtree of cluster " << c->getId() << endl;
+                if (ToulBar2::verbose >= 1)
+                    cout << " propagation has already used some separator nogood inside the current subtree of cluster " << c->getId() << endl;
                 if (recorded && c->getFreedom()) {
                     if (c->open) {
                         *(c->open) = OpenList();

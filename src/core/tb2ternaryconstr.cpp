@@ -758,7 +758,7 @@ bool TernaryConstraint::verify()
     if (td) {
         if (!td->isSameCluster(cluster, xy->getCluster()) || !td->isSameCluster(cluster, xz->getCluster()) || !td->isSameCluster(cluster, yz->getCluster())) {
             if (ToulBar2::heuristicFreedom) {
-                cout << " different cluster assignment for ternary: " << cluster  << "(" << td->getCluster(cluster)->getFreedom() << ") xy: " << xy->getCluster() << "(" << td->getCluster(xy->getCluster())->getFreedom() << ") xz: " << xz->getCluster() << "(" << td->getCluster(xz->getCluster())->getFreedom() << ") yz: " << yz->getCluster() << "(" << td->getCluster(yz->getCluster())->getFreedom() << ")" << endl;
+                cout << " different cluster assignment for ternary: " << cluster << "(" << td->getCluster(cluster)->getFreedom() << ") xy: " << xy->getCluster() << "(" << td->getCluster(xy->getCluster())->getFreedom() << ") xz: " << xz->getCluster() << "(" << td->getCluster(xz->getCluster())->getFreedom() << ") yz: " << yz->getCluster() << "(" << td->getCluster(yz->getCluster())->getFreedom() << ")" << endl;
             } else {
                 cout << " different cluster assignment for ternary: " << cluster << " xy: " << xy->getCluster() << " xz: " << xz->getCluster() << " yz: " << yz->getCluster() << endl;
             }

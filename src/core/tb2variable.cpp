@@ -474,7 +474,7 @@ bool Variable::isSep()
 
         TSepLink::iterator it;
 
-        it=clusters.begin();
+        it = clusters.begin();
 
         while (it != clusters.end()) {
             int c = (*it).first;

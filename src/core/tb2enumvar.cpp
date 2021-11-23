@@ -955,9 +955,10 @@ bool EnumeratedVariable::elimVar(BinaryConstraint* ctr, BinaryConstraint* ctr_du
 
     // deconnect first to be sure the current var is not involved in future propagation
     ctr->deconnect();
-    if (ctr_duplicate) ctr_duplicate->deconnect();
+    if (ctr_duplicate)
+        ctr_duplicate->deconnect();
     // to be done before propagation
-    WCSP::elimInfo ei = { this, x, ctr_duplicate?x:NULL, ctr, ctr_duplicate, NULL, NULL };
+    WCSP::elimInfo ei = { this, x, ctr_duplicate ? x : NULL, ctr, ctr_duplicate, NULL, NULL };
     wcsp->elimInfos[wcsp->getElimOrder()] = ei;
     wcsp->elimOrderInc();
 
@@ -971,7 +972,7 @@ bool EnumeratedVariable::elimVar(BinaryConstraint* ctr, BinaryConstraint* ctr_du
     for (iterator iter1 = x->begin(); iter1 != x->end(); ++iter1) {
         Cost mincost = MAX_COST;
         for (iterator iter = begin(); iter != end(); ++iter) {
-            Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1) + ((ctr_duplicate)?getBinaryCost(ctr_duplicate, *iter, *iter1):MIN_COST);
+            Cost curcost = getCost(*iter) + getBinaryCost(ctr, *iter, *iter1) + ((ctr_duplicate) ? getBinaryCost(ctr_duplicate, *iter, *iter1) : MIN_COST);
             if (ToulBar2::isZ)
                 mincost = wcsp->LogSumExp(mincost, curcost);
             else if (curcost < mincost)
@@ -1137,9 +1138,7 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
         return false; //TODO: continue if it is a duplicated ternary with the same scope as xyz
 
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (td && (!td->isSameCluster(cluster, xyz->getCluster()) ||
-               (n2links > 0 && !td->isSameCluster(cluster, links[0].constr->getCluster())) ||
-               (n2links > 1 && !td->isSameCluster(cluster, links[1].constr->getCluster())))) {
+    if (td && (!td->isSameCluster(cluster, xyz->getCluster()) || (n2links > 0 && !td->isSameCluster(cluster, links[0].constr->getCluster())) || (n2links > 1 && !td->isSameCluster(cluster, links[1].constr->getCluster())))) {
         return false;
     }
 

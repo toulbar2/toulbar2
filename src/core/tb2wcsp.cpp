@@ -393,7 +393,7 @@ void tb2init()
     ToulBar2::btdSubTree = -1;
     ToulBar2::btdRootCluster = -1;
     ToulBar2::rootHeuristic = 0;
-    ToulBar2::reduceHeight=false;
+    ToulBar2::reduceHeight = false;
 
     ToulBar2::startCpuTime = 0;
 
@@ -5236,7 +5236,7 @@ void WCSP::buildTreeDecomposition()
         td->getElimVarOrder(order);
         // allows propagation to operate on the whole problem without modifying tree decomposition local lower bounds and delta costs
         // it is important for RDS-BTD which assumes zero cluster lower bounds and no delta cost moves
-        // note: uncomment these four lines if you want the same DAC order between HBFS and adaptive BTD-HBFS
+        // TODO: uncomment these four lines if you want the same DAC order between HBFS and adaptive BTD-HBFS
         TreeDecomposition* tmptd = td;
         td = NULL;
         setDACOrder(order);
