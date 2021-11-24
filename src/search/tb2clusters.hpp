@@ -442,9 +442,9 @@ private:
     int max_depth;
 
 public:
-    //connected component of the tree
+    // connected component of the tree
     component tree_component;
-    // provisoire components
+    // temporary components
     TClusters comp;
 
     TreeDecomposition(WCSP* wcsp_in);
@@ -501,7 +501,7 @@ public:
     //all cluster connected components of the tree decomposition
     int connectedComponents();
 
-    void makeRootedRec(Cluster* c, TClusters& visited, TClusters& unvisited);
+    void makeRootedRec(Cluster* c, TClusters& unvisited);
     Cluster* getBiggerCluster(TClusters& unvisited);
     Cluster* getCluster_height_rootsize_min(TClusters& unvisited);
     Cluster* getCluster_height_rootsize_max(TClusters& unvisited);

@@ -1443,14 +1443,6 @@ void TreeDecomposition::splitClusterRec(Cluster* c, Cluster* father, unsigned in
                 cproper.erase(varIndex);
                 varIndex = ((ToulBar2::Static_variable_ordering) ? getNextUnassignedVar(&cproper) : getVarMinDomainDivMaxWeightedDegree(&cproper));
             }
-            //	  TVars::iterator it = cproper.begin();
-            //	  for (unsigned int i = 0; i < maxsize && it != cproper.end(); i++) {
-            //		  cnewvars.insert(*it);
-            //		  ++it;
-            //	  }
-            //	  TVars cpropernew;
-            //	  difference(cproper, cnewvars, cpropernew);
-            //	  cproper = cpropernew;
             if (!cprev) {
                 c->getVars().clear();
                 c->addVars(csep);
@@ -1523,6 +1515,7 @@ TVars TreeDecomposition::boostingVarElimRec(Cluster* c, Cluster* father, Cluster
             difference(c->getVars(), csep, cproper);
             father->addVars(cproper);
             father->removeEdge(c);
+            father->accelerateIntersections();
             unvisited.erase(c);
             clusters.back()->setId(c->getId());
             clusters[c->getId()] = clusters.back();
@@ -1560,6 +1553,7 @@ void TreeDecomposition::mergeClusterRec(Cluster* c, Cluster* father, unsigned in
             }
             father->removeEdge(father);
             father->removeEdge(c);
+            father->accelerateIntersections();
             unvisited.erase(c);
             clusters.back()->setId(c->getId());
             clusters[c->getId()] = clusters.back();
@@ -1739,14 +1733,13 @@ void TreeDecomposition::makeDescendants(Cluster* c)
     }
 }
 
-void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited, TClusters& unvisited)
+void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& unvisited)
 {
     TClusters::iterator itj = c->beginEdges();
     while (itj != c->endEdges()) {
         Cluster* cj = *itj;
         cj->removeEdge(c);
         cj->setParent(c);
-        visited.insert(cj);
         unvisited.erase(cj);
 
         if (ToulBar2::searchMethod == DFBB) {
@@ -1770,7 +1763,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& visited, TClusters&
             //-------
         }
 
-        makeRootedRec(cj, visited, unvisited);
+        makeRootedRec(cj, unvisited);
         ++itj;
     }
 }
@@ -1836,11 +1829,9 @@ int TreeDecomposition::makeRooted()
     }
 
     for (auto it = tree_component.begin(); it != tree_component.end(); ++it) {
-        TClusters visited;
         TClusters unvisited(*it);
-
         bool selected = false;
-        while (visited.size() < (*it).size()) {
+        while (unvisited.size() > 0) {
             if (isalreadyrooted) {
                 if (temproots.size() > 0) {
                     root = temproots.front();
@@ -1891,12 +1882,10 @@ int TreeDecomposition::makeRooted()
                     boostingVarElimRec(root, NULL, NULL, ToulBar2::elimDegree, unvisited);
                 reduceHeight(root, vector<Cluster*>());
             }
-            visited.insert(root);
             unvisited.erase(root);
-            makeRootedRec(root, visited, unvisited);
+            makeRootedRec(root, unvisited);
             makeDescendants(root);
         }
-        assert(visited.size() == (*it).size());
         assert(unvisited.size() == 0);
     }
 
@@ -1951,6 +1940,7 @@ int TreeDecomposition::makeRooted()
         c->setup();
     }
     rootRDS = NULL;
+    assert(getRoot() == root);
     root->sortEdgesRec();
     root->sortVarsRec();
     root->sortVarsTreeRec();
