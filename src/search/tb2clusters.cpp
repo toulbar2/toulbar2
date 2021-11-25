@@ -651,6 +651,11 @@ Cluster::Cluster(TreeDecomposition* tdin)
 
 Cluster::~Cluster()
 {
+    id = -1;
+    if (sep) {
+        sep->deconnect();
+        sep->unqueueSep();
+    }
     delete cp;
 }
 
@@ -1733,15 +1738,20 @@ void TreeDecomposition::makeDescendants(Cluster* c)
     }
 }
 
-void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& unvisited)
+void TreeDecomposition::makeRootedRec(Cluster* c, Cluster* father, TClusters& unvisited)
 {
+    //cout << "makeRootedRec " << c << " (" << c->getId() << ") with father cluster " << father << " (" << ((father)?father->getId():NULL) << ")" << endl;
     TClusters::iterator itj = c->beginEdges();
     while (itj != c->endEdges()) {
         Cluster* cj = *itj;
+        assert(cj != c);
+        assert(cj != father);
+        assert(cj->getId() >= 0 && clusters[cj->getId()] == cj); // must be a valid cluster inside the list of clusters
+        //cout << "makeRootedRec " << c << " (" << c->getId() << ")" << " on child cluster " << cj << " (" << cj->getId() << ")" << endl;
+        ++itj;
         cj->removeEdge(c);
         cj->setParent(c);
         unvisited.erase(cj);
-
         if (ToulBar2::searchMethod == DFBB) {
             TVars cjsep;
             intersection(c, cj, cjsep);
@@ -1749,7 +1759,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& unvisited)
             //------- Add the constraint separator
             int i = 0;
             int arity = cjsep.size();
-            EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity];
+            EnumeratedVariable** scopeVars = new EnumeratedVariable*[arity]; // warning! it might allocate too much memory in the stack, it is safer to use the heap!
             TVars::iterator it = cjsep.begin();
             while (it != cjsep.end()) {
                 scopeVars[i] = (EnumeratedVariable*)wcsp->getVar(*it);
@@ -1763,8 +1773,7 @@ void TreeDecomposition::makeRootedRec(Cluster* c, TClusters& unvisited)
             //-------
         }
 
-        makeRootedRec(cj, unvisited);
-        ++itj;
+        makeRootedRec(cj, c, unvisited);
     }
 }
 
@@ -1830,6 +1839,9 @@ int TreeDecomposition::makeRooted()
 
     for (auto it = tree_component.begin(); it != tree_component.end(); ++it) {
         TClusters unvisited(*it);
+//        cout << "clusters component:";
+//        for (auto ccit=unvisited.begin(); ccit != unvisited.end(); ++ccit) cout << ' ' << *ccit;
+//        cout << endl;
         bool selected = false;
         while (unvisited.size() > 0) {
             if (isalreadyrooted) {
@@ -1842,7 +1854,7 @@ int TreeDecomposition::makeRooted()
                     exit(EXIT_FAILURE);
                 }
             } else {
-                if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)(*it).size()) {
+                if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)(*it).size() && unvisited.find(getCluster(ToulBar2::btdRootCluster)) != unvisited.end()) {
                     root = getCluster(ToulBar2::btdRootCluster);
                     selected = true;
                 } else {
@@ -1883,7 +1895,7 @@ int TreeDecomposition::makeRooted()
                 reduceHeight(root, vector<Cluster*>());
             }
             unvisited.erase(root);
-            makeRootedRec(root, unvisited);
+            makeRootedRec(root, NULL, unvisited);
             makeDescendants(root);
         }
         assert(unvisited.size() == 0);
@@ -1901,8 +1913,10 @@ int TreeDecomposition::makeRooted()
 
         for (list<Cluster*>::iterator iter = roots.begin(); iter != roots.end(); ++iter) {
             Cluster* oneroot = *iter;
+            assert(oneroot->getSep() == NULL);
 
             EnumeratedVariable** scopeVars = new EnumeratedVariable*[1];
+
             oneroot->setSep(new Separator(wcsp, scopeVars, 0));
             if (oneroot->getNbVars() <= 1 && oneroot->getDescendants().size() == 1) {
                 oneroot->getSep()->unqueueSep();
@@ -1920,6 +1934,7 @@ int TreeDecomposition::makeRooted()
 
     for (unsigned int i = 0; i < clusters.size(); i++) {
         Cluster* c = clusters[i];
+        assert(c->getId() == (int)i);
         c->accelerateDescendants();
         if (c->getSep())
             c->getSep()->setSep();
