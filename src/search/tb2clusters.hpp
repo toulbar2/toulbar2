@@ -501,7 +501,7 @@ public:
     //all cluster connected components of the tree decomposition
     int connectedComponents();
 
-    void makeRootedRec(Cluster* c, Cluster *father, TClusters& unvisited);
+    void makeRootedRec(Cluster* c, Cluster* father, TClusters& unvisited);
     Cluster* getBiggerCluster(TClusters& unvisited);
     Cluster* getCluster_height_rootsize_min(TClusters& unvisited);
     Cluster* getCluster_height_rootsize_max(TClusters& unvisited);

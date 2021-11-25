@@ -1839,9 +1839,9 @@ int TreeDecomposition::makeRooted()
 
     for (auto it = tree_component.begin(); it != tree_component.end(); ++it) {
         TClusters unvisited(*it);
-//        cout << "clusters component:";
-//        for (auto ccit=unvisited.begin(); ccit != unvisited.end(); ++ccit) cout << ' ' << *ccit;
-//        cout << endl;
+        //        cout << "clusters component:";
+        //        for (auto ccit=unvisited.begin(); ccit != unvisited.end(); ++ccit) cout << ' ' << *ccit;
+        //        cout << endl;
         bool selected = false;
         while (unvisited.size() > 0) {
             if (isalreadyrooted) {
