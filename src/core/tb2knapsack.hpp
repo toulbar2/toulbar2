@@ -13,6 +13,7 @@
 class KnapsackConstraint : public AbstractNaryConstraint {
     int carity;
     Long Original_capacity;
+    Cost Original_ub;
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     StoreLong capacity; // knapsack capacity
     StoreLong MinWeight;
@@ -198,10 +199,11 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
-        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<int>> VarVal_in, vector<vector<int>> NotVarVal_in)
+        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , carity(arity_in)
         , Original_capacity(capacity_in)
+        , Original_ub(wcsp->getUb())
         , nonassigned(arity_in)
         , capacity(capacity_in)
         , MinWeight(0)
@@ -332,8 +334,13 @@ public:
                 res += deltaCosts[i][distance(VarVal[i].begin(), it)];
             }
         }
-        if (W < Original_capacity || res > wcsp->getUb())
-            res = wcsp->getUb();
+        if (W < Original_capacity || res > wcsp->getUb()) {
+            if (W < Original_capacity && Original_ub < wcsp->getUb() && 1.0 * Original_ub * (Original_capacity - W) < wcsp->getUb()) {
+                res = Original_ub * (Original_capacity - W); // VNS-like methods may exploit a relaxation of the constraint
+            } else {
+                res = wcsp->getUb();
+            }
+        }
         assert(res <= wcsp->getUb());
         assert(res >= MIN_COST);
         return res;

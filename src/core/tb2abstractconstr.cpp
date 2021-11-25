@@ -162,7 +162,7 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
     EnumeratedVariable* y = (EnumeratedVariable*)xyz->getVar(1);
     EnumeratedVariable* z = (EnumeratedVariable*)xyz->getVar(2);
     TernaryConstraint* ctr = x->getConstr(y, z);
-    if (ctr && td && (ctr->getCluster() != getCluster())) {
+    if (ctr && td && !td->isSameCluster(ctr->getCluster(), getCluster())) {
         TernaryConstraint* ctr_ = x->getConstr(y, z, getCluster());
         if (ctr_)
             ctr = ctr_;
@@ -176,7 +176,7 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
         if (ctr)
             cout << "ctr exists" << endl;
     }
-    if (!ctr || (ctr && td && cluster != ctr->getCluster())) {
+    if (!ctr || (ctr && td && !td->isSameCluster(cluster, ctr->getCluster()))) {
         xyz->fillElimConstrBinaries();
         xyz->reconnect();
         if (ctr)
@@ -186,7 +186,7 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
         xyz = ctr;
     }
     xyz->propagate();
-    assert(!td || (xyz->getCluster() == xyz->xy->getCluster() && xyz->getCluster() == xyz->xz->getCluster() && xyz->getCluster() == xyz->yz->getCluster()));
+    assert(!td || (td->isSameCluster(xyz->getCluster(), xyz->xy->getCluster()) && td->isSameCluster(xyz->getCluster(), xyz->xz->getCluster()) && td->isSameCluster(xyz->getCluster(), xyz->yz->getCluster())));
 }
 
 void AbstractNaryConstraint::projectNaryBinary(BinaryConstraint* xy)
@@ -204,7 +204,7 @@ void AbstractNaryConstraint::projectNaryBinary(BinaryConstraint* xy)
     if (!ctr)
         ctr = x->getConstr(y);
 
-    if ((ctr && !td) || (ctr && td && (getCluster() == ctr->getCluster()))) {
+    if ((ctr && !td) || (ctr && td && td->isSameCluster(getCluster(), ctr->getCluster()))) {
         if (ToulBar2::verbose >= 2)
             cout << " exists -> fusion" << endl;
         ctr->addCosts(xy);

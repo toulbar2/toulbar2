@@ -1,6 +1,6 @@
 /** \file tb2ternaryconstr.hpp
  *  \brief Ternary constraint applied on variables with enumerated domains.
- *
+ *  \warning EAC is not applied on duplicated ternary constraints
  */
 
 #ifndef TB2TERNARYCONSTR_HPP_
@@ -851,12 +851,14 @@ public:
         return true;
     }
 
+    bool checkTreeDecomposition(); ///\brief if tree decomposition then xy, xz, xz binary constraints attached to this ternary should all belong to the same cluster
+
     void findFullSupportEAC(int varIndex)
     {
         assert(!isDuplicate());
         if (ToulBar2::QueueComplexity && varIndex == getDACScopeIndex() && !ToulBar2::FullEAC)
             return;
-        assert(!wcsp->getTreeDec() || (cluster == xy->getCluster() && cluster == xz->getCluster() && cluster == yz->getCluster()));
+        assert(checkTreeDecomposition());
         switch (varIndex) {
         case 0:
             findFullSupportX();
@@ -1780,9 +1782,7 @@ void TernaryConstraint::projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCo
         }
     }
 
-    if (wcsp->getTreeDec()) {
-        yzin->setCluster(getCluster());
-    }
+    assert((yzin == xy || yzin == xz || yzin == yz) && checkTreeDecomposition());
 
     if (flag) {
         if (y->unassigned() && z->unassigned())

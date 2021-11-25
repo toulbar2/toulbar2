@@ -136,10 +136,10 @@ bool ReplicatedParallelDGVNS::solve(bool first)
         return (lastUb < MAX_COST);
     }
 
-    assert((int)wcsp->numberOfUnassignedVariables() == unassignedVars->getSize());
+    assert((int)wcsp->numberOfUnassignedVariables() >= unassignedVars->getSize());
     ToulBar2::vnsLDSmax = min(ToulBar2::vnsLDSmax, (int)wcsp->getDomainSizeSum() - (int)wcsp->numberOfUnassignedVariables());
     ToulBar2::vnsLDSmin = min(ToulBar2::vnsLDSmin, ToulBar2::vnsLDSmax);
-    ToulBar2::vnsKmax = min(ToulBar2::vnsKmax, (int)wcsp->numberOfUnassignedVariables());
+    ToulBar2::vnsKmax = min(ToulBar2::vnsKmax, unassignedVars->getSize());
     ToulBar2::vnsKmin = min(ToulBar2::vnsKmin, ToulBar2::vnsKmax);
     assert(ToulBar2::vnsLDSmin >= 0);
     assert(ToulBar2::vnsLDSmax >= 0);
@@ -489,7 +489,7 @@ bool ReplicatedParallelDGVNS::VnsLdsCP(MPIEnv& env0, ParallelRandomClusterChoice
     set<int> neighborhood = h->SlaveGetNeighborhood(cluster, k); // based shuffle
     vector<int> variables;
     variables.reserve(unassignedVars->getSize());
-    vector<int> values;
+    vector<Value> values;
     values.reserve(unassignedVars->getSize());
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         int v = *iter;

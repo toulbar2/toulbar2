@@ -164,7 +164,7 @@ void Constraint::assignCluster()
             if (lowest->isDescendant(c))
                 lowest = c;
         }
-    cluster = lowest->getId();
+    setCluster(lowest->getId());
 }
 
 /// \warning always returns 0 for cost functions in intention

@@ -28,7 +28,6 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     maxCost(MIN_COST)
     , maxCostValue(iinf)
     , NCBucket(-1)
-    , cluster(-1)
 {
     if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
@@ -44,6 +43,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     linkIncDecQueue.content.incdec = NOTHING_EVENT;
     linkEliminateQueue.content.var = this;
     linkEliminateQueue.content.timeStamp = -1;
+    cluster = -1;
     isSep_ = false;
 }
 
@@ -464,6 +464,32 @@ double Variable::strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1max,
     }
 
     return maxtight;
+}
+
+// take into account the current tree decomposition of adaptive BTD
+bool Variable::isSep()
+{
+    if (ToulBar2::heuristicFreedom) {
+        isSep_ = false;
+
+        TSepLink::iterator it;
+
+        it = clusters.begin();
+
+        while (it != clusters.end()) {
+            int c = (*it).first;
+            if (wcsp->getTreeDec()->getCluster(c)->getIsCurrInTD()) {
+                isSep_ = true;
+                return true;
+            } else {
+                ++it;
+            }
+        }
+
+        return false;
+    } else {
+        return isSep_;
+    }
 }
 
 ostream& operator<<(ostream& os, Variable& var)

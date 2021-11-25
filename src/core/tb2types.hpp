@@ -69,6 +69,38 @@ const int MAX_BRANCH_SIZE = 1000000;
 const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
 const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
 
+#if (defined(SHORT_COST) || defined(SHORT_VALUE))
+//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
+inline int16_t min(int16_t x, int y)
+{
+    if (x < y)
+        return x;
+    else
+        return y;
+}
+inline int16_t min(int x, int16_t y)
+{
+    if (x < y)
+        return x;
+    else
+        return y;
+}
+inline int16_t max(int16_t x, int y)
+{
+    if (x > y)
+        return x;
+    else
+        return y;
+}
+inline int16_t max(int x, int16_t y)
+{
+    if (x > y)
+        return x;
+    else
+        return y;
+}
+#endif
+
 #ifdef SHORT_COST
 const bool PARTIALORDER = false;
 typedef int16_t Cost;
@@ -116,37 +148,10 @@ inline bool Mul(Cost a, Cost b, Cost* c)
 }
 #endif
 
-//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
-inline int16_t min(int16_t x, int y)
+inline Cost MIN(Cost a, Cost b)
 {
-    if (x < y)
-        return x;
-    else
-        return y;
+    return min(a, b);
 }
-inline int16_t min(int x, int16_t y)
-{
-    if (x < y)
-        return x;
-    else
-        return y;
-}
-inline int16_t max(int16_t x, int y)
-{
-    if (x > y)
-        return x;
-    else
-        return y;
-}
-inline int16_t max(int x, int16_t y)
-{
-    if (x > y)
-        return x;
-    else
-        return y;
-}
-
-inline Cost MIN(Cost a, Cost b) { return min(a, b); }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
 inline Cost MULT(Cost a, double b)
 {
@@ -578,6 +583,14 @@ typedef enum {
 } SearchMethod;
 
 typedef enum {
+    NOBTD,
+    BTD,
+    RDSBTD,
+    RDS,
+    ADAPTBTD
+} BTDMethod;
+
+typedef enum {
     LS_INIT_RANDOM = -1,
     LS_INIT_INF = -2,
     LS_INIT_SUP = -3,
@@ -748,6 +761,8 @@ public:
     static int btdMode;
     static int btdSubTree;
     static int btdRootCluster;
+    static int rootHeuristic;
+    static bool reduceHeight;
 
     static bool maxsateval;
     static bool xmlflag;
@@ -770,6 +785,9 @@ public:
     static int maxSeparatorSize;
     static int minProperVarSize;
     static int smallSeparatorSize;
+
+    static bool heuristicFreedom; // the freedom heuristic used for BTD-like algorithms (if one is used)
+    static int heuristicFreedomLimit; // the freedom limit
 
     static bool Berge_Dec; // flag for berge acyclic decomposition
     static bool learning; // if true, perform pseudoboolean learning

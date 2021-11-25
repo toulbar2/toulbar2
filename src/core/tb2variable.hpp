@@ -137,8 +137,12 @@ public:
 
     /**********************************************************************/
     //   added for tree decomposition stuff
-    StoreInt cluster;
-    void setCluster(int c) { cluster = c; }
+    int cluster;
+    void setCluster(int c)
+    {
+        assert(cluster == -1 || Store::getDepth() == 0);
+        cluster = c;
+    }
     int getCluster() { return cluster; }
 
     BinaryConstraint* getConstr(Variable* x, int cid);
@@ -146,9 +150,9 @@ public:
 
     bool isSep_;
     void setSep() { isSep_ = true; }
-    bool isSep() { return isSep_; }
+    bool isSep();
 
-    typedef set<pair<int, int>> TSepLink; // set of pairs <cluster in wihch the variable appears,
+    typedef set<pair<int, int>> TSepLink; // set of pairs <cluster in which the variable appears,
     //  			    position of the variable in the delta structure>
     TSepLink clusters;
 

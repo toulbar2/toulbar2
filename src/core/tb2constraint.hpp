@@ -285,17 +285,21 @@ public:
         return 0;
     }
 
-    //   added for tree decomposition stuff
-    int cluster;
+    //   added for tree decomposition
+    int cluster; ///\brief warning! this value should not change during search (except for initialization in binary/ternary elimination pool)
     int getCluster() { return cluster; }
-    void setCluster(int i) { cluster = i; }
+    void setCluster(int i)
+    {
+        assert(cluster == -1 || Store::getDepth() == 0);
+        cluster = i;
+    }
     void assignCluster();
 
-    bool isSep_;
+    bool isSep_; ///\brief true if the constraint is used to record nogoods associated to a Separator
     void setSep() { isSep_ = true; }
     bool isSep() { return isSep_; }
 
-    bool isDuplicate_;
+    bool isDuplicate_; ///\brief true if it exists another binary constraint with the same scope or if it is a ternary constraint with a duplicated binary constraint inside
     void setDuplicate()
     {
         isDuplicate_ = true;

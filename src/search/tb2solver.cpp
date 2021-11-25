@@ -101,6 +101,12 @@ Solver::Solver(Cost initUpperBound)
     , globalUpperBound(MAX_COST)
     , initialDepth(0)
     , prevDivSolutionCost(MIN_COST)
+    , nbChoices(0)
+    , nbForcedChoices(0)
+    , nbForcedChoiceChange(0)
+    , nbChoiceChange(0)
+    , nbReadOnly(0)
+    , solveDepth(0)
 {
     searchSize = new StoreInt(0);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
@@ -801,8 +807,12 @@ void Solver::increase(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->increase(varIndex, value);
@@ -825,8 +835,12 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->decrease(varIndex, value);
@@ -874,8 +888,12 @@ void Solver::assign(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
     }
     wcsp->assign(varIndex, value);
@@ -898,8 +916,12 @@ void Solver::remove(int varIndex, Value value, bool reverse)
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
     }
     wcsp->remove(varIndex, value);
@@ -922,8 +944,12 @@ void Solver::remove(int varIndex, ValueCost* array, int first, int last, bool re
             cout << " #" << nbNodes;
         }
         cout << "[" << Store::getDepth() << "," << wcsp->getLb() << "," << wcsp->getUb() << "," << wcsp->getDomainSizeSum();
-        if (wcsp->getTreeDec())
+        if (wcsp->getTreeDec()) {
             cout << ",C" << wcsp->getTreeDec()->getCurrentCluster()->getId();
+            if (ToulBar2::heuristicFreedom) {
+                cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
+            }
+        }
         cout << "] Try " << wcsp->getName(varIndex) << " !=";
         for (int i = first; i <= last; i++)
             cout << " " << array[i].value;
@@ -1691,6 +1717,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 void Solver::beginSolve(Cost ub)
 {
     // Last-minute compatibility checks for ToulBar2 selected options
+    assert(ub > MIN_COST);
     if (ToulBar2::allSolutions && ToulBar2::btdMode == 1 && ub > 1) {
         cerr << "Error: Solution enumeration by BTD-like search methods is only possible for feasability (use -ub=1 and integer costs only)." << endl;
         throw BadConfiguration();
@@ -1713,7 +1740,7 @@ void Solver::beginSolve(Cost ub)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }
     if (wcsp->isGlobal() && ToulBar2::btdMode >= 1) {
-        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B option)." << endl;
+        cout << "Error: cannot use BTD-like search methods with monolithic global cost functions (remove -B or -F options)." << endl;
         throw BadConfiguration();
     }
 #ifdef ILOGCPLEX
@@ -1830,8 +1857,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             initialUpperBound = finiteUb;
         }
     }
-    if (ToulBar2::verbose >= 0)
-        cout << "Preprocessing time: " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
 
     // special data structure to be initialized for variable ordering heuristics
     initVarHeuristic();
@@ -1856,6 +1881,8 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
 
+    if (ToulBar2::verbose >= 0)
+        cout << "Preprocessing time: " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;
     if (ToulBar2::verbose >= 0)
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxCurrentDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. arity:" << wcsp->medianArity() << ", med. degree:" << wcsp->medianDegree() << ")" << endl;
     if (ToulBar2::verbose >= 0) {
@@ -2345,6 +2372,38 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << " %" << endl;
 
+    if (ToulBar2::verbose >= 0 && ToulBar2::heuristicFreedom && wcsp->getTreeDec()) {
+        cout << "Summary of adaptive BTD: " << endl;
+        double sum = nbChoices + nbForcedChoices + nbForcedChoiceChange + nbReadOnly;
+        if (sum != 0)
+            cout << "% of new positive choices (i.e. cluster subtree is merged): " << (nbChoices / sum) * 100.0 << endl;
+        else
+            cout << "% of new positive choices: NA" << endl;
+
+        if (nbChoices != 0)
+            cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): " << (nbChoiceChange / nbChoices) * 100.0 << endl;
+        else
+            cout << "% of transitions (from positive/merged to negative/unmerged) due to an unproductive exploration (w.r.t positive choices): NA" << endl;
+
+        if (sum != 0)
+            cout << "% of transitions due to nogood propagation: " << (nbForcedChoiceChange / sum) * 100.0 << endl;
+        else
+            cout << "% of transitions due to nogood propagation: NA" << endl;
+
+        if (sum != 0)
+            cout << "% of forced negative choices due to nogood propagation: " << (nbForcedChoices / sum) * 100.0 << endl;
+        else
+            cout << "% of forced negative choices due to nogood propagation: NA" << endl;
+
+        if (sum != 0)
+            cout << "% of choices without change: " << (nbReadOnly / sum) * 100.0 << endl;
+        else
+            cout << "% of choices without change: NA" << endl;
+
+        cout << "Maximum cluster depth visited during search / maximum cluster depth of the original tree decomposition (except the root): " << solveDepth << " / " << wcsp->getTreeDec()->getMaxDepth() << endl;
+        ;
+    }
+
     if (isSolution) {
         if (ToulBar2::verbose >= 0 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval) {
             if (ToulBar2::haplotype)
@@ -2650,7 +2709,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
         assert((size_t)idx < cp.size());
         ChoicePoint* cp_ptr = ((randomOrder) ? permute[idx - nd.first] : &cp[idx]);
-        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex));
+        assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCurrentCluster()->isVar(cp_ptr->varIndex) || (wcsp->getTreeDec()->getCurrentCluster()->getFreedom() && wcsp->getTreeDec()->getCurrentCluster()->isVarTree(cp_ptr->varIndex)));
         if ((cp_ptr->op == CP_ASSIGN && !(cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) || (cp_ptr->op == CP_REMOVE && cp_ptr->reverse && cp_ptr != &cp[nd.last - 1])) {
             assignLS[size] = cp_ptr->varIndex;
             valueLS[size] = cp_ptr->value;

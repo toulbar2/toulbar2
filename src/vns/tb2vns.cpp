@@ -58,7 +58,6 @@ void ClustersNeighborhoodStructure::load_decomposition()
         file.close();
         if (nbvars.size() < wcsp->numberOfVariables()) {
             cout << "Warning: cluster decomposition has missing variables! (" << nbvars.size() << "!=" << wcsp->numberOfVariables() << ")" << endl;
-            //exit(EXIT_FAILURE);
         }
         assert(nbunvars.size() == wcsp->numberOfUnassignedVariables());
         TCDGraph::vertex_iterator v, vend, v2;

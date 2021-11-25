@@ -355,7 +355,7 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
         }
         vector<int> variables;
         variables.reserve(unassignedVars->getSize());
-        vector<int> values;
+        vector<Value> values;
         values.reserve(unassignedVars->getSize());
         for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
             int v = *iter;

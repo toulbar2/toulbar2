@@ -1,7 +1,7 @@
 import pytoulbar2.pytb2 as tb2
 
 class CFN:
-    def __init__(self, ubinit, resolution = 0, vac = 0, configuration = False):
+    def __init__(self, ubinit, resolution = 0, vac = 0, configuration = False, vns = None):
         tb2.init()
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
@@ -19,6 +19,13 @@ class CFN:
         if configuration:
             tb2.option.elimDegree_preprocessing = 1   # maximum degree level of variable elimination in preprocessing (-1: none, 0: null degree, 1: degree one, etc.)
             tb2.option.solutionBasedPhaseSaving = False   #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
+
+        if vns is not None:
+            tb2.option.vnsInitSol = vns   # if vns different than None or 0 then perform Decomposition-Guided Variable Neighborhood Search
+            tb2.option.lds = 4
+            tb2.option.restart = 10000;
+            tb2.option.searchMethod = 2;    # 0:DFBB or HBFS, 1:VNS, 2:DGVNS 4:Parallel DGVNS
+            tb2.option.vnsNeighborVarHeur = 3;   # 0: random, 1:conflict, 3: decomposition
 
         self.Variables = {}
         self.VariableIndices = {}

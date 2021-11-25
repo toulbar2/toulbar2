@@ -194,6 +194,8 @@ char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
 int ToulBar2::btdSubTree;
 int ToulBar2::btdRootCluster;
+int ToulBar2::rootHeuristic;
+bool ToulBar2::reduceHeight;
 
 double ToulBar2::startCpuTime;
 
@@ -203,6 +205,9 @@ int ToulBar2::maxSeparatorSize;
 int ToulBar2::minProperVarSize;
 
 int ToulBar2::smallSeparatorSize;
+
+bool ToulBar2::heuristicFreedom;
+int ToulBar2::heuristicFreedomLimit;
 
 bool ToulBar2::isZ;
 TLogProb ToulBar2::logZ;
@@ -387,6 +392,8 @@ void tb2init()
     ToulBar2::btdMode = 0;
     ToulBar2::btdSubTree = -1;
     ToulBar2::btdRootCluster = -1;
+    ToulBar2::rootHeuristic = 0;
+    ToulBar2::reduceHeight = false;
 
     ToulBar2::startCpuTime = 0;
 
@@ -396,6 +403,9 @@ void tb2init()
     ToulBar2::minProperVarSize = 0;
 
     ToulBar2::smallSeparatorSize = 4;
+
+    ToulBar2::heuristicFreedom = false;
+    ToulBar2::heuristicFreedomLimit = 5;
 
     ToulBar2::isZ = false;
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
@@ -467,6 +477,13 @@ void tb2checkOptions()
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::haplotype || ToulBar2::pedigree || ToulBar2::bep || ToulBar2::xmlflag)) {
         cerr << "Error: cost multiplier not implemented for this file format." << endl;
         exit(1);
+    }
+    if (ToulBar2::heuristicFreedom && ToulBar2::btdMode == 0) {
+        ToulBar2::btdMode = 1;
+    }
+    if (ToulBar2::heuristicFreedom && ToulBar2::btdMode >= 2) {
+        cout << "Warning! adaptive BTD not compatible with RDS-like search methods." << endl;
+        ToulBar2::heuristicFreedom = false;
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
         cerr << "Error: BTD-like search methods are compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
@@ -624,6 +641,10 @@ void tb2checkOptions()
     if (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
+    }
+    if (ToulBar2::heuristicFreedom && !ToulBar2::hbfs) {
+        cout << "Warning! adaptive BTD requires HBFS (remove -hbfs: option)." << endl;
+        ToulBar2::heuristicFreedom = false;
     }
 }
 
@@ -1956,15 +1977,15 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<Long> TempWeights;
     vector<vector<Long>> weights;
     Long readw;
-    int readv1;
+    Value readv1;
     Long capacity;
     Long MaxWeight = 0;
     int skip;
     unsigned int size;
     int readnbval;
     Long minweight;
-    vector<int> TempVarVal, TempNotVarVal;
-    vector<vector<int>> VarVal, NotVarVal;
+    vector<Value> TempVarVal, TempNotVarVal;
+    vector<vector<Value>> VarVal, NotVarVal;
     vector<tValue> clausetuple(arity, 0);
     bool isclause = 0;
     vector<EnumeratedVariable*> scopeVars(arity);
@@ -3730,6 +3751,8 @@ void WCSP::propagateAC()
     if (Store::getDepth() == 0)
         AC.sort(false);
     while (!AC.empty()) {
+        if (ToulBar2::interrupted)
+            throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
         if (x->unassigned())
             x->propagateAC();
@@ -4358,7 +4381,7 @@ void WCSP::restoreSolution(Cluster* c)
         EnumeratedVariable* z = (EnumeratedVariable*)ei.z;
         assert(x);
         assert(x->assigned());
-        if (c && !c->isVar(x->wcspIndex))
+        if (c && ((!c->getFreedom() && !c->isVar(x->wcspIndex)) || (c->getFreedom() && !c->isVarTree(x->wcspIndex))))
             continue;
         if (y && y->unassigned())
             continue;
@@ -4459,6 +4482,7 @@ void WCSP::initElimConstrs()
 // Function that adds a new binary constraint from the pool of fake constraints
 BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, Constraint* from1, Constraint* from2)
 {
+    assert(x != y);
     unsigned int newIndex = (int)elimBinOrder;
     assert(newIndex < elimBinConstrs.size());
     BinaryConstraint* ctr = (BinaryConstraint*)elimBinConstrs[newIndex];
@@ -4466,6 +4490,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
     if (ToulBar2::vac)
         ((VACBinaryConstraint*)ctr)->VACfillElimConstr();
     ctr->isDuplicate_ = false;
+    ctr->cluster = -1;
     return ctr;
 }
 
@@ -4483,11 +4508,13 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
 // if they do not exist in the main pool (constrs)
 TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Constraint* from1)
 {
+    assert(x != y && x != z && y != z);
     unsigned int newIndex = (int)elimTernOrder;
     assert(newIndex < elimTernConstrs.size());
     TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[newIndex];
     ctr->fillElimConstr(x, y, z, from1);
     ctr->isDuplicate_ = false;
+    ctr->cluster = -1;
     return ctr;
 }
 
@@ -5195,58 +5222,30 @@ bool WCSP::isAlreadyTreeDec(char* filename)
 
 void WCSP::buildTreeDecomposition()
 {
-    td = new TreeDecomposition(this);
     double time = cpuTime();
+    CmpVarStruct::wcsp = this; // hook pointer for connection between TVarsSorted and current WCSP
+    td = new TreeDecomposition(this);
     if (isAlreadyTreeDec(ToulBar2::varOrder))
         td->buildFromCovering(ToulBar2::varOrder);
     else if (ToulBar2::approximateCountingBTD)
         td->buildFromOrderForApprox();
     else
         td->buildFromOrder();
-    if (ToulBar2::verbose >= 0)
-        cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
     if (!ToulBar2::approximateCountingBTD) {
         vector<int> order;
         td->getElimVarOrder(order);
         // allows propagation to operate on the whole problem without modifying tree decomposition local lower bounds and delta costs
         // it is important for RDS-BTD which assumes zero cluster lower bounds and no delta cost moves
+        // TODO: uncomment these four lines if you want the same DAC order between HBFS and adaptive BTD-HBFS
         TreeDecomposition* tmptd = td;
         td = NULL;
         setDACOrder(order);
         td = tmptd;
         // new constraints may be produced by variable elimination that must be correctly assigned to a cluster
-        for (unsigned int i = 0; i < numberOfConstraints(); i++)
-            if (constrs[i]->getCluster() == -1)
-                constrs[i]->assignCluster();
-        for (int i = 0; i < elimBinOrder; i++)
-            if (elimBinConstrs[i]->connected() && elimBinConstrs[i]->getCluster() == -1)
-                elimBinConstrs[i]->assignCluster();
-        for (int i = 0; i < elimTernOrder; i++)
-            if (elimTernConstrs[i]->connected() && elimTernConstrs[i]->getCluster() == -1)
-                elimTernConstrs[i]->assignCluster();
-        // check if ternary constraint cluster assignments are valid and do corrections if needed
-        for (unsigned int i = 0; i < numberOfConstraints(); i++) {
-            Constraint* ctr = getCtr(i);
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->setDuplicates();
-                    assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                }
-            }
-        }
-        for (int i = 0; i < elimTernOrder; i++)
-            if (elimTernConstrs[i]->connected()) {
-                Constraint* ctr = elimTernConstrs[i];
-                if (ctr->connected() && !ctr->isSep()) {
-                    if (ctr->isTernary()) {
-                        TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                        tctr->setDuplicates();
-                        assert(tctr->xy->getCluster() == tctr->getCluster() && tctr->xz->getCluster() == tctr->getCluster() && tctr->yz->getCluster() == tctr->getCluster());
-                    }
-                }
-            }
+        td->setDuplicates();
     }
+    if (ToulBar2::verbose >= 0)
+        cout << "Tree decomposition time: " << cpuTime() - time << " seconds." << endl;
 }
 
 void WCSP::treeDecFile2Vector(char* filename, vector<int>& order)
