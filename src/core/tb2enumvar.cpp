@@ -1711,7 +1711,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
 bool EnumeratedVariable::verify()
 {
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (!td || (ToulBar2::heuristicFreedom && Store::getDepth > 0))
+    if (!td || (ToulBar2::heuristicFreedom && Store::getDepth() > 0))
         return true;
     for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
         Constraint* ctr1 = (*iter).constr;
