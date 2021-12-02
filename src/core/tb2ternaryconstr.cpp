@@ -326,7 +326,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
             }
         }
     }
-    os << "]}\n";
+    os << "]},\n";
 }
 
 /*
