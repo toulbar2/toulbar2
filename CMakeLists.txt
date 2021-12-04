@@ -78,9 +78,9 @@ IF(APPLE) # Find homebrew libraries first
   SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
 
-IF(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-   INCLUDE(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-   CONAN_BASIC_SETUP()
+IF(EXISTS ${CMAKE_BINARY_DIR}/conan_paths.cmake)
+   message("Conan setup detected.")
+   INCLUDE(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 ENDIF()
 
 IF(NOT CMAKE_BUILD_TYPE)

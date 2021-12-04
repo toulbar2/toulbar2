@@ -5,7 +5,8 @@ gmp/6.2.1
 [build_requires]               # The Conan packages which are used to build the application
 
 [generators]                   # Generators create build system files that capture the dependency information,
-cmake                          # as well as configuration information from Conan settings and options
+cmake_find_package             # as well as configuration information from Conan settings and options
+cmake_paths
 
 [options]                      # Options here override options upstream in the dependency graph
 boost:shared=True              # Options can be specified on a per-package basis for dependencies
