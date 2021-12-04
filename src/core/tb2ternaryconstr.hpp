@@ -629,6 +629,7 @@ public:
 
     void resetSupports()
     {
+        using std::make_pair;
         supportX.assign(supportX.size(), make_pair(y->getInf(), z->getInf()));
         supportY.assign(supportY.size(), make_pair(x->getInf(), z->getInf()));
         supportZ.assign(supportZ.size(), make_pair(x->getInf(), y->getInf()));
@@ -1490,7 +1491,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
         unsigned int xindex = x->toIndex(*iterX);
         pair<Value, Value> support = supportX[xindex];
         if (y->cannotbe(support.first) || z->cannotbe(support.second) || getCost(x, y, z, *iterX, support.first, support.second) > MIN_COST) {
-            support = make_pair(y->getInf(), z->getInf());
+            support = std::make_pair(y->getInf(), z->getInf());
             Cost minCost = MAX_COST;
             if (functionalZ) {
                 for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
@@ -1498,7 +1499,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
                     if (valZ != WRONG_VAL && z->canbe(valZ)) {
                         Cost cost = getCost(x, y, z, *iterX, *iterY, valZ);
                         if (GLB(&minCost, cost)) {
-                            support = make_pair(*iterY, valZ);
+                            support = std::make_pair(*iterY, valZ);
                         }
                     }
                 }
@@ -1508,7 +1509,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
                     if (valY != WRONG_VAL && y->canbe(valY)) {
                         Cost cost = getCost(x, y, z, *iterX, valY, *iterZ);
                         if (GLB(&minCost, cost)) {
-                            support = make_pair(valY, *iterZ);
+                            support = std::make_pair(valY, *iterZ);
                         }
                     }
                 }
@@ -1517,7 +1518,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
                     for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
                         Cost cost = getCost(x, y, z, *iterX, *iterY, *iterZ);
                         if (GLB(&minCost, cost)) {
-                            support = make_pair(*iterY, *iterZ);
+                            support = std::make_pair(*iterY, *iterZ);
                         }
                     }
                 }
@@ -1533,16 +1534,16 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
             if (getIndexY != getDACScopeIndex()) {
                 unsigned int yindex = y->toIndex(support.first);
                 if (getIndexX < getIndexZ)
-                    supportY[yindex] = make_pair(*iterX, support.second);
+                    supportY[yindex] = std::make_pair(*iterX, support.second);
                 else
-                    supportY[yindex] = make_pair(support.second, *iterX);
+                    supportY[yindex] = std::make_pair(support.second, *iterX);
             }
             if (getIndexZ != getDACScopeIndex()) {
                 unsigned int zindex = z->toIndex(support.second);
                 if (getIndexX < getIndexY)
-                    supportZ[zindex] = make_pair(*iterX, support.first);
+                    supportZ[zindex] = std::make_pair(*iterX, support.first);
                 else
-                    supportZ[zindex] = make_pair(support.first, *iterX);
+                    supportZ[zindex] = std::make_pair(support.first, *iterX);
             }
         }
     }
@@ -1574,9 +1575,9 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
     bool supportReversed = (getIndexY > getIndexZ);
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         unsigned int xindex = x->toIndex(*iterX);
-        pair<Value, Value> support = (supportReversed) ? make_pair(supportX[xindex].second, supportX[xindex].first) : make_pair(supportX[xindex].first, supportX[xindex].second);
+        pair<Value, Value> support = (supportReversed) ? std::make_pair(supportX[xindex].second, supportX[xindex].first) : std::make_pair(supportX[xindex].first, supportX[xindex].second);
         if (y->cannotbe(support.first) || z->cannotbe(support.second) || getCostWithBinaries(x, y, z, *iterX, support.first, support.second) + y->getCost(support.first) + z->getCost(support.second) > MIN_COST) {
-            support = make_pair(y->getInf(), z->getInf());
+            support = std::make_pair(y->getInf(), z->getInf());
             Cost minCost = MAX_COST;
             if (functionalZ) {
                 for (EnumeratedVariable::iterator iterY = y->begin(); minCost > MIN_COST && iterY != y->end(); ++iterY) {
@@ -1584,7 +1585,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                     if (valZ != WRONG_VAL && z->canbe(valZ)) {
                         Cost cost = getCostWithBinaries(x, y, z, *iterX, *iterY, valZ) + y->getCost(*iterY) + z->getCost(valZ);
                         if (GLB(&minCost, cost)) {
-                            support = make_pair(*iterY, valZ);
+                            support = std::make_pair(*iterY, valZ);
                         }
                     }
                 }
@@ -1594,7 +1595,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                     if (valY != WRONG_VAL && y->canbe(valY)) {
                         Cost cost = getCostWithBinaries(x, y, z, *iterX, valY, *iterZ) + y->getCost(valY) + z->getCost(*iterZ);
                         if (GLB(&minCost, cost)) {
-                            support = make_pair(valY, *iterZ);
+                            support = std::make_pair(valY, *iterZ);
                         }
                     }
                 }
@@ -1603,7 +1604,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                     for (EnumeratedVariable::iterator iterZ = z->begin(); minCost > MIN_COST && iterZ != z->end(); ++iterZ) {
                         Cost cost = getCostWithBinaries(x, y, z, *iterX, *iterY, *iterZ) + y->getCost(*iterY) + z->getCost(*iterZ);
                         if (GLB(&minCost, cost)) {
-                            support = make_pair(*iterY, *iterZ);
+                            support = std::make_pair(*iterY, *iterZ);
                         }
                     }
                 }
@@ -1741,18 +1742,18 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
                     return;
             }
 
-            supportX[xindex] = (supportReversed) ? make_pair(support.second, support.first) : make_pair(support.first, support.second);
+            supportX[xindex] = (supportReversed) ? std::make_pair(support.second, support.first) : std::make_pair(support.first, support.second);
 
             unsigned int yindex = y->toIndex(support.first);
             unsigned int zindex = z->toIndex(support.second);
             if (getIndexX < getIndexZ)
-                supportY[yindex] = make_pair(*iterX, support.second);
+                supportY[yindex] = std::make_pair(*iterX, support.second);
             else
-                supportY[yindex] = make_pair(support.second, *iterX);
+                supportY[yindex] = std::make_pair(support.second, *iterX);
             if (getIndexX < getIndexY)
-                supportZ[zindex] = make_pair(*iterX, support.first);
+                supportZ[zindex] = std::make_pair(*iterX, support.first);
             else
-                supportZ[zindex] = make_pair(support.first, *iterX);
+                supportZ[zindex] = std::make_pair(support.first, *iterX);
         }
     }
     if (supportBroken) {
@@ -1812,7 +1813,7 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
                     Value valZ = getFunctionZ(x, y, a, *iterY);
                     if (valZ != WRONG_VAL && z->canbe(valZ)) {
                         if (getCostWithBinaries(x, y, z, a, *iterY, valZ) + y->getCost(*iterY) + z->getCost(valZ) == MIN_COST) {
-                            supportX[xindex] = make_pair(*iterY, valZ);
+                            supportX[xindex] = std::make_pair(*iterY, valZ);
                             return true;
                         }
                     }
@@ -1822,7 +1823,7 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
                     Value valY = getFunctionY(x, z, a, *iterZ);
                     if (valY != WRONG_VAL && y->canbe(valY)) {
                         if (getCostWithBinaries(x, y, z, a, valY, *iterZ) + y->getCost(valY) + z->getCost(*iterZ) == MIN_COST) {
-                            supportX[xindex] = make_pair(valY, *iterZ);
+                            supportX[xindex] = std::make_pair(valY, *iterZ);
                             return true;
                         }
                     }
@@ -1831,7 +1832,7 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
                 for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
                     for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
                         if (getCostWithBinaries(x, y, z, a, *iterY, *iterZ) + y->getCost(*iterY) + z->getCost(*iterZ) == MIN_COST) {
-                            supportX[xindex] = make_pair(*iterY, *iterZ);
+                            supportX[xindex] = std::make_pair(*iterY, *iterZ);
                             return true;
                         }
                     }

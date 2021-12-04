@@ -3832,7 +3832,7 @@ void WCSP::read_opb(const char* fileName)
 
     map<string, int> varnames;
     string dummy, token;
-    streampos prev;
+    std::streampos prev;
 
     // skip initial comments
     readToken(file, token);

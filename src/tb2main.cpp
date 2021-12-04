@@ -1162,7 +1162,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
                     ToulBar2::vnsOutput.clear();
                     ToulBar2::vnsOutput.open(args.OptionArg(),
-                        ios::out | ios::trunc);
+                                             std::ios::out | std::ios::trunc);
                     if (!ToulBar2::vnsOutput) {
                         cerr << "File " << args.OptionArg() << " cannot be open!" << endl;
 #ifdef OPENMPI

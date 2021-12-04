@@ -42,7 +42,7 @@ public:
     };
 
     class CPStore;
-    class OpenList FINAL : public priority_queue<OpenNode> {
+    class OpenList FINAL : public std::priority_queue<OpenNode> {
         Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
         Cost cub; // current cluster upper bound (independent of any soft arc consistency cost moves)
     public:

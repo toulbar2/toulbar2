@@ -13,7 +13,7 @@ void BEP::read(const char* fileName, WCSP* wcsp)
     Cost top = MIN_COST;
 
     // open the file
-    ifstream file(fileName);
+    std::ifstream file(fileName);
     if (!file) {
         cerr << "Could not open file " << fileName << endl;
         exit(EXIT_FAILURE);

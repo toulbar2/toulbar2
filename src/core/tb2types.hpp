@@ -34,6 +34,30 @@
 #include <quadmath.h> // only with gcc/g++
 #endif
 
+using std::min;
+using std::max;
+using std::cout;
+using std::cerr;
+using std::cin;
+using std::endl;
+using std::istream;
+using std::ifstream;
+using std::stringstream;
+using std::istringstream;
+using std::ostringstream;
+using std::ofstream;
+using std::numeric_limits;
+using std::string;
+using std::map;
+using std::set;
+using std::make_pair;
+using std::make_tuple;
+using std::tuple;
+using std::tie;
+using std::list;
+using std::stack;
+using std::queue;
+
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
 
@@ -934,10 +958,12 @@ bool compareWCSPIndex(const T* lhs, const T* rhs)
         right = MAX_ELIM_BIN - right;
     return left < right;
 }
+
 template <class T>
 struct Compare {
     typedef bool (*compare_t)(const T*, const T*);
 };
+
 template <class T>
 class Set : public set<T*, typename Compare<T>::compare_t> {
 public:
@@ -946,6 +972,7 @@ public:
     {
     }
 };
+
 typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
 

@@ -472,9 +472,9 @@ bool VACExtension::propagate()
     if (ToulBar2::vacValueHeuristic && acSupportOK && isVAC()) {
         // update current unary support if possible && needed
         for (vector<tuple<VACVariable*, Value, bool>>::iterator iter = acSupport.begin(); iter != acSupport.end(); ++iter) {
-            VACVariable* x = get<0>(*iter);
-            Value val = get<1>(*iter);
-            bool vacintegral = get<2>(*iter);
+            VACVariable* x = std::get<0>(*iter);
+            Value val = std::get<1>(*iter);
+            bool vacintegral = std::get<2>(*iter);
             if (x->canbe(val)) {
                 if (x->getCost(val) == MIN_COST) {
                     if (ToulBar2::verbose > 0 && (x->getSupport() != val || (vacintegral && !x->isFullEAC())))

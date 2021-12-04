@@ -6,6 +6,7 @@
 #include "toulbar2lib.hpp"
 #include "core/tb2enumvar.hpp"
 #include "tb2pedigree.hpp"
+using std::ifstream;
 
 void Pedigree::iniProb(WCSP* wcsp)
 {

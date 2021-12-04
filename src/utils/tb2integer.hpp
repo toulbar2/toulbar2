@@ -143,7 +143,7 @@ struct BigInteger {
         i.print(os);
         return os;
     }
-    friend istream& operator>>(istream& is, BigInteger& i)
+    friend std::istream& operator>>(std::istream& is, BigInteger& i)
     {
         //
         double p;

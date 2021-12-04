@@ -2051,10 +2051,10 @@ void TreeDecomposition::buildFromCovering(string filename)
     ConstraintSet usedctrs;
     //    vector<int> order;
 
-    ifstream file(filename.c_str(), ios::in);
+    std::ifstream file(filename.c_str(), std::ios::in);
     string fstr;
     while (getline(file, fstr)) {
-        istringstream file(fstr);
+        std::istringstream file(fstr);
         int num;
         file >> num;
         if (!file)

@@ -192,14 +192,14 @@ inline Long randomCost(Long min, Long max) { return min + (myrandl() % (max - mi
 inline Long string2Cost(const char* ptr)
 {
     try {
-        string s(ptr);
+        std::string s(ptr);
         Double d = stold(s);
         if ((d >= 0 && d > LONGLONG_MAX) || (d < 0 && d < -LONGLONG_MAX)) {
-            throw out_of_range("long long overflow!");
+            throw std::out_of_range("long long overflow!");
         }
     } catch (std::exception& e) {
-        cerr << "Overflow exception: cannot convert this number " << ptr << " into a cost!" << endl;
-        cerr << "\t" << e.what() << endl;
+        std::cerr << "Overflow exception: cannot convert this number " << ptr << " into a cost!" << std::endl;
+        std::cerr << "\t" << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
     return atoll(ptr);
