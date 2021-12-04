@@ -75,14 +75,14 @@ IF(APPLE) # Find homebrew libraries first
   set(CMAKE_PREFIX_PATH /usr/local)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
   SET(STATIC OFF)
-  SET(WITH_MEM_JEMALLOC OFF)
+  SET(WITH_MEM_JEMALLOC OFF) ${CMAKE_BINARY_DIR}/conan_paths.cmake
 ENDIF(APPLE)
 
 IF(EXISTS ${CMAKE_BINARY_DIR}/conan_paths.cmake)
    message("Conan setup detected.")
    INCLUDE(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 ELSE()
-   message("Conan file not found - assuming conan free build.")
+   message("Conan file not found in ${CMAKE_BINARY_DIR} - assuming conan free build.")
 ENDIF()
 
 IF(NOT CMAKE_BUILD_TYPE)
