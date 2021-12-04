@@ -1,6 +1,10 @@
 version: 1.0.{build}
 platform: x64
 
+environment:
+  matrix:
+    - PYTHON: "C:\\Python35"
+
 install:
   - cmd: echo "Downloading conan..."
   - cmd: set PATH=%PATH%;%PYTHON%/Scripts/
