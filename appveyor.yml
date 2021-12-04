@@ -14,7 +14,7 @@ install:
 
 build_script:
   - cmd: mkdir build
-  - cmd: conan install -s compiler='clang' .
+  - cmd: conan install -s compiler=clang .
   - cmd: cd build
   - cmd: cmake ../
   - cmd: cmake --build . --config Release
