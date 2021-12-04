@@ -39,7 +39,7 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 #define PATH_DELIM ":"
 #endif
 //*definition of  windows include for command line.
-#ifdef OFF__WIN32__
+#ifdef __WIN32__
 #include <windows.h>
 #include <tchar.h>
 #else
