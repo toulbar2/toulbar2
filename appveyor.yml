@@ -14,9 +14,8 @@ install:
 
 build_script:
   - cmd: mkdir build
-  - cmd: cd build
   - cmd: conan install .
-  - cmd: dir
+  - cmd: cd build
   - cmd: cmake ../
   - cmd: cmake --build . --config Release
 
