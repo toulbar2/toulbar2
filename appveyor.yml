@@ -14,11 +14,10 @@ install:
 
 build_script:
   - cmd: mkdir build
-  - cmd: conan install . 
-  - cmd: dir
   - cmd: cd build
-  - cmd: cmake ../
+  - cmd: conan install .
   - cmd: dir
+  - cmd: cmake ../
   - cmd: cmake --build . --config Release
 
 test_script:
