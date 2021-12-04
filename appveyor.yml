@@ -12,7 +12,7 @@ build_script:
   - cmd: mkdir build
   - cmd: conan install . -o gtest:shared=True
   - cmd: cd build
-  - cmd: cmake ../ 
+  - cmd: cmake ../g
   - cmd: cmake --build . --config Release
 
 test_script:
