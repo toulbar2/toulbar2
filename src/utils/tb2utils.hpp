@@ -11,6 +11,7 @@
 #include <climits>
 #include <cstdlib>
 #include <cstring>
+#include "libgen.h"
 
 #ifdef ILOGLUE
 #include <ilsolver/ilosolverint.h>
