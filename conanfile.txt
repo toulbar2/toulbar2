@@ -1,7 +1,6 @@
 [requires]                     # The Conan packages which are used in the application
 boost/1.77.0                   # Versions override versions upstream in the dependency graph
 gmp/6.2.1
-lzma/5.2.4@bincrafters/stable
 
 [build_requires]               # The Conan packages which are used to build the application
 
