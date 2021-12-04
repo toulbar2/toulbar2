@@ -75,7 +75,7 @@ IF(APPLE) # Find homebrew libraries first
   set(CMAKE_PREFIX_PATH /usr/local)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64" )
   SET(STATIC OFF)
-  SET(WITH_MEM_JEMALLOC OFF) ${CMAKE_BINARY_DIR}/conan_paths.cmake
+  SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
 
 IF(EXISTS ${CMAKE_BINARY_DIR}/conan_paths.cmake)
