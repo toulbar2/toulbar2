@@ -40,10 +40,8 @@ build_script:
     - cmd: rem echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
-    - cmd: set   CMD=which python3 python
     - cmd: set   CMD=%CMD%; python --version
-    - cmd: set   CMD=%CMD%; build/bin/exiv2 --verbose --version; pwd ; ls -l
-    - cmd: set   CMD=%CMD%; cd build ; cmake --build . --config Release --target python_tests
+    - cmd: set   CMD=%CMD%; cd build ; make test
     - cmd: echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
@@ -51,7 +49,7 @@ build_script:
     - cmd: set  CMD=rm -rf build
     - cmd: set  CMD=%CMD%; mkdir -p build
     - cmd: set  CMD=%CMD%; cd build
-    - cmd: set  CMD=%CMD%;cmake .. 
+    - cmd: set  CMD=%CMD%; cmake .. 
     - cmd: set  CMD=%CMD%; make
     - cmd: set  CMD=%CMD%; make test
     - cmd: echo %CMD%
