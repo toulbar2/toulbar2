@@ -229,11 +229,10 @@ ENDIF(WITH_MEM_JEMALLOC)
 
 MESSAGE(STATUS "Search for GMP library")
 INCLUDE(FindPkgConfig)
-INCLUDE(${My_cmake_script}/FindGmp.cmake)
+find_package(gmp)
 SET(all_depends  ${all_depends} ${GMP_LIBRARY}) 
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
-INCLUDE(FindPkgConfig)
 INCLUDE(FindGit)
 
 IF(Boost) 
