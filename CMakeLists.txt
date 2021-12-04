@@ -78,6 +78,11 @@ IF(APPLE) # Find homebrew libraries first
   SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
 
+IF(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+   INCLUDE(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+   CONAN_BASIC_SETUP()
+ENDIF()
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
