@@ -41,19 +41,18 @@ build_script:
     - cmd: rem echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
-    - cmd: set   CMD=%CMD%; python --version
-    - cmd: set   CMD=%CMD%; cd build ; make test
-    - cmd: echo %CMD%
+    - cmd: set CMD=python --version
+    - cmd: set CMD=%CMD%; cd build ; make test
+    - cmd: set CMD=%CMD%; grep -A50 -m1 -e latin0 Testing/Temporary/LastTest.log    - cmd: echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
     - cmd: set "PATH=c:\cygwin64\usr\local\bin;c:\cygwin64\bin;c:\cygwin64\usr\bin;c:\cygwin64\usr\sbin;"
-    - cmd: set  CMD=rm -rf build
-    - cmd: set  CMD=%CMD%; mkdir -p build
-    - cmd: set  CMD=%CMD%; cd build
-    - cmd: set  CMD=%CMD%; cmake .. 
-    - cmd: set  CMD=%CMD%; make
-    - cmd: set  CMD=%CMD%; make test
-    - cmd: set  CMD=%CMD%; grep -A50 -m1 -e latin0 Testing/Temporary/LastTest.log
+    - cmd: set CMD=rm -rf build
+    - cmd: set CMD=%CMD%; mkdir -p build
+    - cmd: set CMD=%CMD%; cd build
+    - cmd: set CMD=%CMD%; cmake .. 
+    - cmd: set CMD=%CMD%; make
+    - cmd: set CMD=%CMD%; make test
     - cmd: echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="CYGWIN64" C:\cygwin64\bin\bash -c "%CMD%"
