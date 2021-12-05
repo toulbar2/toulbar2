@@ -53,6 +53,7 @@ build_script:
     - cmd: set  CMD=%CMD%; cmake .. 
     - cmd: set  CMD=%CMD%; make
     - cmd: set  CMD=%CMD%; make test
+    - cmd: set  CMD=%CMD%; grep -A50 -m1 -e latin0 Testing/Temporary/LastTest.log
     - cmd: echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="CYGWIN64" C:\cygwin64\bin\bash -c "%CMD%"
