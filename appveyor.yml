@@ -42,7 +42,7 @@ build_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
     - cmd: set CMD=python --version
-    - cmd: set CMD=%CMD%; build\bin\Windows\toulbar2.exe -ub=1 -a -e: -hbfs: -k=1 -v=1 validation\enum\latin0.wcsp
+    - cmd: set CMD=%CMD%; build\bin\Windows\toulbar2.exe -a -v=1 validation\enum\latin0.wcsp
     - cmd: echo %CMD%
     - cd %APPVEYOR_BUILD_FOLDER%
     - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
