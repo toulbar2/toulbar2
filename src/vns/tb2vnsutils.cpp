@@ -168,7 +168,7 @@ void TreeDecRefinement::load_decomposition()
         bool cover = false;
         if (ToulBar2::clusterFile.find(".cov") != string::npos)
             cover = true;
-        fstream file(ToulBar2::clusterFile.c_str());
+        std::fstream file(ToulBar2::clusterFile.c_str());
         set<int> nbvars;
         while (!file.eof()) {
             string cluster;

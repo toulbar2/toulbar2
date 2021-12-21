@@ -6,6 +6,7 @@
 #include "toulbar2lib.hpp"
 #include "core/tb2enumvar.hpp"
 #include "tb2haplotype.hpp"
+using std::ifstream;
 
 // A MODIFIER POUR PLUSIEURS LOCUS (freqalleles.find(locus))
 void Haplotype::iniProb(WCSP* wcsp)

@@ -10,11 +10,16 @@ MESSAGE(STATUS "Boost flag on.")
 find_package(Boost 1.34.0 REQUIRED COMPONENTS graph iostreams)
 find_package(ZLIB)
 find_package(LibLZMA)
+IF(LIBLZMA_FOUND)
+    SET (all_depends  ${all_depends} ${LIBLZMA_LIBRARIES}) 
+ELSE(LIBLZMA_FOUND)
+    add_compile_definitions("-DNO_LZMA")
+ENDIF(LIBLZMA_FOUND)
 
 MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "   Boost_LIBRARIES: ${Boost_LIBRARIES}")
 
-SET (all_depends ${all_depends} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${LIBLZMA_LIBRARIES})
+SET (all_depends ${all_depends} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 IF(NOT Boost_FOUND)
         MESSAGE(ERROR "#################################")

@@ -21,7 +21,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         bool cover = false;
         if (ToulBar2::clusterFile.find(".cov") != string::npos)
             cover = true;
-        fstream file(ToulBar2::clusterFile.c_str());
+        std::fstream file(ToulBar2::clusterFile.c_str());
         //file >> clustersNumber;
         set<int> nbvars;
         set<int> nbunvars;

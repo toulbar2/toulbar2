@@ -432,7 +432,7 @@ class TreeDecomposition {
 private:
     WCSP* wcsp;
     vector<Cluster*> clusters;
-    list<Cluster*> roots; // intermediate list used by makeRooted method, only one root at the end
+    std::list<Cluster*> roots; // intermediate list used by makeRooted method, only one root at the end
 
     Cluster* rootRDS; // root cluster of the current RDS iteration
 

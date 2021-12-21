@@ -1,0 +1,58 @@
+init:
+  - echo %PYTHON%
+
+environment:
+  PYTHON: "C:/Python37-x64"
+
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      BUILD: MINGW64
+      INTEGRATION_TESTS: 1
+      ARCHITECTURE: x86_64
+      UNIT_TESTS: 1
+      WEBREADY: False
+      WARNINGS_AS_ERRORS: ON
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      BUILD: CYGWIN64
+      INTEGRATION_TESTS: 1
+      ARCHITECTURE: x86_64
+      UNIT_TESTS: 1
+      WEBREADY: False
+      WARNINGS_AS_ERRORS: ON
+
+shallow_clone: true
+
+install:
+    - echo %APPVEYOR_BUILD_FOLDER%
+    - if "%BUILD%"=="MINGW64" set "PATH=c:\msys64\mingw64\bin;c:\msys64\usr\bin;c:\msys64\usr\local\bin;"
+    - if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "for i in mingw-w64-x86_64-cmake mingw-w64-x86_64-boost mingw-w64-x86_64-xz ; do pacman -S --noconfirm $i ; done
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - if "%BUILD%"=="CYGWIN64" set "PATH=c:\cygwin64\usr\local\bin;c:\cygwin64\bin;c:\cygwin64\usr\bin;c:\cygwin64\usr\sbin;"
+    - if "%BUILD%"=="CYGWIN64" C:\cygwin64\bin\bash -c "wget https://raw.githubusercontent.com/transcode-open/apt-cyg/master/apt-cyg ; chmod +x apt-cyg; mv apt-cyg /usr/local/bin"
+    - if "%BUILD%"=="CYGWIN64" C:\cygwin64\bin\bash -c "apt-cyg install cmake zlib-devel libxml2-devel python38 python38-pip"
+    - if "%BUILD%"=="CYGWIN64" C:\cygwin64\bin\bash -c "/usr/bin/python3.8.exe -m pip install --upgrade pip"
+
+build_script:
+    - cmd: set CMD=mkdir -p build
+    - cmd: set CMD=%CMD%; cd build    
+    - cmd: set CMD=%CMD%; cmake .. -G 'Unix Makefiles'
+    - cmd: set CMD=%CMD%; cmake --build . --config Release
+    - cmd: rem echo %CMD%
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
+    - cmd: set   CMD=%CMD%; python --version
+    - cmd: set   CMD=%CMD%; cd build ; make test
+    - cmd: echo %CMD%
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - cmd: if "%BUILD%"=="MINGW64" C:\msys64\usr\bin\bash -c "%CMD%"
+    - cmd: set "PATH=c:\cygwin64\usr\local\bin;c:\cygwin64\bin;c:\cygwin64\usr\bin;c:\cygwin64\usr\sbin;"
+    - cmd: set  CMD=rm -rf build
+    - cmd: set  CMD=%CMD%; mkdir -p build
+    - cmd: set  CMD=%CMD%; cd build
+    - cmd: set  CMD=%CMD%; cmake .. 
+    - cmd: set  CMD=%CMD%; make
+    - cmd: set  CMD=%CMD%; make test
+    - cmd: echo %CMD%
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - cmd: if "%BUILD%"=="CYGWIN64" C:\cygwin64\bin\bash -c "%CMD%"
+

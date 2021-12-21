@@ -78,6 +78,13 @@ IF(APPLE) # Find homebrew libraries first
   SET(WITH_MEM_JEMALLOC OFF)
 ENDIF(APPLE)
 
+IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conan_paths.cmake)
+   message("Conan setup detected.")
+   INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/conan_paths.cmake)
+ELSE()
+   message("Conan file not found in ${CMAKE_CURRENT_SOURCE_DIR} - assuming conan free build.")
+ENDIF()
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
@@ -223,12 +230,11 @@ IF(WITH_MEM_JEMALLOC)
 ENDIF(WITH_MEM_JEMALLOC)
 
 MESSAGE(STATUS "Search for GMP library")
-INCLUDE(FindPkgConfig)
-INCLUDE(${My_cmake_script}/FindGmp.cmake)
+find_package(PkgConfig)
+find_package(gmp)
 SET(all_depends  ${all_depends} ${GMP_LIBRARY}) 
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR}) 
 
-INCLUDE(FindPkgConfig)
 INCLUDE(FindGit)
 
 IF(Boost) 

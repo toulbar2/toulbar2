@@ -463,14 +463,14 @@ public:
 
     int postCliqueConstraint(vector<int>& scope, const string& arguments)
     {
-        istringstream file(arguments);
+        std::istringstream file(arguments);
         return postCliqueConstraint(scope.data(), scope.size(), file);
     }
     int postCliqueConstraint(int* scopeIndex, int arity, istream& file);
 
     int postKnapsackConstraint(vector<int>& scope, const string& arguments, bool isclique = false, bool kp = false)
     {
-        istringstream file(arguments);
+        std::istringstream file(arguments);
         return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp);
     }
     int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp);

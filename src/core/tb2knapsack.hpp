@@ -39,7 +39,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<int> arrvar; // temporary data structure for propagate
     vector<vector<Cost>> Profit; // temporary data structure for propagate
     vector<Double> y_i;
-    vector<array<Double, 4>> Slopes;
+    vector<std::array<Double, 4>> Slopes;
 
     void projectLB(Cost c)
     {
@@ -640,7 +640,7 @@ public:
     }
 
     //Find the optimal solution. Follow the order of the slopes and modify OptSol until we fill the constraint
-    void FindOpt(vector<array<Double, 4>>& Slopes, Long* W, Cost* c, Double* xk, int* iter)
+    void FindOpt(vector<std::array<Double, 4>>& Slopes, Long* W, Cost* c, Double* xk, int* iter)
     {
         int currentVar;
         Long capacityLeft;
@@ -787,7 +787,7 @@ public:
                             if (W < capacity) {
                                 //Sort the Slopes
                                 sort(Slopes.begin(), Slopes.end(),
-                                    [&](array<Double, 4>& x, array<Double, 4>& y) {
+                                     [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
                                         if (x[3] == y[3]) {
                                             if (x[0] == y[0])
                                                 return weights[int(x[0])][int(x[1])] <= weights[int(y[0])][int(y[1])];

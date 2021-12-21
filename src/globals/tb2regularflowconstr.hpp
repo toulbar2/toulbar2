@@ -115,7 +115,7 @@ private:
     };
 
     template <class Element>
-    struct min_priority_queue : public priority_queue<Element, vector<Element>, greater<Element>> {
+    struct min_priority_queue : public std::priority_queue<Element, vector<Element>, std::greater<Element>> {
     };
 
     static const int EDIT = 1;

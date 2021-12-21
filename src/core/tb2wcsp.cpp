@@ -35,6 +35,11 @@
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
 
+using std::ifstream;
+using std::istringstream;
+using std::greater;
+using std::fixed;
+using std::setprecision;
 /*
  * Global variables with their default value
  *
@@ -5272,7 +5277,7 @@ void WCSP::treeDecFile2Vector(char* filename, vector<int>& order)
 
     set<int> usedvars;
 
-    ifstream file(filename, ios::in);
+    ifstream file(filename, std::ios::in);
     string fstr;
     while (getline(file, fstr)) {
         istringstream file(fstr);
