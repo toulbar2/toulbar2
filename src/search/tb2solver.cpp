@@ -1858,7 +1858,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         idleQ.push(status2.source());
 
         Cost minLbWorkers = MAX_COST;
-        for (unordered_map<int, Cost>::const_iterator it = activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers
+        for (std::unordered_map<int, Cost>::const_iterator it = activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers
             if (it->second < minLbWorkers)
                 minLbWorkers = it->second;
         }

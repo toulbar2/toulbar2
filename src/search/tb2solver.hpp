@@ -389,8 +389,8 @@ protected:
 #ifdef OPENMPI
     mpi::communicator world;
     queue<int> idleQ; //MASTER ONLY container with the rank of the free workers
-    unordered_map<int, Cost> activeWork; //MASTER ONLY map the rank i of a worker with the lb cost of an open node
-    unordered_map<int, Cost> bestsolWork; //MASTER ONLY map the rank i of a worker with the cost of the best solution sent by the master
+    std::unordered_map<int, Cost> activeWork; //MASTER ONLY map the rank i of a worker with the lb cost of an open node
+    std::unordered_map<int, Cost> bestsolWork; //MASTER ONLY map the rank i of a worker with the cost of the best solution sent by the master
 
     inline bool MPI_interrupted()
     {
