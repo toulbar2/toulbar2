@@ -41,7 +41,7 @@ void EnumeratedVariable::init()
 {
     if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
-        exit(EXIT_FAILURE);
+        throw InternalError();
     }
 
     costs = vector<StoreCost>(getDomainInitSize(), StoreCost(MIN_COST));
@@ -1370,7 +1370,7 @@ void EnumeratedVariable::permuteDomain(Value a, Value b)
             bctr->permute(this, a, b);
         } else {
             cerr << "Sorry! cannot sort domains with non-binary cost functions!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
     }
 }
@@ -1512,7 +1512,7 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
         switch (scopeSize) {
         case 0: {
             cerr << "Error: empty scope from " << *ctr << " when merging functional variable " << *this << " to variable " << *x << endl;
-            exit(EXIT_FAILURE);
+            throw InternalError();
             break;
         }
         case 1: {

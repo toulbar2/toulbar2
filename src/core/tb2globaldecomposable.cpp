@@ -342,7 +342,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         if (ToulBar2::verbose > 1)
             cout << "wregular add varname =" << varname << "=> var index " << wcsp->numberOfVariables() << " domain size = " << domsize + 1 << endl;
     } else {
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     //################################################initial state ##############################################
     if (automaton->getInitialStates().size() > 0) {
@@ -393,7 +393,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
                 final_states_costs[t_index] = ucost;
             } else {
                 cout << "wregular tuple error " << t_index << "out of domain" << DomVar << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         }
         wcsp->postUnary(q_last, final_states_costs);
@@ -1349,7 +1349,7 @@ void WeightedGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
     it = bounds.find(value);
     if (it != bounds.end()) {
         cerr << "WeightedGcc::setBounds | Value " << value << " is already watch" << endl;
-        exit(128);
+        throw WrongFileFormat();
     }
     bounds[value] = make_pair(lb, ub);
 }
@@ -1455,7 +1455,7 @@ WeightedSame::WeightedSame(unsigned int _arity, int* _scope, istream& file, bool
         baseCost *= ToulBar2::costMultiplier;
     if (_arity % 2 == 1) {
         cerr << "WeightedSame::Constructor the scope must be even" << endl;
-        exit(128);
+        throw WrongFileFormat();
     }
     //display();
 }
@@ -1594,7 +1594,7 @@ WeightedSameGcc::WeightedSameGcc(unsigned int _arity, int* _scope, istream& file
     }
     if (_arity % 2 == 1) {
         cerr << "WeightedSameGcc::Constructor the scope must be even" << endl;
-        exit(128);
+        throw WrongFileFormat();
     }
     //display();
 }
@@ -1606,7 +1606,7 @@ void WeightedSameGcc::setBounds(Value value, unsigned int lb, unsigned int ub)
     it = bounds.find(value);
     if (it != bounds.end()) {
         cerr << "WeightedSameGcc::setBounds | Value " << value << " is already watch" << endl;
-        exit(128);
+        throw WrongFileFormat();
     }
     bounds[value] = make_pair(lb, ub);
 }
@@ -1868,7 +1868,7 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
         break;
     default:
         cerr << "Error: no such diversity encoding method: " << ToulBar2::divMethod << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
     }
 }
 

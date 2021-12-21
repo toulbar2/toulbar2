@@ -150,7 +150,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
@@ -165,7 +165,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
@@ -182,7 +182,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         for (unsigned int a = 0; a < sizeX; a++)
@@ -195,7 +195,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
@@ -210,7 +210,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
@@ -222,7 +222,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
@@ -245,7 +245,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
@@ -269,7 +269,7 @@ public:
 #ifdef NO_STORE_BINARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in binary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "clear cost (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));

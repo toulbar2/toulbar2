@@ -42,7 +42,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
                     nbvars.insert(var);
                     if (var >= wcsp->numberOfVariables()) {
                         cerr << "Error: cluster decomposition contains bad variable index!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     if (wcsp->unassigned(var)) {
                         tmp.insert(var);

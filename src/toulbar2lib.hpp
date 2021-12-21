@@ -464,6 +464,11 @@ ostream& operator<<(ostream& os, WeightedCSP& wcsp); ///< \see WeightedCSP::prin
 
 class WeightedCSPSolver {
 public:
+#ifdef OPENMPI
+    static const int MASTER = 0;   // Master MPI rank number
+    static const int WORKTAG = 1;   // MPI tag value for still working
+    static const int DIETAG = 2;   // MPI tag value for stop working
+#endif
     static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound); ///< \brief WeightedCSP Solver factory
 
     virtual ~WeightedCSPSolver() {}

@@ -252,10 +252,6 @@ void RegularFlowConstraint::buildGraph(Graph& g)
         }
     }
     buildGraphBasic(g, true);
-
-    /* g.print();
-
-    exit(0);*/
 }
 
 void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)

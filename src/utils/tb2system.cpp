@@ -56,12 +56,12 @@ void timeOut(int sig)
 
     if (ToulBar2::solutionFile != NULL) {
         if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         fclose(ToulBar2::solutionFile);
     }
     if (ToulBar2::solution_uai_file != NULL) {
         if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         fclose(ToulBar2::solution_uai_file);
     }
 

@@ -10,51 +10,75 @@
 #define TB2CPDGVNS_HPP_
 #ifdef OPENMPI
 
-//#include <omp.h> // include OpenMP Header for parallel execution
-#include <mpi.h> // include MPI Header for parallel execution
-
 #include "tb2vns.hpp"
-
-// MPI definitions
-const int WORKTAG = 1; // also used to return the search was complete
-const int DIETAG = 2;
-
-inline bool MPI_interrupted()
-{
-    MPI_Status status;
-    int flag = 0;
-    MPI_Iprobe(MPI_ANY_SOURCE, DIETAG, MPI_COMM_WORLD, &flag, &status);
-    return flag;
-}
 
 typedef int* unit_of_work_t;
 typedef int* unit_result_t;
 
-class MPIEnv {
-public:
-    int ntasks;
-    int myrank; // rang du processus
-    int processes; // number of process to be initialize according to the number of cluster
-    int buffsize;
-    int* sendbuff;
-    int* recvbuff;
-};
-
 class NeighborhoodStructure;
 class ParallelRandomClusterChoice;
 
+class SolutionMessage {
+private:
+    friend class serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar& cluster;
+        ar& numberclu;
+        ar& k;
+        ar& kmax;
+        ar& sec;
+        ar& msec;
+        ar& bestUb;
+        ar& bestSolution;
+    }
+
+public:
+    uint cluster;
+    uint numberclu;
+    int k;
+    int kmax;
+    int sec;
+    int msec;
+    Cost bestUb;
+    map<int, Value> bestSolution;
+
+    SolutionMessage() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
+    SolutionMessage(uint cluster_, uint numberclu_, int kinit_, int kmax_, int sec_, int msec_, Cost bestUb_, map<int, Value>& bestSolution_)
+    : cluster(cluster_)
+    , numberclu(numberclu_)
+    , k(kinit_)
+    , kmax(kmax_)
+    , sec(sec_)
+    , msec(msec_)
+    , bestUb(bestUb_)
+    , bestSolution(bestSolution_)
+    {
+    }
+    void get(uint& cluster_, uint& numberclu_, int& k_, int& kmax_, int& sec_, int& msec_, Cost& bestUb_, map<int, Value>& bestSolution_)
+    {
+        cluster_ = cluster;
+        numberclu_ = numberclu;
+        k_ = k;
+        kmax_ = kmax;
+        sec_ = sec;
+        msec_ = msec;
+        bestUb_ = bestUb;
+        bestSolution_ = bestSolution;
+    }
+};
+
 class CooperativeParallelDGVNS : public LocalSearch {
 protected:
-    MPIEnv env0;
     vector<int> file;
     int BestTimeS;
     int BestTimeMS;
 
 public:
-    CooperativeParallelDGVNS(Cost initUpperBound, MPIEnv env0Global)
+    CooperativeParallelDGVNS(Cost initUpperBound)
         : LocalSearch(initUpperBound)
     {
-        env0 = env0Global;
         BestTimeS = 0;
         BestTimeMS = 0;
     }
@@ -65,13 +89,9 @@ public:
     void master();
     void slave();
     // Base functions
-    void VnsLdsCP(MPIEnv& env0, double btime, ParallelRandomClusterChoice* h);
+    void VnsLdsCP(SolutionMessage& solmsg, double btime, ParallelRandomClusterChoice* h);
     // Clustering functions
     uint getCluster();
-
-    // Conversions tools
-    void SolToMsg(MPIEnv& env0, uint cluster, uint numberclu, int kinit, int kmax, Cost bestUb, int sec, int msec, map<int, Value>& bestSolution);
-    void MsgToSol(MPIEnv& env0, int nov, uint& cluster, uint& numberclu, int& k, int& kmax, Cost& bestUb, int& sec, int& msec, map<int, Value>& bestSolution);
 };
 
 #endif

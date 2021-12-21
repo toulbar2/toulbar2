@@ -340,14 +340,14 @@ int split(char* str, char c, char*** arr)
 
     *arr = (char**)malloc(sizeof(char*) * count);
     if (*arr == NULL)
-        exit(1);
+        throw InternalError();
 
     p = str;
     while (*p != '\0') {
         if (*p == c) {
             (*arr)[i] = (char*)malloc(sizeof(char) * token_len);
             if ((*arr)[i] == NULL)
-                exit(EXIT_FAILURE);
+                throw InternalError();
 
             token_len = 0;
             i++;
@@ -357,7 +357,7 @@ int split(char* str, char c, char*** arr)
     }
     (*arr)[i] = (char*)malloc(sizeof(char) * token_len);
     if ((*arr)[i] == NULL)
-        exit(EXIT_FAILURE);
+        throw InternalError();
 
     i = 0;
     p = str;

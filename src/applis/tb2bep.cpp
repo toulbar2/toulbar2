@@ -16,7 +16,7 @@ void BEP::read(const char* fileName, WCSP* wcsp)
     ifstream file(fileName);
     if (!file) {
         cerr << "Could not open file " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     string str;
     getline(file, str);

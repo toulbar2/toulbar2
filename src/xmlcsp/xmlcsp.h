@@ -389,14 +389,14 @@ public:
                     assert(domsize >= 0);
                     if (domsize != wcsp->getDomainInitSize(varindex)) {
                         cerr << "wrong domain size " << domsize << " compared to previous one " << wcsp->getDomainInitSize(varindex) << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     for (int idx = 0; idx < domsize; idx++) {
                         int v = wcsp->Doms[wcsp->varsDom[varindex]][idx];
                         string vname = "v" + to_string(v);
                         if (((EnumeratedVariable *) wcsp->getVar(varindex))->getValueName(idx) != vname) {
                             cerr << "wrong domain value name " << vname << " compared to previous one " << ((EnumeratedVariable *) wcsp->getVar(varindex))->getValueName(idx) << endl;
-                            exit(EXIT_FAILURE);
+                            throw WrongFileFormat();
                         }
                     }
                 } else {

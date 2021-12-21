@@ -13,6 +13,16 @@
 #include <cstring>
 #include <libgen.h>
 
+#include <chrono>
+
+#ifdef OPENMPI
+#include <boost/mpi.hpp>
+namespace mpi = boost::mpi;
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+namespace serialization = boost::serialization;
+#endif
+
 #ifdef ILOGLUE
 #include <ilsolver/ilosolverint.h>
 #else
@@ -29,6 +39,7 @@
 #include <iterator>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <sstream>
 #include <set>
 #include <list>

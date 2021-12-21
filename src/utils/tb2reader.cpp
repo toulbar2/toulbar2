@@ -397,10 +397,10 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
 
     if (ToulBar2::sortDomains) {
         cout << "Error: cannot sort domains in preprocessing with CFN format (remove option -sortd)." << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
         //        if (maxarity > 2) {
         //            cout << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
-        //            exit(EXIT_FAILURE);
+        //            throw BadConfiguration();
         //        } else {
         //            ToulBar2::sortedDomains.clear();
         //            for (unsigned int u = 0; u < unaryCFs.size(); u++) {
@@ -480,7 +480,7 @@ inline void yellOBrace(const string& token, const int& l)
 {
     if (!isOBrace(token)) {
         cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 }
 
@@ -488,7 +488,7 @@ inline void yellCBrace(const string& token, const int& l)
 {
     if (!isCBrace(token)) {
         cerr << "Error: expected a ']' or ']' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 }
 
@@ -518,7 +518,7 @@ inline void CFNStreamReader::testJSONTag(const std::pair<int, string>& token, co
 {
     if (token.second != tag) {
         cerr << "Error: expected '" << tag << "' instead of '" << token.second << "' at line " << token.first << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 }
 
@@ -545,7 +545,7 @@ void CFNStreamReader::testAndSkipFirstOBrace()
 
     if (!isOBrace(token)) {
         cerr << "Error: expected a '{' or '[' instead of '" << token << "' at line " << l << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 }
 
@@ -599,11 +599,11 @@ Cost CFNStreamReader::readHeader()
             }
         } catch (const std::invalid_argument&) {
             cerr << "Error: invalid global bound '" << token << "' at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
     } else {
         cerr << "Error: global bound '" << token << "' misses upper/lower bound comparator at line " << lineNumber << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 
     if (token[0] == '>') {
@@ -618,7 +618,7 @@ Cost CFNStreamReader::readHeader()
 
     if (fbound > MAX_COST) {
         cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " )" << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     return fbound;
 }
@@ -693,7 +693,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         cout << " # " << varIndex << endl;
     if (not varNameToIdx.insert(std::pair<string, int>(varName, varIndex)).second) {
         cerr << "Error: variable name '" << varName << "' not unique at line " << lineNumber << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     // set the value names (if any) in the Variable.values map
     varValNameToIdx.resize(max((size_t)varIndex + 1, varValNameToIdx.size() + 1));
@@ -701,7 +701,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
         if (not varValNameToIdx[varIndex].insert(std::pair<string, int>(valueNames[ii], ii)).second) {
             cerr << "Error: duplicated value name '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
     }
     if (newvar) {
@@ -710,12 +710,12 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     } else {
         if (((EnumeratedVariable*)wcsp->getVar(varIndex))->getDomainInitSize() != (unsigned int)domainSize) {
             cerr << "Error: same variable has two different domain sizes " << ((EnumeratedVariable*)wcsp->getVar(varIndex))->getDomainInitSize() << ", " << domainSize << " for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
         for (unsigned int ii = 0; ii < valueNames.size(); ++ii) {
             if (wcsp->getVar(varIndex)->getValueName(ii) != valueNames[ii]) {
                 cerr << "Error: same variable has two different domains '" << valueNames[ii] << "' for variable '" << wcsp->getName(varIndex) << "' at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         }
     }
@@ -735,7 +735,7 @@ int CFNStreamReader::readDomain(std::vector<string>& valueNames)
     while (!isCBrace(token)) {
         if (isdigit(token[0])) { // not a symbol !
             cerr << "Error: value name '" << token << "' starts with a digit at line " << l << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         } else {
             valueNames.push_back(token);
         }
@@ -758,7 +758,7 @@ void CFNStreamReader::readIntervalUnaryTable(int varIdx, vector<Value>& authoriz
         Cost cost = wcsp->decimalToCost(token, lineNumber);
         if (cost != MIN_COST) {
             cerr << "Error: Unary cost function with non zero non default cost at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
     }
 }
@@ -803,7 +803,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
                     for (int i : scope)
                         cout << i << " ";
                     cout << "] with cost " << cost << " redefined at line " << lineNumber << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 } else {
                     costVector[tableIdx] = cost;
                 }
@@ -870,7 +870,7 @@ void CFNStreamReader::enforceUB()
 {
     if (Add(this->upperBound, wcsp->negCost, &this->upperBound)) {
         cerr << "Error: bound generates Cost overflow with -C multiplier = " << ToulBar2::costMultiplier << " ( " << this->upperBound << " " << wcsp->negCost << " )" << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 
     // if the shifted/scaled bound is less than zero, we equivalently set it to zero
@@ -901,7 +901,7 @@ int CFNStreamReader::getValueIdx(int variableIdx, const string& token, int lineN
             return it->second;
         } else {
             cerr << "Error: value name '" << token << "' not in the domain of variable '" << wcsp->getName(variableIdx) << "' at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
     } else {
         int valueIdx = -1;
@@ -909,11 +909,11 @@ int CFNStreamReader::getValueIdx(int variableIdx, const string& token, int lineN
             valueIdx = stoi(token);
         } catch (std::invalid_argument&) {
             cerr << "Error: value '" << token << "' is not a proper name/index for variable " << wcsp->getName(variableIdx) << " at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
         if (valueIdx < 0 || (unsigned)valueIdx >= wcsp->getDomainInitSize(variableIdx)) {
             cerr << "Error: value '" << token << "' out of range of variable " << wcsp->getName(variableIdx) << " at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
         return valueIdx;
     }
@@ -936,7 +936,7 @@ void CFNStreamReader::readScope(vector<int>& scope)
                 scope.push_back(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         } else {
             int varIdx = -1;
@@ -944,11 +944,11 @@ void CFNStreamReader::readScope(vector<int>& scope)
                 varIdx = stoi(token);
             } catch (std::invalid_argument&) {
                 cerr << "Error: not a variable name or index " << varIdx << " at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             if (varIdx < 0 || (unsigned)varIdx >= wcsp->numberOfVariables()) {
                 cerr << "Error: unknown variable index " << varIdx << " at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             } else {
                 scope.push_back(varIdx);
             }
@@ -1029,7 +1029,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
 
         if (isUnaryInterval && defaultCost == MIN_COST) {
             cerr << "Error: unary function " << funcName << " over an interval variable must have non zero default cost at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
 
         // Discriminate between global/shared and table cost functions
@@ -1046,14 +1046,14 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                 // ready to read params (after OBrace)
             } else if (token != "costs") {
                 cerr << "Error: expected tag 'costs' instead of '" << token << "' at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             } else { // cost table: can be reused or explicit
                 std::tie(lineNumber, token) = this->getNextToken();
                 isReused = !isOBrace(token); // no brace, so reused
                 if (isReused) {
                     if (!skipDefaultCost) {
                         cerr << "Error: function " << funcName << " sharing cost tables with " << token << " cannot have default costs at line " << lineNumber << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     tableShares[token].push_back(make_pair(funcName, scope));
                     skipCBrace();
@@ -1070,7 +1070,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
             } else {
                 if (!skipDefaultCost) {
                     cerr << "Error: function " << funcName << " sharing cost tables with " << token << " cannot have default costs at line " << lineNumber << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
                 isReused = true;
                 tableShares[token].push_back(make_pair(funcName, scope));
@@ -1118,7 +1118,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                                     for (auto v : ns.second)
                                         cerr << wcsp->getVar(v)->getName() << " ";
                                     cerr << "}" << endl;
-                                    exit(EXIT_FAILURE);
+                                    throw WrongFileFormat();
                                 }
                             }
                         }
@@ -1142,7 +1142,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                                 for (auto v : ns.second)
                                     cerr << wcsp->getVar(v)->getName() << " ";
                                 cerr << "}" << endl;
-                                exit(EXIT_FAILURE);
+                                throw WrongFileFormat();
                             }
                         }
                     }
@@ -1164,7 +1164,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                                 for (auto v : ns.second)
                                     cerr << wcsp->getVar(v)->getName() << " ";
                                 cerr << "}" << endl;
-                                exit(EXIT_FAILURE);
+                                throw WrongFileFormat();
                             }
                         }
                     }
@@ -1174,7 +1174,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
         } else if (isReused) {
             if ((scope.size() <= 1) || (scope.size() > NARYPROJECTIONSIZE) || isGlobal) {
                 cerr << "Error: only unary, binary and ternary cost functions can share cost tables for '" << funcName << " at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         } else if (isGlobal) {
             this->readGlobalCostFunction(scope, token, lineNumber);
@@ -1202,7 +1202,7 @@ void CFNStreamReader::readZeroAryCostFunction(bool all, Cost defaultCost)
     } else {
         if (all) { // We should have a cost
             cerr << "Error: no cost or default cost given for 0 arity function at line " << lineNumber << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         } else
             zeroAryCost = defaultCost;
     }
@@ -1260,7 +1260,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
                     for (int i : scope)
                         cout << i << " ";
                     cout << "] with cost " << cost << " redefined at line " << lineNumber << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 } else {
                     nbTuples++;
                     minCost = min(cost, minCost);
@@ -1315,7 +1315,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
                 cout << scope[i] << " ";
             }
             cout << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
 
         int j = 0;
@@ -1395,7 +1395,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                 this->wcsp->postCliqueConstraint(scopeArray, arity, paramsStream);
             else {
                 cerr << "Error: the clique global constraint does not accept RHS different from 1 for now at line" << line << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         } else if (funcName == "knapsackp") {
             string ps = paramsStream.str();
@@ -1414,17 +1414,17 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
 
         if (arithmeticFuncNames.find(funcName) == arithmeticFuncNames.end()) {
             cerr << "Error: unknown global cost function: " << funcName << " at line " << line << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
 
         if (arity != 2) {
             cerr << "Error : arithmetic function " << funcName << " has incorrect arity at line " << line << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
 
         if (ToulBar2::costMultiplier < 0.0 || ToulBar2::decimalPoint != 0) {
             cerr << "Error : arithmetic function " << funcName << " at line " << line << "cannot be used with decimal costs or in maximization mode." << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
 
         pair<int, string> token = this->getNextToken();
@@ -1438,80 +1438,80 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         if (funcName == ">=") {
             if (funcParams.size() != 2) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             try {
                 wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
 
         } else if (funcName == ">") {
             if (funcParams.size() != 2) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             try {
                 wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
 
         } else if (funcName == "<=") {
             if (funcParams.size() != 2) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             try {
                 wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second), stoi(funcParams[1].second));
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
 
         } else if (funcName == "<") {
             if (funcParams.size() != 2) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             try {
                 wcsp->postSupxyc(scope[0], scope[1], -stoi(funcParams[0].second) + 1, stoi(funcParams[1].second));
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
 
         } else if (funcName == "=") {
             if (funcParams.size() != 2) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             try {
                 wcsp->postSupxyc(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second));
                 wcsp->postSupxyc(scope[1], scope[0], -stoi(funcParams[0].second), stoi(funcParams[1].second));
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         } else if (funcName == "disj") {
             if (funcParams.size() != 3) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             Cost cost = wcsp->decimalToCost(funcParams[2].second, funcParams[2].first);
             try {
                 wcsp->postDisjunction(scope[0], scope[1], stoi(funcParams[0].second), stoi(funcParams[1].second), cost);
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
 
         } else if (funcName == "sdisj") {
             if (funcParams.size() != 6) {
                 cerr << "Error : arithmetic function " << funcName << " has incorrect number of parameters." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             Cost cost1 = wcsp->decimalToCost(funcParams[4].second, funcParams[4].first);
             Cost cost2 = wcsp->decimalToCost(funcParams[5].second, funcParams[4].first);
@@ -1520,7 +1520,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
                     stoi(funcParams[2].second), stoi(funcParams[3].second), cost1, cost2);
             } catch (std::invalid_argument&) {
                 cerr << "Error: invalid parameters for '" << funcName << "' at line " << funcParams[0].first << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         }
         skipCBrace();
@@ -1583,7 +1583,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             Cost cost = wcsp->decimalToCost(token, lineNumber);
             if (GCFTemplate[i] == 'c' && cost < 0) {
                 cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             streamContentVec.push_back(std::make_pair(GCFTemplate[i], std::to_string(cost)));
         }
@@ -1598,7 +1598,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     token = it->second;
                 } else {
                     cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
             }
 
@@ -1612,7 +1612,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             for (char c : token) {
                 if (!isdigit(c)) {
                     cerr << "Error: value index required at line " << lineNumber << " but read " << token << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
             }
             streamContentVec.push_back(std::make_pair('v', token));
@@ -1625,7 +1625,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             for (char c : token) {
                 if (!isdigit(c) && c != '-') {
                     cerr << "Error: number required at line " << lineNumber << " but read " << token << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
             }
             streamContentVec.push_back(std::make_pair('N', token));
@@ -1655,7 +1655,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                 if (repeatedSymbols.size() > 1 || variableRepeat) {
                     if (!isOBrace(token)) {
                         cerr << "Error: expected '[/{' but read " << token << " at line " << lineNumber << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     } else
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
@@ -1669,7 +1669,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         for (char c : token) {
                             if (!isdigit(c) && c != '-') {
                                 cerr << "Error: integer required at line " << lineNumber << " but read " << token << endl;
-                                exit(EXIT_FAILURE);
+                                throw WrongFileFormat();
                             }
                         }
                         if (variableRepeat)
@@ -1684,7 +1684,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                                 token = std::to_string(it->second);
                             } else {
                                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
-                                exit(EXIT_FAILURE);
+                                throw WrongFileFormat();
                             }
                         }
                         if (variableRepeat)
@@ -1696,7 +1696,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         for (char c : token) {
                             if (!isdigit(c)) {
                                 cerr << "Error: value index required at line " << lineNumber << " but read " << token << endl;
-                                exit(EXIT_FAILURE);
+                                throw WrongFileFormat();
                             }
                         }
                         if (variableRepeat)
@@ -1707,7 +1707,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         Cost c = wcsp->decimalToCost(token, lineNumber);
                         if (symbol == 'c' && c < 0) {
                             cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
-                            exit(EXIT_FAILURE);
+                            throw WrongFileFormat();
                         }
                         if (variableRepeat)
                             variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
@@ -1722,7 +1722,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                 if (repeatedSymbols.size() > 1 || variableRepeat) {
                     if (!isCBrace(token)) {
                         cerr << "Error: expected ']/}' but read " << token << " at line " << lineNumber << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     } else
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
@@ -1735,7 +1735,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             }
             if (GCFTemplate[i] == 'S' && numberOfTuplesRead != scope.size()) {
                 cerr << "Error: expected " << scope.size() << " tuples for '" << funcType << "' but read " << numberOfTuplesRead << " at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             // Add number of tuples before the list if the number of expected tuples is not known
             if (GCFTemplate[i] == '+')
@@ -1827,7 +1827,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
     metric = token;
     if (metric != "var" && metric != "weight") {
         cerr << "Error: sgrammar metric must be either 'var' or 'weight' at line " << lineNumber << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     // Read cost
     skipJSONTag("cost");
@@ -1835,7 +1835,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
     Cost cost = wcsp->decimalToCost(token, lineNumber);
     if (cost < 0) {
         cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     // Read Nb Symbols
     skipJSONTag("nb_symbols");
@@ -1871,7 +1871,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
             Cost tcost = wcsp->decimalToCost(token, lineNumber);
             if (tcost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             terminal_rule += std::to_string(tcost) + " ";
         }
@@ -1908,7 +1908,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
             Cost tcost = wcsp->decimalToCost(token, lineNumber);
             if (tcost < 0) {
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             non_terminal_rule += std::to_string(tcost) + " ";
         }
@@ -1976,7 +1976,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
                 token = std::to_string(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         }
         variables1.push_back(token);
@@ -1996,7 +1996,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
                 token = std::to_string(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         }
         variables2.push_back(token);
@@ -2072,7 +2072,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             Rfile.open(fileName);
             if (!stream) {
                 cerr << "Error: could not open file '" << fileName << "'." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
 
             } else {
                 CFNStreamReader fileReader(stream, this);
@@ -2080,7 +2080,7 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
 #else
         cerr << "Error: compiling with Boost library is needed to allow to read CFN format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::cfn && ToulBar2::gz) {
 #ifdef BOOST
@@ -2093,7 +2093,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
         if (!file) {
             cerr << "Could not open cfn.gz file : " << fileName << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         } else {
 
             //  inbuf.push(file);
@@ -2101,7 +2101,7 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CFN format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::cfn && ToulBar2::xz) {
 #ifdef BOOST
@@ -2115,7 +2115,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
         if (!file) {
             cerr << "Could not open cfn.xz file : " << fileName << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         } else {
 
             //  inbuf.push(file);
@@ -2123,11 +2123,11 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::haplotype) {
         ToulBar2::haplotype->read(fileName, this);
@@ -2160,7 +2160,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     divVariables.push_back(var);
                 } else {
                     cerr << "Error: cannot control diversity of non enumerated variable: " << var->getName() << endl;
-                    exit(EXIT_FAILURE);
+                    throw BadConfiguration();
                 }
             }
         }
@@ -2262,7 +2262,7 @@ void WCSP::read_legacy(const char* fileName)
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed wcsp format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     }
     zfile.push(rfile);
@@ -2270,17 +2270,17 @@ void WCSP::read_legacy(const char* fileName)
 
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open wcsp file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
     if (ToulBar2::gz || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcsp format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open wcsp file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
@@ -2324,12 +2324,12 @@ void WCSP::read_legacy(const char* fileName)
         } else {
             if ((domsize >= 0) != getVar(i)->enumerated()) {
                 cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain type (" << (getVar(i)->enumerated() ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize()) << ") different than the new one (" << domsize << ")!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             } else if (domsize < 0) {
                 decrease(i, -domsize - 1);
             } else if (domsize >= 0 && (unsigned int)domsize != ((EnumeratedVariable*)getVar(i))->getDomainInitSize()) {
                 cerr << "Variable(" << i << ") " << getVar(i)->getName() << " has a previous domain size " << (getVar(i)->enumerated() ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize()) << " different than the new one of " << domsize << "!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
         }
     }
@@ -2377,7 +2377,7 @@ void WCSP::read_legacy(const char* fileName)
             } else {
                 if (arity > MAX_ARITY) {
                     cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
                 file >> ntuples;
                 int reusedconstr = -1;
@@ -2386,7 +2386,7 @@ void WCSP::read_legacy(const char* fileName)
                     reusedconstr = -ntuples - 1;
                     if (reusedconstr >= (int)sharedSize.size()) {
                         cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     ntuples = sharedSize[reusedconstr];
                 }
@@ -2445,7 +2445,7 @@ void WCSP::read_legacy(const char* fileName)
             file >> k;
             if ((i == j) || (i == k) || (k == j)) {
                 cerr << "Error: ternary cost function!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             file >> defval;
             if (defval >= MIN_COST) {
@@ -2462,7 +2462,7 @@ void WCSP::read_legacy(const char* fileName)
                     int reusedconstr = -ntuples - 1;
                     if (reusedconstr >= (int)sharedSize.size()) {
                         cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     ntuples = sharedSize[reusedconstr];
                     assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize()));
@@ -2553,7 +2553,7 @@ void WCSP::read_legacy(const char* fileName)
                 cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
             if (i == j) {
                 cerr << "Error: binary cost function with only one variable in its scope!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             file >> defval;
             if (defval >= MIN_COST) {
@@ -2566,7 +2566,7 @@ void WCSP::read_legacy(const char* fileName)
                     int reusedconstr = -ntuples - 1;
                     if (reusedconstr >= (int)sharedSize.size()) {
                         cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     ntuples = sharedSize[reusedconstr];
                     assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize()));
@@ -2700,7 +2700,7 @@ void WCSP::read_legacy(const char* fileName)
                         int reusedconstr = -ntuples - 1;
                         if (reusedconstr >= (int)sharedSize.size()) {
                             cerr << "Shared cost function number " << reusedconstr << " not already defined! Cannot reuse it!" << endl;
-                            exit(EXIT_FAILURE);
+                            throw WrongFileFormat();
                         }
                         ntuples = sharedSize[reusedconstr];
                         assert(ntuples == (int)x->getDomainInitSize());
@@ -2734,7 +2734,7 @@ void WCSP::read_legacy(const char* fileName)
                 file >> defval;
                 if (defval == MIN_COST) {
                     cerr << "Error: unary cost function with zero penalty cost!" << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
                 file >> ntuples;
                 Value* dom = new Value[ntuples];
@@ -2743,7 +2743,7 @@ void WCSP::read_legacy(const char* fileName)
                     file >> cost;
                     if (cost != MIN_COST) {
                         cerr << "Error: unary cost function with non-zero cost tuple!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                 }
                 postUnaryConstraint(i, dom, ntuples, defval);
@@ -2757,7 +2757,7 @@ void WCSP::read_legacy(const char* fileName)
                 cout << "read global lower bound contribution " << ic << " of " << defval << endl;
             if (ntuples > 1) {
                 cerr << "Error: global lower bound contribution with several tuples!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             if (ntuples == 1)
                 file >> cost;
@@ -2794,7 +2794,7 @@ void WCSP::read_legacy(const char* fileName)
     if (ToulBar2::sortDomains) {
         if (maxarity > 2) {
             cerr << "Error: cannot sort domains in preprocessing with non-binary cost functions." << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         } else {
             ToulBar2::sortedDomains.clear();
             for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
@@ -2846,7 +2846,7 @@ void WCSP::read_uai2008(const char* fileName)
     ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
     if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
     } else if (ToulBar2::verbose >= 1) {
         cout << "NormFactor= " << ToulBar2::NormFactor << endl;
     }
@@ -2863,7 +2863,7 @@ void WCSP::read_uai2008(const char* fileName)
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed uai/LG format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     }
     zfile.push(rfile);
@@ -2871,17 +2871,17 @@ void WCSP::read_uai2008(const char* fileName)
 
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open uai file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
     if (ToulBar2::gz || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed uai format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open uai file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
@@ -2944,7 +2944,7 @@ void WCSP::read_uai2008(const char* fileName)
 
         if (arity > MAX_ARITY) {
             cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
         if (!file) {
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
@@ -2972,7 +2972,7 @@ void WCSP::read_uai2008(const char* fileName)
             file >> k;
             if ((i == j) || (i == k) || (k == j)) {
                 cerr << "Error: ternary cost function!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             x = (EnumeratedVariable*)vars[i];
             y = (EnumeratedVariable*)vars[j];
@@ -2996,7 +2996,7 @@ void WCSP::read_uai2008(const char* fileName)
                 cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
             if (i == j) {
                 cerr << "Error: binary cost function with only one variable in its scope!" << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             x = (EnumeratedVariable*)vars[i];
             y = (EnumeratedVariable*)vars[j];
@@ -3221,7 +3221,7 @@ void WCSP::read_uai2008(const char* fileName)
         while (nevi) {
             if (!fevid) {
                 cerr << "Error: incorrect number of evidences." << endl;
-                exit(EXIT_FAILURE);
+                throw WrongFileFormat();
             }
             fevid >> i;
             fevid >> j;
@@ -3289,12 +3289,12 @@ void WCSP::read_XML(const char* fileName)
         cout.flush();
         cerr << "\n\tUnexpected exception in XML parsing\n";
         cerr << "\t" << e.what() << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 #else
     cerr << "\nXML format without including in Makefile flag XMLFLAG and files ./xmlcsp\n"
          << endl;
-    exit(EXIT_FAILURE);
+    throw WrongFileFormat();
 #endif
 }
 
@@ -3310,7 +3310,7 @@ void WCSP::solution_XML(bool opt)
     //ofstream fsol;
     //ifstream sol;
     //sol.open(ToulBar2::writeSolution);
-    //if(!sol) { cout << "cannot open solution file to translate" << endl; exit(EXIT_FAILURE); }
+    //if(!sol) { cout << "cannot open solution file to translate" << endl; throw WrongFileFormat(); }
     //fsol.open("solution");
     //fsol << "SOL ";
 
@@ -3344,7 +3344,7 @@ void WCSP::read_wcnf(const char* fileName)
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed cnf/wcnf format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     }
     zfile.push(rfile);
@@ -3352,17 +3352,17 @@ void WCSP::read_wcnf(const char* fileName)
 
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open wcnf file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
     if (ToulBar2::gz || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcnf format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open wcnf file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
@@ -3384,7 +3384,7 @@ void WCSP::read_wcnf(const char* fileName)
     }
     if (sflag != "p") {
         cerr << "Wrong wcnf format in " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 
     string format, strtop;
@@ -3515,7 +3515,7 @@ void WCSP::read_wcnf(const char* fileName)
             inclowerbound += MULT(cost, K);
         } else {
             cerr << "Wrong clause arity " << arity << " in " << fileName << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
     }
 
@@ -3554,7 +3554,7 @@ void WCSP::read_qpbo(const char* fileName)
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed qpbo format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     }
     zfile.push(rfile);
@@ -3562,17 +3562,17 @@ void WCSP::read_qpbo(const char* fileName)
 
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open qpbo file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
     if (ToulBar2::gz || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed qpbo format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open qpbo file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
@@ -3638,7 +3638,7 @@ void WCSP::read_qpbo(const char* fileName)
         ToulBar2::costMultiplier *= -1.0;
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
     }
     Cost top = (Cost)multiplier * sumcost + 1;
     ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
@@ -3793,7 +3793,7 @@ void WCSP::read_opb(const char* fileName)
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed opb format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
 #endif
     }
     zfile.push(rfile);
@@ -3801,17 +3801,17 @@ void WCSP::read_opb(const char* fileName)
 
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open opb file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
     if (ToulBar2::gz || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed opb format files." << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     if (ToulBar2::stdin_format.length() == 0 && !rfile) {
         cerr << "Could not open opb file : " << fileName << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
@@ -3879,7 +3879,7 @@ void WCSP::read_opb(const char* fileName)
             }
             if ((cost >= MIN_COST && multiplier * cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) || (cost < MIN_COST && multiplier * -cost >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST)) {
                 cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
-                exit(EXIT_FAILURE);
+                throw BadConfiguration();
             }
             cost *= ToulBar2::costMultiplier;
             if (token != ";") {
@@ -3888,7 +3888,7 @@ void WCSP::read_opb(const char* fileName)
                     string varname = token.substr(0, token.size() - ((token.back() == ';') ? 1 : 0));
                     if (varname.rfind("~", 0) == 0) {
                         cerr << "Sorry, negative literals in opb format not implemented in this version!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     int var = 0;
                     if (varnames.find(varname) != varnames.end()) {
@@ -3957,7 +3957,7 @@ void WCSP::read_opb(const char* fileName)
                     inclowerbound += cost;
                 } else {
                     cerr << "Sorry! Cannot read objective function with non linear terms of arity " << scopeIndex.size() << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
             }
         } while (token.back() != ';');
@@ -3982,7 +3982,7 @@ void WCSP::read_opb(const char* fileName)
             if (token.substr(0, 2) == "<=" || token.substr(0, 1) == "=" || token.substr(0, 2) == ">=") {
                 if (first) {
                     cerr << "Wrong constraint definition with empty left-hand side! " << token << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
                 opsize = (token[0] == '=') ? 1 : 2;
                 string op = token.substr(0, opsize);
@@ -4013,7 +4013,7 @@ void WCSP::read_opb(const char* fileName)
                 } else {
                     if (!first) {
                         cerr << "Sorry, constraints with non-linear terms in opb format not implemented in this version!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                     coef = 1;
                 }
@@ -4025,7 +4025,7 @@ void WCSP::read_opb(const char* fileName)
                 string varname = token.substr(0, token.size() + opsize);
                 if (varname.rfind("~", 0) == 0) {
                     cerr << "Sorry, negative literals in opb format not implemented in this version!!" << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
                 int var = 0;
                 if (varnames.find(varname) != varnames.end()) {

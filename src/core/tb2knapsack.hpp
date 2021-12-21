@@ -462,7 +462,7 @@ public:
                 }
                 assert(TobeProjected >= MIN_COST);
                 Constraint::projectLB(TobeProjected);
-            } else if (nonassigned <= 3) {
+            } else if (nonassigned <= NARYPROJECTIONSIZE) {
                 deconnect(); // this constraint is removed from the current WCSP problem
                 projectNary();
             } else {
@@ -733,7 +733,7 @@ public:
 
                     //Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
-                    if (!b) {
+                    if (!b && ToulBar2::LcLevel == LC_EDAC) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {
                             assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]].back()) || lastval0ok[current_scope_idx[i]]);

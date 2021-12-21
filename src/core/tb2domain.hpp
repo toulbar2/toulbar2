@@ -48,7 +48,7 @@ public:
             pos++;
         }
         cerr << "Bad (removed) value given as argument of toCurrentIndex function!" << endl;
-        exit(EXIT_FAILURE);
+        throw InternalError();
     }
 
     bool canbe(Value v) const { return !all[toIndex(v)].removed; }

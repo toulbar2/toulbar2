@@ -16,6 +16,29 @@
 #include <quadmath.h>
 #endif
 
+/*
+ * Internal error exceptions
+ *
+ */
+
+class InternalError : public std::exception {
+public:
+    InternalError()
+    {
+    }
+    virtual const char* what() const throw() { return "... internal error found, sorry!"; }
+};
+
+class BadConfiguration : public InternalError {
+public:
+    const char* what() const throw() FINAL { return "... bad solver configuration!"; }
+};
+
+class WrongFileFormat : public InternalError {
+public:
+    const char* what() const throw() FINAL { return "... wrong problem file format!"; }
+};
+
 extern const char* PrintFormatProb;
 
 double cpuTime(); ///< \brief return CPU time in seconds with high resolution (microseconds) if available
@@ -200,7 +223,7 @@ inline Long string2Cost(const char* ptr)
     } catch (std::exception& e) {
         cerr << "Overflow exception: cannot convert this number " << ptr << " into a cost!" << endl;
         cerr << "\t" << e.what() << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
     return atoll(ptr);
 }

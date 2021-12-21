@@ -21,18 +21,80 @@ struct pr { // use it later
 
 typedef vector<pr> PR;
 
+class SolMsg {
+private:
+    friend class serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar& cluster;
+        ar& k;
+        ar& lds;
+        ar& bestUb;
+        ar& bestSolution;
+    }
+public:
+    int cluster;
+    int k;
+    int lds;
+    Cost bestUb;
+    map<int, Value> bestSolution;
+
+    SolMsg() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
+    SolMsg(int cluster_, int k_, int lds_, Cost bestUb_, map<int, Value>& bestSolution_)
+    : cluster(cluster_)
+    , k(k_)
+    , lds(lds_)
+    , bestUb(bestUb_)
+    , bestSolution(bestSolution_)
+    {
+    }
+    void get(int& cluster_, int& k_, int& lds_, Cost& bestUb_, map<int, Value>& bestSolution_)
+    {
+        cluster_ = cluster;
+        k_ = k;
+        lds_ = lds;
+        bestUb_ = bestUb;
+        bestSolution_ = bestSolution;
+    }
+};
+
+class SolMsg2 {
+private:
+    friend class serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar& bestUb;
+        ar& bestSolution;
+    }
+public:
+    Cost bestUb;
+    map<int, Value> bestSolution;
+
+    SolMsg2() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
+    SolMsg2(Cost bestUb_, map<int, Value>& bestSolution_)
+    : bestUb(bestUb_)
+    , bestSolution(bestSolution_)
+    {
+    }
+    void get(Cost& bestUb_, map<int, Value>& bestSolution_)
+    {
+        bestUb_ = bestUb;
+        bestSolution_ = bestSolution;
+    }
+};
+
 class ReplicatedParallelDGVNS : public LocalSearch {
 protected:
-    MPIEnv env0;
     vector<int> file;
     PR vecPR;
     //    vector<bool> clusterKmax;  // clusterKmax[c] is true if cluster c has its k = kmax
     double startTime;
 
 public:
-    ReplicatedParallelDGVNS(Cost initUpperBound, MPIEnv env0Global)
+    ReplicatedParallelDGVNS(Cost initUpperBound)
         : LocalSearch(initUpperBound)
-        , env0(env0Global)
         , startTime(.0)
     {
     }
@@ -45,18 +107,11 @@ public:
     bool slave();
     void NeighborhoodChange(int strategy, int p, int& c, int kinit, int kjump, int kmax, int ldsmin, int ldsmax, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
     void DumpBestSol(bool improved = true);
-    bool VnsLdsCP(MPIEnv& env0, ParallelRandomClusterChoice* h);
+    bool VnsLdsCP(SolMsg& solmsg, ParallelRandomClusterChoice* h, SolMsg2& solmsg2);
 
     // strategies
-
     void ChangeClusterAlways(int p, int& c, int kinit, int kjump, int kmax, int ldsmin, int ldsmax, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
     void ChangeClusterWhenNotImproved(int p, int& c, int kinit, int kjump, int kmax, int ldsmin, int ldsmax, bool synch, Cost pBestUb, map<int, Value>& pBestSolution);
-
-    //Conversions tools
-    void SolToMsg(MPIEnv& env0, int cluster, int k, int discrepancy, Cost bestUb, map<int, Value>& bestSolution);
-    void SolToMsg2(MPIEnv& env0, Cost bestUb, map<int, Value>& bestSolution);
-    void MsgToSol(MPIEnv& env0, int nov, int& cluster, int& k, int& discrepancy, Cost& bestUb, map<int, Value>& bestSolution);
-    void MsgToSol2(MPIEnv& env0, int nov, Cost& bestUb, map<int, Value>& bestSolution);
 };
 
 #endif

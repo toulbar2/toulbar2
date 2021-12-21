@@ -189,7 +189,7 @@ void TreeDecRefinement::load_decomposition()
                     nbvars.insert(var);
                     if (var >= wcsp->numberOfVariables()) {
                         cerr << "Error: cluster decomposition contains bad variable index!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw WrongFileFormat();
                     }
                 };
                 m_graph[c].vars = tmp;
@@ -234,7 +234,7 @@ void TreeDecRefinement::load_decomposition()
         }
     } else {
         cerr << "No cluster decomposition file!" << endl;
-        exit(EXIT_FAILURE);
+        throw WrongFileFormat();
     }
 }
 

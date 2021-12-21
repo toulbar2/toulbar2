@@ -412,7 +412,7 @@ public:
 #ifdef NO_STORE_TERNARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         unsigned int ix, iy, iz;
@@ -438,7 +438,7 @@ public:
 #ifdef NO_STORE_TERNARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(costsin.size() <= costs.size() || functionalX);
@@ -475,7 +475,7 @@ public:
 #ifdef NO_STORE_TERNARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(c >= MIN_COST || !LUBTEST(getCost(vxi, vyi, vzi), -c));
@@ -501,7 +501,7 @@ public:
 #ifdef NO_STORE_TERNARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         assert(c >= MIN_COST || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
@@ -537,7 +537,7 @@ public:
 #ifdef NO_STORE_TERNARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         unsigned int vx = x->toIndex(vxi);
@@ -548,7 +548,7 @@ public:
                 costsYZ[vy * sizeZ + vz] = c;
             else if (!CUT(wcsp->getLb() + c, wcsp->getUb())) {
                 cerr << "cannot reset a forbidden tuple in ternary functional cost functions!" << endl;
-                exit(EXIT_FAILURE);
+                throw InternalError();
             }
         } else
             costs[vx * sizeY * sizeZ + vy * sizeZ + vz] = c;
@@ -559,7 +559,7 @@ public:
 #ifdef NO_STORE_TERNARY_COSTS
         if (Store::getDepth() > 0) {
             cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
 #endif
         unsigned int vindex[3];
@@ -574,7 +574,7 @@ public:
                 costsYZ[vindex[1] * sizeZ + vindex[2]] = c;
             else if (!CUT(c, wcsp->getUb())) {
                 cerr << "cannot reset a forbidden tuple in ternary functional cost functions!" << endl;
-                exit(EXIT_FAILURE);
+                throw InternalError();
             }
         } else
             costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] = c;
@@ -846,7 +846,7 @@ public:
             return isEAC(Functor_getCostWithBinariesZXY(*this), functionalX, Functor_getFunctionXZY(*this), functionalY, Functor_getFunctionYZX(*this), z, a, x, y, supportZ);
             break;
         default:
-            exit(EXIT_FAILURE);
+            throw InternalError();
         }
         return true;
     }
@@ -918,7 +918,7 @@ public:
             if (connected())
                 projectTernaryBinary(Functor_getCostZXY(*this), Functor_getCostXYZ(*this), Functor_addCostXYZ(*this), functionalZ, Functor_getFunctionZXY(*this), z, x, y, xy);
         } else
-            exit(EXIT_FAILURE);
+            throw InternalError();
     }
 
     void extendTernary()

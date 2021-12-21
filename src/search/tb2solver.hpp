@@ -25,11 +25,22 @@ const double epsilon = 1e-6; // 1./100001.
 class Solver : public WeightedCSPSolver {
 public:
     class OpenNode {
+    private:
+        friend class serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar& cost; // node lower bound
+            ar& first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
+            ar& last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
+        }
+
         Cost cost; // global lower bound associated to the open node
     public:
         ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
         ptrdiff_t last; // last position (excluded) in the list of choice points corresponding to a branch in order to reconstruct the open node
 
+        OpenNode() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
         OpenNode(Cost cost_, ptrdiff_t first_, ptrdiff_t last_)
             : cost(cost_)
             , first(first_)
@@ -43,6 +54,7 @@ public:
 
     class CPStore;
     class OpenList FINAL : public priority_queue<OpenNode> {
+    private:
         Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
         Cost cub; // current cluster upper bound (independent of any soft arc consistency cost moves)
     public:
@@ -56,6 +68,11 @@ public:
             , cub(MAX_COST)
         {
         } /// \warning use also this method to clear an open list
+        void init()
+        {
+            clb = MAX_COST;
+            cub = MAX_COST;
+        }
 
         bool finished() const
         {
@@ -128,11 +145,23 @@ public:
     static const string CPOperation[CP_MAX]; // for pretty print
 
     struct ChoicePoint {
+    private:
+        friend class serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar& op;
+            ar& varIndex;
+            ar& value;
+            ar& reverse;
+        }
+    public:
         ChoicePointOp op; // choice point operation
         int varIndex; // variable wcsp's index
         Value value; // variable's value
         bool reverse; // true if the choice point corresponds to the last right branch of an open node
 
+        ChoicePoint() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
         ChoicePoint(ChoicePointOp op_, int var_, Value val_, bool rev_)
             : op(op_)
             , varIndex(var_)
@@ -163,9 +192,106 @@ public:
         }
     };
 
+#ifdef OPENMPI
+    /**
+     * \brief class to send/receive work to/from workers in the form of an object i.e. a message in MPI's semantic //
+     *
+     */
+    class Work {
+    private:
+        friend class serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int version)
+        {
+            ar& hbfs;
+            ar& nbNodes;
+            ar& nbBacktracks;
+            ar& nbDEE;
+            ar& lb;
+            ar& ub;
+            ar& sol;
+            ar& open;
+            ar& cp;
+        }
+
+    public:
+        bool hbfs = true; // false if master cp/open memory is out
+        Long nbNodes = 0;
+        Long nbBacktracks = 0;
+        Long nbDEE = 0;
+        Cost lb; // best lower bound known by the master or found by the worker
+        Cost ub; // best current solution a.k.a incumbent solution
+        vector<Value> sol;
+        vector<OpenNode> open; // priority queue which will contain the node(s) to eXchange between the processes
+        vector<ChoicePoint> cp; // vector of choice points
+
+        Work() {} // dummy message when stopping
+
+        /**
+         * @brief constructor used by the master
+         */
+        Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost lbMaster_, const Cost ubMaster_, vector<Value>& sol_)
+        : lb(lbMaster_)
+        , ub(ubMaster_)
+        {
+
+            open.push_back(openMaster_.top());
+
+            openMaster_.pop(); // pop up directly the open queue!!
+
+            for (ptrdiff_t i = open[0].first; i < open[0].last; i++) { // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+                cp.push_back(cpMaster_[i]);
+            }
+
+            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+        }
+
+        /**
+         * @brief constructor used by the worker
+         */
+        Work(CPStore& cpWorker_, OpenList& openWorker_, Long nbNodes_, Long nbBacktracks_, Long nbDEE_, const Cost lbWorker_, const Cost ubWorker_, vector<Value>& sol_)
+        : nbNodes(nbNodes_)
+        , nbBacktracks(nbBacktracks_)
+        , nbDEE(nbDEE_)
+        , lb(lbWorker_)
+        , ub(ubWorker_)
+        {
+
+            while (!openWorker_.empty()) // init of vector of OpenNode nodeX
+            {
+                OpenNode node = openWorker_.top();
+
+                open.push_back(node);
+
+                openWorker_.pop(); // pop up directly the open queue!!
+            }
+            openWorker_.init(); // clb=cub=MAX_COST  method added to init openList attributes
+            // because emptying an openList is not enough we have to initialize its attributes
+
+            if (open.size() > 0) {
+                for (ptrdiff_t i = 0; i < cpWorker_.stop; i++) {
+                    cp.push_back(cpWorker_[i]);
+                }
+            }
+
+            cpWorker_.clear(); // size = 0  added to put new cp out of the while(1)
+//            cpWorker_.shrink_to_fit(); // to win space we shrink the vector: capacity=0 //TODO: test if it speeds-up things or not
+
+            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+        }
+
+        friend ostream& operator<<(ostream& os, Work& work)
+        {
+            os << "[lb: " << work.lb << ", ub: " << work.ub << ", nbvars: " << work.sol.size() << ", nodes: " << work.open.size() << ", choices: " << work.cp.size() << "]";
+            return os;
+        }
+    };
+#endif
+
     void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
     void addOpenNode(CPStore& cp, OpenList& open, Cost lb, Cost delta = MIN_COST); ///< \param delta cost moved out from the cluster by soft arc consistency
     void restore(CPStore& cp, OpenNode node);
+    char opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd);
 
 protected:
     friend class NeighborhoodStructure;
@@ -259,6 +385,22 @@ protected:
     pair<Cost, Cost> binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost cub, int varIndex, Value value);
     pair<Cost, Cost> recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub);
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
+
+#ifdef OPENMPI
+    mpi::communicator world;
+    queue<int> idleQ; //MASTER ONLY container with the rank of the free workers
+    unordered_map<int, Cost> activeWork; //MASTER ONLY map the rank i of a worker with the lb cost of an open node
+    unordered_map<int, Cost> bestsolWork; //MASTER ONLY map the rank i of a worker with the cost of the best solution sent by the master
+
+    inline bool MPI_interrupted()
+    {
+        if (world.iprobe(mpi::any_source, DIETAG)) return true;
+        else return false;
+    }
+    pair<Cost, Cost> hybridSolveMaster(Cluster* root, Cost clb, Cost cub);
+    pair<Cost, Cost> hybridSolveWorker(Cluster* root, Cost clb, Cost cub);
+#endif
+
     pair<Cost, Cost> russianDollSearch(Cluster* c, Cost cub);
 
     BigInteger binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value value);
@@ -338,11 +480,6 @@ public:
 class DivSolutionOut : public SolverOut {
 public:
     const char* what() const throw() FINAL { return "... optimal diverse solution found!"; }
-};
-
-class BadConfiguration : public SolverOut {
-public:
-    const char* what() const throw() FINAL { return "... bad solver configuration!"; }
 };
 
 class TimeOut : public SolverOut {

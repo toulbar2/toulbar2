@@ -72,17 +72,17 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vect
         for (EnumeratedVariable::iterator v = y->begin(); v != y->end(); ++v) {
             vector<int>::iterator it = find(cDomain.begin(), cDomain.end(), *v);
             if (it == cDomain.end()) {
-                cout << "non exist a value ?" << endl;
+                cerr << "non exist a value ?" << endl;
                 for (vector<int>::iterator v = cDomain.begin(); v != cDomain.end(); v++) {
-                    cout << *v << " ";
+                    cerr << *v << " ";
                 }
-                cout << endl;
+                cerr << endl;
                 for (EnumeratedVariable::iterator v = y->begin(); v != y->end(); ++v) {
-                    cout << *v << " ";
+                    cerr << *v << " ";
                 }
-                cout << endl;
+                cerr << endl;
                 graph.print();
-                exit(0);
+                throw InternalError();
             }
             cDomain.erase(it);
             deleted = true;
@@ -101,9 +101,9 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vect
                 pair<int, int> edge = mapto(i, *v);
                 vector<Cost> weight = graph.getWeight(edge.second, edge.first);
                 if (weight.size() == 0) {
-                    cout << "error for non-existence of edge (" << edge.second << "," << edge.first << ")\n";
+                    cerr << "error for non-existence of edge (" << edge.second << "," << edge.first << ")\n";
                     graph.print();
-                    exit(0);
+                    throw InternalError();
                 }
                 result = graph.augment(edge.first, edge.second, true);
                 if (result.second) {
@@ -112,9 +112,9 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vect
                     result.second = graph.removeEdge(edge.first, edge.second);
                 }
                 if (!result.second) {
-                    cout << "ERROR cannot delete edge (" << edge.second << "," << edge.first << ")\n";
+                    cerr << "ERROR cannot delete edge (" << edge.second << "," << edge.first << ")\n";
                     graph.print();
-                    exit(0);
+                    throw InternalError();
                 }
             }
             if (cost > 0)
@@ -153,7 +153,7 @@ void FlowBasedGlobalConstraint::findProjection(Graph& graph, StoreCost& cost, in
                 result = graph.augment(edge.second, edge.first, false, edges);
                 /*if (!result.second) {
 				  printf("error! no shortest path\n");
-				  exit(0);
+				  throw InternalError();
 				  }*/
                 //tmp = cost+result.first+weight[0];
                 tmp = cost + result.first + graph.getMinWeight(edge.first, edge.second);

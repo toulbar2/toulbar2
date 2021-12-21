@@ -143,8 +143,8 @@ int argument2ul(char* arg, const char* message)
     char* error;
     int s = strtoul(arg, &error, 10);
     if (error == arg || errno == ERANGE) {
-        cerr << "Erreur " << message << " pas un entier " << arg << endl;
-        exit(1);
+        cerr << "Error " << message << " not integer " << arg << endl;
+        throw BadConfiguration();
     }
     return s;
 }
@@ -155,8 +155,8 @@ double argument2d(char* arg, const char* message)
     errno = 0;
     double s = strtod(arg, &error);
     if (errno == ERANGE || error == arg) {
-        cerr << "Erreur " << message << " pas un nombre " << arg << endl;
-        exit(1);
+        cerr << "Error " << message << " not integer " << arg << endl;
+        throw BadConfiguration();
     }
     return s;
 }
@@ -165,8 +165,8 @@ double argument2bd(char* arg, const char* message, double min1, double max1)
 {
     double s = argument2d(arg, message);
     if ((s < min1) || (s > max1)) {
-        cerr << "Erreur " << message << arg << " doit être compris entre " << min1 << " et " << max1;
-        exit(1);
+        cerr << "Error " << message << arg << " must be between " << min1 << " and " << max1;
+        throw BadConfiguration();
     }
     return s;
 }
@@ -175,8 +175,8 @@ int argument2bul(char* arg, const char* message, int min1, int max1)
 {
     int s = argument2ul(arg, message);
     if ((s < min1) || (s > max1)) {
-        cerr << "Erreur " << message << arg << " doit être compris entre " << min1 << " et " << max1;
-        exit(1);
+        cerr << "Error " << message << arg << " must be between " << min1 << " and " << max1;
+        throw BadConfiguration();
     }
     return s;
 }
@@ -186,7 +186,7 @@ string argument2lp(char* arg, const char* message, list<string>& possibles)
     string s = arg;
     if (find(possibles.begin(), possibles.end(), arg) == possibles.end()) {
         cerr << message << arg << endl;
-        exit(1);
+        throw BadConfiguration();
     }
     return s;
 }

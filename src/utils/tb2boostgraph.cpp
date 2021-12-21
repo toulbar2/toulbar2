@@ -4,6 +4,9 @@
  * Variable elimination ordering heuristics developed by Cyril Terrioux <cyril.terrioux@lsis.org>
  */
 
+#include "core/tb2wcsp.hpp"
+#include "core/tb2binconstr.hpp"
+
 #ifdef BOOST
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -34,12 +37,6 @@ typedef adjacency_list<setS, vecS, undirectedS, no_property,
     property<edge_weight_t, double, property<edge_component_t, std::size_t>>>
     DoubleWeightedGraph;
 typedef adjacency_list<setS, vecS, undirectedS, property<vertex_color_t, default_color_type, property<vertex_degree_t, int>>> ColoredGraph;
-#endif
-
-#include "core/tb2wcsp.hpp"
-#include "core/tb2binconstr.hpp"
-
-#ifdef BOOST
 
 template <typename T>
 static void addConstraint(Constraint* c, T& g)

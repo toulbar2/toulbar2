@@ -50,7 +50,7 @@ void GlobalCardinalityConstraint::read(istream& file, bool mult)
 	if (strcmp(str.c_str(), "wdec") == 0) mode = WVALUE;
 	if (mode == EMPTY) {
 		cerr << "Error occurred in reading gcc() : No violation measure" << endl;
-		exit(1);
+		throw WrongFileFormat();
 	}*/
     setSemantics(str);
     //JP End//

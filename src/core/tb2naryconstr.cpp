@@ -16,7 +16,7 @@ NaryConstraint::NaryConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int ar
         unsigned int domsize = scope_in[i]->getDomainInitSize();
         if (domsize > (unsigned int)std::numeric_limits<tValue>::max()) {
             cerr << "Nary constraints overflow. Extend tValue type range." << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
     }
 

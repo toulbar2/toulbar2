@@ -60,7 +60,7 @@ public:
         if (v != x)
             return x;
         else
-            exit(EXIT_FAILURE);
+            throw InternalError();
     }
 
     int getIndex(Variable* var) const FINAL
@@ -169,7 +169,7 @@ public:
         else if (v == y)
             return x;
         else
-            exit(EXIT_FAILURE);
+            throw InternalError();
     }
 
     int getIndex(Variable* var) const FINAL
@@ -241,7 +241,7 @@ public:
     {
 #ifdef NO_STORE_BINARY_COSTS
         cerr << "Sorry, only binary cost functions!" << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
 #endif
         assert(xx != yy);
         assert(xx != zz);
@@ -317,7 +317,7 @@ public:
             return z;
             break;
         default:
-            exit(EXIT_FAILURE);
+            throw InternalError();
         }
     }
 
@@ -336,7 +336,7 @@ public:
         else if ((y == v2) && (z == v1))
             return x;
         else
-            exit(EXIT_FAILURE);
+            throw InternalError();
     }
 
     int getIndex(Variable* var) const FINAL
@@ -365,7 +365,7 @@ public:
             return min(x->wcspIndex, y->wcspIndex);
             break;
         default:
-            exit(EXIT_FAILURE);
+            throw InternalError();
         }
     }
     int getSmallestVarIndexInScope() FINAL
@@ -398,7 +398,7 @@ public:
             return min(x->getDACOrder(), y->getDACOrder());
             break;
         default:
-            exit(EXIT_FAILURE);
+            throw InternalError();
         }
     }
     Variable* getDACVar(int varCtrIndex) const FINAL
@@ -412,7 +412,7 @@ public:
             case 2:
                 return z;
             default:
-                exit(EXIT_FAILURE);
+                throw InternalError();
             }
         } else { // varCtrIndex >= 1
             switch (dacvar) {
@@ -423,7 +423,7 @@ public:
             case 2:
                 return ((varCtrIndex == 1) == (x->getDACOrder() < y->getDACOrder())) ? x : y;
             default:
-                exit(EXIT_FAILURE);
+                throw InternalError();
             }
         }
     }
@@ -478,7 +478,7 @@ public:
     {
 #if defined(NO_STORE_BINARY_COSTS) || defined(NO_STORE_TERNARY_COSTS)
         cerr << "Sorry, no " << arity_in << "-ary cost functions!" << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
 #endif
         scope = new EnumeratedVariable*[arity_];
         scope_dac = new EnumeratedVariable*[arity_];

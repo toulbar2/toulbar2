@@ -29,7 +29,7 @@ void TreeConstraint::initMemoization()
         }
         if (varId < 0) {
             cerr << "variable " << x->getName() << " not found" << endl;
-            exit(1);
+            throw WrongFileFormat();
         }
         val2VarIndex[varId] = i;
         /*for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
@@ -42,7 +42,7 @@ void TreeConstraint::initMemoization()
         for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
             if (val2VarIndex.find(*it) == val2VarIndex.end()) {
                 cerr << "Error invalid MST()" << endl;
-                exit(1);
+                throw WrongFileFormat();
             }
         }
     }

@@ -462,7 +462,7 @@ int main(int argc, char** argv)
         ifstream file(argv[1]);
         if (!file) {
             cerr << "Could not open file " << argv[1] << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
 
         // reads problem name and sizes

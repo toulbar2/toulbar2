@@ -35,8 +35,8 @@ pair<int, int> SameConstraint::mapto(int varindex, Value val)
         return make_pair(mapval[val], varindex + 1);
         //return make_pair(0,0);
     } else {
-        cout << "no group belong ?" << endl;
-        exit(0);
+        cerr << "no group belong ?" << endl;
+        throw InternalError();
     }
 }
 
@@ -88,7 +88,7 @@ Cost SameConstraint::evalOriginal(const Tuple& s)
 	tuple_cost -= projectedCost;
 	if (tuple_cost < 0) {
 		cout << "Error ! " << s << " has -ve cost of " << tuple_cost << endl;
-		exit(0);
+		throw InternalError();
 	}*/
     return tuple_cost;
 }

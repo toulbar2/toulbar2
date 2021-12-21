@@ -31,7 +31,7 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
 {
     if (Store::getDepth() > 0) {
         cerr << "You cannot create a variable during the search!" << endl;
-        exit(EXIT_FAILURE);
+        throw InternalError();
     }
     w->link(this);
 

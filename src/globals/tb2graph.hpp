@@ -277,7 +277,7 @@ public:
         if (nevLoop) {
             cout << "negative loop exists from " << endl;
             print();
-            exit(1);
+            throw InternalError();
         }
     }
 

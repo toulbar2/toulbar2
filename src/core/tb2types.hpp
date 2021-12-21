@@ -164,7 +164,7 @@ inline Cost MULT(Cost a, double b)
         return a * b;
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
-        exit(1);
+        throw InternalError();
     }
 }
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
@@ -256,7 +256,7 @@ inline Cost MULT(Cost a, double b)
         return a * b;
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
-        exit(1);
+        throw InternalError();
     }
 }
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
@@ -363,7 +363,7 @@ inline Cost MULT(Cost a, double b)
         return (Cost)((double)a * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
-        exit(1);
+        throw InternalError();
     }
 }
 inline Cost GLB(Cost a, Cost b) { return MIN(a, b); }
@@ -443,8 +443,8 @@ inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) - exp(
     else if (logc1 > logc2)
         return logc1 + (Log(-Expm1(logc2 - logc1)));
     else {
-        cerr << "My oh my ! Try to Logarithm a negative number" << endl;
-        exit(0);
+        cerr << "My oh my ! Try to logarithm a negative number" << endl;
+        throw InternalError();
     }
 }
 const int STORE_SIZE = 16;
@@ -746,6 +746,7 @@ public:
     static bool vacValueHeuristic;
     static BEP* bep;
     static LcLevelType LcLevel;
+    static int maxEACIter;
     static bool wcnf;
     static bool qpbo;
     static double qpboQuadraticCoefMultiplier;
@@ -819,7 +820,8 @@ public:
     static bool vnsParallelSync; // true if RSGDVNS else RADGVNS
     static string vnsOptimumS;
     static Cost vnsOptimum; // stops VNS if solution found with this cost (or better)
-    static bool vnsParallel; // true if in master/slaves paradigm
+
+    static bool parallel; // true if in master/slaves paradigm (hbfs or vns)
 
     static Long hbfs; // hybrid best-first search mode (used as a limit on the number of backtracks before visiting another open search node)
     static Long hbfsGlobalLimit; // limit on the number of nodes before stopping the search on the current cluster subtree problem
@@ -827,6 +829,7 @@ public:
     static Long hbfsBeta; // inverse of maximum node redundancy goal limit
     static ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
     static ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
+    static Long eps; // Number of open nodes to collect before exit
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution

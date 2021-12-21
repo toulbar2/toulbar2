@@ -88,7 +88,7 @@ void GrammarConstraint::read(istream& file, bool mult)
         }
         default:
             cerr << "Error occurred in reading grammar()" << endl;
-            exit(1);
+            throw WrongFileFormat();
         }
     }
 }

@@ -80,7 +80,7 @@ public:
 
         if (varID == -1) {
             cout << "Error in reading max\n";
-            exit(0);
+            throw WrongFileFormat();
         }
         weightMap[varID][value] = weight;
         top = max(top, weight);

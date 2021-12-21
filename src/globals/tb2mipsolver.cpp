@@ -184,7 +184,7 @@ int IlogMIP::solve()
         cerr << *obj << endl;
         cerr << *sols << endl;
         cerr << "cost = " << objValue << endl;
-        exit(EXIT_FAILURE);
+        throw InternalError();
     }
 
     if (cplex->getObjValue() - floor(cplex->getObjValue()) < 0.000001) {

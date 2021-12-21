@@ -492,7 +492,7 @@ pair<Cost, Cost> Solver::binaryChoicePoint(Cluster* cluster, Cost lbgood, Cost c
     if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
-    if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
+    if (ToulBar2::parallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
         throw TimeOut();
 #endif
     cluster->nbBacktracks++;
@@ -588,7 +588,7 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
     if (nbBacktracks > nbBacktracksLimit)
         throw NbBacktracksOut();
 #ifdef OPENMPI
-    if (ToulBar2::vnsParallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
+    if (ToulBar2::parallel && ((nbBacktracks % 128) == 0) && MPI_interrupted())
         throw TimeOut();
 #endif
     try {

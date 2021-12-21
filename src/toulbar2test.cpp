@@ -23,16 +23,14 @@ const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 int main(int argc, char* argv[])
 {
 #ifdef OPENMPI
-    MPIEnv env0;
-    MPI_Init(NULL, NULL);
-    MPI_Comm_size(MPI_COMM_WORLD, &env0.ntasks);
-    MPI_Comm_rank(MPI_COMM_WORLD, &env0.myrank);
+    mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
+    mpi::communicator world;
 #endif
 
     tb2init(); // must be call before setting specific ToulBar2 options and creating a model
 
 #ifdef OPENMPI
-    if (env0.myrank == 0)
+    if (world.rank() == WeightedCSPSolver::MASTER)
         ToulBar2::verbose = -1; // change to 0 or higher values to see more trace information
     else
         ToulBar2::verbose = -1;
@@ -51,7 +49,7 @@ int main(int argc, char* argv[])
     //ToulBar2::lds = 4;
     //ToulBar2::restart = 10000;
     //#ifdef OPENMPI
-    //     if (env0.ntasks > 1) {
+    //     if (world.size() > 1) {
     //    	 ToulBar2::searchMethod = RPDGVNS;
     //    	 ToulBar2::vnsParallel = true;
     //    	 ToulBar2::vnsNeighborVarHeur = MASTERCLUSTERRAND;
@@ -126,7 +124,7 @@ int main(int argc, char* argv[])
     //tb2checkOptions();
     if (solver->solve()) {
 #ifdef OPENMPI
-        if (env0.myrank == 0) {
+        if (world.rank() == WeightedCSPSolver::MASTER) {
 #endif
             // show optimal solution
             vector<Value> sol;
@@ -138,7 +136,7 @@ int main(int argc, char* argv[])
 #endif
     } else {
 #ifdef OPENMPI
-        if (env0.myrank == 0) {
+        if (world.rank() == WeightedCSPSolver::MASTER) {
 #endif
             cout << "No solution found!" << endl;
 #ifdef OPENMPI

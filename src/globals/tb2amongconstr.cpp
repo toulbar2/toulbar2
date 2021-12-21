@@ -30,7 +30,7 @@ void AmongConstraint::read(istream& file, bool mult)
 
     if (str != "var") {
         cout << "Error in reading samong()\n";
-        exit(1);
+        throw WrongFileFormat();
     }
 
     file >> lb >> ub;
@@ -70,7 +70,7 @@ void AmongConstraint::initMemoization()
 
     if (lb > ub) {
         cout << "Error in samong()\n";
-        exit(1);
+        throw WrongFileFormat();
     }
 
     int n = arity();

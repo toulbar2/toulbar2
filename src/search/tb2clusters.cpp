@@ -54,7 +54,7 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
         vars.insert(scope_in[i]->wcspIndex);
         if (domsize > (unsigned int)std::numeric_limits<tValue>::max()) {
             cerr << "Nary constraints overflow. Extend tValue type range." << endl;
-            exit(EXIT_FAILURE);
+            throw BadConfiguration();
         }
     }
     t = Tuple(arity_in, 0);
@@ -1851,7 +1851,7 @@ int TreeDecomposition::makeRooted()
                 } else {
                     //Error, some clusters are missing in the decomposition tree
                     cerr << "Input tree decomposition file is not valid! (may-be cycles within cluster parents)" << endl;
-                    exit(EXIT_FAILURE);
+                    throw WrongFileFormat();
                 }
             } else {
                 if (!selected && ToulBar2::btdRootCluster >= 0 && ToulBar2::btdRootCluster < (int)(*it).size() && unvisited.find(getCluster(ToulBar2::btdRootCluster)) != unvisited.end()) {
@@ -1881,7 +1881,7 @@ int TreeDecomposition::makeRooted()
                         break;
                     default:
                         cerr << "Unknown root cluster heuristic " << ToulBar2::rootHeuristic << endl;
-                        exit(EXIT_FAILURE);
+                        throw BadConfiguration();
                     }
                 }
                 roots.push_back(root);

@@ -69,8 +69,8 @@ public:
     StoreStack(int powbckmemory = STORE_SIZE)
     {
         if (pow(2., powbckmemory) >= SIZE_MAX) {
-            cerr << "command-line initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
-            exit(EXIT_FAILURE);
+            cerr << "initial memory size parameter " << powbckmemory << " power of two too large!" << endl;
+            throw BadConfiguration();
         }
         indexMax = (ptrdiff_t)pow(2., powbckmemory);
         pointers = new T*[indexMax];
@@ -110,7 +110,7 @@ public:
 #endif
 #endif
                 << " stack out of memory!" << endl;
-            exit(EXIT_FAILURE);
+            throw InternalError();
         }
         std::copy(pointers, pointers + indexMax, newpointers);
         std::copy(content, content + indexMax, newcontent);

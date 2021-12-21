@@ -10,64 +10,11 @@
 #include "core/tb2wcsp.hpp"
 #ifdef OPENMPI
 
-// Conversion Tools
-// Solution to Message
-void CooperativeParallelDGVNS::SolToMsg(
-    MPIEnv& env0, uint cluster, uint numberclu, int kinit, int kmax,
-    Cost bestUb, int sec, int msec, map<int, Value>& bestSolution)
-{
-    env0.sendbuff[0] = cluster;
-    env0.sendbuff[1] = kinit;
-    env0.sendbuff[2] = kmax;
-    env0.sendbuff[3] = sec;
-    env0.sendbuff[4] = msec;
-    env0.sendbuff[5] = numberclu;
-    stringstream nfile;
-    nfile << bestUb;
-    string temp = nfile.str();
-    env0.sendbuff[6] = temp.size();
-    int i = 7;
-    for (string::iterator it = temp.begin(); it != temp.end(); ++it) {
-        env0.sendbuff[i] = *it - '0';
-        i++;
-    }
-    nfile.clear();
-    for (map<int, Value>::iterator it = bestSolution.begin();
-         it != bestSolution.end(); ++it) {
-        env0.sendbuff[i] = it->second;
-        i++;
-    }
-}
-
-//Message to solution
-void CooperativeParallelDGVNS::MsgToSol(
-    MPIEnv& env0, int nov, uint& cluster, uint& numberclu, int& k,
-    int& kmax, Cost& bestUb, int& sec, int& msec, map<int, Value>& bestSolution)
-{
-    cluster = env0.recvbuff[0];
-    k = env0.recvbuff[1];
-    kmax = env0.recvbuff[2];
-    sec = env0.recvbuff[3];
-    msec = env0.recvbuff[4];
-    numberclu = env0.recvbuff[5];
-    uint size = env0.recvbuff[6];
-    bestUb = env0.recvbuff[7];
-    int j = 8;
-    for (uint it = 1; it < size; it++) {
-        bestUb = (bestUb * 10) + env0.recvbuff[j];
-        j++;
-    }
-    for (int i = 0; i < nov; i++) {
-        bestSolution[i] = env0.recvbuff[j];
-        j++;
-    }
-}
-
 //---------------- Class Definition --------------------------//
 
 bool CooperativeParallelDGVNS::solve(bool first)
 {
-    mysrand(abs(ToulBar2::seed) + env0.myrank);
+    mysrand(abs(ToulBar2::seed) + world.rank());
 
     // Initialization
     beginSolve(MAX_COST);
@@ -82,22 +29,17 @@ bool CooperativeParallelDGVNS::solve(bool first)
         }
     } catch (const Contradiction&) {
         wcsp->whenContradiction();
-        if (env0.myrank == 0) {
+        if (world.rank() == MASTER) {
             if (lastUb < MAX_COST)
                 wcsp->setSolution(lastUb, &lastSolution);
             endSolve(lastUb < MAX_COST, lastUb, true);
         }
-        /* Shut down MPI */
-        MPI_Finalize();
         return (lastUb < MAX_COST);
     }
 
-    MPI_Barrier(MPI_COMM_WORLD); /* IMPORTANT */
+    world.barrier(); /* IMPORTANT */
 
-    env0.buffsize = (int)wcsp->numberOfVariables() + 107; // 3 : cluster + k + cost, second time, msecond time, localtime,the rest is the size of solution
-    env0.sendbuff = new int[env0.buffsize];
-    env0.recvbuff = new int[env0.buffsize];
-    if (env0.myrank == 0) {
+    if (world.rank() == MASTER) {
         if (ToulBar2::verbose)
             cout << "Run CPDGVNS method." << endl;
         master();
@@ -113,32 +55,21 @@ bool CooperativeParallelDGVNS::solve(bool first)
         ToulBar2::vnsOutput << "Search end"
                             << " " << cpuTime() << endl;
 
-    /* Shut down MPI */
-    //    MPI_Barrier(MPI_COMM_WORLD); /* IMPORTANT */
-    MPI_Finalize();
-
     return (bestUb < MAX_COST);
 }
 
 //----------------------- Model Master/Slave -----------------------//
 void CooperativeParallelDGVNS::master()
 {
-    // Structure de voisinage bas�e sur la notion des clusters -  ParallelRandomClusterChoice - et l'initialisation du file - file contenant les clusters pour chaque processus -
+    // Structure de voisinage basee sur la notion des clusters -  ParallelRandomClusterChoice - et l'initialisation du file - file contenant les clusters pour chaque processus -
     ParallelRandomClusterChoice* h = new ParallelRandomClusterChoice();
     h->init(wcsp, this);
 
-    // MPI data
-    int rank;
-    MPI_Status status;
-
     // verify the number of processes and number of clusters
-    if (env0.ntasks > h->getSize()) {
-        env0.processes = h->getSize();
-    } else {
-        env0.processes = env0.ntasks;
-    }
+    int processes = min(world.size(), h->getSize()+1);
+
     if (ToulBar2::vnsOutput)
-        ToulBar2::vnsOutput << "#param " << ToulBar2::vnsNeighborVarHeur << " " << ToulBar2::vnsKmin << " " << ToulBar2::vnsKmax << " " << ToulBar2::lds << " " << ToulBar2::vnsInitSol << " " << env0.processes << " " << env0.ntasks << " " << h->getSize() << endl;
+        ToulBar2::vnsOutput << "#param " << ToulBar2::vnsNeighborVarHeur << " " << ToulBar2::vnsKmin << " " << ToulBar2::vnsKmax << " " << ToulBar2::lds << " " << ToulBar2::vnsInitSol << " " << processes << " " << world.size() << " " << h->getSize() << endl;
     // Generation of initial Solution
     bool complete = false;
     bestSolution.clear();
@@ -149,7 +80,7 @@ void CooperativeParallelDGVNS::master()
     file = h->getClustersIndex();
 
     /* Seed the slaves; send one unit of work (initial solution) to each slave. */
-    for (rank = 1; rank < env0.processes; ++rank) {
+    for (int rank = 0; rank < processes; ++rank) if (rank != MASTER) {
         /* choice one free cluster to send it to the processe */
         uint cluster = getCluster();
         int adjcluster = 0;
@@ -160,44 +91,32 @@ void CooperativeParallelDGVNS::master()
         }
         //cout << kmax << " " << adjcluster << endl ;
         /* Convert initial solution with cluster and kinit parameters in buffer, for each slave process */
-        SolToMsg(env0, cluster, adjcluster, ToulBar2::vnsKmin, ToulBar2::vnsKmax, bestUb, BestTimeS,
-            BestTimeMS, bestSolution);
+        SolutionMessage solmsg(cluster, adjcluster, ToulBar2::vnsKmin, ToulBar2::vnsKmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
 
         /* Send Initial Solution to each process */
-        MPI_Send(&env0.sendbuff[0], /* message buffer */
-            env0.buffsize, /* buffer size */
-            MPI_INT, /* data item is an integer */
-            rank, /* destination process rank */
-            WORKTAG, /* user chosen message tag */
-            MPI_COMM_WORLD); /* default communicator */
+        world.send(rank, WORKTAG, solmsg);
     }
 
     /* Loop over getting new Best Solutions */
     uint finished = 0;
-    uint worker = env0.processes - 1;
+    uint worker = processes - 1;
     map<int, Value> slastSolution;
     while (finished < worker) {
 
         /* Receive result (new better solution) from a slave */
-        MPI_Recv(&env0.recvbuff[0], /* message buffer */
-            env0.buffsize, /* size of data */
-            MPI_INT, /* data item is an integer */
-            MPI_ANY_SOURCE, /* receive from any sender */
-            MPI_ANY_TAG, /* any type of message */
-            MPI_COMM_WORLD, /* default communicator */
-            &status); /* info about the received message */
+        SolutionMessage solmsg;
+        mpi::status status = world.recv(mpi::any_source, mpi::any_tag, solmsg);
         /* setting up the best solution in memory, and checkout if we continue or not */
         // Parsing the received buffer
         uint scluster = 0;
         int sk = 0;
+        uint snumberclu;
         int skmax;
-        Cost sbestUb = 0;
         int sBestTimeS = 0;
         int sBestTimeMS = 0;
-        uint snumberclu;
+        Cost sbestUb = 0;
 
-        MsgToSol(env0, wcsp->numberOfVariables(), scluster, snumberclu, sk,
-            skmax, sbestUb, sBestTimeS, sBestTimeMS, slastSolution);
+        solmsg.get(scluster, snumberclu, sk, skmax, sBestTimeS, sBestTimeMS, sbestUb, slastSolution);
 
         // getting the cluster back
         file.push_back(scluster);
@@ -250,41 +169,26 @@ void CooperativeParallelDGVNS::master()
             }
         }
         if (bestUb > ToulBar2::vnsOptimum) {
-            SolToMsg(env0, scluster, snumberclu, ToulBar2::vnsKmin, skmax, bestUb,
-                BestTimeS, BestTimeMS, bestSolution);
+            SolutionMessage solmsg(scluster, snumberclu, ToulBar2::vnsKmin, skmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
             /* Send the best solution to the received slave, for next the search */
-            MPI_Send(&env0.sendbuff[0], /* message buffer */
-                env0.buffsize, /* size of data */
-                MPI_INT, /* data item is an integer */
-                status.MPI_SOURCE, /* to who we just received from */
-                WORKTAG, /* user chosen message tag */
-                MPI_COMM_WORLD); /* default communicator */
+            world.send(status.source(), WORKTAG, solmsg);
         } else {
             finished++;
-            MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, DIETAG, MPI_COMM_WORLD);
+            world.send(status.source(), DIETAG, SolutionMessage());
         }
     }
-    MPI_Request requests[env0.ntasks];
-    for (rank = 1; rank < env0.ntasks; ++rank) {
+    for (int rank = 0; rank < world.size(); ++rank) if (rank != MASTER) {
         //printf("Send finish empty msg to finish with %d\n",rank);
-        MPI_Isend(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD, &requests[rank]);
+        world.isend(rank, DIETAG, SolutionMessage());
     }
 }
 
 void CooperativeParallelDGVNS::slave()
 {
-
-    MPI_Status status;
-
     // Structure de voisinage basée sur la notion des clusters
     //ParallelRandomClusterChoice* h = NeighborhoodStructure::NeighborhoodStructureFactory(VariableHeuristic(hname), static_cast<WCSP*>(wcsp), this);
     ParallelRandomClusterChoice* h = new ParallelRandomClusterChoice();
     h->init(wcsp, this);
-    if (env0.ntasks > h->getSize()) {
-        env0.processes = h->getSize();
-    } else {
-        env0.processes = env0.ntasks;
-    }
 
     // initializing the timer begin for the hole search of the slave process, in seconds
     double btime = cpuTime();
@@ -292,42 +196,34 @@ void CooperativeParallelDGVNS::slave()
     wcsp->setUb(MAX_COST);
     while (true) {
         /* Receive a message from the master */
-        MPI_Recv(&env0.recvbuff[0], /* message buffer */
-            env0.buffsize, /* one data item */
-            MPI_INT, /* of type integer */
-            0, /* receive from master */
-            MPI_ANY_TAG, /* any type of message */
-            MPI_COMM_WORLD, /* default communicator */
-            &status); /* info about the received message */
-        //cout << env0.myrank <<" slave begin" << endl ;
+        SolutionMessage solmsg;
+        mpi::status status = world.recv(0, mpi::any_tag, solmsg);  /* receive from master */
+
         /* Check the tag of the received message. */
-        if (status.MPI_TAG == DIETAG) {
+        if (status.tag() == DIETAG) {
             return;
         }
 
         /* launch Vns/Lds+cp */
-        VnsLdsCP(env0, btime, h);
+        VnsLdsCP(solmsg, btime, h);
 
-        /* Send the result back */
-        MPI_Request request;
-        MPI_Isend(&env0.sendbuff[0], env0.buffsize, MPI_INT, 0, 0,
-            MPI_COMM_WORLD, &request);
-
+        /* send the result back */
+        world.isend(0, 0, solmsg);
         //cout << env0.myrank <<" slave end" << endl ;
     }
 }
 
 //------------------- Base functions -----------------------//
 
-void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRandomClusterChoice* h)
+void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, ParallelRandomClusterChoice* h)
 {
     uint currentcluster = 0;
     uint numberclu = 0;
     int kinit = ToulBar2::vnsKmin;
     int kmax = ToulBar2::vnsKmax;
 
-    MsgToSol(env0, wcsp->numberOfVariables(), currentcluster, numberclu, kinit,
-        kmax, bestUb, BestTimeS, BestTimeMS, bestSolution);
+    solmsg.get(currentcluster, numberclu, kinit, kmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
+
     for (map<int, Value>::iterator it = bestSolution.begin();
          it != bestSolution.end(); ++it)
         lastSolution[(*it).first] = (*it).second;
@@ -348,7 +244,7 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
         set<int> neighborhood = h->SlaveGetNeighborhood(currentcluster, numberclu, k);
 
         if (ToulBar2::verbose >= 1) {
-            cout << env0.myrank << ": LDS " << ToulBar2::lds << " Neighborhood " << k;
+            cout << world.rank() << ": LDS " << ToulBar2::lds << " Neighborhood " << k;
             for (set<int>::iterator it = neighborhood.begin(); it != neighborhood.end(); it++)
                 cout << " " << *it;
             cout << endl;
@@ -385,8 +281,7 @@ void CooperativeParallelDGVNS::VnsLdsCP(MPIEnv& env0, double btime, ParallelRand
     }
     //cout << env0.myrank <<" slave 2" << endl ;
     // return the best solution found
-    SolToMsg(env0, currentcluster, numberclu, k, kmax, bestUb, BestTimeS,
-        BestTimeMS, bestSolution);
+    solmsg = SolutionMessage(currentcluster, numberclu, k, kmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
 }
 
 /*----------------------------- clustring functions ------------------------------- */

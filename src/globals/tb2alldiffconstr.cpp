@@ -52,7 +52,7 @@ void AllDiffConstraint::read(istream& file, bool mult)
 		decompose();
 	} else {
 		cout << "unknown mode?\n";
-		exit(0);
+		throw WrongFileFormat();
 	}*/
     setSemantics(str);
 }

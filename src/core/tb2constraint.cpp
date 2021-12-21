@@ -477,7 +477,7 @@ int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
         break;
     default:
         cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
     }
     if (ToulBar2::constrOrdering >= 0) {
         return result;
@@ -508,7 +508,7 @@ int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLin
         break;
     default:
         cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
     }
     if (ToulBar2::constrOrdering >= 0) {
         return result;

@@ -105,7 +105,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         wcsp.postWRegular(scopeIndexs, arity, "var", (globalname == "sregular") ? "flow" : ((globalname == "wregular") ? "network" : "DAG"), Top, 2, init, last, trans);
     } else {
         cerr << "Random generator: unknown global cost function name " << globalname << endl;
-        exit(-1);
+        throw BadConfiguration();
     }
 
     delete[] scopeIndexs;

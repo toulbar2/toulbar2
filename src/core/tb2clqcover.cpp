@@ -53,7 +53,7 @@ CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     id = nextid++;
     if (rhs != 1) {
         cout << "Unsupported: rhs == " << rhs << "\n";
-        exit(1);
+        throw WrongFileFormat();
     }
 }
 
@@ -616,7 +616,7 @@ void CliqueConstraint::read(istream& is)
     }
     if (rhs != 1) {
         cerr << "Unsupported: rhs == " << rhs << " and should be set to one.\n";
-        exit(1);
+        throw WrongFileFormat();
     }
 }
 

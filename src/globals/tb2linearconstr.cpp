@@ -50,16 +50,16 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
 
             vector<int>::iterator it = find(cDomain.begin(), cDomain.end(), *v);
             if (it == cDomain.end()) {
-                cout << "non exist a value ?" << endl;
+                cerr << "non exist a value ?" << endl;
                 for (vector<int>::iterator v = cDomain.begin(); v != cDomain.end(); v++) {
-                    cout << *v << " ";
+                    cerr << *v << " ";
                 }
-                cout << endl;
+                cerr << endl;
                 for (EnumeratedVariable::iterator v = y->begin(); v != y->end(); ++v) {
-                    cout << *v << " ";
+                    cerr << *v << " ";
                 }
-                cout << endl;
-                exit(0);
+                cerr << endl;
+                throw InternalError();
             }
             cDomain.erase(it);
             //deleted = true;

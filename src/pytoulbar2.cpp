@@ -65,6 +65,7 @@ PYBIND11_MODULE(pytb2, m)
     m.attr("MIN_COST") = py::cast(MIN_COST);
 
     py::register_exception<Contradiction>(m, "Contradiction");
+    py::register_exception<SolverOut>(m, "InternalError");
     py::register_exception<SolverOut>(m, "SolverOut");
 
     py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete>>(m, "option")
@@ -137,6 +138,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("singletonConsistency", &ToulBar2::singletonConsistency)
         .def_readwrite_static("vacValueHeuristic", &ToulBar2::vacValueHeuristic)
         .def_readwrite_static("LcLevel", (int*)&ToulBar2::LcLevel)
+        .def_readwrite_static("maxEACIter", &ToulBar2::maxEACIter)
         .def_readwrite_static("wcnf", &ToulBar2::wcnf)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
@@ -191,7 +193,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("vnsParallelSync", &ToulBar2::vnsParallelSync)
         .def_readwrite_static("vnsOptimumS", &ToulBar2::vnsOptimumS)
         .def_readwrite_static("vnsOptimum", &ToulBar2::vnsOptimum)
-        .def_readwrite_static("vnsParallel", &ToulBar2::vnsParallel)
+        .def_readwrite_static("parallel", &ToulBar2::parallel)
         .def_readwrite_static("hbfs", &ToulBar2::hbfs)
         .def_readwrite_static("hbfsGlobalLimit", &ToulBar2::hbfsGlobalLimit)
         .def_readwrite_static("hbfsAlpha", &ToulBar2::hbfsAlpha)

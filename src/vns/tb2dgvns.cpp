@@ -86,7 +86,7 @@ bool VNSSolver::solve(bool first)
         break;
     default:
         cerr << "Unknown Neighborhood Structure" << endl;
-        exit(EXIT_FAILURE);
+        throw BadConfiguration();
     }
     h->init(wcsp, this);
     if (ToulBar2::verbose >= 0 && ToulBar2::vnsNeighborVarHeur == CLUSTERRAND && ((ClustersNeighborhoodStructure*)h)->getSize() > 1) {
@@ -157,7 +157,7 @@ bool VNSSolver::solve(bool first)
                             break;
                         default:
                             cerr << "Unknown neighborhood size increment strategy inside VNS (see option -kinc)!" << endl;
-                            exit(EXIT_FAILURE);
+                            throw BadConfiguration();
                         }
                         k = min(k, ToulBar2::vnsKmax);
                     } else
@@ -195,7 +195,7 @@ bool VNSSolver::solve(bool first)
                         break;
                     default:
                         cerr << "Unknown LDS increment strategy inside VNS (see option -linc)!" << endl;
-                        exit(EXIT_FAILURE);
+                        throw BadConfiguration();
                     }
                     lds = min(lds, ToulBar2::vnsLDSmax);
                 }

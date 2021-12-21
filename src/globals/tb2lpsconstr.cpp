@@ -44,7 +44,7 @@ void LPSConstraint::read(istream& file, bool mult)
     cout << "Warning! slinear global cost function skipped... (recompile ToulBar2 with ILOGCPLEX flag)" << endl;
     deconnect();
     if (arity_ != (int)wcsp->numberOfVariables())
-        exit(1);
+        throw WrongFileFormat();
     return;
 #endif
     nrows = 0;
@@ -65,7 +65,7 @@ void LPSConstraint::read(istream& file, bool mult)
         file >> d;
         if (d != -1) {
             cerr << "Error occurred in reading slinear" << endl;
-            exit(1);
+            throw WrongFileFormat();
         } else {
             file >> typeID;
             windowType.push_back(typeID);
@@ -76,7 +76,7 @@ void LPSConstraint::read(istream& file, bool mult)
                     subdef.push_back(d);
                 } else {
                     cerr << "Error occurred in reading slinear def|var" << endl;
-                    exit(1);
+                    throw WrongFileFormat();
                 }
             }
             if (strcmp(windowType[i].c_str(), "salldiff") == 0) {
@@ -90,7 +90,7 @@ void LPSConstraint::read(istream& file, bool mult)
                 file >> low >> high >> nvalues;
                 if (high < low) {
                     cerr << "Error occurred in reading samong" << endl;
-                    exit(1);
+                    throw WrongFileFormat();
                 }
                 sumlow.push_back(low);
                 sumhigh.push_back(high);
@@ -112,7 +112,7 @@ void LPSConstraint::read(istream& file, bool mult)
                     file >> nvalues >> low >> high;
                     if (high < low) {
                         cerr << "Error occurred in reading sgcc" << endl;
-                        exit(1);
+                        throw WrongFileFormat();
                     }
                     group[i] = (int*)malloc(sizeof(int) * count2);
                     for (int k = 0; k < count2; k++) {
@@ -151,7 +151,7 @@ void LPSConstraint::read(istream& file, bool mult)
                                 group[i][k] = 0;
                             } else {
                                 cerr << "Error occurred in reading ssame" << endl;
-                                exit(1);
+                                throw WrongFileFormat();
                             }
                             break;
                         }
@@ -165,7 +165,7 @@ void LPSConstraint::read(istream& file, bool mult)
                                 group[i][k] = 1;
                             } else {
                                 cerr << "Error occurred in reading ssame" << endl;
-                                exit(1);
+                                throw WrongFileFormat();
                             }
                             break;
                         }
@@ -177,7 +177,7 @@ void LPSConstraint::read(istream& file, bool mult)
                 file >> low >> high >> nvalues;
                 if (high < low) {
                     cerr << "Error occurred in reading sum" << endl;
-                    exit(1);
+                    throw WrongFileFormat();
                 }
                 sumlow.push_back(low);
                 sumhigh.push_back(high);
@@ -234,7 +234,7 @@ void LPSConstraint::read(istream& file, bool mult)
                 }
             } else {
                 cerr << "Error occurred in reading slinear: no linearization method for: " << typeID << endl;
-                exit(1);
+                throw WrongFileFormat();
             }
         }
     }
@@ -272,7 +272,7 @@ Cost LPSConstraint::evalOriginal(const Tuple& s)
                     appear[s[windowVars[i][j]]] -= subdef[i];
                 } else {
                     cerr << "Error occurred in reading ssame()" << endl;
-                    exit(1);
+                    throw WrongFileFormat();
                 }
             }
             int sum = 0;
@@ -329,7 +329,7 @@ Cost LPSConstraint::evalOriginal(const Tuple& s)
             }
         } else {
             cerr << "Error occurred in evaloriginal: Unknown ID" << endl;
-            exit(1);
+            throw WrongFileFormat();
         }
     }
     return cost;
@@ -514,7 +514,7 @@ Cost LPSConstraint::buildMIP(MIP& mip)
             }
         } else {
             cerr << "Error occurred in building mip: Unknown ID" << windowType[i] << endl;
-            exit(1);
+            throw WrongFileFormat();
         }
     }
 
@@ -574,7 +574,7 @@ void LPSConstraint::dump(ostream& os, bool original)
             os << " " << subdef[i] << " " << sumlow[i] << " " << sumhigh[i];
             cerr << endl
                  << "sorry, dump function for slinear not fully implemented!!!" << endl;
-            exit(EXIT_FAILURE);
+            throw WrongFileFormat();
         }
         os << endl;
     }

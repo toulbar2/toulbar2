@@ -27,13 +27,13 @@ struct ParetoPair {
         , q(p_)
     {
         cerr << "warning! implicit conversion from int to ParetoPair" << endl;
-        exit(EXIT_FAILURE);
+        throw InternalError();
     }
 
     double to_double() const
     {
         cerr << "to_double not implemented on Paretopair";
-        exit(EXIT_FAILURE);
+        throw InternalError();
     }
 
     ParetoPair(const ParetoPair& r)
@@ -170,16 +170,16 @@ const ParetoPair PARETOPAIR_MAX = ParetoPair((INT_MAX / 2) / 3 / 3, (INT_MAX / 2
 inline double to_double(const ParetoPair r)
 {
     cerr << "to_double not implemented on Paretopair";
-    exit(EXIT_FAILURE);
+    throw InternalError();
 }
 inline Long ceil(const ParetoPair r)
 {
-    exit(EXIT_FAILURE);
+    throw InternalError();
     return 0;
 }
 inline Long floor(const ParetoPair r)
 {
-    exit(EXIT_FAILURE);
+    throw InternalError();
     return 0;
 }
 inline ParetoPair randomCost(ParetoPair min, ParetoPair max) { return ParetoPair(min.p + (myrand() % (max.p - min.p + 1)), min.q + (myrand() % (max.q - min.q + 1))); }
@@ -212,7 +212,7 @@ inline ParetoPair MIN(ParetoPair a, ParetoPair b)
     else if (b <= a)
         return b;
     else
-        exit(EXIT_FAILURE);
+        throw InternalError();
 }
 inline ParetoPair MAX(ParetoPair a, ParetoPair b)
 {
@@ -221,7 +221,7 @@ inline ParetoPair MAX(ParetoPair a, ParetoPair b)
     else if (b >= a)
         return b;
     else
-        exit(EXIT_FAILURE);
+        throw InternalError();
 }
 inline ParetoPair MULT(ParetoPair a, double b)
 {
@@ -234,7 +234,7 @@ inline ParetoPair MULT(ParetoPair a, double b)
         return ParetoPair(a.p * b, a.q * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
-        exit(1);
+        throw InternalError();
     }
 }
 inline ParetoPair GLB(ParetoPair a, ParetoPair b) { return ParetoPair(min(a.p, b.p), min(a.q, b.q)); }
