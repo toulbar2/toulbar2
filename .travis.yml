@@ -9,10 +9,13 @@ matrix:
         packages: libboost-all-dev libgmp-dev
                   zlib1g-dev liblzma-dev libjemalloc-dev libopenmpi-dev
                   openmpi-bin
+    before_install:
+    - test -n $CC  && unset CC
+    - test -n $CXX && unset CXX
     script:
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake .. -DMPI=ON
     - make
     - make test
  
