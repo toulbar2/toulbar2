@@ -88,12 +88,14 @@ Required library:
 Recommended libraries (default use):
 * libboost-graph-dev
 * libboost-iostreams-dev
+* libboost-serialization-dev
 * zlib1g-dev
 * liblzma-dev
 
 Optional libraries:
 * libxml2-dev
 * libopenmpi-dev
+* libboost-mpi-dev
 * libjemalloc-dev
 
 On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries.
