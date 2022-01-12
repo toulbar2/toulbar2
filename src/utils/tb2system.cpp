@@ -55,17 +55,6 @@ void timeOut(int sig)
         cout.flush();
     }
 
-    if (ToulBar2::solutionFile != NULL) {
-        if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
-            throw WrongFileFormat();
-        fclose(ToulBar2::solutionFile);
-    }
-    if (ToulBar2::solution_uai_file != NULL) {
-        if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
-            throw WrongFileFormat();
-        fclose(ToulBar2::solution_uai_file);
-    }
-
     if (ToulBar2::timeOut)
         ToulBar2::timeOut();
 
