@@ -157,7 +157,9 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
             else
                 recursiveSolve();
         } catch (const TimeOut&) {
-            ToulBar2::limited = true;
+            assert(ToulBar2::limited == true);
+            if (ToulBar2::interrupted)
+                throw TimeOut();
         }
     } catch (const Contradiction&) {
         wcsp->whenContradiction();

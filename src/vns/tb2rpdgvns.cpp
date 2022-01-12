@@ -9,11 +9,6 @@
 #include "core/tb2wcsp.hpp"
 #ifdef OPENMPI
 
-void timeOut()
-{
-    mpi::environment abort(0);
-}
-
 bool ReplicatedParallelDGVNS::solve(bool first)
 {
     // Initialization
@@ -56,7 +51,6 @@ bool ReplicatedParallelDGVNS::solve(bool first)
     world.barrier(); /* IMPORTANT */
 
     startTime = cpuTime();
-    ToulBar2::timeOut = timeOut;
 
     if (world.rank() == MASTER) {
         if (!ToulBar2::vnsParallelSync) {

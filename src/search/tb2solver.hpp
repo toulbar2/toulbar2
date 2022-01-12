@@ -26,6 +26,7 @@ class Solver : public WeightedCSPSolver {
 public:
     class OpenNode {
     private:
+#ifdef OPENMPI
         friend class serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
@@ -34,7 +35,7 @@ public:
             ar& first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
             ar& last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
         }
-
+#endif
         Cost cost; // global lower bound associated to the open node
     public:
         ptrdiff_t first; // first position in the list of choice points corresponding to a branch in order to reconstruct the open node
@@ -146,6 +147,7 @@ public:
 
     struct ChoicePoint {
     private:
+#ifdef OPENMPI
         friend class serialization::access;
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
@@ -155,6 +157,7 @@ public:
             ar& value;
             ar& reverse;
         }
+#endif
     public:
         ChoicePointOp op; // choice point operation
         int varIndex; // variable wcsp's index

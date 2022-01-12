@@ -65,7 +65,7 @@ PYBIND11_MODULE(pytb2, m)
     m.attr("MIN_COST") = py::cast(MIN_COST);
 
     py::register_exception<Contradiction>(m, "Contradiction");
-    py::register_exception<SolverOut>(m, "InternalError");
+    py::register_exception<InternalError>(m, "InternalError");
     py::register_exception<SolverOut>(m, "SolverOut");
 
     py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete>>(m, "option")
@@ -416,7 +416,6 @@ PYBIND11_MODULE(pytb2, m)
 #ifndef __WIN32__
         .def("timer", [](WeightedCSPSolver& s, int timeout) {
             signal(SIGINT, timeOut);
-            signal(SIGTERM, timeOut);
             if (timeout > 0)
                 timer(timeout);
         })

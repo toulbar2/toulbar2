@@ -222,7 +222,7 @@ TLogProb ToulBar2::logepsilon;
 bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 
 externalfunc ToulBar2::timeOut;
-bool ToulBar2::interrupted;
+std::atomic<bool> ToulBar2::interrupted;
 
 bool ToulBar2::learning;
 

@@ -50,7 +50,8 @@ void timeOut(int sig)
 {
     if (ToulBar2::verbose >= 0) {
         cout << endl
-             << "Time limit expired... Aborting..." << endl;
+             << "Time limit expired... Aborting..."
+             << endl;
         cout.flush();
     }
 
@@ -67,8 +68,12 @@ void timeOut(int sig)
 
     if (ToulBar2::timeOut)
         ToulBar2::timeOut();
-    else
-        throw TimeOut();
+
+#ifdef OPENMPI
+    if (ToulBar2::parallel)
+        mpi::environment::abort(0); // Warning! it will kill all processes without saving last solution found properly except if it is the master
+#endif
+    ToulBar2::interrupted = true;
 }
 
 static struct itimerval thetimer = { { 0, 0 }, { 0, 0 } };

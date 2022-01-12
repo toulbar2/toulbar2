@@ -2052,26 +2052,21 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
             restore(*cp_, nd);  // replay the sequence of decisions and recompute soft arc consistency
             Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
             bestlb = MAX(bestlb, work.lb);
-            try {
-                if (cluster) {
-                    pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
-                    assert(res.first <= res.second);
-                    assert(res.first >= bestlb);
-                    assert(res.second <= cub);
-                    assert(res.second == cub || cluster->getUb() == res.second);
-                    assert(open_->empty() || open_->top().getCost() >= nd.getCost());
-                    work.lb = MAX(work.lb, res.first);
-                    cub = MIN(cub, res.second);
-                } else {
-                    if (ToulBar2::vac < 0)
-                        ToulBar2::vac = 0;
-                    recursiveSolve(bestlb); // call DFS
-                    work.lb = MAX(work.lb, bestlb);
-                    cub = MIN(cub, wcsp->getUb());
-                }
-            } catch (const TimeOut&) {
-                ToulBar2::limited = true;
-                throw TimeOut();
+            if (cluster) {
+                pair<Cost, Cost> res = recursiveSolve(cluster, bestlb, cub);
+                assert(res.first <= res.second);
+                assert(res.first >= bestlb);
+                assert(res.second <= cub);
+                assert(res.second == cub || cluster->getUb() == res.second);
+                assert(open_->empty() || open_->top().getCost() >= nd.getCost());
+                work.lb = MAX(work.lb, res.first);
+                cub = MIN(cub, res.second);
+            } else {
+                if (ToulBar2::vac < 0)
+                    ToulBar2::vac = 0;
+                recursiveSolve(bestlb); // call DFS
+                work.lb = MAX(work.lb, bestlb);
+                cub = MIN(cub, wcsp->getUb());
             }
         } catch (const Contradiction&) {
             wcsp->whenContradiction();
@@ -2730,6 +2725,8 @@ bool Solver::solve(bool first)
             wcsp->whenContradiction();
         }
     } catch (const SolverOut&) {
+        wcsp->whenContradiction();
+        ToulBar2::interrupted = false;
     }
     Store::restore(initdepth);
     //  Store::restore();         // see above for Store::store()

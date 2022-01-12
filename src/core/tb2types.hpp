@@ -817,7 +817,7 @@ public:
     static bool Berge_Dec; // flag for berge acyclic decomposition
     static bool learning; // if true, perform pseudoboolean learning
     static externalfunc timeOut;
-    static bool interrupted;
+    static std::atomic<bool> interrupted;
     static int seed;
 
     static string incop_cmd;

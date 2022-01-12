@@ -533,6 +533,8 @@ void VACExtension::enforcePass1()
     VACBinaryConstraint* cij;
 
     while (!VAC.empty()) {
+        if (ToulBar2::interrupted)
+            throw TimeOut();
         xj = (VACVariable*)VAC.pop_first();
         for (EnumeratedVariable::iterator it = xj->begin(); it != xj->end(); ++it) {
             if (xj->getVACCost(*it) > MIN_COST)

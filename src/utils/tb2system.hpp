@@ -42,7 +42,7 @@ public:
 extern const char* PrintFormatProb;
 
 double cpuTime(); ///< \brief return CPU time in seconds with high resolution (microseconds) if available
-void timeOut(int sig);
+void timeOut(int sig); ///< \brief set ToulBar2::interrupted to throw a TimeOut exception later
 void timer(int t); ///< \brief set a timer (in seconds)
 void timerStop(); ///< \brief stop a timer
 

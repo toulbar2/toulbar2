@@ -18,10 +18,10 @@
 #ifdef OPENMPI
 #include <boost/mpi.hpp>
 namespace mpi = boost::mpi;
-#endif
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 namespace serialization = boost::serialization;
+#endif
 
 #ifdef ILOGLUE
 #include <ilsolver/ilosolverint.h>
@@ -35,6 +35,7 @@ namespace serialization = boost::serialization;
 #include <cmath>
 #endif
 
+#include <atomic>
 #include <limits>
 #include <iterator>
 #include <vector>
