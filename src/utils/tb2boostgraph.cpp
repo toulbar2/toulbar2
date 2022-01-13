@@ -527,7 +527,7 @@ void WCSP::minimumFillInOrdering(vector<int>& order_inv)
         /* compute number of fill-in edges to add for each unprocessed vertex */
         /* choose vertex with minimum fill-in */
         int v = 0;
-        int minfill = n * n;
+        Long minfill = (Long)n * n;
         int deg = -1;
         for (int x = 0; x < n; x++) {
             if ((order[x] == -1) && ((nb_fillin[x] < minfill) || ((nb_fillin[x] == minfill) && (degree[x] > deg)))) {
