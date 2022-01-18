@@ -33,7 +33,7 @@ Some examples
   
 - `Radio link frequency assignment CELAR <http://miat.inrae.fr/schiex/Doc/Export/CELAR.ps.gz>`_ instances :download:`scen06.wcsp<../web/EXAMPLES/scen06.wcsp.xz>`, :download:`scen06.cov<../web/EXAMPLES/scen06.cov>`, :download:`scen06.dec<../web/EXAMPLES/scen06.dec>`, :download:`scen07.wcsp<../web/EXAMPLES/scen07.wcsp.xz>`
   
-- `Earth observation satellite management SPOT5 <https://link.springer.com/content/pdf/10.1023/A:1026488509554.pdf>`_ instances :download:`404.wcsp<../web/EXAMPLES/404.wcsp.xz>` and :download:`505.wcsp<../web/EXAMPLES/505.wcsp.xz>` with associated tree/cluster decompositions :download:`404.cov<../web/EXAMPLES/404.cov>`, :download:`505.cov<../web/EXAMPLES/505.cov>`, :download:`404.dec<../web/EXAMPLES/404.dec>`, :download:`505.dec<../web/EXAMPLES/505.dec>`
+- `Earth observation satellite management SPOT5 <https://forgemia.inra.fr/thomas.schiex/cost-function-library/-/raw/master/real/spot5/BensanaLemaitreVerfaillieConstraints1999.pdf>`_ instances :download:`404.wcsp<../web/EXAMPLES/404.wcsp.xz>` and :download:`505.wcsp<../web/EXAMPLES/505.wcsp.xz>` with associated tree/cluster decompositions :download:`404.cov<../web/EXAMPLES/404.cov>`, :download:`505.cov<../web/EXAMPLES/505.cov>`, :download:`404.dec<../web/EXAMPLES/404.dec>`, :download:`505.dec<../web/EXAMPLES/505.dec>`
   
 - Linkage analysis instance :download:`pedigree9.uai<../web/EXAMPLES/pedigree9.uai.xz>`
   
