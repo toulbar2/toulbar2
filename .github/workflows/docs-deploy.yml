@@ -1,0 +1,28 @@
+name: docs_deploy
+ 
+# execute this workflow automatically when push to master
+on:
+  push:
+ 
+jobs:
+ 
+  build_docs_job:
+    runs-on: ubuntu-latest
+    container: ubuntu:latest
+ 
+    steps:
+ 
+    - name: Prereqs
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        apt-get update
+        apt-get install -y git
+        git clone "https://token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
+      shell: bash
+ 
+    - name: Execute script to build documentation and update GitHub Pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: "docs/deploy.sh"
+      shell: bash
