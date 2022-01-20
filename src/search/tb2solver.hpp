@@ -295,6 +295,7 @@ public:
     void addOpenNode(CPStore& cp, OpenList& open, Cost lb, Cost delta = MIN_COST); ///< \param delta cost moved out from the cluster by soft arc consistency
     void restore(CPStore& cp, OpenNode node);
     char opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd);
+    void epsDumpSubProblems(CPStore& cp, OpenList& open);
 
 protected:
     friend class NeighborhoodStructure;
@@ -392,7 +393,7 @@ protected:
 #ifdef OPENMPI
     mpi::communicator world;
     queue<int> idleQ; //MASTER ONLY container with the rank of the free workers
-    std::unordered_map<int, Cost> activeWork; //MASTER ONLY map the rank i of a worker with the lb cost of an open node
+    std::unordered_map<int, OpenNode> activeWork; //MASTER ONLY map the rank i of a worker with an open node currently explored by the worker
     std::unordered_map<int, Cost> bestsolWork; //MASTER ONLY map the rank i of a worker with the cost of the best solution sent by the master
 
     inline bool MPI_interrupted()

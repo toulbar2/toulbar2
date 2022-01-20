@@ -261,6 +261,7 @@ Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
 ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
 ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
 Long ToulBar2::eps;
+string ToulBar2::epsFilename;
 
 bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
@@ -461,6 +462,7 @@ void tb2init()
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
     ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
     ToulBar2::eps = 0;
+    ToulBar2::epsFilename = "subproblems.txt";
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;

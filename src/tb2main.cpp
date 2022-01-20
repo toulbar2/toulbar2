@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <cfenv>
+#include <thread>
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
@@ -957,7 +958,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -hbfsmin=[integer] : hybrid best-first search compromise between BFS and DFS minimum node redundancy alpha percentage threshold (default value is " << 100 / ToulBar2::hbfsAlpha << "%)" << endl;
     cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100 / ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
-    cout << "   -eps=[integer] : embarrassingly parallel search mode (output a given number of open nodes in -x format and exit, see ./misc/scripts/eps.sh to run them) (default value is " << ToulBar2::eps << ")" << endl;
+    cout << "   -eps=[integer|filename] : embarrassingly parallel search mode (output a given number of open nodes in -x format and exit, see ./misc/script/eps.sh to run them) (default value is " << ToulBar2::eps << ")" << endl;
     cout << "---------------------------" << endl;
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
     cout << endl;
@@ -1889,17 +1890,21 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
             }
             if (args.OptionId() == OPT_eps) {
-                int nbproc = 1;
+                int nbproc = max(1, (int) std::thread::hardware_concurrency());
                 if (args.OptionArg() == NULL) {
                     ToulBar2::eps = epsmultiplier * nbproc;
                 } else {
                     Long eps = atoll(args.OptionArg());
                     if (eps > 0)
                         ToulBar2::eps = eps;
-                    else
-                        ToulBar2::eps = epsmultiplier * nbproc;
+                    else {
+                        if (ToulBar2::eps == 0)
+                            ToulBar2::eps = epsmultiplier * nbproc;
+                        ToulBar2::epsFilename = args.OptionArg();
+                    }
                 }
-                cout << "Embarrassingly Parallel Search mode activated, collecting " << ToulBar2::eps << " open nodes." << endl;
+                if (ToulBar2::debug)
+                    cout << "Embarrassingly Parallel Search mode activated, collecting " << ToulBar2::eps << " open nodes in file " << ToulBar2::epsFilename << endl;
             }
 
             // local search INCOP

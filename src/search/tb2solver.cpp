@@ -19,6 +19,7 @@
 #include "vns/tb2rpdgvns.hpp"
 #endif
 #include <unistd.h>
+#include <thread>
 
 extern void setvalue(int wcspId, int varIndex, Value value, void* solver);
 
@@ -1680,6 +1681,11 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
             Store::restore(storedepthBFS);
             ToulBar2::vac = storeVAC;
             cp_->store();
+            if (ToulBar2::eps && open_->size() >= static_cast<std::size_t>(ToulBar2::eps)) {
+                epsDumpSubProblems(*cp_, *open_);
+                ToulBar2::interrupted = true;
+                throw TimeOut();
+            }
             if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
                 ToulBar2::hbfs = 0;
                 ToulBar2::hbfsGlobalLimit = 0;
@@ -1814,7 +1820,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             if (!ToulBar2::hbfs) {
                 work.hbfs = false;
             }
-            activeWork[worker] = work.open[0].getCost(); // getCost gives the local lb of the node
+            activeWork[worker] = work.open[0];
             idleQ.pop(); // pop it, hence the worker is considered active
 
             if (ToulBar2::verbose >= 1)
@@ -1858,9 +1864,21 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         idleQ.push(status2.source());
 
         Cost minLbWorkers = MAX_COST;
-        for (std::unordered_map<int, Cost>::const_iterator it = activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers
-            if (it->second < minLbWorkers)
-                minLbWorkers = it->second;
+        for (std::unordered_map<int, OpenNode>::const_iterator it = activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers
+            if (it->second.getCost() < minLbWorkers)
+                minLbWorkers = it->second.getCost();
+        }
+
+        if (ToulBar2::eps && open_->size() >= static_cast<std::size_t>(ToulBar2::eps)) {
+            for (std::unordered_map<int, OpenNode>::const_iterator it = activeWork.begin(); it != activeWork.end(); ++it) { // push back unfinished work
+                open_->push(it->second);
+            }
+            epsDumpSubProblems(*cp_, *open_);
+            for (int i = 0; i < world.size(); i++) if (i != MASTER) {
+                world.isend(i, DIETAG, Work());
+            }
+            ToulBar2::interrupted = true;
+            throw TimeOut();
         }
 
         if (cp_->size() >= static_cast<std::size_t>(ToulBar2::hbfsCPLimit) || open_->size() >= static_cast<std::size_t>(ToulBar2::hbfsOpenNodeLimit)) {
@@ -3246,6 +3264,29 @@ char Solver::opSymbol(const CPStore& cp, const ptrdiff_t idx, OpenNode nd)
         throw InternalError();
     }
     }
+}
+
+void Solver::epsDumpSubProblems(CPStore& cp, OpenList& open)
+{
+    ofstream epsfile(ToulBar2::epsFilename);
+    if (!epsfile) {
+        cerr << "Cannot open file for EPS! " << ToulBar2::epsFilename << endl;
+        throw WrongFileFormat();
+    }
+    Long nbsp = 0;
+    while (!open.finished()) {
+        OpenNode nd = open.top();
+        open.pop();
+        if (nd.getCost() < wcsp->getUb()) {
+            string epsSubProblem = "-x=\"";
+            for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
+                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value);
+            }
+            epsfile << epsSubProblem << "\"" << endl;
+            nbsp++;
+        }
+    }
+    cout << endl << "Generating " << nbsp << " subproblems for EPS done in file " << ToulBar2::epsFilename << "." << endl << "Run them in parallel using " << std::thread::hardware_concurrency() << " cores, e.g. (*check pathname for original problem file*):" << endl << "./misc/script/eps.sh " << std::thread::hardware_concurrency() << " ./" << ToulBar2::epsFilename << " ./toulbar2 ./" << wcsp->getName() << " -ub=" << wcsp->getUb() << endl << endl;
 }
 
 Solver::SolutionTrie::TrieNode::TrieNode(size_t w)

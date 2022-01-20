@@ -200,6 +200,8 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("hbfsBeta", &ToulBar2::hbfsBeta)
         .def_readwrite_static("hbfsCPLimit", &ToulBar2::hbfsCPLimit)
         .def_readwrite_static("hbfsOpenNodeLimit", &ToulBar2::hbfsOpenNodeLimit)
+        .def_readwrite_static("eps", &ToulBar2::eps)
+        .def_readwrite_static("epsFilename", &ToulBar2::epsFilename)
         .def_readwrite_static("verifyOpt", &ToulBar2::verifyOpt)
         .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum);
     m.def("check", &tb2checkOptions); // should be called after setting the options (and before reading a problem)

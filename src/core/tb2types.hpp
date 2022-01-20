@@ -854,6 +854,7 @@ public:
     static ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
     static ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
     static Long eps; // Number of open nodes to collect before exit
+    static string epsFilename; // Filename for EPS output
 
     static bool verifyOpt; // if true, for debugging purposes, checks the given optimal solution (problem.sol) is not pruned during search
     static Cost verifiedOptimum; // for debugging purposes, cost of the given optimal solution
