@@ -1,9 +1,13 @@
 name: docs_deploy
  
 # execute this workflow automatically when push to master
+# + workflow_dispatch
 on:
+  workflow_dispatch:
   push:
- 
+    branches:
+      - 'master'
+
 jobs:
  
   build_docs_job:
