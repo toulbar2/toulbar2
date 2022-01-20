@@ -66,12 +66,12 @@ for current_version in ${versions}; do
       # pdf
       sphinx-build -b rinoh docs/ docs/_build/rinoh -D language="${current_language}"
       mkdir -p "${docroot}/${current_language}/${current_version}"
-      cp "docs/_build/rinoh/target.pdf" "${docroot}/${current_language}/${current_version}/toulbar2_${current_language}_${current_version}.pdf"
+      cp "docs/_build/rinoh/toulbar2.pdf" "${docroot}/${current_language}/${current_version}/toulbar2_${current_language}_${current_version}.pdf"
 
       # epub
       sphinx-build -b epub docs/ docs/_build/epub -D language="${current_language}"
       mkdir -p "${docroot}/${current_language}/${current_version}"
-      cp "docs/_build/epub/target.epub" "${docroot}/${current_language}/${current_version}/toulbar2_${current_language}_${current_version}.epub"
+      cp "docs/_build/epub/toulbar2.epub" "${docroot}/${current_language}/${current_version}/toulbar2_${current_language}_${current_version}.epub"
  
       # copy into docroot the static assets produced by the above build
       rsync -av "docs/_build/html/" "${docroot}/"
