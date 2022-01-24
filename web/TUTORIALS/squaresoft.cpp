@@ -32,9 +32,9 @@ int main(int argc, char* argv[])
         solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, (S-i)*(S-i) - 1);
     }
 
-    vector<Cost> costs(S*S*S*S, MIN_COST);
     for (int i=0; i < N; i++) {
         for (int j=i+1; j < N; j++) {
+            vector<Cost> costs((S-i)*(S-i)*(S-j)*(S-j), MIN_COST);
     	    for (int a=0; a < (S-i)*(S-i); a++) {
     	        for (int b=0; b < (S-j)*(S-j); b++) {
                     costs[a*(S-j)*(S-j)+b] = ((((a%(S-i)) + i + 1 <= (b%(S-j))) || ((b%(S-j)) + j + 1 <= (a%(S-i))) || ((a/(S-i)) + i + 1 <= (b/(S-j))) || ((b/(S-j)) + j + 1 <= (a/(S-i))))?MIN_COST:(min((a%(S-i)) + i + 1 - (b%(S-j)), (b%(S-j)) + j + 1 - (a%(S-i))) * min((a/(S-i)) + i + 1 - (b/(S-j)), (b/(S-j)) + j + 1 - (a/(S-i)))));
@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
             cout << "No solution found!" << endl;
     }
 
+    delete solver;
     return 0;
 }
 

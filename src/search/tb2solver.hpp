@@ -413,7 +413,8 @@ protected:
 
 public:
     Solver(Cost initUpperBound);
-    ~Solver();
+
+    virtual ~Solver();
 
     Cost read_wcsp(const char* fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "");

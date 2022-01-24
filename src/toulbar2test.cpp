@@ -145,6 +145,7 @@ int main(int argc, char* argv[])
     }
     // cout << "Problem lower bound: " << solver->getWCSP()->getLb() << endl; // initial problem lower bound possibly enhanced by value removals at the root during search
 
+    delete solver;
     return 0;
 }
 
