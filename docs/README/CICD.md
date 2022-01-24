@@ -1,15 +1,13 @@
-# Sphinx documentation of toulbar2
+# Sphinx documentation of toulbar2 -> CI/CD
 
-## CI/CD
-
-### Install
+## Install
 
 - The file .github/workflows/docs-deploy.yml launches file docs/deploy.sh
 
 - On the repository :
   "Settings" / "Pages" choose 'gh-pages branch' under "Source"
 
-### CI/CD result
+## CI/CD result
 
   - Doc online at : **https://toulbar2.github.io/toulbar2**
 

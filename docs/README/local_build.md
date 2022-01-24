@@ -1,33 +1,24 @@
-# Sphinx documentation of toulbar2
+# Sphinx documentation of toulbar2 -> Local build
 
-## Local build
+## Install 'pyvenv' python virtual environment
 
-### Install 'pyvenv' python virtual environment
+    See file docs/_local/install.txt.
 
-``See file [docs/_local/install.txt](docs/_local/install.txt).``
+## Commands to generate documentation
 
-### Commands to generate documentation
+    source _local/_pyvenv/bin/activate
 
-  ``
+    make clean ;
+    make html ;
+    make rinoh ;
+    make epub ;
 
-  source _local/_pyvenv/bin/activate
+## Productions
 
-  make clean ;
-  make html ;
-  make rinoh ;
-  make epub ;
+    
+    _build/html folder where index.html
 
-  ``
+    .pdf under _build/rinoh
 
-### Productions
-
-  ``
-
-  - _build/html folder where index.html
-
-  - .pdf under _build/rinoh
-
-  - .epub under _build/epub
-
-  ``
+    .epub under _build/epub
 
