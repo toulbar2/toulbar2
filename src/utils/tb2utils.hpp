@@ -13,14 +13,10 @@
 #include <cstring>
 #include "libgen.h"
 
-#include <chrono>
-
 #ifdef OPENMPI
+#define BOOST_MPI_HOMOGENEOUS
 #include <boost/mpi.hpp>
 namespace mpi = boost::mpi;
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/map.hpp>
-namespace serialization = boost::serialization;
 #endif
 
 #ifdef ILOGLUE
@@ -53,6 +49,13 @@ using std::ostream;
 using std::vector;
 using std::pair;
 
+#include <chrono>
+
+#ifdef OPENMPI
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+namespace serialization = boost::serialization;
+#endif
 
 #ifdef NDEBUG
 #define DEBONLY(x)

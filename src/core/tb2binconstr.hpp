@@ -448,7 +448,7 @@ public:
         linkX->content.scopeIndex = 0;
         linkY->content.scopeIndex = 1;
         setDACScopeIndex();
-        resetConflictWeight();
+        resetConflictWeight(); // warning! it is done before having updated costs!!
         elimFrom(from1, from2);
     }
 

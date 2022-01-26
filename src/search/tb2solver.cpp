@@ -2026,10 +2026,13 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
         assert(work.open.size() == 1); // only one open node from the master
 
         for (size_t i = 0; i < work.cp.size(); i++) {
-            addChoicePoint(work.cp[i].op, work.cp[i].varIndex, work.cp[i].value, work.cp[i].reverse); // update work cp->index!?!
+            addChoicePoint(work.cp[i].op, work.cp[i].varIndex, work.cp[i].value, work.cp[i].reverse); // update work cp->index
         }
 
         addOpenNode(*cp_, *open_, work.open[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
+        assert(open_->size() == 1);
+        assert(open_->top().first == 0);
+        assert(open_->top().last == work.cp.size());
 
         cp_->store();
 
@@ -2862,7 +2865,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         } else {
             if (ToulBar2::xmlflag) {
                 ((WCSP*)wcsp)->solution_XML(true);
-            } else if (ToulBar2::uai && !ToulBar2::isZ) {
+            } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << cpuTime() - ToulBar2::startCpuTime << " seconds." << endl;

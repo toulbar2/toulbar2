@@ -2667,6 +2667,7 @@ void WCSP::sortConstraints()
         setDACOrder(order);
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
+        resetWeightedDegree(i); // side-effect: (lazy) recompute tightness
         vars[i]->sortConstraints();
     }
     AC.sort(false); // sort in decreasing order to get the smallest DAC index first when doing pop() on this queue
@@ -5479,17 +5480,6 @@ void WCSP::setDACOrder(vector<int>& order)
             ctr->propagate();
     }
     propagate();
-
-    // recompute all tightness: too slow??? side-effect to reset weighted degrees???
-    for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
-            constrs[i]->computeTightness();
-    for (int i = 0; i < elimBinOrder; i++)
-        if (elimBinConstrs[i]->connected())
-            elimBinConstrs[i]->computeTightness();
-    for (int i = 0; i < elimTernOrder; i++)
-        if (elimTernConstrs[i]->connected())
-            elimTernConstrs[i]->computeTightness();
 }
 
 // -----------------------------------------------------------

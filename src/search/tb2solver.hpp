@@ -212,9 +212,9 @@ public:
             ar& nbDEE;
             ar& lb;
             ar& ub;
-            ar& sol;
             ar& open;
             ar& cp;
+            ar& sol;
         }
 
     public:
@@ -222,11 +222,11 @@ public:
         Long nbNodes = 0;
         Long nbBacktracks = 0;
         Long nbDEE = 0;
-        Cost lb; // best lower bound known by the master or found by the worker
-        Cost ub; // best current solution a.k.a incumbent solution
-        vector<Value> sol;
+        Cost lb = MIN_COST; // best lower bound known by the master or found by the worker
+        Cost ub = MAX_COST; // best current solution a.k.a incumbent solution
         vector<OpenNode> open; // priority queue which will contain the node(s) to eXchange between the processes
         vector<ChoicePoint> cp; // vector of choice points
+        vector<Value> sol;
 
         Work() {} // dummy message when stopping
 
@@ -243,10 +243,16 @@ public:
             openMaster_.pop(); // pop up directly the open queue!!
 
             for (ptrdiff_t i = open[0].first; i < open[0].last; i++) { // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+                assert(i >= 0 && i < cpMaster_.size());
+                assert(i < cpMaster_.stop);
                 cp.push_back(cpMaster_[i]);
+                assert(cp.back().op >= 0 && cp.back().op < CP_MAX);
             }
 
-            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+            if (sol_.size() > 0) {
+                //            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+                sol = sol_;
+            }
         }
 
         /**
@@ -263,6 +269,9 @@ public:
             while (!openWorker_.empty()) // init of vector of OpenNode nodeX
             {
                 OpenNode node = openWorker_.top();
+                assert(node.first >= 0);
+                assert(node.first <= node.last);
+                assert(node.last <= cpWorker_.stop);
 
                 open.push_back(node);
 
@@ -273,14 +282,19 @@ public:
 
             if (open.size() > 0) {
                 for (ptrdiff_t i = 0; i < cpWorker_.stop; i++) {
+                    assert(i < cpWorker_.size());
                     cp.push_back(cpWorker_[i]);
+                    assert(cp.back().op >= 0 && cp.back().op < CP_MAX);
                 }
             }
 
             cpWorker_.clear(); // size = 0  added to put new cp out of the while(1)
 //            cpWorker_.shrink_to_fit(); // to win space we shrink the vector: capacity=0 //TODO: test if it speeds-up things or not
 
-            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+            if (sol_.size() > 0) {
+                //            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
+                sol = sol_;
+            }
         }
 
         friend ostream& operator<<(ostream& os, Work& work)
@@ -460,6 +474,21 @@ public:
 
     WeightedCSP* getWCSP() FINAL { return wcsp; }
 };
+
+#ifdef OPENMPI
+BOOST_IS_MPI_DATATYPE(Solver::OpenNode)
+BOOST_IS_BITWISE_SERIALIZABLE(Solver::OpenNode) // only for simple datatypes with no pointer or any varying size objects (vectors, etc.)
+BOOST_CLASS_IMPLEMENTATION(Solver::OpenNode, serialization::object_serializable)
+BOOST_CLASS_TRACKING(Solver::OpenNode, serialization::track_never)
+
+BOOST_IS_MPI_DATATYPE(Solver::ChoicePoint)
+BOOST_IS_BITWISE_SERIALIZABLE(Solver::ChoicePoint)
+BOOST_CLASS_IMPLEMENTATION(Solver::ChoicePoint, serialization::object_serializable)
+BOOST_CLASS_TRACKING(Solver::ChoicePoint, serialization::track_never)
+
+BOOST_CLASS_IMPLEMENTATION(Solver::Work, serialization::object_serializable)
+BOOST_CLASS_TRACKING(Solver::Work, serialization::track_never)
+#endif
 
 class SolverOut : public std::exception {
 public:

@@ -674,6 +674,8 @@ void TernaryConstraint::fillElimConstrBinaries()
     fillxz();
     fillyz();
 
+    resetConflictWeight(); // if needed recompute tightness after having updated costs
+
     if (ToulBar2::verbose > 1)
         cout << " fillElimConstrBinaries (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  ";
 }

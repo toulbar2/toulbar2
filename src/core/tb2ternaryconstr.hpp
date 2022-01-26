@@ -1198,7 +1198,7 @@ public:
         linkY->content.scopeIndex = 1;
         linkZ->content.scopeIndex = 2;
         setDACScopeIndex();
-        resetConflictWeight();
+        //resetConflictWeight(); // warning! it is done before having updated costs!! it will be done later in fillElimConstrBinaries
         elimFrom(from1);
     }
 
