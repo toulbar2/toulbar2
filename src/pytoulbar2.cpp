@@ -284,6 +284,8 @@ PYBIND11_MODULE(pytb2, m)
         .def("getTrueDegree", &WeightedCSP::getTrueDegree)
         .def("getWeightedDegree", &WeightedCSP::getWeightedDegree)
         .def("resetWeightedDegree", &WeightedCSP::resetWeightedDegree)
+        .def("resetTightness", &WeightedCSP::resetTightness)
+        .def("resetTightnessAndWeightedDegree", &WeightedCSP::resetTightnessAndWeightedDegree)
         .def("preprocessing", &WeightedCSP::preprocessing)
         .def("sortConstraints", &WeightedCSP::sortConstraints) // must be called after creating the model
         .def("getBergeDecElimOrder", &WeightedCSP::getBergeDecElimOrder)

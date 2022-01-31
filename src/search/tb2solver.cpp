@@ -136,9 +136,8 @@ void Solver::initVarHeuristic()
         unassignedVars->push_back(allVars[i], false);
         if (wcsp->assigned(allVars[i]->content) || (ToulBar2::nbDecisionVars > 0 && allVars[i]->content >= ToulBar2::nbDecisionVars))
             unassignedVars->erase(allVars[i], false);
-        else
-            wcsp->resetWeightedDegree(allVars[i]->content);
     }
+    wcsp->resetTightnessAndWeightedDegree();
     // Now function setvalue can be called safely!
     ToulBar2::setvalue = setvalue;
 }
@@ -2573,8 +2572,8 @@ bool Solver::solve(bool first)
                                 enforceUb();
                                 wcsp->propagate();
                                 if (ToulBar2::RASPSreset) {
+                                    wcsp->resetWeightedDegree();
                                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-                                        wcsp->resetWeightedDegree(i);
                                         wcsp->setBestValue(i, wcsp->getSup(i) + 1);
                                     }
                                 }

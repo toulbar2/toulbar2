@@ -93,7 +93,6 @@ public:
     int getTrueDegree();
     Double getMaxElimSize(); /// \brief returns estimated size of the resulting cost function (including this variable) to eliminate itself
     Long getWeightedDegree();
-    void resetWeightedDegree();
     DLink<ConstraintLink>* link(Constraint* c, int index);
     void sortConstraints();
     virtual void eliminate(){};

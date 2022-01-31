@@ -2607,6 +2607,51 @@ int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty,
     }
 }
 
+void WCSP::resetWeightedDegree()
+{
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && !constrs[i]->isSep())
+            constrs[i]->resetConflictWeight();
+    for (int i = 0; i < elimBinOrder; i++)
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep())
+            elimBinConstrs[i]->resetConflictWeight();
+    for (int i = 0; i < elimTernOrder; i++)
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
+            elimTernConstrs[i]->resetConflictWeight();
+}
+
+void WCSP::resetTightness()
+{
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && !constrs[i]->isSep())
+            constrs[i]->resetTightness();
+    for (int i = 0; i < elimBinOrder; i++)
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep())
+            elimBinConstrs[i]->resetTightness();
+    for (int i = 0; i < elimTernOrder; i++)
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
+            elimTernConstrs[i]->resetTightness();
+}
+
+void WCSP::resetTightnessAndWeightedDegree()
+{
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && !constrs[i]->isSep()) {
+            constrs[i]->resetTightness();
+            constrs[i]->resetConflictWeight();
+        }
+    for (int i = 0; i < elimBinOrder; i++)
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) {
+            elimBinConstrs[i]->resetTightness();
+            elimBinConstrs[i]->resetConflictWeight();
+        }
+    for (int i = 0; i < elimTernOrder; i++)
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+            elimTernConstrs[i]->resetTightness();
+            elimTernConstrs[i]->resetConflictWeight();
+        }
+}
+
 void WCSP::sortConstraints()
 {
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
@@ -2666,8 +2711,8 @@ void WCSP::sortConstraints()
             elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
     }
+    resetTightness();
     for (unsigned int i = 0; i < vars.size(); i++) {
-        resetWeightedDegree(i); // side-effect: (lazy) recompute tightness
         vars[i]->sortConstraints();
     }
     AC.sort(false); // sort in decreasing order to get the smallest DAC index first when doing pop() on this queue

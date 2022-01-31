@@ -328,7 +328,9 @@ public:
     int getDegree(int varIndex) const { return vars[varIndex]->getDegree(); } ///< \brief approximate degree of a variable (\e ie number of active cost functions, see \ref varelim)
     int getTrueDegree(int varIndex) const { return vars[varIndex]->getTrueDegree(); } ///< \brief degree of a variable
     Long getWeightedDegree(int varIndex) const { return vars[varIndex]->getWeightedDegree(); } ///< \brief weighted degree heuristic
-    void resetWeightedDegree(int varIndex) { vars[varIndex]->resetWeightedDegree(); } ///< \brief initialize weighted degree heuristic
+    void resetWeightedDegree(); ///< \brief initialize weighted degree heuristic
+    void resetTightness(); ///< \brief initialize constraint tightness used by some heuristics (including weighted degree)
+    void resetTightnessAndWeightedDegree(); ///< \brief initialize tightness and weighted degree heuristics
     void revise(Constraint* c) { lastConflictConstr = c; } ///< \internal last conflict heuristic
     /// \internal last conflict heuristic
     void conflict()

@@ -158,7 +158,9 @@ public:
     virtual int getDegree(int varIndex) const = 0; ///< \brief approximate degree of a variable (\e ie number of active cost functions, see \ref varelim)
     virtual int getTrueDegree(int varIndex) const = 0; ///< \brief degree of a variable
     virtual Long getWeightedDegree(int varIndex) const = 0; ///< \brief weighted degree heuristic
-    virtual void resetWeightedDegree(int varIndex) = 0; ///< \brief initialize weighted degree heuristic
+    virtual void resetWeightedDegree() = 0; ///< \brief initialize weighted degree heuristic
+    virtual void resetTightness() = 0; ///< \brief initialize constraint tightness used by some heuristics (including weighted degree)
+    virtual void resetTightnessAndWeightedDegree() = 0; ///< \brief initialize tightness and weighted degree heuristics
 
     virtual void preprocessing() = 0; ///< \brief applies various preprocessing techniques to simplify the current problem
     /// \brief sorts the list of cost functions associated to each variable based on smallest problem variable indexes

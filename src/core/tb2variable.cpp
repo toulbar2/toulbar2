@@ -173,15 +173,6 @@ Long Variable::getWeightedDegree()
     return res;
 }
 
-void Variable::resetWeightedDegree()
-{
-    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
-        if ((*iter).constr->isSep())
-            continue;
-        (*iter).constr->resetConflictWeight();
-    }
-}
-
 void Variable::conflict()
 {
     wcsp->conflict();
