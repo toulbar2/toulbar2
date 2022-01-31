@@ -380,20 +380,28 @@ public:
 
     double computeTightness() override
     {
-        Cost ucost = UNIT_COST;
-        for (int i = 0; i < arity_; i++) {
-            Cost maxcost = MIN_COST;
-            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            for (auto iter = var->begin(); iter != var->end(); ++iter) {
-                if (getVar(i)->getCost(*iter) > maxcost) {
-                    maxcost = getVar(i)->getCost(*iter);
-                }
-            }
-            assert(maxcost >= getVar(i)->getMaxCost()); // NC may be not established yet
-            ucost += maxcost;
-        }
-        assert(MaxWeight >= 0);
-        return ((double)capacity / (double)MaxWeight) * ucost;
+//TODO: check if multiplying by the sum of median/mean unary costs (only on VarVal?) improve the results
+//TODO: see if arity plays a role (small arity first?)
+//        double ucost = UNIT_COST;
+//        for (int i = 0; i < arity_; i++) {
+//            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+//            int domsize = var->getDomainSize();
+//            ValueCost array[domsize];
+//            wcsp->getEnumDomainAndCost(var->wcspIndex, array);
+//            if (ToulBar2::weightedTightness == 2) {
+//                Cost unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+//                ucost += (double)unarymediancost;
+//            } else {
+//                Cost unarytotalcost = MIN_COST;
+//                for (auto& elt : array) {
+//                    unarytotalcost += elt.cost;
+//                }
+//                ucost += (double)unarytotalcost / (double)domsize;
+//            }
+//        }
+        assert(capacity > 0);
+        assert(MaxWeight > 0);
+        return ((double)capacity / (double)MaxWeight); // * ucost ???
     }
 
     //TODO: needed for dominance test by DEE
