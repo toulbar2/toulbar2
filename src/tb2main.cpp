@@ -2022,8 +2022,16 @@ int _tmain(int argc, TCHAR* argv[])
                         ToulBar2::problemsaved_filename = to_string(args.OptionArg());
                         if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && !ToulBar2::dumpWCSP)
                             ToulBar2::dumpWCSP = 3;
-                        else
+                        else if (ToulBar2::problemsaved_filename.rfind(".wcsp") != string::npos && !ToulBar2::dumpWCSP)
                             ToulBar2::dumpWCSP = 1;
+                        if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) != CFN_FORMAT) {
+                            cerr << "Error: filename extension .cfn not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
+                            throw WrongFileFormat();
+                        }
+                        if (ToulBar2::problemsaved_filename.rfind(".wcsp") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) != WCSP_FORMAT) {
+                            cerr << "Error: filename extension .wcsp not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
+                            throw WrongFileFormat();
+                        }
                     }
                 } else if (!ToulBar2::dumpWCSP)
                     ToulBar2::dumpWCSP = 1;
