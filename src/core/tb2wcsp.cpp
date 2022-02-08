@@ -4729,6 +4729,8 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
         if (tupleXtuple) {
             ctr1->first();
             while (ctr1->next(tuple1, cost1)) {
+                if (ToulBar2::interrupted)
+                    throw TimeOut();
                 ctr2->first();
                 while (ctr2->next(tuple2, cost2)) {
                     nary->insertSum(tuple1, cost1, ctr1, tuple2, cost2, ctr2, true);
@@ -4737,6 +4739,8 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
         } else {
             nary->firstlex();
             while (nary->nextlex(tuple, cost)) {
+                if (ToulBar2::interrupted)
+                    throw TimeOut();
                 cost1 = ctr1->evalsubstr(tuple, nary);
                 cost2 = ctr2->evalsubstr(tuple, nary);
                 if (cost1 + cost2 < Top)
