@@ -280,6 +280,7 @@ public:
 
             if (scope[varIndex]->getValue() == getClause(varIndex)) {
                 deconnect();
+                wcsp->revise(this);
                 satisfied(varIndex);
                 return;
             }
@@ -311,6 +312,7 @@ public:
             }
         }
         if (connected() && mincost < MAX_COST && mincost > MIN_COST && cost > lb) {
+            wcsp->revise(this);
             extend(min(cost - lb, mincost));
         }
     };

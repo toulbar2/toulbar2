@@ -452,6 +452,7 @@ public:
                 Cost TobeProjected = -lb + assigneddeltas;
                 lb = MIN_COST;
                 Cost mindelta;
+                wcsp->revise(this);
                 for (int i = 0; i < carity; i++) {
                     mindelta = MAX_COST;
                     for (int j = 0; j < nbValue[i]; ++j) {
@@ -718,6 +719,7 @@ public:
                 }
             }
             if (connected() && !b) {
+                wcsp->revise(this);
                 if (!verify()) {
                     THROWCONTRADICTION;
                 } else if (nonassigned > 3 && ToulBar2::LcLevel >= LC_AC) {
