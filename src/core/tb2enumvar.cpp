@@ -148,12 +148,15 @@ void EnumeratedVariable::queueFEAC()
 {
     wcsp->queueFEAC(&linkFEACQueue);
 }
-void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
+void EnumeratedVariable::project(Value value, Cost cost, bool delayed,bool kp)
 {
     assert(cost >= MIN_COST);
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
     Cost newcost = oldcost + cost;
+    //If the newcost is greater or if the cost of maxCostValue has changed, we update maxCostValue
+    if(kp && (LUBTEST(maxCost, newcost) || getCost(maxCostValue)!=maxCost))
+        Update_Maxcost();
     if (value == maxCostValue || LUBTEST(maxCost, newcost))
         queueNC();
     if (DACTEST(oldcost, cost)) {
@@ -187,14 +190,30 @@ void EnumeratedVariable::projectSupCost(Cost cost)
     if (support == value || SUPPORTTEST(oldcost, cost))
         findSupport();
 }
+//Update maxcostvalue, used in knapsack.hpp
+void EnumeratedVariable::Update_Maxcost()
+{
+    Value maxcostvalue = getSup() + 1;
+    Cost maxcost = MIN_COST;
+    bool supportBroken = false;
+    for (iterator iter = begin(); iter != end(); ++iter) {
+        Cost cost1 = getCost(*iter);
+        if (LUB(&maxcost, cost1) || cannotbe(maxcostvalue)) {
+            maxcostvalue = *iter;
+        }
+    }
+    assert(getCost(maxcostvalue) == maxcost || !LUBTEST(maxcost, getCost(maxcostvalue)));
+    setMaxUnaryCost(maxcostvalue, maxcost);
+}
 
-void EnumeratedVariable::extend(Value value, Cost cost)
+//We don't update NC queue if extend has been called inside a knapsack constraint
+void EnumeratedVariable::extend(Value value, Cost cost, bool kp)
 {
     assert(ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true));
     assert(cost >= MIN_COST);
     assert(CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
-    if (value == maxCostValue || PARTIALORDER)
+    if (!kp && (value == maxCostValue || PARTIALORDER))
         queueNC();
 }
 

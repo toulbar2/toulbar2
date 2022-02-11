@@ -97,8 +97,9 @@ public:
     void assignWhenEliminated(Value newValue);
     void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) FINAL;
 
-    void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
-    void extend(Value value, Cost cost);
+    void project(Value value, Cost cost, bool delayed = false, bool kp=false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
+    void Update_Maxcost();
+    void extend(Value value, Cost cost, bool kp=false);
     void extendAll(Cost cost);
     Value getSupport() const FINAL { return support; }
     void setSupport(Value val)

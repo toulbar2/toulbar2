@@ -40,6 +40,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<vector<Cost>> Profit; // temporary data structure for propagate
     vector<Double> y_i;
     vector<std::array<Double, 4>> Slopes;
+    bool UpdateMaxCostVal;
 
     void projectLB(Cost c)
     {
@@ -103,8 +104,10 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     {
         for (unsigned int i = 0; i < NotVarVal[var].size(); i++) {
             if (scope[var]->canbe(NotVarVal[var][i])) {
+                if(scope[var]->getMaxCostValue()==NotVarVal[var][i])
+                    UpdateMaxCostVal=true;
                 assert(scope[var]->getCost(NotVarVal[var][i]) >= C);
-                scope[var]->extend(NotVarVal[var][i], C);
+                scope[var]->extend(NotVarVal[var][i], C,true);
             }
         }
     }
@@ -112,7 +115,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     {
         for (unsigned int i = 0; i < NotVarVal[var].size(); i++) {
             if (scope[var]->canbe(NotVarVal[var][i]))
-                scope[var]->project(NotVarVal[var][i], C, true);
+                scope[var]->project(NotVarVal[var][i], C, true,true);
         }
     }
 
@@ -122,7 +125,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         if (C > 0) {
             if (value < (int)VarVal[var].size() - 1) {
                 assert(scope[var]->getCost(VarVal[var][value]) >= C);
-                scope[var]->extend(VarVal[var][value], C);
+                scope[var]->extend(VarVal[var][value], C,true);
                 deltaCosts[var][value] += C;
             } else {
                 Group_extendNVV(var, C);
@@ -130,7 +133,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             }
         } else {
             if (value < (int)VarVal[var].size() - 1) {
-                scope[var]->project(VarVal[var][value], -C, true);
+                scope[var]->project(VarVal[var][value], -C, true,true);
                 deltaCosts[var][value] += C;
             } else {
                 Group_ProjectNVV(var, -C);
@@ -676,32 +679,39 @@ public:
     //Do the Extension/Projection
     void ExtensionProjection(vector<Double>& y_i, Double y_cc)
     {
+        Cost C;
         for (int i = 0; i < carity; i++) {
+            UpdateMaxCostVal=false;
             for (int j = 0; j < nbValue[i]; ++j) {
-                if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] == 1) {
-                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                        Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
+                if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] > 0) {
+                    if (current_val_idx[i][j] == (int) VarVal[current_scope_idx[i]].size() - 1) {
+                        if(UnaryCost0[current_scope_idx[i]]>0){
+                            Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
+                        }
                     } else {
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
-                        scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                        C=scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
+                        if(C>0){
+                            if(VarVal[current_scope_idx[i]][current_val_idx[i][j]]==scope[current_scope_idx[i]]->getMaxCostValue())
+                                UpdateMaxCostVal=true;
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
+                            scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]],scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]),true);
+                        }
                     }
-                } else if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] == 0) {
-                    if (Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]) != 0)
-                        ExtOrProJ(current_scope_idx[i], current_val_idx[i][j], Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]));
                 } else {
-                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                        Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
-                    } else {
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
-                        scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                    if (Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] +y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]) != 0){
+                        if(VarVal[current_scope_idx[i]][current_val_idx[i][j]]==scope[current_scope_idx[i]]->getMaxCostValue())
+                            UpdateMaxCostVal=true;
+                        ExtOrProJ(current_scope_idx[i], current_val_idx[i][j],Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]));
                     }
                 }
             }
+            if(UpdateMaxCostVal)
+                scope[current_scope_idx[i]]->Update_Maxcost();
             scope[current_scope_idx[i]]->findSupport();
-        }
+            }
     }
+
 
     void propagate() override
     {
