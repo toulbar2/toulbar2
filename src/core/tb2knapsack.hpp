@@ -679,24 +679,24 @@ public:
     {
         for (int i = 0; i < carity; i++) {
             for (int j = 0; j < nbValue[i]; ++j) {
-                if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] == 1) {
-                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                        Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
+                if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] > 0) {
+                    if (current_val_idx[i][j] == (int) VarVal[current_scope_idx[i]].size() - 1) {
+                        Cost C = UnaryCost0[current_scope_idx[i]];
+                        if(C > MIN_COST){
+                            Group_extendNVV(current_scope_idx[i], C);
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += C;
+                        }
                     } else {
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
-                        scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                        Cost C = scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
+                        if (C > MIN_COST) {
+                            deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += C;
+                            scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], C);
+                        }
                     }
-                } else if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] == 0) {
-                    if (Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]) != 0)
-                        ExtOrProJ(current_scope_idx[i], current_val_idx[i][j], Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]));
                 } else {
-                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                        Group_extendNVV(current_scope_idx[i], UnaryCost0[current_scope_idx[i]]);
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += UnaryCost0[current_scope_idx[i]];
-                    } else {
-                        deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]);
-                        scope[current_scope_idx[i]]->extend(VarVal[current_scope_idx[i]][current_val_idx[i][j]], scope[current_scope_idx[i]]->getCost(VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                    Cost C = Ceil(-deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] + y_i[i] + y_cc * weights[current_scope_idx[i]][current_val_idx[i][j]]);
+                    if (C != MIN_COST) {
+                        ExtOrProJ(current_scope_idx[i], current_val_idx[i][j], C);
                     }
                 }
             }
