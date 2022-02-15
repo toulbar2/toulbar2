@@ -2820,6 +2820,18 @@ int _tmain(int argc, TCHAR* argv[])
 
         if (ToulBar2::problemsaved_filename.empty())
             ToulBar2::problemsaved_filename = ((static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) == CFN_FORMAT) ? "problem.cfn" : "problem.wcsp");
+#ifdef OPENMPI
+        if (world.rank() != WeightedCSPSolver::MASTER) {
+            string srank = to_string(world.rank());
+            if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos) {
+                srank = srank + ".cfn";
+                ToulBar2::problemsaved_filename.replace(ToulBar2::problemsaved_filename.rfind(".cfn"), 4, srank);
+            } else if (ToulBar2::problemsaved_filename.rfind(".wcsp") != string::npos) {
+                srank = srank + ".wcsp";
+                ToulBar2::problemsaved_filename.replace(ToulBar2::problemsaved_filename.rfind(".wcsp"), 5, srank);
+            }
+        }
+#endif
 
         if (ToulBar2::dumpWCSP % 2) {
             string problemname = ToulBar2::problemsaved_filename;

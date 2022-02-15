@@ -1564,6 +1564,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
     if (ToulBar2::hbfs) {
 #ifdef OPENMPI
         if (ToulBar2::parallel && (!cluster || cluster == wcsp->getTreeDec()->getRoot())) {
+            world.barrier(); /* IMPORTANT */
             if (world.rank() == MASTER) {
                 return hybridSolveMaster(cluster, clb, cub);
             } else {
