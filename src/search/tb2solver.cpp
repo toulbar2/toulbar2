@@ -2806,6 +2806,9 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         wcsp->printVACStat();
 
 #ifdef OPENMPI
+    if (ToulBar2::parallel) {
+        world.barrier(); /* IMPORTANT */
+    }
     if (((ToulBar2::verbose >= 0 && !ToulBar2::parallel) || (ToulBar2::parallel && ToulBar2::verbose == -1 && world.rank() != MASTER)) && nbHybrid >= 1 && nbNodes > 0) {
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes;
         if (ToulBar2::parallel) cout << " % (#pid: " << world.rank() << ")";
