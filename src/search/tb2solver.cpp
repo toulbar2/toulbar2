@@ -2814,6 +2814,9 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         if (ToulBar2::parallel) cout << " % (#pid: " << world.rank() << ")";
         cout << endl;
     }
+    if (ToulBar2::parallel) {
+        world.barrier(); /* IMPORTANT */
+    }
 #else
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes << endl;
