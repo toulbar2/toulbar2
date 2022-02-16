@@ -1376,7 +1376,7 @@ void Solver::newSolution()
             cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << cpuTime() - ToulBar2::startCpuTime << " seconds" << endl;
     }
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
-        if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
+        if (ToulBar2::verbose >= 0 || (!ToulBar2::parallel && ToulBar2::showSolutions)) {
             if (ToulBar2::haplotype)
                 cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << cpuTime() - ToulBar2::startCpuTime << " seconds)" << endl;
             else if (!ToulBar2::bayesian)
@@ -1390,8 +1390,11 @@ void Solver::newSolution()
     if (!ToulBar2::isZ)
         wcsp->setSolution(wcsp->getLb());  // take current assignment and put it in solution (stl c++ map)
 
+#ifdef OPENMPI
+    if (ToulBar2::showSolutions && (!ToulBar2::parallel || world.rank()==MASTER)) {
+#else
     if (ToulBar2::showSolutions) {
-
+#endif
         if (ToulBar2::verbose >= 2)
             cout << *wcsp << endl;
 
@@ -1897,7 +1900,8 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
 
         showGap(clb, cub);
 
-        if (work2.ub < initub && !work2.sol.empty()) { // if the master receives an improving solution from the worker
+        if (work2.ub < initub) { // if the master receives an improving solution from the worker
+            assert(work2.sol.size() == wcsp->numberOfVariables());
 
             // transformation of vector to map necessary because wcsp->getSolution returns a vector
             map<int, Value> workerSolMap;
