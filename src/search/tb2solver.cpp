@@ -2036,7 +2036,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
         addOpenNode(*cp_, *open_, work.open[0].getCost()); // update of cp->stop and push node with first= cp-> start and last= cp->index
         assert(open_->size() == 1);
         assert(open_->top().first == 0);
-        assert(open_->top().last == work.cp.size());
+        assert((size_t)open_->top().last == work.cp.size());
 
         cp_->store();
 
