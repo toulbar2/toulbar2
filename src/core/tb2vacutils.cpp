@@ -105,7 +105,7 @@ bool VACVariable::averaging()
                 assert(cmin < Top);
                 Double mean = to_double(cmin + cu) / 2.;
                 Double extc = to_double(cu) - mean;
-                if (abs(extc) >= 1) {
+                if (std::abs(extc) >= 1) {
                     Cost costi = (Long)extc;
                     for (iterator itx = x->begin(); itx != x->end(); ++itx) {
                         bctr->addcost(this, x, *it, *itx, costi);
@@ -136,7 +136,7 @@ bool VACVariable::averaging()
                 assert(cmin < Top);
                 Double mean = to_double(cmin + cu) / 2.;
                 Double extc = to_double(cu) - mean;
-                if (abs(extc) >= 1) {
+                if (std::abs(extc) >= 1) {
                     Cost costi = (Long)extc;
                     for (iterator itx = x->begin(); itx != x->end(); ++itx) {
                         for (iterator ity = y->begin(); ity != y->end(); ++ity) {
@@ -169,7 +169,7 @@ bool VACVariable::averaging()
                 //				assert(cmin < Top);
                 Double mean = to_double(cmin + cu) / 2.;
                 Double extc = to_double(cu) - mean;
-                if (abs(extc) >= 1) {
+                if (std::abs(extc) >= 1) {
                     Cost costi = (Cost)extc;
                     nctr->addtoTuples(this, *it, costi);
                     if (mean > to_double(cu))

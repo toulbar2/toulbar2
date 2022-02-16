@@ -1317,7 +1317,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::boostingBTD = 0.7;
                 if (args.OptionArg() != NULL) {
                     double ratio = atof(args.OptionArg());
-                    if (fabs(ratio) > 0. && fabs(ratio) <= 1.)
+                    if (std::abs(ratio) > 0. && std::abs(ratio) <= 1.)
                         ToulBar2::boostingBTD = ratio;
                 }
                 if (ToulBar2::debug)

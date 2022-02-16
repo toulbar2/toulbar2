@@ -116,7 +116,7 @@ public:
         return getDomainSizeProduct();
     }
 
-    void reconnect()
+    void reconnect() override
     {
         if (deconnected()) {
             nonassigned = arity_;
@@ -125,14 +125,14 @@ public:
     }
     int getNonAssigned() const { return nonassigned; }
 
-    Long getConflictWeight() const { return Constraint::getConflictWeight(); }
-    Long getConflictWeight(int varIndex) const
+    Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
+    Long getConflictWeight(int varIndex) const override
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
         return conflictWeights[varIndex] + Constraint::getConflictWeight();
     }
-    void incConflictWeight(Constraint* from)
+    void incConflictWeight(Constraint* from) override
     {
         assert(from != NULL);
         if (from == this) {
@@ -155,13 +155,13 @@ public:
             }
         }
     }
-    void resetConflictWeight()
+    void resetConflictWeight() override
     {
         conflictWeights.assign(conflictWeights.size(), 0);
         Constraint::resetConflictWeight();
     }
 
-    bool universal()
+    bool universal() override
     {
         if (cost != MIN_COST || lb != MIN_COST)
             return false;
@@ -171,7 +171,7 @@ public:
         return true;
     }
 
-    Cost eval(const Tuple& s)
+    Cost eval(const Tuple& s) override
     {
         if (lb == MIN_COST && tuple[support] != s[support]) {
             assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
@@ -224,9 +224,9 @@ public:
         return eval(evalTuple);
     }
 
-    double computeTightness() { return 1.0 * cost / getDomainSizeProduct(); }
+    double computeTightness() override { return 1.0 * cost / getDomainSizeProduct(); }
 
-    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
+    pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b) override
     {
         Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
         bool supporta = (getClause(index) == a);
@@ -235,14 +235,14 @@ public:
         return make_pair(make_pair(maxcosta, maxcosta), make_pair(maxcostb, maxcostb));
     }
 
-    void first()
+    void first() override
     {
         zeros = all_of(deltaCosts.begin(), deltaCosts.end(), [](Cost c) { return c == MIN_COST; });
         done = false;
         if (!zeros)
             firstlex();
     }
-    bool next(Tuple& t, Cost& c)
+    bool next(Tuple& t, Cost& c) override
     {
         if (!zeros)
             return nextlex(t, c);
@@ -254,7 +254,7 @@ public:
         return true;
     }
 
-    Cost getMaxFiniteCost()
+    Cost getMaxFiniteCost() override
     {
         Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
         if (CUT(sumdelta, wcsp->getUb()))
@@ -264,14 +264,14 @@ public:
         else
             return max(sumdelta, cost - lb);
     }
-    void setInfiniteCost(Cost ub)
+    void setInfiniteCost(Cost ub) override
     {
         Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
         if (CUT(cost, ub))
             cost = mult_ub;
     }
 
-    void assign(int varIndex)
+    void assign(int varIndex) override
     {
         if (connected(varIndex)) {
             deconnect(varIndex);
@@ -296,7 +296,7 @@ public:
     }
 
     // propagates the minimum between the remaining clause weight and unary costs of all literals to the problem lower bound
-    void propagate()
+    void propagate() override
     {
         Cost mincost = (connected() && scope[support]->unassigned()) ? scope[support]->getCost(getClause(support)) : MAX_COST;
         for (int i = 0; connected() && i < arity_; i++) {
@@ -317,7 +317,7 @@ public:
         }
     };
 
-    bool verify()
+    bool verify() override
     {
         Tuple t;
         Cost c;
@@ -328,10 +328,10 @@ public:
         }
         return false;
     }
-    void increase(int index) {}
-    void decrease(int index) {}
-    void remove(int index) {}
-    void projectFromZero(int index)
+    void increase(int index) override {}
+    void decrease(int index) override {}
+    void remove(int index) override {}
+    void projectFromZero(int index) override
     {
         if (index == support && cost > lb)
             propagate();

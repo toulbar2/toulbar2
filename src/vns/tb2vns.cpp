@@ -138,7 +138,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         m_graph[c].name = to_string(0);
         m_graph[c].vars = l->getUnassignedVars();
     }
-    if (fabs(ToulBar2::boostingBTD) > 0. && fabs(ToulBar2::boostingBTD) < 1.) {
+    if (std::abs(ToulBar2::boostingBTD) > 0. && std::abs(ToulBar2::boostingBTD) < 1.) {
         TCDGraph abs_graph; // graph absorption
         cluster_graph_absorption(m_graph, abs_graph);
         m_graph = abs_graph;

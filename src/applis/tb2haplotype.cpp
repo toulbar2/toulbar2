@@ -843,7 +843,7 @@ void Haplotype::buildWCSP_haplotype(const char* fileName, WCSP* wcsp)
     Double sumcost = 0.;
 
     for (map<pair<int, int>, Double, classcomp>::iterator w = W.begin(); w != W.end(); ++w)
-        sumcost += abs(w->second);
+        sumcost += std::abs(w->second);
     ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
     wcsp->updateUb((Cost)(ToulBar2::NormFactor * sumcost));
     //	  Double constante = 0.;
