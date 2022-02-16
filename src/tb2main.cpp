@@ -2888,6 +2888,11 @@ int _tmain(int argc, TCHAR* argv[])
 	  sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
 	  system(line); */
 
+#ifdef OPENMPI
+    if (ToulBar2::parallel) {
+        world.barrier(); /* IMPORTANT */
+    }
+#endif
     //delete solver; // it takes CPU time for nothing!!
     return 0;
 }
