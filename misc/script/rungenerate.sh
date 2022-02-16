@@ -25,7 +25,7 @@ while (( $n < $nend )) ; do
     toolbar problem.wcsp  | awk 'BEGIN{opt="-";} /^Optimum: /{opt=$2;}  END{printf("%d \n",opt); }' > toolbar_opt
     ub0=`cat toolbar_opt`
     ub=`expr $ub0 + 2`
-    ./toulbar2 problem.wcsp "$@" -w -ub=$ub | awk 'BEGIN{opt="-";} /Read [0-9]* variables/{n=$2;} / unassigned variables/{f=$1} /^Optimum: /{opt=$2;}  END{printf("%d %d %d",opt,n,f);}'  > toulbar2_opt
+    mpirun -n 4 ./toulbar2 problem.wcsp "$@" -w -ub=$ub | awk 'BEGIN{opt="-";} /Read [0-9]* variables/{n=$2;} / unassigned variables/{f=$1} /^Optimum: /{opt=$2;}  END{printf("%d %d %d",opt,n,f);}'  > toulbar2_opt
     toolbar problem.wcsp  -csol  | awk 'BEGIN{opt="-";} /^Total cost /{opt=$4;}  END{printf("%d \n",opt); }' > toolbar_sol
     ub1=`awk '{printf("%d", $1)}' toulbar2_opt`
     ub2=`awk '{printf("%d", $1)}' toolbar_opt`

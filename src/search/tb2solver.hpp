@@ -243,7 +243,7 @@ public:
             openMaster_.pop(); // pop up directly the open queue!!
 
             for (ptrdiff_t i = open[0].first; i < open[0].last; i++) { // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
-                assert(i >= 0 && i < cpMaster_.size());
+                assert(i >= 0 && (size_t)i < cpMaster_.size());
                 assert(i < cpMaster_.stop);
                 cp.push_back(cpMaster_[i]);
                 assert(cp.back().op >= 0 && cp.back().op < CP_MAX);
@@ -282,7 +282,7 @@ public:
 
             if (open.size() > 0) {
                 for (ptrdiff_t i = 0; i < cpWorker_.stop; i++) {
-                    assert(i < cpWorker_.size());
+                    assert((size_t)i < cpWorker_.size());
                     cp.push_back(cpWorker_[i]);
                     assert(cp.back().op >= 0 && cp.back().op < CP_MAX);
                 }

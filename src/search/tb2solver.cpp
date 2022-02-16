@@ -1825,7 +1825,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
 
             if (ToulBar2::verbose >= 1)
                 cout << ">>> master send to worker " << worker << " a message " << work << endl;
-            world.isend(worker, WORKTAG, work); // non blocking send: the master send work to worker
+            world.send(worker, WORKTAG, work); // blocking send: the master send work to an idle worker
         }
 
         Work work2; // object work2 will be populated with workers' best solution ub and other information from this worker after it has performed a DFS
@@ -1875,6 +1875,8 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             }
             epsDumpSubProblems(*cp_, *open_);
             for (int i = 0; i < world.size(); i++) if (i != MASTER) {
+                Work work; // dummy work
+                world.irecv(i, mpi::any_tag, work); // ensure the worker is not waiting in a blocking send message
                 world.isend(i, DIETAG, Work());
             }
             ToulBar2::interrupted = true;
@@ -1941,6 +1943,8 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
     assert(clb <= cub);
     if (clb == cub) {
         for (int i = 0; i < world.size(); i++) if (i != MASTER) {
+            Work work; // dummy work
+            world.irecv(i, mpi::any_tag, work); // ensure the worker is not waiting in a blocking send message
             world.isend(i, DIETAG, Work());
         }
     }
@@ -2129,7 +2133,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
         Work work2(*cp_, *open_, nbNodes - initNbNodes, nbBacktracks - initNbBacktracks, wcsp->getNbDEE() - initNbDEE, work.lb, cub, workerSol); //  create the message with cub and open nodes information from local open and cp
         if (ToulBar2::verbose >= 1)
             cout << ">>> worker "  << world.rank() << " send message to master " << work2 << endl;
-        world.isend(MASTER, WORKTAG, work2); // non blocking send to master
+        world.send(MASTER, WORKTAG, work2); // blocking send to master
     }
 
     assert(clb <= cub);
@@ -2806,16 +2810,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         wcsp->printVACStat();
 
 #ifdef OPENMPI
-    if (ToulBar2::parallel) {
-        world.barrier(); /* IMPORTANT */
-    }
     if (((ToulBar2::verbose >= 0 && !ToulBar2::parallel) || (ToulBar2::parallel && ToulBar2::verbose == -1 && world.rank() != MASTER)) && nbHybrid >= 1 && nbNodes > 0) {
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes;
         if (ToulBar2::parallel) cout << " % (#pid: " << world.rank() << ")";
         cout << endl;
-    }
-    if (ToulBar2::parallel) {
-        world.barrier(); /* IMPORTANT */
     }
 #else
     if (ToulBar2::verbose >= 0 && nbHybrid >= 1 && nbNodes > 0)

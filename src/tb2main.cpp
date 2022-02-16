@@ -990,11 +990,8 @@ void help_msg(char* toulbar2filename)
 
 int _tmain(int argc, TCHAR* argv[])
 {
-    //#pragma STDC FENV_ACCESS ON
-    std::fesetround(FE_TONEAREST);
-
 #ifdef OPENMPI
-    mpi::environment env; // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
+    mpi::environment env(argc, argv); // equivalent to MPI_Init via the constructor and MPI_finalize via the destructor
     mpi::communicator world;
 #endif
     tb2init();
@@ -1004,6 +1001,9 @@ int _tmain(int argc, TCHAR* argv[])
     if (world.rank() != WeightedCSPSolver::MASTER)
         ToulBar2::verbose = -1;
 #endif
+
+    //#pragma STDC FENV_ACCESS ON
+    std::fesetround(FE_TONEAREST);
 
     setlocale(LC_ALL, "C");
     bool certificate = false;
