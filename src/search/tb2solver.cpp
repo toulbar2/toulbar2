@@ -2948,7 +2948,7 @@ bool Solver::solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, 
     // find total cost
     Double sumcost = 0.;
     for (int e = 0; e < m; e++) {
-        sumcost += 2. * abs(cost[e]);
+        sumcost += 2. * std::abs(cost[e]);
     }
     Double multiplier = ((Double)MAX_COST) / sumcost;
     multiplier /= MEDIUM_COST;

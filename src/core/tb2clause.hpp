@@ -380,7 +380,7 @@ public:
         return result;
     }
 
-    void print(ostream& os)
+    void print(ostream& os) override
     {
         os << endl
            << this << " clause(";
@@ -412,7 +412,7 @@ public:
         os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
     }
 
-    void dump(ostream& os, bool original = true)
+    void dump(ostream& os, bool original = true) override
     {
         Cost maxdelta = MIN_COST;
         for (vector<StoreCost>::iterator it = deltaCosts.begin(); it != deltaCosts.end(); ++it) {
@@ -470,7 +470,7 @@ public:
         }
     }
 
-    void dump_CFN(ostream& os, bool original = true)
+    void dump_CFN(ostream& os, bool original = true) override
     {
         bool printed = false;
         os << "\"F_";

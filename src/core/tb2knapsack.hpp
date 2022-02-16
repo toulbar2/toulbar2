@@ -976,7 +976,7 @@ public:
         return result;
     }
 
-    void print(ostream& os)
+    void print(ostream& os) override
     {
         os << endl
            << this << " knapsackp(";

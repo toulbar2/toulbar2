@@ -134,7 +134,7 @@ public:
     }
     ~TreeDecRefinement() {}
 
-    bool solve();
+    bool solve(bool first = true) override;
 
     // decomposition tools
     void load_decomposition();

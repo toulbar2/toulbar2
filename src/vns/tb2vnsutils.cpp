@@ -65,7 +65,7 @@ void treeClusterFusion(TCDGraph::vertex_descriptor p, TCDGraph::vertex_descripto
     }
 }
 
-bool TreeDecRefinement::solve()
+bool TreeDecRefinement::solve(bool first)
 {
     load_decomposition();
     cluster_graph_absorption(m_graph, abs_graph);
