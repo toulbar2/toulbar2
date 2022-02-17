@@ -41,6 +41,11 @@ public:
 
 extern const char* PrintFormatProb;
 
+/// \brief return real time in seconds since epoch
+inline double realTime()
+{
+    return chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now().time_since_epoch()).count() / 1000.;
+}
 double cpuTime(); ///< \brief return CPU time in seconds with high resolution (microseconds) if available
 void timeOut(int sig); ///< \brief set ToulBar2::interrupted to throw a TimeOut exception later
 void timer(int t); ///< \brief set a timer (in seconds)

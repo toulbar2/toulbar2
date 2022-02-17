@@ -405,6 +405,7 @@ protected:
     pair<Cost, Cost> hybridSolve(Cluster* root, Cost clb, Cost cub);
 
 #ifdef OPENMPI
+    double hbfsWaitingTime;
     mpi::communicator world;
     queue<int> idleQ; //MASTER ONLY container with the rank of the free workers
     std::unordered_map<int, OpenNode> activeWork; //MASTER ONLY map the rank i of a worker with an open node currently explored by the worker

@@ -1,5 +1,6 @@
 #ifndef TB2KNAPSACK_HPP_
 #define TB2KNAPSACK_HPP_
+
 #include <utility>
 #include <variant>
 #include "tb2abstractconstr.hpp"
@@ -7,9 +8,7 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 #include "../utils/tb2store.hpp"
-#include <numeric>
-#include <chrono>
-#include <thread>
+
 class KnapsackConstraint : public AbstractNaryConstraint {
     int carity;
     Long Original_capacity;

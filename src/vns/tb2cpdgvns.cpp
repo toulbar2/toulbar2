@@ -14,8 +14,6 @@
 
 bool CooperativeParallelDGVNS::solve(bool first)
 {
-    mysrand(abs(ToulBar2::seed) + world.rank());
-
     // Initialization
     beginSolve(MAX_COST);
     try {
@@ -37,7 +35,11 @@ bool CooperativeParallelDGVNS::solve(bool first)
         return (lastUb < MAX_COST);
     }
 
+    mysrand(abs(ToulBar2::seed) + world.rank());
+
     world.barrier(); /* IMPORTANT */
+
+    ToulBar2::startRealTimeAfterPreProcessing = realTime();
 
     if (world.rank() == MASTER) {
         if (ToulBar2::verbose)

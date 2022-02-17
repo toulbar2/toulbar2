@@ -5,7 +5,6 @@
 #include "tb2ternaryconstr.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
-#include <numeric>
 
 //TODO: avoid enumeration on all variables if they are already assigned and removed (using backtrackable domain data structure).
 //in order to speed-up propagate function if the support variable has a zero unary cost

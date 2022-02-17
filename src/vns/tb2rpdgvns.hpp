@@ -90,12 +90,10 @@ protected:
     vector<int> file;
     PR vecPR;
     //    vector<bool> clusterKmax;  // clusterKmax[c] is true if cluster c has its k = kmax
-    double startTime;
 
 public:
     ReplicatedParallelDGVNS(Cost initUpperBound)
         : LocalSearch(initUpperBound)
-        , startTime(.0)
     {
     }
     ~ReplicatedParallelDGVNS() {}

@@ -204,6 +204,8 @@ int ToulBar2::rootHeuristic;
 bool ToulBar2::reduceHeight;
 
 double ToulBar2::startCpuTime;
+double ToulBar2::startRealTime;
+double ToulBar2::startRealTimeAfterPreProcessing;
 
 int ToulBar2::splitClusterMaxSize;
 double ToulBar2::boostingBTD;
@@ -405,6 +407,8 @@ void tb2init()
     ToulBar2::reduceHeight = false;
 
     ToulBar2::startCpuTime = 0;
+    ToulBar2::startRealTime = 0;
+    ToulBar2::startRealTimeAfterPreProcessing = 0;
 
     ToulBar2::splitClusterMaxSize = 0;
     ToulBar2::boostingBTD = 0.;

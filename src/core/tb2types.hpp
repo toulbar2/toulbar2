@@ -804,6 +804,8 @@ public:
     static string stdin_format; // stdin format declaration
 
     static double startCpuTime;
+    static double startRealTime;
+    static double startRealTimeAfterPreProcessing; // used only if parallel execution of hbfs or vns
 
     static int splitClusterMaxSize;
     static double boostingBTD;

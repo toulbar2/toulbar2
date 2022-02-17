@@ -165,6 +165,8 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("uaieval", &ToulBar2::uaieval)
         .def_readwrite_static("stdin_format", &ToulBar2::stdin_format)
         .def_readwrite_static("startCpuTime", &ToulBar2::startCpuTime)
+        .def_readwrite_static("startRealTime", &ToulBar2::startRealTime)
+        .def_readwrite_static("startRealTimeAfterPreProcessing", &ToulBar2::startRealTimeAfterPreProcessing)
         .def_readwrite_static("splitClusterMaxSize", &ToulBar2::splitClusterMaxSize)
         .def_readwrite_static("boostingBTD", &ToulBar2::boostingBTD)
         .def_readwrite_static("maxSeparatorSize", &ToulBar2::maxSeparatorSize)
@@ -373,6 +375,7 @@ PYBIND11_MODULE(pytb2, m)
     py::class_<WeightedCSPSolver>(m, "Solver")
         .def(py::init([](Cost ub) {
             ToulBar2::startCpuTime = cpuTime();
+            ToulBar2::startRealTime = realTime();
             initCosts();
             if (ToulBar2::seed < 0) { // initialize seed using current time
                 ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);

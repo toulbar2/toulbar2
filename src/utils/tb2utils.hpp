@@ -45,16 +45,17 @@ namespace mpi = boost::mpi;
 #include <functional>
 #include <algorithm>
 #include <numeric>
+#include <chrono>
+namespace chrono = std::chrono;
 using std::ostream;
 using std::vector;
 using std::pair;
-
-#include <chrono>
 
 #ifdef OPENMPI
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 namespace serialization = boost::serialization;
+# include <boost/optional.hpp>
 #endif
 
 #ifdef NDEBUG

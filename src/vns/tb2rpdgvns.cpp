@@ -50,7 +50,7 @@ bool ReplicatedParallelDGVNS::solve(bool first)
 
     world.barrier(); /* IMPORTANT */
 
-    startTime = cpuTime();
+    ToulBar2::startRealTimeAfterPreProcessing = realTime();
 
     if (world.rank() == MASTER) {
         if (!ToulBar2::vnsParallelSync) {
@@ -73,13 +73,13 @@ bool ReplicatedParallelDGVNS::solve(bool first)
 
     /* Shut down MPI */
     world.barrier(); /* IMPORTANT */
-    double elapsedTime = cpuTime() - startTime;
+    double elapsedTime = realTime() - ToulBar2::startRealTimeAfterPreProcessing;
     double elapsedCPUTime = cpuTime() - ToulBar2::startCpuTime;
     double totalCPUTime = 0.;
     mpi::reduce(world, elapsedCPUTime, totalCPUTime, std::plus<double>(), 0);
     if (ToulBar2::verbose >= 0 && world.rank() == MASTER) { /* use time on master node */
-        cout << "Total CPU time = " << totalCPUTime << " seconds" << endl;
-        cout << "Solving real-time = " << elapsedTime << " seconds (not including preprocessing time)" << endl;
+        cout << "Total CPU time = " << totalCPUTime << " seconds." << endl;
+        cout << "Solving real-time = " << elapsedTime << " seconds (not including reading and preprocessing time)." << endl;
     }
 
     return (bestUb < MAX_COST);
@@ -568,7 +568,8 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
     wcsp->setSolution(bestUb, &bestSolution);
     if (ToulBar2::vnsOutput) {
         //cout << "# ------------------------------------------" << endl;
-        ToulBar2::vnsOutput << "InstanceVnsBestTime " << cpuTime() - startTime << endl;
+        double elapsedTime = realTime() - ToulBar2::startRealTime;
+        ToulBar2::vnsOutput << "InstanceVnsBestTime " << elapsedTime << endl;
         ToulBar2::vnsOutput << "Cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
         ToulBar2::vnsOutput << "Solution ";
         for (map<int, Value>::iterator it = bestSolution.begin();
@@ -589,10 +590,11 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         //        cout << "# ------------------------------------------" << endl;
     }
     if (improved && (ToulBar2::verbose >= 0 || ToulBar2::showSolutions)) {
+        double elapsedTime = realTime() - ToulBar2::startRealTime;
         if (!ToulBar2::bayesian)
-            cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " in " << (cpuTime() - startTime) << " seconds." << endl;
+            cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " in " << elapsedTime << " seconds." << endl;
         else
-            cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << " in " << cpuTime() - startTime << " seconds." << endl;
+            cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << " in " << elapsedTime << " seconds." << endl;
     }
     if (improved && ToulBar2::showSolutions) {
         wcsp->printSolution();
