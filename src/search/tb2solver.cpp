@@ -2032,8 +2032,8 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
 
         cub = MIN(cub, work.ub);
 
-//        wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
-//        open_->updateUb(work.ub); // update cub and clb that are attributes of worker's open queue
+        wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
+        open_->updateUb(work.ub); // update cub and clb that are attributes of worker's open queue
 
         assert(work.open.size() == 1); // only one open node from the master
 
