@@ -261,6 +261,10 @@ enum {
     OPT_hbfs_alpha,
     OPT_hbfs_beta,
     OPT_eps,
+#ifdef OPENMPI
+    OPT_burst,
+    NO_OPT_burst,
+#endif
     OPT_localsearch,
     NO_OPT_localsearch,
     OPT_EDAC,
@@ -505,6 +509,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_hbfs_alpha, (char*)"-hbfsmin", SO_REQ_SEP },
     { OPT_hbfs_beta, (char*)"-hbfsmax", SO_REQ_SEP },
     { OPT_eps, (char*)"-eps", SO_OPT },
+#ifdef OPENMPI
+    { OPT_burst, (char*)"-burst", SO_NONE },
+    { NO_OPT_burst, (char*)"-burst:", SO_NONE },
+#endif
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
     { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
@@ -958,6 +966,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -hbfsmin=[integer] : hybrid best-first search compromise between BFS and DFS minimum node redundancy alpha percentage threshold (default value is " << 100 / ToulBar2::hbfsAlpha << "%)" << endl;
     cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100 / ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
+#ifdef OPENMPI
+    cout << "   -burst : in parallel hybrid best-first search, workers send solutions and open nodes as soon as possible (default value is " << ToulBar2::burst << ")" << endl;
+#endif
     cout << "   -eps=[integer|filename] : embarrassingly parallel search mode (output a given number of open nodes in -x format and exit, see ./misc/script/eps.sh to run them) (default value is " << ToulBar2::eps << ")" << endl;
     cout << "---------------------------" << endl;
     cout << "Alternatively one can call the random problem generator with the following options: " << endl;
@@ -1889,6 +1900,17 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
             }
+#ifdef OPENMPI
+            if (args.OptionId() == OPT_burst) {
+                ToulBar2::burst = true;
+                if (ToulBar2::debug)
+                    cout << "burst ON" << endl;
+            } else if (args.OptionId() == NO_OPT_burst) {
+                if (ToulBar2::debug)
+                    cout << "burst OFF" << endl;
+                ToulBar2::burst = false;
+            }
+#endif
             if (args.OptionId() == OPT_eps) {
                 int nbproc = max(1, (int) std::thread::hardware_concurrency());
                 if (args.OptionArg() == NULL) {

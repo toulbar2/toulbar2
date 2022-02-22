@@ -203,6 +203,9 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("hbfsCPLimit", &ToulBar2::hbfsCPLimit)
         .def_readwrite_static("hbfsOpenNodeLimit", &ToulBar2::hbfsOpenNodeLimit)
         .def_readwrite_static("eps", &ToulBar2::eps)
+#ifdef OPENMPI
+        .def_readwrite_static("burst", &ToulBar2::burst)
+#endif
         .def_readwrite_static("epsFilename", &ToulBar2::epsFilename)
         .def_readwrite_static("verifyOpt", &ToulBar2::verifyOpt)
         .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum);

@@ -86,6 +86,7 @@ Solver::Solver(Cost initUpperBound)
     , nbSol(0.)
     , nbSGoods(0)
     , nbSGoodsUse(0)
+    , timeDeconnect(0.)
     , tailleSep(0)
     , cp(NULL)
     , open(NULL)
@@ -105,7 +106,14 @@ Solver::Solver(Cost initUpperBound)
     , nbChoiceChange(0)
     , nbReadOnly(0)
     , solveDepth(0)
-{
+#ifdef OPENMPI
+    , hbfsWaitingTime(0.)
+    , initWorkerNbNodes(0)
+    , initWorkerNbBacktracks(0)
+    , initWorkerNbDEE(0)
+    , initWorkerNbRecomputationNodes(0)
+#endif
+ {
     searchSize = new StoreInt(0);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
 }
@@ -1084,10 +1092,28 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
         remove(varIndex, value, nbBacktracks >= hbfsLimit);
     if (!ToulBar2::hbfs)
         showGap(wcsp->getLb(), wcsp->getUb());
-    if (nbBacktracks >= hbfsLimit)
+    if (nbBacktracks >= hbfsLimit) {
         addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
-    else
+#ifdef OPENMPI
+        if (ToulBar2::parallel && ToulBar2::burst && world.rank() != MASTER) {
+            vector<Value> emptySol;
+            Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, MAX_COST, emptySol);
+            if (ToulBar2::verbose >= 1)
+                cout << ">>> worker "  << world.rank() << " send open-node message to master " << work2 << endl;
+            double beginWaiting = realTime();
+            mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
+            while (!req.test().is_initialized() && !MPI_interrupted());
+            hbfsWaitingTime += realTime() - beginWaiting;
+            assert(open->empty());
+            initWorkerNbNodes = nbNodes;
+            initWorkerNbBacktracks = nbBacktracks;
+            initWorkerNbDEE = wcsp->getNbDEE();
+            initWorkerNbRecomputationNodes = nbRecomputationNodes;
+        }
+#endif
+    } else {
         recursiveSolve(lb);
+    }
 }
 
 void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
@@ -1486,6 +1512,24 @@ void Solver::newSolution()
         throw NbSolutionsOut();
     if (ToulBar2::divNbSol > 1 && wcsp->getLb() <= prevDivSolutionCost)
         throw DivSolutionOut();
+#ifdef OPENMPI
+    if (ToulBar2::parallel && ToulBar2::burst && world.rank() != MASTER) {
+        Cost newWorkerUb = wcsp->getSolutionCost();
+        vector<Value> workerSol = wcsp->getSolution();
+        assert(open->empty());
+        Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, newWorkerUb, workerSol);
+        if (ToulBar2::verbose >= 1)
+            cout << ">>> worker "  << world.rank() << " send solution message to master " << work2 << endl;
+        double beginWaiting = realTime();
+        mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
+        while (!req.test().is_initialized() && !MPI_interrupted());
+        hbfsWaitingTime += realTime() - beginWaiting;
+        initWorkerNbNodes = nbNodes;
+        initWorkerNbBacktracks = nbBacktracks;
+        initWorkerNbDEE = wcsp->getNbDEE();
+        initWorkerNbRecomputationNodes = nbRecomputationNodes;
+    }
+#endif
 }
 
 void Solver::recursiveSolve(Cost lb)
@@ -1569,7 +1613,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         if (ToulBar2::parallel && (!cluster || cluster == wcsp->getTreeDec()->getRoot())) {
             world.barrier(); /* IMPORTANT */
             ToulBar2::startRealTimeAfterPreProcessing = realTime();
-            hbfsWaitingTime = 0;
+            hbfsWaitingTime = 0.;
             if (world.rank() == MASTER) {
                 return hybridSolveMaster(cluster, clb, cub);
             } else {
@@ -1788,8 +1832,10 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         while (idleQ.size() < (size_t) (world.size()-1)) {
             Work work; // dummy work
             mpi::status status = world.recv(mpi::any_source, mpi::any_tag, work); // blocking recv to wait for matching messages from any worker
-            activeWork.erase(status.source());
-            idleQ.push(status.source());
+            if (status.tag() == IDLETAG) {
+                activeWork.erase(status.source());
+                idleQ.push(status.source());
+            }
         }
     } else if (!cluster || cluster->getNbVars() > 0)
         nbHybridContinue++;
@@ -1812,6 +1858,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         }
         Cost initub = wcsp->getUb();
         // loop to distribute jobs to workers
+        vector<mpi::request> reqs;
         while (!open_->finished() && !idleQ.empty()) { // while there is work to do and workers to do it
             int worker = idleQ.front(); // get the first worker in the queue
             vector<Value> masterSol;
@@ -1830,17 +1877,21 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
 
             if (ToulBar2::verbose >= 1)
                 cout << ">>> master send to worker " << worker << " a message " << work << endl;
-            world.send(worker, WORKTAG, work); // blocking send: the master send work to an idle worker
+            reqs.push_back(world.isend(worker, WORKTAG, work)); // non-blocking send: the master send work to an idle worker
         }
+        double beginWaiting = realTime();
+        mpi::wait_all(reqs.begin(), reqs.end());
 
-        Work work2; // object work2 will be populated with workers' best solution ub and other information from this worker after it has performed a DFS
+        Work work2; // object work2 will be populated with workers' best solution ub and other information from this worker after it has performed a (can be partial in burst mode) DFS
         mpi::status status2 = world.recv(mpi::any_source, mpi::any_tag, work2); // blocking recv to wait for matching messages from any worker
+        hbfsWaitingTime += realTime() - beginWaiting;
 
         wcsp->updateUb(work2.ub);
         open_->updateUb(work2.ub);
         nbNodes += work2.nbNodes;
         nbBacktracks += work2.nbBacktracks;
         ((WCSP*)wcsp)->incNbDEE(work2.nbDEE);
+        nbRecomputationNodes += work2.nbRecomputationNodes;
 
         if (!work2.open.empty()) { // the master updates its CPStore with the decisions associated with the nodes sent by the worker
             for (ptrdiff_t i = 0; i < (ptrdiff_t)work2.cp.size(); i++) {
@@ -1859,14 +1910,13 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         if (cluster) {
             assert(work2.lb <= work2.ub);
             open_->updateClosedNodesLb(work2.lb);
-            open_->updateUb(work2.ub);
-            cub = MIN(cub, work2.ub);
-        } else {
-            cub = wcsp->getUb();
         }
+        cub = MIN(cub, work2.ub);
 
-        activeWork.erase(status2.source());
-        idleQ.push(status2.source());
+        if (status2.tag() == IDLETAG) {
+            activeWork.erase(status2.source());
+            idleQ.push(status2.source());
+        }
 
         Cost minLbWorkers = MAX_COST;
         for (std::unordered_map<int, OpenNode>::const_iterator it = activeWork.begin(); it != activeWork.end(); ++it) { // compute the min of lb among those of active workers
@@ -2008,9 +2058,10 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
         cp_->stop = 0; // to have stop=start=index=0
         cp_->store();
 
-        Long initNbNodes = nbNodes;
-        Long initNbBacktracks = nbBacktracks;
-        Long initNbDEE = wcsp->getNbDEE();
+        initWorkerNbNodes = nbNodes;
+        initWorkerNbBacktracks = nbBacktracks;
+        initWorkerNbDEE = wcsp->getNbDEE();
+        initWorkerNbRecomputationNodes = nbRecomputationNodes;
 
         Work work;
         double beginWaiting = realTime();
@@ -2097,7 +2148,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
             } else {
                 if (ToulBar2::vac < 0)
                     ToulBar2::vac = 0;
-                recursiveSolve(bestlb); // call DFS
+                recursiveSolve(bestlb); // call DFS (can generate a Contradiction, even after finding a better solution)
                 work.lb = MAX(work.lb, bestlb);
                 cub = MIN(cub, wcsp->getUb());
             }
@@ -2106,7 +2157,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
             work.lb = MAX(work.lb, wcsp->getUb());
         }
         if (!cluster) { // synchronize current upper bound with DFS (without tree decomposition)
-            cub = wcsp->getUb();
+            cub = MIN(cub, wcsp->getUb());
         }
         Store::restore(storedepthBFS);
         ToulBar2::vac = storeVAC;
@@ -2132,17 +2183,23 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
                 cout << "HBFS backtrack limit for worker#" << world.rank() << ": " << ToulBar2::hbfs << endl;
         }
 
-        Cost newWorkerUb = wcsp->getSolutionCost();
         vector<Value> workerSol;
-        if (newWorkerUb < work.ub) {
-            workerSol = wcsp->getSolution();
-            assert(cub == newWorkerUb);
+        if (!ToulBar2::burst) {
+            Cost newWorkerUb = wcsp->getSolutionCost();
+            if (newWorkerUb < work.ub) {
+                workerSol = wcsp->getSolution();
+                assert(cub == newWorkerUb);
+            }
+        } else {
+            open_->init(); // clb=cub=MAX_COST  method added to init openList attributes
+            cp_->clear(); // size = 0  added to put new cp out of the while(1)
+            assert(open_->empty());
         }
-        Work work2(*cp_, *open_, nbNodes - initNbNodes, nbBacktracks - initNbBacktracks, wcsp->getNbDEE() - initNbDEE, work.lb, cub, workerSol); //  create the message with cub and open nodes information from local open and cp
+        Work work2(*cp_, *open_, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, work.lb, cub, workerSol);
         if (ToulBar2::verbose >= 1)
-            cout << ">>> worker "  << world.rank() << " send message to master " << work2 << endl;
+            cout << ">>> worker "  << world.rank() << " send closing-node message to master " << work2 << endl;
         beginWaiting = realTime();
-        mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
+        mpi::request req = world.isend(MASTER, IDLETAG, work2); // non-blocking send to master saying we have finished exploring its open node
         while (!req.test().is_initialized() && !MPI_interrupted());
         hbfsWaitingTime += realTime() - beginWaiting;
     }
@@ -2230,6 +2287,11 @@ void Solver::beginSolve(Cost ub)
     tailleSep = 0;
     ToulBar2::limited = false;
 #ifdef OPENMPI
+    hbfsWaitingTime = 0.;
+    initWorkerNbNodes = 0;
+    initWorkerNbBacktracks = 0;
+    initWorkerNbDEE = 0;
+    initWorkerNbRecomputationNodes = 0;
     if (ToulBar2::parallel) {
         activeWork.clear();
         bestsolWork.clear();
@@ -2821,7 +2883,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         wcsp->printVACStat();
 
 #ifdef OPENMPI
-    if (((ToulBar2::verbose >= 0 && !ToulBar2::parallel) || (ToulBar2::parallel && ToulBar2::verbose == -1 && world.rank() != MASTER)) && nbHybrid >= 1 && nbNodes > 0) {
+    if (((ToulBar2::verbose >= 0 && !ToulBar2::parallel) || (ToulBar2::parallel && ToulBar2::verbose >= -1)) && nbHybrid >= 1 && nbNodes > 0) {
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes;
         if (ToulBar2::parallel) {
             cout << " % (#pid: " << world.rank() << " wait: " << hbfsWaitingTime << " seconds)";

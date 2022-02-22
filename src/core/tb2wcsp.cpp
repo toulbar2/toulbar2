@@ -262,6 +262,9 @@ Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
 Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
 ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
 ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
+#ifdef OPENMPI
+bool ToulBar2::burst;
+#endif
 Long ToulBar2::eps;
 string ToulBar2::epsFilename;
 
@@ -465,6 +468,9 @@ void tb2init()
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
     ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
+#ifdef OPENMPI
+    ToulBar2::burst = true;
+#endif
     ToulBar2::eps = 0;
     ToulBar2::epsFilename = "subproblems.txt";
 
@@ -656,6 +662,12 @@ void tb2checkOptions()
         cout << "Error: embarrassingly parallel search works only with hybrid best-first search (use -eps with -hbfs)." << endl;
         throw BadConfiguration();
     }
+#ifdef OPENMPI
+    if (ToulBar2::parallel && ToulBar2::burst && ToulBar2::btdMode >= 1) {
+        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+        throw BadConfiguration();
+    }
+#endif
     if (ToulBar2::verifyOpt && (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0)) {
         cout << "Warning! Cannot perform variable elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::elimDegree = -1;

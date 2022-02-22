@@ -855,6 +855,9 @@ public:
     static Long hbfsBeta; // inverse of maximum node redundancy goal limit
     static ptrdiff_t hbfsCPLimit; // limit on the number of choice points stored inside open node list
     static ptrdiff_t hbfsOpenNodeLimit; // limit on the number of open nodes
+#ifdef OPENMPI
+    static bool burst; // workers send open nodes ASAP in parallel HBFS
+#endif
     static Long eps; // Number of open nodes to collect before exit
     static string epsFilename; // Filename for EPS output
 

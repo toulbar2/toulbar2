@@ -470,6 +470,7 @@ public:
     static const int MASTER = 0;   // Master MPI rank number
     static const int WORKTAG = 1;   // MPI tag value for still working
     static const int DIETAG = 2;   // MPI tag value for stop working
+    static const int IDLETAG = 3;   // MPI tag value for no more working
 #endif
     static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound); ///< \brief WeightedCSP Solver factory
 

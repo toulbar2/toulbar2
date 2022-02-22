@@ -210,6 +210,7 @@ public:
             ar& nbNodes;
             ar& nbBacktracks;
             ar& nbDEE;
+            ar& nbRecomputationNodes;
             ar& lb;
             ar& ub;
             ar& open;
@@ -218,23 +219,37 @@ public:
         }
 
     public:
-        bool hbfs = true; // false if master cp/open memory is out
-        Long nbNodes = 0;
-        Long nbBacktracks = 0;
-        Long nbDEE = 0;
-        Cost lb = MIN_COST; // best lower bound known by the master or found by the worker
-        Cost ub = MAX_COST; // best current solution a.k.a incumbent solution
+        bool hbfs; // false if master cp/open memory is out
+        Long nbNodes;
+        Long nbBacktracks;
+        Long nbDEE;
+        Long nbRecomputationNodes;
+        Cost lb; // best lower bound known by the master or found by the worker
+        Cost ub; // best current solution a.k.a incumbent solution
         vector<OpenNode> open; // priority queue which will contain the node(s) to eXchange between the processes
         vector<ChoicePoint> cp; // vector of choice points
         vector<Value> sol;
 
-        Work() {} // dummy message when stopping
+        Work()
+        : hbfs(true)
+        , nbNodes(0)
+        , nbBacktracks(0)
+        , nbDEE(0)
+        , nbRecomputationNodes(0)
+        , lb(MIN_COST)
+        , ub(MAX_COST)
+        {} // dummy message when stopping
 
         /**
          * @brief constructor used by the master
          */
         Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost lbMaster_, const Cost ubMaster_, vector<Value>& sol_)
-        : lb(lbMaster_)
+        : hbfs(true)
+        , nbNodes(0)
+        , nbBacktracks(0)
+        , nbDEE(0)
+        , nbRecomputationNodes(0)
+        , lb(lbMaster_)
         , ub(ubMaster_)
         {
 
@@ -242,7 +257,7 @@ public:
 
             openMaster_.pop(); // pop up directly the open queue!!
 
-            for (ptrdiff_t i = open[0].first; i < open[0].last; i++) { // create a sequence of decisions in the vector vec.  node.last: index in CPStore of the past-the-end element
+            for (ptrdiff_t i = open[0].first; i < open[0].last; i++) { // create a sequence of decisions
                 assert(i >= 0 && (size_t)i < cpMaster_.size());
                 assert(i < cpMaster_.stop);
                 cp.push_back(cpMaster_[i]);
@@ -258,37 +273,46 @@ public:
         /**
          * @brief constructor used by the worker
          */
-        Work(CPStore& cpWorker_, OpenList& openWorker_, Long nbNodes_, Long nbBacktracks_, Long nbDEE_, const Cost lbWorker_, const Cost ubWorker_, vector<Value>& sol_)
-        : nbNodes(nbNodes_)
+        Work(CPStore& cpWorker_, OpenList& openWorker_, const Long nbNodes_, const Long nbBacktracks_, const Long nbDEE_, const Long nbRecomputationNodes_, const Cost lbWorker_, const Cost ubWorker_, vector<Value>& sol_)
+        : hbfs(true)
+        , nbNodes(nbNodes_)
         , nbBacktracks(nbBacktracks_)
         , nbDEE(nbDEE_)
+        , nbRecomputationNodes(nbRecomputationNodes_)
         , lb(lbWorker_)
         , ub(ubWorker_)
         {
 
-            while (!openWorker_.empty()) // init of vector of OpenNode nodeX
+            ptrdiff_t cpmax = 0; // stop collecting choice points if unused. however, we must start collecting choice points at position 0 to be consistent with stored node.first and node.last even if they are not used.
+            while (!openWorker_.empty()) // fill-in local vector of open nodes
             {
                 OpenNode node = openWorker_.top();
                 assert(node.first >= 0);
                 assert(node.first <= node.last);
                 assert(node.last <= cpWorker_.stop);
+                cpmax = MAX(cpmax, node.last);
 
                 open.push_back(node);
 
                 openWorker_.pop(); // pop up directly the open queue!!
             }
-            openWorker_.init(); // clb=cub=MAX_COST  method added to init openList attributes
-            // because emptying an openList is not enough we have to initialize its attributes
+
+            if (!ToulBar2::burst) {
+                openWorker_.init(); // clb=cub=MAX_COST  method added to init openList attributes
+                // because emptying an openList is not enough we have to initialize its attributes
+            }
 
             if (open.size() > 0) {
-                for (ptrdiff_t i = 0; i < cpWorker_.stop; i++) {
+                assert(cpmax <= cpWorker_.stop);
+                for (ptrdiff_t i = 0; i < cpmax; i++) {
                     assert((size_t)i < cpWorker_.size());
                     cp.push_back(cpWorker_[i]);
                     assert(cp.back().op >= 0 && cp.back().op < CP_MAX);
                 }
             }
 
-            cpWorker_.clear(); // size = 0  added to put new cp out of the while(1)
+            if (!ToulBar2::burst)
+                cpWorker_.clear(); // size = 0  added to put new cp out of the while(1)
 //            cpWorker_.shrink_to_fit(); // to win space we shrink the vector: capacity=0 //TODO: test if it speeds-up things or not
 
             if (sol_.size() > 0) {
@@ -406,6 +430,10 @@ protected:
 
 #ifdef OPENMPI
     double hbfsWaitingTime;
+    Long initWorkerNbNodes;
+    Long initWorkerNbBacktracks;
+    Long initWorkerNbDEE;
+    Long initWorkerNbRecomputationNodes;
     mpi::communicator world;
     queue<int> idleQ; //MASTER ONLY container with the rank of the free workers
     std::unordered_map<int, OpenNode> activeWork; //MASTER ONLY map the rank i of a worker with an open node currently explored by the worker
