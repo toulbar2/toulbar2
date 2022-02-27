@@ -379,25 +379,25 @@ public:
 
     double computeTightness() override
     {
-//TODO: check if multiplying by the sum of median/mean unary costs (only on VarVal?) improve the results
-//TODO: see if arity plays a role (small arity first?)
-//        double ucost = UNIT_COST;
-//        for (int i = 0; i < arity_; i++) {
-//            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-//            int domsize = var->getDomainSize();
-//            ValueCost array[domsize];
-//            wcsp->getEnumDomainAndCost(var->wcspIndex, array);
-//            if (ToulBar2::weightedTightness == 2) {
-//                Cost unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
-//                ucost += (double)unarymediancost;
-//            } else {
-//                Cost unarytotalcost = MIN_COST;
-//                for (auto& elt : array) {
-//                    unarytotalcost += elt.cost;
-//                }
-//                ucost += (double)unarytotalcost / (double)domsize;
-//            }
-//        }
+        //TODO: check if multiplying by the sum of median/mean unary costs (only on VarVal?) improve the results
+        //TODO: see if arity plays a role (small arity first?)
+        //        double ucost = UNIT_COST;
+        //        for (int i = 0; i < arity_; i++) {
+        //            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+        //            int domsize = var->getDomainSize();
+        //            ValueCost array[domsize];
+        //            wcsp->getEnumDomainAndCost(var->wcspIndex, array);
+        //            if (ToulBar2::weightedTightness == 2) {
+        //                Cost unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+        //                ucost += (double)unarymediancost;
+        //            } else {
+        //                Cost unarytotalcost = MIN_COST;
+        //                for (auto& elt : array) {
+        //                    unarytotalcost += elt.cost;
+        //                }
+        //                ucost += (double)unarytotalcost / (double)domsize;
+        //            }
+        //        }
         assert(capacity > 0);
         assert(MaxWeight > 0);
         return ((double)capacity / (double)MaxWeight); // * ucost ???
@@ -679,9 +679,9 @@ public:
         for (int i = 0; i < carity; i++) {
             for (int j = 0; j < nbValue[i]; ++j) {
                 if (OptSol[current_scope_idx[i]][current_val_idx[i][j]] > 0) {
-                    if (current_val_idx[i][j] == (int) VarVal[current_scope_idx[i]].size() - 1) {
+                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
                         Cost C = UnaryCost0[current_scope_idx[i]];
-                        if(C > MIN_COST){
+                        if (C > MIN_COST) {
                             Group_extendNVV(current_scope_idx[i], C);
                             deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] += C;
                         }
@@ -796,7 +796,7 @@ public:
                             if (W < capacity) {
                                 //Sort the Slopes
                                 sort(Slopes.begin(), Slopes.end(),
-                                     [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
+                                    [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
                                         if (x[3] == y[3]) {
                                             if (x[0] == y[0])
                                                 return weights[int(x[0])][int(x[1])] <= weights[int(y[0])][int(y[1])];

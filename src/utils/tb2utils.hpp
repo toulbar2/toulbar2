@@ -55,7 +55,7 @@ using std::pair;
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 namespace serialization = boost::serialization;
-# include <boost/optional.hpp>
+#include <boost/optional.hpp>
 #endif
 
 #ifdef NDEBUG

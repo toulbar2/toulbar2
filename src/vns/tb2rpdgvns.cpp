@@ -134,17 +134,18 @@ bool ReplicatedParallelDGVNS::radgvns()
     // Get all clusters from the tree decomposition of constraint graph
     int c = 0;
     if (!complete && bestUb > ToulBar2::vnsOptimum) {
-        for (int p = 0; p < npr + 1; ++p) if (p != MASTER) {
-            pr pr_p = pr();
-            pr_p.cl = c;
-            pr_p.k = ToulBar2::vnsKmin;
-            pr_p.lds = ToulBar2::vnsLDSmin;
-            pr_p.synch = false;
-            vecPR.push_back(pr_p);
-            SolMsg solmsg(pr_p.cl, pr_p.k, pr_p.lds, bestUb, bestSolution);
-            world.send(p, WORKTAG, solmsg);
-            c = (c + 1) % file.size();
-        }
+        for (int p = 0; p < npr + 1; ++p)
+            if (p != MASTER) {
+                pr pr_p = pr();
+                pr_p.cl = c;
+                pr_p.k = ToulBar2::vnsKmin;
+                pr_p.lds = ToulBar2::vnsLDSmin;
+                pr_p.synch = false;
+                vecPR.push_back(pr_p);
+                SolMsg solmsg(pr_p.cl, pr_p.k, pr_p.lds, bestUb, bestSolution);
+                world.send(p, WORKTAG, solmsg);
+                c = (c + 1) % file.size();
+            }
     }
     Cost pbestUb = MAX_COST;
     map<int, Value> pbestSolution;
@@ -164,9 +165,10 @@ bool ReplicatedParallelDGVNS::radgvns()
         }
     }
 
-    for (int p = 0; p < world.size(); ++p) if (p != MASTER) {
-        world.isend(p, DIETAG, SolMsg());
-    }
+    for (int p = 0; p < world.size(); ++p)
+        if (p != MASTER) {
+            world.isend(p, DIETAG, SolMsg());
+        }
 
     return complete && (bestUb < MAX_COST);
 }
@@ -238,11 +240,12 @@ bool ReplicatedParallelDGVNS::rsdgvns()
         int k = ToulBar2::vnsKmin;
         while (npr && !complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
 
-            for (int p = 0; p < npr + 1; ++p) if (p != MASTER) {
-                SolMsg solmsg(c, k, lds, bestUb, bestSolution);
-                world.send(p, WORKTAG, solmsg);
-                c = (c + 1) % file.size();
-            }
+            for (int p = 0; p < npr + 1; ++p)
+                if (p != MASTER) {
+                    SolMsg solmsg(c, k, lds, bestUb, bestSolution);
+                    world.send(p, WORKTAG, solmsg);
+                    c = (c + 1) % file.size();
+                }
 
             int finished = 0;
             Cost pBestUb;
@@ -325,9 +328,10 @@ bool ReplicatedParallelDGVNS::rsdgvns()
         }
     }
 
-    for (int p = 0; p < world.size(); ++p) if (p != MASTER) {
-        world.isend(p, DIETAG, SolMsg());
-    }
+    for (int p = 0; p < world.size(); ++p)
+        if (p != MASTER) {
+            world.isend(p, DIETAG, SolMsg());
+        }
 
     return complete && (bestUb < MAX_COST);
 }

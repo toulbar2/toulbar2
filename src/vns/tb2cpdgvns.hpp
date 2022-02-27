@@ -46,14 +46,14 @@ public:
 
     SolutionMessage() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
     SolutionMessage(uint cluster_, uint numberclu_, int kinit_, int kmax_, int sec_, int msec_, Cost bestUb_, map<int, Value>& bestSolution_)
-    : cluster(cluster_)
-    , numberclu(numberclu_)
-    , k(kinit_)
-    , kmax(kmax_)
-    , sec(sec_)
-    , msec(msec_)
-    , bestUb(bestUb_)
-    , bestSolution(bestSolution_)
+        : cluster(cluster_)
+        , numberclu(numberclu_)
+        , k(kinit_)
+        , kmax(kmax_)
+        , sec(sec_)
+        , msec(msec_)
+        , bestUb(bestUb_)
+        , bestSolution(bestSolution_)
     {
     }
     void get(uint& cluster_, uint& numberclu_, int& k_, int& kmax_, int& sec_, int& msec_, Cost& bestUb_, map<int, Value>& bestSolution_)

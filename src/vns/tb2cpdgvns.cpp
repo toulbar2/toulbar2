@@ -68,7 +68,7 @@ void CooperativeParallelDGVNS::master()
     h->init(wcsp, this);
 
     // verify the number of processes and number of clusters
-    int processes = min(world.size(), h->getSize()+1);
+    int processes = min(world.size(), h->getSize() + 1);
 
     if (ToulBar2::vnsOutput)
         ToulBar2::vnsOutput << "#param " << ToulBar2::vnsNeighborVarHeur << " " << ToulBar2::vnsKmin << " " << ToulBar2::vnsKmax << " " << ToulBar2::lds << " " << ToulBar2::vnsInitSol << " " << processes << " " << world.size() << " " << h->getSize() << endl;
@@ -82,22 +82,23 @@ void CooperativeParallelDGVNS::master()
     file = h->getClustersIndex();
 
     /* Seed the slaves; send one unit of work (initial solution) to each slave. */
-    for (int rank = 0; rank < processes; ++rank) if (rank != MASTER) {
-        /* choice one free cluster to send it to the processe */
-        uint cluster = getCluster();
-        int adjcluster = 0;
-        int kmax = h->getClustersSize(cluster, adjcluster);
-        while (kmax < ToulBar2::vnsKmin) {
-            adjcluster++;
-            kmax = h->getClustersSize(cluster, adjcluster);
-        }
-        //cout << kmax << " " << adjcluster << endl ;
-        /* Convert initial solution with cluster and kinit parameters in buffer, for each slave process */
-        SolutionMessage solmsg(cluster, adjcluster, ToulBar2::vnsKmin, ToulBar2::vnsKmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
+    for (int rank = 0; rank < processes; ++rank)
+        if (rank != MASTER) {
+            /* choice one free cluster to send it to the processe */
+            uint cluster = getCluster();
+            int adjcluster = 0;
+            int kmax = h->getClustersSize(cluster, adjcluster);
+            while (kmax < ToulBar2::vnsKmin) {
+                adjcluster++;
+                kmax = h->getClustersSize(cluster, adjcluster);
+            }
+            //cout << kmax << " " << adjcluster << endl ;
+            /* Convert initial solution with cluster and kinit parameters in buffer, for each slave process */
+            SolutionMessage solmsg(cluster, adjcluster, ToulBar2::vnsKmin, ToulBar2::vnsKmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
 
-        /* Send Initial Solution to each process */
-        world.send(rank, WORKTAG, solmsg);
-    }
+            /* Send Initial Solution to each process */
+            world.send(rank, WORKTAG, solmsg);
+        }
 
     /* Loop over getting new Best Solutions */
     uint finished = 0;
@@ -179,10 +180,11 @@ void CooperativeParallelDGVNS::master()
             world.send(status.source(), DIETAG, SolutionMessage());
         }
     }
-    for (int rank = 0; rank < world.size(); ++rank) if (rank != MASTER) {
-        //printf("Send finish empty msg to finish with %d\n",rank);
-        world.isend(rank, DIETAG, SolutionMessage());
-    }
+    for (int rank = 0; rank < world.size(); ++rank)
+        if (rank != MASTER) {
+            //printf("Send finish empty msg to finish with %d\n",rank);
+            world.isend(rank, DIETAG, SolutionMessage());
+        }
 }
 
 void CooperativeParallelDGVNS::slave()
@@ -199,7 +201,7 @@ void CooperativeParallelDGVNS::slave()
     while (true) {
         /* Receive a message from the master */
         SolutionMessage solmsg;
-        mpi::status status = world.recv(0, mpi::any_tag, solmsg);  /* receive from master */
+        mpi::status status = world.recv(0, mpi::any_tag, solmsg); /* receive from master */
 
         /* Check the tag of the received message. */
         if (status.tag() == DIETAG) {

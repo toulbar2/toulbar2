@@ -113,7 +113,7 @@ Solver::Solver(Cost initUpperBound)
     , initWorkerNbDEE(0)
     , initWorkerNbRecomputationNodes(0)
 #endif
- {
+{
     searchSize = new StoreInt(0);
     wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
 }
@@ -1006,7 +1006,7 @@ void Solver::showGap(Cost newLb, Cost newUb)
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
             std::ios_base::fmtflags f(cout.flags());
-            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+            cout << "Optimality gap: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << Dglb << ", " << Dgub << "] " << std::setprecision(DECIMAL_POINT) << (100. * (Dgub - Dglb)) / max(fabsl(Dglb), fabsl(Dgub)) << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
             cout.flags(f);
         }
     }
@@ -1099,10 +1099,11 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
             vector<Value> emptySol;
             Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, MAX_COST, emptySol);
             if (ToulBar2::verbose >= 1)
-                cout << ">>> worker "  << world.rank() << " send open-node message to master " << work2 << endl;
+                cout << ">>> worker " << world.rank() << " send open-node message to master " << work2 << endl;
             double beginWaiting = realTime();
             mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
-            while (!req.test().is_initialized() && !MPI_interrupted());
+            while (!req.test().is_initialized() && !MPI_interrupted())
+                ;
             hbfsWaitingTime += realTime() - beginWaiting;
             assert(open->empty());
             initWorkerNbNodes = nbNodes;
@@ -1399,25 +1400,25 @@ void Solver::newSolution()
     if (ToulBar2::isZ) {
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, (Cost)(wcsp->getLb() + wcsp->getNegativeLb()));
         if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
-            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
     }
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || (!ToulBar2::parallel && ToulBar2::showSolutions)) {
             if (ToulBar2::haplotype)
-                cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                cout << "***New solution: " << wcsp->getLb() << " log10like: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(wcsp->getLb()) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
             else if (!ToulBar2::bayesian)
-                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
             else
-                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                cout << "New solution: " << wcsp->getLb() << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
         }
     }
 
     wcsp->restoreSolution(); // update all variables to be in the current assignment (necessary when some variables are eliminated)
     if (!ToulBar2::isZ)
-        wcsp->setSolution(wcsp->getLb());  // take current assignment and put it in solution (stl c++ map)
+        wcsp->setSolution(wcsp->getLb()); // take current assignment and put it in solution (stl c++ map)
 
 #ifdef OPENMPI
-    if (ToulBar2::showSolutions && (!ToulBar2::parallel || world.rank()==MASTER)) {
+    if (ToulBar2::showSolutions && (!ToulBar2::parallel || world.rank() == MASTER)) {
 #else
     if (ToulBar2::showSolutions) {
 #endif
@@ -1519,10 +1520,11 @@ void Solver::newSolution()
         assert(open->empty());
         Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, newWorkerUb, workerSol);
         if (ToulBar2::verbose >= 1)
-            cout << ">>> worker "  << world.rank() << " send solution message to master " << work2 << endl;
+            cout << ">>> worker " << world.rank() << " send solution message to master " << work2 << endl;
         double beginWaiting = realTime();
         mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
-        while (!req.test().is_initialized() && !MPI_interrupted());
+        while (!req.test().is_initialized() && !MPI_interrupted())
+            ;
         hbfsWaitingTime += realTime() - beginWaiting;
         initWorkerNbNodes = nbNodes;
         initWorkerNbBacktracks = nbBacktracks;
@@ -1779,8 +1781,10 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
 pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
 {
     if (ToulBar2::verbose >= 1) {
-        if (cluster) cout << "hybridSolveMaster C" << cluster->getId() << " " << clb << " " << cub << endl;
-        else cout << "hybridSolveMaster " << clb << " " << cub << endl;
+        if (cluster)
+            cout << "hybridSolveMaster C" << cluster->getId() << " " << clb << " " << cub << endl;
+        else
+            cout << "hybridSolveMaster " << clb << " " << cub << endl;
     }
     assert(clb < cub);
     assert(wcsp->getUb() == cub);
@@ -1795,7 +1799,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         assert(cluster == wcsp->getTreeDec()->getRoot());
         if (!cluster->open) {
             cluster->open = new OpenList();
-            assert(idleQ.size() == (size_t) (world.size()-1));
+            assert(idleQ.size() == (size_t)(world.size() - 1));
         }
         cluster->setUb(cub); // global problem upper bound
         assert(cluster->open);
@@ -1819,7 +1823,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             delete open;
         open = new OpenList();
         open_ = open;
-        assert(idleQ.size() == (size_t) (world.size()-1));
+        assert(idleQ.size() == (size_t)(world.size() - 1));
     }
     cp_->store();
     if (open_->size() == 0 || (cluster && (clb >= open_->getClosedNodesLb() || cub > open_->getUb()))) { // start a new list of open nodes if needed
@@ -1829,7 +1833,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         *open_ = OpenList(MAX(MIN_COST, cub), MAX(MIN_COST, cub));
         addOpenNode(*cp_, *open_, clb);
         // wait for messages from workers in order to reinitialize the idleQ //TODO: send a message to ask to stop current search but not die
-        while (idleQ.size() < (size_t) (world.size()-1)) {
+        while (idleQ.size() < (size_t)(world.size() - 1)) {
             Work work; // dummy work
             mpi::status status = world.recv(mpi::any_source, mpi::any_tag, work); // blocking recv to wait for matching messages from any worker
             if (status.tag() == IDLETAG) {
@@ -1863,8 +1867,8 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             int worker = idleQ.front(); // get the first worker in the queue
             vector<Value> masterSol;
             Cost masterUb = wcsp->getSolutionCost();
-            if (masterUb < MAX_COST && (bestsolWork.find(worker)==bestsolWork.end() || masterUb < bestsolWork[worker])) {
-                masterSol = wcsp->getSolution();// the master sends the best solution or nothing
+            if (masterUb < MAX_COST && (bestsolWork.find(worker) == bestsolWork.end() || masterUb < bestsolWork[worker])) {
+                masterSol = wcsp->getSolution(); // the master sends the best solution or nothing
                 bestsolWork[worker] = masterUb;
             }
             assert(masterUb >= MAX_COST || wcsp->getUb() == masterUb);
@@ -1930,9 +1934,10 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             }
             epsDumpSubProblems(*cp_, *open_);
             vector<mpi::request> reqs;
-            for (int i = 0; i < world.size(); i++) if (i != MASTER) {
-                reqs.push_back(world.isend(i, DIETAG, Work()));
-            }
+            for (int i = 0; i < world.size(); i++)
+                if (i != MASTER) {
+                    reqs.push_back(world.isend(i, DIETAG, Work()));
+                }
             mpi::wait_all(reqs.begin(), reqs.end());
             ToulBar2::interrupted = true;
             throw TimeOut();
@@ -1967,11 +1972,11 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
 
             if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
                 if (ToulBar2::haplotype)
-                    cout << "***New solution: " << work2.ub << " log10like: " << ToulBar2::haplotype->Cost2LogProb(work2.ub) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(work2.ub) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                    cout << "***New solution: " << work2.ub << " log10like: " << ToulBar2::haplotype->Cost2LogProb(work2.ub) / Log(10.) << " logProb: " << ToulBar2::haplotype->Cost2LogProb(work2.ub) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
                 else if (!ToulBar2::bayesian)
-                    cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                    cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
                 else
-                    cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(work2.ub) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(work2.ub) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                    cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(work2.ub) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(work2.ub) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
             }
 
             if (ToulBar2::showSolutions) {
@@ -1999,9 +2004,10 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
     assert(clb <= cub);
     if (clb == cub) {
         vector<mpi::request> reqs;
-        for (int i = 0; i < world.size(); i++) if (i != MASTER) {
-            reqs.push_back(world.isend(i, DIETAG, Work()));
-        }
+        for (int i = 0; i < world.size(); i++)
+            if (i != MASTER) {
+                reqs.push_back(world.isend(i, DIETAG, Work()));
+            }
         mpi::wait_all(reqs.begin(), reqs.end());
     }
     return make_pair(clb, cub);
@@ -2010,8 +2016,10 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
 pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
 {
     if (ToulBar2::verbose >= 1) {
-        if (cluster) cout << "hybridSolveWorker#" << world.rank() << " C" << cluster->getId() << " " << clb << " " << cub << endl;
-        else cout << "hybridSolveWorker#" << world.rank() << " " << clb << " " << cub << endl;
+        if (cluster)
+            cout << "hybridSolveWorker#" << world.rank() << " C" << cluster->getId() << " " << clb << " " << cub << endl;
+        else
+            cout << "hybridSolveWorker#" << world.rank() << " " << clb << " " << cub << endl;
     }
     assert(clb < cub);
     assert(wcsp->getUb() == cub);
@@ -2078,6 +2086,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
             for (int i = 0; i < int(work.sol.size()); i++) {
                 masterSolMap[i] = work.sol[i];
             }
+            assert(work.ub <= cub);
             wcsp->setSolution(work.ub, &masterSolMap); // take current assignment and stock it in solution
         }
 
@@ -2125,7 +2134,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
         try {
             Store::store(); // store the depth of the DFS search
             OpenNode nd = open_->top(); // get a reference on the best node (min lower bound or, in case of equality, max depth)
-            open_->pop();  // best node is taken from priority queue open
+            open_->pop(); // best node is taken from priority queue open
             if (ToulBar2::verbose >= 3) {
                 if (wcsp->getTreeDec())
                     cout << "[C" << wcsp->getTreeDec()->getCurrentCluster()->getId() << "] ";
@@ -2133,7 +2142,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
             }
             if (ToulBar2::vac < 0 && Store::getDepth() + (nd.last - nd.first) >= abs(ToulBar2::vac))
                 ToulBar2::vac = 0;
-            restore(*cp_, nd);  // replay the sequence of decisions and recompute soft arc consistency
+            restore(*cp_, nd); // replay the sequence of decisions and recompute soft arc consistency
             Cost bestlb = MAX(nd.getCost(), wcsp->getLb());
             bestlb = MAX(bestlb, work.lb);
             if (cluster) {
@@ -2197,10 +2206,11 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
         }
         Work work2(*cp_, *open_, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, work.lb, cub, workerSol);
         if (ToulBar2::verbose >= 1)
-            cout << ">>> worker "  << world.rank() << " send closing-node message to master " << work2 << endl;
+            cout << ">>> worker " << world.rank() << " send closing-node message to master " << work2 << endl;
         beginWaiting = realTime();
         mpi::request req = world.isend(MASTER, IDLETAG, work2); // non-blocking send to master saying we have finished exploring its open node
-        while (!req.test().is_initialized() && !MPI_interrupted());
+        while (!req.test().is_initialized() && !MPI_interrupted())
+            ;
         hbfsWaitingTime += realTime() - beginWaiting;
     }
 
@@ -2296,9 +2306,10 @@ void Solver::beginSolve(Cost ub)
         activeWork.clear();
         bestsolWork.clear();
         assert(idleQ.empty());
-        for (int i = 0; i < world.size(); i++) if (i != MASTER) {
-            idleQ.push(i);
-        }
+        for (int i = 0; i < world.size(); i++)
+            if (i != MASTER) {
+                idleQ.push(i);
+            }
     }
 #endif
 
@@ -2393,7 +2404,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
 
     if (ToulBar2::verbose >= 0)
-        cout << "Preprocessing time: " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+        cout << "Preprocessing time: " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
     if (ToulBar2::verbose >= 0)
         cout << wcsp->numberOfUnassignedVariables() << " unassigned variables, " << wcsp->getDomainSizeSum() << " values in all current domains (med. size:" << wcsp->medianDomainSize() << ", max size:" << wcsp->getMaxCurrentDomainSize() << ") and " << wcsp->numberOfConnectedConstraints() << " non-unary cost functions (med. arity:" << wcsp->medianArity() << ", med. degree:" << wcsp->medianDegree() << ")" << endl;
     if (ToulBar2::verbose >= 0) {
@@ -2853,9 +2864,9 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             fprintf(ToulBar2::solution_uai_file, "\n");
         }
         cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
-        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
         cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";
-        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
         return;
     }
     if (ToulBar2::allSolutions) {
@@ -2873,7 +2884,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << "Number of used #goods  :    " << nbSGoodsUse << endl;
                 cout << "Size of sep            :    " << tailleSep << endl;
             }
-            cout << "Time                   :    " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+            cout << "Time                   :    " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
             cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
         }
         return;
@@ -2935,18 +2946,18 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             if (isLimited == 2)
                 cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
             if (ToulBar2::haplotype)
-                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             else if (!ToulBar2::bayesian)
-                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             else
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         } else {
             if (ToulBar2::xmlflag) {
                 ((WCSP*)wcsp)->solution_XML(true);
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else if (ToulBar2::maxsateval && !isLimited) {
                 cout << "o " << cost << endl;
                 cout << "s OPTIMUM FOUND" << endl;
@@ -2955,7 +2966,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         }
     } else {
         if (ToulBar2::verbose >= 0)
-            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         if (ToulBar2::maxsateval && !isLimited) {
             cout << "o " << cost << endl;
             cout << "s UNSATISFIABLE" << endl;
@@ -3368,7 +3379,11 @@ void Solver::epsDumpSubProblems(CPStore& cp, OpenList& open)
             nbsp++;
         }
     }
-    cout << endl << "Generating " << nbsp << " subproblems for EPS done in file " << ToulBar2::epsFilename << "." << endl << "Run them in parallel using " << std::thread::hardware_concurrency() << " cores, e.g. (*check pathname for original problem file*):" << endl << "./misc/script/eps.sh " << std::thread::hardware_concurrency() << " ./" << ToulBar2::epsFilename << " ./toulbar2 ./" << wcsp->getName() << " -ub=" << wcsp->getUb() << endl << endl;
+    cout << endl
+         << "Generating " << nbsp << " subproblems for EPS done in file " << ToulBar2::epsFilename << "." << endl
+         << "Run them in parallel using " << std::thread::hardware_concurrency() << " cores, e.g. (*check pathname for original problem file*):" << endl
+         << "./misc/script/eps.sh " << std::thread::hardware_concurrency() << " ./" << ToulBar2::epsFilename << " ./toulbar2 ./" << wcsp->getName() << " -ub=" << wcsp->getUb() << endl
+         << endl;
 }
 
 Solver::SolutionTrie::TrieNode::TrieNode(size_t w)

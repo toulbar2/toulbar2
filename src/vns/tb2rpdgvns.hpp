@@ -33,6 +33,7 @@ private:
         ar& bestUb;
         ar& bestSolution;
     }
+
 public:
     int cluster;
     int k;
@@ -42,11 +43,11 @@ public:
 
     SolMsg() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
     SolMsg(int cluster_, int k_, int lds_, Cost bestUb_, map<int, Value>& bestSolution_)
-    : cluster(cluster_)
-    , k(k_)
-    , lds(lds_)
-    , bestUb(bestUb_)
-    , bestSolution(bestSolution_)
+        : cluster(cluster_)
+        , k(k_)
+        , lds(lds_)
+        , bestUb(bestUb_)
+        , bestSolution(bestSolution_)
     {
     }
     void get(int& cluster_, int& k_, int& lds_, Cost& bestUb_, map<int, Value>& bestSolution_)
@@ -68,14 +69,15 @@ private:
         ar& bestUb;
         ar& bestSolution;
     }
+
 public:
     Cost bestUb;
     map<int, Value> bestSolution;
 
     SolMsg2() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
     SolMsg2(Cost bestUb_, map<int, Value>& bestSolution_)
-    : bestUb(bestUb_)
-    , bestSolution(bestSolution_)
+        : bestUb(bestUb_)
+        , bestSolution(bestSolution_)
     {
     }
     void get(Cost& bestUb_, map<int, Value>& bestSolution_)

@@ -1184,14 +1184,17 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
                     ToulBar2::vnsOutput.clear();
                     ToulBar2::vnsOutput.open(args.OptionArg(),
-                                             std::ios::out | std::ios::trunc);
+                        std::ios::out | std::ios::trunc);
                     if (!ToulBar2::vnsOutput) {
                         cerr << "File " << args.OptionArg() << " cannot be open!" << endl;
 #ifdef OPENMPI
-                        for (int rank = 0; rank < world.size(); ++rank) if (rank != WeightedCSPSolver::MASTER) {
-                            if (ToulBar2::searchMethod == CPDGVNS) world.send(rank, WeightedCSPSolver::DIETAG, SolutionMessage());
-                            else world.send(rank, WeightedCSPSolver::DIETAG, SolMsg());
-                        }
+                        for (int rank = 0; rank < world.size(); ++rank)
+                            if (rank != WeightedCSPSolver::MASTER) {
+                                if (ToulBar2::searchMethod == CPDGVNS)
+                                    world.send(rank, WeightedCSPSolver::DIETAG, SolutionMessage());
+                                else
+                                    world.send(rank, WeightedCSPSolver::DIETAG, SolMsg());
+                            }
 #endif
                         throw WrongFileFormat();
                     }
@@ -1912,7 +1915,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
 #endif
             if (args.OptionId() == OPT_eps) {
-                int nbproc = max(1, (int) std::thread::hardware_concurrency());
+                int nbproc = max(1, (int)std::thread::hardware_concurrency());
                 if (args.OptionArg() == NULL) {
                     ToulBar2::eps = epsmultiplier * nbproc;
                 } else {
@@ -2794,11 +2797,15 @@ int _tmain(int argc, TCHAR* argv[])
                 if (!ToulBar2::solutionFile) {
                     cerr << "Could not open file " << solutionFileName << endl;
 #ifdef OPENMPI
-                    for (int rank = 0; rank < world.size(); ++rank) if (rank != WeightedCSPSolver::MASTER) {
-                        if (ToulBar2::searchMethod == CPDGVNS) world.send(rank, WeightedCSPSolver::DIETAG, SolutionMessage());
-                        else if (ToulBar2::searchMethod == RPDGVNS) world.send(rank, WeightedCSPSolver::DIETAG, SolMsg());
-                        else if (ToulBar2::searchMethod == DFBB) world.send(rank, WeightedCSPSolver::DIETAG, Solver::Work());
-                    }
+                    for (int rank = 0; rank < world.size(); ++rank)
+                        if (rank != WeightedCSPSolver::MASTER) {
+                            if (ToulBar2::searchMethod == CPDGVNS)
+                                world.send(rank, WeightedCSPSolver::DIETAG, SolutionMessage());
+                            else if (ToulBar2::searchMethod == RPDGVNS)
+                                world.send(rank, WeightedCSPSolver::DIETAG, SolMsg());
+                            else if (ToulBar2::searchMethod == DFBB)
+                                world.send(rank, WeightedCSPSolver::DIETAG, Solver::Work());
+                        }
 #endif
                     throw WrongFileFormat();
                 }
@@ -2826,11 +2833,15 @@ int _tmain(int argc, TCHAR* argv[])
                 if (!ToulBar2::solution_uai_file) {
                     cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
 #ifdef OPENMPI
-                    for (int rank = 0; rank < world.size(); ++rank) if (rank != WeightedCSPSolver::MASTER) {
-                        if (ToulBar2::searchMethod == CPDGVNS) world.send(rank, WeightedCSPSolver::DIETAG, SolutionMessage());
-                        else if (ToulBar2::searchMethod == RPDGVNS) world.send(rank, WeightedCSPSolver::DIETAG, SolMsg());
-                        else if (ToulBar2::searchMethod == DFBB) world.send(rank, WeightedCSPSolver::DIETAG, Solver::Work());
-                    }
+                    for (int rank = 0; rank < world.size(); ++rank)
+                        if (rank != WeightedCSPSolver::MASTER) {
+                            if (ToulBar2::searchMethod == CPDGVNS)
+                                world.send(rank, WeightedCSPSolver::DIETAG, SolutionMessage());
+                            else if (ToulBar2::searchMethod == RPDGVNS)
+                                world.send(rank, WeightedCSPSolver::DIETAG, SolMsg());
+                            else if (ToulBar2::searchMethod == DFBB)
+                                world.send(rank, WeightedCSPSolver::DIETAG, Solver::Work());
+                        }
 #endif
                     throw WrongFileFormat();
                 }

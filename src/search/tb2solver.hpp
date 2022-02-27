@@ -231,26 +231,27 @@ public:
         vector<Value> sol;
 
         Work()
-        : hbfs(true)
-        , nbNodes(0)
-        , nbBacktracks(0)
-        , nbDEE(0)
-        , nbRecomputationNodes(0)
-        , lb(MIN_COST)
-        , ub(MAX_COST)
-        {} // dummy message when stopping
+            : hbfs(true)
+            , nbNodes(0)
+            , nbBacktracks(0)
+            , nbDEE(0)
+            , nbRecomputationNodes(0)
+            , lb(MIN_COST)
+            , ub(MAX_COST)
+        {
+        } // dummy message when stopping
 
         /**
          * @brief constructor used by the master
          */
         Work(const CPStore& cpMaster_, OpenList& openMaster_, const Cost lbMaster_, const Cost ubMaster_, vector<Value>& sol_)
-        : hbfs(true)
-        , nbNodes(0)
-        , nbBacktracks(0)
-        , nbDEE(0)
-        , nbRecomputationNodes(0)
-        , lb(lbMaster_)
-        , ub(ubMaster_)
+            : hbfs(true)
+            , nbNodes(0)
+            , nbBacktracks(0)
+            , nbDEE(0)
+            , nbRecomputationNodes(0)
+            , lb(lbMaster_)
+            , ub(ubMaster_)
         {
 
             open.push_back(openMaster_.top());
@@ -274,13 +275,13 @@ public:
          * @brief constructor used by the worker
          */
         Work(CPStore& cpWorker_, OpenList& openWorker_, const Long nbNodes_, const Long nbBacktracks_, const Long nbDEE_, const Long nbRecomputationNodes_, const Cost lbWorker_, const Cost ubWorker_, vector<Value>& sol_)
-        : hbfs(true)
-        , nbNodes(nbNodes_)
-        , nbBacktracks(nbBacktracks_)
-        , nbDEE(nbDEE_)
-        , nbRecomputationNodes(nbRecomputationNodes_)
-        , lb(lbWorker_)
-        , ub(ubWorker_)
+            : hbfs(true)
+            , nbNodes(nbNodes_)
+            , nbBacktracks(nbBacktracks_)
+            , nbDEE(nbDEE_)
+            , nbRecomputationNodes(nbRecomputationNodes_)
+            , lb(lbWorker_)
+            , ub(ubWorker_)
         {
 
             ptrdiff_t cpmax = 0; // stop collecting choice points if unused. however, we must start collecting choice points at position 0 to be consistent with stored node.first and node.last even if they are not used.
@@ -313,7 +314,7 @@ public:
 
             if (!ToulBar2::burst)
                 cpWorker_.clear(); // size = 0  added to put new cp out of the while(1)
-//            cpWorker_.shrink_to_fit(); // to win space we shrink the vector: capacity=0 //TODO: test if it speeds-up things or not
+            //            cpWorker_.shrink_to_fit(); // to win space we shrink the vector: capacity=0 //TODO: test if it speeds-up things or not
 
             if (sol_.size() > 0) {
                 //            sol.swap(sol_); //after the swap sol_ in the worker is an empty vector
@@ -441,8 +442,10 @@ protected:
 
     inline bool MPI_interrupted()
     {
-        if (world.iprobe(mpi::any_source, DIETAG)) return true;
-        else return false;
+        if (world.iprobe(mpi::any_source, DIETAG))
+            return true;
+        else
+            return false;
     }
     pair<Cost, Cost> hybridSolveMaster(Cluster* root, Cost clb, Cost cub);
     pair<Cost, Cost> hybridSolveWorker(Cluster* root, Cost clb, Cost cub);

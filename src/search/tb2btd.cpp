@@ -744,9 +744,9 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
             if (cluster == td->getRoot() || cluster == td->getRootRDS()) {
                 if (ToulBar2::verbose >= 0 || ToulBar2::showSolutions) {
                     if (!ToulBar2::bayesian)
-                        cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(csol) << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                        cout << "New solution: " << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(csol) << std::setprecision(DECIMAL_POINT) << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
                     else
-                        cout << "New solution: " << csol << " energy: " << -(wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel)?(realTime() - ToulBar2::startRealTime):(cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
+                        cout << "New solution: " << csol << " energy: " << -(wcsp->Cost2LogProb(csol) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(csol) * Exp(ToulBar2::markov_log) << std::fixed << " (" << nbBacktracks << " backtracks, " << nbNodes << " nodes, depth " << Store::getDepth() << ", " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds)" << endl;
                 }
                 if (cluster == td->getRoot())
                     td->newSolution(csol);

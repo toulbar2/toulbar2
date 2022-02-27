@@ -3346,7 +3346,7 @@ void WCSP::read_wcnf(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::xz) {
-#ifndef NO_LZMA 
+#ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed cnf/wcnf format files." << endl;
@@ -3556,7 +3556,7 @@ void WCSP::read_qpbo(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::xz) {
-#ifndef NO_LZMA 
+#ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed qpbo format files." << endl;
@@ -3795,7 +3795,7 @@ void WCSP::read_opb(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::xz) {
-#ifndef NO_LZMA 
+#ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
 #else
         cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed opb format files." << endl;
