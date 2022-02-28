@@ -46,7 +46,6 @@ namespace mpi = boost::mpi;
 #include <algorithm>
 #include <numeric>
 #include <chrono>
-namespace chrono = std::chrono;
 using std::ostream;
 using std::vector;
 using std::pair;
