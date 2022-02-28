@@ -517,7 +517,7 @@ void tb2checkOptions()
         cerr << "Error: cannot find all solutions or compute a partition function with VNS. Deactivate either option." << endl;
         throw BadConfiguration();
     }
-    if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::parallel) {
+    if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::parallel && ToulBar2::hbfs) {
         cerr << "Error: cannot find all solutions or compute a partition function with parallel HBFS. Deactivate either option." << endl;
         throw BadConfiguration();
     }
@@ -663,7 +663,7 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #ifdef OPENMPI
-    if (ToulBar2::parallel && ToulBar2::burst && ToulBar2::btdMode >= 1) {
+    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
         cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
         throw BadConfiguration();
     }

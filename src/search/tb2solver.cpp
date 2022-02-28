@@ -1093,6 +1093,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
     if (!ToulBar2::hbfs)
         showGap(wcsp->getLb(), wcsp->getUb());
     if (nbBacktracks >= hbfsLimit) {
+        assert(ToulBar2::hbfs);
         addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
 #ifdef OPENMPI
         if (ToulBar2::parallel && ToulBar2::burst && world.rank() != MASTER) {
@@ -1514,10 +1515,10 @@ void Solver::newSolution()
     if (ToulBar2::divNbSol > 1 && wcsp->getLb() <= prevDivSolutionCost)
         throw DivSolutionOut();
 #ifdef OPENMPI
-    if (ToulBar2::parallel && ToulBar2::burst && world.rank() != MASTER) {
+    if (ToulBar2::parallel && ToulBar2::searchMethod==DFBB && ToulBar2::burst && world.rank() != MASTER) { // HBFS may be turn-off due to open list memory-out and switch to DFS
         Cost newWorkerUb = wcsp->getSolutionCost();
         vector<Value> workerSol = wcsp->getSolution();
-        assert(open->empty());
+        assert(open && open->empty());
         Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, newWorkerUb, workerSol);
         if (ToulBar2::verbose >= 1)
             cout << ">>> worker " << world.rank() << " send solution message to master " << work2 << endl;
@@ -2302,7 +2303,7 @@ void Solver::beginSolve(Cost ub)
     initWorkerNbBacktracks = 0;
     initWorkerNbDEE = 0;
     initWorkerNbRecomputationNodes = 0;
-    if (ToulBar2::parallel) {
+    if (ToulBar2::parallel && ToulBar2::hbfs) {
         activeWork.clear();
         bestsolWork.clear();
         assert(idleQ.empty());
