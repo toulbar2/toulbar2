@@ -171,7 +171,6 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("boostingBTD", &ToulBar2::boostingBTD)
         .def_readwrite_static("maxSeparatorSize", &ToulBar2::maxSeparatorSize)
         .def_readwrite_static("minProperVarSize", &ToulBar2::minProperVarSize)
-        .def_readwrite_static("smallSeparatorSize", &ToulBar2::smallSeparatorSize)
         .def_readwrite_static("Berge_Dec", &ToulBar2::Berge_Dec)
         .def_readwrite_static("learning", &ToulBar2::learning)
         //        .def_readwrite_static("interrupted", &ToulBar2::interrupted) // pybind11 not compatible with type atomic<bool>?

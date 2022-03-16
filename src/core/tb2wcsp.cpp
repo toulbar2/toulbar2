@@ -212,8 +212,6 @@ double ToulBar2::boostingBTD;
 int ToulBar2::maxSeparatorSize;
 int ToulBar2::minProperVarSize;
 
-int ToulBar2::smallSeparatorSize;
-
 bool ToulBar2::heuristicFreedom;
 int ToulBar2::heuristicFreedomLimit;
 
@@ -417,8 +415,6 @@ void tb2init()
     ToulBar2::boostingBTD = 0.;
     ToulBar2::maxSeparatorSize = -1;
     ToulBar2::minProperVarSize = 0;
-
-    ToulBar2::smallSeparatorSize = 4;
 
     ToulBar2::heuristicFreedom = false;
     ToulBar2::heuristicFreedomLimit = 5;
