@@ -3,3 +3,4 @@
 build
 src/ToulbarVersion.hpp
 src/MyCPackConf.cmake
+__pycache__
