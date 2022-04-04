@@ -1,0 +1,14 @@
+Read 16 variables, with 4 values at most, and 24 cost functions, with maximum arity 4.
+Cost function decomposition time : 2e-06 seconds.
+Reverse DAC dual bound: 48 (+2.083%)
+Preprocessing time: 0.006 seconds.
+16 unassigned variables, 64 values in all current domains (med. size:4, max size:4) and 8 non-unary cost functions (med. arity:4, med. degree:6)
+Initial lower and upper bounds: [48, 1000] 95.200%
+Optimality gap: [49, 1000] 95.100 % (17 backtracks, 41 nodes)
+Optimality gap: [58, 1000] 94.200 % (355 backtracks, 812 nodes)
+Optimality gap: [72, 1000] 92.800 % (575 backtracks, 1309 nodes)
+Optimality gap: [1000, 1000] 0.000 % (575 backtracks, 1318 nodes)
+Number of solutions    : =  576
+Time                   :    0.306 seconds
+... in 575 backtracks and 1318 nodes
+end.

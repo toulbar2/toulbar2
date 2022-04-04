@@ -1,0 +1,51 @@
+Read 200 variables, with 44 values at most, and 2665 cost functions, with maximum arity 2.
+Cost function decomposition time : 0.000303 seconds.
+Reverse DAC dual bound: 10001 (+0.010%)
+Preprocessing time: 0.351 seconds.
+162 unassigned variables, 6481 values in all current domains (med. size:44, max size:44) and 764 non-unary cost functions (med. arity:2, med. degree:8)
+Initial lower and upper bounds: [10001, 436543501] 99.998%
+c 2097152 Bytes allocated for long long stack.
+c 4194304 Bytes allocated for long long stack.
+c 8388608 Bytes allocated for long long stack.
+New solution: 1455221 (0 backtracks, 232 nodes, depth 233)
+Tree decomposition time: 0.003 seconds.
+Problem decomposition in 25 clusters with size distribution: min: 3 median: 10 mean: 10.360 max: 38
+****** Restart 1 with 1 discrepancies and UB=1455221 ****** (232 nodes)
+New solution: 1445522 (0 backtracks, 232 nodes, depth 1)
+New solution: 1445520 (0 backtracks, 232 nodes, depth 1)
+New solution: 1445320 (0 backtracks, 232 nodes, depth 1)
+New solution: 1445319 (0 backtracks, 232 nodes, depth 1)
+New solution: 1435218 (0 backtracks, 232 nodes, depth 1)
+New solution: 1425218 (0 backtracks, 232 nodes, depth 1)
+New solution: 1425217 (0 backtracks, 232 nodes, depth 1)
+New solution: 1415216 (0 backtracks, 232 nodes, depth 1)
+New solution: 1405218 (0 backtracks, 232 nodes, depth 1)
+New solution: 1405216 (9 backtracks, 286 nodes, depth 2)
+New solution: 1395016 (9 backtracks, 286 nodes, depth 1)
+New solution: 1394815 (9 backtracks, 289 nodes, depth 2)
+New solution: 1394716 (9 backtracks, 289 nodes, depth 1)
+New solution: 394818 (13 backtracks, 300 nodes, depth 1)
+New solution: 394816 (13 backtracks, 300 nodes, depth 1)
+New solution: 394716 (15 backtracks, 307 nodes, depth 1)
+New solution: 394715 (26 backtracks, 361 nodes, depth 1)
+New solution: 394713 (26 backtracks, 361 nodes, depth 1)
+New solution: 384515 (30 backtracks, 379 nodes, depth 2)
+New solution: 384513 (30 backtracks, 379 nodes, depth 1)
+New solution: 384313 (30 backtracks, 379 nodes, depth 1)
+New solution: 384213 (33 backtracks, 390 nodes, depth 1)
+New solution: 384211 (33 backtracks, 390 nodes, depth 1)
+New solution: 384208 (42 backtracks, 426 nodes, depth 1)
+New solution: 384207 (42 backtracks, 427 nodes, depth 2)
+New solution: 364206 (42 backtracks, 427 nodes, depth 1)
+New solution: 353705 (42 backtracks, 438 nodes, depth 2)
+New solution: 353703 (42 backtracks, 443 nodes, depth 2)
+New solution: 353702 (44 backtracks, 450 nodes, depth 1)
+New solution: 353701 (52 backtracks, 482 nodes, depth 1)
+New solution: 343898 (88 backtracks, 705 nodes, depth 1)
+New solution: 343698 (91 backtracks, 717 nodes, depth 1)
+New solution: 343593 (94 backtracks, 726 nodes, depth 1)
+****** Restart 2 with 2 discrepancies and UB=343593 ****** (1906 nodes)
+New solution: 343592 (319 backtracks, 2203 nodes, depth 3)
+****** Restart 3 with 2 discrepancies and UB=343592 ****** (3467 nodes)
+
+Time limit expired... Aborting...

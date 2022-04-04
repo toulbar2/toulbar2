@@ -1,0 +1,16 @@
+Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
+Cost function decomposition time : 1.6e-05 seconds.
+Reverse DAC dual bound: 20 (+10.000%)
+Preprocessing time: 0.001 seconds.
+24 unassigned variables, 116 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. arity:2, med. degree:5)
+Initial lower and upper bounds: [20, 64] 68.750%
+New solution: 28 (0 backtracks, 6 nodes, depth 7)
+Problem decomposition in 7 clusters with size distribution: min: 11 median: 15 mean: 15.143 max: 17
+****** Restart 1 with 1 discrepancies and UB=28 ****** (6 nodes)
+New solution: 27 (0 backtracks, 6 nodes, depth 1)
+****** Restart 2 with 2 discrepancies and UB=27 ****** (57 nodes)
+****** Restart 3 with 4 discrepancies and UB=27 ****** (143 nodes)
+****** Restart 4 with 8 discrepancies and UB=27 ****** (418 nodes)
+****** Restart 5 with 16 discrepancies and UB=27 ****** (846 nodes)
+Optimum: 27 in 521 backtracks and 1156 nodes ( 3066 removals by DEE) and 0.039 seconds.
+end.

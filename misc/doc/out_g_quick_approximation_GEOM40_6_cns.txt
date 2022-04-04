@@ -1,0 +1,25 @@
+Read 40 variables, with 6 values at most, and 78 cost functions, with maximum arity 2.
+Cost function decomposition time : 9e-06 seconds.
+Preprocessing time: 0.000997 seconds.
+40 unassigned variables, 240 values in all current domains (med. size:6, max size:6) and 78 non-unary cost functions (med. arity:2, med. degree:4)
+Initial lower and upper bounds: [0, 1] 100.000%
+
+part 1 : 40 variables and 71 constraints (really added)
+part 2 : 10 variables and 7 constraints (really added)
+--> number of parts : 2
+--> time : 0.000 seconds.
+
+Tree decomposition width  : 5
+Tree decomposition height : 17
+Number of clusters        : 33
+Tree decomposition time: 0.001 seconds.
+
+Cartesian product                  :    13367494538843734031554962259968
+Upper bound of number of solutions : <= 1719926784000000000000000
+Number of solutions    : ~= 480000000000000000000000
+Number of #goods       :    468
+Number of used #goods  :    4788
+Size of sep            :    3
+Time                   :    0.011 seconds
+... in 3738 backtracks and 7476 nodes
+end.

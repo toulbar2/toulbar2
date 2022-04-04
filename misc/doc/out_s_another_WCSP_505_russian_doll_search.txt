@@ -1,0 +1,32 @@
+Read 240 variables, with 4 values at most, and 2242 cost functions, with maximum arity 3.
+Cost function decomposition time : 0.000911 seconds.
+Preprocessing time: 0.013967 seconds.
+233 unassigned variables, 666 values in all current domains (med. size:2, max size:4) and 1966 non-unary cost functions (med. arity:2, med. degree:16)
+Initial lower and upper bounds: [2, 34347] 99.994%
+Tree decomposition width  : 59
+Tree decomposition height : 233
+Number of clusters        : 239
+Tree decomposition time: 0.017 seconds.
+--- Solving cluster subtree 0 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 2)
+---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 2)
+
+--- Solving cluster subtree 1 ...
+New solution: 0 (0 backtracks, 0 nodes, depth 2)
+---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 2)
+
+--- Solving cluster subtree 2 ...
+
+...
+
+--- Solving cluster subtree 3 ...
+New solution: 21253 (26963 backtracks, 48851 nodes, depth 3)
+New solution: 21251 (26991 backtracks, 48883 nodes, depth 4)
+---  done  cost = [21251,21251] (26992 backtracks, 48883 nodes, depth 2)
+
+--- Solving cluster subtree 238 ...
+New solution: 21253 (26992 backtracks, 48883 nodes, depth 2)
+---  done  cost = [21253,21253] (26992 backtracks, 48883 nodes, depth 2)
+
+Optimum: 21253 in 26992 backtracks and 48883 nodes ( 0 removals by DEE) and 6.180 seconds.
+end.
