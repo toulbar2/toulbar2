@@ -1,13 +1,15 @@
 /** \file tb2vac.cpp
  *  \brief VAC implementation for binary cost functions.
  *
- *      \defgroup VAC Virtual Arc Consistency enforcing
+ *  \defgroup VAC Virtual Arc Consistency enforcing
  *  The three phases of VAC are enforced in three different "Pass".
  *  Bool(P) is never built. Instead specific functions (getVACCost) booleanize the WCSP on the fly.
- *  The domain variables of Bool(P) are the original variable domains (saved and restored using trailing at each iteration) 
+ *  The domain variables of Bool(P) are the original variable domains (saved and restored using trailing at each iteration).
  *  All the counter data-structures (k) are timestamped to avoid clearing them at each iteration.
- *  \note Simultaneously AC (and potentially DAC, EAC) are maintained by proper queuing.
- *  \see <em> Soft Arc Consistency Revisited. </em> Cooper et al. Artificial Intelligence. 2010.
+ *
+ *  Note : Simultaneously AC (and potentially DAC, EAC) are maintained by proper queuing.
+ *
+ *  See : <em> Soft Arc Consistency Revisited. </em> Cooper et al. Artificial Intelligence. 2010.
  */
 
 #include <math.h> /* atan2 */

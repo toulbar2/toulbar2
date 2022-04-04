@@ -26,6 +26,11 @@
 </pre>
  */
 
+/* Warning in case of 'mainpage' modifications :
+ * The text of 'mainpage' Doxygen keyword is not automatically generated
+ * into Sphinx documentation, where it has been manually copied.
+ */
+
 /*! @mainpage
 
     <table>
@@ -194,7 +199,7 @@ public:
     /// - enumerated domain allowing direct access to each value (array) and iteration on current domain in times proportional to the current number of values (double-linked list)
     /// - interval domain represented by a lower value and an upper value only (useful for large domains)
     /// .
-    /// \warning Current implementation of toulbar2 has limited modeling and solving facilities for interval domains.
+    /// Warning : Current implementation of toulbar2 has limited modeling and solving facilities for interval domains.
     /// There is no cost functions accepting both interval and enumerated variables for the moment, which means all the variables should have the same type.
 
     /// \addtogroup modeling
@@ -213,14 +218,22 @@ public:
     ///   - \e network propagator based on cost function network decomposition with "w" prefix (\e wsum, \e wvarsum, \e walldiff, \e wgcc, \e wsame, \e wsamegcc, \e wregular, \e wamong, \e wvaramong, \e woverlap)
     ///   .
     /// .
-    /// \note The default semantics (using \e var keyword) of monolithic (flow and DAG-based propagators) global cost functions is to count the number of variables to change in order to restore consistency and to multiply it by the basecost. Other particular semantics may be used in conjunction with the flow-based propagator
-    /// \note The semantics of the network-based propagator approach is either a hard constraint ("hard" keyword) or a soft constraint by multiplying the number of changes by the basecost ("lin" or "var" keyword) or by multiplying the square value of the number of changes by the basecost ("quad" keyword)
-    /// \note A decomposable version exists for each monolithic global cost function, except grammar and MST. The decomposable ones may propagate less than their monolithic counterpart and they introduce extra variables but they can be much faster in practice
-    /// \warning Each global cost function may have less than three propagators implemented
-    /// \warning Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
-    /// \warning Current implementation of toulbar2 disallows global cost functions with less than or equal to three variables in their scope (use cost functions in extension instead)
-    /// \warning Before modeling the problem using make and post, call ::tb2init method to initialize toulbar2 global variables
-    /// \warning After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
+    ///
+    /// Note : The default semantics (using \e var keyword) of monolithic (flow and DAG-based propagators) global cost functions is to count the number of variables to change in order to restore consistency and to multiply it by the basecost. Other particular semantics may be used in conjunction with the flow-based propagator
+    ///
+    /// Note : The semantics of the network-based propagator approach is either a hard constraint ("hard" keyword) or a soft constraint by multiplying the number of changes by the basecost ("lin" or "var" keyword) or by multiplying the square value of the number of changes by the basecost ("quad" keyword)
+    ///
+    /// Note : A decomposable version exists for each monolithic global cost function, except grammar and MST. The decomposable ones may propagate less than their monolithic counterpart and they introduce extra variables but they can be much faster in practice
+    ///
+    /// Warning : Each global cost function may have less than three propagators implemented
+    ///
+    /// Warning : Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
+    ///
+    /// Warning : Current implementation of toulbar2 disallows global cost functions with less than or equal to three variables in their scope (use cost functions in extension instead)
+    ///
+    /// Warning : Before modeling the problem using make and post, call ::tb2init method to initialize toulbar2 global variables
+    ///
+    /// Warning : After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, vector<Value>& dom) = 0; ///< \brief create an enumerated variable with its domain values
@@ -487,7 +500,8 @@ public:
     virtual void remove(int varIndex, Value value, bool reverse = false) = 0; ///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
 
     /** \defgroup solving Solving cost function networks
-     * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact search method (see WeightedCSPSolver::solve).\n
+     * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact search method (see WeightedCSPSolver::solve).
+     *
      * Various options of the solving methods are controlled by ::Toulbar2 static class members (see files ./src/core/tb2types.hpp and ./src/tb2main.cpp).\n
      * A brief code example reading a wcsp problem given as a single command-line parameter and solving it:
      * \code
@@ -534,8 +548,10 @@ public:
         delete solver;
     }
     \endcode
-     * \see another code example in ./src/toulbar2test.cpp
-     * \warning variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
+     *
+     * See : another code example in ./src/toulbar2test.cpp
+     *
+     * Warning : variable domains must start at zero, otherwise recompile libtb2.so without flag WCSPFORMATONLY
     **/
 
     virtual Cost read_wcsp(const char* fileName) = 0; ///< \brief reads a Cost function network from a file (format as indicated by ToulBar2:: global variables)

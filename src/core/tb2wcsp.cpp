@@ -2831,7 +2831,7 @@ void WCSP::processTernary()
 /// -# creates new ternary cost functions for all triangles (\e ie occurences of three binary cost functions \e xy, \e yz, \e zx)
 /// -# removes empty cost functions while repeating #1 and #2 until no new cost functions can be removed
 ///
-/// \note the propagation loop is called after each preprocessing technique (see \ref WCSP::propagate)
+/// Note : the propagation loop is called after each preprocessing technique (see \ref WCSP::propagate)
 
 void WCSP::preprocessing()
 {
@@ -3360,9 +3360,9 @@ void WCSP::printNCBuckets()
  * -# (level 2) idem
  * -# (level 3) also saves current problem into a file before each search choice
  *
- * \note \p toulbar2, compiled in debug mode, can be more verbose and it checks a lot of assertions (pre/post conditions in the code)
+ * Note : \p toulbar2, compiled in debug mode, can be more verbose and it checks a lot of assertions (pre/post conditions in the code)
  *
- * \note \p toulbar2 will output an help message giving available options if run without any parameters
+ * Note : \p toulbar2 will output an help message giving available options if run without any parameters
  *
  */
 
@@ -4275,10 +4275,14 @@ void WCSP::propagateFEAC()
 /// - \e i-bounded variable elimination with i-bound less than or equal to two can be done during the search.
 /// - functional variable elimination eliminates all variables which have a bijective or functional binary hard constraint (\e ie ensuring a one-to-one or several-to-one value mapping) and iff all their cost functions are in extension.
 ///		It can be done without limit on their degree, in preprocessing only.
-/// \note Variable elimination order used in preprocessing is either lexicographic or given by an external file *.order (see toulbar2 options)
-/// \note 2-bounded variable elimination during search is optimal in the sense that any elimination order should result in the same final graph
-/// \warning It is not possible to display/save solutions when bounded variable elimination is applied in preprocessing
-/// \warning toulbar2 maintains a list of current cost functions for each variable.
+///
+/// Note : Variable elimination order used in preprocessing is either lexicographic or given by an external file *.order (see toulbar2 options)
+///
+/// Note : 2-bounded variable elimination during search is optimal in the sense that any elimination order should result in the same final graph
+///
+/// Warning : It is not possible to display/save solutions when bounded variable elimination is applied in preprocessing
+///
+/// Warning : toulbar2 maintains a list of current cost functions for each variable.
 ///		It uses the size of these lists as an approximation of variable degrees.
 ///		During the search, if variable \e x has three cost functions \e xy, \e xz, \e xyz, its true degree is two but its approximate degree is three.
 ///		In toulbar2 options, it is the approximate degree which is given by the user for variable elimination during the search (thus, a value at most three).
@@ -4304,11 +4308,15 @@ void WCSP::eliminate()
 /// Soft arc consistency is an incremental lower bound technique for optimization problems.
 /// Its goal is to move costs from high-order (typically arity two or three) cost functions towards the problem lower bound and unary cost functions.
 /// This is achieved by applying iteratively local equivalence-preserving problem transformations (EPTs) until some terminating conditions are met.
-/// \note \e eg an EPT can move costs between a binary cost function and a unary cost function such that the sum of the two functions remains the same for any complete assignment.
-/// \see <em> Arc consistency for Soft Constraints. </em> T. Schiex. Proc. of CP'2000. Singapour, 2000.
-/// \note Soft Arc Consistency in toulbar2 is limited to binary and ternary and some global cost functions (\e eg alldifferent, gcc, regular, same).
+///
+/// Note : \e eg an EPT can move costs between a binary cost function and a unary cost function such that the sum of the two functions remains the same for any complete assignment.
+///
+/// See : <em> Arc consistency for Soft Constraints. </em> T. Schiex. Proc. of CP'2000. Singapour, 2000.
+///
+/// Note : Soft Arc Consistency in toulbar2 is limited to binary and ternary and some global cost functions (\e eg alldifferent, gcc, regular, same).
 ///		Other n-ary cost functions are delayed for propagation until their number of unassigned variables is three or less.
-/// \see <em> Towards Efficient Consistency Enforcement for Global Constraints in Weighted Constraint Satisfaction. </em> Jimmy Ho-Man Lee, Ka Lun Leung. Proc. of IJCAI 2009, pages 559-565. Pasadena, USA, 2009.
+///
+/// See : <em> Towards Efficient Consistency Enforcement for Global Constraints in Weighted Constraint Satisfaction. </em> Jimmy Ho-Man Lee, Ka Lun Leung. Proc. of IJCAI 2009, pages 559-565. Pasadena, USA, 2009.
 
 /// \defgroup propagation Propagation loop
 /// Propagates soft local consistencies and bounded variable elimination until all the propagation queues are empty or a contradiction occurs.\n

@@ -1,7 +1,7 @@
 /** \file tb2store.hpp
  *  \brief Generic storable data management.
  *
- *	\defgroup backtrack Backtrack management
+ *  \defgroup backtrack Backtrack management
  *  Used by backtrack search methods.
  *  Allows to copy / restore the current state using Store::store and Store::restore methods.
  *  All storable data modifications are trailed into specific stacks.
@@ -18,8 +18,10 @@
  *  - Store::storeBigInteger for very large integers ::StoreBigInteger used in solution counting methods
  *
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
- *  \note storable data are not trailed at depth 0.
- *  \warning Current storable data management is not multi-threading safe! (Store is a static virtual class relying on StoreBasic<T> static members)
+ *
+ *  Note : storable data are not trailed at depth 0.
+ *
+ *  Warning : Current storable data management is not multi-threading safe! (Store is a static virtual class relying on StoreBasic<T> static members)
  */
 
 #ifndef TB2STORE_HPP_
