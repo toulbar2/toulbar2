@@ -61,8 +61,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
-    m.attr("MAX_COST") = py::cast(MAX_COST);
-    m.attr("MIN_COST") = py::cast(MIN_COST);
+    m.attr("MAX_COST") = py::int_(MAX_COST);
+    m.attr("MIN_COST") = py::int_(MIN_COST);
 
     py::register_exception<Contradiction>(m, "Contradiction");
     py::register_exception<InternalError>(m, "InternalError");

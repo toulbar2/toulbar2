@@ -1,7 +1,25 @@
-import pytoulbar2.pytb2 as tb2
+"""Help on module pytoulbar2:
+
+NAME
+    pytoulbar2 - Python3 interface of toulbar2.
+
+DESCRIPTION
+
+
+"""
+
+try :
+    import pytoulbar2.pytb2 as tb2
+except :
+    pass
 
 class CFN:
-    def __init__(self, ubinit, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, showSolutions = 0):
+    """pytoulbar2 base class used to manipulate and solve a cost function network.
+    
+    See pytoulbar2test.py example in src repository.
+    
+    """
+    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, showSolutions = 0):
         tb2.init()
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
@@ -32,11 +50,12 @@ class CFN:
         self.VariableIndices = {}
         self.Scopes = []
         self.VariableNames = []
-        self.CFN = tb2.Solver(ubinit * 10**resolution) # initialize VAC algorithm depending on tb2.option.vac
-
+        self.CFN = tb2.Solver() # initialize VAC algorithm depending on tb2.option.vac
+        self.UbInit = ubinit # warning! cannot convert initial upper bound into an integer cost before knowing the rest of the problem        
         self.Contradiction = tb2.Contradiction
         self.SolverOut = tb2.SolverOut
         self.Option = tb2.option
+        self.Top = tb2.MAX_COST // 10**resolution
         tb2.check()
 
     def __del__(self):
@@ -45,6 +64,14 @@ class CFN:
         del self.VariableIndices
         del self.VariableNames
         del self.CFN
+
+    @staticmethod
+    def flatten(S):
+        if S == []:
+            return S
+        if isinstance(S[0], list):
+            return CFN.flatten(S[0]) + CFN.flatten(S[1:])
+        return S[:1] + CFN.flatten(S[1:])
 
     def NoPreprocessing(self):
         tb2.option.elimDegree = -1
@@ -58,6 +85,16 @@ class CFN:
         tb2.option.trwsAccuracy = -1
 
     def AddVariable(self, name, values):
+        """AddVariable summary line description....
+
+        Args:
+            name (type...): ...
+            values (type...): ...
+
+        Returns:
+            ...
+
+        """
         if name in self.Variables:
             raise RuntimeError(name+" already defined")
         self.Variables[name] = values
@@ -77,6 +114,19 @@ class CFN:
         return vIdx
 
     def AddFunction(self, scope, costs, incremental = False):
+        """AddFunction summary line description....
+
+        Description text ... AddFunction ...
+     
+        Args:
+           scope (type...): Description text...
+           costs (type...): Description text...
+           incremental (type...): Description text...
+
+        Returns:
+            ...
+
+        """
         sscope = set(scope)
         if len(scope) != len(sscope):
             raise RuntimeError("Duplicate variable in scope:"+str(scope))
@@ -89,12 +139,16 @@ class CFN:
             iscope.append(v) 
             
         if (len(iscope) == 0):
+            assert(isinstance(costs, (int, float)))
             self.CFN.wcsp.postNullaryConstraint(costs)
         elif (len(iscope) == 1):
+            assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) == len(costs))
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
         elif (len(iscope) == 2):
+            assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) == len(costs))
             self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, incremental)
         elif (len(iscope) == 3):
+            assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]) == len(costs))
             self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, incremental)
         else:
             if incremental:
@@ -108,7 +162,7 @@ class CFN:
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
                 if cost > mincost:
-                    self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, (cost-mincost) * 10 ** tb2.option.decimalPoint)
+                    self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, int((cost-mincost) * 10 ** tb2.option.decimalPoint))
                 for r in range(len(iscope)):
                     i = len(iscope)-1-r
                     v = iscope[i]
@@ -121,6 +175,120 @@ class CFN:
         self.Scopes.append(sscope)
         return
 
+    def AddCompactFunction(self, scope, defcost, tuples, tcosts, incremental = False):
+        """AddCompactFunction summary line description....
+
+        Description text ... AddCompactFunction ...
+     
+        Args:
+           scope (type...): Description text...
+           tcosts (type...): Description text...
+           incremental (type...): Description text...
+
+        Returns:
+            ...
+
+        """
+        assert(len(tuples) == len(tcosts))
+        sscope = set(scope)
+        if len(scope) != len(sscope):
+            raise RuntimeError("Duplicate variable in scope:"+str(scope))
+        iscope = []
+        for i, v in enumerate(scope):
+            if isinstance(v, str):
+                v = self.VariableIndices[v]
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v) 
+            
+        if (len(iscope) == 0):
+            assert(len(tuples) == 0)
+            self.CFN.wcsp.postNullaryConstraint(defcost)
+        elif (len(iscope) == 1):
+            costs = [defcost] * self.CFN.wcsp.getDomainInitSize(iscope[0])
+            for i, tuple in enumerate(tuples):
+                costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0])] = tcosts[i]
+            self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
+        elif (len(iscope) == 2):
+            costs = [defcost] * (self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]))
+            for i, tuple in enumerate(tuples):
+                costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) + self.CFN.wcsp.toIndex(iscope[1], tuple[1])] = tcosts[i]
+            self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, incremental)
+        elif (len(iscope) == 3):
+            costs = [defcost] * (self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]))
+            for i, tuple in enumerate(tuples):
+                costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]) + self.CFN.wcsp.toIndex(iscope[1], tuple[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]) + self.CFN.wcsp.toIndex(iscope[2], tuple[2])] = tcosts[i]
+            self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, incremental)
+        else:
+            if incremental:
+                raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
+            mincost = min(defcost, min(tcosts))
+            maxcost = max(defcost, max(tcosts))
+            self.CFN.wcsp.postNullaryConstraint(mincost)
+            if (mincost == maxcost):
+                return
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts), False)
+            for i, tuple in enumerate(tuples):
+                self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
+            self.CFN.wcsp.postNaryConstraintEnd(idx)
+        self.Scopes.append(sscope)
+        return
+
+
+    def AddLinearConstraint(self, coefs, scope, operand = '==', rightcoef = 0):
+        assert(len(coefs) == len(scope))
+        sscope = set(scope)
+        if len(scope) != len(sscope):
+            raise RuntimeError("Duplicate variable in scope: "+str(scope))
+        if operand != '>=' and operand != '<=' and operand != '==':
+            raise RuntimeError("Unknown operand in AddLinearConstraint: "+str(operand))
+        iscope = []
+        for i, v in enumerate(scope):
+            if isinstance(v, str):
+                v = self.VariableIndices[v]
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v) 
+
+        if operand == '>=' or operand == '==':
+            params = str(rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+            self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
+        if operand == '<=' or operand == '==':
+            params = str(-rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+            self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
+
+    def AddGeneralizedLinearConstraint(self, tuples, operand = '==', rightcoef = 0):
+        sscope = set()
+        scope = []
+        for (v, val, coef) in tuples:
+            if v not in sscope:
+                sscope.add(v)
+                scope.append(v)
+        if operand != '>=' and operand != '<=' and operand != '==':
+            raise RuntimeError("Unknown operand in AddGeneralizedLinearConstraint: "+str(operand))
+        iscope = []
+        for i, v in enumerate(scope):
+            if isinstance(v, str):
+                v = self.VariableIndices[v]
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v) 
+
+        if operand == '>=' or operand == '==':
+            params = str(rightcoef)
+            for v in iscope:
+                vtuples = [[str(val), str(coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
+                params += ' ' + str(len(vtuples))
+                params += ' ' + ' '.join(self.flatten(vtuples))
+            self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
+        if operand == '<=' or operand == '==':
+            params = str(-rightcoef)
+            for v in iscope:
+                vtuples = [[str(val), str(-coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
+                params += ' ' + str(len(vtuples))
+                params += ' ' + ' '.join(self.flatten(vtuples))
+            self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
+    
     def Read(self, problem):
         self.CFN.read(problem)
 
@@ -165,6 +333,9 @@ class CFN:
 
     # non-incremental solving method
     def Solve(self):
+        if self.UbInit is not None:
+            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
+            self.CFN.wcsp.updateUb(integercost)
         self.CFN.wcsp.sortConstraints()
         solved = self.CFN.solve()
         if (solved):
@@ -174,6 +345,9 @@ class CFN:
 
     # incremental solving: perform initial preprocessing before all future searches, return improved ub
     def SolveFirst(self):
+        if self.UbInit is not None:
+            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
+            self.CFN.wcsp.updateUb(integercost)
         self.CFN.wcsp.sortConstraints()
         ub = self.CFN.wcsp.getUb()
         self.CFN.beginSolve(ub)
@@ -207,6 +381,9 @@ class CFN:
             return None
 
     def Dump(self, problem):
+        if self.UbInit is not None:
+            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
+            self.CFN.wcsp.updateUb(integercost)
         if '.wcsp' in problem:
             self.CFN.dump_wcsp(problem, True, 1)
         elif '.cfn' in problem:

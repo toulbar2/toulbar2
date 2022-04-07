@@ -590,7 +590,7 @@ EXCLUDE_SYMLINKS       = YES
 # against the file with absolute path, so to exclude all test directories 
 # for example use the pattern */test/*
 
-# keep tb2store.hpp group documentation
+# keep tb2store.hpp and tb2type.hpp group documentation
 EXCLUDE_PATTERNS       = tb2a*.hpp \
 	tb2b*.hpp \
 	tb2c*.hpp \
@@ -609,9 +609,11 @@ EXCLUDE_PATTERNS       = tb2a*.hpp \
 	tb2p*.hpp \
 	tb2q*.hpp \
 	tb2r*.hpp \
+	tb2sameconstr.hpp \
 	tb2solver.hpp \
 	tb2system.hpp \
-	tb2t*.hpp \
+	tb2ternaryconstr.hpp \
+	tb2treeconstr.hpp \
 	tb2u*.hpp \
 	tb2v*.hpp \
 	tb2w*.hpp \

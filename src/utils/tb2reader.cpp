@@ -186,7 +186,7 @@ typedef struct {
  * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
  * \warning  Cost functions defined in intention cannot be shared.
  *
- * \note More about network-based global cost functions can be found here https://metivier.users.greyc.fr/decomposable/
+ * \note More about network-based global cost functions can be found on ./misc/doc/DecomposableGlobalCostFunctions.html
  *
  * Examples:
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
