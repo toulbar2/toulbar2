@@ -1,0 +1,17 @@
+Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
+Cost function decomposition time : 1.6e-05 seconds.
+Reverse DAC dual bound: 20 (+10.000%)
+Preprocessing time: 0.001 seconds.
+24 unassigned variables, 116 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. arity:2, med. degree:5)
+Initial lower and upper bounds: [20, 64] 68.750%
+New solution: 28 (0 backtracks, 6 nodes, depth 8)
+New solution: 27 (5 backtracks, 15 nodes, depth 5)
+Optimality gap: [21, 27] 22.222 % (8 backtracks, 18 nodes)
+Optimality gap: [22, 27] 18.519 % (21 backtracks, 55 nodes)
+Optimality gap: [23, 27] 14.815 % (49 backtracks, 122 nodes)
+Optimality gap: [24, 27] 11.111 % (63 backtracks, 153 nodes)
+Optimality gap: [25, 27] 7.407 % (81 backtracks, 217 nodes)
+Optimality gap: [27, 27] 0.000 % (89 backtracks, 240 nodes)
+Node redundancy during HBFS: 25.417 %
+Optimum: 27 in 89 backtracks and 240 nodes ( 460 removals by DEE) and 0.006 seconds.
+end.

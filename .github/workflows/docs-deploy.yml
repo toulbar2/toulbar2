@@ -1,32 +1,69 @@
-name: docs_deploy
- 
-# execute this workflow automatically when push to master
-# + workflow_dispatch
+name: "docs-deploy toulbar2 site on GitHub Pages"
+
+# workflow automatically executed when push to master
+# + workflow_dispatch (manual)
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'master'
+  #push:
+  #  branches:
+  #    - 'master'
 
 jobs:
- 
-  build_docs_job:
+
+  build-and-deploy-docs:
+
     runs-on: ubuntu-latest
-    container: ubuntu:latest
- 
+    #runs-on: ubuntu-20.04
+
     steps:
- 
-    - name: Prereqs
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        apt-get update
-        apt-get install -y git
-        git clone "https://token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
-      shell: bash
- 
-    - name: Execute script to build documentation and update GitHub Pages
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: "docs/deploy.sh"
-      shell: bash
+
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          ref: 'master'
+
+      - name: "Cache"
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: "Doxygen install"
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install cmake g++ libgmp-dev libboost-graph-dev libboost-iostreams-dev zlib1g-dev liblzma-dev libxml2-dev libopenmpi-dev libboost-mpi-dev libjemalloc-dev pkg-config texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk graphviz doxygen
+        shell: bash
+
+      - name: "Python setup"
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: "Sphinx install"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+
+      - name: "Doxygen build"
+        run: |
+          mkdir build
+          cd build
+          cmake -DBUILD_API_DOC=ON ..
+          make doc
+
+      - name: "Sphinx build"
+        run: |
+          cd docs
+          make docs
+
+      - name: "Deploy on Github Pages (ghp-import)"
+        run: | 
+          ghp-import -n -p -f docs/_build/html
+
+      - name: "Run a shell script ?"
+        run: |
+          echo "... a shell script to be run ?"
+        shell: bash
+

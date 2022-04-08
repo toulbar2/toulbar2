@@ -78,9 +78,13 @@ typedef struct {
  ...
  <Domain size of variable with index N - 1>
  \endverbatim
- * \note domain values range from zero to \e size-1
- * \note a negative domain size is interpreted as a variable with an interval domain in \f$[0,-size-1]\f$
- * \warning variables with interval domains are restricted to arithmetic and disjunctive cost functions in intention (see below)
+ *
+ * Note : domain values range from zero to \e size-1
+ *
+ * Note : a negative domain size is interpreted as a variable with an interval domain in \f$[0,-size-1]\f$
+ *
+ * Warning : variables with interval domains are restricted to arithmetic and disjunctive cost functions in intention (see below)
+ *
  * - General definition of cost functions
  *   - Definition of a cost function in extension
  * \verbatim
@@ -98,7 +102,9 @@ typedef struct {
  <Index of the value assigned to the last variable in the scope>
  <Cost of the tuple>
  \endverbatim
- * \note Shared cost function: A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one AllDifferent hard constraint decomposed into 6 binary constraints.
+ *
+ * Note : Shared cost function: A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one AllDifferent hard constraint decomposed into 6 binary constraints.
+ *
  *   - Shared CF used inside a small example in wcsp format:
  * \code
  AllDifferentDecomposedIntoBinaryConstraints 4 4 6 1
@@ -182,11 +188,13 @@ typedef struct {
  *     .
  * .
  *
- * \warning The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes).
- * \warning  \e list_size1 and \e list_size2 must be equal in \e ssame.
- * \warning  Cost functions defined in intention cannot be shared.
+ * Warning : The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes).
  *
- * \note More about network-based global cost functions can be found on ./misc/doc/DecomposableGlobalCostFunctions.html
+ * Warning :  \e list_size1 and \e list_size2 must be equal in \e ssame.
+ *
+ * Warning :  Cost functions defined in intention cannot be shared.
+ *
+ * Note More about network-based global cost functions can be found on ./misc/doc/DecomposableGlobalCostFunctions.html
  *
  * Examples:
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
@@ -3543,11 +3551,11 @@ void WCSP::read_wcnf(const char* fileName)
 
 /// \brief minimizes/maximizes \f$ X^t \times W \times X = \sum_{i=1}^N \sum_{j=1}^N W_{ij} \times X_i \times X_j \f$
 /// where W is expressed by its M non-zero triangle matrix terms (W_ij, i<=j, it can be positive or negative float numbers)
-/// \note Quadratic terms for \f$ i < j \f$ are multiplied by 2 (see option -qpmult to change this value) to get a symmetric N*N squared matrix
-/// \note If N is positive, then variable domain values are {0,1}
-/// \note If N is negative, then variable domain values are {1,-1} with value 1 having index 0 and value -1 having index 1 in the output solutions
-/// \note If M is positive then minimizes the quadratic objective function, else maximizes it
-/// \warning It does not allow infinite costs (no forbidden assignments)
+/// Note : Quadratic terms for \f$ i < j \f$ are multiplied by 2 (see option -qpmult to change this value) to get a symmetric N*N squared matrix
+/// Note : If N is positive, then variable domain values are {0,1}
+/// Note : If N is negative, then variable domain values are {1,-1} with value 1 having index 0 and value -1 having index 1 in the output solutions
+/// Note : If M is positive then minimizes the quadratic objective function, else maximizes it
+/// Warning : It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
@@ -3756,8 +3764,8 @@ bool isInteger(string& s) { return string("0123456789+-").find(s[0]) != string::
 /// \param file: input file
 /// \param token: in: previous token, out: new token (read from file or from the end of the previous token)
 /// \param keep: in: relative position to start reading from the previous token (if positive and greater or equal to previous token size then reads from file else if negative subtracts from the end), out: size of the new token
-/// \warning if new token is + or - then replace to +1 or -1
-/// \warning if new token is +varname or -varname then split into +1 varname or -1 varname
+/// Warning : if new token is + or - then replace to +1 or -1
+/// Warning : if new token is +varname or -varname then split into +1 varname or -1 varname
 void readToken(istream& file, string& token, int* keep = NULL)
 {
     if (keep == NULL || *keep >= (int)token.size()) {

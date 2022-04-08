@@ -1,0 +1,21 @@
+Read 787 variables, with 7 values at most, and 3527 cost functions, with maximum arity 3.
+No evidence file specified. Trying EXAMPLES/GeomSurf-7-gm256.uai.xz.evid
+No evidence file.
+Cost function decomposition time : 0.001227 seconds.
+Reverse DAC dual bound: 5879065363 energy: 1074.088 (+0.082%)
+VAC dual bound: 5906374927 energy: 1076.819 (iter:486)
+Number of VAC iterations: 726
+Number of times is VAC: 240 Number of times isvac and itThreshold > 1: 234
+Preprocessing time: 1.872 seconds.
+729 unassigned variables, 4819 values in all current domains (med. size:7, max size:7) and 3128 non-unary cost functions (med. arity:2, med. degree:6)
+Initial lower and upper bounds: [5906374927, 111615200815] 94.708%
+c 2097152 Bytes allocated for long long stack.
+New solution: 5968997522 energy: 1083.081 prob: 4.204e-471 (0 backtracks, 19 nodes, depth 21)
+Optimality gap: [5920086558, 5968997522] 0.819 % (17 backtracks, 36 nodes)
+New solution: 5922481881 energy: 1078.430 prob: 4.404e-469 (17 backtracks, 48 nodes, depth 8)
+Optimality gap: [5922481881, 5922481881] 0.000 % (21 backtracks, 52 nodes)
+Number of VAC iterations: 846
+Number of times is VAC: 360 Number of times isvac and itThreshold > 1: 351
+Node redundancy during HBFS: 11.538 %
+Optimum: 5922481881 energy: 1078.430 prob: 4.404e-469 in 21 backtracks and 52 nodes ( 2749 removals by DEE) and 1.980 seconds.
+end.

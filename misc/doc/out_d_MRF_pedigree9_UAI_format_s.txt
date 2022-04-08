@@ -1,0 +1,25 @@
+Read 1118 variables, with 7 values at most, and 1118 cost functions, with maximum arity 4.
+No evidence file specified. Trying EXAMPLES/pedigree9.uai.xz.evid
+No evidence file.
+Generic variable elimination of degree 4
+Maximum degree of generic variable elimination: 4
+Cost function decomposition time : 0.003733 seconds.
+Preprocessing time: 0.073664 seconds.
+232 unassigned variables, 517 values in all current domains (med. size:2, max size:4) and 415 non-unary cost functions (med. arity:2, med. degree:6)
+Initial lower and upper bounds: [553902779, 13246577453] 95.819%
+Tree decomposition width  : 227
+Tree decomposition height : 230
+Number of clusters        : 890
+Tree decomposition time: 0.047 seconds.
+New solution: 865165767 energy: 298.395 prob: 2.564e-130 (72 backtracks, 140 nodes, depth 3)
+New solution: 844685630 energy: 296.347 prob: 1.987e-129 (128 backtracks, 254 nodes, depth 3)
+New solution: 822713386 energy: 294.149 prob: 1.789e-128 (188 backtracks, 373 nodes, depth 3)
+New solution: 809800912 energy: 292.858 prob: 6.506e-128 (327 backtracks, 665 nodes, depth 3)
+New solution: 769281277 energy: 288.806 prob: 3.742e-126 (383 backtracks, 771 nodes, depth 3)
+New solution: 755317979 energy: 287.410 prob: 1.512e-125 (714 backtracks, 1549 nodes, depth 3)
+New solution: 755129381 energy: 287.391 prob: 1.540e-125 (927 backtracks, 2038 nodes, depth 3)
+New solution: 711184893 energy: 282.997 prob: 1.248e-123 (1249 backtracks, 2685 nodes, depth 3)
+HBFS open list restarts: 0.000 % and reuse: 39.620 % of 1474
+Node redundancy during HBFS: 22.653 %
+Optimum: 711184893 energy: 282.997 prob: 1.248e-123 in 21719 backtracks and 56124 nodes ( 72435 removals by DEE) and 4.310 seconds.
+end.

@@ -1,0 +1,39 @@
+Read 100 variables, with 4 values at most, and 710 cost functions, with maximum arity 3.
+Cost function decomposition time : 6.6e-05 seconds.
+Reverse DAC dual bound: 64 (+35.938%)
+Reverse DAC dual bound: 66 (+3.030%)
+Reverse DAC dual bound: 67 (+1.493%)
+Preprocessing time: 0.008 seconds.
+88 unassigned variables, 228 values in all current domains (med. size:2, max size:4) and 591 non-unary cost functions (med. arity:2, med. degree:13)
+Initial lower and upper bounds: [67, 155] 56.774%
+Tree decomposition width  : 19
+Tree decomposition height : 43
+Number of clusters        : 47
+Tree decomposition time: 0.002 seconds.
+New solution: 124 (20 backtracks, 35 nodes, depth 3)
+Optimality gap: [70, 124] 43.548 % (20 backtracks, 35 nodes)
+New solution: 123 (34 backtracks, 64 nodes, depth 3)
+Optimality gap: [77, 123] 37.398 % (34 backtracks, 64 nodes)
+New solution: 119 (173 backtracks, 348 nodes, depth 3)
+Optimality gap: [88, 119] 26.050 % (173 backtracks, 348 nodes)
+Optimality gap: [91, 119] 23.529 % (202 backtracks, 442 nodes)
+New solution: 117 (261 backtracks, 609 nodes, depth 3)
+Optimality gap: [97, 117] 17.094 % (261 backtracks, 609 nodes)
+New solution: 114 (342 backtracks, 858 nodes, depth 3)
+Optimality gap: [98, 114] 14.035 % (342 backtracks, 858 nodes)
+Optimality gap: [100, 114] 12.281 % (373 backtracks, 984 nodes)
+Optimality gap: [101, 114] 11.404 % (437 backtracks, 1123 nodes)
+Optimality gap: [102, 114] 10.526 % (446 backtracks, 1152 nodes)
+Optimality gap: [103, 114] 9.649 % (484 backtracks, 1232 nodes)
+Optimality gap: [104, 114] 8.772 % (521 backtracks, 1334 nodes)
+Optimality gap: [105, 114] 7.895 % (521 backtracks, 1353 nodes)
+Optimality gap: [106, 114] 7.018 % (525 backtracks, 1364 nodes)
+Optimality gap: [107, 114] 6.140 % (525 backtracks, 1379 nodes)
+Optimality gap: [109, 114] 4.386 % (534 backtracks, 1539 nodes)
+Optimality gap: [111, 114] 2.632 % (536 backtracks, 1559 nodes)
+Optimality gap: [113, 114] 0.877 % (536 backtracks, 1564 nodes)
+Optimality gap: [114, 114] 0.000 % (536 backtracks, 1598 nodes)
+HBFS open list restarts: 0.000 % and reuse: 11.080 % of 352
+Node redundancy during HBFS: 34.355 %
+Optimum: 114 in 536 backtracks and 1598 nodes ( 21 removals by DEE) and 0.031 seconds.
+end.
