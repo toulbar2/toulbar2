@@ -1519,7 +1519,7 @@ void Solver::newSolution()
     if (ToulBar2::divNbSol > 1 && wcsp->getLb() <= prevDivSolutionCost)
         throw DivSolutionOut();
 #ifdef OPENMPI
-    if (ToulBar2::parallel && ToulBar2::searchMethod==DFBB && ToulBar2::burst && world.rank() != MASTER) { // HBFS may be turn-off due to open list memory-out and switch to DFS
+    if (ToulBar2::parallel && ToulBar2::searchMethod == DFBB && ToulBar2::burst && world.rank() != MASTER) { // HBFS may be turn-off due to open list memory-out and switch to DFS
         Cost newWorkerUb = wcsp->getSolutionCost();
         vector<Value> workerSol = wcsp->getSolution();
         assert(open && open->empty());
