@@ -19,20 +19,19 @@ class CFN:
     See pytoulbar2test.py example in src repository.
     
     """
-    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, showSolutions = 0):
+    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1):
         tb2.init()
+        
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.seed = seed    # random seed number (use -1 if a pseudo-randomly generated seed is wanted)
         tb2.option.verbose = verbose   # verbosity level of toulbar2 (-1:no message, 0:search statistics, 1:search tree, 2-7: propagation information)
-        tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
-        tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable 
-#        tb2.option.VACthreshold = True  # if True, reuse VAC auto-threshold value found in preprocessing during search 
-#        tb2.option.useRASPS = 1   # if 1 or greater, perform iterative RASPS depth-first search (or LDS if greater than 1) in preprocessing during 1000 backtracks to find good initial upperbound (use with VAC)
-#        tb2.option.hbfs = False   # if True, apply hybrid best-first search algorithm, else apply depth-first search algorithm
-#        tb2.option.backtrackLimit = 50000   # maximum number of backtracks before restart
-#        tb2.option.weightedTightness = False   # variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
-#        tb2.option.allSolutions = 1000   # find all solutions up to a maximum limit
+
+        # default options (can be modified later by the user)
+        tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable
+        tb2.option.VACthreshold = False  # if True, reuse VAC auto-threshold value found in preprocessing during search 
+        tb2.option.useRASPS = 0   # if 1 or greater, perform iterative RASPS depth-first search (or LDS if greater than 1) in preprocessing during 1000 backtracks to find a good initial upperbound (to be used with VAC)
+        tb2.option.weightedTightness = 0   # if 1 or 2, variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
 
         self.configuration = configuration   # if True then special settings for learning
         if configuration:
@@ -40,7 +39,7 @@ class CFN:
             tb2.option.solutionBasedPhaseSaving = False   #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
 
         if vns is not None:
-            tb2.option.vnsInitSol = vns   # if vns different than None or 0 then perform Decomposition-Guided Variable Neighborhood Search
+            tb2.option.vnsInitSol = vns   # if vns different than None then perform Decomposition-Guided Variable Neighborhood Search (-1: initial solution at random, -2: minimum domain values, -3: maximum domain values, -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies)
             tb2.option.lds = 4
             tb2.option.restart = 10000;
             tb2.option.searchMethod = 2;    # 0:DFBB or HBFS, 1:VNS, 2:DGVNS 4:Parallel DGVNS
@@ -50,13 +49,16 @@ class CFN:
         self.VariableIndices = {}
         self.Scopes = []
         self.VariableNames = []
+        
         self.CFN = tb2.Solver() # initialize VAC algorithm depending on tb2.option.vac
+        
         self.UbInit = ubinit # warning! cannot convert initial upper bound into an integer cost before knowing the rest of the problem        
         self.Contradiction = tb2.Contradiction
         self.SolverOut = tb2.SolverOut
         self.Option = tb2.option
-        self.Top = tb2.MAX_COST // 10**resolution
-        tb2.check()
+        self.Top = tb2.MAX_COST // 10**resolution    # can be used to represent forbidden assignments
+        
+        tb2.check()    # checks compatibility between selected options
 
     def __del__(self):
         del self.Scopes
@@ -295,35 +297,36 @@ class CFN:
     def Parse(self, certificate):
         self.CFN.parse_solution(certificate, False if self.configuration else True)    # WARNING! False: do not reuse certificate in future searches used by structure learning evaluation procedure!
 
+    def Dump(self, problem):
+        if self.UbInit is not None:
+            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
+            self.CFN.wcsp.updateUb(integercost)
+        if '.wcsp' in problem:
+            if self.CFN.wcsp.getNegativeLb() > 0 or tb2.option.decimalPoint != 0:
+                print('Warning! Problem optimum has been' + (' multiplied by ' + str(10 ** tb2.option.decimalPoint) if tb2.option.decimalPoint != 0 else '') + (' and' if self.CFN.wcsp.getNegativeLb() > 0 and tb2.option.decimalPoint != 0 else '') + (' shifted by ' + str(self.CFN.wcsp.getNegativeLb()) if self.CFN.wcsp.getNegativeLb() > 0 else '') + ' in wcp format')
+            self.CFN.dump_wcsp(problem, True, 1)
+        elif '.cfn' in problem:
+            self.CFN.dump_wcsp(problem, True, 2)
+        else:
+            print('Error unknown format!')
+
+    def GetNbVars(self):
+        return self.CFN.wcsp.numberOfVariables()
+
     def Domain(self, varIndex):
         return self.CFN.wcsp.getEnumDomain(varIndex)
 
+    def GetNbConstrs(self):
+        return self.CFN.wcsp.numberOfConstraints()
+ 
     def GetUB(self):
         return self.CFN.wcsp.getDPrimalBound()
 
-    # decreasing upper bound only
+    # use only for decreasing current upper bound
     def UpdateUB(self, cost):
         icost = self.CFN.wcsp.DoubletoCost(cost)
         self.CFN.wcsp.updateUb(icost)
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
-
-    # important! used in incremental solving for changing initial upper bound up and down before adding any problem modifications
-    def SetUB(self, cost):
-        icost = self.CFN.wcsp.DoubletoCost(cost)
-        self.CFN.wcsp.setUb(icost)  # must be done after problem loading
-        self.CFN.wcsp.initSolutionCost()  # important to notify previous best found solution is no more valid
-        self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
-
-    def Depth(self):
-        return tb2.store.getDepth()
-
-    # make a copy of the current problem and move to store.depth+1
-    def Store(self):
-        tb2.store.store()
-
-    # restore previous copy made at a given depth
-    def Restore(self, depth):
-        tb2.store.restore(depth)
 
     def GetNbNodes(self):
         return self.CFN.getNbNodes()
@@ -331,15 +334,29 @@ class CFN:
     def GetNbBacktracks(self):
         return self.CFN.getNbBacktracks()
 
+    def GetSolutions(self):
+        return self.CFN.solutions()
+        
     # non-incremental solving method
-    def Solve(self):
+    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0):
+        tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
+        tb2.option.allSolutions = allSolutions   # find all solutions up to a given maximum limit (or 0 if searching for the optimum)
+        if diversityBound != 0 and allSolutions > 0:
+            tb2.option.divNbSol = allSolutions
+            tb2.option.divBound = diversityBound
+            tb2.option.divMethod = 3
+            self.CFN.wcsp.initDivVariables()
+        tb2.check()    # checks compatibility between selected options
         if self.UbInit is not None:
             integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
             self.CFN.wcsp.updateUb(integercost)
         self.CFN.wcsp.sortConstraints()
         solved = self.CFN.solve()
-        if (solved):
-            return self.CFN.solution(), self.CFN.wcsp.getDPrimalBound(), len(self.CFN.solutions())
+        if (len(self.CFN.solutions()) > 0):
+            if allSolutions > 0:
+                return self.CFN.solutions()[-1][1], self.CFN.solutions()[-1][0], len(self.CFN.solutions()) # returns the last solution found
+            else:
+                return self.CFN.solution(), self.CFN.wcsp.getDPrimalBound(), len(self.CFN.solutions()) # returns the best solution found
         else:
             return None
 
@@ -348,6 +365,7 @@ class CFN:
         if self.UbInit is not None:
             integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
             self.CFN.wcsp.updateUb(integercost)
+        tb2.check()    # checks compatibility between selected options
         self.CFN.wcsp.sortConstraints()
         ub = self.CFN.wcsp.getUb()
         self.CFN.beginSolve(ub)
@@ -359,8 +377,17 @@ class CFN:
             return None
         return self.CFN.wcsp.Cost2ADCost(ub)
 
-    # incremental solving: find the next optimum value after a problem modification (see also SetUB)
-    def SolveNext(self):
+    # incremental solving: change initial upper bound up and down before adding any problem modifications
+    def SetUB(self, cost):
+        icost = self.CFN.wcsp.DoubletoCost(cost)
+        self.CFN.wcsp.setUb(icost)  # must be done after problem loading
+        self.CFN.wcsp.initSolutionCost()  # important to notify previous best found solution is no more valid
+        self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
+
+    # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
+    def SolveNext(self, showSolutions = 0):
+        tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
+        tb2.check()    # checks compatibility between selected options
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)
@@ -380,13 +407,37 @@ class CFN:
         else:
             return None
 
-    def Dump(self, problem):
-        if self.UbInit is not None:
-            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
-            self.CFN.wcsp.updateUb(integercost)
-        if '.wcsp' in problem:
-            self.CFN.dump_wcsp(problem, True, 1)
-        elif '.cfn' in problem:
-            self.CFN.dump_wcsp(problem, True, 2)
-        else:
-            print('Error unknown format!')
+    # The following functions allow user-defined search procedures:
+    
+    def Depth(self):
+        return tb2.store.getDepth()
+
+    # make a copy (incremental) of the current problem and move to Depth+1
+    def Store(self):
+        tb2.store.store()
+
+    # restore previous copy made at a given depth
+    def Restore(self, depth):
+        tb2.store.restore(depth)
+
+    def Assign(self, varIndex, value):
+        self.CFN.wcsp.assign(varIndex, value)
+        self.CFN.wcsp.propagate()
+
+    def MultipleAssign(self, varIndexes, values):
+        self.CFN.wcsp.assignLS(varIndexes, values, false)
+        
+    def Remove(self, varIndex, value):
+        self.CFN.wcsp.remove(varIndex, value)
+        self.CFN.wcsp.propagate()
+        
+    def Increase(self, varIndex, value):
+        self.CFN.wcsp.increase(varIndex, value)
+        self.CFN.wcsp.propagate()
+        
+    def Decrease(self, varIndex, value):
+        self.CFN.wcsp.decrease(varIndex, value)
+        self.CFN.wcsp.propagate()
+        
+    def ClearPropagationQueues(self):
+        self.CFN.wcsp.whenContradiction()

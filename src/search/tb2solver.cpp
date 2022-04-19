@@ -1431,7 +1431,7 @@ void Solver::newSolution()
             cout << *wcsp << endl;
 
         if (ToulBar2::allSolutions) {
-            cout << std::setprecision(0) << nbSol << " solution(" << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << "): ";
+            cout << std::setprecision(0) << nbSol << " solution(" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << "): ";
         }
 
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {

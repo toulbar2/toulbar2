@@ -148,6 +148,8 @@ public:
     /// \brief assigns a set of variables at once and propagates (used by Local Search methods such as Large Neighborhood Search)
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     /// \param newValues vector of values to be assigned to the corresponding variables
+    /// \param force boolean if true then apply assignLS even if the variable is already assigned
+    /// Note this function is equivalent but faster than a sequence of assign.
     virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false) = 0;
     virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false) = 0;
 
@@ -457,6 +459,7 @@ public:
     virtual TreeDecomposition* getTreeDec() = 0;
 
     virtual vector<Variable*>& getDivVariables() = 0; ///< \brief returns all variables on which a diversity request exists
+    virtual void initDivVariables() = 0; ///< \brief initializes diversity variables with all decision variables in the problem
 
     virtual void iniSingleton() = 0;
     virtual void updateSingleton() = 0;

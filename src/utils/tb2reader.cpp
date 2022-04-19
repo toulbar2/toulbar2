@@ -2168,17 +2168,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     // Diverse variables structure and variables allocation and initialization
     if (ToulBar2::divNbSol > 1) {
-        for (auto var : vars) {
-            if (var->unassigned() && var->getName().rfind(IMPLICIT_VAR_TAG, 0) != 0) {
-                if (var->enumerated()) {
-                    divVariables.push_back(var);
-                } else {
-                    cerr << "Error: cannot control diversity of non enumerated variable: " << var->getName() << endl;
-                    throw BadConfiguration();
-                }
-            }
-        }
-
+        initDivVariables();
         // Dual variables allocation, only needed for divMethod 0 Dual or 1 Hidden
         if (ToulBar2::divMethod < 2) {
             divVarsId.resize(ToulBar2::divNbSol);

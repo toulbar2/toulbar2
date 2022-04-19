@@ -463,6 +463,21 @@ public:
         return divVariables;
     }
 
+    void initDivVariables()
+    {
+        divVariables.clear();
+        for (auto var : vars) {
+            if (var->unassigned() && var->getName().rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+                if (var->enumerated()) {
+                    divVariables.push_back(var);
+                } else {
+                    cerr << "Error: cannot control diversity of non enumerated variable: " << var->getName() << endl;
+                    throw BadConfiguration();
+                }
+            }
+        }
+    }
+
     int postCliqueConstraint(vector<int>& scope, const string& arguments)
     {
         std::istringstream file(arguments);
