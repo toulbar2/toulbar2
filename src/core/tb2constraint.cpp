@@ -5,6 +5,7 @@
 #include "tb2constraint.hpp"
 #include "tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
+#include "core/tb2knapsack.hpp"
 
 /*
  * Constructor
@@ -455,6 +456,42 @@ bool Constraint::cmpConstraintTightnessDAC(DLink<ConstraintLink>* c1, DLink<Cons
     }
 }
 
+bool Constraint::cmpConstraintLAG(Constraint* c1, Constraint* c2)
+{
+    auto* k = dynamic_cast<KnapsackConstraint*>(c1);
+    auto* k1 = dynamic_cast<KnapsackConstraint*>(c2);
+    if (k && !k1)
+        return false;
+    if (!k && k1)
+        return true;
+    if (k && k1) {
+        double v1 = k->getLag();
+        double v2 = k1->getLag();
+        if (v1 == v2)
+            return k->computeTightness() < k1->computeTightness();
+        return (v1 < v2);
+    } else
+        return cmpConstraintDAC(c1, c2);
+}
+
+bool Constraint::cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    auto* k = dynamic_cast<KnapsackConstraint*>(c1->content.constr);
+    auto* k1 = dynamic_cast<KnapsackConstraint*>(c2->content.constr);
+    if (k && !k1)
+        return false;
+    if (!k && k1)
+        return true;
+    if (k && k1) {
+        double v1 = k->getLag();
+        double v2 = k1->getLag();
+        if (v1 == v2)
+            return k->computeTightness() < k1->computeTightness();
+        return (v1 < v2);
+    } else
+        return cmpConstraintDAC(c1, c2);
+}
+
 // sort a list of constraints
 int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
 {
@@ -473,6 +510,9 @@ int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
         result = cmpConstraintDACTightness(c1, c2);
         break;
     case CONSTR_ORDER_TIGHTNESS_DAC:
+        result = cmpConstraintTightnessDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_LAG:
         result = cmpConstraintTightnessDAC(c1, c2);
         break;
     default:
@@ -505,6 +545,9 @@ int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLin
         break;
     case CONSTR_ORDER_TIGHTNESS_DAC:
         result = cmpConstraintTightnessDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_LAG:
+        result = cmpConstraintLAG(c1, c2);
         break;
     default:
         cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;

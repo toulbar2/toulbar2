@@ -2447,6 +2447,8 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         throw TimeOut();
     }
 
+    if (ToulBar2::knapsackDP == -1)
+        ToulBar2::knapsackDP = -2;
     return initialUpperBound;
 }
 

@@ -30,24 +30,25 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
 
     shuffle(&scopeIndexs[0], &scopeIndexs[arity - 1], myrandom_generator);
 
-    if (globalname == "knapsackp") {
+    if (globalname == "knapsackp" || globalname == "knapsackc") {
         string arguments;
-        Long capacity = (myrandln() % (Long)costMax);
+        Long capacity = (myrandln() % 100);
         if (capacity == 0)
             capacity++;
         arguments.append(to_string(capacity));
         string kparguments;
         Value* VV;
         int domsize;
-        Long weight;
+        Long weight, prevweight;
         for (i = 0; i < arity; i++) {
             kparguments = "";
             int countone = 0;
             domsize = scopeVars[i]->getDomainSize();
             VV = new Value[domsize];
             scopeVars[i]->getDomain(VV);
+            prevweight = 1000;
             for (int j = 0; j < domsize; j++) {
-                if ((rand() % 100) < 50) {
+                if ((rand() % 100) < 100) {
                     kparguments.append(" ");
                     kparguments.append(to_string(VV[j]));
                     if ((rand() % 100) < 50) {
@@ -55,18 +56,68 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
                     } else {
                         weight = (-myrandl() % capacity - 1);
                     }
+                    if (prevweight == weight)
+                        weight++;
+                    prevweight = weight;
                     kparguments.append(" " + to_string(weight));
                     countone++;
                 }
             }
             arguments.append(" " + to_string(countone) + kparguments);
         }
-        istringstream file(arguments);
         cout << arguments << endl;
-        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true);
+        if (globalname == "knapsackc") {
+            vector<int> AMO1;
+            vector<int> AMO2;
+            vector<int> AMO3;
+            vector<int> AMO4;
+            for (i = 0; i < arity; i++) {
+                if (rand() % 100 < 33) {
+                    AMO1.push_back(scopeIndexs[i]);
+                } else if (rand() % 100 < 66) {
+                    AMO2.push_back(scopeIndexs[i]);
+                } else {
+                    AMO3.push_back(scopeIndexs[i]);
+                }
+            }
+            if (AMO1.size() > 1 && AMO2.size() > 1 && AMO3.size() > 1)
+                arguments.append(" 3");
+            else if ((AMO1.size() > 1 && AMO2.size() > 1) || (AMO1.size() > 1 && AMO3.size() > 1) || (AMO3.size() > 1 && AMO2.size() > 1))
+                arguments.append(" 2");
+            else
+                arguments.append(" 1");
+            if (AMO1.size() > 1) {
+                kparguments = " " + to_string(AMO1.size());
+                for (unsigned int j = 0; j < AMO1.size(); ++j) {
+                    kparguments.append(" " + to_string(AMO1[j]) + " 1");
+                }
+            }
+            arguments.append(kparguments);
+            if (AMO2.size() > 1) {
+                kparguments = " " + to_string(AMO2.size());
+                for (unsigned int j = 0; j < AMO2.size(); ++j) {
+                    kparguments.append(" " + to_string(AMO2[j]) + " 1");
+                }
+            }
+            arguments.append(kparguments);
+
+            if (AMO3.size() > 1) {
+                kparguments = " " + to_string(AMO3.size());
+                for (unsigned int j = 0; j < AMO3.size(); ++j) {
+                    kparguments.append(" " + to_string(AMO3[j]) + " 1");
+                }
+            }
+            arguments.append(kparguments);
+        }
+        istringstream file(arguments);
+        cout << "arguments" << arguments << endl;
+        if (globalname == "knapsackc")
+            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, true);
+        else
+            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, false);
     } else if (globalname == "knapsack") {
         string arguments;
-        Long capacity = (myrandln() % (Long)costMax);
+        Long capacity = (myrandln() % (Long)150);
         if (capacity == 0)
             capacity++;
         arguments.append(to_string(capacity));
@@ -81,7 +132,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             }
         }
         istringstream file(arguments);
-        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false);
+        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false);
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {

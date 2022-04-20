@@ -178,6 +178,7 @@ public:
     virtual void whenContradiction() = 0; ///< \brief after a contradiction, resets propagation queues
     virtual void propagate() = 0; ///< \brief propagates until a fix point is reached (or throws a contradiction)
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
+    virtual void addAMOConstraints() = 0;
 
     virtual unsigned int numberOfVariables() const = 0; ///< \brief number of created variables
     virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \brief current number of unassigned variables
@@ -265,8 +266,8 @@ public:
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
     virtual int postCliqueConstraint(vector<int>& scope, const string& arguments) = 0;
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
-    virtual int postKnapsackConstraint(vector<int>& scope, const string& arguments, bool isclique = false, bool kp = false) = 0;
-    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false) = 0; /// \deprecated
+    virtual int postKnapsackConstraint(vector<int>& scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false) = 0;
+    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false, bool conflict = false) = 0; /// \deprecated
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
 
     /// \brief post a soft among cost function

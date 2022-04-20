@@ -579,6 +579,7 @@ typedef enum {
     CONSTR_ORDER_DAC_TIGHTNESS = 4,
     CONSTR_ORDER_TIGHTNESS_DAC = 5,
     CONSTR_ORDER_RANDOM = 6,
+    CONSTR_ORDER_LAG = 7,
     CONSTR_ORDER_THEMAX
 } ConstrOrdering;
 
@@ -781,6 +782,9 @@ public:
     static bool qpbo; /// < \internal do not use
     static double qpboQuadraticCoefMultiplier; /// < \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
     static bool opb; /// < \internal do not use
+
+    static bool addAMOConstraints; /// < \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
+    static int knapsackDP; /// < \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
 
     static unsigned int divNbSol; /// < \brief upper bound on the number of diverse solutions (0: no diverse solution) (keep it small as it controls model size)
     static unsigned int divBound; /// < \brief minimum Hamming distance between diverse solutions (command line options -div and -a)

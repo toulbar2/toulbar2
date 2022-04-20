@@ -234,6 +234,8 @@ enum {
     OPT_RASPSlds,
 
     OPT_singletonConsistency,
+    OPT_GenAMOforPB,
+    OPT_DynPB,
     NO_OPT_singletonConsistency,
     OPT_vacValueHeuristic,
     NO_OPT_vacValueHeuristic,
@@ -483,6 +485,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     //preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
     { OPT_singletonConsistency, (char*)"-S", SO_NONE },
+    { OPT_GenAMOforPB, (char*)"-amo", SO_NONE },
+    { OPT_DynPB, (char*)"-kpdp", SO_OPT },
     { OPT_preprocessTernary, (char*)"-t", SO_OPT },
     { NO_OPT_preprocessTernary, (char*)"-t:", SO_NONE },
     { OPT_preprocessFunctional, (char*)"-f", SO_OPT },
@@ -816,7 +820,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::sortDomains)
         cout << " (default option)";
     cout << endl;
-    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6) or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
+    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
     cout << "   -solr : solution-based phase saving";
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
@@ -838,6 +842,10 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::MSTDAC)
         cout << " (default option)";
     cout << endl;
+    cout << "   -amo : automatically detect at-most-one constraints and add them to existing knapsack/linear/pseudo-boolean constraints";
+    if (ToulBar2::addAMOConstraints)
+        cout << " (default option)";
+    cout << endl;
 #endif
     cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
@@ -846,6 +854,7 @@ void help_msg(char* toulbar2filename)
     cout << endl;
     cout << "   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is " << ToulBar2::LcLevel << ")" << endl;
     cout << "   -dee=[integer] : restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is " << ToulBar2::DEE << ")" << endl;
+    cout << "   -kpdp=[integer] : solves knapsack constraints using dynamic programming (-2: never, -1: only in preprocessing, 0: at every search node, >0: after a given number of nodes) (default value is " << ToulBar2::knapsackDP << ")" << endl;
     cout << "   -l=[integer] : limited discrepancy search, use a negative value to stop the search after the given absolute number of discrepancies has been explored (discrepancy bound = " << maxdiscrepancy << " by default)";
     if (ToulBar2::lds)
         cout << " (default option)";
@@ -1681,6 +1690,18 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_singletonConsistency)
                 ToulBar2::singletonConsistency = true;
+
+            if (args.OptionId() == OPT_GenAMOforPB) {
+                ToulBar2::addAMOConstraints = true;
+            }
+            if (args.OptionId() == OPT_DynPB) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::knapsackDP = atoi(args.OptionArg());
+                } else {
+                    ToulBar2::knapsackDP = 0;
+                }
+            }
+
             if (args.OptionId() == OPT_vacValueHeuristic)
                 ToulBar2::vacValueHeuristic = true;
             else if (args.OptionId() == NO_OPT_vacValueHeuristic)

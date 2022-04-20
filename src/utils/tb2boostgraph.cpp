@@ -6,6 +6,8 @@
 
 #include "core/tb2wcsp.hpp"
 #include "core/tb2binconstr.hpp"
+#include "core/tb2knapsack.hpp"
+#include "core/tb2naryconstr.hpp"
 
 #ifdef BOOST
 #include <boost/config.hpp>
@@ -674,6 +676,178 @@ void WCSP::minimumDegreeOrdering(vector<int>& order_inv)
         cout << endl;
     }
     assert(order_inv.size() == numberOfVariables());
+}
+
+int cmpValueCost3(const void* p1, const void* p2)
+{
+    Cost c1 = ((ValueCost*)p1)->cost;
+    Cost c2 = ((ValueCost*)p2)->cost;
+    Value v1 = ((ValueCost*)p1)->value;
+    Value v2 = ((ValueCost*)p2)->value;
+    if (c1 < c2)
+        return -1;
+    else if (c1 > c2)
+        return 1;
+    else if (v1 < v2)
+        return -1;
+    else if (v1 > v2)
+        return 1;
+    else
+        return 0;
+}
+template <typename T>
+static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g)
+{
+    Graph G;
+    for (unsigned int i = 0; i < scope.size(); ++i) {
+        add_vertex(G);
+        add_vertex(G);
+    }
+    for (unsigned int i = 0; i < scope.size(); i++) {
+        for (unsigned int j = i + 1; j < scope.size(); j++) {
+            if (edge(2 * scope[i], 2 * scope[j], g).second)
+                add_edge(2 * i, 2 * j, G);
+            if (edge(2 * scope[i] + 1, 2 * scope[j], g).second)
+                add_edge(2 * i + 1, 2 * j, G);
+            if (edge(2 * scope[i], 2 * scope[j] + 1, g).second)
+                add_edge(2 * i, 2 * j + 1, G);
+            if (edge(2 * scope[i] + 1, 2 * scope[j] + 1, g).second)
+                add_edge(2 * i + 1, 2 * j + 1, G);
+        }
+    }
+    vector<int> Temp;
+    vector<vector<int>> Tempclq;
+    vector<int> order;
+    for (unsigned int i = 0; i < scope.size(); ++i) {
+        order.push_back(i);
+    }
+    if (G.m_vertices[2 * order[0]].m_out_edges.size() > G.m_vertices[2 * order[0] + 1].m_out_edges.size())
+        Temp.push_back(0);
+    else
+        Temp.push_back(1);
+    Tempclq.push_back(Temp);
+    bool ok;
+    unsigned j, k, curr;
+    for (int i = 1; i < (int)order.size(); i++) {
+        ok = false;
+        j = 0;
+        curr = 2 * order[i] + 1;
+        if (G.m_vertices[2 * order[i]].m_out_edges.size() > G.m_vertices[2 * order[i] + 1].m_out_edges.size())
+            curr = 2 * order[order[i]];
+        while (!ok && j < Tempclq.size()) {
+            k = 0;
+            ok = true;
+            while (ok && k < Tempclq[j].size()) {
+                if (!edge(curr, Tempclq[j][k], G).second && !edge(Tempclq[j][k], curr, G).second)
+                    ok = false;
+                k++;
+            }
+            j++;
+        }
+        if (ok) {
+            Tempclq[j - 1].push_back(curr);
+        } else {
+            Temp.clear();
+            Temp.push_back(curr);
+            Tempclq.push_back(Temp);
+        }
+    }
+    vector<vector<pair<int, int>>> clq;
+    vector<pair<int, int>> clq2;
+    for (unsigned int i = 0; i < Tempclq.size(); ++i) {
+        clq2.clear();
+        for (unsigned int l = 0; l < Tempclq[i].size(); ++l) {
+            clq2.push_back(pair(scope[(int)floor(Tempclq[i][l] / 2.0 + 0.1)], Tempclq[i][l] % 2));
+        }
+        if (clq2.size() > 1)
+            clq.push_back(clq2);
+    }
+    return clq;
+}
+
+void WCSP::addAMOConstraints()
+{
+    if (ToulBar2::verbose >= 1)
+        cout << "Add AMO constraints to knapsack contraints." << endl;
+    double startCpuTime = cpuTime();
+    double startRealTime = realTime();
+
+    vector<int> Var;
+    Graph G;
+    int count = 0;
+    if (ToulBar2::verbose >= 1)
+        cout << "Construct Graph of size " << vars.size() << endl;
+    for (int i = 0; i < (int)vars.size(); ++i) {
+        if (vars[i]->unassigned()) {
+            Var.push_back(i);
+            assert(i == vars[i]->wcspIndex);
+        }
+        add_vertex(G);
+        add_vertex(G);
+    }
+    for (unsigned int varIndex = 0; varIndex < Var.size(); varIndex++) {
+        int size = getDomainSize(Var[varIndex]);
+        ValueCost sorted[size];
+        getEnumDomainAndCost(Var[varIndex], sorted);
+        qsort(sorted, size, sizeof(ValueCost), cmpValueCost3);
+        for (int a = 0; a < size; a++) {
+            int storedepth = Store::getDepth();
+            try {
+                Store::store();
+                assign(Var[varIndex], sorted[a].value);
+            } catch (const Contradiction&) {
+            }
+            for (unsigned int i = 0; i < Var.size(); ++i) {
+                if (vars[Var[i]]->assigned() && i != varIndex) {
+                    add_edge(2 * Var[varIndex] + sorted[a].value, 2 * Var[i] + 1 - vars[Var[i]]->getValue(), G);
+                }
+            }
+            Store::restore(storedepth);
+        }
+    }
+    if (ToulBar2::verbose >= 1)
+        cout << "Graph done." << endl;
+    count = 0;
+    vector<int> scope;
+    vector<int> scope2;
+    vector<vector<pair<int, int>>> clq;
+    int MaxAMO = 0;
+    int total = 0;
+    unsigned int nbconstrs = constrs.size();
+    for (unsigned int i = 0; i < nbconstrs; ++i) {
+        auto* k = dynamic_cast<KnapsackConstraint*>(constrs[i]);
+        if (!k)
+            continue;
+        else {
+            if (constrs[i]->arity() > 3 && constrs[i]->connected()) {
+                scope.clear();
+                scope2.clear();
+                clq.clear();
+                //scope=k->GetOrder();
+                for (int j = 0; j < constrs[i]->arity(); j++) {
+                    if (constrs[i]->getVar(j)->unassigned()) {
+                        scope2.push_back(constrs[i]->getVar(j)->wcspIndex);
+                    }
+                }
+                if (scope2.size() > 3) {
+                    clq = FindClique(scope2, G);
+                    if (clq.size() > 0) {
+                        for (unsigned int j = 0; j < clq.size(); ++j) {
+                            if ((int)clq[j].size() > MaxAMO)
+                                MaxAMO = clq[j].size();
+                            total += clq[j].size();
+                        }
+                        count++;
+                        k->addAMOConstraints(clq, vars, this);
+                    }
+                }
+            }
+        }
+    }
+    if (ToulBar2::verbose >= 0) {
+        cout << count << " AMO constraints added with max size " << MaxAMO;
+        cout << " in " << ((ToulBar2::parallel) ? (realTime() - startRealTime) : (cpuTime() - startCpuTime)) << " seconds." << endl;
+    }
 }
 
 #endif
