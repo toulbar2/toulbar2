@@ -845,7 +845,8 @@ void WCSP::addAMOConstraints()
         }
     }
     if (ToulBar2::verbose >= 0) {
-        cout << count << " AMO constraints added with max size " << MaxAMO;
+        if (count>0) cout << count << " AMO constraint" << ((count>1)?"s":"") << " added with max size " << MaxAMO;
+        else cout << "No AMO constraint added"
         cout << " in " << ((ToulBar2::parallel) ? (realTime() - startRealTime) : (cpuTime() - startCpuTime)) << " seconds." << endl;
     }
 }

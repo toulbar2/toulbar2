@@ -837,6 +837,7 @@ public:
             weights.push_back(TempWeight);
             n += clq[i].size();
         }
+        //TODO: reinitialize current knapsack constraint instead of creating a new constraint
         deconnect();
         new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weigths, CorrAMO, VirtualVar, nonassigned, deltaCosts, lb, assigneddeltas, Original_capacity);
     }
