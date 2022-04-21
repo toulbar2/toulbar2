@@ -362,6 +362,13 @@ class CFN:
 
     # incremental solving: perform initial preprocessing before all future searches, return improved ub
     def SolveFirst(self):
+        """SolveFirst performs problem preprocessing before doing incremental solving.
+
+        Returns:
+            Initial upper bound, possibly improved by considering a worst-case situation based on the sum of maximum finite cost for every function plus one.
+            or None if the problem has no solution (a contradiction occurs during preprocessing).
+
+        """
         if self.UbInit is not None:
             integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
             self.CFN.wcsp.updateUb(integercost)
@@ -386,6 +393,16 @@ class CFN:
 
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
     def SolveNext(self, showSolutions = 0):
+        """AddVariable summary line description....
+
+        Args:
+            name (type...): ...
+            values (type...): ...
+
+        Returns:
+            ...
+
+        """
         tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
         tb2.check()    # checks compatibility between selected options
         initub = self.CFN.wcsp.getUb()
