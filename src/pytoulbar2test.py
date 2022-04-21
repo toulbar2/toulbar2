@@ -1,6 +1,6 @@
 """
 
-Test pytoulbar2 API.
+Test basic pytoulbar2 API.
 
 """
 
