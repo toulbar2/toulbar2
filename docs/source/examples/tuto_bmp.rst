@@ -1,8 +1,10 @@
-.. _bmp:
+.. _tuto_bmp:
 
 ======================
 Block modeling problem
 ======================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================

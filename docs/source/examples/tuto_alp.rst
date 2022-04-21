@@ -1,8 +1,10 @@
-.. _alp:
+.. _tuto_alp:
 
 ========================
 Airplane landing problem
 ========================
+
+.. include:: menu_backto.rst
 
 Brief description (from `CHOCO-SOLVER <https://choco-solver.org/tutos/aircraft-landing-problem>`_)
 ==================================================================================================

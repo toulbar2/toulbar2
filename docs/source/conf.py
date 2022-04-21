@@ -159,6 +159,10 @@ latex_elements = {
     #
     # 'pointsize': '10pt',
 
+    # remove blank pages (between the title page and the TOC, etc.)
+    'classoptions': ',openany,oneside',
+    'babel' : '\\usepackage[english]{babel}',
+
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
@@ -175,7 +179,11 @@ latex_documents = [
 
     # extracts 
 
-    ('tutorials', 'tutorials.tex',
+    ('examples/tutorials_pdf', 'tutorials.tex',
+     '', # to keep .rst title
+     'INRAE', 'manual'),
+
+    ('examples/usecases_pdf', 'usecases.tex',
      '', # to keep .rst title
      'INRAE', 'manual'),
 
@@ -206,7 +214,7 @@ latex_documents = [
 
     # main
 
-    ('index', 'toulbar2.tex',
+    ('index_pdf', 'toulbar2.tex',
      'toulbar2 Documentation',
      'INRAE', 'manual'),
 ]

@@ -1,8 +1,10 @@
-.. _wnqp:
+.. _tuto_wnqp:
 
 ========================
 Weighted n-queen problem
 ========================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================

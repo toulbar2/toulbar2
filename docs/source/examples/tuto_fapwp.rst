@@ -1,13 +1,15 @@
-.. _fapwp:
+.. _tuto_fapwp:
 
 ==============================================
 Frequency assignment problem with polarization
 ==============================================
 
+.. include:: menu_backto.rst
+
 Brief description
 =================
 
-The previously-described :ref:`rlfap` has been extended to take into account polarization constraints and user-defined relaxation of electromagnetic compatibility constraints. The problem is to assign a pair (frequency,polarization) to every radio communication link (also called a path). Frequencies are integer values taken in finite domains. Polarizations are in {-1,1}. Constraints are :
+The previously-described :ref:`tuto_rlfap` has been extended to take into account polarization constraints and user-defined relaxation of electromagnetic compatibility constraints. The problem is to assign a pair (frequency,polarization) to every radio communication link (also called a path). Frequencies are integer values taken in finite domains. Polarizations are in {-1,1}. Constraints are :
 
   - \(I) two paths must use equal or different frequencies (`f_i=f_j` or `f_i<>f_j`),
   - \(II) the absolute difference between two frequencies should exactly be equal or different to a given number e (`|f_i-f_j|=e` or `|f_i-f_j|<>e`),

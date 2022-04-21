@@ -5,20 +5,23 @@
 
 .. _home:
 
-.. only:: html
+.. _index:
 
-    .. include:: presentation.rst
+.. include:: presentation.rst
 
 Detailed Content
 ----------------
 
-  .. toctree::
-     :maxdepth: 3
+.. toctree::
+   :maxdepth: 3
 
-     presentation.rst
-     tutorials.rst
-     userdoc.rst
-     refman.rst
-     publications.rst
-     resources.rst
+   presentation.rst
+   downloads.rst
+   benchmarks.rst
+   examples/tutorials.rst
+   Use cases <examples/usecases.rst>
+   userdoc.rst
+   refman.rst
+   pdfmanuals.rst
+   publications.rst
 

@@ -1,8 +1,10 @@
-.. _medp:
+.. _tuto_medp:
 
 =================================
 Mendelian error detection problem
 =================================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================
