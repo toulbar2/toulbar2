@@ -1,8 +1,10 @@
-.. _wlp:
+.. _tuto_wlp:
 
 ==========================
 Warehouse location problem
 ==========================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================

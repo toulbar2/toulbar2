@@ -1,8 +1,10 @@
-.. _sspp:
+.. _tuto_sspp:
 
 ===========================
 Square soft packing problem
 ===========================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================
@@ -12,7 +14,7 @@ Find a packing of squares of size 1×1, 2×2,..., NxN into a given container squ
 CFN model
 =========
 
-We reuse the :ref:`spp` model except that binary constraints are replaced by cost functions returning the overlapping size or zero if no overlaps. The initial upper bound is a worst-case upper estimation of total sum of overlaps.
+We reuse the :ref:`tuto_spp` model except that binary constraints are replaced by cost functions returning the overlapping size or zero if no overlaps. The initial upper bound is a worst-case upper estimation of total sum of overlaps.
 
 Python model generator
 ======================

@@ -1,8 +1,10 @@
-.. _rlfap:
+.. _tuto_rlfap:
 
 =======================================
 Radio link frequency assignment problem
 =======================================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================

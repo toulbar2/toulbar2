@@ -1,8 +1,10 @@
-.. _spp:
+.. _tuto_spp:
 
 ======================
 Square packing problem
 ======================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================

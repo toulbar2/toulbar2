@@ -1,8 +1,10 @@
-.. _wlsp:
+.. _tuto_wlsp:
 
 =============================
 Weighted latin square problem
 =============================
+
+.. include:: menu_backto.rst
 
 Brief description
 =================
