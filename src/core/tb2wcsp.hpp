@@ -316,6 +316,16 @@ public:
             propagate();
     }
 
+    /// \brief deconnects a set of variables from the rest of the problem and assigns them to their support value (used by Incremental Search)
+    /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
+    void deconnect(vector<int>& varIndexes)
+    {
+        for (unsigned int index: varIndexes) {
+            assert(index >= 0 && index < numberOfVariables());
+            vars[index]->deconnect();
+        }
+    }
+
     Cost getUnaryCost(int varIndex, Value v) const { return vars[varIndex]->getCost(v); } ///< \brief unary cost associated to a domain value
     Cost getMaxUnaryCost(int varIndex) const { return vars[varIndex]->getMaxCost(); } ///< \brief maximum unary cost in the domain
     Value getMaxUnaryCostValue(int varIndex) const { return vars[varIndex]->getMaxCostValue(); } ///< \brief a value having the maximum unary cost in the domain

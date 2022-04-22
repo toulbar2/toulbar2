@@ -111,6 +111,14 @@ void Variable::deconnect(DLink<ConstraintLink>* link, bool reuse)
     }
 }
 
+void Variable::deconnect()
+{
+    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        (*iter).constr->deconnect();
+    }
+    assign(getSupport());
+}
+
 int Variable::getTrueDegree()
 {
     //	if (constrs.getSize() >= ToulBar2::weightedDegree) return getDegree(); ///\warning returns an approximate degree if the constraint list is too large!

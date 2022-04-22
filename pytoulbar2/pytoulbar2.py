@@ -16,13 +16,15 @@ except :
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
     
-    Public Members:
-        CFN : python interface to C++ class WeightedCSPSolver.
-        Contradiction : python exception corresponding to the same C++ class.
-        Limit : contains the last SolverOut exception or None if no exception occurs when solving.
-        Option : python interface to C++ class ToulBar2.
-        SolverOut : python exception corresponding to the same C++ class.
-        Top : maximum decimal cost (can be used as forbidden cost).
+    Members:
+        CFN (WeightedCSPSolver): python interface to C++ class WeightedCSPSolver.
+        Contradiction (exception): python exception corresponding to the same C++ class.
+        Limit (exception|None): contains the last SolverOut exception or None if no exception occurs when solving.
+        Option (TouBar2): python interface to C++ class ToulBar2.
+        SolverOut (exception): python exception corresponding to the same C++ class.
+        Top (decimal cost): maximum decimal cost (it can be used to represent a forbidden cost).
+        VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).
+        VariableNames (list): array of created variable names (str) sorted by their index number.
         
     See pytoulbar2test.py example in src repository.
     
@@ -531,6 +533,8 @@ class CFN:
             
         Warning:
             This operation must be done at solver depth 0 (see Depth).
+        Warning:
+            This operation cannot be called multiple times on the same CFN object.
 
         """
         if self.UbInit is not None:
@@ -642,11 +646,11 @@ class CFN:
         self.CFN.wcsp.propagate()
 
     def MultipleAssign(self, varIndexes, values):
-        """Assign assigns a variable to a domain value.
+        """MultipleAssign assigns several variables at once.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
-            value (int): domain value.
+            varIndexes (list): list of indexes of variables.
+            values (list): list of domain values.
 
         """
         self.CFN.wcsp.assignLS(varIndexes, values, false)
@@ -683,6 +687,26 @@ class CFN:
         """
         self.CFN.wcsp.decrease(varIndex, value)
         self.CFN.wcsp.propagate()
+        
+    def Deconnect(self, varIndex):
+        """Deconnect deconnects a variable from the rest of the problem and assigns it to its support value.
+
+        Args:
+            varIndex (int): index of the variable as returned by AddVariable.
+
+        """
+        varIndexes = []
+        varIndexes.append(varIndex)
+        self.MultipleDeconnect(varIndexes)
+
+    def MultipleDeconnect(self, varIndexes):
+        """MultipleDeconnect deconnects a set of variables from the rest of the problem and assigns them to their support value.
+
+        Args:
+            varIndexes (list): list of indexes of variables.
+
+        """
+        self.CFN.wcsp.deconnect(varIndexes)
         
     def ClearPropagationQueues(self):
         """ClearPropagationQueues resets propagation queues. It should be called when an exception Contradiction occurs.

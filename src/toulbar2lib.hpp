@@ -153,6 +153,10 @@ public:
     virtual void assignLS(vector<int>& varIndexes, vector<Value>& newValues, bool force = false) = 0;
     virtual void assignLS(int* varIndexes, Value* newValues, unsigned int size, bool dopropagate, bool force = false) = 0;
 
+    /// \brief deconnects a set of variables from the rest of the problem and assigns them to their support value (used by Incremental Search)
+    /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
+    virtual void deconnect(vector<int>& varIndexes) = 0;
+
     virtual Cost getUnaryCost(int varIndex, Value v) const = 0; ///< \brief unary cost associated to a domain value
     virtual Cost getMaxUnaryCost(int varIndex) const = 0; ///< \brief maximum unary cost in the domain
     virtual Value getMaxUnaryCostValue(int varIndex) const = 0; ///< \brief a value having the maximum unary cost in the domain

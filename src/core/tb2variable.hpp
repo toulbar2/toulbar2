@@ -102,6 +102,7 @@ public:
     TernaryConstraint* existTernary();
     double strongLinkedby(Variable*& strvar, TernaryConstraint*& tctr1, TernaryConstraint*& tctr2);
     void deconnect(DLink<ConstraintLink>* link, bool reuse = false);
+    void deconnect(); /// \brief deconnects temporally a variable from the problem (i.e., deconnects all its constraints and assigns to its support value)
 
     void projectLB(Cost cost);
 
