@@ -2171,6 +2171,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::addAMOConstraints) {
         addAMOConstraints();
+        ToulBar2::addAMOConstraints_=false;
     }
 
     // Diverse variables structure and variables allocation and initialization

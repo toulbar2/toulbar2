@@ -1693,6 +1693,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_GenAMOforPB) {
                 ToulBar2::addAMOConstraints = true;
+                ToulBar2::addAMOConstraints_ = true;
             }
             if (args.OptionId() == OPT_DynPB) {
                 if (args.OptionArg() != NULL) {

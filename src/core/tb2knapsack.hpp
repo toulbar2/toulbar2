@@ -46,7 +46,8 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     //CorrAMO has size arity and gives on which AMO constraint the given variable belongs (0 if it is in no AMO constraint).
     vector<StoreInt> nbVirtualVar;
     StoreInt AlwaysSatisfied;
-    int DoDyn = -1;
+    bool DoDyn = false;
+    Long NbNodes=-1;
     bool sameweight;
     vector<vector<Cost>> tempdeltaCosts;
     vector<bool> Booleanvar;
@@ -364,8 +365,6 @@ public:
                     nbVirtualVar.emplace_back((int)AMO[i].size());
                 }
             }
-            if (ToulBar2::knapsackDP >= 0)
-                DoDyn = 0;
             get_current_scope();
 #ifndef NDEBUG
             Long Sumw = 0;
@@ -374,13 +373,14 @@ public:
             }
             assert(MaxWeight == Sumw);
 #endif
-            if (universal())
-                deconnected();
+            if (universal()) {
+                deconnect();
+            }
         } else {
             if (!verify()) {
                 THROWCONTRADICTION;
             }
-            deconnected();
+            deconnect();
         }
     }
 
@@ -865,7 +865,7 @@ public:
                         capacity -= weights[varIndex][distance(VarVal[varIndex].begin(), it)];
                         assigneddeltas += deltaCosts[varIndex][distance(VarVal[varIndex].begin(), it)];
                     }
-                    fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), 0);
+                    fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), MIN_COST);
                     MaxWeight -= weights[varIndex][GreatestWeightIdx[varIndex]];
                 } else {
                     bool ok = false;
@@ -879,7 +879,7 @@ public:
                                 if (AMO[CorrAMO[varIndex] - 1][k].second == scope[varIndex]->getInf()) {
                                     capacity -= weights[nbRealVar + CorrAMO[varIndex] - 1][k];
                                     assigneddeltas += deltaCosts[varIndex][scope[varIndex]->getInf()];
-                                    fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), 0);
+                                    fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), MIN_COST);
                                     MaxWeight -= weights[nbRealVar + CorrAMO[varIndex] - 1][GreatestWeightIdx[nbRealVar + CorrAMO[varIndex] - 1]];
                                     nbVirtualVar[CorrAMO[varIndex] - 1] = 0;
                                     for (unsigned int i = 0; i < AMO[CorrAMO[varIndex] - 1].size(); ++i) {
@@ -887,7 +887,7 @@ public:
                                             assigneddeltas += deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first][1 - AMO[CorrAMO[varIndex] - 1][i].second];
                                             assigned[AMO[CorrAMO[varIndex] - 1][i].first] = 2;
                                             toassign.push_back(i);
-                                            fill(deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first].begin(), deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first].end(), 0);
+                                            fill(deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first].begin(), deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first].end(), MIN_COST);
                                         }
                                     }
                                     for (unsigned int i = 0; i < toassign.size(); ++i) {
@@ -898,7 +898,7 @@ public:
                                     }
                                 } else {
                                     assigneddeltas += deltaCosts[varIndex][scope[varIndex]->getInf()];
-                                    fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), 0);
+                                    fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), MIN_COST);
                                     nbVirtualVar[CorrAMO[varIndex] - 1] = nbVirtualVar[CorrAMO[varIndex] - 1] - 1;
                                     if (nbVirtualVar[CorrAMO[varIndex] - 1] == 0) {
                                         capacity -= weights[nbRealVar + CorrAMO[varIndex] - 1].back();
@@ -912,7 +912,7 @@ public:
                                                 ok = true;
                                                 capacity -= weights[nbRealVar + CorrAMO[varIndex] - 1][k1];
                                                 assigneddeltas += deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first][AMO[CorrAMO[varIndex] - 1][k1].second];
-                                                fill(deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first].begin(), deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first].end(), 0);
+                                                fill(deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first].begin(), deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first].end(), MIN_COST);
                                                 MaxWeight -= weights[nbRealVar + CorrAMO[varIndex] - 1][GreatestWeightIdx[nbRealVar + CorrAMO[varIndex] - 1]];
                                                 assigned[AMO[CorrAMO[varIndex] - 1][k1].first] = 2;
                                                 nonassigned = nonassigned - 1;
@@ -1179,7 +1179,7 @@ public:
                 scope[current_scope_idx[i]]->findSupport();
             else {
                 for (int j = 0; j < nbValue[i]; ++j) {
-                    if (current_val_idx[i][j] != (int)AMO[VirtualVar[current_val_idx[i][j]] - 1].size())
+                    if (current_val_idx[i][j] != (int)AMO[VirtualVar[current_scope_idx[i]] - 1].size())
                         scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first]->findSupport();
                 }
             }
@@ -1288,10 +1288,7 @@ public:
                                 } else
                                     return false;
                             } else {
-                                if (scope[AMO[VirtualVar[currentvar] - 1][x].first]->getSupport() == AMO[VirtualVar[currentvar] - 1][x].second) {
-                                    return true;
-                                } else
-                                    return false;
+                                return false;
                             }
                         } else
                             return Profit[currentvar][x] > Profit[currentvar][y];
@@ -1520,22 +1517,19 @@ public:
         // propagates from scratch the constraint
         if (connected()) {
             bool b = false;
-            int i = 0;
-            while (i < arity_ && !b) {
-                if (CorrAMO[i] == 0) {
-                    if (assigned[i] == 0 && (scope[i]->assigned() || !isunassigned(i))) {
+            for (int i = 0; connected() && i < arity_; i++) {
+                if(CorrAMO[i] == 0){
+                    if (assigned[i]==0 && !isunassigned(i)){
                         assign(i);
-                        b = true;
-                    } // indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..)
+                        b=true;}  /* indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..) */
                     else
-                        assert(assigned[i] > 0 || scope[i]->getDomainSize() > 1);
-                } else {
-                    if (assigned[i] == 0 && scope[i]->assigned()) {
+                        assert(assigned[i]>0 || scope[i]->getDomainSize()>1);
+                }else{
+                    if (assigned[i]==0 && scope[i]->assigned()){
                         assign(i);
-                        b = true;
+                        b=true;
                     }
                 }
-                i++;
             }
             if (connected() && !b) {
                 if (!verify()) {
@@ -1566,7 +1560,7 @@ public:
 #endif
                     //Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
-                    if (!b && !ToulBar2::addAMOConstraints && ToulBar2::LcLevel == LC_EDAC) {
+                    if (!b && !ToulBar2::dumpWCSP && !ToulBar2::addAMOConstraints_ && ToulBar2::LcLevel == LC_EDAC) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {
@@ -1625,7 +1619,12 @@ public:
 #endif
                             int iter = 0;
                             Double xk = 0;
-                            if ((DoDyn == ToulBar2::knapsackDP) && W < capacity) {
+                            if(ToulBar2::knapsackDP>-2 && NbNodes!=wcsp->getNbNodes()){
+                                NbNodes=wcsp->getNbNodes();
+                                if(NbNodes%ToulBar2::knapsackDP == 0)
+                                    DoDyn=true;
+                            }
+                            if ( ToulBar2::knapsackDP>-2 && DoDyn && W < capacity) {
                                 Cost c2;
                                 vector<vector<Long>> WeightforDyn, NewWeightforDyn;
                                 vector<vector<Cost>> ProfforDyn, NewProfforDyn;
@@ -1732,8 +1731,7 @@ public:
                                     }
 #endif
                                 }
-                                if (ToulBar2::knapsackDP > 0)
-                                    DoDyn++;
+                                DoDyn=false;
                             } else {
                                 if (W < capacity) {
                                     //Sort the Slopes
@@ -1809,9 +1807,6 @@ public:
                                     projectLB(c);
                                     ObjConsistency();
                                 }
-
-                                if (ToulBar2::knapsackDP >= 0)
-                                    DoDyn++;
                             }
                             if (ToulBar2::verbose >= 4) {
                                 cout << "projected cost " << c << " LB : " << lb - assigneddeltas << endl;

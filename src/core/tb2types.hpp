@@ -784,6 +784,7 @@ public:
     static bool opb; /// < \internal do not use
 
     static bool addAMOConstraints; /// < \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
+    static bool addAMOConstraints_; /// < \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
     static int knapsackDP; /// < \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
 
     static unsigned int divNbSol; /// < \brief upper bound on the number of diverse solutions (0: no diverse solution) (keep it small as it controls model size)
