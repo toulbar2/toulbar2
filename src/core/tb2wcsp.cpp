@@ -197,6 +197,7 @@ double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
 
 bool ToulBar2::addAMOConstraints;
+bool ToulBar2::addAMOConstraints_;
 int ToulBar2::knapsackDP;
 
 char* ToulBar2::varOrder;
@@ -404,6 +405,7 @@ void tb2init()
     ToulBar2::opb = false;
 
     ToulBar2::addAMOConstraints = false;
+    ToulBar2::addAMOConstraints_ = false;
     ToulBar2::knapsackDP = -2;
 
     ToulBar2::varOrder = NULL;
@@ -2810,9 +2812,7 @@ void WCSP::sortConstraints()
         stable_sort(delayedNaryCtr.begin(), delayedNaryCtr.end(), [&](int idx1, int idx2) { return Constraint::cmpConstraint(getCtr(idx1), getCtr(idx2)); });
     }
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
-        if (!ToulBar2::dumpWCSP || !ToulBar2::addAMOConstraints) {
             getCtr(*idctr)->propagate();
-        }
     }
     delayedNaryCtr.clear();
     isDelayedNaryCtr = false;
