@@ -310,7 +310,8 @@ public:
     /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for DAG-based propagator: "var", for network-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
-    virtual int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost) = 0;
+    virtual int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< post a soft alldifferent cost function
+    virtual int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< \deprecated
     virtual void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost) = 0; ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
 
     /// \brief post a soft global cardinality cost function

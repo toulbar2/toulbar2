@@ -331,6 +331,43 @@ class CFN:
                 params += ' ' + ' '.join(self.flatten(vtuples))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
+    def AddAllDifferent(self, scope, encoding = 'binary', excepted = None, incremental = False):
+        """Add AllDifferent hard global constraint.
+        
+        Args:
+            scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
+            encoding (string): encoding used to represent AllDifferent (available choices are 'binary' or 'salldiff' or 'salldiffdp' or 'walldiff').
+            excepted (None or list): list of excepted domain values which can be taken by any variable without violating the constraint.
+            incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
+            
+        """
+        if incremental and model is not 'binary':
+            raise RuntimeError("Implementation of AllDifferent constraint requires 'binary' encoding in incremental mode!")
+        if excepted is not None and model is not 'binary':
+            raise RuntimeError("Excepted domain values in AllDifferent constraint requires 'binary' encoding!")
+        sscope = set(scope)
+        if len(scope) != len(sscope):
+            raise RuntimeError("Duplicate variable in scope:"+str(scope))
+        iscope = []
+        for i, v in enumerate(scope):
+            if isinstance(v, str):
+                v = self.VariableIndices[v]
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v)
+        if (len(iscope) >= 2):
+            if (encoding=='binary'):
+                for i in range(len(iscope)):
+                    for j in range(i+1, len(iscope)):
+                        costs = [(0 if (self.CFN.wcsp.toValue(iscope[i], a) != self.CFN.wcsp.toValue(iscope[j], b) or (excepted and ((self.CFN.wcsp.toValue(iscope[i], a) in excepted) or (self.CFN.wcsp.toValue(iscope[j], b) in excepted)))) else self.Top) for a in range(self.CFN.wcsp.getDomainInitSize(iscope[i])) for b in range(self.CFN.wcsp.getDomainInitSize(iscope[j]))]
+                        self.CFN.wcsp.postBinaryConstraint(iscope[i], iscope[j], costs, incremental)
+            elif (encoding=='salldiff'):
+                self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST);
+            elif (encoding=='salldiffdp'):
+                self.CFN.wcsp.postWAllDiff(iscope, "var", "DAG", tb2.MAX_COST);
+            elif (encoding=='walldiff'):
+                self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
+            
     def Read(self, filename):
         """Read reads the problem from a file.
 

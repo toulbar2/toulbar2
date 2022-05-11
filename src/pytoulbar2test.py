@@ -35,7 +35,6 @@ Problem.AddFunction([x, y, z], [(0 if xvalue + yvalue == zvalue else Problem.Top
 #an equivalent formulation with a linear hard constraint (by default, operator is '==' and rightcoef=0)
 #Problem.AddLinearConstraint([1, 1, -1], [x, y ,z])
 
-
 # add a linear hard constraint (x + y + 2 * z >= 2)
 Problem.AddLinearConstraint([1, 1, 2], [x, y ,z], '>=', 2)
 #an equivalent formulation with a list of (variable, value, coefficient)
@@ -43,11 +42,13 @@ Problem.AddLinearConstraint([1, 1, 2], [x, y ,z], '>=', 2)
 #an equivalent formulation with a compact cost table expressed by a list of allowed tuples and a corresponding list of zero costs (other tuples are forbidden due to the default cost set to Problem.Top)
 #Problem.AddCompactFunction([x, y ,z], Problem.Top, [(0,0,1),(0,1,1),(1,0,1),(1,1,0),(1,1,1)], [0] * 5)
 
-
 # add a linear hard constraint (x + y + z == u)
 Problem.AddLinearConstraint([1, 1, 1, -1], [x, y ,z, u])
 #an equivalent formulation with a compact cost table expressed by a list of allowed tuples and a corresponding list of zero costs (other tuples are forbidden due to the default cost set to Problem.Top)
 #Problem.AddCompactFunction([x, y ,z, u], Problem.Top, [(0,0,0,0),(0,0,1,1),(0,1,0,1),(1,0,0,1),(0,1,1,2),(1,0,1,2),(1,1,0,2),(1,1,1,3)], [0] * 8)
+
+# add a hard global alldifferent constraint on variables y,z,u
+Problem.AddAllDifferent([y,z,u])
 
 # add a 1-hour CPU-time limit in seconds
 Problem.CFN.timer(3600)
