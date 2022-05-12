@@ -109,6 +109,8 @@ class CFN:
             
         Note:
             Symbolic values are implicitely associated to integer values (starting from zero) in the other functions.
+            In case of numerical values, the initial domain size is equal to max(values)-min(values)+1 and not equal to len(values).
+            Otherwise (symbolic case), the initial domain size is equal to len(values).
 
         """
         if name in self.Variables:
@@ -131,7 +133,7 @@ class CFN:
 
     def AddFunction(self, scope, costs, incremental = False):
         """AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
-        The costs are given by a flat array the size of which corresponds to the product of initial domain sizes. 
+        The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable). 
      
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
