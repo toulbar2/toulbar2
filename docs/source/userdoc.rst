@@ -64,7 +64,7 @@ How do I install it ?
 toulbar2 is an open source solver distributed under the MIT license as a set of C++ sources managed with git at http://github.com/toulbar2/toulbar2. If you want
 to use a released version, then you can download there source archives of a specific release that should be easy to compile on most Linux systems.
 
-If you want to compile the latest sources yourself, you will need a modern C++ compiler, CMake, Gnu MP Bignum library, a recent version of boost libraries and optionally the jemalloc memory management and OpenMPI libraries. You can then clone toulbar2 on your machine and compile it by executing: ::
+If you want to compile the latest sources yourself, you will need a modern C++ compiler, CMake, Gnu MP Bignum library, a recent version of boost libraries and optionally the jemalloc memory management and OpenMPI libraries (for more information, see :ref:`Installation from sources <_README_5>`). You can then clone toulbar2 on your machine and compile it by executing: ::
 
   git clone https://github.com/toulbar2/toulbar2.git
   cd toulbar2

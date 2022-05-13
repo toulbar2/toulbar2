@@ -4,7 +4,7 @@
 master: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
 cpd: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=cpd)](https://travis-ci.com/toulbar2/toulbar2) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/toulbar2/toulbar2.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/toulbar2/toulbar2/context:cpp)[![PyPi version](https://img.shields.io/pypi/v/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi wheel](https://img.shields.io/pypi/wheel/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi python versions](https://img.shields.io/pypi/pyversions/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)
 
-
+(_README_1)=
 ## What is toulbar2?
 
 toulbar2 is an open-source black-box C++ optimizer for cost function
@@ -41,6 +41,7 @@ shown how it can learn user preferences or how to play the Sudoku
 without knowing the rules). The current CFN learning code is available
 on [GitHub](https://github.com/toulbar2/CFN-learn).
 
+(_README_2)=
 ## Installation from binaries
 
 You can install toulbar2 directly using the package manager in Debian
@@ -51,6 +52,7 @@ and Debian derived Linux distributions (Ubuntu, Mint,...):
 
 For the most recent binary or the Python API, compile from source.
 
+(_README_3)=
 ## Python interface
 
 An alpha-release Python interface can be tested through pip on Linux and MacOS:
@@ -69,6 +71,7 @@ Commands for compiling the Python API on Linux/MacOS with cmake (Python module i
 
 Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/pytoulbar2/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
 
+(_README_4)=
 ## Download
 
 Download the latest release from GitHub
@@ -78,6 +81,7 @@ e.g.:
     git clone --branch 1.1.1 https://github.com/toulbar2/toulbar2.git
 
 
+(_README_5)=
 ## Installation from sources
 
 Compilation requires git, cmake and a C++-11 capable compiler (in C++11 mode). 
