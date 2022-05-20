@@ -43,7 +43,8 @@ OPTION(MENDELSOFT "mendelsoft compilation and packaging ONLY ==> remove other ex
 OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
 OPTION(PYTB2 "Python3 toulbar2 module compilation (MPI off) [default: off]" OFF)
 OPTION(ILOG  "ilog solver binding [default: off]" OFF)
-OPTION(XML "add a reader for the (W)CSP xml input format [default: off]" OFF)
+OPTION(XML "add a reader for the XCSP2/3 xml input format [default: off]" OFF)
+OPTION(XCSP3 "select XCSP3 format instead of XCSP2 [default: on]" ON)
 OPTION(CPLEX "encode global cost functions into a linear program solved by CPLEX [default: off]" OFF)
 OPTION(Boost "boost graph binding [default: on]" ON) 
 OPTION(MPI "MPI [default: off]" OFF)
@@ -63,7 +64,7 @@ OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 
 MARK_AS_ADVANCED(FORCE BUILD_API_DOC_LATEX)
-MARK_AS_ADVANCED(FORCE CPLEX ILOG XML verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS BINARYWCSP TERNARYWCSP)
+MARK_AS_ADVANCED(FORCE CPLEX ILOG XML XCSP3 verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS BINARYWCSP TERNARYWCSP)
 MARK_AS_ADVANCED(FORCE BUILD_SHARED_LIBS GMP_LIBRARY MPI_LIBRARY MPI_EXTRA_LIBRARY)
 MARK_AS_ADVANCED(FORCE BENCH)
 
@@ -256,7 +257,11 @@ IF(MPI)
   SET(mpiflag OPENMPI)
 ENDIF(MPI)
 
-INCLUDE(${My_cmake_script}/xmlcsp.cmake)
+IF(XCSP3)
+  INCLUDE(${My_cmake_script}/xmlcsp3.cmake)
+ELSE(XCSP3)
+  INCLUDE(${My_cmake_script}/xmlcsp.cmake)
+ENDIF(XCSP3)
 
 
 ##########################################
@@ -353,7 +358,9 @@ IF(LIBTB2)
     ARCHIVE DESTINATION lib
     )
 ELSE(LIBTB2)
+  IF(NOT XCSP3)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWCSPFORMATONLY" )
+  ENDIF(NOT XCSP3)
 ENDIF(LIBTB2)
 
 ##########################################

@@ -1500,7 +1500,7 @@ void Solver::newSolution()
     }
 
     if (ToulBar2::xmlflag) {
-        cout << "o " << wcsp->getLb() << endl; //" ";
+        cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
     }
     if (ToulBar2::maxsateval) {
         cout << "o " << wcsp->getLb() << endl;
@@ -1994,7 +1994,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
                 fprintf(ToulBar2::solutionFile, "\n");
             }
             if (ToulBar2::xmlflag) {
-                cout << "o " << work2.ub << endl; //" ";
+                cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
             }
             if (ToulBar2::maxsateval) {
                 cout << "o " << work2.ub << endl;
@@ -2857,7 +2857,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     ToulBar2::DEE_ = 0;
     ToulBar2::elimDegree_ = -1;
 
-    static string solType[4] = { "Optimum: ", "Primal bound: ", "guaranteed primal bound: ", "Primal bound: " };
+    static string solType[4] = { "Optimum: ", "Primal bound: ", "Guaranteed primal bound: ", "Primal bound: " };
 
     int isLimited = (!isComplete) | ((ToulBar2::deltaUb != MIN_COST) << 1);
 
@@ -2960,7 +2960,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         } else {
             if (ToulBar2::xmlflag) {
-                ((WCSP*)wcsp)->solution_XML(true);
+                ((WCSP*)wcsp)->solution_XML(isComplete);
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";

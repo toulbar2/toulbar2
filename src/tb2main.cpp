@@ -738,12 +738,14 @@ void help_msg(char* toulbar2filename)
     cout << "   *.opb : pseudo-Boolean optimization format" << endl;
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
-#ifdef XMLFLAG
+#if defined(XMLFLAG)
     cout << "   *.xml : CSP and weighted CSP in XML format XCSP 2.1 (constraints in extension only)";
 #ifdef MAXCSP
     cout << " (Max-CSP only)";
 #endif
     cout << endl;
+#elif defined(XMLFLAG3)
+    cout << "   *.xml : CSP and COP in restricted XML format XCSP3 (see Mini-solver Track restrictions at http://www.xcsp.org/competitions)" << endl;
 #endif
     cout << "   *.pre : pedigree format (see misc/doc/MendelSoft.txt for Mendelian error correction)" << endl;
     cout << "   *.pre *.map : pedigree and genetic map formats (see misc/doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)" << endl;
@@ -2450,7 +2452,6 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(problem, file_extension_map["wcspXML_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xml file:" << problem << endl;
-
                 ToulBar2::xmlflag = true;
                 if (!ToulBar2::writeSolution) {
                     ToulBar2::writeSolution = 1;

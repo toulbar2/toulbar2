@@ -419,7 +419,7 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::uai = 2;
                 ToulBar2::bayesian = true;
             }
-#ifdef XMLFLAG
+#if defined(XMLFLAG) || defined(XMLFLAG3)
             if (strstr(fileName, ".xml")) {
                 ToulBar2::xmlflag = true;
             }

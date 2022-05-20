@@ -3299,13 +3299,15 @@ void WCSP::solution_UAI(Cost res)
     //	}
 }
 
-#ifdef XMLFLAG
+#if defined(XMLFLAG)
 #include "./xmlcsp/xmlcsp.h"
+#elif defined(XMLFLAG3)
+#include "./xmlcsp3/xmlcsp3.h"
 #endif
 
 void WCSP::read_XML(const char* fileName)
 {
-#ifdef XMLFLAG
+#if defined(XMLFLAG)
     MyCallback xmlCallBack;
     xmlCallBack.wcsp = this;
     xmlCallBack.fname = string(fileName);
@@ -3320,6 +3322,18 @@ void WCSP::read_XML(const char* fileName)
         cerr << "\t" << e.what() << endl;
         throw WrongFileFormat();
     }
+#elif defined(XMLFLAG3)
+    MySolverCallbacks xmlCallBack; // my interface between the parser and the solver
+    xmlCallBack.problem = this;
+    try {
+        XCSP3CoreParser parser(&xmlCallBack);
+        parser.parse(fileName); // fileName is a string
+    } catch (exception &e) {
+        cout.flush();
+        cerr << "\n\tUnexpected exception in XML XCSP3 parsing\n";
+        cerr << "\t" << e.what() << endl;
+        throw WrongFileFormat();
+    }
 #else
     cerr << "\nXML format without including in Makefile flag XMLFLAG and files ./xmlcsp\n"
          << endl;
@@ -3329,7 +3343,7 @@ void WCSP::read_XML(const char* fileName)
 
 void WCSP::solution_XML(bool opt)
 {
-#ifdef XMLFLAG
+#if defined(XMLFLAG) || defined(XMLFLAG3)
     if (!ToulBar2::xmlflag)
         return;
 
@@ -3349,8 +3363,12 @@ void WCSP::solution_XML(bool opt)
         int value;
         //soll >> value;
         fscanf(ToulBar2::solutionFile, "%d", &value);
+#ifdef XMLFLAG
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
+#else
+        cout << value << " ";
+#endif
     }
     cout << endl;
     freopen(NULL, "w", ToulBar2::solutionFile);

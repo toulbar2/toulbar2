@@ -610,7 +610,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         fprintf(ToulBar2::solutionFile, "\n");
     }
     if (ToulBar2::xmlflag) {
-        cout << "o " << bestUb << endl;
+        cout << "o " << std::fixed << std::setprecision(0) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl; //" ";
     }
     if (ToulBar2::maxsateval) {
         cout << "o " << bestUb << endl;
