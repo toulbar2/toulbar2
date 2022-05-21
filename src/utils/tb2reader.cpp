@@ -3349,7 +3349,7 @@ void WCSP::solution_XML(bool opt)
 
     if (opt) {
         cout << "s OPTIMUM FOUND" << endl;
-    } else {
+    } else {
         cout << "s SATISFIABLE" << endl;
     }
 
