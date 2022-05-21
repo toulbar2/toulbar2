@@ -2918,8 +2918,8 @@ int _tmain(int argc, TCHAR* argv[])
             cout << "Log(Z)= ";
             cout << -numeric_limits<TProb>::infinity() << endl;
         }
-        if (ToulBar2::maxsateval) {
-            cout << "o " << solver->getWCSP()->getUb() << endl;
+        if (ToulBar2::maxsateval || ToulBar2::xmlflag) {
+//            cout << "o " << solver->getWCSP()->getUb() << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
     }

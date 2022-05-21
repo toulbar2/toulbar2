@@ -2960,7 +2960,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         } else {
             if (ToulBar2::xmlflag) {
-                ((WCSP*)wcsp)->solution_XML(isComplete);
+                ((WCSP*)wcsp)->solution_XML(!isLimited);
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
@@ -2972,10 +2972,11 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             }
         }
     } else {
-        if (ToulBar2::verbose >= 0)
+        if (ToulBar2::verbose >= 0) {
             cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
-        if (ToulBar2::maxsateval && !isLimited) {
-            cout << "o " << cost << endl;
+        }
+        if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited) {
+//            cout << "o " << cost << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
     }
