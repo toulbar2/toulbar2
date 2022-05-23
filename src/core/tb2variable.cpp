@@ -265,6 +265,17 @@ void Variable::propagateIncDec(int incdec)
     }
 }
 
+// returns true if there is a global cost function currently linked to this variable
+bool Variable::isGlobal()
+{
+    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        if ((*iter).constr->isGlobal()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Looks for the constraint that links this variable with x
 BinaryConstraint* Variable::getConstr(Variable* x)
 {

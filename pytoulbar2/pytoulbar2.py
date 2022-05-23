@@ -338,7 +338,7 @@ class CFN:
         
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
-            encoding (string): encoding used to represent AllDifferent (available choices are 'binary' or 'salldiff' or 'salldiffdp' or 'walldiff').
+            encoding (string): encoding used to represent AllDifferent (available choices are 'binary' or 'salldiff' or 'salldiffdp' or 'salldiffkp' or 'walldiff').
             excepted (None or list): list of excepted domain values which can be taken by any variable without violating the constraint.
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
@@ -367,6 +367,8 @@ class CFN:
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST);
             elif (encoding=='salldiffdp'):
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "DAG", tb2.MAX_COST);
+            elif (encoding=='salldiffkp'):
+                self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST);
             elif (encoding=='walldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
             

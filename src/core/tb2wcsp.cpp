@@ -2496,6 +2496,31 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
         return INT_MIN;
     }
 
+    if (propagator == "knapsack") {
+        if (semantics == "hard") {
+            set<Value> values;
+            for (int variable = 0; variable < arity; ++variable) {
+                ((EnumeratedVariable*)getVar(scopeIndex[variable]))->getDomain(values);
+            }
+            for (Value value : values) {
+                string params = to_string(-1);
+                for (int variable = 0; variable < arity; ++variable) {
+                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value))  {
+                        params += " 1 " + to_string(value) + " -1";
+                    } else {
+                        params += " 0";
+                    }
+                }
+                istringstream file(params);
+                postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+            }
+            return INT_MIN;
+        } else {
+            cerr << "Error: post AllDifferent with knapsack propagator cannot be a soft constraint! (use instead semantics=\"hard\")" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
     if (propagator == "flow") {
         GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, "salldiff");
 
@@ -2506,25 +2531,24 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
         gc->setBaseCost(baseCost);
         gc->init();
         return gc->wcspIndex;
-    } else { // DAG-based propagation using a decomposition into multiple among cost functions
-        // Counting the number of value
-        int inf = ((EnumeratedVariable*)getVar(scopeIndex[0]))->getInf();
-        int sup = ((EnumeratedVariable*)getVar(scopeIndex[0]))->getSup();
-        for (int variable = 0; variable < arity; ++variable) {
-            int tinf = ((EnumeratedVariable*)getVar(scopeIndex[variable]))->getInf();
-            int tsup = ((EnumeratedVariable*)getVar(scopeIndex[variable]))->getSup();
-            inf = min(inf, tinf);
-            sup = max(sup, tsup);
-        }
+    }
 
-        // Adding WeightedAmong over each variable
-        for (int value = inf; value <= sup; value++) {
-            vector<Value> values;
-            values.push_back(value);
-            postWAmong(scopeIndex, arity, semantics, "DAG", baseCost, values, 0, 1);
+    if (propagator == "DAG") { // DAG-based propagation using a decomposition into multiple among cost functions
+        // Adding WeightedAmong over each possible domain value
+        set<Value> values;
+        for (int variable = 0; variable < arity; ++variable) {
+            ((EnumeratedVariable*)getVar(scopeIndex[variable]))->getDomain(values);
+        }
+        for (Value value : values) {
+            vector<Value> thevalue;
+            thevalue.push_back(value);
+            postWAmong(scopeIndex, arity, semantics, "DAG", baseCost, thevalue, 0, 1);
         }
         return INT_MIN;
     }
+
+    cerr << "Error: post AllDifferent cost function with unknown propagator " << propagator << endl;
+    throw WrongFileFormat();
 }
 
 int WCSP::postWGrammarCNF(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,

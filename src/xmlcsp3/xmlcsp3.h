@@ -235,16 +235,20 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintAlldifferent(string id, vector<XVariable *> &list) override {
         vector<int> vars;
         toMyVariables(list,vars);
-        for (unsigned int i = 0; i < vars.size(); i++) {
-            for (unsigned int j = i+1; j < vars.size(); j++) {
-                vector<Cost> costs;
-                for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
-                    for (unsigned int b = 0; b < problem->getDomainInitSize(vars[j]); b++) {
-                        costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b))?MIN_COST:MAX_COST);
+        if (vars.size() <= 50) {
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                for (unsigned int j = i+1; j < vars.size(); j++) {
+                    vector<Cost> costs;
+                    for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
+                        for (unsigned int b = 0; b < problem->getDomainInitSize(vars[j]); b++) {
+                            costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b))?MIN_COST:MAX_COST);
+                        }
                     }
+                    problem->postBinaryConstraint(vars[i], vars[j], costs);
                 }
-                problem->postBinaryConstraint(vars[i], vars[j], costs);
             }
+        } else {
+            problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST);
         }
     }
 
@@ -254,6 +258,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<int> myvars = vars;
         vector<int> mycoeffs = coeffs;
         int rightcoef = 0;
+        string extravarname = "";
+        int extravar = -1;
         string params = "";
         switch (cond.operandType) {
         case OperandType::VARIABLE:
@@ -311,6 +317,33 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
                 problem->postKnapsackConstraint(myvars, params, false, true, false);
                 break;
+            case OrderType::NE:
+                extravarname = IMPLICIT_VAR_TAG + "sum" + to_string(problem->numberOfVariables());
+                extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                myvars.push_back(extravar);
+                mycoeffs.push_back(INT_MAX);
+                params = to_string(rightcoef + 1);
+                for (unsigned int i=0; i < myvars.size(); i++) {
+                    int domsize = problem->getDomainInitSize(myvars[i]);
+                    params += " " + to_string(domsize);
+                    for (int idval=0; idval < domsize; idval++) {
+                        int value = problem->toValue(myvars[i], idval);
+                        params += " " + to_string(value) + " " + to_string(mycoeffs[i] * value);
+                    }
+                }
+                problem->postKnapsackConstraint(myvars, params, false, true, false);
+                params = to_string((Long)-rightcoef + 1 - INT_MAX);
+                for (unsigned int i=0; i < myvars.size(); i++) {
+                    int domsize = problem->getDomainInitSize(myvars[i]);
+                    params += " " + to_string(domsize);
+                    for (int idval=0; idval < domsize; idval++) {
+                        int value = problem->toValue(myvars[i], idval);
+                        params += " " + to_string(value) + " " + to_string(-mycoeffs[i] * value);
+                    }
+                }
+                problem->postKnapsackConstraint(myvars, params, false, true, false);
+                break;
             case OrderType::EQ:
                 params = to_string(rightcoef);
                 for (unsigned int i=0; i < myvars.size(); i++) {
@@ -333,12 +366,35 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
                 problem->postKnapsackConstraint(myvars, params, false, true, false);
                 break;
-            case OrderType::IN:
-            case OrderType::NE:
             default:
                 cerr << "Sorry operator " << cond.op << " not implemented in sum constraint!" << endl;
                 throw WrongFileFormat();
             }
+            break;
+        case OperandType::INTERVAL:
+            assert(cond.op == OrderType::IN);
+            // sum >= cond.min
+            params = to_string(cond.min);
+            for (unsigned int i=0; i < myvars.size(); i++) {
+                int domsize = problem->getDomainInitSize(myvars[i]);
+                params += " " + to_string(domsize);
+                for (int idval=0; idval < domsize; idval++) {
+                    int value = problem->toValue(myvars[i], idval);
+                    params += " " + to_string(value) + " " + to_string(mycoeffs[i] * value);
+                }
+            }
+            problem->postKnapsackConstraint(myvars, params, false, true, false);
+            // sum <= cond.max
+            params = to_string(-cond.max);
+            for (unsigned int i=0; i < myvars.size(); i++) {
+                int domsize = problem->getDomainInitSize(myvars[i]);
+                params += " " + to_string(domsize);
+                for (int idval=0; idval < domsize; idval++) {
+                    int value = problem->toValue(myvars[i], idval);
+                    params += " " + to_string(value) + " " + to_string(-mycoeffs[i] * value);
+                }
+            }
+            problem->postKnapsackConstraint(myvars, params, false, true, false);
             break;
         default:
             cerr << "Sorry operandType " << cond.operandType << " not implemented in sum constraint!" << endl;

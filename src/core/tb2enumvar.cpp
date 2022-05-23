@@ -64,6 +64,13 @@ void EnumeratedVariable::init()
     queueDEE();
 }
 
+void EnumeratedVariable::getDomain(set<Value> &array)
+{
+    for (iterator iter = begin(); iter != end(); ++iter) {
+        array.insert(*iter);
+    }
+}
+
 void EnumeratedVariable::getDomain(Value* array)
 {
     for (iterator iter = begin(); iter != end(); ++iter) {
@@ -1256,7 +1263,7 @@ void EnumeratedVariable::eliminate()
 
     assert(!wcsp->getTreeDec() || wcsp->getTreeDec()->getCluster(cluster)->isActive());
 
-    if (ToulBar2::elimDegree_preprocessing_ >= 0 && (getDegree() <= min(1, ToulBar2::elimDegree_preprocessing_) || getTrueDegree() <= ToulBar2::elimDegree_preprocessing_)) {
+    if (ToulBar2::elimDegree_preprocessing_ >= 0 && (getDegree() <= min(1, ToulBar2::elimDegree_preprocessing_) || getTrueDegree() <= ToulBar2::elimDegree_preprocessing_) && !isGlobal()) {
         if (ToulBar2::elimSpaceMaxMB && (Double)wcsp->elimSpace + (sizeof(tValue) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() > (Double)ToulBar2::elimSpaceMaxMB * 1024. * 1024.) {
             if (ToulBar2::verbose >= 1)
                 cout << "Generic variable elimination of " << getName() << " stopped (" << (Double)wcsp->elimSpace / 1024. / 1024. << " + " << (Double)(sizeof(tValue) * (getTrueDegree() + 1) + sizeof(Cost)) * getMaxElimSize() / 1024. / 1024. << " >= " << ToulBar2::elimSpaceMaxMB << " MB)" << endl;

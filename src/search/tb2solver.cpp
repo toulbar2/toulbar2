@@ -2260,10 +2260,6 @@ void Solver::beginSolve(Cost ub)
         throw BadConfiguration();
     }
 #endif
-    if (wcsp->isGlobal() && (ToulBar2::elimDegree_preprocessing >= 1 || ToulBar2::elimDegree_preprocessing < -1)) {
-        cout << "Warning! Cannot use generic variable elimination with global cost functions." << endl;
-        ToulBar2::elimDegree_preprocessing = -1;
-    }
     if (ToulBar2::incop_cmd.size() > 0) {
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {

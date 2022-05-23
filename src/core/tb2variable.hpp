@@ -97,6 +97,7 @@ public:
     void sortConstraints();
     virtual void eliminate(){};
 
+    bool isGlobal();
     BinaryConstraint* getConstr(Variable* x);
     TernaryConstraint* getConstr(Variable* x, Variable* y);
     TernaryConstraint* existTernary();
