@@ -215,19 +215,35 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         int varx = mapping[x->id];
         int vary = mapping[y->id];
         int varz = mapping[z->id];
-        assert(varx != vary);
-        assert(varx != varz);
-        assert(vary != varz);
         vector<Cost> costs;
-        for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
-            for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
-                for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
-                    costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varz, c))?MIN_COST:MAX_COST);
+        if (varx != vary) {
+            assert(varx != varz);
+            assert(vary != varz);
+            for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+                for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
+                    for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
+                        costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varz, c))?MIN_COST:MAX_COST);
+                    }
                 }
             }
+            problem->postTernaryConstraint(varx, vary, varz, costs);
+        } else {
+            assert(varx == vary);
+            if (varx != varz) {
+                for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+                    for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
+                        costs.push_back((problem->toValue(varx, a) * problem->toValue(varx, a) == problem->toValue(varz, c))?MIN_COST:MAX_COST);
+                    }
+                }
+                problem->postBinaryConstraint(varx, varz, costs);
+            } else {
+                assert(varx == varz);
+                for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+                    costs.push_back((problem->toValue(varx, a) * problem->toValue(varx, a) == problem->toValue(varx, a))?MIN_COST:MAX_COST);
+                }
+                problem->postUnaryConstraint(varx, costs);
+            }
         }
-        problem->postTernaryConstraint(varx, vary, varz, costs);
-
     }
 
 //    Remark: Note that the argument list of each function does not always provides the scope of the constraint: a variable can appear twice
@@ -698,7 +714,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         case ExpressionObjective::MAXIMUM_O:
             for (unsigned int i=0; i<list.size(); i++) {
                 for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
-                    Cost cost = (Cost)problem->toValue(vars[i], a) * sign;
+                    Cost cost = (Cost)problem->toValue(vars[i], a) * coefs[i] * sign;
                     if (cost < negcost) {
                         negcost = cost;
                     }
@@ -709,7 +725,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     WeightedVarValPair elt;
                     elt.varIndex = vars[i];
                     elt.val = problem->toValue(vars[i], a);
-                    elt.weight = (Cost)elt.val * sign - negcost;
+                    elt.weight = (Cost)elt.val * coefs[i] * sign - negcost;
                     weightFunction.push_back(elt);
                 }
             }
