@@ -48,14 +48,14 @@ void VACVariable::init()
 //void VACVariable::remove(Value value)
 //{
 //    if (ToulBar2::singletonConsistency)
-//        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
+//        vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + value);
 //    EnumeratedVariable::remove(value);
 //}
 //
 //void VACVariable::removeFast(Value value)
 //{
 //    if (ToulBar2::singletonConsistency)
-//        vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + value);
+//        vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + value);
 //    EnumeratedVariable::removeFast(value);
 //}
 //
@@ -63,7 +63,7 @@ void VACVariable::init()
 //{
 //    if (ToulBar2::singletonConsistency)
 //        for (int i = inf; i <= newInf; i++)
-//            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
+//            vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
 //    EnumeratedVariable::increase(newInf);
 //}
 //
@@ -71,7 +71,7 @@ void VACVariable::init()
 //{
 //    if (ToulBar2::singletonConsistency)
 //        for (int i = sup; i >= newSup; i--)
-//            vac->singleton.insert(MAX_DOMAIN_SIZE * wcspIndex + i);
+//            vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
 //    EnumeratedVariable::decrease(newSup);
 //}
 

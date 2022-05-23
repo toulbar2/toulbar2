@@ -690,6 +690,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildObjectiveMaximize(type, list, coefs);
     }
 
+    void buildConstraintInstantiation(string id, vector<XVariable *> &list, vector<int> &values) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        problem->assignLS(vars, values);
+    }
+
     void buildAnnotationDecision(vector<XVariable *> &list) override {}
 };
 

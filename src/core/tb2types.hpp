@@ -81,7 +81,7 @@ const Value WRONG_VAL = std::numeric_limits<Value>::max();
 const Value MIN_VAL = -(std::numeric_limits<Value>::max() / 2);
 /// Maximum domain size
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
-const Value MAX_DOMAIN_SIZE = 2000;
+const Value MAX_DOMAIN_SIZE = 20000;
 
 typedef vector<tValue> Tuple;
 

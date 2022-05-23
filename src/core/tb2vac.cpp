@@ -833,14 +833,14 @@ void VACExtension::iniSingleton()
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
         int size = wcsp->getDomainSize(i);
         for (int a = 0; a < size; a++)
-            singletonI.insert(MAX_DOMAIN_SIZE * i + a);
+            singletonI.insert(wcsp->getMaxDomainSize() * i + a);
     }
 }
 
 void VACExtension::updateSingleton()
 {
-    set<int>& s1 = singleton;
-    set<int> s2(singletonI);
+    set<Long>& s1 = singleton;
+    set<Long> s2(singletonI);
     singletonI.clear();
     set_intersection(s1.begin(), s1.end(),
         s2.begin(), s2.end(),
@@ -850,11 +850,11 @@ void VACExtension::updateSingleton()
 
 void VACExtension::removeSingleton()
 {
-    set<int>& s = singletonI;
-    set<int>::iterator it = s.begin();
+    set<Long>& s = singletonI;
+    set<Long>::iterator it = s.begin();
     while (it != s.end()) {
-        int ivar = *it / MAX_DOMAIN_SIZE;
-        Value a = *it % MAX_DOMAIN_SIZE;
+        int ivar = *it / wcsp->getMaxDomainSize();
+        Value a = *it % wcsp->getMaxDomainSize();
         Variable* var = wcsp->getVar(ivar);
         var->remove(a);
         var->queueNC();

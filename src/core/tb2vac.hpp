@@ -88,8 +88,8 @@ public:
     void histogram(Cost c);
     void histogram(); /**< Computes the ScaleVAC splitting the cost scale in 20 buckets or less */
 
-    set<int> singletonI;
-    set<int> singleton;
+    set<Long> singletonI;
+    set<Long> singleton;
 
     void iniSingleton();
     void updateSingleton();
