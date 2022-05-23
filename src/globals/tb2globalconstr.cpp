@@ -108,9 +108,8 @@ Cost GlobalConstraint::eval(const Tuple& s)
 
     Cost tcost = evalOriginal(s);
     for (unsigned int i = 0; i < s.size(); i++) {
-        EnumeratedVariable* x = (EnumeratedVariable*)getVar(i);
         if (tcost < wcsp->getUb()) {
-            tcost -= deltaCost[i][x->toIndex(s[i])];
+            tcost -= deltaCost[i][s[i]];
         }
     }
     if (tcost < wcsp->getUb()) {
