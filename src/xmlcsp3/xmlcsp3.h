@@ -42,13 +42,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         mapping[id] = v;
     }
 
-    // This a function transforms a vector of XVariable in vector of toulbar2 variable indices
+    // transforms a vector of XVariable in vector of toulbar2 variable indices
     void toMyVariables(vector<XVariable*> &src, vector<int> &dest) {
             for(unsigned int i = 0;i<src.size();i++)
                 dest.push_back(mapping[src[i]->id]);
     }
 
-    void buildConstraintExtension(string id, vector<XVariable *> list, vector<vector<int> > &tuples, bool isSupport, bool hasStar) override {
+    // transforms a vector of string Variable name in vector of toulbar2 variable indices
+    void toMyVariables(vector<string> &src, vector<int> &dest) {
+            for(unsigned int i = 0;i<src.size();i++)
+                dest.push_back(mapping[src[i]]);
+    }
+
+    void buildConstraintExtension(string id, vector<string> list, vector<vector<int> > &tuples, bool isSupport, bool hasStar) {
         if(hasStar) {
             cerr << "Sorry tuples with stars not implemented!" << endl;
             throw WrongFileFormat();
@@ -100,6 +106,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintExtension(string id, vector<XVariable *> list, vector<vector<int> > &tuples, bool isSupport, bool hasStar) override {
+        vector<string> thelist;
+        for (XVariable *var : list) {
+            thelist.push_back(var->id);
+        }
+        buildConstraintExtension(id, thelist, tuples, isSupport, hasStar);
+    }
+
     void buildConstraintExtension(string id, XVariable *variable, vector<int> &tuples, bool isSupport, bool hasStar) override {
         // This function is called for unary extensional constraint.
         if(hasStar) {
@@ -124,11 +138,41 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintExtension(id, list, lastTuples, isSupport, hasStar);
     }
 
-//    void buildConstraintIntension(string id, Tree *tree) {
-//          // The expression is the tree.
-//        map<string, int> tuple;
-//        tree->evaluate(tuple);
-//    }
+    void buildConstraintIntension(string id, Tree *tree) override {
+        vector<string> list = tree->listOfVariables;
+        vector<int> vars;
+        toMyVariables(list,vars);
+        vector<vector<int> > tuples;
+        map<string, int> tuplemap;
+        vector<int> tuplevec;
+        unsigned int pos = 0;
+        for (unsigned int i=0; i<vars.size(); i++) {
+            Value val = problem->getInf(vars[i]);
+            tuplemap[list[i]] = val;
+            tuplevec.push_back(val);
+        }
+        do {
+            if (tree->evaluate(tuplemap)) {
+                tuples.push_back(tuplevec);
+            }
+            while (pos < vars.size() && tuplevec[pos] == problem->getSup(vars[pos])) {
+                pos++;
+            }
+            if (pos < vars.size()) {
+                Value nextval = problem->nextValue(vars[pos], tuplevec[pos]);
+                assert(nextval != tuplevec[pos]);
+                tuplemap[list[pos]] = nextval;
+                tuplevec[pos] = nextval;
+                for (unsigned int i=0; i<pos; i++) {
+                    Value val = problem->getInf(vars[i]);
+                    tuplemap[list[i]] = val;
+                    tuplevec[i] = val;
+                }
+                pos = 0;
+            }
+        } while (pos < vars.size());
+        buildConstraintExtension(id, list, tuples, true, false);
+    }
 
     void buildConstraintPrimitive(string id, OrderType op, XVariable *x, int k, XVariable *y) override {
         int varx = mapping[x->id];
@@ -423,32 +467,182 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintSum(id, list, coeffs, cond);
     }
 
-    void buildConstraintElement(string id, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, string value) {
+    void buildConstraintElement(string id, OrderType op, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, string value) {
         vector<int> vars;
         toMyVariables(list,vars);
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
         int varindex = mapping[index->id];
-        int varvalue = mapping[value];
-        assert(varindex != varvalue);
         assert(problem->getDomainInitSize(varindex) == vars.size());
-        for (unsigned int i=0; i<vars.size(); i++) {
-            vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
-            assert(varindex != vars[i]);
-            assert(varvalue != vars[i]);
-            assert(problem->toValue(varindex, i) == (Value)i);
-            for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
-                for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
-                    if (problem->toValue(varvalue, a) != problem->toValue(vars[i], b)) {
-                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+        int varvalue = mapping[value];
+        if (varindex != varvalue) {
+            for (unsigned int i=0; i<vars.size(); i++) {
+                vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
+                assert(varindex != vars[i]);
+                assert(varvalue != vars[i]);
+                assert(problem->toValue(varindex, i) == (Value)i);
+                for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
+                    for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
+                        switch (op) {
+                        case OrderType::EQ:
+                            if (problem->toValue(vars[i], b) != problem->toValue(varvalue, a)) {
+                                costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            }
+                            break;
+                        case OrderType::NE:
+                            if (problem->toValue(vars[i], b) == problem->toValue(varvalue, a)) {
+                                costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            }
+                            break;
+                        case OrderType::LE:
+                            if (problem->toValue(vars[i], b) > problem->toValue(varvalue, a)) {
+                                costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            }
+                            break;
+                        case OrderType::LT:
+                            if (problem->toValue(vars[i], b) >= problem->toValue(varvalue, a)) {
+                                costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            }
+                            break;
+                        case OrderType::GE:
+                            if (problem->toValue(vars[i], b) < problem->toValue(varvalue, a)) {
+                                costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            }
+                            break;
+                        case OrderType::GT:
+                            if (problem->toValue(vars[i], b) <= problem->toValue(varvalue, a)) {
+                                costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            }
+                            break;
+                        default:
+                            cerr << "Sorry operator " << op << " not implemented in element constraint!" << endl;
+                            throw WrongFileFormat();
+                        }
                     }
                 }
+                problem->postTernaryConstraint(varvalue, varindex, vars[i], costs);
             }
-            problem->postTernaryConstraint(varvalue, varindex, vars[i], costs);
+        } else {
+            for (unsigned int i=0; i<vars.size(); i++) {
+                vector<Cost> costs(problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
+                assert(varindex != vars[i]);
+                assert(varvalue != vars[i]);
+                assert(problem->toValue(varindex, i) == (Value)i);
+                for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
+                    switch (op) {
+                    case OrderType::EQ:
+                        if (problem->toValue(vars[i], b) != (Value)i) {
+                            costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::NE:
+                        if (problem->toValue(vars[i], b) == (Value)i) {
+                            costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::LE:
+                        if (problem->toValue(vars[i], b) > (Value)i) {
+                            costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::LT:
+                        if (problem->toValue(vars[i], b) >= (Value)i) {
+                            costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::GE:
+                        if (problem->toValue(vars[i], b) < (Value)i) {
+                            costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::GT:
+                        if (problem->toValue(vars[i], b) <= (Value)i) {
+                            costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        }
+                        break;
+                    default:
+                        cerr << "Sorry operator " << op << " not implemented in element constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                }
+                problem->postBinaryConstraint(varindex, vars[i], costs);
+            }
         }
     }
     void buildConstraintElement(string id, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, XVariable *value) override {
-        buildConstraintElement(id, list, startIndex, index, rank, value->id);
+        buildConstraintElement(id, OrderType::EQ, list, startIndex, index, rank, value->id);
+    }
+
+    void buildConstraintElement(string id, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, int minvalue, int maxvalue) {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        assert(startIndex == 0);
+        assert(rank == RankType::ANY);
+        int varindex = mapping[index->id];
+        assert(problem->getDomainInitSize(varindex) == vars.size());
+        for (unsigned int i=0; i<vars.size(); i++) {
+            vector<Cost> costs(problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
+            assert(varindex != vars[i]);
+            assert(problem->toValue(varindex, i) == (Value)i);
+            for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
+                if (minvalue > problem->toValue(vars[i], b) || maxvalue < problem->toValue(vars[i], b)) {
+                    costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                }
+            }
+            problem->postBinaryConstraint(varindex, vars[i], costs);
+        }
+    }
+
+    void buildConstraintElement(string id, OrderType op, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, int value) {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        assert(startIndex == 0);
+        assert(rank == RankType::ANY);
+        int varindex = mapping[index->id];
+        assert(problem->getDomainInitSize(varindex) == vars.size());
+        for (unsigned int i=0; i<vars.size(); i++) {
+            vector<Cost> costs(problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
+            assert(varindex != vars[i]);
+            assert(problem->toValue(varindex, i) == (Value)i);
+            for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
+                switch (op) {
+                case OrderType::EQ:
+                    if (problem->toValue(vars[i], b) != value) {
+                        costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                    }
+                    break;
+                case OrderType::NE:
+                    if (problem->toValue(vars[i], b) == value) {
+                        costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                    }
+                    break;
+                case OrderType::LE:
+                    if (problem->toValue(vars[i], b) > value) {
+                        costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                    }
+                    break;
+                case OrderType::LT:
+                    if (problem->toValue(vars[i], b) >= value) {
+                        costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                    }
+                    break;
+                case OrderType::GE:
+                    if (problem->toValue(vars[i], b) < value) {
+                        costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                    }
+                    break;
+                case OrderType::GT:
+                    if (problem->toValue(vars[i], b) <= value) {
+                        costs[i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                    }
+                    break;
+                default:
+                    cerr << "Sorry operator " << op << " not implemented in element constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+            problem->postBinaryConstraint(varindex, vars[i], costs);
+        }
     }
 
     void buildConstraintElement(string id, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, int value) override {
@@ -521,30 +715,21 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *index, int startIndex, XCondition &xc) override {
-        switch (xc.op) {
-        case OrderType::EQ:
             switch (xc.operandType) {
             case OperandType::INTEGER:
-                buildConstraintElement(id, list, startIndex, index, RankType::ANY, xc.val);
+                buildConstraintElement(id, xc.op, list, startIndex, index, RankType::ANY, xc.val);
                 break;
             case OperandType::VARIABLE:
-                buildConstraintElement(id, list, startIndex, index, RankType::ANY, xc.var);
+                buildConstraintElement(id, xc.op, list, startIndex, index, RankType::ANY, xc.var);
+                break;
+            case OperandType::INTERVAL:
+                assert(xc.op == OrderType::IN);
+                buildConstraintElement(id, list, startIndex, index, RankType::ANY, xc.min, xc.max);
                 break;
             default:
                 cerr << "Sorry operand type " << xc.operandType << " not implemented in element constraint!" << endl;
                 throw WrongFileFormat();
             }
-            break;
-        case OrderType::LE:
-        case OrderType::LT:
-        case OrderType::GE:
-        case OrderType::GT:
-        case OrderType::IN:
-        case OrderType::NE:
-        default:
-            cerr << "Sorry operator " << xc.op << " not implemented in element constraint!" << endl;
-            throw WrongFileFormat();
-        }
     }
 
     void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable* value) override {
@@ -674,6 +859,42 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildUnaryCostFunction(-1, x);
     }
 
+    void buildCostFunction(int coef, Tree *tree) {
+        vector<string> list = tree->listOfVariables;
+        vector<int> vars;
+        toMyVariables(list,vars);
+        vector<vector<int> > tuples;
+        vector<Cost> costs;
+        map<string, int> tuplemap;
+        vector<int> tuplevec;
+        unsigned int pos = 0;
+        for (unsigned int i=0; i<vars.size(); i++) {
+            Value val = problem->getInf(vars[i]);
+            tuplemap[list[i]] = val;
+            tuplevec.push_back(val);
+        }
+        do {
+            tuples.push_back(tuplevec);
+            costs.push_back((Cost)coef * tree->evaluate(tuplemap));
+            while (pos < vars.size() && tuplevec[pos] == problem->getSup(vars[pos])) {
+                pos++;
+            }
+            if (pos < vars.size()) {
+                Value nextval = problem->nextValue(vars[pos], tuplevec[pos]);
+                assert(nextval != tuplevec[pos]);
+                tuplemap[list[pos]] = nextval;
+                tuplevec[pos] = nextval;
+                for (unsigned int i=0; i<pos; i++) {
+                    Value val = problem->getInf(vars[i]);
+                    tuplemap[list[i]] = val;
+                    tuplevec[i] = val;
+                }
+                pos = 0;
+            }
+        } while (pos < vars.size());
+//        problem->postCostFunction(vars, tuples); // TODO
+    }
+
     void buildObjective(Cost sign, ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) {
         assert(list.size() == coefs.size());
         vector<int> vars;
@@ -703,6 +924,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 cerr << "Sorry multiplicative objective for " << list.size() << " variables not implemented!" << endl;
                 throw WrongFileFormat();
             }
+        case ExpressionObjective::EXPRESSION_O:
             assert(list.size() == 1);
         case ExpressionObjective::SUM_O:
             for (unsigned int i=0; i<list.size(); i++) {
@@ -734,7 +956,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
             break;
-        case ExpressionObjective::EXPRESSION_O:
         case ExpressionObjective::NVALUES_O:
         case ExpressionObjective::LEX_O:
         default:
@@ -760,6 +981,87 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list) override {
         vector<int> coefs(list.size(), 1);
         buildObjectiveMaximize(type, list, coefs);
+    }
+
+    void buildObjective(Cost sign, ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) {
+        assert(trees.size() == coefs.size());
+//        vector<int> vars;
+//        toMyVariables(list,vars);
+//        Cost negcost = MIN_COST;
+        vector<WeightedVarValPair> weightFunction;
+        switch (type) {
+        case ExpressionObjective::EXPRESSION_O:
+            assert(trees.size() == 1);
+        case ExpressionObjective::SUM_O:
+            for (unsigned int i=0; i<trees.size(); i++) {
+                buildCostFunction(sign * coefs[i], trees[i]);
+            }
+            break;
+//        case ExpressionObjective::MINIMUM_O:
+//            sign *= -UNIT_COST;
+//        case ExpressionObjective::MAXIMUM_O:
+//            for (unsigned int i=0; i<list.size(); i++) {
+//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
+//                    Cost cost = (Cost)problem->toValue(vars[i], a) * coefs[i] * sign;
+//                    if (cost < negcost) {
+//                        negcost = cost;
+//                    }
+//                }
+//            }
+//            for (unsigned int i=0; i<list.size(); i++) {
+//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
+//                    WeightedVarValPair elt;
+//                    elt.varIndex = vars[i];
+//                    elt.val = problem->toValue(vars[i], a);
+//                    elt.weight = (Cost)elt.val * coefs[i] * sign - negcost;
+//                    weightFunction.push_back(elt);
+//                }
+//            }
+//            if (negcost < MIN_COST) {
+//                problem->decreaseLb(-negcost);
+//            }
+//            problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
+//            break;
+        case ExpressionObjective::PRODUCT_O:
+        case ExpressionObjective::NVALUES_O:
+        case ExpressionObjective::LEX_O:
+        default:
+            cerr << "Sorry objective type " << type << " on trees not implemented!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
+    void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) override {
+        buildObjective(UNIT_COST, type, trees, coefs);
+    }
+
+    void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) override {
+        ToulBar2::costMultiplier *= -1.0;
+        buildObjective(-UNIT_COST, type, trees, coefs);
+    }
+
+    void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees) override {
+        vector<int> coefs(trees.size(), 1);
+        buildObjectiveMinimize(type, trees, coefs);
+    }
+
+    void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees) override {
+        vector<int> coefs(trees.size(), 1);
+        buildObjectiveMaximize(type, trees, coefs);
+    }
+
+    void buildObjectiveMinimizeExpression(string expr) override {
+        Tree tree(expr);
+        vector<Tree *> trees;
+        trees.push_back(&tree);
+        buildObjectiveMinimize(ExpressionObjective::EXPRESSION_O, trees);
+    }
+
+    void buildObjectiveMaximizeExpression(string expr) override {
+        Tree tree(expr);
+        vector<Tree *> trees;
+        trees.push_back(&tree);
+        buildObjectiveMaximize(ExpressionObjective::EXPRESSION_O, trees);
     }
 
     void buildConstraintInstantiation(string id, vector<XVariable *> &list, vector<int> &values) override {
