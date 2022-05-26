@@ -3365,7 +3365,9 @@ void WCSP::solution_XML(bool opt)
 #ifdef XMLFLAG3
     cout << "<instantiation type=\"" << ((opt)?"optimum":"solution") << "\" cost=\"" << std::fixed << std::setprecision(0) << getDPrimalBound() << std::setprecision(DECIMAL_POINT) << "\"> <list>";
     for (unsigned int i = 0; i < vars.size(); i++) {
-        cout << " " << getName(i);
+        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+            cout << " " << getName(i);
+        }
     }
     cout << " </list> <values>";
 #endif
@@ -3376,7 +3378,9 @@ void WCSP::solution_XML(bool opt)
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
 #else // XCSP3
-        cout << " " << value;
+        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+            cout << " " << value;
+        }
 #endif
     }
 #ifdef XMLFLAG3

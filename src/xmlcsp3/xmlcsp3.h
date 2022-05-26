@@ -988,7 +988,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    // Semantic of subcircuit (successor variables may be not inserted
+    // Semantic of subcircuit (successor variables may be not inserted in the circuit by selecting them-self, i.e. self-loops are authorized)
     void buildConstraintCircuit(string id, vector<XVariable *> &list, int startIndex) override {
         vector<int> succ;
         toMyVariables(list,succ);
@@ -1003,25 +1003,40 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             order.push_back(extravar);
         }
         buildConstraintAlldifferent(order);
-        //buildConstraintPrimitive(OrderType::EQ, order[0], 0); //
+        //buildConstraintPrimitive(OrderType::EQ, order[0], 0); // only if circuit of length n
         //forall(i in range(n))(order[x[i]] = if order[i] = n-1 then 0 else order[i] + 1 endif
         for (unsigned int i = 0; i < n; i++) {
             for (unsigned int j = 0; j < n; j++) {
                 if (i != j) {
-                    vector<Cost> costs(problem->getDomainInitSize(succ[i]) * problem->getDomainInitSize(order[i]) * problem->getDomainInitSize(order[j]), MAX_COST);
+                    vector<Cost> costs;
                     for (unsigned int a = 0; a < problem->getDomainInitSize(succ[i]); a++) {
                         for (unsigned int b = 0; b < problem->getDomainInitSize(order[i]); b++) {
                             for (unsigned int c = 0; c < problem->getDomainInitSize(order[j]); c++) {
                                 if ((a != j) || (a==j && b==n-1 && c==0) || (a==j && b<n-1 && c>=b+1)) {
-                                    costs[a * problem->getDomainInitSize(order[i]) * problem->getDomainInitSize(order[j]) + b * problem->getDomainInitSize(order[j]) + c] = MIN_COST;
+                                    costs.push_back(MIN_COST);
+                                } else {
+                                    costs.push_back(MAX_COST);
                                 }
                             }
                         }
                     }
                     problem->postTernaryConstraint(succ[i], order[i], order[j], costs);
                 }
+                if (i < j) {
+                    vector<Cost> costs;
+                    for (unsigned int a = 0; a < problem->getDomainInitSize(succ[i]); a++) {
+                        for (unsigned int b = 0; b < problem->getDomainInitSize(succ[j]); b++) {
+                            if ((a!=j && b!=i) || (a==j && b!=j) || (b==i && a!=i)) {
+                                costs.push_back(MIN_COST);
+                            } else {
+                                costs.push_back(MAX_COST);
+                            }
+                        }
+                    }
+                    problem->postBinaryConstraint(succ[i], succ[j], costs);
+                }
             }
-            //buildConstraintPrimitive(OrderType::NE, succ[i], i);
+            //buildConstraintPrimitive(OrderType::NE, succ[i], i); // only if circuit of length n
         }
     }
 
