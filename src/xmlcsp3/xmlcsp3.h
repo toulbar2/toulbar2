@@ -1043,10 +1043,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildUnaryCostFunction(Value mult, XVariable *x) {
         int var = mapping[x->id];
         unsigned int domsize = problem->getDomainInitSize(var);
-        vector<Cost> costs(domsize, MIN_COST);
+        vector<Cost> costs;
         Cost negcost = min(MIN_COST, (Cost)min((Cost)problem->toValue(var, 0) * mult, (Cost)problem->toValue(var, domsize-1) * mult));
         for (unsigned int a=0; a < domsize; a++) {
-            costs[a] = (Cost)problem->toValue(var, a) * mult - negcost;
+            costs.push_back((Cost)problem->toValue(var, a) * mult - negcost);
         }
         if (negcost < MIN_COST) {
             problem->decreaseLb(-negcost);
@@ -1141,7 +1141,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         switch (type) {
         case ExpressionObjective::PRODUCT_O:
             if (list.size() == 2) {
-                vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), MIN_COST);
                 for (unsigned int a=0; a < problem->getDomainInitSize(vars[0]); a++) {
                     for (unsigned int b=0; b < problem->getDomainInitSize(vars[1]); b++) {
                         Cost cost = (Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign;
@@ -1150,9 +1149,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         }
                     }
                 }
+                vector<Cost> costs;
                 for (unsigned int a=0; a < problem->getDomainInitSize(vars[0]); a++) {
                     for (unsigned int b=0; b < problem->getDomainInitSize(vars[1]); b++) {
-                        costs[a * problem->getDomainInitSize(vars[1]) + b] = (Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign - negcost;
+                        costs.push_back((Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign - negcost);
                     }
                 }
                 problem->postBinaryConstraint(vars[0], vars[1], costs);
