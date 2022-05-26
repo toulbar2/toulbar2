@@ -46,16 +46,34 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         mapping[id] = v;
     }
 
+    int getMyVar(string var) {
+        assert(mapping.find(var) != mapping.end());
+        assert(mapping[var] >= 0 && mapping[var] < (int)problem->numberOfVariables());
+        return mapping[var];
+    }
+
+    int getMyVar(XVariable *var) {
+        return getMyVar(var->id);
+    }
+
     // transforms a vector of XVariable in vector of toulbar2 variable indices and add it to dest
     void toMyVariables(vector<XVariable*> &src, vector<int> &dest) {
-            for(unsigned int i = 0;i<src.size();i++)
-                dest.push_back(mapping[src[i]->id]);
+        set<int> control;
+        for(unsigned int i = 0;i<src.size();i++) {
+            dest.push_back(getMyVar(src[i]));
+            control.insert(getMyVar(src[i]));
+        }
+        assert(dest.size() == control.size());
     }
 
     // transforms a vector of string Variable name in vector of toulbar2 variable indices and add it to dest
     void toMyVariables(vector<string> &src, vector<int> &dest) {
-            for(unsigned int i = 0;i<src.size();i++)
-                dest.push_back(mapping[src[i]]);
+        set<int> control;
+        for(unsigned int i = 0;i<src.size();i++) {
+            dest.push_back(getMyVar(src[i]));
+            control.insert(getMyVar(src[i]));
+        }
+        assert(dest.size() == control.size());
     }
 
     void buildConstraintExtension(vector<int> vars, vector<vector<int> > &tuples, bool isSupport, bool hasStar) {
@@ -140,7 +158,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintExtension(string id, string variable, vector<int> &tuples, bool isSupport, bool hasStar) {
-        int var = mapping[variable];
+        int var = getMyVar(variable);
         buildConstraintExtension(var, tuples, isSupport, hasStar);
     }
 
@@ -271,8 +289,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintPrimitive(string id, OrderType op, string x, int k, string y)  {
-        int varx = mapping[x];
-        int vary = mapping[y];
+        int varx = getMyVar(x);
+        int vary = getMyVar(y);
         buildConstraintPrimitive(op, varx, k, vary);
     }
 
@@ -312,7 +330,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintPrimitive(string id, OrderType op, string x, int k) {
-        int varx = mapping[x];
+        int varx = getMyVar(x);
         buildConstraintPrimitive(op, varx, k);
     }
 
@@ -333,7 +351,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintPrimitive(string id, string x, bool in, int min, int max) {
-        int varx = mapping[x];
+        int varx = getMyVar(x);
         buildConstraintPrimitive(varx, in, min, max);
     }
 
@@ -389,9 +407,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintMult(string id, string x, string y, string z) {
-        int varx = mapping[x];
-        int vary = mapping[y];
-        int varz = mapping[z];
+        int varx = getMyVar(x);
+        int vary = getMyVar(y);
+        int varz = getMyVar(z);
         buildConstraintMult(varx, vary, varz);
     }
 
@@ -450,7 +468,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         string params = "";
         switch (cond.operandType) {
         case OperandType::VARIABLE:
-            myvars.push_back(mapping[cond.var]);
+            myvars.push_back(getMyVar(cond.var));
             mycoefs.push_back(-1);
             rightcoef -= cond.val;
         case OperandType::INTEGER:
@@ -619,48 +637,106 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
-        int varindex = mapping[index->id];
+        int varindex = getMyVar(index->id);
         assert(problem->getInf(varindex) >= 0);
         assert(problem->getSup(varindex) < (Value)vars.size());
-        int varvalue = mapping[value];
+        int varvalue = getMyVar(value);
         if (varindex != varvalue) {
             for (unsigned int i=0; i<vars.size(); i++) {
-                vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
-                assert(varindex != vars[i]);
-                assert(varvalue != vars[i]);
                 if (problem->canbe(varindex, (Value)i)) {
-                    for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
-                        for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
+                    if (varindex != vars[i] && varvalue != vars[i]) {
+                        vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
+                        for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
+                            for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
+                                switch (op) {
+                                case OrderType::IN:
+                                case OrderType::EQ:
+                                    if (problem->toValue(vars[i], b) != problem->toValue(varvalue, a)) {
+                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                    }
+                                    break;
+                                case OrderType::NE:
+                                    if (problem->toValue(vars[i], b) == problem->toValue(varvalue, a)) {
+                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                    }
+                                    break;
+                                case OrderType::LE:
+                                    if (problem->toValue(vars[i], b) > problem->toValue(varvalue, a)) {
+                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                    }
+                                    break;
+                                case OrderType::LT:
+                                    if (problem->toValue(vars[i], b) >= problem->toValue(varvalue, a)) {
+                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                    }
+                                    break;
+                                case OrderType::GE:
+                                    if (problem->toValue(vars[i], b) < problem->toValue(varvalue, a)) {
+                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                    }
+                                    break;
+                                case OrderType::GT:
+                                    if (problem->toValue(vars[i], b) <= problem->toValue(varvalue, a)) {
+                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                    }
+                                    break;
+                                default:
+                                    cerr << "Sorry operator " << op << " not implemented in element constraint!" << endl;
+                                    throw WrongFileFormat();
+                                }
+                            }
+                        }
+                        problem->postTernaryConstraint(varvalue, varindex, vars[i], costs);
+                    } else if (varvalue == vars[i]) {
+                        switch (op) {
+                        case OrderType::LE:
+                        case OrderType::GE:
+                        case OrderType::IN:
+                        case OrderType::EQ:
+                            // element constraint is always satisfied if varindex=i and vars[i]=varvalue
+                            break;
+                        case OrderType::LT:
+                        case OrderType::GT:
+                        case OrderType::NE:
+                            buildConstraintPrimitive(OrderType::NE, varindex, (Value)i);
+                            break;
+                        default:
+                            cerr << "Sorry operator " << op << " not implemented in element constraint!" << endl;
+                            throw WrongFileFormat();
+                        }
+                    } else if (varindex == vars[i]) {
+                        vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex), MIN_COST);
+                        for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
                             switch (op) {
                             case OrderType::IN:
                             case OrderType::EQ:
-                                if (problem->toValue(vars[i], b) != problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                if ((Value)i != problem->toValue(varvalue, a)) {
+                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
                                 }
                                 break;
                             case OrderType::NE:
-                                if (problem->toValue(vars[i], b) == problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                if ((Value)i == problem->toValue(varvalue, a)) {
+                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
                                 }
                                 break;
                             case OrderType::LE:
-                                if (problem->toValue(vars[i], b) > problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                if ((Value)i > problem->toValue(varvalue, a)) {
+                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
                                 }
                                 break;
                             case OrderType::LT:
-                                if (problem->toValue(vars[i], b) >= problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                if ((Value)i >= problem->toValue(varvalue, a)) {
+                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
                                 }
                                 break;
                             case OrderType::GE:
-                                if (problem->toValue(vars[i], b) < problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                if ((Value)i < problem->toValue(varvalue, a)) {
+                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
                                 }
                                 break;
                             case OrderType::GT:
-                                if (problem->toValue(vars[i], b) <= problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                if ((Value)i <= problem->toValue(varvalue, a)) {
+                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
                                 }
                                 break;
                             default:
@@ -668,8 +744,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 throw WrongFileFormat();
                             }
                         }
+                        problem->postBinaryConstraint(varvalue, varindex, costs);
                     }
-                    problem->postTernaryConstraint(varvalue, varindex, vars[i], costs);
                 }
             }
         } else {
@@ -730,7 +806,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
-        int varindex = mapping[index->id];
+        int varindex = getMyVar(index->id);
         assert(problem->getDomainInitSize(varindex) == vars.size());
         for (unsigned int i=0; i<vars.size(); i++) {
             vector<Cost> costs(problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
@@ -750,7 +826,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
-        int varindex = mapping[index->id];
+        int varindex = getMyVar(index->id);
         assert(problem->getDomainInitSize(varindex) == vars.size());
         for (unsigned int i=0; i<vars.size(); i++) {
             vector<Cost> costs(problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
@@ -802,7 +878,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
-        int varindex = mapping[index->id];
+        int varindex = getMyVar(index->id);
         assert(problem->getDomainInitSize(varindex) == vars.size());
         for (unsigned int i=0; i<vars.size(); i++) {
             vector<Cost> costs(problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
@@ -820,8 +896,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintElement(string id, vector<int> &list, int startIndex, XVariable *index, RankType rank, XVariable *value) override {
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
-        int varindex = mapping[index->id];
-        int varvalue = mapping[value->id];
+        int varindex = getMyVar(index->id);
+        int varvalue = getMyVar(value->id);
         assert(varindex != varvalue);
         assert(problem->getDomainInitSize(varindex) == list.size());
         vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex), MIN_COST);
@@ -836,7 +912,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *value) override {
-        int varvalue = mapping[value->id];
+        int varvalue = getMyVar(value->id);
         vector<int> vars;
         toMyVariables(list,vars);
         vector<int> myvars = vars;
@@ -892,9 +968,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
         assert(startRowIndex == 0);
         assert(startColIndex == 0);
-        int varrowindex = mapping[rowIndex->id];
-        int varcolindex = mapping[colIndex->id];
-        int varvalue = mapping[value->id];
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        int varvalue = getMyVar(value->id);
         assert(varcolindex != varrowindex);
         assert(varrowindex != varvalue);
         assert(varcolindex != varvalue);
@@ -938,8 +1014,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
         assert(startRowIndex == 0);
         assert(startColIndex == 0);
-        int varrowindex = mapping[rowIndex->id];
-        int varcolindex = mapping[colIndex->id];
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
         assert(varcolindex != varrowindex);
         assert(problem->getDomainInitSize(varrowindex) == vars.size());
         for (unsigned int i=0; i<vars.size(); i++) {
@@ -963,9 +1039,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) override {
         assert(startRowIndex == 0);
         assert(startColIndex == 0);
-        int varrowindex = mapping[rowIndex->id];
-        int varcolindex = mapping[colIndex->id];
-        int varvalue = mapping[value->id];
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        int varvalue = getMyVar(value->id);
         assert(varcolindex != varrowindex);
         assert(varrowindex != varvalue);
         assert(varcolindex != varvalue);
@@ -1041,7 +1117,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildUnaryCostFunction(Value mult, XVariable *x) {
-        int var = mapping[x->id];
+        int var = getMyVar(x->id);
         unsigned int domsize = problem->getDomainInitSize(var);
         vector<Cost> costs;
         Cost negcost = min(MIN_COST, (Cost)min((Cost)problem->toValue(var, 0) * mult, (Cost)problem->toValue(var, domsize-1) * mult));
