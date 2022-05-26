@@ -64,6 +64,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             control.insert(getMyVar(src[i]));
         }
         assert(dest.size() == control.size());
+        assert(dest.size() > 0);
     }
 
     // transforms a vector of string Variable name in vector of toulbar2 variable indices and add it to dest
@@ -74,6 +75,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             control.insert(getMyVar(src[i]));
         }
         assert(dest.size() == control.size());
+        assert(dest.size() > 0);
     }
 
     void buildConstraintExtension(vector<int> vars, vector<vector<int> > &tuples, bool isSupport, bool hasStar) {

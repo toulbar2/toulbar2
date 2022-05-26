@@ -495,6 +495,7 @@ bool Constraint::cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLin
 // sort a list of constraints
 int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
 {
+    assert(c1->arity() > 0 && c2->arity() > 0);
     bool result = false;
     switch (abs(ToulBar2::constrOrdering)) {
     case CONSTR_ORDER_ID:
@@ -529,6 +530,7 @@ int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
 // sort a list of constraints related to a given variable
 int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
 {
+    assert(c1->content.constr->arity() > 0 && c2->content.constr->arity() > 0);
     bool result = false;
     switch (abs(ToulBar2::constrOrdering)) {
     case CONSTR_ORDER_ID:

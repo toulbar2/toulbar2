@@ -2121,6 +2121,10 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         scopeIndex[tobedel[i]] = -1;
         arity--;
     }
+    assert(arity >= 0);
+    if (arity == 0) {
+        return -INT_MAX;
+    }
     if (capacity > 0) {
         for (unsigned int i = 0; i < weights.size(); ++i) {
             for (unsigned int j = 0; j < weights[i].size(); ++j) {
