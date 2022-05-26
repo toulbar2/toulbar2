@@ -488,21 +488,21 @@ public:
         }
     }
 
-    int postCliqueConstraint(vector<int>& scope, const string& arguments)
+    int postCliqueConstraint(vector<int> scope, const string& arguments)
     {
         std::istringstream file(arguments);
         return postCliqueConstraint(scope.data(), scope.size(), file);
     }
-    int postCliqueConstraint(int* scopeIndex, int arity, istream& file);
+    int postCliqueConstraint(int* scopeIndex, int arity, istream& file); // warning! scopeIndex may be modified internally.
 
     void addAMOConstraints();
 
-    int postKnapsackConstraint(vector<int>& scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false)
+    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false)
     {
         istringstream file(arguments);
         return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict);
     }
-    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict);
+    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict); // warning! scopeIndex may be modified internally.
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
 
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);
