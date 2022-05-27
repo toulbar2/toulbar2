@@ -146,6 +146,9 @@ IF(STATIC)
 ELSE()
   SET(BUILD_SHARED_LIBS ON) #shared library building
   SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
+  SET (all_depends  ${all_depends} "m") 
+  SET (all_depends  ${all_depends} "pthread") 
+  SET (all_depends  ${all_depends} "dl") 
 ENDIF(STATIC)
 
 ##########################################

@@ -24,7 +24,7 @@ IF(XML)
         MESSAGE(STATUS "XML2 Package configured successfully.")
         MESSAGE(STATUS "#################################")
 
-        SET(all_depends  ${all_depends} ${LIBXML2_LIBRARIES} -licuuc -licui18n -licudata libxcsp3parser.a)
+        SET(all_depends ${LIBXML2_LIBRARIES} -licuuc -licui18n -licudata libxcsp3parser.a ${all_depends})
 
         INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR}) 
         INCLUDE_DIRECTORIES(${My_Source}/xmlcsp3/)
