@@ -29,6 +29,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void beginInstance(InstanceType type) {
         XCSP3CoreCallbacks::intensionUsingString = false;
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
+        XCSP3CoreCallbacks::recognizeSpecialCountCases = false;
+        XCSP3CoreCallbacks::recognizeNValuesCases = false;
         problem->updateUb(MAX_COST);
     }
 
@@ -634,15 +636,185 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintSum(id, trees, coefs, cond);
     }
 
-    void buildConstraintElement(string id, OrderType op, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, string value) {
+    void buildConstraintMinMax(bool max, vector<int> &vars, int varargmax, XCondition &cond) {
+        int n = vars.size();
+        assert(n > 0);
+        int maxinf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+            if (problem->getInf(vars[i]) < maxinf) {
+                maxinf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+        }
+        string varmaxname = IMPLICIT_VAR_TAG + ((max)?"max":"min") + to_string(problem->numberOfVariables());
+        int varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
+        mapping[varmaxname] = varmax;
+        buildConstraintElement(OrderType::EQ, vars, varargmax, varmax);
+        for (unsigned int i=0; i<vars.size(); i++) {
+            buildConstraintPrimitive((max)?OrderType::LE:OrderType::GE, vars[i], 0, varmax);
+        }
+        switch (cond.operandType) {
+        case OperandType::VARIABLE:
+            buildConstraintPrimitive(cond.op, varmax, 0, getMyVar(cond.var));
+            break;
+        case OperandType::INTEGER:
+            buildConstraintPrimitive(cond.op, varmax, cond.val);
+            break;
+        case OperandType::INTERVAL:
+            assert(cond.op == OrderType::IN);
+            buildConstraintPrimitive(varmax, true, cond.min, cond.max);
+            break;
+        default:
+            cerr << "Sorry operandType " << cond.operandType << " not implemented in min/max constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
+    void buildConstraintMaximum(string id, vector<XVariable *> &list, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMax(true, vars, varargmax, cond);
+    }
+
+    void buildConstraintMinimum(string id, vector<XVariable *> &list, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMax(false, vars, varargmax, cond);
+    }
+
+    void buildConstraintMaximum(string id, vector<Tree*> &trees, XCondition &cond) override {
+        vector<int> vars;
+        for (unsigned int i = 0; i < trees.size(); i++) {
+            vars.push_back(buildConstraintIntension(trees[i]));
+        }
+        assert(vars.size() == trees.size());
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMax(true, vars, varargmax, cond);
+    }
+
+    void buildConstraintMinimum(string id, vector<Tree*> &trees, XCondition &cond) override {
+        vector<int> vars;
+        for (unsigned int i = 0; i < trees.size(); i++) {
+            vars.push_back(buildConstraintIntension(trees[i]));
+        }
+        assert(vars.size() == trees.size());
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMax(false, vars, varargmax, cond);
+    }
+
+    void buildConstraintMaximum(string id, vector<XVariable *> &list, XVariable *index, int startIndex, RankType rank, XCondition &cond) override {
         assert(startIndex == 0);
         assert(rank == RankType::ANY);
-        int varindex = getMyVar(index->id);
+        vector<int> vars;
+        toMyVariables(list,vars);
+        buildConstraintMinMax(true, vars, getMyVar(index), cond);
+    }
+
+    void buildConstraintMinimum(string id, vector<XVariable *> &list, XVariable *index, int startIndex, RankType rank, XCondition &cond) override {
+        assert(startIndex == 0);
+        assert(rank == RankType::ANY);
+        vector<int> vars;
+        toMyVariables(list,vars);
+        buildConstraintMinMax(false, vars, getMyVar(index), cond);
+    }
+
+    void buildConstraintMinMaxArg(bool max, vector<int> &vars, int varargmax, XCondition &cond) {
+        int n = vars.size();
+        assert(n > 0);
+        int maxinf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+            if (problem->getInf(vars[i]) < maxinf) {
+                maxinf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+        }
+        string varmaxname = IMPLICIT_VAR_TAG + ((max)?"max":"min") + to_string(problem->numberOfVariables());
+        int varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
+        mapping[varmaxname] = varmax;
+        buildConstraintElement(OrderType::EQ, vars, varargmax, varmax);
+        for (unsigned int i=0; i<vars.size(); i++) {
+            buildConstraintPrimitive((max)?OrderType::LE:OrderType::GE, vars[i], 0, varmax);
+        }
+        switch (cond.operandType) {
+        case OperandType::VARIABLE:
+            buildConstraintPrimitive(cond.op, varargmax, 0, getMyVar(cond.var));
+            break;
+        case OperandType::INTEGER:
+            buildConstraintPrimitive(cond.op, varargmax, cond.val);
+            break;
+        case OperandType::INTERVAL:
+            assert(cond.op == OrderType::IN);
+            buildConstraintPrimitive(varargmax, true, cond.min, cond.max);
+            break;
+        default:
+            cerr << "Sorry operandType " << cond.operandType << " not implemented in argmin/argmax constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
+    void buildConstraintMaximumArg(string id, vector<XVariable*> &list, RankType rank, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMaxArg(true, vars, varargmax, cond);
+    }
+
+    void buildConstraintMinimumArg(string id, vector<XVariable*> &list, RankType rank, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMaxArg(false, vars, varargmax, cond);
+    }
+
+    void buildConstraintMaximumArg(string id, vector<Tree*> &trees, RankType rank, XCondition &cond) override {
+        assert(rank == RankType::ANY);
+        vector<int> vars;
+        for (unsigned int i = 0; i < trees.size(); i++) {
+            vars.push_back(buildConstraintIntension(trees[i]));
+        }
+        assert(vars.size() == trees.size());
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMaxArg(true, vars, varargmax, cond);
+    }
+
+    void buildConstraintMinimumArg(string id, vector<Tree*> &trees, RankType rank, XCondition &cond) override {
+        assert(rank == RankType::ANY);
+        vector<int> vars;
+        for (unsigned int i = 0; i < trees.size(); i++) {
+            vars.push_back(buildConstraintIntension(trees[i]));
+        }
+        assert(vars.size() == trees.size());
+        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+        mapping[varargmaxname] = varargmax;
+        buildConstraintMinMaxArg(false, vars, varargmax, cond);
+    }
+
+    void buildConstraintElement(OrderType op, vector<int> &vars, int varindex, int varvalue) {
         assert(problem->getInf(varindex) >= 0);
         assert(problem->getSup(varindex) < (Value)vars.size());
-        int varvalue = getMyVar(value);
         if (varindex != varvalue) {
             for (unsigned int i=0; i<vars.size(); i++) {
                 if (problem->canbe(varindex, (Value)i)) {
@@ -799,6 +971,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
         }
     }
+
+    void buildConstraintElement(string id, OrderType op, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, string value) {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        assert(startIndex == 0);
+        assert(rank == RankType::ANY);
+        int varindex = getMyVar(index->id);
+        int varvalue = getMyVar(value);
+        buildConstraintElement(op, vars, varindex, varvalue);
+    }
+
     void buildConstraintElement(string id, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, XVariable *value) override {
         buildConstraintElement(id, OrderType::EQ, list, startIndex, index, rank, value->id);
     }
