@@ -1500,11 +1500,6 @@ void Solver::newSolution()
 
         if (ToulBar2::xmlflag) {
             cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
-#ifdef OPENMPI
-            if (ToulBar2::parallel && world.rank() == MASTER) {
-                ((WCSP*)wcsp)->solution_XML(false);
-            }
-#endif
         }
         if (ToulBar2::maxsateval) {
             cout << "o " << wcsp->getLb() << endl;
@@ -2002,6 +1997,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             }
             if (ToulBar2::xmlflag) {
                 cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
+                ((WCSP*)wcsp)->solution_XML(false);
             }
             if (ToulBar2::maxsateval) {
                 cout << "o " << work2.ub << endl;
