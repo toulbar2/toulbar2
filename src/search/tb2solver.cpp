@@ -1423,91 +1423,93 @@ void Solver::newSolution()
         wcsp->setSolution(wcsp->getLb()); // take current assignment and put it in solution (stl c++ map)
 
 #ifdef OPENMPI
-    if (ToulBar2::showSolutions && (!ToulBar2::parallel || world.rank() == MASTER)) {
-#else
-    if (ToulBar2::showSolutions) {
+    if (!ToulBar2::parallel || world.rank() == MASTER) {
 #endif
-        if (ToulBar2::verbose >= 2)
-            cout << *wcsp << endl;
+        if (ToulBar2::showSolutions) {
+            if (ToulBar2::verbose >= 2)
+                cout << *wcsp << endl;
 
-        if (ToulBar2::allSolutions) {
-            cout << std::setprecision(0) << nbSol << " solution(" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << "): ";
-        }
+            if (ToulBar2::allSolutions) {
+                cout << std::setprecision(0) << nbSol << " solution(" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << "): ";
+            }
 
-        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-            if (ToulBar2::pedigree) {
-                cout << " ";
-                cout << wcsp->getName(i) << ":";
-                ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
-            } else if (ToulBar2::haplotype) {
-                cout << " ";
-                ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
-            } else if (wcsp->enumerated(i) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
-                EnumeratedVariable* myvar = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
-                Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][myvar->toIndex(myvar->getValue())].value : myvar->getValue());
-                string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
-                string varlabel = myvar->getName();
+            for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                if (ToulBar2::pedigree) {
+                    cout << " ";
+                    cout << wcsp->getName(i) << ":";
+                    ToulBar2::pedigree->printGenotype(cout, wcsp->getValue(i));
+                } else if (ToulBar2::haplotype) {
+                    cout << " ";
+                    ToulBar2::haplotype->printHaplotype(cout, wcsp->getValue(i), i);
+                } else if (wcsp->enumerated(i) && ((EnumeratedVariable*)((WCSP*)wcsp)->getVar(i))->isValueNames()) {
+                    EnumeratedVariable* myvar = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(i);
+                    Value myvalue = ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][myvar->toIndex(myvar->getValue())].value : myvar->getValue());
+                    string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
+                    string varlabel = myvar->getName();
 
-                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
-                    switch (ToulBar2::showSolutions) {
-                    case 1:
-                        cout << " ";
-                        cout << myvalue;
-                        break;
-                    case 2:
-                        cout << " ";
-                        cout << valuelabel;
-                        break;
-                    case 3:
-                        cout << " ";
-                        cout << varlabel << "=" << valuelabel;
-                        break;
-                    default:
-                        break;
+                    if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                        switch (ToulBar2::showSolutions) {
+                        case 1:
+                            cout << " ";
+                            cout << myvalue;
+                            break;
+                        case 2:
+                            cout << " ";
+                            cout << valuelabel;
+                            break;
+                        case 3:
+                            cout << " ";
+                            cout << varlabel << "=" << valuelabel;
+                            break;
+                        default:
+                            break;
+                        }
                     }
+                } else {
+                    cout << " ";
+                    cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
                 }
-            } else {
-                cout << " ";
-                cout << ((ToulBar2::sortDomains && ToulBar2::sortedDomains.find(i) != ToulBar2::sortedDomains.end()) ? ToulBar2::sortedDomains[i][wcsp->toIndex(i, wcsp->getValue(i))].value : wcsp->getValue(i));
+            }
+            cout << endl;
+            if (ToulBar2::bep)
+                ToulBar2::bep->printSolution((WCSP*)wcsp);
+        }
+        if (ToulBar2::pedigree) {
+            ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
+        }
+        if (ToulBar2::writeSolution) {
+            if (ToulBar2::pedigree) {
+                string problemname = ToulBar2::problemsaved_filename;
+                if (problemname.rfind(".wcsp") != string::npos)
+                    problemname.replace(problemname.rfind(".wcsp"), 5, ".pre");
+                else if (problemname.rfind(".cfn") != string::npos)
+                    problemname.replace(problemname.rfind(".wcsp"), 4, ".pre");
+                ToulBar2::pedigree->save((problemname.find("problem.pre") == 0) ? "problem_corrected.pre" : problemname.c_str(), (WCSP*)wcsp, true, false);
+                ToulBar2::pedigree->printSol((WCSP*)wcsp);
+                ToulBar2::pedigree->printCorrectSol((WCSP*)wcsp);
+            } else if (ToulBar2::haplotype) {
+                ToulBar2::haplotype->printSol((WCSP*)wcsp);
+            }
+            if (ToulBar2::solutionFile != NULL) {
+                if (!ToulBar2::allSolutions)
+                    fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
+                wcsp->printSolution(ToulBar2::solutionFile);
+                fprintf(ToulBar2::solutionFile, "\n");
             }
         }
-        cout << endl;
-        if (ToulBar2::bep)
-            ToulBar2::bep->printSolution((WCSP*)wcsp);
-    }
-    if (ToulBar2::pedigree) {
-        ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
-    }
-    if (ToulBar2::writeSolution) {
-        if (ToulBar2::pedigree) {
-            string problemname = ToulBar2::problemsaved_filename;
-            if (problemname.rfind(".wcsp") != string::npos)
-                problemname.replace(problemname.rfind(".wcsp"), 5, ".pre");
-            else if (problemname.rfind(".cfn") != string::npos)
-                problemname.replace(problemname.rfind(".wcsp"), 4, ".pre");
-            ToulBar2::pedigree->save((problemname.find("problem.pre") == 0) ? "problem_corrected.pre" : problemname.c_str(), (WCSP*)wcsp, true, false);
-            ToulBar2::pedigree->printSol((WCSP*)wcsp);
-            ToulBar2::pedigree->printCorrectSol((WCSP*)wcsp);
-        } else if (ToulBar2::haplotype) {
-            ToulBar2::haplotype->printSol((WCSP*)wcsp);
-        }
-        if (ToulBar2::solutionFile != NULL) {
-            if (!ToulBar2::allSolutions)
-                fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
-            wcsp->printSolution(ToulBar2::solutionFile);
-            fprintf(ToulBar2::solutionFile, "\n");
-        }
-    }
 
-    if (ToulBar2::xmlflag) {
-        cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
+        if (ToulBar2::xmlflag) {
+            cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
+        }
+        if (ToulBar2::maxsateval) {
+            cout << "o " << wcsp->getLb() << endl;
+        }
+        if (ToulBar2::uaieval && !ToulBar2::isZ) {
+            ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
+        }
+#ifdef OPENMPI
     }
-    if (ToulBar2::maxsateval) {
-        cout << "o " << wcsp->getLb() << endl;
-    }
-    if (ToulBar2::uaieval && !ToulBar2::isZ) {
-        ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
-    }
+#endif
 
     if (ToulBar2::newsolution)
         (*ToulBar2::newsolution)(wcsp->getIndex(), wcsp->getSolver());
@@ -2955,13 +2957,21 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             else
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         } else {
+#ifdef OPENMPI
+            if (ToulBar2::xmlflag && (!ToulBar2::parallel || world.rank() == MASTER)) {
+#else
             if (ToulBar2::xmlflag) {
+#endif
                 ((WCSP*)wcsp)->solution_XML(!isLimited);
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+#ifdef OPENMPI
+            } else if (ToulBar2::maxsateval && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
+#else
             } else if (ToulBar2::maxsateval && !isLimited) {
+#endif
                 cout << "o " << cost << endl;
                 cout << "s OPTIMUM FOUND" << endl;
                 ((WCSP*)wcsp)->printSolutionMaxSAT(cout);
@@ -2971,7 +2981,12 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         if (ToulBar2::verbose >= 0) {
             cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         }
+#ifdef OPENMPI
+        if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
+#else
         if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited) {
+#endif
+        }
 //            cout << "o " << cost << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
