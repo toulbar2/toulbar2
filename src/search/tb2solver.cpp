@@ -2986,7 +2986,6 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
 #else
         if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited) {
 #endif
-        }
 //            cout << "o " << cost << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
