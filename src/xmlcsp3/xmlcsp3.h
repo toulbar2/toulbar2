@@ -1301,8 +1301,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildUnaryCostFunction(Value mult, XVariable *x) {
-        int var = getMyVar(x->id);
+    void buildUnaryCostFunction(Value mult, int var) {
         unsigned int domsize = problem->getDomainInitSize(var);
         vector<Cost> costs;
         Cost negcost = min(MIN_COST, (Cost)min((Cost)problem->toValue(var, 0) * mult, (Cost)problem->toValue(var, domsize-1) * mult));
@@ -1313,6 +1312,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             problem->decreaseLb(-negcost);
         }
         problem->postUnaryConstraint(var, costs);
+    }
+
+    void buildUnaryCostFunction(Value mult, XVariable *x) {
+        int var = getMyVar(x->id);
+        buildUnaryCostFunction(mult, var);
     }
 
     void buildObjectiveMinimizeVariable(XVariable *x) override {
@@ -1483,10 +1487,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void buildObjective(Cost sign, ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) {
         assert(trees.size() == coefs.size());
-//        vector<int> vars;
-//        toMyVariables(list,vars);
-//        Cost negcost = MIN_COST;
+        vector<int> vars;
         vector<WeightedVarValPair> weightFunction;
+        string varargmaxname;
+        int varargmax;
+        string varmaxname;
+        int varmax;
+        XCondition cond;
+        bool themax = true;
         switch (type) {
         case ExpressionObjective::EXPRESSION_O:
             assert(trees.size() == 1);
@@ -1495,31 +1503,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 buildCostFunction(sign * coefs[i], trees[i]);
             }
             break;
-//        case ExpressionObjective::MINIMUM_O:
-//            sign *= -UNIT_COST;
-//        case ExpressionObjective::MAXIMUM_O:
-//            for (unsigned int i=0; i<list.size(); i++) {
-//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
-//                    Cost cost = (Cost)problem->toValue(vars[i], a) * coefs[i] * sign;
-//                    if (cost < negcost) {
-//                        negcost = cost;
-//                    }
-//                }
-//            }
-//            for (unsigned int i=0; i<list.size(); i++) {
-//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
-//                    WeightedVarValPair elt;
-//                    elt.varIndex = vars[i];
-//                    elt.val = problem->toValue(vars[i], a);
-//                    elt.weight = (Cost)elt.val * coefs[i] * sign - negcost;
-//                    weightFunction.push_back(elt);
-//                }
-//            }
-//            if (negcost < MIN_COST) {
-//                problem->decreaseLb(-negcost);
-//            }
-//            problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
-//            break;
+        case ExpressionObjective::MINIMUM_O:
+            themax = false;
+        case ExpressionObjective::MAXIMUM_O:
+            for (unsigned int i=0; i<trees.size(); i++) {
+                int var = buildConstraintIntension(trees[i]);
+                string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+                int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));
+                mapping[prodname] = varprod;
+                string coefname = IMPLICIT_VAR_TAG + "coef" + to_string(problem->numberOfVariables());
+                int varcoef = problem->makeEnumeratedVariable(coefname, coefs[i], coefs[i]);
+                buildConstraintMult(var, varcoef, varprod);
+                vars.push_back(varprod);
+            }
+            assert(vars.size() == coefs.size());
+            varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
+            varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+            mapping[varargmaxname] = varargmax;
+            varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
+            varmax = problem->makeEnumeratedVariable(varmaxname, 0, vars.size()-1);
+            mapping[varmaxname] = varmax;
+            cond.operandType = OperandType::VARIABLE;
+            cond.op = OrderType::EQ;
+            cond.var = varmaxname;
+            buildConstraintMinMax(themax, vars, varargmax, cond);
+            buildUnaryCostFunction(sign, varmax);
+            break;
         case ExpressionObjective::PRODUCT_O:
         case ExpressionObjective::NVALUES_O:
         case ExpressionObjective::LEX_O:
