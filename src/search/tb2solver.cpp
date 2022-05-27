@@ -1500,6 +1500,11 @@ void Solver::newSolution()
 
         if (ToulBar2::xmlflag) {
             cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
+#ifdef OPENMPI
+            if (ToulBar2::parallel && world.rank() == MASTER) {
+                ((WCSP*)wcsp)->solution_XML(false);
+            }
+#endif
         }
         if (ToulBar2::maxsateval) {
             cout << "o " << wcsp->getLb() << endl;
@@ -2899,7 +2904,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         wcsp->printVACStat();
 
 #ifdef OPENMPI
-    if (((ToulBar2::verbose >= 0 && !ToulBar2::parallel) || (ToulBar2::parallel && ToulBar2::verbose >= -1)) && nbHybrid >= 1 && nbNodes > 0) {
+    if (((ToulBar2::verbose >= 0 && !ToulBar2::parallel) || (ToulBar2::parallel && ToulBar2::verbose >= -1 && !ToulBar2::uai && !ToulBar2::xmlflag && !ToulBar2::maxsateval)) && nbHybrid >= 1 && nbNodes > 0) {
         cout << "Node redundancy during HBFS: " << 100. * nbRecomputationNodes / nbNodes;
         if (ToulBar2::parallel) {
             cout << " % (#pid: " << world.rank() << " wait: " << hbfsWaitingTime << " seconds)";
