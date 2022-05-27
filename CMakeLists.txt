@@ -136,19 +136,19 @@ MARK_AS_ADVANCED(FORCE Default_test_option Default_test_timeout Default_validati
 # static building
 ##########################################
 IF(STATIC)
-  MESSAGE(STATUS "STATIC COMPILATION ON (warning: jemalloc and MPI options not compliant with static link)")
-  SET(WITH_MEM_JEMALLOC OFF)
+  MESSAGE(STATUS "STATIC COMPILATION ON (warning: MPI option not compliant with static link)")
   SET(MPI OFF)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
+  set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --disable-shared --enable-static -static-libgcc -static-libstdc++")   # -flto 
-ELSE()
-  SET(BUILD_SHARED_LIBS ON) #shared library building
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
   SET (all_depends  ${all_depends} "m") 
   SET (all_depends  ${all_depends} "pthread") 
   SET (all_depends  ${all_depends} "dl") 
+ELSE(STATIC)
+  SET(BUILD_SHARED_LIBS ON) #shared library building
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
 ENDIF(STATIC)
 
 ##########################################
