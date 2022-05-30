@@ -2249,32 +2249,39 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildObjective(Cost sign, ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) {
         assert(list.size() == coefs.size());
         vector<int> vars;
-        toMyVariables(list,vars);
-        Cost negcost = MIN_COST;
-        vector<WeightedVarValPair> weightFunction;
+        vector<int> varsin;
+        toMyVariables(list,varsin);
+//        Cost negcost = MIN_COST;
+//        vector<WeightedVarValPair> weightFunction;
+        string varargmaxname;
+        int varargmax;
+        string varmaxname;
+        int varmax;
+        XCondition cond;
+        bool themax = true;
         switch (type) {
-        case ExpressionObjective::PRODUCT_O:
-            if (list.size() == 2) {
-                for (unsigned int a=0; a < problem->getDomainInitSize(vars[0]); a++) {
-                    for (unsigned int b=0; b < problem->getDomainInitSize(vars[1]); b++) {
-                        Cost cost = (Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign;
-                        if (cost < negcost) {
-                            negcost = cost;
-                        }
-                    }
-                }
-                vector<Cost> costs;
-                for (unsigned int a=0; a < problem->getDomainInitSize(vars[0]); a++) {
-                    for (unsigned int b=0; b < problem->getDomainInitSize(vars[1]); b++) {
-                        costs.push_back((Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign - negcost);
-                    }
-                }
-                problem->postBinaryConstraint(vars[0], vars[1], costs);
-                break;
-            } else if (list.size() >= 3) {
-                cerr << "Sorry multiplicative objective for " << list.size() << " variables not implemented!" << endl;
-                throw WrongFileFormat();
-            }
+//        case ExpressionObjective::PRODUCT_O:
+//            if (list.size() == 2) {
+//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[0]); a++) {
+//                    for (unsigned int b=0; b < problem->getDomainInitSize(vars[1]); b++) {
+//                        Cost cost = (Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign;
+//                        if (cost < negcost) {
+//                            negcost = cost;
+//                        }
+//                    }
+//                }
+//                vector<Cost> costs;
+//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[0]); a++) {
+//                    for (unsigned int b=0; b < problem->getDomainInitSize(vars[1]); b++) {
+//                        costs.push_back((Cost)coefs[0] * problem->toValue(vars[0], a) * coefs[1] * problem->toValue(vars[1], b) * sign - negcost);
+//                    }
+//                }
+//                problem->postBinaryConstraint(vars[0], vars[1], costs);
+//                break;
+//            } else if (list.size() >= 3) {
+//                cerr << "Sorry multiplicative objective for " << list.size() << " variables not implemented!" << endl;
+//                throw WrongFileFormat();
+//            }
         case ExpressionObjective::EXPRESSION_O:
             assert(list.size() == 1);
         case ExpressionObjective::SUM_O:
@@ -2283,30 +2290,64 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             break;
         case ExpressionObjective::MINIMUM_O:
-            sign *= -UNIT_COST;
+            themax = false;
         case ExpressionObjective::MAXIMUM_O:
-            for (unsigned int i=0; i<list.size(); i++) {
-                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
-                    Cost cost = (Cost)problem->toValue(vars[i], a) * coefs[i] * sign;
-                    if (cost < negcost) {
-                        negcost = cost;
-                    }
+            for (unsigned int i=0; i<varsin.size(); i++) {
+                int var = varsin[i];
+                if (coefs[i] != 1) {
+                    string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+                    int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));
+                    mapping[prodname] = varprod;
+                    buildConstraintPrimitiveMult(OrderType::EQ, var, coefs[i], varprod);
+                    vars.push_back(varprod);
+                } else {
+                    vars.push_back(var);
                 }
             }
-            for (unsigned int i=0; i<list.size(); i++) {
-                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
-                    WeightedVarValPair elt;
-                    elt.varIndex = vars[i];
-                    elt.val = problem->toValue(vars[i], a);
-                    elt.weight = (Cost)elt.val * coefs[i] * sign - negcost;
-                    weightFunction.push_back(elt);
+            assert(vars.size() == coefs.size());
+            varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
+            varmax = problem->makeEnumeratedVariable(varmaxname, 0, vars.size()-1);
+            mapping[varmaxname] = varmax;
+            if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
+                for (unsigned int i=0; i<vars.size(); i++) {
+                    buildConstraintPrimitive((themax)?OrderType::LE:OrderType::GE, vars[i], 0, varmax);
                 }
+            } else {
+                varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
+                varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+                mapping[varargmaxname] = varargmax;
+                cond.operandType = OperandType::VARIABLE;
+                cond.op = OrderType::EQ;
+                cond.var = varmaxname;
+                buildConstraintMinMax(themax, vars, varargmax, cond);
             }
-            if (negcost < MIN_COST) {
-                problem->decreaseLb(-negcost);
-            }
-            problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
+            buildUnaryCostFunction(sign, varmax);
             break;
+//        case ExpressionObjective::MINIMUM_O:
+//            sign *= -UNIT_COST;
+//        case ExpressionObjective::MAXIMUM_O:
+//            for (unsigned int i=0; i<list.size(); i++) {
+//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
+//                    Cost cost = (Cost)problem->toValue(vars[i], a) * coefs[i] * sign;
+//                    if (cost < negcost) {
+//                        negcost = cost;
+//                    }
+//                }
+//            }
+//            for (unsigned int i=0; i<list.size(); i++) {
+//                for (unsigned int a=0; a < problem->getDomainInitSize(vars[i]); a++) {
+//                    WeightedVarValPair elt;
+//                    elt.varIndex = vars[i];
+//                    elt.val = problem->toValue(vars[i], a);
+//                    elt.weight = (Cost)elt.val * coefs[i] * sign - negcost;
+//                    weightFunction.push_back(elt);
+//                }
+//            }
+//            if (negcost < MIN_COST) {
+//                problem->decreaseLb(-negcost);
+//            }
+//            problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
+//            break;
         case ExpressionObjective::NVALUES_O:
         case ExpressionObjective::LEX_O:
         default:
@@ -2337,7 +2378,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildObjective(Cost sign, ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) {
         assert(trees.size() == coefs.size());
         vector<int> vars;
-        vector<WeightedVarValPair> weightFunction;
         string varargmaxname;
         int varargmax;
         string varmaxname;
