@@ -1159,7 +1159,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (int i = 0; i < n; i++) {
             for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
                 currentval = problem->toValue(vars[i], a);
-                if (!emptyExcept && currentval != except[0]){
+                if (emptyExcept || currentval != except[0]){
                     auto it = find(Diffvalue.begin(), Diffvalue.end(), currentval);
                     if (it == Diffvalue.end()) {
                         string extravarname = IMPLICIT_VAR_TAG + "Nval" + to_string(problem->numberOfVariables());
@@ -1176,11 +1176,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             }
                         }
                         for (int b = 0; b < (int)problem->getDomainInitSize(vars[i]); b++) {
-                            if (b == currentval) {
-                                costs.push_back(MIN_COST);
-                            } else {
-                                costs.push_back(MAX_COST);
-                            }
+                            costs.push_back(MIN_COST);
                         }
                         problem->postBinaryConstraint(Bvar.back(), vars[i], costs);
                     }else{
@@ -1193,73 +1189,95 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             }
                         }
                         for (int b = 0; b < (int)problem->getDomainInitSize(vars[i]); b++) {
-                            if (b == currentval) {
-                                costs.push_back(MIN_COST);
-                            } else {
-                                costs.push_back(MAX_COST);
-                            }
+                            costs.push_back(MIN_COST);
                         }
                         problem->postBinaryConstraint(Bvar[distance(Diffvalue.begin(), it)], vars[i], costs);
                     }
                 }
             }
         }
-        switch (cond.op) {
-            case OrderType::EQ:
-                switch (cond.operandType) {
-                    case OperandType::VARIABLE:
-                        Bvar.push_back(getMyVar(cond.var));
-                        params = to_string(0);
-                        for (unsigned int i=0; i < Bvar.size()-1; i++) {
-                            params+=" 2 0 0 1 1";
-                        }
-                        domsize=problem->getDomainInitSize(Bvar.back());
-                        params += " " + to_string(domsize);
-                        for (int idval=0; idval < domsize; idval++) {
-                            int value = problem->toValue(Bvar.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(-value);
-                        }
-                        problem->postKnapsackConstraint(Bvar, params, false, true, false);
-                        params = to_string(0);
-                        for (unsigned int i=0; i < Bvar.size()-1; i++) {
-                            params+=" 2 0 0 1 -1";
-                        }
-                        domsize=problem->getDomainInitSize(Bvar.back());
-                        params += " " + to_string(domsize);
-                        for (int idval=0; idval < domsize; idval++) {
-                            int value = problem->toValue(Bvar.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(value);
-                        }
-                        problem->postKnapsackConstraint(Bvar, params, false, true, false);
-                        break;
-                    case OperandType::INTEGER:
-                        rightcoef = cond.val;
-                        params = to_string(rightcoef);
-                        for (unsigned int i=0; i < Bvar.size(); i++) {
-                            params+=" 2 0 0 1 1";
-                        }
-                        problem->postKnapsackConstraint(Bvar, params, false, true, false);
-                        params = to_string(-rightcoef);
-                        for (unsigned int i=0; i < Bvar.size(); i++) {
-                            params+=" 2 0 0 1 -1";
-                        }
-                        problem->postKnapsackConstraint(Bvar, params, false, true, false);
-                        break;
-                    default:
-                        cerr << "Sorry operandType " << cond.operandType << " not implemented in Nvalues constraint!" << endl;
-                        throw WrongFileFormat();
+        int nbvar;
+        bool b;
+        vector<int> tempvars;
+        for (int i = 0; i < (int)Diffvalue.size(); ++i) {
+            nbvar=0;
+            params="0 ";
+            tempvars=vars;
+            tempvars.push_back(Bvar[i]);
+            for (int j = 0; j < n; ++j) {
+                int ite=0;
+                b=false;
+                while(ite<problem->getDomainInitSize(vars[j]) && !b){
+                    currentval = problem->toValue(vars[j], ite);
+                    if(currentval==Diffvalue[i]){
+                        b=true;
+                        nbvar++;
+                        params+=" 1 "+to_string(currentval)+" 1";
+                    }
+                    ite++;
                 }
+                if(!b)
+                    params+=" 0";
+            }
+            params+=" 1 1 -1";
+            problem->postKnapsackConstraint(tempvars, params, false, true, false);
+        }
+        switch (cond.op) {
+        case OrderType::EQ:
+            switch (cond.operandType) {
+            case OperandType::VARIABLE:
+                Bvar.push_back(getMyVar(cond.var));
+                params = to_string(0);
+                for (unsigned int i=0; i < Bvar.size()-1; i++) {
+                    params+=" 1 1 1";
+                }
+                domsize=problem->getDomainInitSize(Bvar.back());
+                params += " " + to_string(domsize);
+                for (int idval=0; idval < domsize; idval++) {
+                    int value = problem->toValue(Bvar.back(), idval);
+                    params += " " + to_string(value) + " " + to_string(-value);
+                }
+                problem->postKnapsackConstraint(Bvar, params, false, true, false);
+                params = to_string(0);
+                for (unsigned int i=0; i < Bvar.size()-1; i++) {
+                    params+=" 1 1 -1";
+                }
+                domsize=problem->getDomainInitSize(Bvar.back());
+                params += " " + to_string(domsize);
+                for (int idval=0; idval < domsize; idval++) {
+                    int value = problem->toValue(Bvar.back(), idval);
+                    params += " " + to_string(value) + " " + to_string(value);
+                }
+                problem->postKnapsackConstraint(Bvar, params, false, true, false);
                 break;
-            case OrderType::GT:
-                params = to_string(1);
+            case OperandType::INTEGER:
+                rightcoef = cond.val;
+                params = to_string(rightcoef);
                 for (unsigned int i=0; i < Bvar.size(); i++) {
-                    params+=" 2 0 0 1 1";
+                    params+=" 1 1 1";
+                }
+                problem->postKnapsackConstraint(Bvar, params, false, true, false);
+                params = to_string(-rightcoef);
+                for (unsigned int i=0; i < Bvar.size(); i++) {
+                    params+=" 1 1 -1";
                 }
                 problem->postKnapsackConstraint(Bvar, params, false, true, false);
                 break;
             default:
                 cerr << "Sorry operandType " << cond.operandType << " not implemented in Nvalues constraint!" << endl;
                 throw WrongFileFormat();
+            }
+            break;
+        case OrderType::GT:
+            params = to_string(2);
+            for (unsigned int i=0; i < Bvar.size(); i++) {
+                params+=" 1 1 1";
+            }
+            problem->postKnapsackConstraint(Bvar, params, false, true, false);
+            break;
+        default:
+            cerr << "Sorry operandType " << cond.operandType << " not implemented in Nvalues constraint!" << endl;
+            throw WrongFileFormat();
         }
     }
 
