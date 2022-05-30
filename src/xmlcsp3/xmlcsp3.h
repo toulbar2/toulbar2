@@ -80,12 +80,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(dest.size() > 0);
     }
 
+    void recursiveExpanse(vector<int> &vars, vector<int> &tuple, unsigned int pos, int value, vector<vector<int>> &tuples, vector<int> expanded) {
+        if (pos < vars.size()) {
+            if (value == STAR) {
+                for (unsigned int a = 0; a < problem->getDomainInitSize(vars[pos]); a++) {
+                    recursiveExpanse(vars, tuple, pos, problem->toValue(vars[pos], a), tuples, expanded);
+                }
+            } else {
+                expanded.push_back(value);
+                recursiveExpanse(vars, tuple, pos+1, (pos+1 < vars.size())?tuple[pos+1]:STAR, tuples, expanded);
+            }
+        } else {
+            assert(expanded.size() == tuple.size());
+            tuples.push_back(expanded);
+        }
+    }
+
     void buildConstraintExtension(vector<int> vars, vector<vector<int> > &tuples, bool isSupport, bool hasStar) {
         if(hasStar) {
-            cerr << "Sorry tuples with stars not implemented!" << endl;
-            throw WrongFileFormat();
+            vector<vector<int> > newtuples;
+            for(auto& tuple:tuples) {
+                recursiveExpanse(vars, tuple, 0, tuple[0], newtuples, vector<int>());
+            }
+            assert(newtuples.size() >= tuples.size());
+            tuples = newtuples; // warning it will change the input tuples
         }
-        lastTuples = tuples; // copy tuples for future usage by buildConstraintExtensionAs
+        lastTuples = tuples; // copy tuples for future usage by buildConstraintExtensionAs after tuples expansion
         assert(vars.size() > 0);
         if (vars.size()==1) {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]), (isSupport)?MAX_COST:MIN_COST);
@@ -146,12 +166,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void buildConstraintExtension(int var, vector<int> &tuples, bool isSupport, bool hasStar) {
         // This function is called for unary extensional constraint.
-        if(hasStar) {
-            cerr << "Sorry unary tuples with stars not implemented!" << endl;
-            throw WrongFileFormat();
+        assert(tuples[0] != STAR || tuples.size()==1);
+        lastTuples = vector<vector<int> >();
+        lastTuples.push_back(tuples);
+        if (tuples[0] == STAR) {
+            if (!isSupport) {
+                throw Contradiction();
+            } else {
+                return;
+            }
         }
         vector<Cost> costs(problem->getDomainInitSize(var), (isSupport)?MAX_COST:MIN_COST);
         for(auto value:tuples) {
+            assert(value != STAR);
             if (isSupport) {
                 costs[problem->toIndex(var, value)] = MIN_COST;
             } else {
@@ -173,7 +200,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     // This function is called with group of constraint where the set of tuples is exactly the same
     // than the previous one (then, you can save time/memory using the same set of tuples.
     void buildConstraintExtensionAs(string id, vector<XVariable *> list, bool isSupport, bool hasStar) override {
-        buildConstraintExtension(id, list, lastTuples, isSupport, hasStar);
+        buildConstraintExtension(id, list, lastTuples, isSupport, false);
     }
 
     // returns a WCSP variable index corresponding to the evaluation of Tree expression
@@ -282,6 +309,40 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     break;
                 case OrderType::NE:
                     costs.push_back((problem->toValue(varx, a) + k != problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    break;
+                default:
+                    cerr << "Sorry operator " << op << " not implemented!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+        problem->postBinaryConstraint(varx, vary, costs);
+    }
+
+    void buildConstraintPrimitiveMult(OrderType op, int varx, int mult, int vary) {
+        assert(varx != vary);
+        vector<Cost> costs;
+        for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+            for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
+                switch (op) {
+                case OrderType::LE:
+                    costs.push_back((problem->toValue(varx, a) * mult <= problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    break;
+                case OrderType::LT:
+                    costs.push_back((problem->toValue(varx, a) * mult < problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    break;
+                case OrderType::GE:
+                    costs.push_back((problem->toValue(varx, a) * mult >= problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    break;
+                case OrderType::GT:
+                    costs.push_back((problem->toValue(varx, a) * mult > problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    break;
+                case OrderType::IN:
+                case OrderType::EQ:
+                    costs.push_back((problem->toValue(varx, a) * mult == problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    break;
+                case OrderType::NE:
+                    costs.push_back((problem->toValue(varx, a) * mult != problem->toValue(vary, b))?MIN_COST:MAX_COST);
                     break;
                 default:
                     cerr << "Sorry operator " << op << " not implemented!" << endl;
@@ -2296,25 +2357,33 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         case ExpressionObjective::MAXIMUM_O:
             for (unsigned int i=0; i<trees.size(); i++) {
                 int var = buildConstraintIntension(trees[i]);
-                string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
-                int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));
-                mapping[prodname] = varprod;
-                string coefname = IMPLICIT_VAR_TAG + "coef" + to_string(problem->numberOfVariables());
-                int varcoef = problem->makeEnumeratedVariable(coefname, coefs[i], coefs[i]);
-                buildConstraintMult(var, varcoef, varprod);
-                vars.push_back(varprod);
+                if (coefs[i] != 1) {
+                    string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+                    int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));
+                    mapping[prodname] = varprod;
+                    buildConstraintPrimitiveMult(OrderType::EQ, var, coefs[i], varprod);
+                    vars.push_back(varprod);
+                } else {
+                    vars.push_back(var);
+                }
             }
             assert(vars.size() == coefs.size());
-            varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
-            varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
-            mapping[varargmaxname] = varargmax;
             varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
             varmax = problem->makeEnumeratedVariable(varmaxname, 0, vars.size()-1);
             mapping[varmaxname] = varmax;
-            cond.operandType = OperandType::VARIABLE;
-            cond.op = OrderType::EQ;
-            cond.var = varmaxname;
-            buildConstraintMinMax(themax, vars, varargmax, cond);
+            if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
+                for (unsigned int i=0; i<vars.size(); i++) {
+                    buildConstraintPrimitive((themax)?OrderType::LE:OrderType::GE, vars[i], 0, varmax);
+                }
+            } else {
+                varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
+                varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+                mapping[varargmaxname] = varargmax;
+                cond.operandType = OperandType::VARIABLE;
+                cond.op = OrderType::EQ;
+                cond.var = varmaxname;
+                buildConstraintMinMax(themax, vars, varargmax, cond);
+            }
             buildUnaryCostFunction(sign, varmax);
             break;
         case ExpressionObjective::PRODUCT_O:
