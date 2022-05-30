@@ -1205,7 +1205,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             tempvars=vars;
             tempvars.push_back(Bvar[i]);
             for (int j = 0; j < n; ++j) {
-                int ite=0;
+                unsigned int ite=0;
                 b=false;
                 while(ite<problem->getDomainInitSize(vars[j]) && !b){
                     currentval = problem->toValue(vars[j], ite);
@@ -2267,14 +2267,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildObjective(Cost sign, ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) {
         assert(list.size() == coefs.size());
         vector<int> vars;
-        vector<int> varsin;
-        toMyVariables(list,varsin);
+        toMyVariables(list,vars);
 //        Cost negcost = MIN_COST;
 //        vector<WeightedVarValPair> weightFunction;
+        vector<int> objvars;
         string varargmaxname;
         int varargmax;
         string varmaxname;
         int varmax;
+        string varnvaluename;
+        int varnvalue;
+        vector<int> except;
         XCondition cond;
         bool themax = true;
         switch (type) {
@@ -2310,34 +2313,34 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         case ExpressionObjective::MINIMUM_O:
             themax = false;
         case ExpressionObjective::MAXIMUM_O:
-            for (unsigned int i=0; i<varsin.size(); i++) {
-                int var = varsin[i];
+            for (unsigned int i=0; i<vars.size(); i++) {
+                int var = vars[i];
                 if (coefs[i] != 1) {
                     string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
                     int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));
                     mapping[prodname] = varprod;
                     buildConstraintPrimitiveMult(OrderType::EQ, var, coefs[i], varprod);
-                    vars.push_back(varprod);
+                    objvars.push_back(varprod);
                 } else {
-                    vars.push_back(var);
+                    objvars.push_back(var);
                 }
             }
-            assert(vars.size() == coefs.size());
+            assert(objvars.size() == coefs.size());
             varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
-            varmax = problem->makeEnumeratedVariable(varmaxname, 0, vars.size()-1);
+            varmax = problem->makeEnumeratedVariable(varmaxname, 0, objvars.size()-1);
             mapping[varmaxname] = varmax;
             if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
-                for (unsigned int i=0; i<vars.size(); i++) {
-                    buildConstraintPrimitive((themax)?OrderType::LE:OrderType::GE, vars[i], 0, varmax);
+                for (unsigned int i=0; i<objvars.size(); i++) {
+                    buildConstraintPrimitive((themax)?OrderType::LE:OrderType::GE, objvars[i], 0, varmax);
                 }
             } else {
                 varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
-                varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
+                varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, objvars.size()-1);
                 mapping[varargmaxname] = varargmax;
                 cond.operandType = OperandType::VARIABLE;
                 cond.op = OrderType::EQ;
                 cond.var = varmaxname;
-                buildConstraintMinMax(themax, vars, varargmax, cond);
+                buildConstraintMinMax(themax, objvars, varargmax, cond);
             }
             buildUnaryCostFunction(sign, varmax);
             break;
@@ -2367,6 +2370,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //            problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
 //            break;
         case ExpressionObjective::NVALUES_O:
+            varnvaluename = IMPLICIT_VAR_TAG + "nvalue" + to_string(problem->numberOfVariables());
+            varnvalue = problem->makeEnumeratedVariable(varnvaluename, 1, vars.size());
+            mapping[varnvaluename] = varnvalue;
+            cond.operandType = OperandType::VARIABLE;
+            cond.op = OrderType::EQ;
+            cond.var = varnvalue;
+            buildConstraintNValues(vars, except, cond);
+            buildUnaryCostFunction(sign, varnvalue);
+            break;
         case ExpressionObjective::LEX_O:
         default:
             cerr << "Sorry objective type " << type << " not implemented!" << endl;
@@ -2400,6 +2412,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         int varargmax;
         string varmaxname;
         int varmax;
+        string varnvaluename;
+        int varnvalue;
+        vector<int> except;
         XCondition cond;
         bool themax = true;
         switch (type) {
@@ -2444,8 +2459,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             buildUnaryCostFunction(sign, varmax);
             break;
-        case ExpressionObjective::PRODUCT_O:
         case ExpressionObjective::NVALUES_O:
+            varnvaluename = IMPLICIT_VAR_TAG + "nvalue" + to_string(problem->numberOfVariables());
+            varnvalue = problem->makeEnumeratedVariable(varnvaluename, 1, trees.size());
+            mapping[varnvaluename] = varnvalue;
+            cond.operandType = OperandType::VARIABLE;
+            cond.op = OrderType::EQ;
+            cond.var = varnvalue;
+            buildConstraintNValues("NValue", trees, cond);
+            buildUnaryCostFunction(sign, varnvalue);
+            break;
+        case ExpressionObjective::PRODUCT_O:
         case ExpressionObjective::LEX_O:
         default:
             cerr << "Sorry objective type " << type << " on trees not implemented!" << endl;
