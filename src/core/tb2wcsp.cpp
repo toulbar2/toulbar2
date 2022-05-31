@@ -821,11 +821,20 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 /// \warning Vector costs must have the same size as Cartesian product of original domains.
 int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 {
-    assert(xIndex != yIndex);
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
+
+    if (xIndex == yIndex) {
+        vector<Cost> ucosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            ucosts.push_back(costs[a * x->getDomainInitSize() + a]);
+        }
+        postUnaryConstraint(xIndex, ucosts);
+        return INT_MAX;
+    }
+
     if (ToulBar2::vac) {
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
@@ -935,10 +944,35 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
 /// \brief create a ternary cost function from a flat vector of costs (z indexes moving first)
 int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs)
 {
-    assert(xIndex != yIndex && xIndex != zIndex && yIndex != zIndex);
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
+
+    if (xIndex == yIndex) {
+        vector<Cost> bcosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + a * z->getDomainInitSize() + c]);
+            }
+        }
+        return postBinaryConstraint(xIndex, zIndex, bcosts);
+    } else if (xIndex == zIndex) {
+        vector<Cost> bcosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + a]);
+            }
+        }
+        return postBinaryConstraint(xIndex, yIndex, bcosts);
+    } else if (yIndex == zIndex) {
+        vector<Cost> bcosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + b]);
+            }
+        }
+        return postBinaryConstraint(xIndex, yIndex, bcosts);
+    }
 
     if (ToulBar2::vac) {
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
@@ -1114,6 +1148,16 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
     assert(getTreeDec() == NULL);
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
+
+    if (xIndex == yIndex) {
+        vector<Cost> ucosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            ucosts.push_back(costs[a * y->getDomainInitSize() + a]);
+        }
+        postIncrementalUnaryConstraint(xIndex, ucosts);
+        return INT_MAX;
+    }
+
     BinaryConstraint* xy = x->getConstr(y);
 
     initElimConstr();
@@ -1144,6 +1188,36 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
 // Add a temporary (backtrackable) ternary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs)
 {
+    EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
+    EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
+    EnumeratedVariable* z = (EnumeratedVariable*)getVar(zIndex);
+
+    if (xIndex == yIndex) {
+        vector<Cost> bcosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + a * z->getDomainInitSize() + c]);
+            }
+        }
+        return postIncrementalBinaryConstraint(xIndex, zIndex, bcosts);
+    } else if (xIndex == zIndex) {
+        vector<Cost> bcosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + a]);
+            }
+        }
+        return postIncrementalBinaryConstraint(xIndex, yIndex, bcosts);
+    } else if (yIndex == zIndex) {
+        vector<Cost> bcosts;
+        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+            for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + b]);
+            }
+        }
+        return postIncrementalBinaryConstraint(xIndex, yIndex, bcosts);
+    }
+
     assert(getTreeDec() == NULL);
     BinaryConstraint* bctr;
     TernaryConstraint* xyz = new TernaryConstraint(this);
@@ -1155,10 +1229,6 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
             bctr = new VACBinaryConstraint(this);
         elimBinConstrs.push_back(bctr);
     }
-
-    EnumeratedVariable* z = (EnumeratedVariable*)getVar(zIndex);
-    EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
-    EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
 
     xyz = newTernaryConstr(x, y, z);
     elimTernOrderInc();
