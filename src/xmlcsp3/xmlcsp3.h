@@ -2164,6 +2164,47 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintChannel(string id, vector<XVariable *> &list1, int startIndex1, vector<XVariable *> &list2, int startIndex2) override {
+        assert(startIndex1 == 0);
+        assert(startIndex2 == 0);
+        vector<int> vars1;
+        toMyVariables(list1,vars1);
+        vector<int> vars2;
+        toMyVariables(list2,vars2);
+        if (vars1.size() <= vars2.size()) {
+           for (unsigned int j = 0; j < vars2.size(); j++) {
+               buildConstraintPrimitive(vars2[j], true, 0, vars1.size()-1);
+           }
+           for (unsigned int i = 0; i < vars1.size(); i++) {
+                buildConstraintPrimitive(vars1[i], true, 0, vars2.size()-1);
+                for (unsigned int j = 0; j < vars2.size(); j++) {
+                    vector<Cost> costs;
+                    for (unsigned int a = 0; a < problem->getDomainInitSize(vars1[i]); a++) {
+                        for (unsigned int b = 0; b < problem->getDomainInitSize(vars2[j]); b++) {
+                            if ((a != j || b == i) && (vars1.size() < vars2.size() || b != i || a == j)) {
+                                costs.push_back(MIN_COST);
+                            } else {
+                                costs.push_back(MAX_COST);
+                            }
+                        }
+                    }
+                    problem->postBinaryConstraint(vars1[i], vars2[j], costs);
+                }
+            }
+        } else {
+            cerr << "Sorry wrong list sizes in channel constraint!" << endl;
+            throw WrongFileFormat();
+
+        }
+    }
+
+//    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex) override {
+//    }
+//    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex, XVariable *value) override {
+//    }
+
+
+
     // Semantic of subcircuit (successor variables may be not inserted in the circuit by selecting them-self, i.e. self-loops are authorized)
     void buildConstraintCircuit(string id, vector<XVariable *> &list, int startIndex) override {
         vector<int> succ;
@@ -2328,6 +2369,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<int> except;
         XCondition cond;
         bool themax = true;
+        int maxinf = INT_MAX;
+        int maxsup = -INT_MAX;
         switch (type) {
 //        case ExpressionObjective::PRODUCT_O:
 //            if (list.size() == 2) {
@@ -2374,8 +2417,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
             assert(objvars.size() == coefs.size());
+            for (unsigned int i=0; i<objvars.size(); i++) {
+                if (problem->getInf(objvars[i]) < maxinf) {
+                    maxinf = problem->getInf(objvars[i]);
+                }
+                if (problem->getSup(objvars[i]) > maxsup) {
+                    maxsup = problem->getSup(objvars[i]);
+                }
+            }
             varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
-            varmax = problem->makeEnumeratedVariable(varmaxname, 0, objvars.size()-1);
+            varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
             mapping[varmaxname] = varmax;
             if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
                 for (unsigned int i=0; i<objvars.size(); i++) {
@@ -2465,6 +2516,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<int> except;
         XCondition cond;
         bool themax = true;
+        int maxinf = INT_MAX;
+        int maxsup = -INT_MAX;
         switch (type) {
         case ExpressionObjective::EXPRESSION_O:
             assert(trees.size() == 1);
@@ -2489,8 +2542,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
             assert(vars.size() == coefs.size());
+            for (unsigned int i=0; i<vars.size(); i++) {
+                if (problem->getInf(vars[i]) < maxinf) {
+                    maxinf = problem->getInf(vars[i]);
+                }
+                if (problem->getSup(vars[i]) > maxsup) {
+                    maxsup = problem->getSup(vars[i]);
+                }
+            }
             varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
-            varmax = problem->makeEnumeratedVariable(varmaxname, 0, vars.size()-1);
+            varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
             mapping[varmaxname] = varmax;
             if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
                 for (unsigned int i=0; i<vars.size(); i++) {
