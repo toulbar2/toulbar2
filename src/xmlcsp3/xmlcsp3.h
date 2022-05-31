@@ -2203,7 +2203,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex, XVariable *value) override {
 //    }
 
+    void buildConstraintOrdered(string id, vector<XVariable *> &list, OrderType order) override {
+        vector<int> lengths(list.size()-1, 0);
+        buildConstraintOrdered(id, list, lengths, order);
+    }
 
+    void buildConstraintOrdered(string id, vector<XVariable *> &list, vector<int> &lengths, OrderType order) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        assert(vars.size() <= lengths.size() + 1);
+        for (unsigned int i = 0; i < vars.size()-1; i++) {
+            buildConstraintPrimitive(order, vars[i], lengths[i], vars[i+1]);
+        }
+    }
 
     // Semantic of subcircuit (successor variables may be not inserted in the circuit by selecting them-self, i.e. self-loops are authorized)
     void buildConstraintCircuit(string id, vector<XVariable *> &list, int startIndex) override {
