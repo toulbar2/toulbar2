@@ -30,7 +30,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         XCSP3CoreCallbacks::intensionUsingString = false;
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
         XCSP3CoreCallbacks::recognizeSpecialCountCases = false;
-        XCSP3CoreCallbacks::recognizeNValuesCases = false;
+        XCSP3CoreCallbacks::recognizeNValuesCases = true;
         problem->updateUb(MAX_COST);
     }
 
@@ -2181,7 +2181,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     vector<Cost> costs;
                     for (unsigned int a = 0; a < problem->getDomainInitSize(vars1[i]); a++) {
                         for (unsigned int b = 0; b < problem->getDomainInitSize(vars2[j]); b++) {
-                            if ((a != j || b == i) && (vars1.size() < vars2.size() || b != i || a == j)) {
+                            if ((problem->toValue(vars1[i], a) != (Value)j || problem->toValue(vars2[j], b) == (Value)i) && (vars1.size() < vars2.size() || problem->toValue(vars2[j], b) != (Value)i || problem->toValue(vars1[i], a) == (Value)j)) {
                                 costs.push_back(MIN_COST);
                             } else {
                                 costs.push_back(MAX_COST);
@@ -2214,6 +2214,64 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(vars.size() <= lengths.size() + 1);
         for (unsigned int i = 0; i < vars.size()-1; i++) {
             buildConstraintPrimitive(order, vars[i], lengths[i], vars[i+1]);
+        }
+    }
+
+    void buildConstraintAllEqual(vector<int> &vars) {
+        // remove multiple occurrences of the same variable
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (unsigned int j = i + 1; j < vars.size(); j++) {
+                if (vars[i] == vars[j]) {
+                    vars.erase(vars.begin()+j);
+                    j--;
+                }
+            }
+        }
+        for (unsigned int i = 0; i < vars.size()-1; i++) {
+            buildConstraintPrimitive(OrderType::EQ, vars[i], 0, vars[i+1]);
+        }
+    }
+
+    void buildConstraintAllEqual(string id, vector<XVariable *> &list) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        buildConstraintAllEqual(vars);
+    }
+
+    void buildConstraintAllEqual(string id, vector<Tree *> &trees) override {
+        vector<int> vars;
+        for (unsigned int i = 0; i < trees.size(); i++) {
+            vars.push_back(buildConstraintIntension(trees[i]));
+        }
+        assert(vars.size() == trees.size());
+        buildConstraintAllEqual(vars);
+    }
+
+    void buildConstraintNotAllEqual(string id, vector<XVariable *> &list) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        // remove multiple occurrences of the same variable
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (unsigned int j = i + 1; j < vars.size(); j++) {
+                if (vars[i] == vars[j]) {
+                    vars.erase(vars.begin()+j);
+                    j--;
+                }
+            }
+        }
+        assert(vars.size() >= 2);
+        set<Value> values;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
+                values.insert(problem->toValue(vars[i], a));
+            }
+        }
+        for (Value val: values) {
+            string params = to_string(-vars.size()+1);
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                params += " 1 " + to_string(val) + " -1";
+            }
+            problem->postKnapsackConstraint(vars, params, false, true, false);
         }
     }
 
