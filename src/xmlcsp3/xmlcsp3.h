@@ -2603,6 +2603,35 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 accepting, &(transition_indices[0]), trCosts);
     }
 
+    void buildConstraintNoOverlap(string id, vector<XVariable *> &origins, vector<int> &lengths, bool zeroIgnored) override {
+        assert(origins.size() == lengths.size());
+        unsigned int n = origins.size();
+        for (unsigned int i = 0; i < n; i++) {
+            for (unsigned int j = i +1 ; j < n; j++) {
+                if (!zeroIgnored || (lengths[i]>0 && lengths[j]>0)) {
+                    Tree tree("or(le(add(" + origins[i]->id + "," + to_string(lengths[i]) + ")," + origins[j]->id + "),le(add(" + origins[j]->id + "," + to_string(lengths[j]) + ")," + origins[i]->id + "))");
+                    buildConstraintIntension(id, &tree);
+                }
+            }
+        }
+    }
+
+    void buildConstraintNoOverlap(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, bool zeroIgnored) {
+        assert(origins.size() == lengths.size());
+        unsigned int n = origins.size();
+        for (unsigned int i = 0; i < n; i++) {
+            for (unsigned int j = i +1 ; j < n; j++) {
+                if (!zeroIgnored) {
+                    Tree tree("or(le(add(" + origins[i]->id + "," + lengths[i]->id + ")," + origins[j]->id + "),le(add(" + origins[j]->id + "," + lengths[j]->id + ")," + origins[i]->id + "))");
+                    buildConstraintIntension(id, &tree);
+                } else {
+                    Tree tree("or(eq(" + lengths[i]->id + ",0),eq(" + lengths[j]->id + ",0),le(add(" + origins[i]->id + "," + lengths[i]->id + ")," + origins[j]->id + "),le(add(" + origins[j]->id + "," + lengths[j]->id + ")," + origins[i]->id + "))");
+                    buildConstraintIntension(id, &tree);
+                }
+            }
+        }
+    }
+
     void buildUnaryCostFunction(Value mult, int var) {
         unsigned int domsize = problem->getDomainInitSize(var);
         vector<Cost> costs;
