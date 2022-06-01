@@ -940,6 +940,19 @@ void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs, bo
     }
 }
 
+void EnumeratedVariable::shrink()
+{
+    if (toIndex(inf) > 0) {
+        for (int i = 0; i < sup - inf + 1; i++) {
+            costs[i] = costs[toIndex(inf + i)];
+            valueNames[i] = valueNames[toIndex(inf + i)];
+        }
+    }
+    costs.resize(sup - inf + 1);
+    valueNames.resize(sup - inf + 1);
+    domain.shrink(inf, sup);
+}
+
 // eliminates the current (this) variable that participates
 // in a single binary constraint ctr (plus a duplicated one if any)
 bool EnumeratedVariable::elimVar(BinaryConstraint* ctr, BinaryConstraint* ctr_duplicate)

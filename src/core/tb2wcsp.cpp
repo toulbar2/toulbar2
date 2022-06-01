@@ -3345,6 +3345,13 @@ void WCSP::preprocessing()
     }
 }
 
+void WCSP::shrink()
+{
+    for (unsigned int i = 0; i < vars.size(); i++) {
+        vars[i]->shrink();
+    }
+}
+
 Cost WCSP::finiteUb() const
 {
     Cost summaxcost = getLb() + UNIT_COST;

@@ -49,6 +49,21 @@ void Domain::init(Value inf, Value sup)
     }
 }
 
+void Domain::shrink(Value inf, Value sup)
+{
+    assert(sup - inf + 1 >= 1);
+    assert(sup - inf + 1 <= (Value)initSize);
+#if defined(WCSPFORMATONLY)
+    assert(inf == 0);
+#endif
+    assert(inf >= distanceToZero);
+    for (int idx = 0; idx < sup - inf + 1; idx++) {
+        all[idx] = all[idx + inf - distanceToZero];
+    }
+    initSize = sup - inf + 1;
+    distanceToZero = inf;
+}
+
 int cmpValue(const void* v1, const void* v2)
 {
     if (*((int*)v1) < *((int*)v2))

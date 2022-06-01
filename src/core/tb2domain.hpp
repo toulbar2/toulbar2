@@ -11,11 +11,10 @@
 extern int cmpValue(const void* v1, const void* v2);
 
 class Domain : public BTList<Value> {
-    const unsigned int initSize;
-    const Value distanceToZero;
+    unsigned int initSize;
+    Value distanceToZero;
     DLink<Value>* all;
 
-    vector<string> valueNames;
     void init(Value inf, Value sup);
 
     // make it private because we don't want copy nor assignment
@@ -35,6 +34,7 @@ public:
             delete[] all;
     }
 
+    void shrink(Value inf, Value sup);
     unsigned int getInitSize() const { return initSize; }
     unsigned int toIndex(Value v) const { return v - distanceToZero; }
     Value toValue(int idx) const { return idx + distanceToZero; }

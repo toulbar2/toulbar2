@@ -95,6 +95,7 @@ public:
     Long getWeightedDegree();
     DLink<ConstraintLink>* link(Constraint* c, int index);
     void sortConstraints();
+    virtual void shrink(){};
     virtual void eliminate(){};
 
     bool isGlobal();

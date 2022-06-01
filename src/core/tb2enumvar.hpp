@@ -147,6 +147,7 @@ public:
     void setCostProvidingPartition();
     bool checkEACGreedySolution();
     bool reviseEACGreedySolution();
+    void shrink() FINAL;
 
     void eliminate() FINAL;
     bool elimVar(BinaryConstraint* xy, BinaryConstraint* xy_duplicate = NULL);

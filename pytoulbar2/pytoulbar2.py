@@ -119,8 +119,10 @@ class CFN:
 
         if all(isinstance(value, int) for value in values):
             vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, min(values), max(values))
-            for vn in values:
+            for vn in range(min(values), max(values)+1):
                 self.CFN.wcsp.addValueName(vIdx, 'v' + str(vn))
+                if vn not in values:
+                    self.CFN.wcsp.remove(vIdx, vn)
         elif all(isinstance(value, str) for value in values):
             vIdx = self.CFN.wcsp.makeEnumeratedVariable(name, 0, len(values)-1)
             for vn in values:

@@ -782,6 +782,10 @@ public:
     /// \warning to be done \b only before the search
     void preprocessing();
 
+    /// \brief shrink domains to current domain bounds, reducing cost function memory usage
+    /// \warning to be done \b only before the search (not backtrackable) and preferably at the end of the preprocessing
+    void shrink();
+
     // -----------------------------------------------------------
     // Methods for Variable Elimination
 
