@@ -87,6 +87,7 @@ typedef vector<tValue> Tuple;
 
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
 const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
+const unsigned int NARYPROJECTION3MAXDOMSIZE = 100; // limit on the maximum initial domain size for nary to ternary projection
 const Long NARYDECONNECTSIZE = 4; // maximum number of initial tuples in nary constraints in order to check for its removal (if it is always satisfied by current domains)
 
 const int MAX_BRANCH_SIZE = 1000000;

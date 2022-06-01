@@ -66,7 +66,7 @@ void NaryConstraint::assign(int varIndex)
             return;
         }
 
-        if (nonassigned <= NARYPROJECTIONSIZE) {
+        if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE)) {
             //	  cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
             deconnect();
             projectNary();

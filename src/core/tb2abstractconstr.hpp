@@ -461,6 +461,7 @@ extern int cmpDAC(const void* var1, const void* var2);
 class AbstractNaryConstraint : public Constraint {
 protected:
     int arity_;
+    unsigned int maxInitDomSize;
 
     EnumeratedVariable** scope;
     EnumeratedVariable** scope_dac; // scope sorted by increasing DAC order
@@ -475,6 +476,7 @@ public:
     AbstractNaryConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
         : Constraint(wcsp)
         , arity_(arity_in)
+        , maxInitDomSize(0)
     {
 #if defined(NO_STORE_BINARY_COSTS) || defined(NO_STORE_TERNARY_COSTS)
         cerr << "Sorry, no " << arity_in << "-ary cost functions!" << endl;
@@ -486,6 +488,9 @@ public:
 
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* var = scope_in[i];
+            if (var->getDomainInitSize() > maxInitDomSize) {
+                maxInitDomSize = var->getDomainInitSize();
+            }
             scope_inv[var->wcspIndex] = i;
             scope[i] = var;
             scope_dac[i] = var;
@@ -497,6 +502,7 @@ public:
 
     AbstractNaryConstraint(WCSP* wcsp)
         : Constraint(wcsp)
+        , maxInitDomSize(0)
     {
     }
 

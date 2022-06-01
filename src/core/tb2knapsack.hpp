@@ -969,7 +969,7 @@ public:
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
 
-                    } else if (nonassigned <= NARYPROJECTIONSIZE) {
+                    } else if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             projectNary();
@@ -1036,7 +1036,7 @@ public:
                 if (assigned[varIndex] == 1 && scope[varIndex]->getDomainSize() == 1) {
                     nonassigned = nonassigned - 1;
                     assigned[varIndex] = 2;
-                    if (nonassigned <= NARYPROJECTIONSIZE) {
+                    if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             projectNary();
@@ -1859,7 +1859,7 @@ public:
                         }
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
-                    } else if (nonassigned <= NARYPROJECTIONSIZE) {
+                    } else if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             projectNary();
