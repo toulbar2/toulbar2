@@ -26,6 +26,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     virtual ~MySolverCallbacks() {}
 
+    const vector<string> orderString = {"le", "lt", "ge", "gt", "eq", "eq", "ne"};
+    const vector<string> lexString = {"le", "le", "ge", "ge", "eq", "eq", "ne"};
+
     void beginInstance(InstanceType type) {
         XCSP3CoreCallbacks::intensionUsingString = false;
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
@@ -555,7 +558,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     // warning! vars and coefs may be modified
-    void buildConstraintSum(vector<int> &vars, vector<int> &coefs, XCondition &cond) {
+    void buildConstraintSum(vector<int> &vars, vector<Long> &coefs, XCondition &cond, Long valLong = LONG_MAX, Long minLong = LONG_MAX, Long maxLong = LONG_MAX) {
         assert(vars.size() == coefs.size());
         // remove multiple occurrences of the same variable
         for (unsigned int i = 0; i < vars.size(); i++) {
@@ -568,7 +571,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
-        int rightcoef = 0;
+        Long rightcoef = 0;
         string extravarname = "";
         int extravar = -1;
         string params = "";
@@ -584,9 +587,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     break;
                 }
             }
-            rightcoef -= cond.val;
+            rightcoef -= ((valLong<LONG_MAX)?valLong:cond.val);
         case OperandType::INTEGER:
-            rightcoef += cond.val;
+            rightcoef += ((valLong<LONG_MAX)?valLong:cond.val);
             switch (cond.op) {
             case OrderType::LE:
                 params = to_string(-rightcoef);
@@ -652,7 +655,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
-                params = to_string((Long)-rightcoef + 1 - INT_MAX);
+                params = to_string(-rightcoef + 1 - INT_MAX);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
                     params += " " + to_string(domsize);
@@ -693,7 +696,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         case OperandType::INTERVAL:
             assert(cond.op == OrderType::IN);
             // sum >= cond.min
-            params = to_string(cond.min);
+            params = to_string((minLong<LONG_MAX)?minLong:cond.min);
             for (unsigned int i=0; i < vars.size(); i++) {
                 int domsize = problem->getDomainInitSize(vars[i]);
                 params += " " + to_string(domsize);
@@ -704,7 +707,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
             // sum <= cond.max
-            params = to_string(-cond.max);
+            params = to_string(-((maxLong<LONG_MAX)?maxLong:cond.max));
             for (unsigned int i=0; i < vars.size(); i++) {
                 int domsize = problem->getDomainInitSize(vars[i]);
                 params += " " + to_string(domsize);
@@ -724,7 +727,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintSum(string id, vector<XVariable *> &list, vector<int> &coefs, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
-        vector<int> mycoefs = coefs;
+        vector<Long> mycoefs(coefs.begin(), coefs.end());
         buildConstraintSum(vars, mycoefs, cond);
     }
 
@@ -733,13 +736,36 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintSum(id, list, coefs, cond);
     }
 
+    void buildConstraintSum(string id, vector<XVariable *> &list, vector<XVariable *> &coefs, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        vector<int> varscoefs;
+        toMyVariables(coefs,varscoefs);
+        assert(vars.size() == varscoefs.size());
+        vector<Long> mycoefs(list.size(), 1);
+        vector<int> varsprod;
+        for (unsigned int i = 0; i < list.size(); i++) {
+            string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+            Value prodinf = min(min(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), min(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
+            Value prodsup = max(max(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), max(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
+            assert(prodinf <= prodsup);
+            int varprod = problem->makeEnumeratedVariable(prodname, prodinf, prodsup);
+            mapping[prodname] = varprod;
+            buildConstraintMult(vars[i], varscoefs[i], varprod);
+            varsprod.push_back(varprod);
+        }
+        assert(varsprod.size() == list.size());
+        buildConstraintSum(varsprod, mycoefs, cond);
+
+    }
+
     void buildConstraintSum(string id, vector<Tree *> &trees, vector<int> &coefs, XCondition &cond) override {
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
             vars.push_back(buildConstraintIntension(trees[i]));
         }
         assert(vars.size() == trees.size());
-        vector<int> mycoefs = coefs;
+        vector<Long> mycoefs(coefs.begin(), coefs.end());
         buildConstraintSum(vars, mycoefs, cond);
     }
 
@@ -2215,6 +2241,104 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (unsigned int i = 0; i < vars.size()-1; i++) {
             buildConstraintPrimitive(order, vars[i], lengths[i], vars[i+1]);
         }
+    }
+
+    void buildConstraintLex(string id, vector<vector<XVariable *>> &lists, OrderType order) override {
+        for (unsigned int l = 0; l < lists.size() - 1; l++) {
+            assert(lists[l].size() == lists[l+1].size());
+            vector<int> vars1;
+            toMyVariables(lists[l],vars1);
+            vector<int> vars2;
+            toMyVariables(lists[l+1],vars2);
+            unsigned int n = vars1.size();
+            if (order == OrderType::EQ ||order == OrderType::IN) {
+                for (unsigned int i = 0; i < n; i++) {
+                    buildConstraintPrimitive(OrderType::EQ, vars1[i], 0, vars2[i]);
+                }
+            } else {
+                Value maxdom = 0;
+                for (unsigned int i = 0; i < n; i++) {
+                    maxdom = max(maxdom, max(problem->getSup(vars1[i]), problem->getSup(vars2[i])) - min(problem->getInf(vars1[i]), problem->getInf(vars2[i])) + 1);
+                }
+                if (Pow(maxdom, lists[l].size()) < (MAX_COST / maxdom / n)) {
+                    vector<int> vars;
+                    vector<Long> coefs;
+                    Long rightcoef = 0;
+                    for (unsigned int i = 0; i < n; i++) {
+                        vars.push_back(vars1[i]);
+                        coefs.push_back((Long)Pow(maxdom, n-1-i));
+                        rightcoef += (Long)Pow(maxdom, n-1-i) * min(problem->getInf(vars1[i]),problem->getInf(vars2[i]));
+                    }
+                    for (unsigned int i = 0; i < n; i++) {
+                        vars.push_back(vars2[i]);
+                        coefs.push_back((Long)-Pow(maxdom, n-1-i));
+                        rightcoef -= (Long)Pow(maxdom, n-1-i) * min(problem->getInf(vars1[i]),problem->getInf(vars2[i]));
+                    }
+                    XCondition cond;
+                    cond.op = order;
+                    cond.val = INT_MAX; //possible integer overflow, do not use it.
+                    cond.operandType = OperandType::INTEGER;
+                    buildConstraintSum(vars, coefs, cond, rightcoef);
+                } else {
+                    if (order == OrderType::NE) {
+                        vector<int> varseq;
+                        vector<Long> coefseq;
+                        for (unsigned int i = 0; i < n; i++) {
+                            Tree treeeq("eq(" + lists[l][i]->id + "," + lists[l+1][i]->id + ")");
+                            int vareq = buildConstraintIntension(&treeeq);
+                            varseq.push_back(vareq);
+                            coefseq.push_back(1);
+                        }
+                        XCondition cond;
+                        cond.op = OrderType::LE;
+                        cond.val = n-1;
+                        cond.operandType = OperandType::INTEGER;
+                        buildConstraintSum(varseq, coefseq, cond);
+                    } else {
+                        vector<int> varseq;
+                        vector<int> varscond;
+                        for (unsigned int i = 0; i < n; i++) {
+                            Tree treeeq("eq(" + lists[l][i]->id + "," + lists[l+1][i]->id + ")");
+                            int vareq = buildConstraintIntension(&treeeq);
+                            varseq.push_back(vareq);
+                            Tree treecond(((i<n-1)?lexString[order]:orderString[order]) + "(" + lists[l][i]->id + "," + lists[l+1][i]->id + ")");
+                            int varcond = buildConstraintIntension(&treecond);
+                            varscond.push_back(varcond);
+                        }
+                        buildConstraintPrimitive(OrderType::EQ, varscond[0],1);
+                        for (unsigned int i = 1; i < n; i++) {
+                            vector<int> vars;
+                            vector<Long> coefs;
+                            int rightcoef = 1;
+                            for (unsigned int j = 0; j < i; j++) {
+                                vars.push_back(varseq[j]);
+                                coefs.push_back(-1);
+                                rightcoef -= 1;
+                            }
+                            vars.push_back(varscond[i]);
+                            coefs.push_back(1);
+                            XCondition cond;
+                            cond.op = OrderType::GE;
+                            cond.val = rightcoef;
+                            cond.operandType = OperandType::INTEGER;
+                            buildConstraintSum(vars, coefs, cond);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void buildConstraintLexMatrix(string id, vector<vector<XVariable *>> &matrix, OrderType order) override {
+        buildConstraintLex(id, matrix, order); // row lex
+        vector<vector<XVariable *>> transpose;
+        for (unsigned int c = 0; c < matrix[0].size(); c++) {
+            transpose.push_back(vector<XVariable *>());
+            for (unsigned int l = 0; l < matrix.size(); l++) {
+                transpose.back().push_back(matrix[l][c]);
+            }
+        }
+        buildConstraintLex(id, transpose, order); // column lex
     }
 
     void buildConstraintAllEqual(vector<int> &vars) {
