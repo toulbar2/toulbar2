@@ -2451,6 +2451,158 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintMDD(string id, vector<XVariable*>& list, vector<XTransition>& transitions) override {
+        vector<int> vars;
+        toMyVariables(list, vars);
+        vector<Cost> trCosts(transitions.size(), 0);
+        set<string> states;
+        map<string, int> stateids;
+        map<int, string> statenames;
+        map<int, vector<int>> incoming, outgoing;
+        map<int, int> statelvl; // from state to level, 0 is the root
+        map<int, vector<int>> lvlstates; // from level to vector of states
+        map<int, int> stateval; // from state to the value in the
+        // corresponding state variable
+        int root{-1}, sink{-1};
+        int maxid{0};
+        for (auto& tr : transitions) {
+            states.insert(tr.from);
+            states.insert(tr.to);
+            if (stateids.count(tr.from) == 0) {
+                stateids[tr.from] = maxid;
+                statenames[maxid] = tr.from;
+                ++maxid;
+            }
+            if (stateids.count(tr.to) == 0) {
+                stateids[tr.to] = maxid;
+                statenames[maxid] = tr.to;
+                ++maxid;
+            }
+            outgoing[stateids[tr.from]].push_back(stateids[tr.to]);
+            incoming[stateids[tr.to]].push_back(stateids[tr.from]);
+        }
+        // one more pass over the states to identify the root and sink
+        for (auto&& sname : states) {
+            int s = stateids[sname];
+            if (incoming[s].empty()) {
+                if (root >= 0)
+                    throw runtime_error("Too many root nodes in MDD constraint " + id);
+                root = s;
+            }
+            if (outgoing[s].empty()) {
+                if (sink >= 0)
+                    throw runtime_error("Too many sink nodes in MDD constraint " + id);
+                sink = s;
+            }
+        }
+        if (root < 0)
+            throw runtime_error("No root node in MDD constraint " + id);
+        if (sink < 0)
+            throw runtime_error("No sink node in MDD constraint " + id);
+
+        // a Breadth-first search to compute levels for each state
+        statelvl[root] = 0;
+        lvlstates[0].push_back(0);
+        stateval[root] = 0;
+        vector<int> Q;
+        set<int> inq;
+        Q.push_back(root);
+        inq.insert(root);
+        size_t qhead = 0;
+        while(qhead != Q.size()) {
+            int s = Q[qhead];
+            ++qhead;
+
+            int slvl = statelvl[s];
+            for(int n : outgoing[s]) {
+                if (inq.count(n) == 0) {
+                    Q.push_back(n);
+                    inq.insert(n);
+                    int& nlvl = statelvl[n];
+                    nlvl = slvl + 1;
+                    stateval[n] = lvlstates[nlvl].size();
+                    lvlstates[nlvl].push_back(n);
+                }
+            }
+
+            // some sanity checking
+            for(int p : incoming[s]) {
+                if (statelvl[p] != slvl - 1)
+                    throw runtime_error("MDD constraint " + id + " state "
+                            + statenames[p] + " has long incoming edges");
+            }
+        }
+
+        // construct the state variables
+        if(lvlstates.size() != list.size() + 1)
+            throw runtime_error("MDD constraint " + id
+                    + " has different number of variables and levels");
+        vector<int> statevars(lvlstates.size());
+        for (size_t i = 0; i != lvlstates.size(); ++i) {
+            string varname = id + "_Q" + to_string(i);
+            statevars[i] = problem->makeEnumeratedVariable(varname, 0, lvlstates[i].size());
+        }
+
+        // and now the ternary transition constraints
+        for (size_t i = 0; i != lvlstates.size()-1; ++i) {
+            int tvars[3] = {statevars[i], vars[i], statevars[i + 1]};
+            vector<Cost> costs(problem->getDomainInitSize(tvars[0])
+                    * problem->getDomainInitSize(tvars[1])
+                    * problem->getDomainInitSize(tvars[2]),
+                    MAX_COST);
+            auto idx = [&](int i, int j, int k) {
+                return problem->toIndex(tvars[0], i) * problem->getDomainInitSize(tvars[1]) * problem->getDomainInitSize(tvars[2])
+                        + problem->toIndex(tvars[1], j) * problem->getDomainInitSize(tvars[2])
+                        + problem->toIndex(tvars[2], k);
+            };
+            for (auto&& tr : transitions) {
+                if (statelvl[stateids[tr.from]] != static_cast<int>(i))
+                    continue;
+                int from = stateids[tr.from];
+                int to = stateids[tr.to];
+                int val = tr.val;
+                costs[idx(stateval[from], val, stateval[to])] = MIN_COST;
+            }
+            problem->postTernaryConstraint(statevars[i], vars[i], statevars[i + 1], costs);
+        }
+    }
+
+    void buildConstraintRegular(string id, vector<XVariable *> &list, string start, vector<string> &final, vector<XTransition> &transitions) override {
+        vector<int> vars;
+        toMyVariables(list, vars);
+        vector<Cost> trCosts(transitions.size(), 0);
+        set<string> states;
+        map<string, int> stateids;
+        vector<pair<int, Cost>> initial, accepting;
+        vector<int> flat_transitions;
+        vector<int*> transition_indices;
+        vector<Cost> trcosts;
+        int maxid{0};
+        for (auto& tr : transitions) {
+            states.insert(tr.from);
+            states.insert(tr.to);
+            if (stateids.count(tr.from) == 0)
+                stateids[tr.from] = maxid++;
+            if (stateids.count(tr.to) == 0)
+                stateids[tr.to] = maxid++;
+            flat_transitions.push_back(stateids[tr.from]);
+            flat_transitions.push_back(stateids[tr.to]);
+            flat_transitions.push_back(tr.val);
+            trcosts.push_back(0);
+        }
+
+        initial.push_back({stateids[start], 0});
+        for (auto &&acc : final)
+            accepting.push_back({stateids[acc], 0});
+        // populate transition_indices (transitions is now stable, so
+        // we can get pointers to it)
+        for (size_t i = 0; i != transitions.size(); ++i)
+            transition_indices.push_back(&(flat_transitions[i*3]));
+
+        problem->postWRegular(&vars[0], vars.size(), states.size(), initial,
+                accepting, &(transition_indices[0]), trCosts);
+    }
+
     void buildUnaryCostFunction(Value mult, int var) {
         unsigned int domsize = problem->getDomainInitSize(var);
         vector<Cost> costs;
