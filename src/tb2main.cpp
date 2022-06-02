@@ -2453,10 +2453,10 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xml file:" << problem << endl;
                 ToulBar2::xmlflag = true;
-                if (!ToulBar2::writeSolution) {
-                    ToulBar2::writeSolution = 1;
-                    solutionFileName = (char*)"sol";
-                }
+//                if (!ToulBar2::writeSolution) {
+//                    ToulBar2::writeSolution = 1;
+//                    solutionFileName = (char*)"sol";
+//                }
                 strext.insert(".xml");
                 strfile.push_back(problem);
             }

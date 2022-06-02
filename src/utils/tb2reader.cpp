@@ -3360,7 +3360,7 @@ void WCSP::solution_XML(bool opt)
     //fsol.open("solution");
     //fsol << "SOL ";
 
-    freopen(NULL, "r", ToulBar2::solutionFile);
+//    freopen(NULL, "r", ToulBar2::solutionFile);
     cout << "v ";
 #ifdef XMLFLAG3
     cout << "<instantiation type=\"" << ((opt)?"optimum":"solution") << "\" cost=\"" << std::fixed << std::setprecision(0) << getDPrimalBound() << std::setprecision(DECIMAL_POINT) << "\"> <list>";
@@ -3371,9 +3371,10 @@ void WCSP::solution_XML(bool opt)
     }
     cout << " </list> <values>";
 #endif
+    vector<Value> lastsol = getSolution();
     for (unsigned int i = 0; i < vars.size(); i++) {
-        int value;
-        fscanf(ToulBar2::solutionFile, "%d", &value);
+        int value = lastsol[i];
+//        fscanf(ToulBar2::solutionFile, "%d", &value);
 #ifdef XMLFLAG
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
@@ -3387,7 +3388,7 @@ void WCSP::solution_XML(bool opt)
     cout << " </values> </instantiation>";
 #endif
     cout << endl;
-    freopen(NULL, "w", ToulBar2::solutionFile);
+//    freopen(NULL, "w", ToulBar2::solutionFile);
 
 //fsol << endl;
 //fsol.close();
