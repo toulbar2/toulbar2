@@ -23,6 +23,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         WeightedCSP *problem;
         std::map<string,int> mapping;
         vector<vector<int> > lastTuples;
+        vector<int> assignedVars;
+        vector<Value> assignedValues;
 
     virtual ~MySolverCallbacks() {}
 
@@ -39,6 +41,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void endInstance() {
         problem->sortConstraints();
+        if (assignedVars.size() > 0) {
+            problem->assignLS(assignedVars, assignedValues);
+        }
     }
 
     void buildVariableInteger(string id, int minValue, int maxValue) override {
@@ -2616,7 +2621,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildConstraintNoOverlap(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, bool zeroIgnored) {
+    void buildConstraintNoOverlap(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, bool zeroIgnored) override {
         assert(origins.size() == lengths.size());
         unsigned int n = origins.size();
         for (unsigned int i = 0; i < n; i++) {
@@ -2627,6 +2632,89 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 } else {
                     Tree tree("or(eq(" + lengths[i]->id + ",0),eq(" + lengths[j]->id + ",0),le(add(" + origins[i]->id + "," + lengths[i]->id + ")," + origins[j]->id + "),le(add(" + origins[j]->id + "," + lengths[j]->id + ")," + origins[i]->id + "))");
                     buildConstraintIntension(id, &tree);
+                }
+            }
+        }
+    }
+
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths, vector<int> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string valparamspos;
+                string valparamsneg;
+                int nbval = 0;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    if (time >= value && time < value + lengths[i]) {
+                        valparamspos += " " + to_string(value) + " " + to_string(heights[i]);
+                        valparamsneg += " " + to_string(value) + " " + to_string(-heights[i]);
+                        nbval++;
+                    }
+                }
+                if (nbval > 0) {
+                    paramspos += " " + to_string(nbval) + valparamspos;
+                    paramsneg += " " + to_string(nbval) + valparamsneg;
+                    scope.push_back(vars[i]);
+                    nbvar++;
+                }
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
                 }
             }
         }
@@ -2995,9 +3083,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildConstraintInstantiation(string id, vector<XVariable *> &list, vector<int> &values) override {
-        vector<int> vars;
-        toMyVariables(list,vars);
-        problem->assignLS(vars, values);
+        toMyVariables(list,assignedVars);
+        assignedValues.insert(assignedValues.end(), values.begin(), values.end());
     }
 
     void buildAnnotationDecision(vector<XVariable *> &list) override {}
