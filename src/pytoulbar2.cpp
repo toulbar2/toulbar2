@@ -336,11 +336,11 @@ PYBIND11_MODULE(pytb2, m)
         .def("postSupxyc", &WeightedCSP::postSupxyc)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
-        .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> & scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
-        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int>& scope, const string& arguments, bool isclique, bool kp) {
-            return s.postKnapsackConstraint(scope, arguments, isclique, kp);
+        .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
+        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, bool kp, bool conflict) {
+            return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
         },
-            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false)
+            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
