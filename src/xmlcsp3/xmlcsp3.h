@@ -32,6 +32,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     const vector<string> lexString = {"le", "le", "ge", "ge", "eq", "eq", "ne"};
 
     void beginInstance(InstanceType type) override {
+        ToulBar2::xmlcop = false;
         XCSP3CoreCallbacks::intensionUsingString = false;
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
         XCSP3CoreCallbacks::recognizeSpecialCountCases = false;
@@ -40,6 +41,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void endInstance() override {
+        assert(ToulBar2::xmlcop == true || problem->getUb() == UNIT_COST);
         problem->sortConstraints();
         if (assignedVars.size() > 0) {
             problem->assignLS(assignedVars, assignedValues);
@@ -2739,10 +2741,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildObjectiveMinimizeVariable(XVariable *x) override {
+        ToulBar2::xmlcop = true;
         buildUnaryCostFunction(1, x);
     }
 
     void buildObjectiveMaximizeVariable(XVariable *x) override {
+        ToulBar2::xmlcop = true;
         ToulBar2::costMultiplier *= -1.0;
         buildUnaryCostFunction(-1, x);
     }
@@ -2949,20 +2953,24 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) override {
+        ToulBar2::xmlcop = true;
         buildObjective(UNIT_COST, type, list, coefs);
     }
 
     void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) override {
+        ToulBar2::xmlcop = true;
         ToulBar2::costMultiplier *= -1.0;
         buildObjective(-UNIT_COST, type, list, coefs);
     }
 
     void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list) override {
+        ToulBar2::xmlcop = true;
         vector<int> coefs(list.size(), 1);
         buildObjectiveMinimize(type, list, coefs);
     }
 
     void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list) override {
+        ToulBar2::xmlcop = true;
         vector<int> coefs(list.size(), 1);
         buildObjectiveMaximize(type, list, coefs);
     }
@@ -3050,25 +3058,30 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) override {
+        ToulBar2::xmlcop = true;
         buildObjective(UNIT_COST, type, trees, coefs);
     }
 
     void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) override {
+        ToulBar2::xmlcop = true;
         ToulBar2::costMultiplier *= -1.0;
         buildObjective(-UNIT_COST, type, trees, coefs);
     }
 
     void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees) override {
+        ToulBar2::xmlcop = true;
         vector<int> coefs(trees.size(), 1);
         buildObjectiveMinimize(type, trees, coefs);
     }
 
     void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees) override {
+        ToulBar2::xmlcop = true;
         vector<int> coefs(trees.size(), 1);
         buildObjectiveMaximize(type, trees, coefs);
     }
 
     void buildObjectiveMinimizeExpression(string expr) override {
+        ToulBar2::xmlcop = true;
         Tree tree(expr);
         vector<Tree *> trees;
         trees.push_back(&tree);
@@ -3076,6 +3089,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildObjectiveMaximizeExpression(string expr) override {
+        ToulBar2::xmlcop = true;
         Tree tree(expr);
         vector<Tree *> trees;
         trees.push_back(&tree);

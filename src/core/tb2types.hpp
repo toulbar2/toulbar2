@@ -803,6 +803,7 @@ public:
 
     static bool maxsateval; /// < \internal do not use
     static bool xmlflag; /// < \internal do not use
+    static bool xmlcop; /// < \internal do not use
     static TLogProb markov_log; /// < \internal do not use
     static string evidence_file; /// < \internal do not use
     static FILE* solution_uai_file; /// < \internal do not use

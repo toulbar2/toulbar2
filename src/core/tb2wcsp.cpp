@@ -150,6 +150,7 @@ string ToulBar2::solution_uai_filename;
 string ToulBar2::problemsaved_filename;
 TLogProb ToulBar2::markov_log;
 bool ToulBar2::xmlflag;
+bool ToulBar2::xmlcop;
 string ToulBar2::map_file;
 bool ToulBar2::maxsateval;
 bool ToulBar2::uaieval;
@@ -363,6 +364,7 @@ void tb2init()
     ToulBar2::problemsaved_filename = "";
     ToulBar2::markov_log = 0;
     ToulBar2::xmlflag = false;
+    ToulBar2::xmlcop = false;
     ToulBar2::maxsateval = false;
     ToulBar2::uaieval = false;
 
