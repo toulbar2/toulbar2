@@ -3694,7 +3694,7 @@ void WCSP::read_qpbo(const char* fileName)
     // find total cost
     Double sumcost = 0.;
     for (int e = 0; e < m; e++) {
-        sumcost += 2. * abs(cost[e]);
+        sumcost += 2. * std::abs(cost[e]);
     }
     Double multiplier = Exp10((Double)ToulBar2::resolution);
     ToulBar2::costMultiplier = multiplier;

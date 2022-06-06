@@ -613,7 +613,7 @@ public:
     // Internal Solver functions DO NOT USE THEM
 
     virtual set<int> getUnassignedVars() const = 0; ///< \internal returns the set of unassigned variable indexes \warning not valid before the search (see WeightedCSPSolver::solve)
-    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (returns -1)
+    virtual int numberOfUnassignedVariables() const = 0; ///< \internal returns the number of unassigned variables \warning not valid before the search (returns -1)
 };
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)

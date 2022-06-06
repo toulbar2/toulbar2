@@ -238,14 +238,12 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     file = clusters;
     shuffle(file.begin(), file.end(), myrandom_generator);
     insideHeuristic = new RandomNeighborhoodChoice();
-    precK = -1;
     insideHeuristic->init(wcsp, l);
 }
 
 const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
     assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
-    precK = neighborhood_size;
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;
@@ -353,13 +351,11 @@ void ParallelRandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     file = clusters;
     shuffle(file.begin(), file.end(), myrandom_generator);
     insideHeuristic = new RandomNeighborhoodChoice();
-    precK = -1;
     insideHeuristic->init(wcsp, l);
 }
 
 const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
-    precK = neighborhood_size;
     set<int> selclusters;
     int c = file.back();
     file.pop_back();
@@ -411,7 +407,6 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
 
 const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int CurrentCluster, size_t neighborhood_size)
 {
-    precK = neighborhood_size;
     set<int> selclusters;
     selclusters.insert(CurrentCluster);
     zone z = m_graph[CurrentCluster].vars;
@@ -453,7 +448,6 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
 
 const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int CurrentCluster, uint number, size_t NeighborhoodSize)
 {
-    precK = NeighborhoodSize;
     set<int> selclusters;
     selclusters.insert(CurrentCluster);
     zone z = m_graph[CurrentCluster].vars;

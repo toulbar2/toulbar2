@@ -435,7 +435,8 @@ set<int> Solver::getUnassignedVars() const
     }
     return res;
 }
-unsigned int Solver::numberOfUnassignedVariables() const
+
+int Solver::numberOfUnassignedVariables() const
 {
     return ((unassignedVars) ? unassignedVars->getSize() : -1);
 }

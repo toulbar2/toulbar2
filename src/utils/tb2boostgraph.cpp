@@ -757,7 +757,7 @@ static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g)
     for (unsigned int i = 0; i < Tempclq.size(); ++i) {
         clq2.clear();
         for (unsigned int l = 0; l < Tempclq[i].size(); ++l) {
-            clq2.push_back(pair(scope[(int)floor(Tempclq[i][l] / 2.0 + 0.1)], Tempclq[i][l] % 2));
+            clq2.push_back(make_pair(scope[(int)floor(Tempclq[i][l] / 2.0 + 0.1)], Tempclq[i][l] % 2));
         }
         if (clq2.size() > 1)
             clq.push_back(clq2);

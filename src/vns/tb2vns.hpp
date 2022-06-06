@@ -90,7 +90,6 @@ protected:
     vector<int> file;
     NeighborhoodStructure* insideHeuristic;
     uint counter;
-    uint precK;
     uint maxClusterSize;
     uint minClusterSize;
 

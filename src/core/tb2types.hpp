@@ -91,8 +91,8 @@ const unsigned int NARYPROJECTION3MAXDOMSIZE = 100; // limit on the maximum init
 const Long NARYDECONNECTSIZE = 4; // maximum number of initial tuples in nary constraints in order to check for its removal (if it is always satisfied by current domains)
 
 const int MAX_BRANCH_SIZE = 1000000;
-const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX - MAX_BRANCH_SIZE;
-const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX;
+const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX; // warning! converted to -1
+const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX; // warning! converted to -1
 
 #if (defined(SHORT_COST) || defined(SHORT_VALUE))
 //C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
@@ -864,8 +864,8 @@ public:
     static Long hbfsGlobalLimit; /// < \brief restarts BTD-HBFS from the root cluster after a given number of backtracks (command line option -hbfs)
     static Long hbfsAlpha; /// < \brief minimum recomputation node redundancy percentage threshold value (command line option -hbfsmin)
     static Long hbfsBeta; /// < \brief  maximum recomputation node redundancy percentage threshold value (command line option -hbfsmax)
-    static ptrdiff_t hbfsCPLimit; /// < \brief maximum number of stored choice points before switching to normal DFS
-    static ptrdiff_t hbfsOpenNodeLimit; /// < \brief maximum number of stored open nodes before switching to normal DFS (command line option -open)
+    static ptrdiff_t hbfsCPLimit; /// < \brief maximum number of stored choice points before switching to normal DFS (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
+    static ptrdiff_t hbfsOpenNodeLimit; /// < \brief maximum number of stored open nodes before switching to normal DFS (command line option -open) (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
 #ifdef OPENMPI
     static bool burst; /// < \brief in parallel HBFS, workers send open nodes as soon as possible to the master (command line option -burst)
 #endif

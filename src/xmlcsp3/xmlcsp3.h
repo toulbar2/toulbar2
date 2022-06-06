@@ -31,7 +31,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     const vector<string> orderString = {"le", "lt", "ge", "gt", "eq", "eq", "ne"};
     const vector<string> lexString = {"le", "le", "ge", "ge", "eq", "eq", "ne"};
 
-    void beginInstance(InstanceType type) {
+    void beginInstance(InstanceType type) override {
         XCSP3CoreCallbacks::intensionUsingString = false;
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
         XCSP3CoreCallbacks::recognizeSpecialCountCases = false;
@@ -39,7 +39,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         problem->updateUb(MAX_COST);
     }
 
-    void endInstance() {
+    void endInstance() override {
         problem->sortConstraints();
         if (assignedVars.size() > 0) {
             problem->assignLS(assignedVars, assignedValues);
@@ -233,7 +233,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     // returns a WCSP variable index corresponding to the evaluation of Tree expression
-    int buildConstraintIntension(Tree *tree) {
+    int buildConstraintIntensionVar(Tree *tree) {
         set<int> values;
         vector<string> list = tree->listOfVariables;
         vector<int> vars;
@@ -556,7 +556,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintAlldifferent(string id, vector<Tree *> &list) override {
         vector<int> vars;
         for (unsigned int i = 0; i < list.size(); i++) {
-            vars.push_back(buildConstraintIntension(list[i]));
+            vars.push_back(buildConstraintIntensionVar(list[i]));
         }
         assert(vars.size() == list.size());
         buildConstraintAlldifferent(vars);
@@ -767,7 +767,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintSum(string id, vector<Tree *> &trees, vector<int> &coefs, XCondition &cond) override {
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         vector<Long> mycoefs(coefs.begin(), coefs.end());
@@ -1219,7 +1219,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintCount(string id, vector<Tree*> &trees, vector<int> &values, XCondition &cond) override {
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         buildConstraintCount(vars, values, cond);
@@ -1377,13 +1377,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintNValues(string id, vector<Tree *> &trees, XCondition &cond) override {
         vector<int> vars,except;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         buildConstraintNValues(vars,except, cond);
     }
 
-    void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<int> &occurs, bool closed) {
+    void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<int> &occurs, bool closed) override {
         vector<int> vars;
         toMyVariables(list,vars);
         string params="";
@@ -1408,7 +1408,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-vars.size());
+                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
@@ -1434,7 +1434,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-vars.size());
+                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
@@ -1446,7 +1446,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XVariable *> &occurs, bool closed){
+    void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XVariable *> &occurs, bool closed) override {
         vector<int> vars;
         toMyVariables(list,vars);
         string params;
@@ -1471,7 +1471,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-vars.size());
+                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
@@ -1504,7 +1504,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-vars.size());
+                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
@@ -1523,7 +1523,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XInterval> &occurs, bool closed){
+    void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XInterval> &occurs, bool closed) override {
         vector<int> vars;
         toMyVariables(list,vars);
         string params="";
@@ -1547,7 +1547,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-vars.size());
+                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
@@ -1573,7 +1573,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-vars.size());
+                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
@@ -1642,7 +1642,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintMaximum(string id, vector<Tree*> &trees, XCondition &cond) override {
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
@@ -1654,7 +1654,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintMinimum(string id, vector<Tree*> &trees, XCondition &cond) override {
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
@@ -1737,7 +1737,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(rank == RankType::ANY);
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
@@ -1750,7 +1750,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(rank == RankType::ANY);
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
@@ -2290,7 +2290,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         vector<Long> coefseq;
                         for (unsigned int i = 0; i < n; i++) {
                             Tree treeeq("eq(" + lists[l][i]->id + "," + lists[l+1][i]->id + ")");
-                            int vareq = buildConstraintIntension(&treeeq);
+                            int vareq = buildConstraintIntensionVar(&treeeq);
                             varseq.push_back(vareq);
                             coefseq.push_back(1);
                         }
@@ -2304,10 +2304,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         vector<int> varscond;
                         for (unsigned int i = 0; i < n; i++) {
                             Tree treeeq("eq(" + lists[l][i]->id + "," + lists[l+1][i]->id + ")");
-                            int vareq = buildConstraintIntension(&treeeq);
+                            int vareq = buildConstraintIntensionVar(&treeeq);
                             varseq.push_back(vareq);
                             Tree treecond(((i<n-1)?lexString[order]:orderString[order]) + "(" + lists[l][i]->id + "," + lists[l+1][i]->id + ")");
-                            int varcond = buildConstraintIntension(&treecond);
+                            int varcond = buildConstraintIntensionVar(&treecond);
                             varscond.push_back(varcond);
                         }
                         buildConstraintPrimitive(OrderType::EQ, varscond[0],1);
@@ -2370,7 +2370,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintAllEqual(string id, vector<Tree *> &trees) override {
         vector<int> vars;
         for (unsigned int i = 0; i < trees.size(); i++) {
-            vars.push_back(buildConstraintIntension(trees[i]));
+            vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
         buildConstraintAllEqual(vars);
@@ -2396,7 +2396,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
         }
         for (Value val: values) {
-            string params = to_string(-vars.size()+1);
+            string params = to_string(-(int)vars.size() + 1);
             for (unsigned int i = 0; i < vars.size(); i++) {
                 params += " 1 " + to_string(val) + " -1";
             }
@@ -2993,7 +2993,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             themax = false;
         case ExpressionObjective::MAXIMUM_O:
             for (unsigned int i=0; i<trees.size(); i++) {
-                int var = buildConstraintIntension(trees[i]);
+                int var = buildConstraintIntensionVar(trees[i]);
                 if (coefs[i] != 1) {
                     string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
                     int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));

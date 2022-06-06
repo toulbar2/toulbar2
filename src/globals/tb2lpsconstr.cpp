@@ -546,8 +546,6 @@ Cost LPSConstraint::solveMIP(MIP& mip)
 
 void LPSConstraint::dump(ostream& os, bool original)
 {
-    int nvalues = 1;
-
     if (original) {
         os << arity_;
         for (int i = 0; i < arity_; i++)

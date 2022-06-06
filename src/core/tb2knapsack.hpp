@@ -1462,7 +1462,7 @@ public:
             if (W.empty())
                 return 0;
             assert(MW - Cap + 1 > 0);
-            vector<pair<Cost, vector<int>>> last(MW - Cap + 1, pair(MAX_COST, currOPT));
+            vector<pair<Cost, vector<int>>> last(MW - Cap + 1, make_pair(MAX_COST, currOPT));
             last[0].first = 0;
             for (unsigned int i = 0; i < W.size(); ++i) {
                 currOPT.push_back(distance(W[i].begin(), max_element(W[i].begin(), W[i].end())));
