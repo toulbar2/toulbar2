@@ -1501,6 +1501,7 @@ void Solver::newSolution()
 
         if (ToulBar2::xmlflag) {
             cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl; //" ";
+            ((WCSP*)wcsp)->solution_XML(false);
         }
         if (ToulBar2::maxsateval) {
             cout << "o " << wcsp->getLb() << endl;
