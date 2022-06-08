@@ -164,12 +164,12 @@ bool ReplicatedParallelDGVNS::radgvns()
             world.send(status.source(), WORKTAG, solmsg);
         }
     }
-
+    vector<mpi::request> reqs;
     for (int p = 0; p < world.size(); ++p)
         if (p != MASTER) {
-            world.isend(p, DIETAG, SolMsg());
+            reqs.push_back(world.isend(p, DIETAG, SolMsg()));
         }
-
+    mpi::wait_all(reqs.begin(), reqs.end());
     return complete && (bestUb < MAX_COST);
 }
 
@@ -327,12 +327,12 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                 stop = true;
         }
     }
-
+    vector<mpi::request> reqs;
     for (int p = 0; p < world.size(); ++p)
         if (p != MASTER) {
-            world.isend(p, DIETAG, SolMsg());
+            reqs.push_back(world.isend(p, DIETAG, SolMsg()));
         }
-
+    mpi::wait_all(reqs.begin(), reqs.end());
     return complete && (bestUb < MAX_COST);
 }
 
@@ -353,7 +353,9 @@ bool ReplicatedParallelDGVNS::slave()
         SolMsg2 solmsg2;
         complete = complete || VnsLdsCP(solmsg, h, solmsg2);
         /* Send the result back */
-        world.isend(0, complete, solmsg2);
+        mpi::request req = world.isend(0, complete, solmsg2);
+        while (!req.test().is_initialized() && !MPI_interrupted())
+            ;
     }
     return complete;
 }

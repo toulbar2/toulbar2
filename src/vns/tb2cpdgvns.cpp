@@ -180,11 +180,13 @@ void CooperativeParallelDGVNS::master()
             world.send(status.source(), DIETAG, SolutionMessage());
         }
     }
+    vector<mpi::request> reqs;
     for (int rank = 0; rank < world.size(); ++rank)
         if (rank != MASTER) {
             //printf("Send finish empty msg to finish with %d\n",rank);
-            world.isend(rank, DIETAG, SolutionMessage());
+            reqs.push_back(world.isend(rank, DIETAG, SolutionMessage()));
         }
+    mpi::wait_all(reqs.begin(), reqs.end());
 }
 
 void CooperativeParallelDGVNS::slave()
@@ -212,8 +214,10 @@ void CooperativeParallelDGVNS::slave()
         VnsLdsCP(solmsg, btime, h);
 
         /* send the result back */
-        world.isend(0, 0, solmsg);
+        mpi::request req = world.isend(0, 0, solmsg);
         //cout << env0.myrank <<" slave end" << endl ;
+        while (!req.test().is_initialized() && !MPI_interrupted())
+            ;
     }
 }
 
