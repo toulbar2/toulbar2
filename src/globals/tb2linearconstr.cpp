@@ -8,7 +8,9 @@ LinearConstraint::LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, in
     , initTest(false)
     , mip(NULL)
 {
+#ifdef ILOGCPLEX
     mip = MIP::makeMIP();
+#endif
 }
 
 Cost LinearConstraint::solveMIP(MIP& mip)

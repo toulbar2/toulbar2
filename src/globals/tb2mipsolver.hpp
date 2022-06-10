@@ -9,8 +9,9 @@
 
 class MIP { //Wrapper Interface for MIP solver
 public:
+#ifdef ILOGCPLEX
     static MIP* makeMIP();
-
+#endif
     virtual ~MIP() {}
 
     virtual unsigned called_time() = 0;

@@ -97,10 +97,14 @@ Recommended libraries (default use):
 * liblzma-dev
 
 Optional libraries:
-* libxml2-dev
+* libjemalloc-dev
 * libopenmpi-dev
 * libboost-mpi-dev
-* libjemalloc-dev
+* libicuuc
+* libicui18n
+* libicudata
+* libxml2-dev
+* libxcsp3parser
 
 On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries.
 
@@ -111,23 +115,34 @@ Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\
     cmake ..
     make
 
-Commands for compiling toulbar2 on Linux in directory toulbar2/src without cmake:
+Commands for statically compiling toulbar2 on Linux in directory toulbar2/src without cmake:
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.1.0"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
-     -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -llzma -static
+    echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
+    g++ -o toulbar2 -std=c++17 -O3 -DNDEBUG -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
+     -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+     -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -llzma
 
 Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.1.0"' > ToulbarVersion.hpp
-    mpicxx -o toulbar2 -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp -std=c++11 -O3 -DNDEBUG \
-     -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DOPENMPI -DWCSPFORMATONLY -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lgmp -lz -llzma
+    echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
+    mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
+     -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+     -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lgmp -lz -llzma
 
 Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
 
-Copyright (C) 2006-2021, toulbar2 team.
+Replace WCSPFORMATONLY by XMLFLAG3 and add libxcsp3parser.a from xcsp.org in your current directory for reading XCSP3 files:
+
+    bash
+    cd src
+    echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
+    mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
+     -I/usr/include/libxml2 -I. -I./xmlcsp3 tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+     -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -licuuc -licui18n -licudata -lxml2 libxcsp3parser.a -lgmp -lz -llzma -lm -lpthread -ldl
+
+Copyright (C) 2006-2022, toulbar2 team.
 toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)

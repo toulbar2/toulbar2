@@ -292,16 +292,16 @@ class CFN:
 
     def AddGeneralizedLinearConstraint(self, tuples, operand = '==', rightcoef = 0):
         """AddGeneralizedLinearConstraint creates a linear constraint with integer coefficients associated to domain values. 
-        The scope implicitely corresponds to the variables involved in the tuples. Missing values have an implicit zero coefficient. 
-        All constant terms must belong to the rigt part.
+        The scope implicitely corresponds to the variables involved in the tuples. Missing domain values have an implicit zero coefficient. 
+        All constant terms must belong to the right part.
         
         Args:
-            tuples (list): array of triplets (variable, value, coefficient) in the left part of the constraint.
+            tuples (list): array of triplets (variable, domain value, coefficient) in the left part of the constraint.
             operand (str): can be either '==' or '<=' or '>='.
             rightcoef (int): constant term in the right part.
            
         Example:
-            AddGeneralizedLinearConstraint([('x',1,1),('y',1,1),('z',1,-2)], '==', -1) also encodes x + y -2z = -1 assuming 0/1 variables. 
+            AddGeneralizedLinearConstraint([('x',1,1),('y',1,1),('z',0,2)], '==', 1) encodes (x==1) + (y==1) + 2*(z==0) = 1 assuming 0/1 variables and (x==u) is equal to 1 if value u is assigned to x else equal to 0. 
 
         """
         sscope = set()

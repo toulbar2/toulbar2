@@ -5,8 +5,8 @@ BOOST = -DBOOST
 
 # Same thing for XML
 #XML = XMLFLAG
-#XMLI = -I/usr/include/libxml2 -DXMLFLAG
-# -DXMLFLAG -DMAXCSP
+#XMLI = -I/usr/include/libxml2 -I./xmlcsp3 -DXMLFLAG3
+# -I./xmlcsp -DXMLFLAG -DMAXCSP
 
 ifeq ($(BOOST),-DBOOST)
 SRCS = $(SRCSFULL)
@@ -15,10 +15,10 @@ SRCS = $(SRCSFULL:utils/tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
-OBJS = $(SRCS:.cpp=.o) -lxml2 -lboost_graph -lboost_iostreams -lgmp -lz -llzma
-# -lxml2 -lz -llzma -lm -lpthread
+OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lboost_serialization -licuuc -licui18n -licudata -lxml2 -lgmp -lz -llzma -lm -lpthread -ldl
+# -licuuc -licui18n -licudata -lxml2 -lz -llzma -lm -lpthread -ldl
 else
-OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lgmp -lz -llzma
+OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -llzma
 endif
 
 LIBSRCS = $(SRCS:tb2main.cpp=)
@@ -43,7 +43,7 @@ CC = g++
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -lm -lpthread -ldl -rdynamic 
 
-CFLAGS = -std=c++11 -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLONGLONG_COST -DLONGDOUBLE_PROB -DWCSPFORMATONLY
+CFLAGS = -std=c++17 -g -Wall -I. $(ILOGFLAGS) $(BOOST) $(XMLI) -DLONGLONG_COST -DLONGDOUBLE_PROB -DWCSPFORMATONLY
 # -DLONGLONG_COST # uses type long long for encoding costs, to be replaced by -DINT_COST if memory is an issue (but costs are limited to 119304647)
 # -DLONGDOUBLE_PROB # uses type long double for encoding (log) probabilities instead of type double if using -DDOUBLE_PROB
 # -DWCSPFORMATONLY # assumes positive domains starting at value 0 (as in the wcsp format file) *** Incompatible with Numberjack ***
