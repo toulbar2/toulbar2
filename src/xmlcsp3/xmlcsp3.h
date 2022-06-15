@@ -2941,7 +2941,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             mapping[varnvaluename] = varnvalue;
             cond.operandType = OperandType::VARIABLE;
             cond.op = OrderType::EQ;
-            cond.var = varnvalue;
+            cond.var = varnvaluename;
             buildConstraintNValues(vars, except, cond);
             buildUnaryCostFunction(sign, varnvalue);
             break;
@@ -3045,7 +3045,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             mapping[varnvaluename] = varnvalue;
             cond.operandType = OperandType::VARIABLE;
             cond.op = OrderType::EQ;
-            cond.var = varnvalue;
+            cond.var = varnvaluename;
             buildConstraintNValues("NValue", trees, cond);
             buildUnaryCostFunction(sign, varnvalue);
             break;
