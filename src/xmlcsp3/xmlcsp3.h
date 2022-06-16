@@ -1231,7 +1231,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<int> Bvar;
         int n=vars.size();
         vector<Value> Diffvalue;
-        int currentval,domsize;
+        int domsize;
         vector <Cost> costs;
         bool emptyExcept=false;
         string params;
@@ -1250,7 +1250,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         Diffvalue.push_back(currentval);
                         costs.clear();
                         for (int b = 0; b < (int)problem->getDomainInitSize(vars[i]); b++) {
-                            if (b == currentval) {
+                            if (problem->toValue(vars[i], b) == currentval) {
                                 costs.push_back(MAX_COST);
                             } else {
                                 costs.push_back(MIN_COST);
@@ -1263,7 +1263,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     }else{
                         costs.clear();
                         for (int b = 0; b < (int)problem->getDomainInitSize(vars[i]); b++) {
-                            if (b == currentval) {
+                            if (problem->toValue(vars[i], b) == currentval) {
                                 costs.push_back(MAX_COST);
                             } else {
                                 costs.push_back(MIN_COST);
