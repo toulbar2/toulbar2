@@ -1230,7 +1230,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintNValues(vector<int> &vars, vector<int> &except, XCondition &cond) {
         vector<int> Bvar;
         int n=vars.size();
-        vector<int> Diffvalue;
+        vector<Value> Diffvalue;
         int currentval,domsize;
         vector <Cost> costs;
         bool emptyExcept=false;
@@ -1239,8 +1239,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         if(except.empty())
             emptyExcept= true;
         for (int i = 0; i < n; i++) {
-            for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
-                currentval = problem->toValue(vars[i], a);
+            for (Value currentval : problem->getEnumDomain(vars[i])) {
                 if (emptyExcept || currentval != except[0]){
                     auto it = find(Diffvalue.begin(), Diffvalue.end(), currentval);
                     if (it == Diffvalue.end()) {
@@ -1278,31 +1277,23 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
-        int nbvar;
-        bool b;
-        vector<int> tempvars;
-        for (int i = 0; i < (int)Diffvalue.size(); ++i) {
-            nbvar=0;
+        for (unsigned int i=0; i < Diffvalue.size(); i++) {
+            Value diffvalue = Diffvalue[i];
+            vector<int> tempvars;
+            int nbvar=0;
             params="0 ";
-            tempvars=vars;
-            tempvars.push_back(Bvar[i]);
             for (int j = 0; j < n; ++j) {
-                unsigned int ite=0;
-                b=false;
-                while(ite<problem->getDomainInitSize(vars[j]) && !b){
-                    currentval = problem->toValue(vars[j], ite);
-                    if(currentval==Diffvalue[i]){
-                        b=true;
-                        nbvar++;
-                        params+=" 1 "+to_string(currentval)+" 1";
-                    }
-                    ite++;
+                if (problem->canbe(vars[j], diffvalue)) {
+                    nbvar++;
+                    tempvars.push_back(vars[j]);
+                    params+=" 1 "+to_string(diffvalue)+" 1";
                 }
-                if(!b)
-                    params+=" 0";
             }
-            params+=" 1 1 -1";
-            problem->postKnapsackConstraint(tempvars, params, false, true, false);
+            if (nbvar > 0) {
+                tempvars.push_back(Bvar[i]);
+                params+=" 1 1 -1";
+                problem->postKnapsackConstraint(tempvars, params, false, true, false);
+            } // assert(nbvar > 0);
         }
         switch (cond.op) {
         case OrderType::EQ:
@@ -1350,15 +1341,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 throw WrongFileFormat();
             }
             break;
-        case OrderType::GT:
-            params = to_string(2);
-            for (unsigned int i=0; i < Bvar.size(); i++) {
-                params+=" 1 1 1";
-            }
-            problem->postKnapsackConstraint(Bvar, params, false, true, false);
-            break;
+//        case OrderType::GT:
+//            params = to_string(2);
+//            for (unsigned int i=0; i < Bvar.size(); i++) {
+//                params+=" 1 1 1";
+//            }
+//            problem->postKnapsackConstraint(Bvar, params, false, true, false);
+//            break;
         default:
-            cerr << "Sorry operandType " << cond.operandType << " not implemented in Nvalues constraint!" << endl;
+            cerr << "Sorry orderType " << cond.op << " not implemented in Nvalues constraint!" << endl;
             throw WrongFileFormat();
         }
     }
@@ -2937,7 +2928,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //            break;
         case ExpressionObjective::NVALUES_O:
             varnvaluename = IMPLICIT_VAR_TAG + "nvalue" + to_string(problem->numberOfVariables());
-            varnvalue = problem->makeEnumeratedVariable(varnvaluename, 1, vars.size());
+            varnvalue = problem->makeEnumeratedVariable(varnvaluename, 0, vars.size());
             mapping[varnvaluename] = varnvalue;
             cond.operandType = OperandType::VARIABLE;
             cond.op = OrderType::EQ;
@@ -3041,7 +3032,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             break;
         case ExpressionObjective::NVALUES_O:
             varnvaluename = IMPLICIT_VAR_TAG + "nvalue" + to_string(problem->numberOfVariables());
-            varnvalue = problem->makeEnumeratedVariable(varnvaluename, 1, trees.size());
+            varnvalue = problem->makeEnumeratedVariable(varnvaluename, 0, trees.size());
             mapping[varnvaluename] = varnvalue;
             cond.operandType = OperandType::VARIABLE;
             cond.op = OrderType::EQ;
