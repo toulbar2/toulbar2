@@ -2171,7 +2171,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     if (ToulBar2::addAMOConstraints) {
         addAMOConstraints();
-        ToulBar2::addAMOConstraints_=false;
+        ToulBar2::addAMOConstraints_ = false;
     }
 
     // Diverse variables structure and variables allocation and initialization
@@ -3328,7 +3328,7 @@ void WCSP::read_XML(const char* fileName)
     try {
         XCSP3CoreParser parser(&xmlCallBack);
         parser.parse(fileName); // fileName is a string
-    } catch (exception &e) {
+    } catch (exception& e) {
         cout.flush();
         cerr << "\n\tUnexpected exception in XML XCSP3 parsing\n";
         cerr << "\t" << e.what() << endl;
@@ -3360,11 +3360,11 @@ void WCSP::solution_XML(bool opt)
     //fsol.open("solution");
     //fsol << "SOL ";
 
-//    freopen(NULL, "r", ToulBar2::solutionFile);
+    //    freopen(NULL, "r", ToulBar2::solutionFile);
     cout << "v ";
 #ifdef XMLFLAG3
     if (ToulBar2::xmlcop) {
-        cout << "<instantiation type=\"" << ((opt)?"optimum":"solution") << "\" cost=\"" << std::fixed << std::setprecision(0) << getDPrimalBound() << std::setprecision(DECIMAL_POINT) << "\"> <list>";
+        cout << "<instantiation type=\"" << ((opt) ? "optimum" : "solution") << "\" cost=\"" << std::fixed << std::setprecision(0) << getDPrimalBound() << std::setprecision(DECIMAL_POINT) << "\"> <list>";
     } else {
         cout << "<instantiation type=\"solution\"> <list>";
     }

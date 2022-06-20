@@ -320,7 +320,7 @@ public:
     /// \param varIndexes vector of variable indexes as returned by makeXXXVariable
     void deconnect(vector<int>& varIndexes)
     {
-        for (unsigned int index: varIndexes) {
+        for (unsigned int index : varIndexes) {
             assert(index >= 0 && index < numberOfVariables());
             vars[index]->deconnect();
         }
@@ -523,7 +523,7 @@ public:
         const vector<WeightedObjInt>& accepting_States,
         const vector<DFATransition>& Wtransitions); ///< \deprecated
     void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
-    int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) {return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost);} ///< \brief post a soft alldifferent cost function
+    int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \deprecated
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
     int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,

@@ -2105,13 +2105,12 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<int> VarIdx;
     vector<int> RealScopeIdx; //Remove redundant var from scopeIndex
     for (int i = 0; i < arity; ++i) {
-        auto it=find(scopeVars.begin(),scopeVars.end(),(EnumeratedVariable*)vars[scopeIndex[i]]);
-        if(it==scopeVars.end()) {
-            scopeVars.push_back((EnumeratedVariable *) vars[scopeIndex[i]]);
-            VarIdx.push_back(scopeVars.size()-1);
+        auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
+        if (it == scopeVars.end()) {
+            scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
+            VarIdx.push_back(scopeVars.size() - 1);
             RealScopeIdx.push_back(scopeIndex[i]);
-        }
-        else {
+        } else {
             ar -= 1;
             VarIdx.push_back(distance(scopeVars.begin(), it));
         }
@@ -2121,17 +2120,17 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
     int CurrentVarIdx;
     for (int i = 0; i < arity; ++i) {
-        CurrentVarIdx=VarIdx[i];
+        CurrentVarIdx = VarIdx[i];
         if (!kp) {
             file >> readw;
             if (readw != 0) {
                 if (scopeVars[CurrentVarIdx]->canbe(1)) {
-                    auto it=find(VarVal[CurrentVarIdx].begin(),VarVal[CurrentVarIdx].end(),1);
-                    if(it==VarVal[CurrentVarIdx].end()) {
+                    auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), 1);
+                    if (it == VarVal[CurrentVarIdx].end()) {
                         weights[CurrentVarIdx].push_back(readw);
                         VarVal[CurrentVarIdx].push_back(1);
-                    }else
-                        weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(),it)]+=readw;
+                    } else
+                        weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
                 }
             }
         } else {
@@ -2142,12 +2141,12 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                     if (!isclique) {
                         file >> readw;
                         if (readw != 0) {
-                            auto it=find(VarVal[CurrentVarIdx].begin(),VarVal[CurrentVarIdx].end(),readv1);
-                            if(it==VarVal[CurrentVarIdx].end()) {
+                            auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), readv1);
+                            if (it == VarVal[CurrentVarIdx].end()) {
                                 VarVal[CurrentVarIdx].push_back(readv1);
                                 weights[CurrentVarIdx].push_back(readw);
-                            }else
-                                weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(),it)]+=readw;
+                            } else
+                                weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
                         }
                     } else {
                         VarVal[CurrentVarIdx].push_back(readv1);
@@ -2162,8 +2161,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         }
     }
     for (int i = 0; i < ar; ++i) {
-        if(!weights[i].empty()){
-            CurrentVarIdx=VarIdx[i];
+        if (!weights[i].empty()) {
+            CurrentVarIdx = VarIdx[i];
             minweight = *min_element(weights[i].begin(), weights[i].end());
             size = scopeVars[i]->getDomainSize();
             if (size != VarVal[i].size()) {
@@ -2188,8 +2187,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             if (weights[i].size() == 1) {
                 tobedel.push_back(i);
             }
-        }
-        else
+        } else
             tobedel.push_back(i);
     }
     sort(tobedel.begin(), tobedel.end(), greater<int>());
@@ -2197,8 +2195,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         scopeVars.erase(scopeVars.begin() + tobedel[i]);
         RealScopeIdx[tobedel[i]] = -1;
         weights.erase(weights.begin() + tobedel[i]);
-        VarVal.erase(VarVal.begin()+ tobedel[i]);
-        NotVarVal.erase(NotVarVal.begin()+tobedel[i]);
+        VarVal.erase(VarVal.begin() + tobedel[i]);
+        NotVarVal.erase(NotVarVal.begin() + tobedel[i]);
         CorrAMO.pop_back();
         VirtualVar.pop_back();
         ar--;
@@ -2586,7 +2584,7 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
             for (Value value : values) {
                 string params = to_string(-1);
                 for (int variable = 0; variable < arity; ++variable) {
-                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value))  {
+                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
                         params += " 1 " + to_string(value) + " -1";
                     } else {
                         params += " 0";
@@ -2917,7 +2915,7 @@ void WCSP::sortConstraints()
         stable_sort(delayedNaryCtr.begin(), delayedNaryCtr.end(), [&](int idx1, int idx2) { return Constraint::cmpConstraint(getCtr(idx1), getCtr(idx2)); });
     }
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
-            getCtr(*idctr)->propagate();
+        getCtr(*idctr)->propagate();
     }
     delayedNaryCtr.clear();
     isDelayedNaryCtr = false;

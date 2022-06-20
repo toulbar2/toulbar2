@@ -2453,10 +2453,10 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xml file:" << problem << endl;
                 ToulBar2::xmlflag = true;
-//                if (!ToulBar2::writeSolution) {
-//                    ToulBar2::writeSolution = 1;
-//                    solutionFileName = (char*)"sol";
-//                }
+                //                if (!ToulBar2::writeSolution) {
+                //                    ToulBar2::writeSolution = 1;
+                //                    solutionFileName = (char*)"sol";
+                //                }
                 strext.insert(".xml");
                 strfile.push_back(problem);
             }
@@ -2919,7 +2919,7 @@ int _tmain(int argc, TCHAR* argv[])
             cout << -numeric_limits<TProb>::infinity() << endl;
         }
         if (ToulBar2::maxsateval || ToulBar2::xmlflag) {
-//            cout << "o " << solver->getWCSP()->getUb() << endl;
+            //            cout << "o " << solver->getWCSP()->getUb() << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
     }

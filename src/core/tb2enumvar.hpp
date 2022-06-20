@@ -83,7 +83,7 @@ public:
         else
             return domain.getSize(); ///< \warning can return a negative size in the case of a wrong list utilization
     }
-    void getDomain(set<Value> &array);
+    void getDomain(set<Value>& array);
     void getDomain(Value* array);
     void getDomainAndCost(ValueCost* array);
 

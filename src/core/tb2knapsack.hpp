@@ -47,7 +47,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<StoreInt> nbVirtualVar;
     StoreInt AlwaysSatisfied;
     bool DoDyn = false;
-    Long NbNodes=-1;
+    Long NbNodes = -1;
     bool sameweight;
     vector<vector<Cost>> tempdeltaCosts;
     vector<bool> Booleanvar;
@@ -1519,16 +1519,17 @@ public:
         if (connected()) {
             bool b = false;
             for (int i = 0; connected() && i < arity_; i++) {
-                if(CorrAMO[i] == 0){
-                    if (assigned[i]==0 && !isunassigned(i)){
+                if (CorrAMO[i] == 0) {
+                    if (assigned[i] == 0 && !isunassigned(i)) {
                         assign(i);
-                        b=true;}  /* indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..) */
+                        b = true;
+                    } /* indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..) */
                     else
-                        assert(assigned[i]>0 || scope[i]->getDomainSize()>1);
-                }else{
-                    if (assigned[i]==0 && scope[i]->assigned()){
+                        assert(assigned[i] > 0 || scope[i]->getDomainSize() > 1);
+                } else {
+                    if (assigned[i] == 0 && scope[i]->assigned()) {
                         assign(i);
-                        b=true;
+                        b = true;
                     }
                 }
             }
@@ -1620,12 +1621,12 @@ public:
 #endif
                             int iter = 0;
                             Double xk = 0;
-                            if(ToulBar2::knapsackDP>-2 && NbNodes!=wcsp->getNbNodes()){
-                                NbNodes=wcsp->getNbNodes();
-                                if(NbNodes%ToulBar2::knapsackDP == 0)
-                                    DoDyn=true;
+                            if (ToulBar2::knapsackDP > -2 && NbNodes != wcsp->getNbNodes()) {
+                                NbNodes = wcsp->getNbNodes();
+                                if (NbNodes % ToulBar2::knapsackDP == 0)
+                                    DoDyn = true;
                             }
-                            if ( ToulBar2::knapsackDP>-2 && DoDyn && W < capacity) {
+                            if (ToulBar2::knapsackDP > -2 && DoDyn && W < capacity) {
                                 Cost c2;
                                 vector<vector<Long>> WeightforDyn, NewWeightforDyn;
                                 vector<vector<Cost>> ProfforDyn, NewProfforDyn;
@@ -1732,7 +1733,7 @@ public:
                                     }
 #endif
                                 }
-                                DoDyn=false;
+                                DoDyn = false;
                             } else {
                                 if (W < capacity) {
                                     //Sort the Slopes
@@ -2086,7 +2087,8 @@ public:
                     os << " " << -1 << " knapsackc " << Original_capacity;
                     for (int i = 0; i < arity_; i++) {
                         if (scope[i]->unassigned())
-                           os << " 2 " << "0 " << Original_weigths[i][0] << " 1 " << Original_weigths[i][1];
+                            os << " 2 "
+                               << "0 " << Original_weigths[i][0] << " 1 " << Original_weigths[i][1];
                     }
                     os << " " << AMO.size();
                     for (unsigned int i = 0; i < AMO.size(); ++i) {

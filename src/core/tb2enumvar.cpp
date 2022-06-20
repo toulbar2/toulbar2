@@ -64,7 +64,7 @@ void EnumeratedVariable::init()
     queueDEE();
 }
 
-void EnumeratedVariable::getDomain(set<Value> &array)
+void EnumeratedVariable::getDomain(set<Value>& array)
 {
     for (iterator iter = begin(); iter != end(); ++iter) {
         array.insert(*iter);

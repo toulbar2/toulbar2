@@ -12,7 +12,9 @@ public:
 #ifdef ILOGCPLEX
     static MIP* makeMIP();
 #endif
-    virtual ~MIP() {}
+    virtual ~MIP()
+    {
+    }
 
     virtual unsigned called_time() = 0;
 
