@@ -142,7 +142,7 @@ Replace WCSPFORMATONLY by XMLFLAG3 and add libxcsp3parser.a from xcsp.org in you
     echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
      -I/usr/include/libxml2 -I. -I./xmlcsp3 tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
-     -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -licuuc -licui18n -licudata -lxml2 libxcsp3parser.a -lgmp -lz -llzma -lm -lpthread -ldl
+     -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lxml2 -licuuc -licui18n -licudata libxcsp3parser.a -lgmp -lz -llzma -lm -lpthread -ldl
 
 Copyright (C) 2006-2022, toulbar2 team.
 toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)
