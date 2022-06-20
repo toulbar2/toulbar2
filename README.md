@@ -78,7 +78,7 @@ Download the latest release from GitHub
 (https://github.com/toulbar2/toulbar2) or similarly use tag versions,
 e.g.:
 
-    git clone --branch 1.1.1 https://github.com/toulbar2/toulbar2.git
+    git clone --branch 1.2.0 https://github.com/toulbar2/toulbar2.git
 
 
 (_README_5)=
@@ -119,7 +119,7 @@ Commands for statically compiling toulbar2 on Linux in directory toulbar2/src wi
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
+    echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
     g++ -o toulbar2 -std=c++17 -O3 -DNDEBUG -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
      -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -llzma
@@ -128,7 +128,7 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
+    echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
      -I. tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lgmp -lz -llzma
@@ -139,7 +139,7 @@ Replace WCSPFORMATONLY by XMLFLAG3 and add libxcsp3parser.a from xcsp.org in you
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.1.1"' > ToulbarVersion.hpp
+    echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
      -I/usr/include/libxml2 -I. -I./xmlcsp3 tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lxml2 -licuuc -licui18n -licudata libxcsp3parser.a -lgmp -lz -llzma -lm -lpthread -ldl
