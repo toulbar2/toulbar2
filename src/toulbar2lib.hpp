@@ -2,7 +2,7 @@
  *  \brief Main protocol class of a global soft constraint representing a weighted CSP and a generic WCSP complete tree-search-based solver
  *
 <pre>
-    Copyright (c) 2006-2020, toulbar2 team
+    Copyright (c) 2006-2022, toulbar2 team
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal

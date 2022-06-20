@@ -1097,7 +1097,7 @@ int _tmain(int argc, TCHAR* argv[])
 #else
         cout << "toulbar2";
 #endif
-        cout << "  version : " << ToulBar2::version << ", copyright (c) 2006-2020, toulbar2 team" << endl;
+        cout << "  version : " << ToulBar2::version << ", copyright (c) 2006-2022, toulbar2 team" << endl;
     }
 
     // --------------------------simple opt ----------------------
