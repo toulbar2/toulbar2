@@ -3170,13 +3170,13 @@ void Solver::addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool re
         cp_->addChoicePoint(op, varIndex, value, reverse);
         CPStore::size_type after = cp_->capacity();
         if (ToulBar2::verbose >= 0 && after > before && after > (1 << STORE_SIZE))
-            cout << "c " << after * sizeof(ChoicePointOp) + td->getCurrentCluster()->open->capacity() * sizeof(OpenNode) << " Bytes allocated for hybrid best-first search open nodes at cluster " << td->getCurrentCluster()->getId() << "." << endl;
+            cout << "c " << after * sizeof(ChoicePoint) + td->getCurrentCluster()->open->capacity() * sizeof(OpenNode) << " Bytes allocated for hybrid best-first search open nodes at cluster " << td->getCurrentCluster()->getId() << "." << endl;
     } else {
         CPStore::size_type before = cp->capacity();
         cp->addChoicePoint(op, varIndex, value, reverse);
         CPStore::size_type after = cp->capacity();
         if (ToulBar2::verbose >= 0 && after > before && after > (1 << STORE_SIZE))
-            cout << "c " << after * sizeof(ChoicePointOp) + open->capacity() * sizeof(OpenNode) << " Bytes allocated for hybrid best-first search open nodes." << endl;
+            cout << "c " << after * sizeof(ChoicePoint) + open->capacity() * sizeof(OpenNode) << " Bytes allocated for hybrid best-first search open nodes." << endl;
     }
 }
 

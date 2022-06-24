@@ -135,7 +135,7 @@ public:
     Mdd computeMDD(SolutionTrie* solTrie, Cost cost);
     ostream& printLayers(ostream& os, Mdd mdd);
 
-    typedef enum {
+    typedef enum : unsigned char {
         CP_ASSIGN = 0,
         CP_REMOVE = 1,
         CP_INCREASE = 2,
@@ -152,23 +152,23 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& op;
             ar& varIndex;
             ar& value;
+            ar& op;
             ar& reverse;
         }
 #endif
     public:
-        ChoicePointOp op; // choice point operation
         int varIndex; // variable wcsp's index
         Value value; // variable's value
+        ChoicePointOp op; // choice point operation
         bool reverse; // true if the choice point corresponds to the last right branch of an open node
 
         ChoicePoint() {} // default constructor added to avoid boost/serialization/access.hpp:130:9: error
         ChoicePoint(ChoicePointOp op_, int var_, Value val_, bool rev_)
-            : op(op_)
-            , varIndex(var_)
+            : varIndex(var_)
             , value(val_)
+            , op(op_)
             , reverse(rev_)
         {
         }
