@@ -46,6 +46,7 @@ the (unknown) optimal cost. Thus, even if it is unable to prove
 optimality, it will bound the quality of the solution provided.
 It can also apply a variable neighborhood search algorithm exploiting a problem decomposition [Ouali2017]_.
 This algorithm is complete (if enough CPU-time is given) and it can be run in parallel using OpenMPI.
+A parallel version of previous algorithm also exists [Beldjilali2022].
 
 Beyond the service of providing optimal solutions, toulbar2 can also find a greedy sequence of diverse solutions [Ruffini2019a]_ or
 exhaustively enumerate solutions below a cost threshold and
@@ -338,6 +339,10 @@ Preprocessing
         on all binary cost functions if n is lower than the given value
         (default value is 10). See [Favier2011a]_.
 
+-amo
+        automatically detects at-most-one constraints and adds them to existing
+        knapsack/linear/pseudo-boolean constraints.
+
 -mst    find a maximum spanning tree ordering for DAC
 
 -S      preprocessing only: performs singleton consistency (only in
@@ -417,11 +422,28 @@ Tree search algorithms and tree decomposition selection
 
 -hbfs=[integer]
         hybrid best-first search [Katsirelos2015a]_, restarting from the
-        root after a given number of backtracks (default value is 10000)
+        root after a given number of backtracks (default value is 16384)
+
+-hbfsmin=[integer]
+        hybrid best-first search compromise between BFS and DFS minimum node redundancy
+        threshold (alpha percentage, default value is 5%)
+
+-hbfsmax=[integer]
+        hybrid best-first search compromise between BFS and DFS maximum node redundancy
+        threshold (beta percentage default value is 10%)
 
 -open=[integer]
         hybrid best-first search limit on the number
         of stored open nodes (default value is -1, i.e., no limit)
+
+-burst
+        in parallel HBFS, workers send their solutions and open nodes as soon as possible (by default)
+        For using a parallel version of HBFS, after compiling with MPI option (cmake -DMPI=ON .)
+        use "mpirun -n [NbOfProcess] toulbar2 problem.wcsp"
+
+-eps=[integer|filename]
+        Embarrassingly parallel search mode. It outputs a given number of open nodes in -x format and exit  (default value is 0).
+        See ./misc/script/eps.sh to run them. Use this option twice to specify the output filename.
 
 -B=[integer]
         (0) HBFS, (1) BTD-HBFS [Schiex2006a]_ [Katsirelos2015a]_,
@@ -446,8 +468,16 @@ Tree search algorithms and tree decomposition selection
           * (-5) reverse Cuthill-Mckee ordering, 
           * (-6) approximate minimum degree ordering,
           * (-7) default file ordering
+          * (-8) lexicographic ordering of variable names
 
         If not specified, then use the variable order in which variables appear in the problem file.
+        
+-root=[integer]
+        root cluster heuristic
+        (0:largest, 1:max. size/(height-size), 2:min. size/(height-size), 3:min. height) (default value is 0)
+
+-minheight
+        minimizes cluster tree height when searching for the root cluster (can be slow to perform)
 
 -j=[integer]
         splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number (use options "-B=3 -j=1 -svo -k=1" for pure RDS, use value 0 for no splitting) (default value is 0).
@@ -460,6 +490,10 @@ Tree search algorithms and tree decomposition selection
 
 -E=[float]
         merges leaf clusters with their fathers if small local treewidth (in conjunction with option "-e" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option -vns) (default value is 0)
+
+-F=[integer]
+        merges clusters automatically to give more freedom to variable ordering heuristic in BTD-HBFS
+        (-1: no merging, positive value: maximum iteration value for trying to solve the same subtree given its separator assignment before considering it as unmerged) (default value is -1)
 
 -R=[integer]
         choice for a specific root cluster number
@@ -535,6 +569,10 @@ Node processing \& bounding options
 -o      ensures an optimal worst-case time complexity of DAC and EAC 
         (can be slower in practice)
 
+-kpdp=[integer]
+        solves knapsack constraints using dynamic programming
+        (-2: never, -1: only in preprocessing, 0: at every search node, >0: after a given number of nodes) (default value is -2)
+
 Branching, variable and value ordering
 --------------------------------------
 
@@ -592,8 +630,8 @@ toulbar2 can search for a greedy sequence of diverse solutions with guaranteed l
         with -a=integer with a limit of 1000 solutions) (default value is 0)
 
 -divm=[integer]
-        diversity encoding method: 0:Dual 1:Hidden 2:Ternary
-        (default value is 0)
+        diversity encoding method (0:Dual, 1:Hidden, 2:Ternary, 3:Knapsack)
+        (default value is 3)
 
 -mdd=[integer]
         maximum relaxed MDD width for diverse solution global constraint
@@ -766,6 +804,7 @@ Formats details
    QPBO format (.qpbo) <formats/qpboformat.rst>
    OPB format (.opb) <formats/opbformat.rst>
    XCSP2.1 format (.xml) <formats/xmlformat.rst>
+   XCSP3 format (.xml) <formats/xmlformat.rst>
    Linkage format (.pre) <formats/preformat.rst>
 
 .. .. CPD final stanza
@@ -799,15 +838,17 @@ References
 
    See 'BIBLIOGRAPHY' at the end of the document.
 
+.. [Beldjilali22] A Beldjilali, P Montalbano, D Allouche, G Katsirelos and S de Givry.
+    Parallel Hybrid Best-First Search.
+    In *Proc. of CP-22*, Haifa, Israel, 2022.
+
 .. [Schiex2020b] Céline Brouard and Simon de Givry and Thomas Schiex.
     Pushing Data in CP Models Using Graphical Model Learning and Solving.
-    In *Proc. of CP-20*,
-    Louvain-la-neuve, Belgium, 2020.
+    In *Proc. of CP-20*, Louvain-la-neuve, Belgium, 2020.
 
 .. [Trosser2020a] Fulya Trösser, Simon de Givry and George Katsirelos.
     Relaxation-Aware Heuristics for Exact Optimization in Graphical Models.
-    In *Proc.of CP-AI-OR'2020*,
-    Vienna, Austria, 2020.
+    In *Proc.of CP-AI-OR'2020*, Vienna, Austria, 2020.
 
 .. [Ruffini2019a] M. Ruffini, J. Vucinic, S. de Givry, G. Katsirelos, S. Barbe and T. Schiex.
     Guaranteed Diversity & Quality for the Weighted CSP.
@@ -855,7 +896,7 @@ References
 
 .. [Favier2009a] A. Favier, S. de Givry and P. Jégou.
     Exploiting Problem Structure for Solution Counting.
-    I, *Proc. of CP-09*, pages 335-343, Lisbon, Portugal, 2009.
+    In *Proc. of CP-09*, pages 335-343, Lisbon, Portugal, 2009.
 
 .. [Sanchez2009a] M Sanchez, D Allouche, S de Givry and T Schiex.
     Russian Doll Search with Tree Decomposition.
@@ -922,8 +963,7 @@ References
 
 .. [Larrosa2003] J. Larrosa and T. Schiex.
     In the quest of the best form of local consistency for Weighted CSP.
-    In *Proc. of the 18th IJCAI*,
-    pages 239-244, Acapulco, Mexico, August 2003.
+    In *Proc. of the 18th IJCAI*, pages 239-244, Acapulco, Mexico, August 2003.
 
 .. [Schiex2000b] T. Schiex.
     Arc consistency for soft constraints.
