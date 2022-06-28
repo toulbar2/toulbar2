@@ -18,12 +18,19 @@ class CFN:
     
     Members:
         CFN (WeightedCSPSolver): python interface to C++ class WeightedCSPSolver.
+        
         Contradiction (exception): python exception corresponding to the same C++ class.
+        
         Limit (exception|None): contains the last SolverOut exception or None if no exception occurs when solving.
+        
         Option (TouBar2): python interface to C++ class ToulBar2.
+        
         SolverOut (exception): python exception corresponding to the same C++ class.
+        
         Top (decimal cost): maximum decimal cost (it can be used to represent a forbidden cost).
+        
         VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).
+        
         VariableNames (list): array of created variable names (str) sorted by their index number.
         
     See pytoulbar2test.py example in src repository.
@@ -101,7 +108,7 @@ class CFN:
         """AddVariable creates a new discrete variable.
 
         Args:
-            name (str): variable name
+            name (str): variable name.
             values (list or iterable): list of domain values represented by numerical (int) or symbolic (str) values.
 
         Returns:
@@ -382,6 +389,12 @@ class CFN:
 
         """
         self.CFN.read(filename)
+        self.VariableIndices = {}
+        self.VariableNames = []
+        for i in range(self.CFN.wcsp.numberOfVariables()):
+            name = self.CFN.wcsp.getName(i)
+            self.VariableIndices[name] = i
+            self.VariableNames.append(name)
 
     def Parse(self, certificate):
         """Parse performs a list of elementary reduction operations on domains of variables.

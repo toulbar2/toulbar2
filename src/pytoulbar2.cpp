@@ -107,6 +107,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("backtrackLimit", &ToulBar2::backtrackLimit)
         .def_readwrite_static("cfn", &ToulBar2::cfn)
         .def_readwrite_static("gz", &ToulBar2::gz)
+        .def_readwrite_static("bz2", &ToulBar2::bz2)
         .def_readwrite_static("xz", &ToulBar2::xz)
         .def_readwrite_static("bayesian", &ToulBar2::bayesian)
         .def_readwrite_static("uai", &ToulBar2::uai)
@@ -404,6 +405,8 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::xz = true;
             if (strstr(fileName, ".gz") == &fileName[strlen(fileName) - strlen(".gz")])
                 ToulBar2::gz = true;
+            if (strstr(fileName, ".bz2") == &fileName[strlen(fileName) - strlen(".bz2")])
+                ToulBar2::bz2 = true;
             if (strstr(fileName, ".cfn"))
                 ToulBar2::cfn = true;
             if (strstr(fileName, ".wcnf") || strstr(fileName, ".cnf"))

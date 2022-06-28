@@ -113,7 +113,7 @@ PBO or Linkage **.pre** file and executing: ::
 
   toulbar2 [option parameters] <file>
 
-and toulbar2 will start solving the optimization problem described in its file argument. By default, the extension of the file (either **.cfn**, **.cfn.gz**, **.cfn.xz**, **.wcsp**, **.wcsp.gz**, **.wcsp.xz**, **.wcnf**, **.wcnf.gz**, **.wcnf.xz**, **.cnf**, **.cnf.gz**, **.cnf.xz**, **.qpbo**, **.qpbo.gz**, **.qpbo.xz**, **.opb**, **.opb.gz**, **.opb.xz**, **.uai**, **.uai.gz**, **.uai.xz**, **.LG**, **.LG.gz**, **.LG.xz**, **.pre** or **.bep**) is used to determine the nature of the file (see :ref:`input_formats`).
+and toulbar2 will start solving the optimization problem described in its file argument. By default, the extension of the file (either **.cfn**, **.cfn.gz**, **.cfn.bz2**, **.cfn.xz**, **.wcsp**, **.wcsp.gz**, **.wcsp.bz2**, **.wcsp.xz**, **.wcnf**, **.wcnf.gz**, **.wcnf.bz2**, **.wcnf.xz**, **.cnf**, **.cnf.gz**, **.cnf.bz2**, **.cnf.xz**, **.qpbo**, **.qpbo.gz**, **.qpbo.bz2**, **.qpbo.xz**, **.opb**, **.opb.gz**, **.opb.bz2**, **.opb.xz**, **.uai**, **.uai.gz**, **.uai.bz2**, **.uai.xz**, **.LG**, **.LG.gz**, **.LG.bz2**, **.LG.xz**, **.xml**, **.xml.gz**, **.xml.bz2**, **.xml.xz**, **.pre** or **.bep**) is used to determine the nature of the file (see :ref:`input_formats`).
 There is no specific order for the options or problem file. toulbar2 comes with decently optimized default option parameters. It is however often possible to set it up for different target than pure optimization or tune it for faster action using specific command line options.
 
 Quick start
@@ -753,7 +753,7 @@ Input formats
 Introduction
 ------------
 
-The available **file formats** (possibly compressed by gzip or xz, e.g., .cfn.gz, .wcsp.xz) are :
+The available **file formats** (possibly compressed by gzip or bzip2 or xz, e.g., .cfn.gz, .wcsp.xz, .opb.bz2) are :
 
   - Cost Function Network format (:ref:`.cfn<cfn_format>` file extension)
   - Weighted Constraint Satisfaction Problem (:ref:`.wcsp<wcsp_format>` file extension)
@@ -761,6 +761,7 @@ The available **file formats** (possibly compressed by gzip or xz, e.g., .cfn.gz
   - Weigthed Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
   - Quadratic Unconstrained Pseudo-Boolean Optimization (:ref:`.qpbo<qpbo_format>` file extension)
   - Pseudo-Boolean Optimization (`.opb <http://www.cril.univ-artois.fr/PB16/format.pdf>`_ file extension)
+  - Constraint Satisfaction and Optimization Problem (`.xml <https://xcsp.org`_ file extension)
 
 **Some examples** :
 
@@ -797,7 +798,7 @@ Formats details
 .. toctree::
    :maxdepth: 3
 
-   cfn format (.cfn, .cfn.gz, and .cfn.xz file extension) <formats/cfnformat.rst>
+   cfn format (.cfn, .cfn.gz, .cfn.bz2, and .cfn.xz file extension) <formats/cfnformat.rst>
    wcsp format (.wcsp file extension) <formats/wcspformat.rst>
    UAI and LG formats (.uai, .LG) <formats/uailgformat.rst>
    Partial Weighted MaxSAT format <formats/cnfwcnfformat.rst>

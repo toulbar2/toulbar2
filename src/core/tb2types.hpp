@@ -746,6 +746,7 @@ public:
     static string map_file; /// < \internal do not use
     static bool cfn; /// < \internal do not use
     static bool gz; /// < \internal do not use
+    static bool bz2; /// < \internal do not use
     static bool xz; /// < \internal do not use
     static bool bayesian; /// < \internal do not use
     static int uai; /// < \internal do not use

@@ -140,6 +140,7 @@ Haplotype* ToulBar2::haplotype;
 
 bool ToulBar2::cfn;
 bool ToulBar2::gz;
+bool ToulBar2::bz2;
 bool ToulBar2::xz;
 bool ToulBar2::bayesian;
 int ToulBar2::uai;
@@ -356,6 +357,7 @@ void tb2init()
 
     ToulBar2::cfn = false;
     ToulBar2::gz = false;
+    ToulBar2::bz2 = false;
     ToulBar2::xz = false;
     ToulBar2::bayesian = false;
     ToulBar2::uai = 0;
@@ -525,6 +527,10 @@ void tb2checkOptions()
     }
     if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::parallel && ToulBar2::hbfs) {
         cerr << "Error: cannot find all solutions or compute a partition function with parallel HBFS. Deactivate either option." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::divNbSol > 1 && ToulBar2::parallel && ToulBar2::hbfs) {
+        cerr << "Error: cannot find diverse solutions with parallel HBFS. Deactivate either option." << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::divNbSol > 1 && ToulBar2::searchMethod != DFBB) {

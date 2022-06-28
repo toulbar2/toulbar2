@@ -21,6 +21,7 @@
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
 
 #if (BOOST_VERSION < 106500)
 #define NO_LZMA
@@ -2077,7 +2078,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             ToulBar2::vnsOptimum = string2Cost(ToulBar2::vnsOptimumS.c_str());
     }
 
-    if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::xz) {
+    if (ToulBar2::cfn && !ToulBar2::gz && !ToulBar2::bz2 && !ToulBar2::xz) {
 #ifdef BOOST
         ifstream Rfile;
         istream& stream = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
@@ -2118,6 +2119,27 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read gzip'd CFN format files." << endl;
+        throw WrongFileFormat();
+#endif
+    } else if (ToulBar2::cfn && ToulBar2::bz2) {
+#ifdef BOOST
+        ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
+        istream& file = Rfile;
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+        inbuf.push(boost::iostreams::bzip2_decompressor());
+        inbuf.push(file);
+        std::istream stream(&inbuf);
+
+        if (!file) {
+            cerr << "Could not open cfn.bz2 file : " << fileName << endl;
+            throw WrongFileFormat();
+        } else {
+
+            //  inbuf.push(file);
+            CFNStreamReader fileReader(stream, this);
+        }
+#else
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read bzip2'd CFN format files." << endl;
         throw WrongFileFormat();
 #endif
     } else if (ToulBar2::cfn && ToulBar2::xz) {
@@ -2264,11 +2286,13 @@ void WCSP::read_legacy(const char* fileName)
     vector<vector<Tuple>> sharedTuples;
     vector<Tuple> emptyTuples;
 
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+        zfile.push(boost::iostreams::bzip2_decompressor());
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -2286,7 +2310,7 @@ void WCSP::read_legacy(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
-    if (ToulBar2::gz || ToulBar2::xz) {
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcsp format files." << endl;
         throw WrongFileFormat();
     }
@@ -2882,11 +2906,13 @@ void WCSP::read_uai2008(const char* fileName)
 
     // Cost inclowerbound = MIN_COST;
     string uaitype;
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+        zfile.push(boost::iostreams::bzip2_decompressor());
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -2904,7 +2930,7 @@ void WCSP::read_uai2008(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
-    if (ToulBar2::gz || ToulBar2::xz) {
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed uai format files." << endl;
         throw WrongFileFormat();
     }
@@ -3307,6 +3333,40 @@ void WCSP::solution_UAI(Cost res)
 
 void WCSP::read_XML(const char* fileName)
 {
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+        zfile.push(boost::iostreams::bzip2_decompressor());
+    } else if (ToulBar2::xz) {
+#ifndef NO_LZMA
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed xml format files." << endl;
+        throw WrongFileFormat();
+#endif
+    }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open xml file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed xml format files." << endl;
+        throw WrongFileFormat();
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open xml file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 #if defined(XMLFLAG)
     MyCallback xmlCallBack;
     xmlCallBack.wcsp = this;
@@ -3315,7 +3375,7 @@ void WCSP::read_XML(const char* fileName)
     try {
         XMLParser_libxml2<> parser(xmlCallBack);
         parser.setPreferredExpressionRepresentation(INFIX_C);
-        parser.parse(fileName);
+        parser.parse(file);
     } catch (exception& e) {
         cout.flush();
         cerr << "\n\tUnexpected exception in XML parsing\n";
@@ -3327,7 +3387,7 @@ void WCSP::read_XML(const char* fileName)
     xmlCallBack.problem = this;
     try {
         XCSP3CoreParser parser(&xmlCallBack);
-        parser.parse(fileName); // fileName is a string
+        parser.parse(file);
     } catch (exception& e) {
         cout.flush();
         cerr << "\n\tUnexpected exception in XML XCSP3 parsing\n";
@@ -3402,11 +3462,13 @@ void WCSP::solution_XML(bool opt)
 
 void WCSP::read_wcnf(const char* fileName)
 {
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+        zfile.push(boost::iostreams::bzip2_decompressor());
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3424,7 +3486,7 @@ void WCSP::read_wcnf(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
-    if (ToulBar2::gz || ToulBar2::xz) {
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed wcnf format files." << endl;
         throw WrongFileFormat();
     }
@@ -3612,11 +3674,13 @@ void WCSP::read_wcnf(const char* fileName)
 /// Warning : It does not allow infinite costs (no forbidden assignments)
 void WCSP::read_qpbo(const char* fileName)
 {
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+        zfile.push(boost::iostreams::bzip2_decompressor());
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3634,7 +3698,7 @@ void WCSP::read_qpbo(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
-    if (ToulBar2::gz || ToulBar2::xz) {
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed qpbo format files." << endl;
         throw WrongFileFormat();
     }
@@ -3851,11 +3915,13 @@ void readToken(istream& file, string& token, int* keep = NULL)
 
 void WCSP::read_opb(const char* fileName)
 {
-    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+        zfile.push(boost::iostreams::bzip2_decompressor());
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3873,7 +3939,7 @@ void WCSP::read_opb(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
 #else
-    if (ToulBar2::gz || ToulBar2::xz) {
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed opb format files." << endl;
         throw WrongFileFormat();
     }

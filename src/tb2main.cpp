@@ -120,17 +120,24 @@ enum {
     // file extension option
     OPT_wcsp_ext,
     OPT_wcspgz_ext,
+    OPT_wcspbz2_ext,
     OPT_wcspxz_ext,
     OPT_wcspXML_ext,
+    OPT_wcspXMLgz_ext,
+    OPT_wcspXMLbz2_ext,
+    OPT_wcspXMLxz_ext,
     OPT_cfn_ext,
     OPT_cfngz_ext,
+    OPT_cfnbz2_ext,
     OPT_cfnxz_ext,
     OPT_order_ext,
     OPT_uai_ext,
     OPT_uaigz_ext,
+    OPT_uaibz2_ext,
     OPT_uaixz_ext,
     OPT_uai_log_ext,
     OPT_uaigz_log_ext,
+    OPT_uaibz2_log_ext,
     OPT_uaixz_log_ext,
     OPT_evid_ext,
     OPT_map_ext,
@@ -140,15 +147,19 @@ enum {
     OPT_pre_ext,
     OPT_wcnf_ext,
     OPT_wcnfgz_ext,
+    OPT_wcnfbz2_ext,
     OPT_wcnfxz_ext,
     OPT_cnf_ext,
     OPT_cnfgz_ext,
+    OPT_cnfbz2_ext,
     OPT_cnfxz_ext,
     OPT_qpbo_ext,
     OPT_qpbogz_ext,
+    OPT_qpbobz2_ext,
     OPT_qpboxz_ext,
     OPT_opb_ext,
     OPT_opbgz_ext,
+    OPT_opbbz2_ext,
     OPT_opbxz_ext,
     OPT_treedec_ext,
     OPT_clusterdec_ext,
@@ -342,18 +353,24 @@ CSimpleOpt::SOption g_rgOptions[] = {
     //stdin format
     { OPT_stdin, (char*)"--stdin", SO_REQ_SEP },
 
-    // file extension
+    // file extension (NOT USED!?!)
     { OPT_wcsp_ext, (char*)"--wcsp_ext", SO_REQ_SEP },
     { OPT_wcspXML_ext, (char*)"--wcspXML_ext", SO_REQ_SEP },
+    { OPT_wcspXMLgz_ext, (char*)"--wcspXMLgz_ext", SO_REQ_SEP },
+    { OPT_wcspXMLbz2_ext, (char*)"--wcspXMLbz2_ext", SO_REQ_SEP },
+    { OPT_wcspXMLxz_ext, (char*)"--wcspXMLxz_ext", SO_REQ_SEP },
     { OPT_cfn_ext, (char*)"--cfn_ext", SO_REQ_SEP },
     { OPT_cfngz_ext, (char*)"--cfngz_ext", SO_REQ_SEP },
+    { OPT_cfnbz2_ext, (char*)"--cfnbz2_ext", SO_REQ_SEP },
     { OPT_cfnxz_ext, (char*)"--cfnxz_ext", SO_REQ_SEP },
     { OPT_order_ext, (char*)"--order_ext", SO_REQ_SEP },
     { OPT_uai_ext, (char*)"--uai_ext", SO_REQ_SEP },
     { OPT_uaigz_ext, (char*)"--uaigz_ext", SO_REQ_SEP },
+    { OPT_uaibz2_ext, (char*)"--uaibz2_ext", SO_REQ_SEP },
     { OPT_uaixz_ext, (char*)"--uaixz_ext", SO_REQ_SEP },
     { OPT_uai_log_ext, (char*)"--uai_log_ext", SO_REQ_SEP },
     { OPT_uaigz_log_ext, (char*)"--uaigz_log_ext", SO_REQ_SEP },
+    { OPT_uaibz2_log_ext, (char*)"--uaibz2_log_ext", SO_REQ_SEP },
     { OPT_uaixz_log_ext, (char*)"--uaixz_log_ext", SO_REQ_SEP },
     { OPT_evid_ext, (char*)"--evid_ext", SO_REQ_SEP },
     { OPT_map_ext, (char*)"--map_ext", SO_REQ_SEP },
@@ -363,15 +380,19 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_pre_ext, (char*)"--pre_ext", SO_REQ_SEP },
     { OPT_wcnf_ext, (char*)"--wcnf_ext", SO_REQ_SEP },
     { OPT_wcnfgz_ext, (char*)"--wcnfgz_ext", SO_REQ_SEP },
+    { OPT_wcnfbz2_ext, (char*)"--wcnfbz2_ext", SO_REQ_SEP },
     { OPT_wcnfxz_ext, (char*)"--wcnfxz_ext", SO_REQ_SEP },
     { OPT_cnf_ext, (char*)"--cnf_ext", SO_REQ_SEP },
     { OPT_cnfgz_ext, (char*)"--cnfgz_ext", SO_REQ_SEP },
+    { OPT_cnfbz2_ext, (char*)"--cnfbz2_ext", SO_REQ_SEP },
     { OPT_cnfxz_ext, (char*)"--cnfxz_ext", SO_REQ_SEP },
     { OPT_qpbo_ext, (char*)"--qpbo_ext", SO_REQ_SEP },
     { OPT_qpbogz_ext, (char*)"--qpbogz_ext", SO_REQ_SEP },
+    { OPT_qpbobz2_ext, (char*)"--qpbobz2_ext", SO_REQ_SEP },
     { OPT_qpboxz_ext, (char*)"--qpboxz_ext", SO_REQ_SEP },
     { OPT_opb_ext, (char*)"--opb_ext", SO_REQ_SEP },
     { OPT_opbgz_ext, (char*)"--opbgz_ext", SO_REQ_SEP },
+    { OPT_opbbz2_ext, (char*)"--opbbz2_ext", SO_REQ_SEP },
     { OPT_opbxz_ext, (char*)"--opbxz_ext", SO_REQ_SEP },
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
@@ -759,7 +780,11 @@ void help_msg(char* toulbar2filename)
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
 #ifdef BOOST
-    cout << "Note: cfn, cnf, LG, qpbo, opb, uai, wcnf, wcsp formats can be read in gzip'd or xz compressed format, e.g., toulbar2 problem.cfn.xz" << endl;
+    cout << "Note: cfn, cnf, LG, qpbo, opb, uai, wcnf, wcsp";
+#if defined(XMLFLAG) || defined(XMLFLAG3)
+    cout << ", xml";
+#endif
+    cout << " formats can be read in gzip'd or bzip2 or xz compressed format, e.g., toulbar2 problem.cfn.xz" << endl;
 #endif
     cout << "Warning! File formats are recognized by filename extensions. To change the default file format extension, use option --old_ext=\".new\" Examples: --cfn_ext='.json' --wcspgz_ext='.wgz' --sol_ext='.sol2'  " << endl;
     cout << endl;
@@ -943,6 +968,11 @@ void help_msg(char* toulbar2filename)
     cout << "                           (-" << ELIM_FILE_ORDER << ") default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)" << endl;
     cout << "                           (-" << ELIM_LEXICOGRAPHIC_ORDER << ") lexicographic ordering of variable names." << endl;
 #endif
+    cout << "   -root=[integer] : root cluster heuristic (0:largest, 1:max. size/(height-size), 2:min. size/(height-size), 3:min. height) (default value is " << ToulBar2::rootHeuristic << ")" << endl;
+    cout << "   -minheight : minimizes cluster tree height when searching for the root cluster";
+    if (ToulBar2::reduceHeight)
+        cout << " (default option)";
+    cout << endl;
     cout << "   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number" << endl;
     cout << "                (use options \"-B=3 -j=1 -svo -k=1\" for pure RDS, use value 0 for no splitting) (default value is " << ToulBar2::splitClusterMaxSize << ")" << endl;
     cout << "   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is " << ToulBar2::maxSeparatorSize << ")" << endl;
@@ -950,11 +980,6 @@ void help_msg(char* toulbar2filename)
     cout << "   -E=[float] : merges leaf clusters with their fathers if small local treewidth (in conjunction with option \"-e\" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option \"-vns\") (default value is " << ToulBar2::boostingBTD << ")" << endl;
     cout << "   -F=[integer] : merges clusters automatically to give more freedom to variable ordering heuristic in BTD-HBFS (-1: no merging, positive value: maximum iteration value for trying to solve the same subtree given its separator assignment before considering it as unmerged) (default value is " << ((ToulBar2::heuristicFreedom) ? ToulBar2::heuristicFreedomLimit : -1) << ")" << endl;
     //    cout << "   -LF=[integer] : separator count limit for switching from cluster descendant merging to cluster decomposition (default value is " << ToulBar2::heuristicFreedomLimit << ")" << endl;
-    cout << "   -root=[integer] : root cluster heuristic (0:largest, 1:max. size/(height-size), 2:min. size/(height-size), 3:min. height) (default value is " << ToulBar2::rootHeuristic << ")" << endl;
-    cout << "   -minheight : minimizes cluster tree height when searching for the root cluster";
-    if (ToulBar2::reduceHeight)
-        cout << " (default option)";
-    cout << endl;
     cout << "   -R=[integer] : chooses a specific root cluster number" << endl;
     cout << "   -I=[integer] : chooses a particular rooted cluster subtree for solving (with RDS-BTD only)" << endl
          << endl;
@@ -973,7 +998,11 @@ void help_msg(char* toulbar2filename)
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
     cout << "   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cout << endl;
-    cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")" << endl;
+    cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")";
+#ifdef OPENMPI
+    cout << " (usage for parallel version: \"mpirun -n [NbOfProcess] toulbar2 -hbfs problem.wcsp\")";
+#endif
+    cout << endl;
     cout << "   -hbfsmin=[integer] : hybrid best-first search compromise between BFS and DFS minimum node redundancy alpha percentage threshold (default value is " << 100 / ToulBar2::hbfsAlpha << "%)" << endl;
     cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100 / ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
@@ -1056,19 +1085,26 @@ int _tmain(int argc, TCHAR* argv[])
     std::map<std::string, string> file_extension_map;
     file_extension_map["wcsp_ext"] = ".wcsp";
     file_extension_map["wcspgz_ext"] = ".wcsp.gz";
+    file_extension_map["wcspbz2_ext"] = ".wcsp.bz2";
     file_extension_map["wcspxz_ext"] = ".wcsp.xz";
     file_extension_map["cfn_ext"] = ".cfn";
     file_extension_map["cfngz_ext"] = ".cfn.gz";
+    file_extension_map["cfnbz2_ext"] = ".cfn.bz2";
     file_extension_map["cfnxz_ext"] = ".cfn.xz";
     file_extension_map["wcspXML_ext"] = ".xml";
+    file_extension_map["wcspXMLgz_ext"] = ".xml.gz";
+    file_extension_map["wcspXMLbz2_ext"] = ".xml.bz2";
+    file_extension_map["wcspXMLxz_ext"] = ".xml.xz";
     file_extension_map["order_ext"] = ".order";
     file_extension_map["ub_ext"] = ".ub";
     file_extension_map["sol_ext"] = ".sol";
     file_extension_map["uai_ext"] = ".uai";
     file_extension_map["uaigz_ext"] = ".uai.gz";
+    file_extension_map["uaibz2_ext"] = ".uai.bz2";
     file_extension_map["uaixz_ext"] = ".uai.xz";
     file_extension_map["uai_log_ext"] = ".LG";
     file_extension_map["uaigz_log_ext"] = ".LG.gz";
+    file_extension_map["uaibz2_log_ext"] = ".LG.bz2";
     file_extension_map["uaixz_log_ext"] = ".LG.xz";
     file_extension_map["evid_ext"] = ".evid";
     file_extension_map["bep_ext"] = ".bep";
@@ -1076,15 +1112,19 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["map_ext"] = ".map";
     file_extension_map["wcnf_ext"] = ".wcnf";
     file_extension_map["wcnfgz_ext"] = ".wcnf.gz";
+    file_extension_map["wcnfbz2_ext"] = ".wcnf.bz2";
     file_extension_map["wcnfxz_ext"] = ".wcnf.xz";
     file_extension_map["cnf_ext"] = ".cnf";
     file_extension_map["cnfgz_ext"] = ".cnf.gz";
+    file_extension_map["cnfbz2_ext"] = ".cnf.bz2";
     file_extension_map["cnfxz_ext"] = ".cnf.xz";
     file_extension_map["qpbo_ext"] = ".qpbo";
     file_extension_map["qpbogz_ext"] = ".qpbo.gz";
+    file_extension_map["qpbobz2_ext"] = ".qpbo.bz2";
     file_extension_map["qpboxz_ext"] = ".qpbo.xz";
     file_extension_map["opb_ext"] = ".opb";
     file_extension_map["opbgz_ext"] = ".opb.gz";
+    file_extension_map["opbbz2_ext"] = ".opb.bz2";
     file_extension_map["opbxz_ext"] = ".opb.xz";
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
@@ -2350,6 +2390,13 @@ int _tmain(int argc, TCHAR* argv[])
                 strfile.push_back(problem);
                 ToulBar2::gz = true;
             }
+            if (check_file_ext(problem, file_extension_map["wcspbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd wcsp file: " << problem << endl;
+                strext.insert(".wcsp.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
+            }
             if (check_file_ext(problem, file_extension_map["wcspxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed wcsp file: " << problem << endl;
@@ -2374,6 +2421,15 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cfn = true;
                 ToulBar2::gz = true;
             }
+            // CFN bzip2'd file
+            if (check_file_ext(problem, file_extension_map["cfnbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd cfn file: " << problem << endl;
+                strext.insert(".cfn.bz2");
+                strfile.push_back(problem);
+                ToulBar2::cfn = true;
+                ToulBar2::bz2 = true;
+            }
             // CFN xz file
             if (check_file_ext(problem, file_extension_map["cfnxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2383,6 +2439,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cfn = true;
                 ToulBar2::xz = true;
             }
+
             // uai  file
             if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
                 strfile.push_back(problem);
@@ -2401,6 +2458,15 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
                 ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["uaibz2_ext"])) {
+                strfile.push_back(problem);
+                strext.insert(".uai.bz2");
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd uai file:  " << problem << endl;
+                ToulBar2::uai = 1;
+                ToulBar2::bayesian = true;
+                ToulBar2::bz2 = true;
             }
             // uai xz compressed file
             if (check_file_ext(problem, file_extension_map["uaixz_ext"])) {
@@ -2431,6 +2497,15 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::bayesian = true;
                 ToulBar2::gz = true;
             }
+            if (check_file_ext(problem, file_extension_map["uaibz2_log_ext"])) {
+                strfile.push_back(problem);
+                strext.insert(".LG.bz2");
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd uai log file:  " << problem << endl;
+                ToulBar2::uai = 2;
+                ToulBar2::bayesian = true;
+                ToulBar2::bz2 = true;
+            }
             // uai log file
             if (check_file_ext(problem, file_extension_map["uaixz_log_ext"])) {
                 strfile.push_back(problem);
@@ -2459,6 +2534,45 @@ int _tmain(int argc, TCHAR* argv[])
                 //                }
                 strext.insert(".xml");
                 strfile.push_back(problem);
+            }
+            // xml.gz file
+            if (check_file_ext(problem, file_extension_map["wcspXMLgz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading gzip'd xml file:" << problem << endl;
+                ToulBar2::xmlflag = true;
+                //                if (!ToulBar2::writeSolution) {
+                //                    ToulBar2::writeSolution = 1;
+                //                    solutionFileName = (char*)"sol";
+                //                }
+                strext.insert(".xml.gz");
+                strfile.push_back(problem);
+                ToulBar2::gz = true;
+            }
+            // xml.bz2 file
+            if (check_file_ext(problem, file_extension_map["wcspXMLbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bz2 compressed xml file:" << problem << endl;
+                ToulBar2::xmlflag = true;
+                //                if (!ToulBar2::writeSolution) {
+                //                    ToulBar2::writeSolution = 1;
+                //                    solutionFileName = (char*)"sol";
+                //                }
+                strext.insert(".xml.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
+            }
+            // xml.xz file
+            if (check_file_ext(problem, file_extension_map["wcspXMLxz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading xz compressed xml file:" << problem << endl;
+                ToulBar2::xmlflag = true;
+                //                if (!ToulBar2::writeSolution) {
+                //                    ToulBar2::writeSolution = 1;
+                //                    solutionFileName = (char*)"sol";
+                //                }
+                strext.insert(".xml.xz");
+                strfile.push_back(problem);
+                ToulBar2::xz = true;
             }
 
             // wcnf or cnf file
@@ -2489,6 +2603,21 @@ int _tmain(int argc, TCHAR* argv[])
                 strext.insert(".cnf.gz");
                 strfile.push_back(problem);
                 ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["wcnfbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd wcnf file:" << problem << endl;
+                ToulBar2::wcnf = true;
+                strext.insert(".wcnf.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
+            } else if (check_file_ext(problem, file_extension_map["cnfbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd cnf file:" << problem << endl;
+                ToulBar2::wcnf = true;
+                strext.insert(".cnf.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
             }
             if (check_file_ext(problem, file_extension_map["wcnfxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
@@ -2522,6 +2651,14 @@ int _tmain(int argc, TCHAR* argv[])
                 strfile.push_back(problem);
                 ToulBar2::gz = true;
             }
+            if (check_file_ext(problem, file_extension_map["qpbobz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd quadratic pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::qpbo = true;
+                strext.insert(".qpbo.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
+            }
             if (check_file_ext(problem, file_extension_map["qpboxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading xz compressed quadratic pseudo-Boolean optimization file:" << problem << endl;
@@ -2546,6 +2683,14 @@ int _tmain(int argc, TCHAR* argv[])
                 strext.insert(".opb.gz");
                 strfile.push_back(problem);
                 ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["opbbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd pseudo-Boolean optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".opb.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
             }
             if (check_file_ext(problem, file_extension_map["opbxz_ext"])) {
                 if (ToulBar2::verbose >= 0)
