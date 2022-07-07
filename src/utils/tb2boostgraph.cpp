@@ -835,7 +835,8 @@ void WCSP::addAMOConstraints()
                         for (unsigned int j = 0; j < clq.size(); ++j) {
                             if ((int)clq[j].size() > MaxAMO)
                                 MaxAMO = clq[j].size();
-                            total += clq[j].size();
+                            if ((int)clq[j].size() > 1)
+                                total += 1;
                         }
                         count++;
                         k->addAMOConstraints(clq, vars, this);
@@ -846,7 +847,7 @@ void WCSP::addAMOConstraints()
     }
     if (ToulBar2::verbose >= 0) {
         if (count > 0)
-            cout << count << " AMO constraint" << ((count > 1) ? "s" : "") << " added with max size " << MaxAMO;
+            cout << count << " knapsack constraint" << ((count > 1) ? "s" : "") << " extended with " << total << " AMO constraint" << ((total > 1) ? "s" : "") << " of maximum arity " << MaxAMO;
         else
             cout << "No AMO constraint added";
         cout << " in " << ((ToulBar2::parallel) ? (realTime() - startRealTime) : (cpuTime() - startCpuTime)) << " seconds." << endl;

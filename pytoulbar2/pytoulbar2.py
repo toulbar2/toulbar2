@@ -21,7 +21,7 @@ class CFN:
         
         Contradiction (exception): python exception corresponding to the same C++ class.
         
-        Limit (exception|None): contains the last SolverOut exception or None if no exception occurs when solving.
+        Limit (exception|None): contains the last SolverOut exception or None if no exception occurs when solving with SolveNext.
         
         Option (TouBar2): python interface to C++ class ToulBar2.
         
@@ -551,6 +551,7 @@ class CFN:
             The best (or last if enumeration/diversity) solution found as a list of domain values, its associated cost, always strictly lower 
             than the initial upper bound, and the number of solutions found (returned type: tuple(list, decimal cost, int)).
             or None if no solution has been found (the problem has no solution better than the initial upper bound or a search limit occurs).
+            See GetSolutions to retrieve of the solutions found so far.
             
         Warning:
             This operation cannot be called multiple times on the same CFN object (it may modify the problem or its upper bound).
