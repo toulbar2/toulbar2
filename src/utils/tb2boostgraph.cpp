@@ -778,7 +778,7 @@ void WCSP::addAMOConstraints()
     if (ToulBar2::verbose >= 1)
         cout << "Construct Graph of size " << vars.size() << endl;
     for (int i = 0; i < (int)vars.size(); ++i) {
-        if (vars[i]->unassigned()) {
+        if (vars[i]->unassigned() && vars[i]->getDomainSize() == 2) {
             Var.push_back(i);
             assert(i == vars[i]->wcspIndex);
         }
