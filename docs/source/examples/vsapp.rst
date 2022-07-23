@@ -27,6 +27,8 @@ Available
   - You can run this software directly from your browser as a
     `web service <http://147.100.179.250/api/ui/vsudoku>`_
     |qrcode_ui_vsudoku| 
+   
+  - or from your smartphone (install the following application ; in your parameter settings for the app, allows accessing to camera and files ; rerun the app) `Visual Sudoku App <http://147.100.179.250/visualsudoku-release.apk>`_
 
   - Other ways to call the web service :
 
