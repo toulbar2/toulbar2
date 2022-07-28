@@ -32,7 +32,7 @@ Problem.AddFunction(['X' + str(N-1)], range(N**2))
 #fix the first mark to be zero
 Problem.AddFunction(['X0'], [0] + [top] * (N**2 - 1))
 
-#Problem.Dump('Golomb.cfn')
+#Problem.Dump('golomb.cfn')
 Problem.CFN.timer(300)
 res = Problem.Solve(showSolutions=3)
 if res:
