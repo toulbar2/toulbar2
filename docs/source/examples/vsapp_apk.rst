@@ -48,13 +48,13 @@ Download and Install
 
   To install the 'Visual Sudoku' application on smartphone :
 
-   1) **Download** the **visualsudokurelease.apk** APK file from Github
+   1) **Download** the **visualsudoku-release.apk** APK file from Github
       repository : 
 
        |qrcode_visualsudokuapk| 
        `https://github.com/toulbar2/visualsudoku/releases/latest <https://github.com/toulbar2/visualsudoku/releases/latest>`_
 
-   2) Click on the downloaded **visualsudokurelease.apk** APK file to ask
+   2) Click on the downloaded **visualsudoku-release.apk** APK file to ask
       for **installation** 
       (*you have to accept to 'install anyway' from unknown developer*).
 
