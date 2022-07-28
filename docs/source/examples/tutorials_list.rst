@@ -15,6 +15,7 @@
 - :ref:`tuto_wlp`
 - :ref:`tuto_spp`
 - :ref:`tuto_sspp`
+- :ref:`tuto_grp`
 
 - :ref:`ltps`
 - :ref:`rccs`
