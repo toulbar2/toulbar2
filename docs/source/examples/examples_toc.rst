@@ -22,4 +22,9 @@ List of all examples
    rccs.rst
    vstut.rst
    vsapp.rst
+   vsapp_apk.rst
    snum.rst
+
+.. vsapp_apk.rst is under vsapp.rst (as html page),
+.. it has been added into that toctree in order to be visible into pdf
+

@@ -14,29 +14,45 @@ An automatic Sudoku puzzle **solver** using **OpenCV**, **Deep Learning**, and *
 Available
 =========
 
-- **Software** adapted by Simon de Givry (@ INRAE, 2022)
-  in order to use **toulbar2** solver, from a
-  `tutorial <https://pyimagesearch.com/2020/08/10/opencv-sudoku-solver-and-ocr>`_
-  by Adrian Rosebrock (@ PyImageSearch, 2022) :
+Software
+--------
 
-  `GitHub code <https://forgemia.inra.fr/thomas.schiex/cost-function-library/-/tree/master/crafted/visualsudoku>`_
-  |github_logo_vsudoku|
+**Software** adapted by Simon de Givry (@ INRAE, 2022)
+in order to use **toulbar2** solver, from a
+`tutorial <https://pyimagesearch.com/2020/08/10/opencv-sudoku-solver-and-ocr>`_
+by Adrian Rosebrock (@ PyImageSearch, 2022) :
+`GitHub code <https://forgemia.inra.fr/thomas.schiex/cost-function-library/-/tree/master/crafted/visualsudoku>`_
+|github_logo_vsudoku|
   
-- **As a web service** :
+As a Web service
+----------------
 
-  - You can run this software directly from your browser as a
-    `web service <http://147.100.179.250/api/ui/vsudoku>`_
-    |qrcode_ui_vsudoku| 
-   
-  - or from your smartphone (install the following android application ; in your parameter settings for the app, allows accessing to camera and files ; rerun the app) `Visual Sudoku App <http://147.100.179.250/visualsudoku-release.apk>`_
+The software is available as a web service.
+The **visual sudoku web service**, hosted by the `ws <http://147.100.179.250>`_ web services (based on HTTP protocol), can be called by many ways : from a **browser** (like above), from any softwares written in a language supporting HTTP protocol (**Python**, **R**, **C++**, **Java**, **Php**...), from command line tools (**cURL**...)...
+  
+  - Calling the visual sudoku web service from a **browser** :
 
-  - Other ways to call the web service :
+      |ws_logo_ui_vsudoku| |qrcode_ui_vsudoku|
+      `api/ui/vsudoku <http://147.100.179.250/api/ui/vsudoku>`_
 
-    The **visual sudoku web service**, hosted by the `ws <http://147.100.179.250>`_ web services (based on HTTP protocol), can be called by many ways : from a browser (like above), from any softwares written in a language supporting HTTP protocol (Python, R, C++, Java, Php...), from command line tools (cURL...)...
+  - Example of calling the visual sudoku web service from a **terminal** by
+    **cURL** :
 
-    Example from a terminal by cURL (*replace mygridfilename.jpg by your own image file name*) : ::
+    Commands (*replace mygridfilename.jpg by your own image file name*) : ::
 
       curl --output mysolutionfilename.jpg -F 'file=@mygridfilename.jpg' -F 'keep=40' -F 'border=15' http://147.100.179.250/api/tool/vsudoku
+
+As an APK
+---------
+
+A 'Visual Sudoku' application for Android has been developed to be used from a
+smartphone.
+
+See the :ref:`detailed presentation <vs_app_apk>`
+(description, source, download...).
+
+.. include:: vsapp/vsappapk_overview.rst
+
 
 .. |github_logo_vsudoku| image:: /_static/img/logo-github.png
    :width: 30
@@ -49,4 +65,7 @@ Available
    :target: `url_ui_vsudoku`_
 
 .. _url_ui_vsudoku: http://147.100.179.250/api/ui/vsudoku
+
+.. |ws_logo_ui_vsudoku| image:: /_static/img/logo-ws_ui-vsudoku.png
+   :width: 200
 

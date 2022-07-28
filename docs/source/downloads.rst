@@ -4,6 +4,12 @@
 Downloads
 =========
 
+Open-source code
+----------------
+
+- `toulbar2 on GitHub <https://github.com/toulbar2/toulbar2>`_
+  |github_logo_toulbar2|
+
 Packages
 --------
 
@@ -25,11 +31,6 @@ Python package
 
 - **pytoulbar2** module for Linux and MacOS on `PyPI <https://pypi.org/project/pytoulbar2>`_ 
 
-Open-source code
-----------------
-
-- `toulbar2 on GitHub <https://github.com/toulbar2/toulbar2>`_
-
 Docker images
 -------------
 
@@ -48,4 +49,12 @@ Docker images
     Install from the command line: ::
 
       docker pull ghcr.io/toulbar2/toulbar2/pytoulbar2:master
+
+
+.. |github_logo_toulbar2| image:: /_static/img/logo-github.png
+   :width: 30
+   :alt: `github_url_toulbar2`_
+   :target: `github_url_toulbar2`_
+
+.. _github_url_toulbar2: https://github.com/toulbar2/toulbar2
 
