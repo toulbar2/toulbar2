@@ -10,7 +10,9 @@ Brief description
 =================
 
 The problem consists in assigning frequencies to radio communication links in such a way that no interferences occur. Domains are set of integers (non necessarily consecutives).
+
 Two types of constraints occur: 
+
  - \(I) the absolute difference between two frequencies should be greater than a given number d_i ( | x - y | > d_i )
  - \(II) the absolute difference between two frequencies should exactly be equal to a given number d_i ( | x - y | = d_i ).
 

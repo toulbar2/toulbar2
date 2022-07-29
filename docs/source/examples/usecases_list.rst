@@ -12,6 +12,9 @@
 .. |ws_logo_ui_sudoku_tut| image:: /_static/img/logo-ws_ui-sudoku-tut.png
    :width: 30
 
+.. |ws_logo_ui_vsudoku| image:: /_static/img/logo-ws_ui-vsudoku.png
+   :width: 30
+
 .. |apk_logo_visualsudokuapp| image:: /_static/img/logo-apk_visualsudokuapp.png
    :width: 20
 
