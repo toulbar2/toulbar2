@@ -1007,7 +1007,10 @@ void help_msg(char* toulbar2filename)
     cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100 / ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
 #ifdef OPENMPI
-    cout << "   -burst : in parallel hybrid best-first search, workers send solutions and open nodes as soon as possible (default value is " << ToulBar2::burst << ")" << endl;
+    cout << "   -burst : in parallel hybrid best-first search, workers send solutions and open nodes as soon as possible";
+    if (ToulBar2::burst)
+        cout << " (default option)";
+    cout << endl;
 #endif
     cout << "   -eps=[integer|filename] : embarrassingly parallel search mode (output a given number of open nodes in -x format and exit, see ./misc/script/eps.sh to run them) (default value is " << ToulBar2::eps << ")" << endl;
     cout << "---------------------------" << endl;

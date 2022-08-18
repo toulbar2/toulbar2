@@ -3424,7 +3424,7 @@ void WCSP::solution_XML(bool opt)
     cout << "v ";
 #ifdef XMLFLAG3
     if (ToulBar2::xmlcop) {
-        cout << "<instantiation type=\"" << ((opt) ? "optimum" : "solution") << "\" cost=\"" << std::fixed << std::setprecision(0) << getDPrimalBound() << std::setprecision(DECIMAL_POINT) << "\"> <list>";
+        cout << "<instantiation type=\"" << ((opt) ? "optimum" : "solution") << "\" cost=\"" << std::fixed << std::setprecision(0) << getSolutionValue() << std::setprecision(DECIMAL_POINT) << "\"> <list>";
     } else {
         cout << "<instantiation type=\"solution\"> <list>";
     }
