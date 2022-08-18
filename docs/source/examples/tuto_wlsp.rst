@@ -9,12 +9,16 @@ Weighted latin square problem
 Brief description
 =================
 
-The problem consists in assigning a value from 0 to N-1 to every cell of a NxN chessboard. Each row and each column must be a permutation of N values. For each cell, a random weight in (1...N) is associated to every domain value. The objective is to find a complete assignment where the sum of the weights associated to the selected values for the cells is minimized.
+The problem consists in assigning a value from 0 to N-1 to every cell of a NxN chessboard.
+Each row and each column must be a permutation of N values. For each cell, a random cost in (1...N) is associated to every domain value.
+The objective is to find a complete assignment where the sum of the costs associated to the selected values for the cells is minimized.
 
 CFN model
 =========
 
-We create NxN variables for all cells with domain size N. A hard AllDifferent global cost function is used to model a permutation for every row and every column. Random weights are generated for every cell and domain value. Forbidden assignments have cost k=N**3+1.
+We create NxN variables, one for every cell, with domain size N. An AllDifferent hard global constraint is used to model a permutation for every row and every column. Its encoding uses knapsack constraints.
+Unary cost functions containing random costs associated to domain values are generated for every cell.
+The worst possible solution is when every cell is associated with a cost of N, so the maximum cost of a solution is N**3, so forbidden assignments have cost k=N**3+1.
 
 Example for N=4 in JSON .cfn format
 ===================================
@@ -53,15 +57,15 @@ Example for N=4 in JSON .cfn format
       {scope: ["X3_3"], "costs": [4, 4, 4, 3]}}
   }
 
-Optimal solution with cost 35 for the latin 4-square example (in red, weights associated to the selected values) :
+Optimal solution with cost 35 for the latin 4-square example (in red, costs associated to the selected values) :
 
 .. image:: ../../../web/IMAGES/latin4.png
    :height: 250px
 
-Python model generator
-======================
+Python model
+============
 
-The following code using python3 interpreter will generate the previous example if called without argument. Otherwise the first argument is the dimension N of the chessboard (e.g. "python3 latinsquare.py 6").
+The following code using the pytoulbar2 library solves the weighted latin square problem with the first argument being the dimension N of the chessboard (e.g. "python3 latinsquare.py 6").
 
 :download:`latinsquare.py<../../../web/TUTORIALS/latinsquare.py>`
 

@@ -15,9 +15,18 @@
 - :ref:`tuto_wlp`
 - :ref:`tuto_spp`
 - :ref:`tuto_sspp`
+- :ref:`tuto_grp`
+- :ref:`tuto_bcp`
 
 - :ref:`ltps`
 - :ref:`rccs`
-- :ref:`vs_tut`
-- :ref:`snum` (verbose version)
+- :ref:`vs_tut` |colab_logo_visualsudoku|
+- :ref:`snum` (verbose version) |ws_logo_ui_sudoku_tut|
+
+
+.. |colab_logo_visualsudoku| image:: /_static/img/logo-colab.png
+   :width: 30
+
+.. |ws_logo_ui_sudoku_tut| image:: /_static/img/logo-ws_ui-sudoku-tut.png
+   :width: 30
 

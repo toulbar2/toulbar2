@@ -17,9 +17,16 @@ List of all examples
    tuto_wlp.rst
    tuto_spp.rst
    tuto_sspp.rst
+   tuto_grp.rst
+   tuto_bcp.rst
 
    ltps.rst
    rccs.rst
    vstut.rst
    vsapp.rst
+   vsapp_apk.rst
    snum.rst
+
+.. vsapp_apk.rst is under vsapp.rst (as html page),
+.. it has been added into that toctree in order to be visible into pdf
+

@@ -16,9 +16,9 @@ They may contain source code, explanations, possibility to run yourself...
 
 **toulbar2 and Deep Learning** :
 
-  - :ref:`vs_tut`
+  - :ref:`vs_tut` |colab_logo_visualsudoku|
 
-  - :ref:`vs_app`
+  - :ref:`vs_app` |ws_logo_ui_vsudoku| |apk_logo_visualsudokuapp|
 
 **Some applications based on toulbar2** :
 
@@ -31,7 +31,20 @@ They may contain source code, explanations, possibility to run yourself...
     [`Vucini et al Bioinformatics 2020
     <https://hal.inrae.fr/hal-02625007/file/main.pdf>`_]
 
-  - :ref:`vs_app`
+  - :ref:`vs_app` |ws_logo_ui_vsudoku| |apk_logo_visualsudokuapp|
 
-  - :ref:`snum`
+  - :ref:`snum` |ws_logo_ui_sudoku|
+
+
+.. |colab_logo_visualsudoku| image:: /_static/img/logo-colab.png
+   :width: 30
+
+.. |ws_logo_ui_sudoku| image:: /_static/img/logo-ws_ui-sudoku.png
+   :width: 30
+
+.. |ws_logo_ui_vsudoku| image:: /_static/img/logo-ws_ui-vsudoku.png
+   :width: 30
+
+.. |apk_logo_visualsudokuapp| image:: /_static/img/logo-apk_visualsudokuapp.png
+   :width: 20
 

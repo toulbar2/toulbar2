@@ -761,7 +761,7 @@ The available **file formats** (possibly compressed by gzip or bzip2 or xz, e.g.
   - Weigthed Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
   - Quadratic Unconstrained Pseudo-Boolean Optimization (:ref:`.qpbo<qpbo_format>` file extension)
   - Pseudo-Boolean Optimization (`.opb <http://www.cril.univ-artois.fr/PB16/format.pdf>`_ file extension)
-  - Constraint Satisfaction and Optimization Problem (`.xml <https://xcsp.org`_ file extension)
+  - Constraint Satisfaction and Optimization Problem (`.xml <https://xcsp.org>`_ file extension)
 
 **Some examples** :
 
@@ -804,8 +804,7 @@ Formats details
    Partial Weighted MaxSAT format <formats/cnfwcnfformat.rst>
    QPBO format (.qpbo) <formats/qpboformat.rst>
    OPB format (.opb) <formats/opbformat.rst>
-   XCSP2.1 format (.xml) <formats/xmlformat.rst>
-   XCSP3 format (.xml) <formats/xmlformat.rst>
+   XCSP2.1 and XCSP3 formats (.xml) <formats/xmlformat.rst>
    Linkage format (.pre) <formats/preformat.rst>
 
 .. .. CPD final stanza

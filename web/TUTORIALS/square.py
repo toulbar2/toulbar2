@@ -1,97 +1,76 @@
-
 import sys
-from random import seed
+from random import randint, seed		
 seed(123456789)
 
-def flatten(x):
-    result = []
-    for el in x:
-        if hasattr(el, "__iter__") and not isinstance(el, str) and not isinstance(el, tuple) and not isinstance(el, dict):
-            result.extend(flatten(el))
-        else:
-            result.append(el)
-    return result
+import pytoulbar2
+try:
+	N = int(sys.argv[1])
+	S = int(sys.argv[2])
+	assert N <= S
+except:
+	print('Two integers need to be given as arguments: N and S')
+	exit()
 
-def cfn(problem, isMinimization, initPrimalBound, floatPrecision=0):
-    globals_key_order = ["rhs", "capacity", "weights", "weightedvalues", "metric", "cost", "bounds", "vars1", "vars2", "nb_states", "starts", "ends", "transitions", "nb_symbols", "nb_values", "start", "terminals", "non_terminals", "min", "max", "values", "defaultcost", "tuples", "comparator", "to"]
-    print('{')
-    print('\tproblem: { "name": "%s", "mustbe": "%s%.*f" },' % (problem["name"], "<" if (isMinimization) else ">", floatPrecision, initPrimalBound))
-    print('\tvariables: {', end='')
-    for i,e in enumerate(flatten(problem["variables"])):
-        if i > 0: print(', ', end='')
-        print('"%s":' % e[0], end='')
-        if isinstance(e[1], int):
-            print(' %s' % e[1], end='')
-        else:
-            print('[', end='')
-            for j,a in enumerate(e[1]):
-                if j > 0: print(', ', end='')
-                print('"%s"' % a, end='')
-            print(']', end='')
-    print('},')
-    print( '\tfunctions: {')
-    for i,e in enumerate(flatten(problem["functions"])):
-        if i > 0: print(',')
-        if e.get("name") is not None: print('\t\t"%s": {scope: [' % e.get("name"), end='')
-        else: print('\t\t{scope: [', end='')
-        scope = {}
-        for j,x in enumerate(e.get("scope")):
-            if (x in scope): sys.exit(str(e) + '\nError: scope of function ' + str(i) + ' with the same variable twice is forbidden!')
-            if j > 0: print(', ', end='')
-            print('"%s"' % x, end='')
-            scope[x]=j
-        print('], ', end='')
-        if e.get("type") is not None:
-            print('"type": %s, ' % e.get("type"), end='')
-        if e.get("params") is not None:
-            if isinstance(e.get("params"), dict):
-                print('"params": {', end='')
-                first = True
-                for key in globals_key_order:
-                    if key in e.get("params"):
-                        if not first: print(', ', end='')
-                        if isinstance(e.get("params")[key], str): print('"%s": "%s"' % (str(key),str(e.get("params")[key]).replace("'", '"')), end='')
-                        else: print('"%s": %s' % (str(key),str(e.get("params")[key]).replace("'", '"')), end='')
-                        first = False
-                print ('}', end='')
-            else: print('"params": %s, ' % str(e.get("params")).replace("'",'"'), end='')
-        if e.get("defaultcost") is not None:
-            print('"defaultcost:" %s, ' % e.get("defaultcost"), end='')
-        if e.get("costs") is not None:
-            print('"costs": ', end='')
-            if isinstance(e.get("costs"), str):
-                print('"%s"' % e.get("costs"), end='') # reuse future cost function by giving its name here
-            else:
-                print('[', end='')
-                for j,c in enumerate(e.get("costs")):
-                    if j > 0: print(', ', end='')
-                    if isinstance(c, str) and not c.isdigit():
-                        print('"%s"' % c, end='')
-                    else:
-                        print('%s' % c, end='')
-                print(']', end='')
-        print('}', end='')
-    print('}\n}')
+#pure constraint satisfaction problem
+Problem = pytoulbar2.CFN(1)
 
-def model(N, S, top):
-    Var = ["sq" + str(i+1) for i in range(N)]
-    Model = {
-        "name": "SquarePacking" + str(N) + "_" + str(S),
-        "variables": [(Var[i], (S-i)*(S-i)) for i in range(N)],
-        "functions":
-            [
-             # no overlapping constraint
-             [{"scope": [Var[i], Var[j]], "costs": [(0 if ((a%(S-i)) + i + 1 <= (b%(S-j))) or ((b%(S-j)) + j + 1 <= (a%(S-i))) or (int(a/(S-i)) + i + 1 <= int(b/(S-j))) or (int(b/(S-j)) + j + 1 <= int(a/(S-i))) else top) for a in range((S-i)*(S-i)) for b in range((S-j)*(S-j))]} for i in range(N) for j in range(N) if (i < j)]
-            ]
-         }
-    return Model
+#create a variable for each square
+for i in range(N):
+	Problem.AddVariable('sq' + str(i+1), ['(' + str(l) + ',' + str(j) + ')' for l in range(S-i) for j in range(S-i)])
 
-if __name__ == '__main__':
-    # read parameters
-    N = int(sys.argv[1])
-    S = int(sys.argv[2])
-    # infinite cost
-    top = 1
-    # dump problem into JSON .cfn format for minimization
-    cfn(model(N, S, top), True, top)
+#binary hard constraints for overlapping squares
+for i in range(N):
+	for j in range(i+1,N):
+		ListConstraintsOverlaps = []
+		for a in [S*k+l for k in range(S-i) for l in range(S-i)]:
+			for b in [S*m+n for m in range(S-j) for n in range(S-j)]:
+				#calculating the coordinates of the squares
+				X_i = a%S
+				X_j = b%S
+				Y_i = a//S
+				Y_j = b//S
+				#calculating if squares are overlapping
+				if X_i >= X_j :
+					if X_i - X_j < j+1:
+						if Y_i >= Y_j:
+							if Y_i - Y_j < j+1:
+								ListConstraintsOverlaps.append(1)
+							else:
+								ListConstraintsOverlaps.append(0)
+						else:
+							if Y_j - Y_i < i+1:
+								ListConstraintsOverlaps.append(1)
+							else:
+								ListConstraintsOverlaps.append(0)
+					else:
+						ListConstraintsOverlaps.append(0)
+				else :
+					if X_j - X_i < i+1:
+						if Y_i >= Y_j:
+							if Y_i - Y_j < j+1:
+								ListConstraintsOverlaps.append(1)
+							else:
+								ListConstraintsOverlaps.append(0)
+						else:
+							if Y_j - Y_i < i+1:
+								ListConstraintsOverlaps.append(1)
+							else:
+								ListConstraintsOverlaps.append(0)
+					else:
+						ListConstraintsOverlaps.append(0)
+		Problem.AddFunction(['sq' + str(i+1), 'sq' + str(j+1)], ListConstraintsOverlaps)
 
+#Problem.Dump('Square.cfn')
+Problem.CFN.timer(300)
+res = Problem.Solve(showSolutions=3)
+if res:
+	for i in range(S):
+		row = ''
+		for j in range(S):
+			row += ' '
+			for k in range(N-1, -1, -1):
+				if (res[0][k]%(S-k) <= j and j - res[0][k]%(S-k) <= k) and (res[0][k]//(S-k) <= i and i - res[0][k]//(S-k) <= k):
+					row = row[:-1] + chr(65 + k)
+		print(row)
+else:
+	print('No solution found!')

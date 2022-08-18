@@ -25,34 +25,28 @@ top = 44 # give a good initial upper-bound
 Problem = pytoulbar2.CFN(top)
 
 for i in range(N):
-    Problem.AddVariable('x' + str(i), range(horizon))
+	Problem.AddVariable('x' + str(i), range(horizon))
 
 # first job starts at 0
 Problem.AddFunction([0], [0 if a==0 else top for a in range(horizon)])
 
 # precedence constraints 
 for i in range(N):
-    for j in job_successors[i]:
-        Problem.AddFunction([i, j ], [(0 if a + job_durations[i] <= b else top) for a in range(horizon) for b in range(horizon)])
+	for j in job_successors[i]:
+		Problem.AddFunction([i, j ], [(0 if a + job_durations[i] <= b else top) for a in range(horizon) for b in range(horizon)])
 
 # for each ressource and each time slot, we post a linear constraint on all the jobs that require this ressource to not overcome the ressoure capacity
 for k, capacity in enumerate(capacities):
-  for a in range(horizon):
-    params = ''
-    realscope = []
-    for i in range(N):
-      if job_requirements[i][k] > 0:
-        paramval = ''
-        nbval = 0
-        for b in range(horizon):
-          if a >= b and a < b + job_durations[i]:
-            nbval += 1
-            paramval += ' ' + str(b) + ' ' + str(-job_requirements[i][k])
-        if nbval > 0:
-          params += ' ' + str(nbval) + paramval
-          realscope.append(i)
-    if len(params) > 0:
-      Problem.CFN.wcsp.postKnapsackConstraint(realscope, str(-capacity) + params, False, True)
+	for a in range(horizon):
+		List = []
+		for i in range(N):
+			if job_requirements[i][k] > 0:
+				for b in range(horizon):
+					if a >= b and a < b + job_durations[i]:
+						List.append(('x' +str(i), a, job_requirements[i][k]))
+		if len(List) > 0:
+			Problem.AddGeneralizedLinearConstraint(List, operand='<=', rightcoef=capacity)
+			print(List)
 
 # minimize makespan, i.e., the completion time of the last job
 Problem.AddFunction([N-1], [a for a in range(horizon)])

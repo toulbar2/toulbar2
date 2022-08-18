@@ -9,12 +9,12 @@ Weighted n-queen problem
 Brief description
 =================
 
-The problem consists in assigning N queens on a NxN chessboard with random weights in (1..N) associated to every cell such that each queen does not attack another queen and the sum of the weights of queen's selected cells is minimized.
+The problem consists in assigning N queens on a NxN chessboard with random costs in (1..N) associated to every cell such that each queen does not attack another queen and the sum of the costs of queen's selected cells is minimized.
 
 CFN model
 =========
 
-A solution must have only one queen per column and per row. We create N variables for every column with domain size N to represent the selected row for each queen. A clique of binary constraints is used to express that two queens cannot be on the same row. Forbidden assignments have cost k=N**2+1. Two other cliques of binary constraints are used to express that two queens do not attack each other on a lower/upper diagonal.
+A solution must have only one queen per column and per row. We create N variables for every column with domain size N to represent the selected row for each queen. A clique of binary constraints is used to express that two queens cannot be on the same row. Forbidden assignments have cost k=N**2+1. Two other cliques of binary constraints are used to express that two queens do not attack each other on a lower/upper diagonal. We add N unary cost functions to create the objective function with random costs on every cell.
 
 Example for N=4 in JSON .cfn format
 ===================================
@@ -63,15 +63,12 @@ Optimal solution with cost 11 for the 4-queen example :
 .. image:: ../../../web/IMAGES/queen4.png
    :height: 250px
 
-Python model generator
-======================
+Python model
+============
 
-The following code using python3 interpreter will generate the previous example if called without argument. Otherwise the first argument is the number of queens N (e.g. "python3 queens.py 8").
+The following code using the pytoulbar2 library solves the weighted N-queen problem with the first argument being the number of queens N (e.g. "python3 weightedqueens.py 8").
 
-.. note::
-   Notice that the first lines of code (import and functions flatten and cfn) are needed by all the other tutorial examples.
+:download:`weightedqueens.py<../../../web/TUTORIALS/weightedqueens.py>`
 
-:download:`queens.py<../../../web/TUTORIALS/queens.py>`
-
-.. literalinclude:: ../../../web/TUTORIALS/queens.py
+.. literalinclude:: ../../../web/TUTORIALS/weightedqueens.py
 
