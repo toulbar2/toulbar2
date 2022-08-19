@@ -40,7 +40,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<vector<Double>> yAMO_i;
     vector<std::array<Double, 4>> Slopes;
     int nbRealVar;
-    vector<vector<pair<int, int>>> AMO; //Represent AMO contraints
+    vector<vector<pair<int, int>>> AMO; //Represent AMO constraints
     vector<vector<Long>> Original_weigths;
     vector<int> VirtualVar, CorrAMO; //VirtualVar has size Number of AMO constraint + number of variable in no AMO constraint, it returns if a given index represents a virtual var (an AMO constraint) or a real one.
     //CorrAMO has size arity and gives on which AMO constraint the given variable belongs (0 if it is in no AMO constraint).
@@ -878,7 +878,7 @@ public:
                                 ok = true;
                                 if (AMO[CorrAMO[varIndex] - 1][k].second == scope[varIndex]->getInf()) {
                                     capacity -= weights[nbRealVar + CorrAMO[varIndex] - 1][k];
-                                    assigneddeltas += deltaCosts[varIndex][scope[varIndex]->getInf()];
+                                    assigneddeltas += deltaCosts[varIndex][scope[varIndex]->toIndex(scope[varIndex]->getInf())];
                                     fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), MIN_COST);
                                     MaxWeight -= weights[nbRealVar + CorrAMO[varIndex] - 1][GreatestWeightIdx[nbRealVar + CorrAMO[varIndex] - 1]];
                                     nbVirtualVar[CorrAMO[varIndex] - 1] = 0;
@@ -897,7 +897,7 @@ public:
                                         }
                                     }
                                 } else {
-                                    assigneddeltas += deltaCosts[varIndex][scope[varIndex]->getInf()];
+                                    assigneddeltas += deltaCosts[varIndex][scope[varIndex]->toIndex(scope[varIndex]->getInf())];
                                     fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), MIN_COST);
                                     nbVirtualVar[CorrAMO[varIndex] - 1] = nbVirtualVar[CorrAMO[varIndex] - 1] - 1;
                                     if (nbVirtualVar[CorrAMO[varIndex] - 1] == 0) {
@@ -992,7 +992,7 @@ public:
                                         scope[current_scope_idx[i]]->findSupport();
                                     }
                                 } else {
-                                    mindelta = deltaCosts[current_scope_idx[i]][scope[current_scope_idx[i]]->getValue()];
+                                    mindelta = deltaCosts[current_scope_idx[i]][scope[current_scope_idx[i]]->toIndex(scope[current_scope_idx[i]]->getValue())];
                                     if (mindelta != 0) {
                                         lb -= mindelta;
                                         deltaCosts[current_scope_idx[i]][1] = 0;
@@ -1014,7 +1014,8 @@ public:
                                                 scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first]->findSupport();
                                             }
                                         } else {
-                                            mindelta = deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first][scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first]->getValue()];
+                                            int varidx = AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first;
+                                            mindelta = deltaCosts[varidx][scope[varidx]->toIndex(scope[varidx]->getValue())];
                                             if (mindelta != 0) {
                                                 lb -= mindelta;
                                                 deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first][1] = 0;
