@@ -311,7 +311,7 @@ bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
 bool Constraint::decompose()
 {
     bool sep = false;
-    if (extension() && !universal() && arity() >= 3 && arity() <= ToulBar2::preprocessNary && (isTernary() || (isNary() && (getDomainSizeProduct() < MAX_NB_TUPLES) && (getDefCost() > MIN_COST || ((NaryConstraint*)this)->size() > 1)))) {
+    if (extension() && !universal() && arity() >= 3 && arity() <= ToulBar2::preprocessNary && ((isTernary() && getVar(0)->getTrueDegree() > (min(2,max(ToulBar2::elimDegree,ToulBar2::elimDegree_preprocessing))) && getVar(1)->getTrueDegree() > (min(2,max(ToulBar2::elimDegree,ToulBar2::elimDegree_preprocessing))) && getVar(2)->getTrueDegree() > (min(2,max(ToulBar2::elimDegree,ToulBar2::elimDegree_preprocessing)))) || (isNary() && (getDomainSizeProduct() < MAX_NB_TUPLES) && (getDefCost() > MIN_COST || ((NaryConstraint*)this)->size() > 1)))) {
         TSCOPE scopeinv;
         getScope(scopeinv);
         EnumeratedVariable* vx = NULL;
