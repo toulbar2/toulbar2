@@ -564,6 +564,64 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintAlldifferent(vars);
     }
 
+    void buildConstraintAlldifferentExcept(vector<int> &vars, vector<int> &except) {
+        // remove multiple occurrences of the same variable
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (unsigned int j = i + 1; j < vars.size(); j++) {
+                if (vars[i] == vars[j]) {
+                    vars.erase(vars.begin()+j);
+                    j--;
+                }
+            }
+        }
+        if (vars.size() <= 50) {
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                for (unsigned int j = i+1; j < vars.size(); j++) {
+                    vector<Cost> costs;
+                    for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
+                        for (unsigned int b = 0; b < problem->getDomainInitSize(vars[j]); b++) {
+                            costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b) || std::find(except.begin(), except.end(), problem->toValue(vars[i], a))!=except.end() || std::find(except.begin(), except.end(), problem->toValue(vars[j], b))!=except.end())?MIN_COST:MAX_COST);
+                        }
+                    }
+                    problem->postBinaryConstraint(vars[i], vars[j], costs);
+                }
+            }
+        } else {
+            set<Value> values;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                ((EnumeratedVariable*)((WCSP*)problem)->getVar(vars[i]))->getDomain(values);
+            }
+            for (Value value : values) {
+                if (std::find(except.begin(), except.end(), value)==except.end()) {
+                    string params = to_string(-1);
+                    for (unsigned int i = 0; i < vars.size(); i++) {
+                        if (problem->canbe(vars[i], value)) {
+                            params += " 1 " + to_string(value) + " -1";
+                        } else {
+                            params += " 0";
+                        }
+                    }
+                    istringstream file(params);
+                    ((WCSP*)problem)->postKnapsackConstraint(vars.data(), vars.size(), file, false, true, false);
+                }
+            }
+        }
+    }
+
+    void buildConstraintAlldifferentExcept(string id, vector<string> &list, vector<int> &except) {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        buildConstraintAlldifferentExcept(vars, except);
+    }
+
+    void buildConstraintAlldifferentExcept(string id, vector<XVariable *> &list, vector<int> &except) override {
+        vector<string> slist;
+        for (auto& x:list) {
+            slist.push_back(x->id);
+        }
+        buildConstraintAlldifferentExcept(id, slist, except);
+    }
+
     // warning! vars and coefs may be modified
     void buildConstraintSum(vector<int> &vars, vector<Long> &coefs, XCondition &cond, Long valLong = LONG_MAX, Long minLong = LONG_MAX, Long maxLong = LONG_MAX) {
         assert(vars.size() == coefs.size());
