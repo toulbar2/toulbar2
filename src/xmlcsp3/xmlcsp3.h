@@ -2672,6 +2672,44 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintNoOverlap(string id, vector<vector<XVariable *>> &origins, vector<vector<int>> &lengths, bool zeroIgnored) override {
+        assert(origins.size() == lengths.size());
+        if (origins[0].size()==1) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i +1 ; j < n; j++) {
+                    if (!zeroIgnored || (lengths[i][0]>0 && lengths[j][0]>0)) {
+                        Tree tree("or(le(add(" + origins[i][0]->id + "," + to_string(lengths[i][0]) + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + to_string(lengths[j][0]) + ")," + origins[i][0]->id + "))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else if (origins[0].size()==2) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i +1 ; j < n; j++) {
+                    if (!zeroIgnored || (lengths[i][0]>0 && lengths[j][0]>0 && lengths[i][1]>0 && lengths[j][1]>0)) {
+                        Tree tree("or(or(le(add(" + origins[i][0]->id + "," + to_string(lengths[i][0]) + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + to_string(lengths[j][0]) + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + to_string(lengths[i][1]) + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + to_string(lengths[j][1]) + ")," + origins[i][1]->id + ")))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else if (origins[0].size()==3) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i +1 ; j < n; j++) {
+                    if (!zeroIgnored || (lengths[i][0]>0 && lengths[j][0]>0 && lengths[i][1]>0 && lengths[j][1]>0 && lengths[i][2]>0 && lengths[j][2]>0)) {
+                        Tree tree("or(or(or(le(add(" + origins[i][0]->id + "," + to_string(lengths[i][0]) + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + to_string(lengths[j][0]) + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + to_string(lengths[i][1]) + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + to_string(lengths[j][1]) + ")," + origins[i][1]->id + "))),or(le(add(" + origins[i][2]->id + "," + to_string(lengths[i][2]) + ")," + origins[j][2]->id + "),le(add(" + origins[j][2]->id + "," + to_string(lengths[j][2]) + ")," + origins[i][2]->id + "))))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else {
+            cerr << "Sorry " << origins[0].size() << " dimension not implemented in NoOverlap constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
     void buildConstraintNoOverlap(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, bool zeroIgnored) override {
         assert(origins.size() == lengths.size());
         unsigned int n = origins.size();
@@ -2685,6 +2723,53 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     buildConstraintIntension(id, &tree);
                 }
             }
+        }
+    }
+
+    void buildConstraintNoOverlap(string id, vector<vector<XVariable *>> &origins, vector<vector<XVariable *>> &lengths, bool zeroIgnored) override {
+        assert(origins.size() == lengths.size());
+        if (origins[0].size()==1) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i +1 ; j < n; j++) {
+                    if (!zeroIgnored) {
+                        Tree tree("or(le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + "))");
+                        buildConstraintIntension(id, &tree);
+                    } else {
+                        Tree tree("or(eq(" + lengths[i][0]->id + ",0),eq(" + lengths[j][0]->id + ",0),le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + "))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else if (origins[0].size()==2) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i +1 ; j < n; j++) {
+                    if (!zeroIgnored) {
+                        Tree tree("or(or(le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + lengths[i][1]->id + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + lengths[j][1]->id + ")," + origins[i][1]->id + ")))");
+                        buildConstraintIntension(id, &tree);
+                    } else {
+                        Tree tree("or(eq(" + lengths[i][0]->id + ",0),eq(" + lengths[j][0]->id + ",0),eq(" + lengths[i][1]->id + ",0),eq(" + lengths[j][1]->id + ",0),or(le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + lengths[i][1]->id + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + lengths[j][1]->id + ")," + origins[i][1]->id + ")))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else if (origins[0].size()==3) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i +1 ; j < n; j++) {
+                    if (!zeroIgnored) {
+                        Tree tree("or(or(or(le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + lengths[i][1]->id + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + lengths[j][1]->id + ")," + origins[i][1]->id + "))),or(le(add(" + origins[i][2]->id + "," + lengths[i][2]->id + ")," + origins[j][2]->id + "),le(add(" + origins[j][2]->id + "," + lengths[j][2]->id + ")," + origins[i][2]->id + "))))");
+                        buildConstraintIntension(id, &tree);
+                    } else {
+                        Tree tree("or(eq(" + lengths[i][0]->id + ",0),eq(" + lengths[j][0]->id + ",0),eq(" + lengths[i][1]->id + ",0),eq(" + lengths[j][1]->id + ",0),eq(" + lengths[i][2]->id + ",0),eq(" + lengths[j][2]->id + ",0),or(or(le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + lengths[i][1]->id + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + lengths[j][1]->id + ")," + origins[i][1]->id + "))),or(le(add(" + origins[i][2]->id + "," + lengths[i][2]->id + ")," + origins[j][2]->id + "),le(add(" + origins[j][2]->id + "," + lengths[j][2]->id + ")," + origins[i][2]->id + "))))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else {
+            cerr << "Sorry " << origins[0].size() << " dimension not implemented in NoOverlap constraint!" << endl;
+            throw WrongFileFormat();
         }
     }
 
