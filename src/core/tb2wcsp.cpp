@@ -627,6 +627,16 @@ void tb2checkOptions()
         cerr << "Error: VAC-based upper bound probing heuristic not implemented with BTD-like search methods (remove -rasps option)." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::useRASPS && ToulBar2::searchMethod != DFBB) {
+        cerr << "Error: VAC-based upper bound probing heuristic not implemented with variable neighborhood search methods (remove -rasps option)." << endl;
+        throw BadConfiguration();
+    }
+#ifdef OPENMPI
+    if (ToulBar2::useRASPS && ToulBar2::parallel) {
+        cerr << "Error: VAC-based upper bound probing heuristic not implemented with parallel search methods (remove -rasps option)." << endl;
+        throw BadConfiguration();
+    }
+#endif
     if (ToulBar2::useRASPS && !ToulBar2::vac) {
         cerr << "Error: VAC-based upper bound probing heuristic requires VAC at least in preprocessing (add -A option)." << endl;
         throw BadConfiguration();

@@ -734,8 +734,10 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         // remove following "+1" when isolated variables are automatically assigned
-        double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        if (varIndex < 0 || heuristic < best - epsilon * best
+        Long wdeg = wcsp->getWeightedDegree(*iter);
+        double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
+        if ((varIndex < 0)
+            || (heuristic < best - epsilon * best)
             || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
