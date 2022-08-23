@@ -325,12 +325,10 @@ public:
                 LowestWeightIdx.emplace_back(min_element(weights[i].begin(), weights[i].end()) - weights[i].begin());
                 InitLargestWeight.emplace_back(weights[i][GreatestWeightIdx[i]]);
                 if (NotVarVal[i].empty()) {
-                    lastval0.push_back(scope[i]->getInf() - 1);
-                    lastval0ok.emplace_back(true);
-                } else {
-                    lastval0.push_back(NotVarVal[i][0]);
-                    lastval0ok.emplace_back(false);
+                    NotVarVal[i].push_back(VarVal[i].back());
                 }
+                lastval0.push_back(NotVarVal[i][0]);
+                lastval0ok.emplace_back(false);
                 lastval1.push_back(VarVal[i][0]);
                 assert(VarVal[i].size() == weights[i].size());
                 if (maxdom < VarVal[i].size())
