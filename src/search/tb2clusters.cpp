@@ -2523,7 +2523,7 @@ void TreeDecomposition::newSolution(Cost lb)
         cout << endl;
     }
 
-    if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
+    if (!ToulBar2::uaieval && ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
         if (!ToulBar2::allSolutions)
             fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
         wcsp->printSolution(ToulBar2::solutionFile);

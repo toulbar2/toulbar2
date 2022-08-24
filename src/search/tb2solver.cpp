@@ -1480,7 +1480,7 @@ void Solver::newSolution()
         if (ToulBar2::pedigree) {
             ToulBar2::pedigree->printCorrection((WCSP*)wcsp);
         }
-        if (ToulBar2::writeSolution) {
+        if (!ToulBar2::uaieval && ToulBar2::writeSolution) {
             if (ToulBar2::pedigree) {
                 string problemname = ToulBar2::problemsaved_filename;
                 if (problemname.rfind(".wcsp") != string::npos)
@@ -1994,7 +1994,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
                 wcsp->printSolution(cout);
                 cout << endl;
             }
-            if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
+            if (!ToulBar2::uaieval && ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
                 rewind(ToulBar2::solutionFile);
                 wcsp->printSolution(ToulBar2::solutionFile);
                 fprintf(ToulBar2::solutionFile, "\n");
@@ -2868,10 +2868,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         if (ToulBar2::verbose >= 1)
             cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
         if (ToulBar2::uaieval) {
-            rewind(ToulBar2::solution_uai_file);
-            fprintf(ToulBar2::solution_uai_file, "PR\n");
-            fprintf(ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
-            fprintf(ToulBar2::solution_uai_file, "\n");
+            rewind((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file);
+            fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "PR\n");
+            fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
+            fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "\n");
         }
         cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
         cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;

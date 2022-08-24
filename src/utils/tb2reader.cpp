@@ -3300,12 +3300,12 @@ void WCSP::solution_UAI(Cost res)
         return;
     if (ToulBar2::isZ)
         return;
-    if (ToulBar2::solution_uai_file == NULL)
+    if (((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file) == NULL)
         return;
     // UAI 2012 Challenge output format
     //	    ToulBar2::solution_file << "-BEGIN-" << endl;
-    rewind(ToulBar2::solution_uai_file);
-    fprintf(ToulBar2::solution_uai_file, "MPE\n");
+    rewind((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file);
+    fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "MPE\n");
     //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
     //    if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
     //        cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
@@ -3313,9 +3313,9 @@ void WCSP::solution_UAI(Cost res)
     //        cout << numberOfVariables();
     //        printSolution(cout);
     //    }
-    fprintf(ToulBar2::solution_uai_file, "%d ", numberOfVariables());
-    printSolution(ToulBar2::solution_uai_file);
-    fprintf(ToulBar2::solution_uai_file, "\n");
+    fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "%d ", numberOfVariables());
+    printSolution((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file);
+    fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "\n");
     //	if (opt) {
     //	  if (ToulBar2::showSolutions) cout << " LU" << endl;
     //	  ToulBar2::solution_file << " LU" << endl;

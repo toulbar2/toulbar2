@@ -1076,7 +1076,7 @@ int _tmain(int argc, TCHAR* argv[])
     //	ToulBar2::lds = 1;
 
     // Configuration for UAI Evaluation
-    // ToulBar2::uaieval = (world.rank() == 0);
+    //  ToulBar2::uaieval = true; // (world.rank() == 0);
     //  ToulBar2::verbose = 0;
     //  ToulBar2::lds = 1;
     //  ToulBar2::incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -2981,7 +2981,7 @@ int _tmain(int argc, TCHAR* argv[])
                     throw WrongFileFormat();
                 }
             }
-            if (ToulBar2::uaieval) {
+            if (ToulBar2::uaieval && !ToulBar2::writeSolution) {
                 char* tmpPath = new char[strlen(argv[0]) + 1];
                 strcpy(tmpPath, argv[0]);
                 if (strcmp(tmpPath, "toulbar2") == 0)
@@ -2992,7 +2992,7 @@ int _tmain(int argc, TCHAR* argv[])
                 filename += "/";
                 filename += basename(tmpFile);
                 size_t wcsppos = string::npos;
-                if (ToulBar2::uaieval && (wcsppos = filename.rfind(".wcsp")) != string::npos)
+                if ((wcsppos = filename.rfind(".wcsp")) != string::npos)
                     filename.replace(wcsppos, 5, ".uai");
                 filename += ".";
                 if (ToulBar2::isZ)

@@ -606,7 +606,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         wcsp->printSolution();
         cout << endl;
     }
-    if (ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
+    if (!ToulBar2::uaieval && ToulBar2::writeSolution && ToulBar2::solutionFile != NULL) {
         fseek(ToulBar2::solutionFile, ToulBar2::solutionFileRewindPos, SEEK_SET);
         wcsp->printSolution(ToulBar2::solutionFile);
         fprintf(ToulBar2::solutionFile, "\n");
