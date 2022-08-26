@@ -462,14 +462,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<Cost> costs;
         if (varx != vary) {
             if (varx != varz && vary != varz) {
-                for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
-                    for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
-                        for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
+                for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
+                    for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+                        for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
                             costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varz, c))?MIN_COST:MAX_COST);
                         }
                     }
                 }
-                problem->postTernaryConstraint(varx, vary, varz, costs);
+//                problem->postTernaryConstraint(varx, vary, varz, costs);
+                problem->postTernaryConstraint(varz, varx, vary, costs);
             } else if (varx == varz) {
                 for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
                     for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
