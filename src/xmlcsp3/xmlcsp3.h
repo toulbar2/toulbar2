@@ -159,12 +159,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]), (isSupport)?MAX_COST:MIN_COST);
             for(auto& tuple:tuples) {
                 if (isSupport) {
-                    costs[problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MIN_COST;
+//                    costs[problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MIN_COST;
+                    costs[problem->toIndex(vars[2], tuple[2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuple[1])] = MIN_COST;
                 } else {
-                    costs[problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MAX_COST;
+//                    costs[problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MAX_COST;
+                    costs[problem->toIndex(vars[2], tuple[2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuple[1])] = MAX_COST;
                 }
             }
-            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
+//            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
+            problem->postTernaryConstraint(vars[2], vars[0], vars[1], costs);
         } else {
             int ctridx = problem->postNaryConstraintBegin(vars, (isSupport)?MAX_COST:MIN_COST, tuples.size());
             for(auto& tuple:tuples) {
@@ -2942,9 +2945,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else if (vars.size()==3) {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]), MAX_COST);
             for(unsigned int i=0; i<tuples.size(); i++) {
-                costs[problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuples[i][1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuples[i][2])] = tcosts[i] - negcost;
+//                costs[problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuples[i][1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuples[i][2])] = tcosts[i] - negcost;
+                costs[problem->toIndex(vars[2], tuples[i][2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuples[i][1])] = tcosts[i] - negcost;
             }
-            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
+//            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
+            problem->postTernaryConstraint(vars[2], vars[0], vars[1], costs);
         } else {
             int ctridx = problem->postNaryConstraintBegin(vars, MAX_COST, tuples.size());
             for(unsigned int i=0; i<tuples.size(); i++) {

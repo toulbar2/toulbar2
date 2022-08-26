@@ -1,5 +1,7 @@
 /** \file tb2ternaryconstr.hpp
  *  \brief Ternary constraint applied on variables with enumerated domains.
+ *  Functional variables are automatically detected and used to reduce time complexity of propagation by a factor of its domain size (isEAC, findSupport and findFullSupport).
+ *  If the first variable in the scope is functional wrt to the two others then it is also used to reduce space complexity (quadratic instead of cubic)
  *  \warning EAC is not applied on duplicated ternary constraints
  */
 

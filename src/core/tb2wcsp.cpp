@@ -925,6 +925,8 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
 ///
 /// \note This must ONLY be called before search.
 ///
+/// \note If variable x is a function of y and z then the space and time complexity of the cost function will be quadratic instead of cubic
+///
 /// \warning The cost Vector must have the same size as Cartesian product of original domains.
 int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& dcosts, bool incremental)
 {
