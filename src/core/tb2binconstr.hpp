@@ -435,7 +435,7 @@ public:
             supportY.resize(sizeY);
         if (max(sizeX, sizeY) > trwsM.size())
             trwsM.resize(max(sizeX, sizeY), MIN_COST);
-        if ((unsigned long)sizeX * (unsigned long)sizeY > costs.size())
+        if ((size_t)sizeX * (size_t)sizeY > costs.size())
 #ifdef NO_STORE_BINARY_COSTS
             costs.resize((size_t)sizeX * (size_t)sizeY, MIN_COST);
 #else

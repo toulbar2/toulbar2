@@ -28,7 +28,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     , functionalY(true)
     , functionalZ(true)
 {
-    assert(tab.size() == sizeX * sizeY * sizeZ);
+    assert(tab.size() == (size_t)sizeX * (size_t)sizeY * (size_t)sizeZ);
     deltaCostsX = vector<StoreCost>(sizeX, StoreCost(MIN_COST));
     deltaCostsY = vector<StoreCost>(sizeY, StoreCost(MIN_COST));
     deltaCostsZ = vector<StoreCost>(sizeZ, StoreCost(MIN_COST));
@@ -40,13 +40,10 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     supportY = vector<pair<Value, Value>>(sizeY, make_pair(x->getInf(), z->getInf()));
     supportZ = vector<pair<Value, Value>>(sizeZ, make_pair(x->getInf(), y->getInf()));
 
-    //    costs = vector<StoreCost>(sizeX*sizeY*sizeZ,StoreCost(MIN_COST,storeCost));
-
-    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-            for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                Cost cost = tab[a * sizeY * sizeZ + b * sizeZ + c];
-                //		  costs[a * sizeY * sizeZ + b * sizeZ + c] = cost;
+    for (unsigned int a = 0; a < sizeX; a++) {
+        for (unsigned int b = 0; b < sizeY; b++) {
+            for (unsigned int c = 0; c < sizeZ; c++) {
+                Cost cost = tab[(size_t)a * (size_t)sizeY * (size_t)sizeZ + (size_t)b * (size_t)sizeZ + (size_t)c];
                 if (!CUT(cost, top) && x->canbe(x->toValue(a)) && y->canbe(y->toValue(b)) && z->canbe(z->toValue(c))) {
                     if (functionalX) {
                         if (functionX[b * sizeZ + c] == WRONG_VAL)
@@ -71,9 +68,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
         }
     }
 
-    xy = xy_;
-    xz = xz_;
-    yz = yz_;
+    setBinaries(xy_, xz_, yz_);
 
     if (functionalX) {
 #ifdef NO_STORE_TERNARY_COSTS
@@ -97,7 +92,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
                 for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                    costs[a * sizeY * sizeZ + b * sizeZ + c] = tab[a * sizeY * sizeZ + b * sizeZ + c];
+                    costs[(size_t)a * sizeY * sizeZ + (size_t)b * sizeZ + c] = tab[(size_t)a * sizeY * sizeZ + (size_t)b * sizeZ + c];
                 }
             }
         }
@@ -105,78 +100,78 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
 
 // Uncomment the following code if toulbar2 is used within numberjack
 #ifdef NUMBERJACK
-    vector<int>& vecX = wcsp->getListSuccessors()->at(xx->wcspIndex);
-    vector<int>& vecY = wcsp->getListSuccessors()->at(yy->wcspIndex);
-    vector<int>& vecZ = wcsp->getListSuccessors()->at(zz->wcspIndex);
-    // If variables xx,yy,zz are not yet involved by a decomposable global cost function and there is a functional dependency between them
+    vector<int>& vecX = wcsp->getListSuccessors()->at(x->wcspIndex);
+    vector<int>& vecY = wcsp->getListSuccessors()->at(y->wcspIndex);
+    vector<int>& vecZ = wcsp->getListSuccessors()->at(z->wcspIndex);
+    // If variables x,y,z are not yet involved by a decomposable global cost function and there is a functional dependency between them
     // then suggests a good Berge DAC ordering:
-    if ((std::find(vecX.begin(), vecX.end(), yy->wcspIndex) == vecX.end()) && (std::find(vecX.begin(), vecX.end(), zz->wcspIndex) == vecX.end()) && (std::find(vecY.begin(), vecY.end(), xx->wcspIndex) == vecY.end()) && (std::find(vecY.begin(), vecY.end(), zz->wcspIndex) == vecY.end()) && (std::find(vecZ.begin(), vecZ.end(), xx->wcspIndex) == vecZ.end()) && (std::find(vecZ.begin(), vecZ.end(), yy->wcspIndex) == vecZ.end())) {
+    if ((std::find(vecX.begin(), vecX.end(), y->wcspIndex) == vecX.end()) && (std::find(vecX.begin(), vecX.end(), z->wcspIndex) == vecX.end()) && (std::find(vecY.begin(), vecY.end(), x->wcspIndex) == vecY.end()) && (std::find(vecY.begin(), vecY.end(), z->wcspIndex) == vecY.end()) && (std::find(vecZ.begin(), vecZ.end(), x->wcspIndex) == vecZ.end()) && (std::find(vecZ.begin(), vecZ.end(), y->wcspIndex) == vecZ.end())) {
         switch (functionalX + functionalY + functionalZ) {
         case 1:
             if (functionalX) {
-                vecX.push_back(yy->wcspIndex);
-                vecX.push_back(zz->wcspIndex);
+                vecX.push_back(y->wcspIndex);
+                vecX.push_back(z->wcspIndex);
             } else if (functionalY) {
-                vecY.push_back(xx->wcspIndex);
-                vecY.push_back(zz->wcspIndex);
+                vecY.push_back(x->wcspIndex);
+                vecY.push_back(z->wcspIndex);
             } else if (functionalZ) {
-                vecZ.push_back(xx->wcspIndex);
-                vecZ.push_back(yy->wcspIndex);
+                vecZ.push_back(x->wcspIndex);
+                vecZ.push_back(y->wcspIndex);
             }
             ToulBar2::Berge_Dec = true;
             break;
         case 2:
             if (functionalX && functionalY) {
-                if (xx->wcspIndex < yy->wcspIndex) {
-                    vecX.push_back(zz->wcspIndex);
-                    vecZ.push_back(yy->wcspIndex);
+                if (x->wcspIndex < y->wcspIndex) {
+                    vecX.push_back(z->wcspIndex);
+                    vecZ.push_back(y->wcspIndex);
                 } else {
-                    vecY.push_back(zz->wcspIndex);
-                    vecZ.push_back(xx->wcspIndex);
+                    vecY.push_back(z->wcspIndex);
+                    vecZ.push_back(x->wcspIndex);
                 }
             } else if (functionalX && functionalZ) {
-                if (xx->wcspIndex < zz->wcspIndex) {
-                    vecX.push_back(yy->wcspIndex);
-                    vecY.push_back(zz->wcspIndex);
+                if (x->wcspIndex < z->wcspIndex) {
+                    vecX.push_back(y->wcspIndex);
+                    vecY.push_back(z->wcspIndex);
                 } else {
-                    vecZ.push_back(yy->wcspIndex);
-                    vecY.push_back(xx->wcspIndex);
+                    vecZ.push_back(y->wcspIndex);
+                    vecY.push_back(x->wcspIndex);
                 }
             } else if (functionalY && functionalZ) {
-                if (yy->wcspIndex < zz->wcspIndex) {
-                    vecY.push_back(xx->wcspIndex);
-                    vecX.push_back(zz->wcspIndex);
+                if (y->wcspIndex < z->wcspIndex) {
+                    vecY.push_back(x->wcspIndex);
+                    vecX.push_back(z->wcspIndex);
                 } else {
-                    vecZ.push_back(xx->wcspIndex);
-                    vecX.push_back(yy->wcspIndex);
+                    vecZ.push_back(x->wcspIndex);
+                    vecX.push_back(y->wcspIndex);
                 }
             }
             ToulBar2::Berge_Dec = true;
             break;
         case 3:
-            if (xx->wcspIndex < yy->wcspIndex && xx->wcspIndex < zz->wcspIndex) {
-                if (yy->wcspIndex < zz->wcspIndex) {
-                    vecY.push_back(xx->wcspIndex);
-                    vecX.push_back(zz->wcspIndex);
+            if (x->wcspIndex < y->wcspIndex && x->wcspIndex < z->wcspIndex) {
+                if (y->wcspIndex < z->wcspIndex) {
+                    vecY.push_back(x->wcspIndex);
+                    vecX.push_back(z->wcspIndex);
                 } else {
-                    vecZ.push_back(xx->wcspIndex);
-                    vecX.push_back(yy->wcspIndex);
+                    vecZ.push_back(x->wcspIndex);
+                    vecX.push_back(y->wcspIndex);
                 }
-            } else if (yy->wcspIndex < xx->wcspIndex && yy->wcspIndex < zz->wcspIndex) {
-                if (xx->wcspIndex < zz->wcspIndex) {
-                    vecX.push_back(yy->wcspIndex);
-                    vecY.push_back(zz->wcspIndex);
+            } else if (y->wcspIndex < x->wcspIndex && y->wcspIndex < z->wcspIndex) {
+                if (x->wcspIndex < z->wcspIndex) {
+                    vecX.push_back(y->wcspIndex);
+                    vecY.push_back(z->wcspIndex);
                 } else {
-                    vecZ.push_back(yy->wcspIndex);
-                    vecY.push_back(xx->wcspIndex);
+                    vecZ.push_back(y->wcspIndex);
+                    vecY.push_back(x->wcspIndex);
                 }
-            } else if (zz->wcspIndex < xx->wcspIndex && zz->wcspIndex < yy->wcspIndex) {
-                if (xx->wcspIndex < yy->wcspIndex) {
-                    vecX.push_back(zz->wcspIndex);
-                    vecZ.push_back(yy->wcspIndex);
+            } else if (z->wcspIndex < x->wcspIndex && z->wcspIndex < y->wcspIndex) {
+                if (x->wcspIndex < y->wcspIndex) {
+                    vecX.push_back(z->wcspIndex);
+                    vecZ.push_back(y->wcspIndex);
                 } else {
-                    vecY.push_back(zz->wcspIndex);
-                    vecZ.push_back(xx->wcspIndex);
+                    vecY.push_back(z->wcspIndex);
+                    vecZ.push_back(x->wcspIndex);
                 }
             }
             ToulBar2::Berge_Dec = true;

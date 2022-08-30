@@ -352,7 +352,7 @@ public:
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
         unsigned int iz = z->toIndex(vz);
-        Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : top) : (costs[ix * sizeY * sizeZ + iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
+        Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : top) : (costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
         assert(res >= MIN_COST);
         return res;
     }
@@ -363,7 +363,7 @@ public:
         vindex[getIndex(xx)] = xx->toIndex(vx);
         vindex[getIndex(yy)] = yy->toIndex(vy);
         vindex[getIndex(zz)] = zz->toIndex(vz);
-        Cost res = ((costs.empty()) ? ((x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) ? (costsYZ[vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]) : top) : (costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]));
+        Cost res = ((costs.empty()) ? ((x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) ? (costsYZ[vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]) : top) : (costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]));
         assert(res >= MIN_COST);
         return res;
     }
@@ -381,7 +381,7 @@ public:
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
         unsigned int iz = z->toIndex(vz);
-        Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : top) : (costs[ix * sizeY * sizeZ + iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
+        Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : top) : (costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
         if (xy->connected())
             res += xy->getCost(x, y, vx, vy);
         if (xz->connected())
@@ -398,7 +398,7 @@ public:
         vindex[getIndex(xx)] = pair<unsigned int, Value>(xx->toIndex(vx), vx);
         vindex[getIndex(yy)] = pair<unsigned int, Value>(yy->toIndex(vy), vy);
         vindex[getIndex(zz)] = pair<unsigned int, Value>(zz->toIndex(vz), vz);
-        Cost res = ((costs.empty()) ? ((vindex[0].second == functionX[vindex[1].first * sizeZ + vindex[2].first]) ? (costsYZ[vindex[1].first * sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]) : top) : (costs[vindex[0].first * sizeY * sizeZ + vindex[1].first * sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]));
+        Cost res = ((costs.empty()) ? ((vindex[0].second == functionX[vindex[1].first * sizeZ + vindex[2].first]) ? (costsYZ[vindex[1].first * sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]) : top) : (costs[(size_t)vindex[0].first * sizeY * sizeZ + (size_t)vindex[1].first * sizeZ + vindex[2].first] - deltaCostsX[vindex[0].first] - deltaCostsY[vindex[1].first] - deltaCostsZ[vindex[2].first]));
         if (xy->connected())
             res += xy->getCost(x, y, vindex[0].second, vindex[1].second);
         if (xz->connected())
@@ -429,7 +429,7 @@ public:
                         if (*iterx == functionX[iy * sizeZ + iz])
                             costsYZ[iy * sizeZ + iz] += xyz->getCost(x, y, z, *iterx, *itery, *iterz);
                     } else
-                        costs[ix * sizeY * sizeZ + iy * sizeZ + iz] += xyz->getCost(x, y, z, *iterx, *itery, *iterz);
+                        costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] += xyz->getCost(x, y, z, *iterx, *itery, *iterz);
                 }
             }
         }
@@ -466,7 +466,7 @@ public:
                         if (x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]])
                             costsYZ[vindex[1] * sizeZ + vindex[2]] += costsin[vxin * sizeYin * sizeZin + vyin * sizeZin + vzin];
                     } else
-                        costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] += costsin[vxin * sizeYin * sizeZin + vyin * sizeZin + vzin];
+                        costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] += costsin[(size_t)vxin * sizeYin * sizeZin + (size_t)vyin * sizeZin + vzin];
                 }
             }
         }
@@ -490,10 +490,10 @@ public:
         } else {
             if (c < MIN_COST && (functionalX || functionalY || functionalZ)) {
                 if ((!functionalX || getFunctionX(vyi, vzi) == vxi) && (!functionalY || getFunctionY(vxi, vzi) == vyi) && (!functionalZ || getFunctionZ(vxi, vyi) == vzi)) {
-                    costs[vx * sizeY * sizeZ + vy * sizeZ + vz] += c; // does not subtract infinity if known by a functional constraint
+                    costs[(size_t)vx * sizeY * sizeZ + (size_t)vy * sizeZ + vz] += c; // does not subtract infinity if known by a functional constraint
                 }
             } else {
-                costs[vx * sizeY * sizeZ + vy * sizeZ + vz] += c;
+                costs[(size_t)vx * sizeY * sizeZ + (size_t)vy * sizeZ + vz] += c;
             }
         }
     }
@@ -526,10 +526,10 @@ public:
                 Value valyi = y->toValue(vindex[1]);
                 Value valzi = z->toValue(vindex[2]);
                 if ((!functionalX || getFunctionX(valyi, valzi) == valxi) && (!functionalY || getFunctionY(valxi, valzi) == valyi) && (!functionalZ || getFunctionZ(valxi, valyi) == valzi)) {
-                    costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] += c; // does not subtract infinity if known by a functional constraint
+                    costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] += c; // does not subtract infinity if known by a functional constraint
                 }
             } else {
-                costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] += c;
+                costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] += c;
             }
         }
     }
@@ -553,7 +553,7 @@ public:
                 throw InternalError();
             }
         } else
-            costs[vx * sizeY * sizeZ + vy * sizeZ + vz] = c;
+            costs[(size_t)vx * sizeY * sizeZ + (size_t)vy * sizeZ + vz] = c;
     }
 
     void setcost(EnumeratedVariable* xin, EnumeratedVariable* yin, EnumeratedVariable* zin, Value vxi, Value vyi, Value vzi, Cost c)
@@ -579,7 +579,7 @@ public:
                 throw InternalError();
             }
         } else
-            costs[vindex[0] * sizeY * sizeZ + vindex[1] * sizeZ + vindex[2]] = c;
+            costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] = c;
     }
 
     Cost getMaxFiniteCost()
@@ -615,10 +615,10 @@ public:
                                 costsYZ[iy * sizeZ + iz] = mult_ub + delta;
                         }
                     } else {
-                        Cost cost = costs[ix * sizeY * sizeZ + iy * sizeZ + iz];
+                        Cost cost = costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz];
                         Cost delta = deltaCostsX[ix] + deltaCostsY[iy] + deltaCostsZ[iz];
                         if (CUT(cost - delta, ub))
-                            costs[ix * sizeY * sizeZ + iy * sizeZ + iz] = mult_ub + delta;
+                            costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] = mult_ub + delta;
                     }
                 }
             }
@@ -1184,7 +1184,7 @@ public:
             supportY.resize(sizeY);
         if (sizeZ > supportZ.size())
             supportZ.resize(sizeZ);
-        if ((unsigned long)sizeX * (unsigned long)sizeY * (unsigned long)sizeZ > costs.size())
+        if ((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ > costs.size())
 #ifdef NO_STORE_TERNARY_COSTS
             costs.resize((size_t)sizeX * (size_t)sizeY * (size_t)sizeZ, MIN_COST);
 #else

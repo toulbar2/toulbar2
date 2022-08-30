@@ -937,7 +937,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
 
-    assert(dcosts.size() == (x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize()));
+    assert(dcosts.size() == (size_t)x->getDomainInitSize() * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize());
 
     long double minCost = std::numeric_limits<long double>::infinity();
     for (long double cost : dcosts) {
@@ -949,7 +949,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                icosts[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = (Cost)(round((dcosts[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] - minCost) * pow(10, ToulBar2::decimalPoint)));
+                icosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] = (Cost)(round((dcosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] - minCost) * pow(10, ToulBar2::decimalPoint)));
             }
         }
     }
@@ -972,7 +972,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
         vector<Cost> bcosts;
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                bcosts.push_back(costs[a * y->getDomainInitSize() * z->getDomainInitSize() + a * z->getDomainInitSize() + c]);
+                bcosts.push_back(costs[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)a * (size_t)z->getDomainInitSize() + (size_t)c]);
             }
         }
         return postBinaryConstraint(xIndex, zIndex, bcosts);
@@ -1061,7 +1061,67 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
             }
         }
 
-        ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs);
+        bool functionalX(true);
+        bool functionalY(true);
+        bool functionalZ(true);
+        size_t sizeX = x->getDomainInitSize();
+        size_t sizeY = y->getDomainInitSize();
+        size_t sizeZ = z->getDomainInitSize();
+        vector<Value> functionX(sizeY * sizeZ, WRONG_VAL);
+        vector<Value> functionY(sizeX * sizeZ, WRONG_VAL);
+        vector<Value> functionZ(sizeX * sizeY, WRONG_VAL);
+
+        for (unsigned int a = 0; a < sizeX; a++) {
+            for (unsigned int b = 0; b < sizeY; b++) {
+                for (unsigned int c = 0; c < sizeZ; c++) {
+                    Cost cost = costs[(size_t)a * (size_t)sizeY * (size_t)sizeZ + (size_t)b * (size_t)sizeZ + (size_t)c];
+                    if (!CUT(cost, getUb()) && x->canbe(x->toValue(a)) && y->canbe(y->toValue(b)) && z->canbe(z->toValue(c))) {
+                        if (functionalX) {
+                            if (functionX[b * sizeZ + c] == WRONG_VAL)
+                                functionX[b * sizeZ + c] = x->toValue(a);
+                            else
+                                functionalX = false;
+                        }
+                        if (functionalY) {
+                            if (functionY[a * sizeZ + c] == WRONG_VAL)
+                                functionY[a * sizeZ + c] = y->toValue(b);
+                            else
+                                functionalY = false;
+                        }
+                        if (functionalZ) {
+                            if (functionZ[a * sizeY + b] == WRONG_VAL)
+                                functionZ[a * sizeY + b] = z->toValue(c);
+                            else
+                                functionalZ = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (functionalY && (!functionalX || sizeY > sizeX) && (!functionalZ || sizeY >= sizeZ)) {
+            vector<Cost> tab(costs.size(), MAX_COST);
+            for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+                    if (functionY[a * sizeZ + c] != WRONG_VAL) {
+                        tab[(size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeX * sizeZ + (size_t)a * sizeZ + c] = costs[(size_t)a * sizeY * sizeZ + (size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeZ + c];
+                    }
+                }
+            }
+            ctr = new TernaryConstraint(this, y, x, z, xy, yz, xz, tab);
+        } else if (functionalZ && (!functionalX || sizeZ > sizeX) && (!functionalY || sizeZ > sizeY)) {
+            vector<Cost> tab(costs.size(), MAX_COST);
+            for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                    if (functionZ[a * sizeY + b] != WRONG_VAL) {
+                        tab[(size_t)z->toIndex(functionZ[a * sizeY + b]) * sizeX * sizeY + (size_t)a * sizeY + b] = costs[(size_t)a * sizeY * sizeZ + (size_t)b * sizeZ + z->toIndex(functionZ[a * sizeY + b])];
+                    }
+                }
+            }
+            ctr = new TernaryConstraint(this, z, x, y, xz, yz, xy, tab);
+        } else {
+            ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs);
+        }
     } else {
         ctr->addCosts(x, y, z, costs);
         ctr->propagate();
@@ -5215,7 +5275,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
                 for (vyi = 0; vyi < evars[1]->getDomainInitSize(); vyi++) {
                     for (vzi = 0; vzi < evars[2]->getDomainInitSize(); vzi++) {
-                        costs[vxi * evars[1]->getDomainInitSize() * evars[2]->getDomainInitSize() + vyi * evars[2]->getDomainInitSize() + vzi] -= negcost;
+                        costs[(size_t)vxi * evars[1]->getDomainInitSize() * evars[2]->getDomainInitSize() + (size_t)vyi * evars[2]->getDomainInitSize() + vzi] -= negcost;
                     }
                 }
             }
@@ -5489,7 +5549,7 @@ void WCSP::ternaryCompletion()
                                             long unsigned xsize = x->getDomainInitSize();
                                             long unsigned ysize = y->getDomainInitSize();
                                             long unsigned zsize = z->getDomainInitSize();
-                                            TripleVarCostSize tvcs = { x, y, z, tight, xsize * ysize * zsize };
+                                            TripleVarCostSize tvcs = { x, y, z, tight, (size_t)xsize * (size_t)ysize * (size_t)zsize };
                                             triplelist.push_back(tvcs);
                                         }
                                     }

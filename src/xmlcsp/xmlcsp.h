@@ -520,7 +520,7 @@ public:
                                 int pos = scopeOrder[scopeIndex[i]];
                                 values[i] = DomsToIndex[wcsp->varsDom[scopeIndex[i]]][MAXDOMSIZEZERO + t[pos]];
                             }
-                            int pos = values[0] * y->getDomainInitSize() * z->getDomainInitSize() + values[1] * z->getDomainInitSize() + values[2];
+                            size_t pos = (size_t)values[0] * y->getDomainInitSize() * z->getDomainInitSize() + (size_t)values[1] * z->getDomainInitSize() + values[2];
                             if (r->type == REL_SUPPORT) {
                                 costs[pos] = MIN_COST;
                             } else if (r->type == REL_CONFLICT) {

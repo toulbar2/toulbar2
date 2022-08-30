@@ -93,13 +93,13 @@ public:
         Constraint* ctr; ///< corresponding sum/join cost function if using generic variable elimination
     } elimInfo;
 
-    /// \brief used for preprocesssTernary to make a list of potential ternary constraints with assciated information
+    /// \brief used for preprocesssTernary to make a list of potential ternary constraints with associated information
     struct TripleVarCostSize {
         EnumeratedVariable* x;
         EnumeratedVariable* y;
         EnumeratedVariable* z;
         float meancost;
-        long unsigned int size;
+        size_t size;
 
         bool operator<(const TripleVarCostSize& a) const
         {

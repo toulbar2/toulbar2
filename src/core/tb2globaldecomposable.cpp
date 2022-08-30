@@ -202,7 +202,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
         wcsp->getListSuccessors()->at(indexCi).push_back(indexXi);
         wcsp->getListSuccessors()->at(indexXi).push_back(indexCj);
 
-        unsigned long tableSize = long(varCi->getDomainInitSize() * varCj->getDomainInitSize() * varXi->getDomainInitSize());
+        size_t tableSize = (size_t)varCi->getDomainInitSize() * (size_t)varCj->getDomainInitSize() * (size_t)varXi->getDomainInitSize();
         vector<Cost> ternaryCosts(tableSize, top);
 
         for (unsigned long valuePosition = 0; valuePosition < varXi->getDomainInitSize(); valuePosition++) {
@@ -221,9 +221,9 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
                 //	unsigned long position =  (counter) 		* (varXi->getDomainInitSize()*varCj->getDomainInitSize())
                 //							+ (value) 			* (varCj->getDomainInitSize())
                 //							+ (nextCounter);
-                unsigned long position = (counterPosition) * (varXi->getDomainInitSize() * varCj->getDomainInitSize())
-                    + (valuePosition) * (varCj->getDomainInitSize())
-                    + (nextCounter);
+                size_t position = (size_t)(counterPosition) * (size_t)(varXi->getDomainInitSize() * varCj->getDomainInitSize())
+                    + (size_t)(valuePosition) * (varCj->getDomainInitSize())
+                    + (size_t)(nextCounter);
                 if (VVERBOSE)
                     cout << position << "/" << tableSize << endl;
                 ternaryCosts[position] = 0;
@@ -454,7 +454,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         unsigned long DomQi = Qi->getDomainInitSize();
         unsigned long DomQj = Qi->getDomainInitSize();
         unsigned long DomXi = Xi->getDomainInitSize();
-        unsigned long Domsize = long(Qi->getDomainInitSize() * Xi->getDomainInitSize() * Qj->getDomainInitSize());
+        size_t Domsize = (size_t)Qi->getDomainInitSize() * (size_t)Xi->getDomainInitSize() * (size_t)Qj->getDomainInitSize();
 
         vector<Cost> tmp_ternary_costs(Domsize, top);
         list<WTransition*> transitions = automaton->getTransitions();
@@ -472,7 +472,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
             Cost weight = transition->weight;
 
             if (symbol < DomXi) {
-                unsigned long cindex = start * DomXi * DomQj + positionSymbol * DomQj + end;
+                size_t cindex = (size_t)start * (size_t)DomXi * (size_t)DomQj + (size_t)positionSymbol * (size_t)DomQj + (size_t)end;
                 tmp_ternary_costs[cindex] = weight;
             }
             if (ToulBar2::verbose > 1) {
@@ -566,7 +566,7 @@ void WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
 
         //cout << "\033[46m" << "post ternary constraint on " << indexCi <<"("<<varCi->getDomainInitSize()<<")" << ","  << indexXi <<"("<<varXi->getDomainInitSize()<<")" << ","  << indexCj <<"("<<varCj->getDomainInitSize()<<")" << "\033[0m" << endl;
 
-        unsigned long tableSize = long(varCi->getDomainInitSize() * varCj->getDomainInitSize() * varXi->getDomainInitSize());
+        size_t tableSize = (size_t)varCi->getDomainInitSize() * (size_t)varCj->getDomainInitSize() * (size_t)varXi->getDomainInitSize();
         vector<Cost> ternaryCosts(tableSize, top);
 
         for (unsigned long valueXPosition = 0; valueXPosition < varXi->getDomainInitSize(); valueXPosition++) {
@@ -578,9 +578,9 @@ void WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
 
                     if (counter_j == (counter_i + value)) {
                         //cout << counter_i << " + " << value << " = " << counter_j << endl;
-                        unsigned long position = (valueCiPosition) * (varXi->getDomainInitSize() * varCj->getDomainInitSize())
-                            + (valueXPosition) * (varCj->getDomainInitSize())
-                            + (valueCjPosition);
+                        size_t position = (size_t)(valueCiPosition) * (size_t)varXi->getDomainInitSize() * (size_t)varCj->getDomainInitSize()
+                            + (size_t)(valueXPosition) * (size_t)(varCj->getDomainInitSize())
+                            + (size_t)(valueCjPosition);
                         ternaryCosts[position] = 0;
                     }
                 }
@@ -767,7 +767,7 @@ void WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp)
         //		indexCj <<"("<<varCj->getDomainInitSize()<<" [" << varCj->getInf() <<  ":" <<varCj->getSup()<< "])" << ","  <<
         //		"\033[0m" << endl;
 
-        unsigned long tableSize = long(varCi->getDomainInitSize() * varCj->getDomainInitSize() * varXi->getDomainInitSize());
+        size_t tableSize = (size_t)varCi->getDomainInitSize() * (size_t)varCj->getDomainInitSize() * (size_t)varXi->getDomainInitSize();
         vector<Cost> ternaryCosts(tableSize, top);
         //		cout << "TableSize = " << tableSize << endl;
 
@@ -782,9 +782,9 @@ void WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp)
                     long counter_j = *iterCj;
                     if (counter_j == (counter_i + value)) {
 
-                        unsigned long position = (valueCiPosition) * (varXi->getDomainInitSize() * varCj->getDomainInitSize())
-                            + (valueXPosition) * (varCj->getDomainInitSize())
-                            + (valueCjPosition);
+                        size_t position = (size_t)(valueCiPosition) * (size_t)varXi->getDomainInitSize() * (size_t)varCj->getDomainInitSize()
+                            + (size_t)(valueXPosition) * (size_t)(varCj->getDomainInitSize())
+                            + (size_t)(valueCjPosition);
                         //cout << counter_i << " + " << value << " = " << counter_j <<  " ==> "  << position << endl;
                         ternaryCosts[position] = 0;
                     }
@@ -907,7 +907,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
         wcsp->getListSuccessors()->at(X).push_back(O);
         wcsp->getListSuccessors()->at(Y).push_back(O);
 
-        unsigned long tableSize = long(varX->getDomainInitSize() * varY->getDomainInitSize() * varO->getDomainInitSize());
+        size_t tableSize = (size_t)varX->getDomainInitSize() * (size_t)varY->getDomainInitSize() * (size_t)varO->getDomainInitSize();
         vector<Cost> ternaryCosts(tableSize, top);
 
         //cout << X << "--" << Y  << "--" << O << endl;
@@ -921,9 +921,9 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
                 if (vX == vY && vY != 0)
                     vO = 1;
                 //cout << "X=" << vX << " Y=" << vY << " O=" << vO << endl;
-                unsigned long position = (valueXPosition) * (varY->getDomainInitSize() * varO->getDomainInitSize())
-                    + (valueYPosition) * (varO->getDomainInitSize())
-                    + (vO);
+                size_t position = (size_t)(valueXPosition) * (size_t)varY->getDomainInitSize() * (size_t)varO->getDomainInitSize()
+                    + (size_t)(valueYPosition) * (size_t)(varO->getDomainInitSize())
+                    + (size_t)(vO);
                 ternaryCosts[position] = 0;
             }
         }
@@ -955,7 +955,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
         wcsp->getListSuccessors()->at(indexCi).push_back(indexXi);
         wcsp->getListSuccessors()->at(indexXi).push_back(indexCj);
 
-        unsigned long tableSize = long(varCi->getDomainInitSize() * varCj->getDomainInitSize() * varXi->getDomainInitSize());
+        size_t tableSize = (size_t)varCi->getDomainInitSize() * (size_t)varCj->getDomainInitSize() * (size_t)varXi->getDomainInitSize();
         vector<Cost> ternaryCosts(tableSize, top);
 
         for (unsigned long value = 0; value < varXi->getDomainInitSize(); value++) {
@@ -964,9 +964,9 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
                 if (value == 1) {
                     nextCounter++;
                 }
-                unsigned long position = (counter) * (varXi->getDomainInitSize() * varCj->getDomainInitSize())
-                    + (value) * (varCj->getDomainInitSize())
-                    + (nextCounter);
+                size_t position = (size_t)(counter) * (size_t)varXi->getDomainInitSize() * (size_t)varCj->getDomainInitSize()
+                    + (size_t)(value) * (varCj->getDomainInitSize())
+                    + (size_t)(nextCounter);
                 ternaryCosts[position] = 0;
             }
         }
@@ -1184,7 +1184,7 @@ void WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
         wcsp->getListSuccessors()->at(indexCi).push_back(indexXi);
         wcsp->getListSuccessors()->at(indexXi).push_back(indexCj);
 
-        unsigned long tableSize = long(varCi->getDomainInitSize() * varCj->getDomainInitSize() * varXi->getDomainInitSize());
+        size_t tableSize = (size_t)varCi->getDomainInitSize() * (size_t)varCj->getDomainInitSize() * (size_t)varXi->getDomainInitSize();
         vector<Cost> ternaryCosts(tableSize, top);
 
         for (unsigned long valuePosition = 0; valuePosition < varXi->getDomainInitSize(); valuePosition++) {
@@ -1196,9 +1196,9 @@ void WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
                 if (values.find(value) != values.end()) {
                     nextCounter++;
                 }
-                unsigned long position = (counterPosition) * (varXi->getDomainInitSize() * varCj->getDomainInitSize())
-                    + (valuePosition) * (varCj->getDomainInitSize())
-                    + (nextCounter);
+                size_t position = (size_t)(counterPosition) * (size_t)varXi->getDomainInitSize() * (size_t)varCj->getDomainInitSize()
+                    + (size_t)(valuePosition) * (varCj->getDomainInitSize())
+                    + (size_t)(nextCounter);
                 ternaryCosts[position] = 0;
             }
         }
@@ -1231,7 +1231,7 @@ void WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
 
             //cout << value << " == " << counter << endl;
 
-            unsigned long position = (counterPosition) * (varLast->getDomainInitSize()) + valuePosition;
+            size_t position = (size_t)(counterPosition) * (varLast->getDomainInitSize()) + valuePosition;
             if (counter == value)
                 binaryCosts[position] = 0;
             else
@@ -1404,7 +1404,7 @@ void WeightedGcc::rec_sum_counters(WCSP* wcsp, int* cscope, int carity, int totl
                 for (int v = wcsp->getInf(cscope[1]); v <= wcsp->getSup(cscope[1]); v++) {
                     for (int w = wcsp->getInf(cscope[2]); w <= wcsp->getSup(cscope[2]); w++) {
                         if (u + v + w >= totlb && u + v + w <= min(totub, arity)) {
-                            costs[wcsp->toIndex(cscope[0], u) * wcsp->getDomainInitSize(cscope[1]) * wcsp->getDomainInitSize(cscope[2]) + wcsp->toIndex(cscope[1], v) * wcsp->getDomainInitSize(cscope[2]) + wcsp->toIndex(cscope[2], w)] = MIN_COST;
+                            costs[(size_t)wcsp->toIndex(cscope[0], u) * (size_t)wcsp->getDomainInitSize(cscope[1]) * (size_t)wcsp->getDomainInitSize(cscope[2]) + (size_t)wcsp->toIndex(cscope[1], v) * (size_t)wcsp->getDomainInitSize(cscope[2]) + (size_t)wcsp->toIndex(cscope[2], w)] = MIN_COST;
                         }
                     }
                 }
@@ -1529,12 +1529,12 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
     for (int value = 0; value < nbValue; value++) {
         EnumeratedVariable* left = (EnumeratedVariable*)wcsp->getVar(newVariable[value][0]);
         EnumeratedVariable* right = (EnumeratedVariable*)wcsp->getVar(newVariable[value][1]);
-        unsigned long tableSize = long(left->getDomainInitSize() * right->getDomainInitSize());
+        size_t tableSize = (size_t)left->getDomainInitSize() * right->getDomainInitSize();
         vector<Cost> binaryCosts(tableSize, top);
         //cout << "Binary = " << newVariable[value][0] << " " <<  newVariable[value][1] << endl;
         for (unsigned long valueL = 0; valueL < left->getDomainInitSize(); valueL++) {
             for (unsigned long valueR = 0; valueR < right->getDomainInitSize(); valueR++) {
-                unsigned long position = (valueR) * (left->getDomainInitSize()) + valueL;
+                size_t position = (size_t)(valueR) * (left->getDomainInitSize()) + valueL;
 
                 int gap = (valueL - valueR);
                 if (gap < 0)

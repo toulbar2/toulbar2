@@ -219,7 +219,7 @@ void naryRandom::generateTernCtr(int i, int j, int k, long nogoods, Cost costMin
                 for (c = 0; c < mz; c++) {
                     if (costs[my * mz * a + b * mz + c] == MIN_COST) {
                         if (dice == 0) {
-                            costs[my * mz * a + b * mz + c] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
+                            costs[(size_t)my * mz * a + (size_t)b * mz + c] = ToulBar2::costMultiplier * randomCost(costMin, costMax);
                             nogoods--;
                             total_nogoods--;
                             a = mx;

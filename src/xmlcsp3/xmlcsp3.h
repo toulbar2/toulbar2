@@ -156,14 +156,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             problem->postBinaryConstraint(vars[0], vars[1], costs);
         } else if (vars.size()==3) {
-            vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]), (isSupport)?MAX_COST:MIN_COST);
+            vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), (isSupport)?MAX_COST:MIN_COST);
             for(auto& tuple:tuples) {
                 if (isSupport) {
-//                    costs[problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MIN_COST;
-                    costs[problem->toIndex(vars[2], tuple[2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuple[1])] = MIN_COST;
+//                    costs[(size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MIN_COST;
+                    costs[(size_t)problem->toIndex(vars[2], tuple[2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuple[1])] = MIN_COST;
                 } else {
-//                    costs[problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MAX_COST;
-                    costs[problem->toIndex(vars[2], tuple[2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuple[1])] = MAX_COST;
+//                    costs[(size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MAX_COST;
+                    costs[(size_t)problem->toIndex(vars[2], tuple[2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuple[1])] = MAX_COST;
                 }
             }
 //            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
@@ -1821,39 +1821,39 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             for (unsigned int i=0; i<vars.size(); i++) {
                 if (problem->canbe(varindex, (Value)i)) {
                     if (varindex != vars[i] && varvalue != vars[i]) {
-                        vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]), MIN_COST);
+                        vector<Cost> costs((size_t)problem->getDomainInitSize(varvalue) * (size_t)problem->getDomainInitSize(varindex) * (size_t)problem->getDomainInitSize(vars[i]), MIN_COST);
                         for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
                             for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
                                 switch (op) {
                                 case OrderType::IN:
                                 case OrderType::EQ:
                                     if (problem->toValue(vars[i], b) != problem->toValue(varvalue, a)) {
-                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::NE:
                                     if (problem->toValue(vars[i], b) == problem->toValue(varvalue, a)) {
-                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::LE:
                                     if (problem->toValue(vars[i], b) > problem->toValue(varvalue, a)) {
-                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::LT:
                                     if (problem->toValue(vars[i], b) >= problem->toValue(varvalue, a)) {
-                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::GE:
                                     if (problem->toValue(vars[i], b) < problem->toValue(varvalue, a)) {
-                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::GT:
                                     if (problem->toValue(vars[i], b) <= problem->toValue(varvalue, a)) {
-                                        costs[a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 default:
@@ -2211,10 +2211,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 assert(varrowindex != vars[i][j]);
                 assert(varcolindex != vars[i][j]);
                 assert(problem->toValue(varcolindex, j) == (Value)j);
-                vector<Cost> costs(problem->getDomainInitSize(varrowindex) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]), MIN_COST);
+                vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(vars[i][j]), MIN_COST);
                 for (unsigned int b=0; b < problem->getDomainInitSize(vars[i][j]); b++) {
                     if (value != problem->toValue(vars[i][j], b)) {
-                        costs[i * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]) + j * problem->getDomainInitSize(vars[i][j]) + b] = MAX_COST;
+                        costs[(size_t)i * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]) + (size_t)j * problem->getDomainInitSize(vars[i][j]) + b] = MAX_COST;
                     }
                 }
                 problem->postTernaryConstraint(varrowindex, varcolindex, vars[i][j], costs);
@@ -2239,10 +2239,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 assert(varrowindex != matrix[i][j]);
                 assert(varcolindex != matrix[i][j]);
                 assert(problem->toValue(varcolindex, j) == (Value)j);
-                vector<Cost> costs(problem->getDomainInitSize(varrowindex) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(varvalue), MIN_COST);
+                vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(varvalue), MIN_COST);
                 for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
                     if (matrix[i][j] != problem->toValue(varvalue, a)) {
-                        costs[i * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(varvalue) + j * problem->getDomainInitSize(varvalue) + a] = MAX_COST;
+                        costs[(size_t)i * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(varvalue) + (size_t)j * problem->getDomainInitSize(varvalue) + a] = MAX_COST;
                     }
                 }
                 problem->postTernaryConstraint(varrowindex, varcolindex, varvalue, costs);
@@ -2606,9 +2606,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         // and now the ternary transition constraints
         for (size_t i = 0; i != lvlstates.size()-1; ++i) {
             int tvars[3] = {statevars[i], vars[i], statevars[i + 1]};
-            vector<Cost> costs(problem->getDomainInitSize(tvars[0])
-                    * problem->getDomainInitSize(tvars[1])
-                    * problem->getDomainInitSize(tvars[2]),
+            vector<Cost> costs((size_t)problem->getDomainInitSize(tvars[0])
+                    * (size_t)problem->getDomainInitSize(tvars[1])
+                    * (size_t)problem->getDomainInitSize(tvars[2]),
                     MAX_COST);
             auto idx = [&](int i, int j, int k) {
                 return problem->toIndex(tvars[0], i) * problem->getDomainInitSize(tvars[1]) * problem->getDomainInitSize(tvars[2])
@@ -2944,10 +2944,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             problem->postBinaryConstraint(vars[0], vars[1], costs);
         } else if (vars.size()==3) {
-            vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]), MAX_COST);
+            vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), MAX_COST);
             for(unsigned int i=0; i<tuples.size(); i++) {
-//                costs[problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[1], tuples[i][1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuples[i][2])] = tcosts[i] - negcost;
-                costs[problem->toIndex(vars[2], tuples[i][2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuples[i][1])] = tcosts[i] - negcost;
+//                costs[(size_t)problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuples[i][1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuples[i][2])] = tcosts[i] - negcost;
+                costs[(size_t)problem->toIndex(vars[2], tuples[i][2]) * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) + problem->toIndex(vars[1], tuples[i][1])] = tcosts[i] - negcost;
             }
 //            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
             problem->postTernaryConstraint(vars[2], vars[0], vars[1], costs);

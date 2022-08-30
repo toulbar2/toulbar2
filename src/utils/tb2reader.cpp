@@ -804,7 +804,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         int arity = scope.size();
         int scopeIdx = 0; // position in the scope
         int tableIdx = 0; // position in the cost table
-        unsigned long int nbCostInserted = 0;
+        size_t nbCostInserted = 0;
 
         while (!isCBrace(token)) {
             // if we have read a full tuple and cost
@@ -1239,12 +1239,12 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
     Cost minCost = MAX_COST;
 
     // Compute the cardinality of the cartesian product as unsigned long and floating point (log)
-    // the unsigned long may overflow but all tuples cannot be available in this case
+    // the size_t may overflow but all tuples cannot be available in this case
     long double logCard = 0.0;
-    unsigned long card = 1;
+    size_t card = 1;
     for (auto i : scope) {
         logCard += log(wcsp->getDomainInitSize(i));
-        card *= wcsp->getDomainInitSize(i);
+        card *= (size_t)wcsp->getDomainInitSize(i);
     }
 
     if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
@@ -1253,7 +1253,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
     unsigned int arity = scope.size();
     Tuple tup(arity);
     map<Tuple, Cost> costFunction;
-    unsigned long int nbTuples = 0;
+    size_t nbTuples = 0;
     int scopeArray[arity];
     for (unsigned int i = 0; i < scope.size(); i++) {
         scopeArray[i] = scope[i];
@@ -1289,7 +1289,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             std::tie(lineNumber, token) = this->getNextToken();
         }
         // Is there any remaining default cost (either too many tuples or less than we need)
-        if ((logCard > log(std::numeric_limits<unsigned long>::max())) || nbTuples < card) {
+        if ((logCard > log(std::numeric_limits<size_t>::max())) || nbTuples < card) {
             minCost = min(minCost, defaultCost);
         }
 
@@ -1324,7 +1324,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         }
 
         // Test if all tuples have been read
-        if ((logCard > log(std::numeric_limits<unsigned long>::max())) || nbTuples < card) {
+        if ((logCard > log(std::numeric_limits<size_t>::max())) || nbTuples < card) {
             cerr << "Error : incorrect number of tuples for scope : ";
             for (unsigned int i = 0; i < arity; i++) {
                 cout << scope[i] << " ";
@@ -2273,7 +2273,7 @@ void WCSP::read_legacy(const char* fileName)
     unsigned int c;
     Cost defval;
     Cost cost;
-    int ntuples;
+    Long ntuples;
     int arity;
     string funcname;
     Value funcparam1;
@@ -2281,7 +2281,7 @@ void WCSP::read_legacy(const char* fileName)
     vector<TemporaryUnaryConstraint> unaryconstrs;
     Cost inclowerbound = MIN_COST;
     int maxarity = 0;
-    vector<int> sharedSize;
+    vector<Long> sharedSize;
     vector<vector<Cost>> sharedCosts;
     vector<vector<Tuple>> sharedTuples;
     vector<Tuple> emptyTuples;
@@ -2530,7 +2530,7 @@ void WCSP::read_legacy(const char* fileName)
                     assert(a >= 0 && a < x->getDomainInitSize());
                     assert(b >= 0 && b < y->getDomainInitSize());
                     assert(c >= 0 && c < z->getDomainInitSize());
-                    costs[a * y->getDomainInitSize() * z->getDomainInitSize() + b * z->getDomainInitSize() + c] = tmpcost;
+                    costs[(size_t)a * y->getDomainInitSize() * z->getDomainInitSize() + (size_t)b * z->getDomainInitSize() + c] = tmpcost;
                 }
                 if (shared) {
                     sharedSize.push_back(costs.size());

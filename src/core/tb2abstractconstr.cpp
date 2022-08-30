@@ -113,7 +113,7 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
             tValue a = t[0];
             tValue b = t[1];
             tValue c = t[2];
-            costs[(a * sizeY * sizeZ) + (b * sizeZ) + c] = cost;
+            costs[(size_t)(a * sizeY * sizeZ) + (size_t)(b * sizeZ) + (size_t)c] = cost;
         }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
     } else if (arity_ == 2) {
