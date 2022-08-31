@@ -140,8 +140,8 @@ public:
     bool next(Tuple& t, Cost& c);
 
     void first(EnumeratedVariable* a, EnumeratedVariable* b);
-    bool separability(EnumeratedVariable* a, EnumeratedVariable* b);
-    void separate(EnumeratedVariable* a, EnumeratedVariable* c);
+    bool separability(EnumeratedVariable* a, EnumeratedVariable* b) FINAL;
+    void separate(EnumeratedVariable* a, EnumeratedVariable* c) FINAL;
 
     void setTuple(const Tuple& tin, Cost c) FINAL
     {

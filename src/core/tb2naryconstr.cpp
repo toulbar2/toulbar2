@@ -602,6 +602,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
             cout << "  " << diffcost << endl;
         }
+        assert(diffcost >= MIN_COST);
         naryz->setTuple(tZ, diffcost);
         int finished = false;
         i = a - 1;
@@ -791,7 +792,7 @@ void NaryConstraint::addtoTuples(Cost costi)
 
 void NaryConstraint::setInfiniteCost(Cost ub)
 {
-    Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
+    Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
     if (pf) {
         for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
             Cost c = it->second;

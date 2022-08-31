@@ -564,6 +564,7 @@ void TernaryConstraint::separate(EnumeratedVariable* vy, EnumeratedVariable* vz)
             costsXY[xvar->toIndex(*itvx) * yvar->getDomainInitSize() + yvar->toIndex(*itvy)] = squareminus(cost, costzx, wcsp->getUb());
             if (ToulBar2::verbose >= 3)
                 cout << *itvx << " " << *itvy << " : " << squareminus(cost, costzx, wcsp->getUb()) << endl;
+            assert(squareminus(cost, costzx, wcsp->getUb()) >= MIN_COST);
             ++itvy;
         }
         ++itvx;

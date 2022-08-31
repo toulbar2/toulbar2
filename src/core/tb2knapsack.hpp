@@ -841,6 +841,7 @@ public:
     }
 
     //void setInfiniteCost(Cost ub)
+
     void assign(int varIndex) override
     {
         if (!verify()) {

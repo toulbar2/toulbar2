@@ -265,7 +265,7 @@ public:
     }
     void setInfiniteCost(Cost ub) override
     {
-        Cost mult_ub = ((ub < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, ub * MEDIUM_COST)) : ub);
+        Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
         if (CUT(cost, ub))
             cost = mult_ub;
     }

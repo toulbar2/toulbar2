@@ -156,16 +156,16 @@ public:
     virtual void first(EnumeratedVariable* alpha, EnumeratedVariable* beta) {}
     virtual bool separability(EnumeratedVariable* alpha, EnumeratedVariable* beta) { return false; }
     virtual void separate(EnumeratedVariable* a, EnumeratedVariable* c) {}
-    bool decompose();
+    bool findConditionalIndependences();
     Cost squareminus(Cost c1, Cost c2, Cost top)
     {
         Cost c;
         if (c1 >= top && c2 >= top)
             c = top; //c = 0;
         else if (c1 >= top)
-            c = 3 * top;
+            c = MEDIUM_COST * top;
         else if (c2 >= top)
-            c = -3 * top;
+            c = -MEDIUM_COST * top;
         else
             c = c1 - c2;
         return c;

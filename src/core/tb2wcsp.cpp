@@ -925,7 +925,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
 ///
 /// \note This must ONLY be called before search.
 ///
-/// \note If variable x is a function of y and z then the space and time complexity of the cost function will be quadratic instead of cubic
+/// \warning Scope ordering may be modified if variable y (or z) is a function of x and z (or y), resulting in better space complexity of the rearranged cost function
 ///
 /// \warning The cost Vector must have the same size as Cartesian product of original domains.
 int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& dcosts, bool incremental)
@@ -3145,7 +3145,7 @@ void WCSP::processTernary()
         //		cout << "PROJECT&SUBTRACT tern(" << t->getVar(0)->getName() << "," << t->getVar(1)->getName() << "," << t->getVar(2)->getName() << ")" << endl;
         t->extendTernary();
         if (ToulBar2::costfuncSeparate)
-            t->decompose();
+            t->findConditionalIndependences();
         if (t->connected())
             t->projectTernary();
     }
@@ -3208,12 +3208,12 @@ void WCSP::preprocessing()
         double time = cpuTime();
         for (unsigned int i = 0; i < constrs.size(); i++) {
             if (constrs[i]->connected() && !constrs[i]->isSep()) {
-                constrs[i]->decompose();
+                constrs[i]->findConditionalIndependences();
             }
         }
         for (int i = 0; i < elimTernOrder; i++) {
             if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
-                elimTernConstrs[i]->decompose();
+                elimTernConstrs[i]->findConditionalIndependences();
             }
         }
         posConstrs = constrs.size();
@@ -3387,12 +3387,12 @@ void WCSP::preprocessing()
         if (ToulBar2::costfuncSeparate) {
             for (unsigned int i = posConstrs; i < constrs.size(); i++) {
                 if (constrs[i]->connected() && !constrs[i]->isSep()) {
-                    constrs[i]->decompose();
+                    constrs[i]->findConditionalIndependences();
                 }
             }
             for (int i = posElimTernConstrs; i < elimTernOrder; i++) {
                 if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
-                    elimTernConstrs[i]->decompose();
+                    elimTernConstrs[i]->findConditionalIndependences();
                 }
             }
             posConstrs = constrs.size();
@@ -3509,7 +3509,7 @@ void WCSP::setInfiniteCost()
     Cost ub = getUb() - getLb();
     assert(ub > 0);
     if (ToulBar2::verbose >= 1)
-        cout << "Set infinite cost to " << ub << endl;
+        cout << "Set infinite relative cost to " << ub << " (+ lower bound of " << getLb() << ")" << endl;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         if (constrs[i]->connected() && !constrs[i]->isSep()) {
             constrs[i]->setInfiniteCost(ub);
