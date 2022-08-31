@@ -7,8 +7,9 @@ SET (source_files ${source_files} ${boost_file})
 # boost detection 
 MESSAGE(STATUS "Boost flag on.")
 
-find_package(Boost 1.34.0 REQUIRED COMPONENTS graph iostreams)
+find_package(Boost 1.34.0 REQUIRED COMPONENTS graph iostreams serialization)
 find_package(ZLIB)
+find_package(BZip2)
 find_package(LibLZMA)
 IF(LIBLZMA_FOUND)
     SET (all_depends  ${all_depends} ${LIBLZMA_LIBRARIES}) 
@@ -19,7 +20,7 @@ ENDIF(LIBLZMA_FOUND)
 MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "   Boost_LIBRARIES: ${Boost_LIBRARIES}")
 
-SET (all_depends ${all_depends} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+SET (all_depends ${all_depends} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${BZIP2_LIBRARIES})
 
 IF(NOT Boost_FOUND)
         MESSAGE(ERROR "#################################")

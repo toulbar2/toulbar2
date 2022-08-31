@@ -7,9 +7,6 @@
 
 #include "utils/tb2queue.hpp"
 
-#define INCREMENTALVAC
-//#define AC2001
-
 class tVACStat;
 class VACVariable;
 class VACBinaryConstraint;

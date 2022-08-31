@@ -63,6 +63,10 @@ namespace serialization = boost::serialization;
 #define DEBONLY(x) x
 #endif
 
+//#include <numbers>   // C++-20 std::numbers::pi
+//const double PI = boost::math::constants::pi<double>();
+const double PI = 3.1415926535897932384626433832795;
+
 template <typename T1, typename T2, typename T3>
 struct triplet {
     T1 first;

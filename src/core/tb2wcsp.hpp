@@ -13,9 +13,6 @@
 #include "tb2intervar.hpp"
 #include "search/tb2solver.hpp"
 
-// Transforms clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
-#define CLIQUE2KNAPSACK
-
 class NaryConstraint;
 class GlobalConstraint;
 class FlowBasedGlobalConstraint;

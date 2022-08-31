@@ -15,10 +15,10 @@ SRCS = $(SRCSFULL:utils/tb2boostgraph.cpp=)
 endif
 
 ifeq ($(XML),XMLFLAG)
-OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lboost_serialization -licuuc -licui18n -licudata -lxml2 -lgmp -lz -llzma -lm -lpthread -ldl
-# -licuuc -licui18n -licudata -lxml2 -lz -llzma -lm -lpthread -ldl
+OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lboost_serialization -licuuc -licui18n -licudata -lxml2 -lgmp -lz -lbz2 -llzma -lm -lpthread -ldl
+# -licuuc -licui18n -licudata -lxml2 -lz -lbz2 -llzma -lm -lpthread -ldl
 else
-OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -llzma
+OBJS = $(SRCS:.cpp=.o) -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -lbz2 -llzma
 endif
 
 LIBSRCS = $(SRCS:tb2main.cpp=)
@@ -77,10 +77,10 @@ libtb2.so: $(LIBOBJS)
 	$(BUILD) $(LIBFLAGS) $(LIBOBJS) -o $@
 
 toulbar2test: toulbar2test.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< ./libtb2.so -lboost_graph -lboost_iostreams -lgmp -lz -llzma
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< ./libtb2.so -lboost_graph -lboost_iostreams -lgmp -lz -lbz2 -llzma
 
 iloglue: iloglue.cpp libtb2.so
-	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lboost_graph -lboost_iostreams -lgmp -lz -llzma
+	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lboost_graph -lboost_iostreams -lgmp -lz -lbz2 -llzma
 
 clean:
 	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test

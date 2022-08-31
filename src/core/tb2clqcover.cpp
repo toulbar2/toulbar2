@@ -10,8 +10,6 @@
 #include "tb2clqcover.hpp"
 #include "search/tb2clusters.hpp"
 
-//#define PROPAGATE_CLIQUE_WITH_BINARIES
-
 int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,

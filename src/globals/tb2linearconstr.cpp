@@ -1,7 +1,7 @@
 #include "tb2linearconstr.hpp"
 #include "core/tb2wcsp.hpp"
 
-#define verify
+//#define verify
 
 LinearConstraint::LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : GlobalConstraint(wcsp, scope_in, arity_in, 0)

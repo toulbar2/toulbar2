@@ -472,6 +472,17 @@ inline TLogProb GLogSubExp(TLogProb logc1, TLogProb logc2) // log[exp(c1) - exp(
         throw InternalError();
     }
 }
+
+typedef map<int, int> TSCOPE;
+typedef map<int, Value> TAssign;
+
+typedef unsigned int uint;
+
+/*
+ * General constants (limits)
+ *
+ */
+
 const int STORE_SIZE = 16;
 #define INTEGERBITS (8 * sizeof(Cost) - 2)
 
@@ -483,10 +494,25 @@ const int LARGE_NB_VARS = 10000;
 
 const int DECIMAL_POINT = 3; // default number of digits after decimal point for printing floating-point values
 
-typedef map<int, int> TSCOPE;
-typedef map<int, Value> TAssign;
+/*
+ * Parameter settings for cost function propagation
+ *
+ */
 
-typedef unsigned int uint;
+// Clique constraint propagates by including unary and binary cost functions inside its scope (in practice, it can be very time-consuming)
+//#define PROPAGATE_CLIQUE_WITH_BINARIES
+
+// Transforms clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
+#define CLIQUE2KNAPSACK
+
+// Transforms hard decomposable among constraint into knapsack constraint
+//#define WAMONG2KNAPSACK
+
+// VAC propagation becomes more incremental in pass 1 keeping removed values from previous cost threshold iterations
+#define INCREMENTALVAC
+
+// VAC propagation has optimal O(ed^2) time complexity in pass 1 (but it requires to reset support values at every cost threshold iteration)
+//#define AC2001
 
 /*
  * Abstract data type that help post a global cost function

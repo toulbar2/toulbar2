@@ -1101,24 +1101,46 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
 
         if (functionalY && (!functionalX || sizeY > sizeX) && (!functionalZ || sizeY >= sizeZ)) {
             vector<Cost> tab(costs.size(), MAX_COST);
-            for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-                for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                    if (functionY[a * sizeZ + c] != WRONG_VAL) {
-                        tab[(size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeX * sizeZ + (size_t)a * sizeZ + c] = costs[(size_t)a * sizeY * sizeZ + (size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeZ + c];
+            if (x->getDACOrder() < z->getDACOrder()) {
+                for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                    for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+                        if (functionY[a * sizeZ + c] != WRONG_VAL) {
+                            tab[(size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeX * sizeZ + (size_t)a * sizeZ + c] = costs[(size_t)a * sizeY * sizeZ + (size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeZ + c];
+                        }
                     }
                 }
+                ctr = new TernaryConstraint(this, y, x, z, xy, yz, xz, tab);
+            } else {
+                for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
+                    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                        if (functionY[a * sizeZ + c] != WRONG_VAL) {
+                            tab[(size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeZ * sizeX + (size_t)c * sizeX + a] = costs[(size_t)a * sizeY * sizeZ + (size_t)y->toIndex(functionY[a * sizeZ + c]) * sizeZ + c];
+                        }
+                    }
+                }
+                ctr = new TernaryConstraint(this, y, z, x, yz, xy, xz, tab);
             }
-            ctr = new TernaryConstraint(this, y, x, z, xy, yz, xz, tab);
         } else if (functionalZ && (!functionalX || sizeZ > sizeX) && (!functionalY || sizeZ > sizeY)) {
             vector<Cost> tab(costs.size(), MAX_COST);
-            for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-                for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-                    if (functionZ[a * sizeY + b] != WRONG_VAL) {
-                        tab[(size_t)z->toIndex(functionZ[a * sizeY + b]) * sizeX * sizeY + (size_t)a * sizeY + b] = costs[(size_t)a * sizeY * sizeZ + (size_t)b * sizeZ + z->toIndex(functionZ[a * sizeY + b])];
+            if (x->getDACOrder() < y->getDACOrder()) {
+                for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                    for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                        if (functionZ[a * sizeY + b] != WRONG_VAL) {
+                            tab[(size_t)z->toIndex(functionZ[a * sizeY + b]) * sizeX * sizeY + (size_t)a * sizeY + b] = costs[(size_t)a * sizeY * sizeZ + (size_t)b * sizeZ + z->toIndex(functionZ[a * sizeY + b])];
+                        }
                     }
                 }
+                ctr = new TernaryConstraint(this, z, x, y, xz, yz, xy, tab);
+            } else {
+                for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
+                    for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                        if (functionZ[a * sizeY + b] != WRONG_VAL) {
+                            tab[(size_t)z->toIndex(functionZ[a * sizeY + b]) * sizeY * sizeX + (size_t)b * sizeX + a] = costs[(size_t)a * sizeY * sizeZ + (size_t)b * sizeZ + z->toIndex(functionZ[a * sizeY + b])];
+                        }
+                    }
+                }
+                ctr = new TernaryConstraint(this, z, y, x, yz, xz, xy, tab);
             }
-            ctr = new TernaryConstraint(this, z, x, y, xz, yz, xy, tab);
         } else {
             ctr = new TernaryConstraint(this, x, y, z, xy, xz, yz, costs);
         }

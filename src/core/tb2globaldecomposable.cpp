@@ -130,6 +130,7 @@ WeightedAmong::~WeightedAmong()
 
 void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
 {
+#ifdef WAMONG2KNAPSACK
     if (semantics == "hard" || baseCost >= wcsp->getUb()) {
         vector<int> scopevec;
         for (int i = 0; i < arity; i++) {
@@ -163,6 +164,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
         }
         return;
     }
+#endif
     bool VERBOSE = false;
     bool VVERBOSE = false;
     int nbVariableCFN = wcsp->numberOfVariables();
