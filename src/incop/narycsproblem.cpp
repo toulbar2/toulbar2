@@ -232,10 +232,14 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
     vector<int>* connexions, vector<Value>* tabdomaines)
 {
     static Tuple tuple;
+    assert(wcsp->getUb() > wcsp->getLb());
     Cost gap = wcsp->getUb() - wcsp->getLb();
     int nbconst_ = 0;
     for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-        if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && !wcsp->getCtr(i)->isGlobal() && wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary) {
+        if (wcsp->getCtr(i)->connected() &&
+            !wcsp->getCtr(i)->isSep() &&
+            wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary &&
+            wcsp->getCtr(i)->getDomainSizeProduct() <= MAX_NB_TUPLES) {
             int arity = 0;
             for (int j = 0; j < wcsp->getCtr(i)->arity(); j++)
                 if (wcsp->getCtr(i)->getVar(j)->unassigned())

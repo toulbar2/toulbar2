@@ -2910,7 +2910,7 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
 
     if (ToulBar2::seed < 0) { // initialize seed using current time
-        ToulBar2::seed = abs((int)time(NULL) * getpid() * ToulBar2::seed);
+        ToulBar2::seed = abs((Long)time(NULL) * getpid() * ToulBar2::seed);
         if (ToulBar2::verbose >= 0)
             cout << "Initial random seed is " << ToulBar2::seed << endl;
     }

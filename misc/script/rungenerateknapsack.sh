@@ -25,7 +25,7 @@ while (( $n < $nend )) ; do
     randomfile="knapsack-$n-$d-$tight-$bctr-$tctr-0-$nary-$seed"
 #    echo $randomfile
     ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -ub=1000000 -z=1 > /dev/null
-    python2 ./wcsp2lp-support.py problem.wcsp problem.lp > /dev/null
+    python2 ./misc/script/wcsp2lp-support.py problem.wcsp problem.lp > /dev/null
     ./toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /No solution/{opt=-2} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$4;} END{printf("%d",opt);}' > toulbar2_verif
