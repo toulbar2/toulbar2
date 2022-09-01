@@ -1555,8 +1555,6 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             break;
         }
         case 2: {
-            assert(wcsp->unassigned(scopeIndex[0]));
-            assert(wcsp->unassigned(scopeIndex[1]));
             EnumeratedVariable* u = (EnumeratedVariable*)wcsp->getVar(scopeIndex[0]);
             EnumeratedVariable* v = (EnumeratedVariable*)wcsp->getVar(scopeIndex[1]);
             assert(x == u || x == v);
@@ -1585,10 +1583,6 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
             break;
         }
         case 3: {
-            assert(wcsp->unassigned(scopeIndex[0]));
-            assert(wcsp->unassigned(scopeIndex[1]));
-            assert(wcsp->unassigned(scopeIndex[2]));
-
             EnumeratedVariable* u = (EnumeratedVariable*)wcsp->getVar(scopeIndex[0]);
             EnumeratedVariable* v = (EnumeratedVariable*)wcsp->getVar(scopeIndex[1]);
             EnumeratedVariable* w = (EnumeratedVariable*)wcsp->getVar(scopeIndex[2]);

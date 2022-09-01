@@ -600,7 +600,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         if (!ToulBar2::bayesian)
             cout << "New solution: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " in " << elapsedTime << " seconds." << endl;
         else
-            cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << " in " << elapsedTime << " seconds." << endl;
+            cout << "New solution: " << bestUb << " energy: " << -(wcsp->Cost2LogProb(bestUb) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(bestUb) * Exp(ToulBar2::markov_log) << std::fixed << " in " << elapsedTime << " seconds." << endl;
     }
     if (improved && ToulBar2::showSolutions) {
         wcsp->printSolution();
