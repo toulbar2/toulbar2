@@ -3937,6 +3937,8 @@ void WCSP::dump_CFN(ostream& os, bool original)
     os << getDPrimalBound() << "\"},\n";
 
     // Domain variables
+    unsigned int nvars = numberOfUnassignedVariables();
+    unsigned int ivar = 0;
     os << "\"variables\":{\n";
     for (unsigned int i = 0; i < vars.size(); i++) {
         assert(enumerated(i));
@@ -3969,8 +3971,9 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 printed = true;
             }
             os << "]";
-            if (i < vars.size() - 1)
+            if (ivar < nvars - 1)
                 os << ",";
+            ivar++;
             os << "\n";
         }
     }
