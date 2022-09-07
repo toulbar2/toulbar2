@@ -180,6 +180,7 @@ PYBIND11_MODULE(pytb2, m)
         //        .def_readwrite_static("interrupted", &ToulBar2::interrupted) // pybind11 not compatible with type atomic<bool>?
         .def_readwrite_static("seed", &ToulBar2::seed)
         .def_readwrite_static("incop_cmd", &ToulBar2::incop_cmd)
+        .def_readwrite_static("pils_cmd", &ToulBar2::pils_cmd)
         .def_readwrite_static("searchMethod", (int*)&ToulBar2::searchMethod)
         .def_readwrite_static("clusterFile", &ToulBar2::clusterFile)
         .def_readwrite_static("vnsInitSol", (int*)&ToulBar2::vnsInitSol)

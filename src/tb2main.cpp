@@ -29,8 +29,9 @@ const int maxdivnbsol = 1000;
 const int heuristicfreedomlimit = 5;
 const Long epsmultiplier = 30;
 
-// INCOP default command line option
+// INCOP and PILS default command line options
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
+const string PILS_cmd = "3 0 0.333 100 500 10000 0.1 0.5 0.1 0.1";
 
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
 #ifdef __WIN32__
@@ -280,6 +281,8 @@ enum {
 #endif
     OPT_localsearch,
     NO_OPT_localsearch,
+    OPT_pils,
+    NO_OPT_pils,
     OPT_EDAC,
     OPT_ub,
     OPT_divDist,
@@ -539,6 +542,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_burst, (char*)"-burst:", SO_NONE },
 #endif
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
+    { OPT_pils, (char*)"-pils", SO_OPT }, // PILS option default or string for pils argument
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
     { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
     { OPT_divDist, (char*)"-div", SO_REQ_SEP }, // distance between solutions
@@ -893,6 +897,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
     cout << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
     cout << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode" << endl;
+    cout << "   -pils=[\"string\"] : initial upperbound found by PILS local search solver." << endl;
+    cout << "       string parameter is optional, using \"" << PILS_cmd << "\" by default with the following meaning:" << endl;
+    cout << "       nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC nbEvalMax strengthMin strengthMax incrFactor decrFactor" << endl;
 #ifdef BOOST
     cout << "   -vns : unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O)";
 #ifdef OPENMPI
@@ -2005,6 +2012,15 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::incop_cmd = args.OptionArg();
                 } else {
                     ToulBar2::incop_cmd = Incop_cmd;
+                }
+            }
+
+            // local search PILS
+            if (args.OptionId() == OPT_pils) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::pils_cmd = args.OptionArg();
+                } else {
+                    ToulBar2::pils_cmd = PILS_cmd;
                 }
             }
 

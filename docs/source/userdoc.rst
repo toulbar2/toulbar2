@@ -388,6 +388,14 @@ Initial upper bounding
         neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors
         neighborhoodchoice3 autotuning tracemode*.
 
+-pils=["string"]
+        initial upper bound found by PILS local search
+        solver. The string parameter is optional,
+        using "3 0 0.333 100 500 10000 0.1 0.5 0.1 0.1" by default with the
+        following meaning:
+        *nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC 
+        nbEvalMax strengthMin strengthMax incrFactor decrFactor*.
+
 -x=[(,i[:math:`=\#<>`]a)*]
         performs an elementary operation (':math:`=`':assign,
         ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with

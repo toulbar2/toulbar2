@@ -2276,6 +2276,15 @@ void Solver::beginSolve(Cost ub)
             }
         }
     }
+    if (ToulBar2::pils_cmd.size() > 0) {
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+            if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
+                cout << "Warning! Cannot use PILS local search with bounds arc propagation (non enumerated variable domains)." << endl;
+                ToulBar2::pils_cmd = "";
+                break;
+            }
+        }
+    }
     if (((WCSP*)wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
         if (ToulBar2::btdMode >= 3) {
             cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
@@ -2393,7 +2402,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 
     int lds = ToulBar2::lds;
     ToulBar2::lds = 0; // avoid TimeOut exception when new solutions found
-    if (ToulBar2::incop_cmd.size() > 0) {
+    if (ToulBar2::incop_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 0) {
         double incopStartTime = cpuTime();
         vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
@@ -2401,6 +2410,12 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         narycsp(ToulBar2::incop_cmd, bestsol);
         if (ToulBar2::verbose >= 0)
             cout << "INCOP solving time: " << cpuTime() - incopStartTime << " seconds." << endl;
+    }
+    if (ToulBar2::pils_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 0) {
+        double pilsStartTime = cpuTime();
+        pils(ToulBar2::pils_cmd);
+        if (ToulBar2::verbose >= 0)
+            cout << "PILS solving time: " << cpuTime() - pilsStartTime << " seconds." << endl;
     }
     ToulBar2::lds = lds;
 

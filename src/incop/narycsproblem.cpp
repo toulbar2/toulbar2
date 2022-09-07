@@ -405,10 +405,10 @@ void removeSpaces(string& str)
 /// \return best solution cost found
 /// \param cmd command line argument for narycsp INCOP local search solver (cmd format: lowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors  neighborhoodchoice3 autotuning tracemode)
 /// \param solution best solution assignment found (MUST BE INITIALIZED WITH A DEFAULT ASSIGNMENT)
-/// \warning cannot solve problems with global cost functions
 Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
 {
     Long result = MAX_COST;
+    Cost initialUpperBound = wcsp->getUb();
 
     string filename = "/dev/stdin";
     string outputfile = "/dev/stdout";
@@ -559,8 +559,10 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     delete[] tabdomaines;
     delete[] connexions;
 
-    wcsp->enforceUb();
-    wcsp->propagate();
+    if (wcsp->getUb() < initialUpperBound) {
+        wcsp->enforceUb();
+        wcsp->propagate();
+    }
 
     return result;
 }

@@ -36,6 +36,7 @@ Additional contributions by:
 - Ecole des Ponts ParisTech, France (CERMICS/LIGM for `INCOP <http://imagine.enpc.fr/~neveub/incop/incoppresentation.html>`_ local search solver
 - University College Cork, Ireland (Insight) for a Python interface in `Numberjack <https://github.com/eomahony/Numberjack>`_  and a portfolio dedicated to UAI graphical models `Proteus <https://github.com/9thbit/uai-proteus>`_
 - Artois University, France (CRIL) for an XCSP 2.1 format reader of CSP and WCSP instances
+- Université de Toulouse I Capitole (IRIT) and Université du Littoral Côte d'Opale, France (LISIC) for PILS local search solver
 
 .. _citations:
 

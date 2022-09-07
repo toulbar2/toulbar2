@@ -235,6 +235,7 @@ bool ToulBar2::learning;
 int ToulBar2::seed;
 
 string ToulBar2::incop_cmd;
+string ToulBar2::pils_cmd;
 
 string ToulBar2::clusterFile;
 ofstream ToulBar2::vnsOutput;
@@ -445,6 +446,7 @@ void tb2init()
     ToulBar2::seed = 1;
 
     ToulBar2::incop_cmd = "";
+    ToulBar2::pils_cmd = "";
 
     ToulBar2::searchMethod = DFBB;
 
@@ -666,6 +668,10 @@ void tb2checkOptions()
     }
     if (ToulBar2::incop_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
         cout << "Error: Cannot use INCOP local search for (weighted) counting (remove -i option)." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::pils_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
+        cout << "Error: Cannot use PILS local search for (weighted) counting (remove -i option)." << endl;
         throw BadConfiguration();
     }
     if (!ToulBar2::binaryBranching && ToulBar2::hbfs) {

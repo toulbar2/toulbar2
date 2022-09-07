@@ -127,6 +127,24 @@ What are the algorithms inside toulbar2 ?
   F Trösser, S de Givry and G Katsirelos,
   In Proc. of CPAIOR-20, Vienna, Austria, 2020.
 
+- **Partition crossover iterative local search (pils)**
+
+  `Iterated local search with partition crossover for computational protein design <https://miat.inrae.fr/degivry/Beuvin21a.pdf>`_,
+  François Beuvin, Simon de Givry, Thomas Schiex, Sébastien Verel, and David Simoncini,
+  Proteins: Structure, Function, and Bioinformatics, 2021.
+  
+- **Knapsack/generalized linear global constraint (knapsack/knapsackp)**
+
+  `Multiple-choice knapsack constraint in graphical models <https://miat.inrae.fr/degivry/Montalbano22a.pdf>`_,
+  P Montalbano, S de Givry, and G Katsirelos,
+  In Proc. of CP-AI-OR'2022, Los Angeles, CA, 2022.
+  
+- **Parallel hybrid best-first search (parallel HBFS)**
+
+  `Parallel Hybrid Best-First Search <https://miat.inrae.fr/degivry/Beldjilali22a.pdf>`_,
+  A Beldjilali, P Montalbano, D Allouche, G Katsirelos, and S de Givry,
+  In Proc. of CP-22, volume 235, pages 7:1-7:10, Haifa, Israel, 2022.
+
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------
 

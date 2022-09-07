@@ -862,6 +862,7 @@ public:
     static int seed; /// < \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
 
     static string incop_cmd; /// < \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
+    static string pils_cmd; /// < \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)
 
     static SearchMethod searchMethod; /// < \brief chooses between tree search and variable neighborhood search methods (0: tree search, 1: sequential unified VNS, 2: sequential unified decomposition guided VNS, 3: synchronous parallel UDGVNS, 4: asynchronous parallel UDGVNS, 5: tree decomposition heuristic) (command line option -vns)
 

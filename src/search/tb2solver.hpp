@@ -482,7 +482,25 @@ public:
     void endSolve(bool isSolution, Cost cost, bool isComplete);
     // end of internal solve methods
 
+    // INCOP local search
     Cost narycsp(string cmd, vector<Value>& solution);
+
+    // PILS local search
+    /// \brief solves the current problem using PILS local search @ Francois Beuvin, David Simoncini, Sebastien Verel
+    /// \param nbruns number of runs
+    /// \param perturb_id perturbation mode: 0 means static perturbation, 1: random perturbation, 2: adaptive perturbation
+    /// \param perturb_s size of the static perturbation (proportional to sequence length)
+    /// \param flatMax number of iterations allowed without improvement
+    /// \param nEvalHC maximum number of evaluations during each steepest descent
+    /// \param nEvalMax maximum total number of evaluations
+    /// \param strengthMin minimum size of the random/adaptive perturbation (proportional to sequence length)
+    /// \param strengthMax maximum size of the random/adaptive perturbation (proportional to sequence length)
+    /// \param incrFactor increasing factor of perturbation size
+    /// \param decrFactor decreasing factor of perturbation size
+    /// \return best solution cost found
+    /// \warning cannot solve problems with non-binary cost functions
+    Cost pils(int nbruns = 3, int perturb_id = 0, double perturb_s = 0.333, Long flatMax = 100, Long nEvalHC = 500, Long nEvalMax = 10000, double strengthMin = 0.1, double strengthMax = 0.5, double incrFactor = 0.1, double decrFactor = 0.1);
+    Cost pils(string cmd);
 
     bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol);
 

@@ -509,7 +509,7 @@ public:
     virtual void remove(int varIndex, Value value, bool reverse = false) = 0; ///< \brief removes a domain value and propagates (valid if done for an enumerated variable or on its domain bounds)
 
     /** \defgroup solving Solving cost function networks
-     * After creating a Weighted CSP, it can be solved using a local search method INCOP (see WeightedCSPSolver::narycsp) and/or an exact search method (see WeightedCSPSolver::solve).
+     * After creating a Weighted CSP, it can be solved using a local search method like INCOP or PILS (see WeightedCSPSolver::narycsp or WeightedCSPSolver::pils) and/or an exact search method (see WeightedCSPSolver::solve).
      *
      * Various options of the solving methods are controlled by ::Toulbar2 static class members (see files ./src/core/tb2types.hpp and ./src/tb2main.cpp).\n
      * A brief code example reading a wcsp problem given as a single command-line parameter and solving it:
@@ -588,6 +588,14 @@ public:
     /// \warning cannot solve problems with global cost functions
     /// \note side-effects: updates current problem upper bound and propagates, best solution saved (using WCSP::setBestValue)
     virtual Cost narycsp(string cmd, vector<Value>& solution) = 0;
+
+    // PILS local search
+    /// \brief solves the current problem using PILS local search @ Francois Beuvin, David Simoncini, Sebastien Verel
+    /// \return best solution cost found
+    /// \param cmd command line argument for PILS local search solver (cmd format: nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC nbEvalMax strengthMin strengthMax incrFactor decrFactor)
+    /// \warning cannot solve problems with non-binary cost functions
+    virtual Cost pils(string cmd) = 0;
+
 
     /// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its
