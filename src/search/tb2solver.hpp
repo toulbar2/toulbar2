@@ -499,7 +499,7 @@ public:
     /// \param decrFactor decreasing factor of perturbation size
     /// \return best solution cost found
     /// \warning cannot solve problems with non-binary cost functions
-    Cost pils(int nbruns = 3, int perturb_id = 0, double perturb_s = 0.333, Long flatMax = 100, Long nEvalHC = 500, Long nEvalMax = 10000, double strengthMin = 0.1, double strengthMax = 0.5, double incrFactor = 0.1, double decrFactor = 0.1);
+    Cost pils(int nbruns = 3, int perturb_id = 0, double perturb_s = 0.333, unsigned long long flatMax = 100, unsigned long long nEvalHC = 500, unsigned long long nEvalMax = 10000, double strengthMin = 0.1, double strengthMax = 0.5, double incrFactor = 0.1, double decrFactor = 0.1);
     Cost pils(string cmd);
 
     bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol);
