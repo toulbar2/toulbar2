@@ -23,7 +23,7 @@ public:
   NeighborEval(CostFunction & _eval) : eval(_eval) {
   }
 
-  virtual double operator()(Solution & _solution, std::pair<int, int> & _neighbor) = 0;
+  virtual Cost operator()(Solution & _solution, std::pair<int, int> & _neighbor) = 0;
 
 protected:
   // Evaluation function

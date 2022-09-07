@@ -34,7 +34,7 @@ public :
           Perturbation & _pertu1,
           unsigned long long _nEvalMax,
           unsigned _flatMax) :
-              LocalSearch(_eval), nEvalMax(_nEvalMax), flatMax(_flatMax),
+              LocalSearch(_eval), nEvalMax(_nEvalMax), flatMax(_flatMax), lastFit(MIN_COST),
               ls1(_ls1), pertu1(_pertu1), neighborEval(_neighborEval)
                                  {
 
@@ -52,7 +52,7 @@ public :
         throw TimeOut();
       }
 
-      if ( abs(sol1.fitness() - lastFit) < 10e-6 ){
+      if ( sol1.fitness() == lastFit ){
         flat++;
       } else {
         flat=0;
@@ -68,6 +68,10 @@ public :
       nEval += ls1.nEval;
 
       if (ToulBar2::verbose >= 1) {
+#ifndef NDEBUG
+          checkfit(sol1);
+          checkfit(sol2);
+#endif
           cout << eval.getLb() + sol1.fitness() << " " << eval.getLb() + sol2.fitness() << " " << nEval << " ";
       }
       xo(sol1, sol2, sol1);	
@@ -90,7 +94,7 @@ protected :
 
   unsigned flatMax;
 
-  double lastFit = 0;
+  Cost lastFit;
 
   bool same;
 
@@ -104,8 +108,8 @@ protected :
 
   IncrNeighborEval & neighborEval;
 
-  multimap<double, Solution> fitnesss;
+  multimap<Cost, Solution> fitnesss;
 
-  multimap<double, Solution>::iterator it1;
+  multimap<Cost, Solution>::iterator it1;
 
 };

@@ -143,7 +143,7 @@ Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long lo
         // verify result
         eval(x);
 
-        if (initialLowerBound + (Cost)x.fitness()  < wcsp->getUb()) {
+        if (initialLowerBound + x.fitness()  < wcsp->getUb()) {
             vector<Value> bestsolution(wcsp->numberOfVariables(), 0);
             int depth = Store::getDepth();
             try {
@@ -152,7 +152,7 @@ Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long lo
                 vector<Value> solution(eval.size());
                 for (unsigned i = 0; i < eval.size(); i++) {
                     tabvars[i] = eval.getWCSPIndex(i);
-                    solution[i] = atoi(eval.getValueName(i, x[i]).c_str());
+                    solution[i] = eval.getValue(i, x[i]);
                 }
                 wcsp->assignLS(tabvars, solution);
                 newSolution();

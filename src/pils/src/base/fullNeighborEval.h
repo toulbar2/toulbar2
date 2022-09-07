@@ -24,12 +24,12 @@ public:
   FullNeighborEval(CostFunction & _eval) : NeighborEval(_eval) {
   }
 
-  virtual double operator()(Solution & _solution, std::pair<int, int> & _neighbor) {
-    double tmp = _solution.fitness();
+  virtual Cost operator()(Solution & _solution, std::pair<int, int> & _neighbor) {
+    Cost tmp = _solution.fitness();
     unsigned v = _solution[ _neighbor.first ];
     _solution[ _neighbor.first ] = (v + _neighbor.second) % eval.n_values[ _neighbor.first ];
     eval(_solution);
-  	double neighFit = _solution.fitness();
+  	Cost neighFit = _solution.fitness();
 	  // back
      _solution[ _neighbor.first ] = v;
 	  _solution.fitness(tmp);

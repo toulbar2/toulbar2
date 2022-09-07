@@ -44,7 +44,7 @@ public:
   
   virtual void operator()(Solution & _solution) {
     std::pair<int, int> neighbor;
-    double neighFit;
+    Cost neighFit;
     unsigned r;
     unsigned n_strength;
 

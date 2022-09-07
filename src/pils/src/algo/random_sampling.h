@@ -38,7 +38,7 @@ public:
   }
 
   // fitness values of the sample
-  std::vector<double> sample;
+  std::vector<Cost> sample;
 
 protected:
   // Automata

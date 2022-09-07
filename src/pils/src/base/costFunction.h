@@ -197,15 +197,15 @@ public:
                 n_values.push_back( wcsp->getDomainSize(i));
                 index2var.push_back( i );
 
-                // save the name of the values
-                std::vector<std::string> names;
+                // save the associated values
+                std::vector<Value> domvals;
                 vector<pair<Value, Cost>> domcosts = wcsp->getEnumDomainAndCost(i);
                 for (size_t k = 0; k < domcosts.size(); k++) {
-                    names.push_back( to_string(domcosts[k].first) );
+                    domvals.push_back( domcosts[k].first );
                     // linear part: unary cost
-                    energy[nbvar].push_back( (double)min(gap, domcosts[k].second) );
+                    energy[nbvar].push_back( min(gap, domcosts[k].second) );
                 }
-                value_name.push_back(names);
+                values.push_back(domvals);
                 nbvar++;
             }
         }
@@ -239,7 +239,7 @@ public:
                     for(unsigned a1 = 0; a1 < n_values[i]; a1++) {
                         assert(energy2[i][j][a1].size() == 0);
                         for(unsigned a2 = 0; a2 < n_values[j]; a2++) {
-                            energy2[i][j][a1].push_back( (double)min(gap, ctr->getCost(domi[a1], domj[a2])) );
+                            energy2[i][j][a1].push_back( min(gap, ctr->getCost(domi[a1], domj[a2])) );
                         }
                     }
                 } else {
@@ -252,7 +252,7 @@ public:
                     for(unsigned a1 = 0; a1 < n_values[j]; a1++) {
                         assert(energy2[j][i][a1].size() == 0);
                         for(unsigned a2 = 0; a2 < n_values[i]; a2++) {
-                            energy2[j][i][a1].push_back( (double)min(gap, ctr->getCost(domi[a2], domj[a1])) );
+                            energy2[j][i][a1].push_back( min(gap, ctr->getCost(domi[a2], domj[a1])) );
                         }
                     }
                 }
@@ -276,7 +276,7 @@ public:
                     for(unsigned a1 = 0; a1 < n_values[i]; a1++) {
                         assert(energy2[i][j][a1].size() == 0);
                         for(unsigned a2 = 0; a2 < n_values[j]; a2++) {
-                            energy2[i][j][a1].push_back( (double)min(gap, ctr->getCost(domi[a1], domj[a2])) );
+                            energy2[i][j][a1].push_back( min(gap, ctr->getCost(domi[a1], domj[a2])) );
                         }
                     }
                 } else {
@@ -289,7 +289,7 @@ public:
                     for(unsigned a1 = 0; a1 < n_values[j]; a1++) {
                         assert(energy2[j][i][a1].size() == 0);
                         for(unsigned a2 = 0; a2 < n_values[i]; a2++) {
-                            energy2[j][i][a1].push_back( (double)min(gap, ctr->getCost(domi[a2], domj[a1])) );
+                            energy2[j][i][a1].push_back( min(gap, ctr->getCost(domi[a2], domj[a1])) );
                         }
                     }
                 }
@@ -311,10 +311,10 @@ public:
         return index2var[i];
     }
 
-    string& getValueName(unsigned i, unsigned a) {
+    Value getValue(unsigned i, unsigned a) {
         assert(i < n_variables);
         assert(a < n_values[i]);
-        return value_name[i][a];
+        return values[i][a];
     }
 
     Cost getLb() {
@@ -322,7 +322,7 @@ public:
     }
 
     void operator()(Solution & _x) {
-        double fit = 0;
+        Cost fit = 0;
         unsigned j;
 
 
@@ -352,7 +352,7 @@ public:
         for(unsigned i = 0; i < n_variables; i++) {
             std::cout << i << " " << n_values[i] ;
             for(unsigned j = 0; j < n_values[i]; j++) {
-                std::cout << " " << value_name[i][j];
+                std::cout << " " << values[i][j];
             }
             std::cout << std::endl;
         }
@@ -445,7 +445,7 @@ public:
     std::vector<unsigned> n_values;
 
     // value names
-    std::vector< std::vector< std::string > > value_name;
+    std::vector< std::vector< Value > > values;
 
     // list of PILS variable's indexes
     vector<int> var2index;
@@ -456,14 +456,14 @@ public:
     Cost energy0;
 
     // linear term
-    std::vector< std::vector<double> > energy;
+    std::vector< std::vector<Cost> > energy;
 
     // interaction between variables with i < j
     std::vector< std::vector<unsigned> > links; // who am I connecting to ?
     std::vector< std::vector<unsigned> > backlinks; // who is connecting to me ?
 
     // quadratic term : energy2[i][j][a1][a2] : position i and j, and then acide/angle a1 in position i, and a2 in position j
-    std::vector< std::vector< std::vector< std::vector<double> > > > energy2;
+    std::vector< std::vector< std::vector< std::vector<Cost> > > > energy2;
 };
 
 #endif

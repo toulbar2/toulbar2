@@ -9,14 +9,14 @@
 
 class Node {
 public:
-    double fitness;
+    Cost fitness;
     std::pair<int, int> neighbor;
 
     int height;
     Node * left;
     Node * right;
 
-    Node(double _fitness, std::pair<int, int> & _neighbor) : fitness(_fitness), neighbor(_neighbor), height(1), left(NULL), right(NULL) {}
+    Node(Cost _fitness, std::pair<int, int> & _neighbor) : fitness(_fitness), neighbor(_neighbor), height(1), left(NULL), right(NULL) {}
 
     Node(Node * _source) : fitness(_source->fitness), neighbor(_source->neighbor), height(1), left(NULL), right(NULL) {}
 
@@ -66,15 +66,15 @@ public:
         root = NULL;
     }
 
-    void insert(double _fitness, std::pair<int, int> & _neighbor) {
+    void insert(Cost _fitness, std::pair<int, int> & _neighbor) {
         root = insert(root, _fitness, _neighbor);
     }
 
-    void remove(double _fitness, std::pair<int, int> & _neighbor) {
+    void remove(Cost _fitness, std::pair<int, int> & _neighbor) {
         root = remove(root, _fitness, _neighbor);
     }
 
-    void minimum(double & vmin, std::pair<int, int> & min) {
+    void minimum(Cost & vmin, std::pair<int, int> & min) {
         Node * n = minimum(root);
 
         min.first  = n->neighbor.first;
@@ -82,7 +82,7 @@ public:
         vmin = n->fitness;
     }
 
-    void findall(double _fitness, unsigned & _nb, std::vector< Node* > & _res) {
+    void findall(Cost _fitness, unsigned & _nb, std::vector< Node* > & _res) {
         _nb = 0;
         findall(root, _fitness, _nb, _res);
     }
@@ -169,7 +169,7 @@ private:
         }
     }
 
-    void findall(Node * n, double fit, unsigned & nb, std::vector< Node* > & res) {
+    void findall(Node * n, Cost fit, unsigned & nb, std::vector< Node* > & res) {
         if (n != NULL) {
             if (fit == n->fitness) {
                 res[nb] = n;
@@ -184,7 +184,7 @@ private:
         }
     }
 
-    Node* insert(Node * n, double _fitness, std::pair<int, int> & _neighbor) {
+    Node* insert(Node * n, Cost _fitness, std::pair<int, int> & _neighbor) {
         if (n == NULL) {
             n = new Node(_fitness, _neighbor);
         } else {
@@ -203,7 +203,7 @@ private:
         return n;
     }
 
-    Node* remove(Node * n, double _fitness, std::pair<int, int> & _neighbor) {
+    Node* remove(Node * n, Cost _fitness, std::pair<int, int> & _neighbor) {
         if (n != NULL) {
             if (n->fitness == _fitness && n->neighbor.first == _neighbor.first && n->neighbor.second == _neighbor.second) {
                 // remove this node

@@ -56,7 +56,7 @@ public:
 
         while (nEval < nEvalMax && flat < flatMax) {
 
-            if ( abs(_solution.fitness() - lastFit) < 10e-6 ){
+            if ( _solution.fitness() == lastFit ){
                 flat++;
             } else {
                 flat=0;
@@ -102,22 +102,12 @@ public:
 
     }
 
-    void checkfit(Solution & _x) {
-        double f = _x.fitness();
-        eval(_x);
-        std::cout << f << " " << _x.fitness() << std::endl;
-        if (std::abs(f - _x.fitness()) > 1e-6) {
-            std::cout << "error fit" << std::endl;
-            //exit(1);
-        }
-    }
-
 protected:
   unsigned long long nEvalMax;
 
   unsigned flatMax;
 
-  double lastFit = 0;
+  Cost lastFit = 0;
   
   // local search  (here HC)
   LocalSearch & ls;

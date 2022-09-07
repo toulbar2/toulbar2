@@ -46,7 +46,7 @@ public:
   /**
    * set the fitness
    */
-  void fitness(double _fit) {
+  void fitness(Cost _fit) {
     valid    = true;
     _fitness = _fit;
   }
@@ -54,7 +54,7 @@ public:
   /**
    * get the fitness
    */
-  double fitness() const { 
+  Cost fitness() const {
     return _fitness; 
   }
 
@@ -67,7 +67,7 @@ public:
 
   virtual void printOn(std::ostream& _os) const {
     if (valid) {
-      double res = this->fitness();
+      Cost res = this->fitness();
       long long resi = (long long)res;
       if (resi < (res - DBL_EPSILON) || resi > (res + DBL_EPSILON)) {
     	_os << res;
@@ -119,7 +119,7 @@ public:
 
 private:
   // quality of the solution
-  double _fitness;
+  Cost _fitness;
 
   // valid fitness value if true
   bool valid;

@@ -30,7 +30,7 @@ public:
     unsigned long long nEvalLocal = 0;
     unsigned long long nAccept = 0;
     int r, n;
-    double neighFit, bestFit;
+    Cost neighFit, bestFit;
     bool accept = true;
     unsigned nBest;
     std::vector<unsigned> iBest(neighborhood.size());

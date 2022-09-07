@@ -29,7 +29,7 @@ public:
     unsigned long long nEvalLocal = 0;
     unsigned long long nAccept = 0;
     int r, n;
-    double neighFit;
+    Cost neighFit;
     bool accept = true;
 
     //out << id << nEval << " 0 " << _solution << std::endl;

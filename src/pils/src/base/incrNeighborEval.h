@@ -33,8 +33,8 @@ public:
       }
   }
 
-  virtual double operator()(Solution & _solution, std::pair<int, int> & _neighbor) {
-    double delta ;
+  virtual Cost operator()(Solution & _solution, std::pair<int, int> & _neighbor) {
+    Cost delta ;
 
     unsigned new_value = (_solution[_neighbor.first] + _neighbor.second) % eval.n_values[_neighbor.first];
     // linear part

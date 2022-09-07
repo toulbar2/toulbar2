@@ -38,7 +38,7 @@ public :
 
     compute_connected_components(x1, x2);
 
-    double g1, g2;
+    Cost g1, g2;
 
     bool n1 = false;
     bool n2 = false;
@@ -47,7 +47,7 @@ public :
         cout << nComponents << " ";
     }
     // first common component : copy x1 into child
-    double child_fit = 0; 
+    Cost child_fit = 0;
     child_fit = partial_func(0, x1) ;
     for(unsigned i : components[0])
       child[i] = x1[i];
@@ -175,8 +175,8 @@ protected:
     }
   }
 	
-  double partial_func(unsigned c, Solution & x){
-    double res= 0;
+  Cost partial_func(unsigned c, Solution & x){
+    Cost res= 0;
                 
     vector<bool> inthere;
     inthere.resize(x.size());

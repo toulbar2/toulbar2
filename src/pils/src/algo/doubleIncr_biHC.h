@@ -47,7 +47,7 @@ public:
     bool accept = true;
 
     unsigned nBest;
-    double bestDelta;
+    Cost bestDelta;
     std::pair<int, int> bestNeigh;
     std::vector< Node* > iBest(neighborhoodSize);
     unsigned r, old_value;
@@ -146,7 +146,7 @@ public:
       btree.findall(bestDelta, nBest, iBest);
 
       // Selection: select one of the best (if there are ties)
-      if (bestDelta < 0) {
+      if (bestDelta < 0) { //TODO: global switch between greedy hill climbing and steepest descent
         accept = true;
 
         if (nBest > 1) {
@@ -179,7 +179,7 @@ protected:
 
   // incremental delta
   unsigned neighborhoodSize;
-  std::vector< std::vector<double> > delta;
+  std::vector< std::vector<Cost> > delta;
 
   // neighborhood
   IncrNeighborEval & neighborEval;
