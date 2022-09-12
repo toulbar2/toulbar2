@@ -37,9 +37,9 @@ Cost Solver::pils(string cmd)
     int nbruns = 3;
     int perturb_id = 0;
     double perturb_s = 0.333;
-    Long flatMax = 150;
-    Long nEvalHC = 150;
-    Long nEvalMax = 1500;
+    Long flatMax = 100;
+    Long nEvalHC = 500;
+    Long nEvalMax = 10000;
     double strengthMin = 0.1;
     double strengthMax = 0.5;
     double incrFactor = 0.1;
@@ -119,6 +119,10 @@ Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long lo
     case 2: // adaptive perturbation
         perturbation = new AdaptivePerturb(myrandom_generator, eval, neighborEval, strengthMin, strengthMax, incrFactor, decrFactor);
         break;
+
+    default: // wrong parameter value
+        cerr << "Sorry! Wrong perturb mode (should be 0, 1 or 2): " << perturb_id << endl;
+        throw BadConfiguration();
     }
 
 

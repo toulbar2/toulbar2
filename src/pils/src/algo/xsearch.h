@@ -45,6 +45,9 @@ public :
     pertu1.init(sol1);
     ls1.nEval = 0;
     ls1(sol1);
+#ifndef NDEBUG
+    checkfit(sol1);
+#endif
     nEval += ls1.nEval;
     unsigned flat = 0;
     while(nEval < nEvalMax && flat <= flatMax && sol1.fitness() > 0) {
@@ -65,22 +68,26 @@ public :
 
       ls1.nEval = 0;
       ls1(sol2);
+#ifndef NDEBUG
+      checkfit(sol2);
+#endif
       nEval += ls1.nEval;
 
       if (ToulBar2::verbose >= 1) {
-#ifndef NDEBUG
-          checkfit(sol1);
-          checkfit(sol2);
-#endif
           cout << eval.getLb() + sol1.fitness() << " " << eval.getLb() + sol2.fitness() << " " << nEval << " ";
       }
       xo(sol1, sol2, sol1);
+#ifndef NDEBUG
+      checkfit(sol1);
+#endif
 
       ls1.nEval = 0;
       ls1(sol1);
+#ifndef NDEBUG
+      checkfit(sol1);
+#endif
       nEval += ls1.nEval;
     }
-
   }
 
 
