@@ -47,7 +47,7 @@ public :
     ls1(sol1);
     nEval += ls1.nEval;
     unsigned flat = 0;
-    while(nEval < nEvalMax && flat < flatMax && sol1.fitness() > 0){
+    while(nEval < nEvalMax && flat <= flatMax && sol1.fitness() > 0) {
       if (ToulBar2::interrupted) {
         throw TimeOut();
       }
@@ -74,13 +74,11 @@ public :
 #endif
           cout << eval.getLb() + sol1.fitness() << " " << eval.getLb() + sol2.fitness() << " " << nEval << " ";
       }
-      xo(sol1, sol2, sol1);	
+      xo(sol1, sol2, sol1);
 
       ls1.nEval = 0;
       ls1(sol1);
       nEval += ls1.nEval;
-
-
     }
 
   }

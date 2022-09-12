@@ -53,7 +53,7 @@ public :
       child[i] = x1[i];
 
     // Others true components
-    for(unsigned c = 1; c < nComponents; c++) {
+    for(unsigned c = 1; c <= nComponents; c++) {
       g1 = partial_func(c, x1);
       g2 = partial_func(c, x2);
 
@@ -73,7 +73,7 @@ public :
           child[i] = x1[i];
       }
     }
-                
+
     child.fitness(child_fit);
     
     if (ToulBar2::verbose >= 1) {
@@ -92,7 +92,7 @@ public :
 
     std::cout << "nb components : " << nComponents << std::endl;
 
-    for(unsigned c = 0; c < nComponents; c++) {
+    for(unsigned c = 0; c <= nComponents; c++) {
       std::cout << c << ":" ;
       for(unsigned i : components[c])
         {
@@ -110,7 +110,7 @@ public :
 
   void afficheComponents() {
 
-    for(unsigned i=0; i < nComponents; i++){
+    for(unsigned i=0; i <= nComponents; i++){
       cout << endl << "comp" << i << endl;
       for(unsigned j : components[i]){
         cout << components[i][j] << " ";
@@ -154,14 +154,14 @@ protected:
         }
       }
 
-    
-    for(unsigned c = 0; c < nComponents; c++) 
+    for(unsigned c = 0; c <= nComponents; c++)
       components[c].resize( 0 );
 
-    for(unsigned i = 0; i < eval.n_variables; i++) 
-      components[ component_id[i] ].push_back(i);
-
-
+    for(unsigned i = 0; i < eval.n_variables; i++) {
+        assert(component_id[i] >= 0);
+        assert(component_id[i] <= (int)nComponents );
+        components[ component_id[i] ].push_back(i);
+    }
   }
 
   void set_component(unsigned i) {
@@ -199,13 +199,21 @@ protected:
         for(unsigned k : components[c]) {
           for(unsigned i = 0; i < eval.links[k].size(); i++) {
             unsigned l = eval.links[k][i];
-            if (!inthere[l])
-              res += eval.energy2[k][l][x[k]][x[l]];					
+            if (!inthere[l]) {
+                assert(component_id[l] == 0);
+                res += eval.energy2[k][l][x[k]][x[l]];
+            } else {
+                assert(component_id[k] == component_id[l]);
+            }
           }
           for(unsigned i = 0; i < eval.backlinks[k].size(); i++) {
             unsigned l = eval.backlinks[k][i];
-            if (!inthere[l])
-              res += eval.energy2[l][k][x[l]][x[k]];
+            if (!inthere[l]) {
+                assert(component_id[l] == 0);
+                res += eval.energy2[l][k][x[l]][x[k]];
+            } else {
+                assert(component_id[k] == component_id[l]);
+            }
           }
         }
       }

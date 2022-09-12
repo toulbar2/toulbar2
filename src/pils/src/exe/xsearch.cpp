@@ -83,7 +83,7 @@ Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long lo
     IncrNeighborEval neighborEval(eval);
 
     // local search
-    DoubleIncr_biHC hc(myrandom_generator, eval, neighborEval, nEvalHC, std::cout);
+    DoubleIncr_biHC hc(myrandom_generator, eval, neighborEval, nEvalHC, flatMax, std::cout);
 
 
     // perturbation
@@ -166,6 +166,8 @@ Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long lo
             Store::restore(depth);
         }
     }
+
+    delete perturbation;
 
     if (wcsp->getUb() < initialUpperBound) {
         wcsp->enforceUb();

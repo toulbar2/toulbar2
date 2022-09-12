@@ -23,8 +23,9 @@ public:
   DoubleIncr_biHC(std::mt19937 & _rng, 
                      CostFunction & _eval,
                      IncrNeighborEval & _neighborEval, 
-                     unsigned long long _nEvalMax, 
-                     std::ostream & _out) : LocalSearch(_eval), rng(_rng), nEvalMax(_nEvalMax), neighborEval(_neighborEval), out(_out) {
+                     unsigned long long _nEvalMax,
+                     unsigned _flatMaxLocal,
+                     std::ostream & _out) : LocalSearch(_eval), rng(_rng), nEvalMax(_nEvalMax), flatMaxLocal(_flatMaxLocal), neighborEval(_neighborEval), out(_out) {
     delta.resize(eval.size());
     neighborhoodSize = 0;
     for(unsigned i = 0; i < delta.size(); i++) {
@@ -51,8 +52,9 @@ public:
     std::pair<int, int> bestNeigh;
     std::vector< Node* > iBest(neighborhoodSize);
     unsigned r, old_value;
+    unsigned flatLocal = 0;
 
-    while (nEvalLocal < nEvalMax && accept) {
+    while (nEvalLocal < nEvalMax && accept && flatLocal <= flatMaxLocal) {
 
       if (nEvalLocal == 0) {
         // first iteration: 
@@ -133,7 +135,6 @@ public:
             delta[i][k] += eval.energy2[i][i_move][ _solution[i] ][ old_value ]       - eval.energy2[i][i_move][ _solution[i] ][ _solution[i_move] ]
                          + eval.energy2[i][i_move][ move_value ][ _solution[i_move] ] - eval.energy2[i][i_move][ move_value ][ old_value ];
             // save new value
-
             btree.insert(delta[i][k], neighbor);
           }
         }
@@ -146,8 +147,14 @@ public:
       btree.findall(bestDelta, nBest, iBest);
 
       // Selection: select one of the best (if there are ties)
-      if (bestDelta < 0) { //TODO: global switch between greedy hill climbing and steepest descent
+      if (bestDelta <= 0) { //TODO: global switch between greedy hill climbing and steepest descent
         accept = true;
+
+        if (bestDelta == 0) {
+            flatLocal++;
+        } else {
+            flatLocal = 0;
+        }
 
         if (nBest > 1) {
           r = runif(rng) % nBest;
@@ -176,6 +183,7 @@ protected:
   std::uniform_int_distribution<int> runif;
 
   unsigned long long nEvalMax;
+  unsigned flatMaxLocal;
 
   // incremental delta
   unsigned neighborhoodSize;
