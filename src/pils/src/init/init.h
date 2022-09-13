@@ -37,7 +37,6 @@ public:
     _solution.invalidate();
   }
 
-
 protected:
   std::mt19937 & rng;
 

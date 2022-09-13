@@ -594,7 +594,7 @@ public:
     /// \return best solution cost found
     /// \param cmd command line argument for PILS local search solver (cmd format: nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC nbEvalMax strengthMin strengthMax incrFactor decrFactor)
     /// \warning cannot solve problems with non-binary cost functions
-    virtual Cost pils(string cmd) = 0;
+    virtual Cost pils(string cmd, vector<Value>& solution) = 0;
 
 
     /// \brief quadratic unconstrained pseudo-Boolean optimization

@@ -487,6 +487,7 @@ public:
 
     // PILS local search
     /// \brief solves the current problem using PILS local search @ Francois Beuvin, David Simoncini, Sebastien Verel
+    /// \param solution initial starting solution for the first run only
     /// \param nbruns number of runs
     /// \param perturb_id perturbation mode: 0 means static perturbation, 1: random perturbation, 2: adaptive perturbation
     /// \param perturb_s size of the static perturbation (proportional to sequence length)
@@ -497,10 +498,10 @@ public:
     /// \param strengthMax maximum size of the random/adaptive perturbation (proportional to sequence length)
     /// \param incrFactor increasing factor of perturbation size
     /// \param decrFactor decreasing factor of perturbation size
-    /// \return best solution cost found
-    /// \warning cannot solve problems with non-binary cost functions
-    Cost pils(int nbruns = 3, int perturb_id = 0, double perturb_s = 0.333, unsigned long long flatMax = 100, unsigned long long nEvalHC = 500, unsigned long long nEvalMax = 10000, double strengthMin = 0.1, double strengthMax = 0.5, double incrFactor = 0.1, double decrFactor = 0.1);
-    Cost pils(string cmd);
+    /// \return best solution cost found (and updates upper bound and best solution found as a side-effect)
+    /// \warning cannot solve problems with non-binary cost functions (it ignores them!)
+    Cost pils(vector<Value>& solution, int nbruns = 3, int perturb_id = 0, double perturb_s = 0.333, unsigned long long flatMax = 100, unsigned long long nEvalHC = 500, unsigned long long nEvalMax = 10000, double strengthMin = 0.1, double strengthMax = 0.5, double incrFactor = 0.1, double decrFactor = 0.1);
+    Cost pils(string cmd, vector<Value>& solution);
 
     bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol);
 

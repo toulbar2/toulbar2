@@ -101,10 +101,6 @@ protected :
 
   Cost lastFit;
 
-  bool same;
-
-  bool growth;
-
   Solution sol2;
 
   LocalSearch & ls1;

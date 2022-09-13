@@ -317,6 +317,18 @@ public:
         return values[i][a];
     }
 
+    int getPILSValueIndex(unsigned i, Value a) {
+        assert(i < n_variables);
+        unsigned pos = 0;
+        for (auto iter = values[i].begin(); iter != values[i].end(); iter++) {
+            if (*iter == a) {
+                break;
+            }
+            pos++;
+        }
+        return (pos < n_values[i])?pos:-1;
+    }
+
     Cost getLb() {
         return energy0;
     }

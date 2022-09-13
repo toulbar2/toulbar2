@@ -2413,7 +2413,10 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     }
     if (ToulBar2::pils_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 0) {
         double pilsStartTime = cpuTime();
-        pils(ToulBar2::pils_cmd);
+        vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
+            bestsol[i] = (wcsp->canbe(i, wcsp->getBestValue(i)) ? wcsp->getBestValue(i) : wcsp->getSupport(i));
+        pils(ToulBar2::pils_cmd, bestsol);
         if (ToulBar2::verbose >= 0)
             cout << "PILS solving time: " << cpuTime() - pilsStartTime << " seconds." << endl;
     }

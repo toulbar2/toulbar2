@@ -32,7 +32,7 @@ using namespace PILS;
 
 */
 
-Cost Solver::pils(string cmd)
+Cost Solver::pils(string cmd, vector<Value>& solution)
 {
     int nbruns = 3;
     int perturb_id = 0;
@@ -55,10 +55,10 @@ Cost Solver::pils(string cmd)
     if (ss_cmd) ss_cmd >> strengthMax;
     if (ss_cmd) ss_cmd >> incrFactor;
     if (ss_cmd) ss_cmd >> decrFactor;
-    return pils(nbruns, perturb_id, perturb_s, flatMax, nEvalHC, nEvalMax, strengthMin, strengthMax, incrFactor, decrFactor);
+    return pils(solution, nbruns, perturb_id, perturb_s, flatMax, nEvalHC, nEvalMax, strengthMin, strengthMax, incrFactor, decrFactor);
 }
 
-Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long long flatMax, unsigned long long nEvalHC, unsigned long long nEvalMax, double strengthMin, double strengthMax, double incrFactor, double decrFactor)
+Cost Solver::pils(vector<Value>& solution, int nbruns, int perturb_id, double perturb_s, unsigned long long flatMax, unsigned long long nEvalHC, unsigned long long nEvalMax, double strengthMin, double strengthMax, double incrFactor, double decrFactor)
 {
     if (ToulBar2::verbose >= 1) {
         cout << "PILS parameters: " << nbruns;
@@ -136,10 +136,22 @@ Cost Solver::pils(int nbruns, int perturb_id, double perturb_s, unsigned long lo
     Solution x;
 
     for (int nessai = 0; nessai < nbruns && wcsp->getLb() < wcsp->getUb(); nessai++) {
-        // random initialization
+        // random initialization except first run
         init(x);
+        if (nessai==0) {
+            for(size_t i = 0; i < eval.size(); i++) {
+                int val = eval.getPILSValueIndex(i, solution[eval.getWCSPIndex(i)]);
+                if (val >= 0 && val < (int)eval.variable_size(i)) {
+                    x[i] = val;
+                }
+            }
+        }
         eval(x);
         xs.nEval = 1;
+        if (ToulBar2::verbose >= 1) {
+            x.print();
+            cout << endl;
+        }
 
         // do it
         xs(x);
