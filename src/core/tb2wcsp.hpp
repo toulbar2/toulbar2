@@ -592,7 +592,7 @@ public:
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                if (ToulBar2::showHidden || (varlabel.rfind(HIDDEN_VAR_TAG, 0) != 0)) {
                     switch (ToulBar2::showSolutions) {
                     case 1:
                         printed = true;
@@ -628,7 +628,7 @@ public:
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                if (ToulBar2::showHidden || (varlabel.rfind(HIDDEN_VAR_TAG, 0) != 0)) {
                     switch (ToulBar2::writeSolution) {
                     case 1:
                         printed = true;
@@ -664,7 +664,7 @@ public:
                 string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                 string varlabel = myvar->getName();
 
-                if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                if (ToulBar2::showHidden || (varlabel.rfind(HIDDEN_VAR_TAG, 0) != 0)) {
                     switch (ToulBar2::writeSolution) {
                     case 1:
                         printed = true;
@@ -813,6 +813,8 @@ public:
     void processTernary(); ///< \brief projects&subtracts ternary cost functions (see \ref preprocessing)
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
+
+    bool dualEncoding();
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency

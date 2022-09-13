@@ -253,6 +253,8 @@ enum {
     NO_OPT_vacValueHeuristic,
     OPT_preprocessTernary,
     NO_OPT_preprocessTernary,
+    OPT_preprocessPWC,
+    NO_OPT_preprocessPWC,
     OPT_preprocessFunctional,
     NO_OPT_preprocessFunctional,
     OPT_preprocessNary,
@@ -517,6 +519,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_preprocessFunctional, (char*)"-f:", SO_NONE },
     { OPT_preprocessNary, (char*)"-n", SO_OPT },
     { NO_OPT_preprocessNary, (char*)"-n:", SO_NONE },
+    { OPT_preprocessPWC, (char*)"-pwc", SO_NONE },
+    { NO_OPT_preprocessPWC, (char*)"-pwc:", SO_NONE },
 
     { OPT_QueueComplexity, (char*)"-o", SO_NONE },
     { OPT_MSTDAC, (char*)"-mst", SO_NONE },
@@ -862,6 +866,10 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::preprocessTernaryRPC)
         cout << " (" << ToulBar2::preprocessTernaryRPC << " MB)";
     cout << endl;
+    cout << "   -pwc : preprocessing only: pairwise consistency by dual encoding into a binary cost function network within a given maximum space limit (in MB)";
+    if (ToulBar2::pwc)
+        cout << " (default option)";
+    cout << endl;
     cout << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
     cout << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
     if (ToulBar2::costfuncSeparate)
@@ -878,7 +886,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
 #endif
-    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws:)" << endl;
+    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws: -pwc:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
     if (ToulBar2::QueueComplexity)
         cout << " (default option)";
@@ -1772,6 +1780,16 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::preprocessTernaryRPC = 0;
             }
 
+            if (args.OptionId() == OPT_preprocessPWC) {
+                if (ToulBar2::debug)
+                    cout << "preprocess pairwise consistency ON" << endl;
+                ToulBar2::pwc = true;
+            } else if (args.OptionId() == NO_OPT_preprocessPWC) {
+                if (ToulBar2::debug)
+                    cout << "preprocess pairwise consistency OFF" << endl;
+                ToulBar2::pwc = false;
+            }
+
             if (args.OptionId() == OPT_trwsAccuracy) {
                 if (args.OptionArg() == NULL) {
                     ToulBar2::trwsAccuracy = 0.00001;
@@ -2282,6 +2300,9 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "TRW-S OFF" << endl;
                 ToulBar2::trwsAccuracy = -1.;
+                if (ToulBar2::debug)
+                    cout << "PWC OFF" << endl;
+                ToulBar2::pwc = false;
             }
 
             if (args.OptionId() == OPT_VACINT) {

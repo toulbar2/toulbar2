@@ -1450,7 +1450,7 @@ void Solver::newSolution()
                     string valuelabel = myvar->getValueName(myvar->toIndex(myvalue));
                     string varlabel = myvar->getName();
 
-                    if (ToulBar2::showHidden || (varlabel.rfind(DIVERSE_VAR_TAG, 0) != 0)) {
+                    if (ToulBar2::showHidden || (varlabel.rfind(HIDDEN_VAR_TAG, 0) != 0)) {
                         switch (ToulBar2::showSolutions) {
                         case 1:
                             cout << " ";

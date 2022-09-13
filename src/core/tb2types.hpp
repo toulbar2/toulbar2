@@ -61,8 +61,8 @@ using std::queue;
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
 
-/// Special character value at the beginning of a variable's name to identify diverse extra variables corresponding to the current sequence of diverse solutions found so far
-const string DIVERSE_VAR_TAG = "^";
+/// Special character value at the beginning of a variable's name to identify hidden variables like diverse extra variables corresponding to the current sequence of diverse solutions found so far
+const string HIDDEN_VAR_TAG = "^";
 
 /// Domain value (can be positive or negative integers)
 #ifdef SHORT_VALUE
@@ -744,6 +744,7 @@ public:
     static int elimSpaceMaxMB; /// < \brief maximum space size for generic variable elimination (in MegaByte) (related to command line option -p)
     static int minsumDiffusion; /// < \brief in preprocessing, applies Min Sum Diffusion algorithm a given number of iterations (command line option -M)
     static int preprocessTernaryRPC; /// < \brief in preprocessing, simulates restricted path consistency by adding ternary cost functions on most-promising triangles of binary cost functions (maximum space size in MegaByte) (command line option -t)
+    static bool pwc; /// \brief pairwise consistency by dual encoding into a binary WCSP
     static int preprocessFunctional; /// < \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
     static bool costfuncSeparate; /// < \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
     static int preprocessNary; /// < \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)

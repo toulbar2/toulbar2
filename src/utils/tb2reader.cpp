@@ -2205,7 +2205,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_sol" + std::to_string(j) + "_" + x->getName(), 0, 2 * ToulBar2::divBound + 1);
+                    divVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_sol" + std::to_string(j) + "_" + x->getName(), 0, 2 * ToulBar2::divBound + 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                         theVar->addValueName("q" + std::to_string(val % (ToulBar2::divBound + 1)) + "_"
@@ -2221,7 +2221,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divHVarsId[j][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
+                    divHVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                         theVar->addValueName("q" + std::to_string(val));
@@ -2235,7 +2235,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             if (ToulBar2::divMethod < 2) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "c_relax_" + x->getName(), 0, ToulBar2::divWidth * ToulBar2::divWidth - 1);
+                    divVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_relax_" + x->getName(), 0, ToulBar2::divWidth * ToulBar2::divWidth - 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[ToulBar2::divNbSol - 1][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                         theVar->addValueName("Q" + std::to_string(val));
@@ -2245,7 +2245,7 @@ Cost WCSP::read_wcsp(const char* fileName)
             if (ToulBar2::divMethod >= 1 && ToulBar2::divMethod <= 2) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(DIVERSE_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
+                    divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[ToulBar2::divNbSol - 1][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                         theVar->addValueName("q" + std::to_string(val));
