@@ -3167,13 +3167,15 @@ bool WCSP::dualEncoding()
     vector<vector<Cost>> listOfDualCosts;
     map<Constraint *, unsigned int> indexOfCtrs;
     set<pair<unsigned int, unsigned int>> intersections; // graph of intersections of non-binary cost functions with at least two variables
+    Long nbintersections = 0;
+    map<unsigned int, unsigned int> inclusions; // graph of inclusions of non-binary cost functions (map[i]=j means i included into j)
+    map<Constraint *, Constraint *> included; // graph of inclusions of any cost functions (map[i]=j means i included into j)
     unsigned int nbdual = 0;
     Long maxdomsize = 0;
+    Long maxtuples = (2 << (sizeof(tValue)*8 - 1)) - 1;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint *ctr = constrs[i];
-        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3) {
-            listOfCtrs.push_back(ctr);
-            indexOfCtrs[ctr] = nbdual++;
+        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= 10) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3185,31 +3187,37 @@ bool WCSP::dualEncoding()
                     tuples.push_back(tuple);
                     costs.push_back(cost);
                     nbtuples++;
+                    if (nbtuples > maxtuples) {
+                        break;
+                    }
                 }
             }
-            listOfDualDomains.push_back(tuples);
-            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(i), 0, nbtuples - 1);
+            if (nbtuples > maxtuples) {
+                if (ToulBar2::verbose >= 1) {
+                    cout << "Warning! Cannot dualize this constraint with too many tuples! " << endl;
+                    cout << *ctr << endl;
+                }
+                continue;
+            }
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
-                if (maxdomsize > (2 << (sizeof(tValue)*8 - 1)) - 1) {
-                    cout << "# Sorry, cannot perform parwise consistency! dual domain size of " << maxdomsize << " is too large!!" << endl;
-                    return false;
-                }
             }
+            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(i), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
-            listOfDualVars.push_back(theVar);
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
             }
+            listOfDualVars.push_back(theVar);
+            listOfDualDomains.push_back(tuples);
             listOfDualCosts.push_back(costs);
+            listOfCtrs.push_back(ctr);
+            indexOfCtrs[ctr] = nbdual++;
         }
     }
     for (int i = 0; i < elimTernOrder; i++) {
         if (elimTernConstrs[i]->connected()) {
             TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[i];
             if (ctr->connected()) {
-                listOfCtrs.push_back(ctr);
-                indexOfCtrs[ctr] = nbdual++;
                 Tuple tuple;
                 Cost cost;
                 vector<Tuple> tuples;
@@ -3221,27 +3229,34 @@ bool WCSP::dualEncoding()
                         tuples.push_back(tuple);
                         costs.push_back(cost);
                         nbtuples++;
+                        if (nbtuples > maxtuples) {
+                            break;
+                        }
                     }
                 }
-                listOfDualDomains.push_back(tuples);
-                int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(i), 0, nbtuples - 1);
+                if (nbtuples > maxtuples) {
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "Warning! Cannot dualize this constraint with too many tuples! " << endl;
+                        cout << *ctr << endl;
+                    }
+                    continue;
+                }
                 if (nbtuples > maxdomsize) {
                     maxdomsize = nbtuples;
-                    if (maxdomsize > (2 << (sizeof(tValue)*8 - 1)) - 1) {
-                        cout << "# Sorry, cannot perform parwise consistency! dual domain size of " << maxdomsize << " is too large!!" << endl;
-                        return false;
-                    }
                 }
+                int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(i), 0, nbtuples - 1);
                 EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
-                listOfDualVars.push_back(theVar);
                 for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                     theVar->addValueName("t" + to_string(tuples[val]));
                 }
+                listOfDualVars.push_back(theVar);
+                listOfDualDomains.push_back(tuples);
                 listOfDualCosts.push_back(costs);
+                listOfCtrs.push_back(ctr);
+                indexOfCtrs[ctr] = nbdual++;
             }
         }
     }
-    cout << "Add " << listOfDualVars.size() << " dual vars with maximum domain size " << maxdomsize << endl;
     assert(nbdual == listOfCtrs.size());
     assert(nbdual == listOfDualVars.size());
     assert(nbdual == listOfDualDomains.size());
@@ -3249,27 +3264,48 @@ bool WCSP::dualEncoding()
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
         TSCOPE scope;
         listOfCtrs[i]->getScope(scope);
-        set<Constraint *> intersect;
+        set<unsigned int> intersect;
         for (auto var:scope) {
             EnumeratedVariable* neighbor = static_cast<EnumeratedVariable*>(getVar(var.first));
             for (ConstraintList::iterator iter = neighbor->getConstrs()->begin(); iter != neighbor->getConstrs()->end(); ++iter) {
                 Constraint *ctr = (*iter).constr;
                 assert(ctr->connected());
-                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr != listOfCtrs[i]) {
+                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= 10 && ctr != listOfCtrs[i]) {
                     TSCOPE inter;
                     listOfCtrs[i]->scopeCommon(inter, ctr);
-                    if (inter.size() >= 2) {
-                        intersect.insert(ctr);
-                    }
                     if (ctr->arity() == (int)inter.size()) {
-                        cout << "warning!" << endl << *ctr << endl << "included in" << endl << *listOfCtrs[i] << endl;
+                       if (ToulBar2::verbose >= 1) {
+                           cout << "Warning! Constraint " << ctr << " is included in dualized constraint of index " << i << endl;
+                           cout << *ctr;
+                           cout << *listOfCtrs[i];
+                           cout << endl;
+                       }
+                       auto iter = indexOfCtrs.find(ctr);
+                       if (iter != indexOfCtrs.end()) {
+                           unsigned int j = (*iter).second;
+                           auto inclus = inclusions.find(j);
+                           if (inclus == inclusions.end() || listOfCtrs[(*inclus).second]->arity() < listOfCtrs[i]->arity()) {
+                               inclusions[j] = i;
+                               included[ctr] = listOfCtrs[i];
+                           }
+                       } else {
+                           for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
+                               listOfDualCosts[i][vali] += ctr->evalsubstr(listOfDualDomains[i][vali], listOfCtrs[i]);
+                           }
+                           included[ctr] = listOfCtrs[i];
+                           ctr->deconnect();
+                       }
+                    } else if (inter.size() >= 2) {
+                        assert(ctr->arity() >= 3);
+                        auto iter = indexOfCtrs.find(ctr);
+                        if (iter != indexOfCtrs.end()) {
+                            intersect.insert((*iter).second);
+                        }
                     }
                 }
             }
         }
-        for (Constraint *ctr:intersect) {
-            assert(indexOfCtrs.find(ctr) != indexOfCtrs.end());
-            unsigned int j = indexOfCtrs[ctr];
+        for (unsigned int j:intersect) {
             pair<unsigned int, unsigned int> elt;
             if (i < j) {
                 elt = make_pair(i,j);
@@ -3279,63 +3315,93 @@ bool WCSP::dualEncoding()
             intersections.insert(elt);
         }
     }
-    cout << "Find " << intersections.size() << " nontrivial intersection scopes." << endl;
 
-    for (auto ctr:listOfCtrs) {
+    for (auto ctr:listOfCtrs) { // deconnect dualized constraints
         ctr->deconnect();
     }
-    for (auto inter:intersections) {
-        initElimConstr();
+    for (auto inter:intersections) { // add binary constraints for pairwise consistency
         assert(inter.first < inter.second);
         int i = inter.first;
+        if (inclusions.find(i) != inclusions.end()) {
+            continue; // do not create intersection if one dual variable has its constraint included into another constraint
+        }
         int j = inter.second;
-        TSCOPE scopei;
-        listOfCtrs[i]->getScope(scopei);
-        TSCOPE scopej;
-        listOfCtrs[j]->getScope(scopej);
-        TSCOPE scope;
-        listOfCtrs[i]->scopeCommon(scope, listOfCtrs[j]);
-        assert(scope.size() >= 2);
-        vector<unsigned int> subscopei;
-        vector<unsigned int> subscopej;
-        for (auto var:scope) {
-            subscopei.push_back(scopei[var.first]);
-            subscopej.push_back(scopej[var.first]);
+        if (inclusions.find(j) != inclusions.end()) {
+            continue; // do not create intersection if one dual variable has its constraint included into another constraint
         }
-        vector<Cost> costs;
-        for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
-            for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
-                bool compatible = true;
-                unsigned int a = 0;
-                while (compatible && a < scope.size()) {
-                    if (listOfDualDomains[i][vali][subscopei[a]] != listOfDualDomains[j][valj][subscopej[a]]) {
-                        compatible = false;
+        if ((Long)listOfDualVars[i]->getDomainInitSize() * listOfDualVars[j]->getDomainInitSize() <= (Long)MAX_NB_TUPLES / 10) {
+            initElimConstr();
+            TSCOPE scopei;
+            listOfCtrs[i]->getScope(scopei);
+            TSCOPE scopej;
+            listOfCtrs[j]->getScope(scopej);
+            TSCOPE scope;
+            listOfCtrs[i]->scopeCommon(scope, listOfCtrs[j]);
+            assert(scope.size() >= 2);
+            vector<unsigned int> subscopei;
+            vector<unsigned int> subscopej;
+            for (auto var:scope) {
+                subscopei.push_back(scopei[var.first]);
+                subscopej.push_back(scopej[var.first]);
+            }
+            vector<Cost> costs;
+            for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
+                for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
+                    bool compatible = true;
+                    unsigned int a = 0;
+                    while (compatible && a < scope.size()) {
+                        if (listOfDualDomains[i][vali][subscopei[a]] != listOfDualDomains[j][valj][subscopej[a]]) {
+                            compatible = false;
+                        }
+                        a++;
                     }
-                    a++;
+                    costs.push_back((compatible) ? MIN_COST : MAX_COST);
                 }
-                costs.push_back((compatible) ? MIN_COST : MAX_COST);
+            }
+            postIncrementalBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
+            nbintersections++;
+        } else {
+            if (ToulBar2::verbose >= 1) {
+                cout << "Warning! Cannot represent the intersection between constraints " << i << " and " << j << " with too many tuples!" << endl;
+                cout << *listOfCtrs[i];
+                cout << *listOfCtrs[j];
+                cout << endl;
             }
         }
-        postIncrementalBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
     }
-    for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
-        initElimConstr();
+    for (unsigned int i = 0; i < listOfCtrs.size(); i++) { // add binary constraints for channeling between dual variables and original variables
         EnumeratedVariable *vardual = listOfDualVars[i];
-        for (int a = 0; a < listOfCtrs[i]->arity(); a++) {
-            EnumeratedVariable* var = static_cast<EnumeratedVariable*>(listOfCtrs[i]->getVar(a));
-            vector<Cost> costs; // (var->getDomainInitSize() * vardual->getDomainInitSize(), MAX_COST);
-            for (tValue val = 0; val < (tValue)var->getDomainInitSize(); val++) {
-                for (unsigned int valdual = 0; valdual < vardual->getDomainInitSize(); valdual++) {
-                    costs.push_back((listOfDualDomains[i][valdual][a] == val) ? MIN_COST : MAX_COST);
+        auto inclus = inclusions.find(i);
+        if (inclus == inclusions.end()) {
+            initElimConstr();
+            for (int a = 0; a < listOfCtrs[i]->arity(); a++) { // link constraint i to all the variables in its scope
+                EnumeratedVariable* var = static_cast<EnumeratedVariable*>(listOfCtrs[i]->getVar(a));
+                vector<Cost> costs; // (var->getDomainInitSize() * vardual->getDomainInitSize(), MAX_COST);
+                for (tValue val = 0; val < (tValue)var->getDomainInitSize(); val++) {
+                    for (unsigned int valdual = 0; valdual < vardual->getDomainInitSize(); valdual++) {
+                        costs.push_back((listOfDualDomains[i][valdual][a] == val) ? MIN_COST : MAX_COST);
+                    }
                 }
+                postIncrementalBinaryConstraint(var->wcspIndex, vardual->wcspIndex, costs);
             }
-            postIncrementalBinaryConstraint(var->wcspIndex, vardual->wcspIndex, costs);
+        } else { // constraint i is included into constraint j
+            unsigned int j = (*inclus).second;
+            for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
+                listOfDualCosts[j][valj] += listOfCtrs[i]->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
+            }
         }
     }
     for (unsigned int i = 0; i < listOfDualVars.size(); i++) {
-        postIncrementalUnaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualCosts[i]);
+        if (inclusions.find(i) == inclusions.end()) { // add costs of constraint i to its dual variable unary cost function
+            postIncrementalUnaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualCosts[i]);
+        } else {
+            assign(listOfDualVars[i]->wcspIndex, listOfDualVars[i]->getInf()); // assign this dual variable corresponding to an included constraint to a dummy value
+            nbdual--;
+        }
     }
-
+    if (ToulBar2::verbose >= 0) {
+        cout << "Dual encoding with " << nbdual << " extra variables with maximum domain size " << maxdomsize << " and " << nbintersections << " non-unary intersection edges." << endl;
+    }
     return true;
 }
 
