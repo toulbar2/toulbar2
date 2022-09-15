@@ -199,7 +199,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
 {
     assert(ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true));
     assert(cost >= MIN_COST);
-    assert(CUT(costs[toIndex(value)], cost));
+    assert(ToulBar2::pwc || CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
     if (value == maxCostValue || PARTIALORDER)
         queueNC();

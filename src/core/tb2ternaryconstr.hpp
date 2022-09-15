@@ -480,7 +480,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(c >= MIN_COST || !LUBTEST(getCost(vxi, vyi, vzi), -c));
+        assert(c >= MIN_COST || ToulBar2::pwc || !LUBTEST(getCost(vxi, vyi, vzi), -c));
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
         unsigned int vz = z->toIndex(vzi);
@@ -506,7 +506,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(c >= MIN_COST || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
+        assert(c >= MIN_COST || ToulBar2::pwc || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
 
         unsigned int vindex[3];
         unsigned int vx = xin->toIndex(vxi);

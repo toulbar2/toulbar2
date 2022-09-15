@@ -126,6 +126,33 @@ public:
         return minCost;
     }
 
+    vector<Cost> getDeltaCostsX() {
+        vector<Cost> deltas;
+        for (Cost cost: deltaCostsX) {
+            deltas.push_back(cost);
+        }
+        return deltas;
+    }
+    vector<Cost> getDeltaCostsY() {
+        vector<Cost> deltas;
+        for (Cost cost: deltaCostsY) {
+            deltas.push_back(cost);
+        }
+        return deltas;
+    }
+    void setDeltaCostsX(const vector<Cost>& update) {
+        assert(update.size() == sizeX);
+        for (unsigned int a = 0; a < sizeX; a++) {
+            deltaCostsX[a] = update[a];
+        }
+    }
+    void setDeltaCostsY(const vector<Cost>& update) {
+        assert(update.size() == sizeY);
+        for (unsigned int b = 0; b < sizeY; b++) {
+            deltaCostsY[b] = update[b];
+        }
+    }
+
     Cost getCost(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy)
     {
         unsigned int vindex[2];
