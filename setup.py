@@ -10,8 +10,7 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
-#python_Path = os.path.dirname(sys.executable)
-python_Path = sys.argv[2]
+python_Path = sys.exec_prefix
 print("python_Path", python_Path)
 
 class CMakeExtension(Extension):
