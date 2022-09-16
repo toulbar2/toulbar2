@@ -31,8 +31,8 @@ for whl in wheelhouse/*.whl; do
     repair_wheel "$whl"
 done
 
-# Install packages and test
-for PYBIN in /opt/python/*/bin/; do
+# Install cython packages and test
+for PYBIN in /opt/python/cp*/bin/; do
     "${PYBIN}/pip3" install pytoulbar2 --no-index -f /io/wheelhouse
     "${PYBIN}/python" -m nose2 pytoulbar2
 done
