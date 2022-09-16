@@ -20,7 +20,7 @@ yum -y install libxml2-devel
 
 cd "$HOME"
 
-# Compile wheels for cython only
+# Compile wheels for cython only on Linux
 for PYBIN in /opt/python/cp*/bin; do
     "${PYBIN}/pip3" install -r /io/dev-requirements.txt
     "${PYBIN}/pip3" wheel /io/ --no-deps -w wheelhouse
