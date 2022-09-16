@@ -1,7 +1,7 @@
 matrix:
   include:
   - if: commit_message =~ /^\[(code|bug|error|option)\]/
-    dist: bionic
+    dist: focal
     language: cpp
     compiler: clang
     addons:
@@ -21,7 +21,7 @@ matrix:
  
   - if: commit_message =~ /^\[pytb2-deploy\].*Linux/ 
     sudo: required
-    dist: bionic
+    dist: focal
     addons:
       apt:
         packages: python3 python3-pip python3-setuptools
