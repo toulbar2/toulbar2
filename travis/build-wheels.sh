@@ -14,13 +14,14 @@ function repair_wheel {
 yum -y install gmp-devel
 yum -y install boost-devel
 yum -y install zlib-devel
+yum -y install bzip2-devel
 yum -y install xz-devel
 yum -y install libxml2-devel
 
 cd "$HOME"
 
-# Compile wheels
-for PYBIN in /opt/python/*/bin; do
+# Compile wheels for cython only
+for PYBIN in /opt/python/cp*/bin; do
     "${PYBIN}/pip3" install -r /io/dev-requirements.txt
     "${PYBIN}/pip3" wheel /io/ --no-deps -w wheelhouse
 done
