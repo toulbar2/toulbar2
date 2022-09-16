@@ -21,8 +21,8 @@ cd "$HOME"
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-    "${PYBIN}/pip" install -r /io/dev-requirements.txt
-    "${PYBIN}/pip" wheel /io/ --no-deps -w wheelhouse
+    "${PYBIN}/pip3" install -r /io/dev-requirements.txt
+    "${PYBIN}/pip3" wheel /io/ --no-deps -w wheelhouse
 done
 
 # Bundle external shared libraries into the wheels
@@ -32,6 +32,6 @@ done
 
 # Install packages and test
 for PYBIN in /opt/python/*/bin/; do
-    "${PYBIN}/pip" install pytoulbar2 --no-index -f /io/wheelhouse
+    "${PYBIN}/pip3" install pytoulbar2 --no-index -f /io/wheelhouse
     "${PYBIN}/python" -m nose2 pytoulbar2
 done

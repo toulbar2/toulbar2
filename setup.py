@@ -11,6 +11,7 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 python_Path = sys.executable
+python_Root = sys.exec_prefix
 print("==> python_Path =", python_Path)
 
 class CMakeExtension(Extension):
@@ -37,7 +38,7 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir, '-DPython3_EXECUTABLE=' + python_Path,
-                      '-DPYTB2=ON']
+                      '-DPython_ROOT_DIR=' + python_Root, '-DPYTB2=ON']
 
         build_type = os.environ.get("BUILD_TYPE", "Release")
         build_args = ['--config', build_type]

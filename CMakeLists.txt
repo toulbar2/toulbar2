@@ -34,7 +34,6 @@ MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
 include(CMakeDependentOption)
-#set(Python3_ROOT_DIR "/opt/python/cp39-cp39/")
 ##########################################
 # cmake option definition
 ##########################################
@@ -213,11 +212,15 @@ IF(PYTB2)
     MESSAGE(STATUS "Python3_Interpreter FOUND")
   endif()
   MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
-### Old cmake, python and pybind11
-  EXECUTE_PROCESS(
-    COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
+
+  if(${CMAKE_VERSION} VERSION_LESS "3.17.0")
+    EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
     OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+  else()
+    SET(Python3_SUFFIX ${Python_SOABI})
+  endif()
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
+
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
     OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
