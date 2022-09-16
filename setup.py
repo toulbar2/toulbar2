@@ -11,7 +11,7 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 python_Path = sys.executable
-print("===> python_Path =", python_Path)
+print("==> python_Path =", python_Path)
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
