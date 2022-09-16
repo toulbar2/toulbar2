@@ -205,6 +205,7 @@ IF(PYTB2)
   SET(LIBTB2 ON)
   SET(Python_FIND_STRATEGY LOCATION)
   FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  MESSAGE(STATUS "Suffix ${Python_SOABI}")
   if(NOT Python3_Interpreter_FOUND)
     MESSAGE(STATUS "Python3_Interpreter NOT FOUND")
     SET(Python3_EXECUTABLE /usr/bin/python3)
@@ -213,12 +214,14 @@ IF(PYTB2)
   endif()
   MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 
-  if(${CMAKE_VERSION} VERSION_LESS "3.17.0")
-    EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
-    OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(EXISTS "${Python3_EXECUTABLE}-config")
+	 SET(Python3_config "${Python3_EXECUTABLE}-config")
   else()
-    SET(Python3_SUFFIX ${Python_SOABI})
+	 SET(Python3_config "${Python3_EXECUTABLE}3-config")
   endif()
+	  
+  EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE}-config --extension-suffix 
+  OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
 
   EXECUTE_PROCESS(
