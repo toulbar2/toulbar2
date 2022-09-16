@@ -2123,6 +2123,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 #endif
     } else if (ToulBar2::cfn && ToulBar2::bz2) {
 #ifdef BOOST
+#ifndef NO_BZ2
         ifstream Rfile(fileName, std::ios_base::in | std::ios_base::binary);
         istream& file = Rfile;
         boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
@@ -2139,8 +2140,12 @@ Cost WCSP::read_wcsp(const char* fileName)
             CFNStreamReader fileReader(stream, this);
         }
 #else
-        cerr << "Error: compiling with Boost iostreams library is needed to allow to read bzip2'd CFN format files." << endl;
+        cerr << "Error: Boost iostreams library requires bzip2 library to read bzip2'd CFN format files." << endl;
         throw WrongFileFormat();
+#endif
+#else
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read bzip2'd CFN format files." << endl;
+        throw WrongFileFormat();        
 #endif
     } else if (ToulBar2::cfn && ToulBar2::xz) {
 #ifdef BOOST
@@ -2161,11 +2166,11 @@ Cost WCSP::read_wcsp(const char* fileName)
             CFNStreamReader fileReader(stream, this);
         }
 #else
-        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed CFN format files." << endl;
+        cerr << "Error: Boost iostream version 1.65 or higher requires lzma library to read xz compressed CFN format files." << endl;
         throw WrongFileFormat();
 #endif
 #else
-        cerr << "Error: compiling with Boost iostreams library is needed to allow to read xz compressed CFN format files." << endl;
+        cerr << "Error: compiling with Boost iostreams library is needed to read xz compressed CFN format files." << endl;
         throw WrongFileFormat();
 #endif
     } else if (ToulBar2::haplotype) {
@@ -2292,7 +2297,12 @@ void WCSP::read_legacy(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        throw WrongFileFormat();        
+#endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -2912,7 +2922,12 @@ void WCSP::read_uai2008(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        throw WrongFileFormat();        
+#endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3339,7 +3354,12 @@ void WCSP::read_XML(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2        
         zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        throw WrongFileFormat();        
+#endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3468,7 +3488,12 @@ void WCSP::read_wcnf(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        throw WrongFileFormat();        
+#endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3680,7 +3705,12 @@ void WCSP::read_qpbo(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        throw WrongFileFormat();        
+#endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
@@ -3921,7 +3951,12 @@ void WCSP::read_opb(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        throw WrongFileFormat();        
+#endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
         zfile.push(boost::iostreams::lzma_decompressor());
