@@ -1,8 +1,10 @@
-The python wheels are build by Travis (see .travis.yml) when the commit message contains the string "[pytb2-deploy]" followed somewhere in the following text by either "Linux" or "MacOS" (or both, this is case-sensitive). This is directly uploaded on PyPi using the version number that is set in "setup.py".
+The python wheels are build by Travis (see .travis.yml) when the commit message contains the string "[pytb2-deploy]" followed somewhere in the following text by either "Linux" or "MacOS" (or both, this is case-sensitive). The process goes as follows.  This is directly uploaded on PyPi using the version number that is set in "setup.py".
 
-Linux: the manylinux docker image is used to build PyPi compatible images. The git directory is mounted on /io, the script in travis/buildwheels.sh is in charge of building the wheels in the /io/wheelhouse directory, using setup.py to guide the wheel assembly. then twine is used to upload the wheels on TestPypi (for now). The user and password for upload are stored in the toulbar2 Travis account. 
+Linux: on the travis virtual machine, a docker image of a suitably setup docker image is pulled (manylinux image). This virtual image uses old version of libc to remain compatible with old Linuxes. The docker image moints the toulbar2 folder on /io and the script in travis/build-wheels.sh is executed on the docker image. This script install the suitable libraries to compile toulbar2 with PYTB2=ON and uses pip3 wheel system to compile a python wheel (pip3" wheel /io/ --no-deps -w wheelhouse) for every python version (cython) available on the manylinux docker image. These python versions are all in /opt/python/cp*, together with non cython versions.  The pip3 wheel itself calls the setup.py script at the root folder of toulbar2. This issues the suitable commands to compile toulbar2 using cmake. A usual failure point here is that the correct python interpreter, suffix extension and pybind11 are not found/used during toulbar2 compilation. The setup.py script has to be adjusted. At the end, all wheels are in the wheelhouse folder. They are suitable only to use on the many-linux docker image. To make them portable, the wheels need to be "repaired" (all dependencies need to be gathered in the wheel). This is done by auditwheel. The docker image has finished its job. Controls returns to travis 'after-success' stanza: twine is a python package that can upload wheels to PyPi. Twine is installed and the upload is performed using PyPi passwords that are stored in the travis account. 
 
-MacOSX:  Travis macos image is used with cibuildwheels instead of the buildwheel.sh script. Twine does the upload again.
+MacOSX (amd64):  Travis macos image is used with cibuildwheels instead of the buildwheel.sh script. Twine does the upload again.
 
-Windows: to be done
+MacOSX (Silicon M1): does not seem to be available on travis.
+
+Windows: to be done.
 
