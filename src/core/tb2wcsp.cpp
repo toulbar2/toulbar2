@@ -3539,8 +3539,8 @@ bool WCSP::dualEncoding()
     propagate();
     Cost pwcLowerBound = getLb();
 
-    // verifies there are no finite costs remaining in all the channeling constraints
 #ifndef NDEBUG
+    // verifies there are no finite costs remaining in all the channeling constraints
     for (BinaryConstraint *channel: channelingCtrs) {
         if (channel->getMaxFiniteCost() > MIN_COST) {
             cout << *channel;
@@ -3573,6 +3573,15 @@ bool WCSP::dualEncoding()
                 pair<unsigned int, unsigned int> elt = make_pair(i, valdual);
                 removalCtrs.push_back(elt);
             }
+        }
+    }
+    // collects deltaCost in dual variables
+    vector<pair<unsigned int, Cost>> deltaCostDuals;
+    for (unsigned int i = 0; i < listOfDualVars.size(); i++) {
+        Cost cost = listOfDualVars[i]->getDeltaCost();
+        assert(cost >= MIN_COST);
+        if (cost > MIN_COST) {
+            deltaCostDuals.push_back(make_pair(i, cost));
         }
     }
     // collects deltaCosts in channelingCtrs and also in original binary cost functions
@@ -3718,6 +3727,15 @@ bool WCSP::dualEncoding()
             dualctr2->propagate();
         }
     }
+
+    // applies deltaCost found in dual variables to all tuples of the corresponding dualized constraint
+    for (pair<unsigned int, Cost> deltadual: deltaCostDuals) {
+        unsigned int i = deltadual.first;
+        for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
+            listOfCtrs[i]->addtoTuple(listOfDualDomains[i][vali], -deltadual.second);
+        }
+    }
+
     // increase lower bound
     increaseLb(pwcLowerBound - initialLowerBound);
 
