@@ -2199,8 +2199,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     unsigned int size;
     int readnbval;
     Long minweight;
-    vector<tValue> clausetuple(arity, 0);
-    bool isclause = 0;
+//    vector<tValue> clausetuple(arity, 0);
+//    bool isclause = 0;
     vector<EnumeratedVariable*> scopeVars;
     int ar = arity;
     if (!isclique) {
@@ -2438,14 +2438,18 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         MaxWeight += *max_element(weights[i].begin(), weights[i].end());
     }
     AbstractNaryConstraint* cc = NULL;
-    if (isclause) {
-        assert(ar == (int)clausetuple.size());
-        if (ToulBar2::verbose >= 3)
-            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
-        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
-    } else {
-        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
-    }
+//#ifdef UNITKNAPSACK2CLAUSE
+//    if (isclause) {
+//        assert(ar == (int)clausetuple.size());
+//        if (ToulBar2::verbose >= 3)
+//            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
+//        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
+//    } else {
+//#endif
+    cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
+//#ifdef UNITKNAPSACK2CLAUSE
+//    }
+//#endif
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
     else {
@@ -3210,7 +3214,7 @@ bool WCSP::dualEncoding()
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
             }
-            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(i), 0, nbtuples - 1);
+            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(constrs[i]->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
@@ -3254,7 +3258,7 @@ bool WCSP::dualEncoding()
                 if (nbtuples > maxdomsize) {
                     maxdomsize = nbtuples;
                 }
-                int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(i), 0, nbtuples - 1);
+                int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(constrs[i]->wcspIndex), 0, nbtuples - 1);
                 EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
                 for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                     theVar->addValueName("t" + to_string(tuples[val]));
@@ -3275,14 +3279,6 @@ bool WCSP::dualEncoding()
     if (listOfCtrs.size() == 0) { // if nothing to dualize then quit
         return false;
     }
-
-    Cost initialLowerBound = getLb();
-    for (unsigned int i = 0; i < nbvars; i++) { // copy current domains of original variables
-        listOfCurrentDomains.push_back(getEnumDomain(i));
-    }
-
-    int depth = Store::getDepth();
-    Store::store();
 
     // builds intersection graph
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
@@ -3346,17 +3342,57 @@ bool WCSP::dualEncoding()
         }
     }
 
-    // deconnects all cost functions except nonincluded binary cost functions
+    // extends all included cost functions into their largest including cost functions
+    for (pair<Constraint *, Constraint *> extending: included) {
+        if (ToulBar2::verbose >= 1) {
+            cout << *extending.first;
+            cout << " extended into ";
+            cout << *extending.second;
+            cout << endl;
+        }
+        Constraint *ctrextend = extending.first;
+        Constraint *ctrincluding = extending.second;
+        while (included.find(ctrincluding) != included.end()) {
+            ctrincluding = included[ctrincluding];
+        }
+        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
+        if (ctrextend->isBinary()) {
+            static_cast<BinaryConstraint*>(ctrextend)->clearCosts();
+        }
+        ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
+        ctrincluding->propagate();
+    }
+
+    Cost initialLowerBound = getLb();
+    for (unsigned int i = 0; i < nbvars; i++) { // copy current domains of original variables
+        listOfCurrentDomains.push_back(getEnumDomain(i));
+    }
+
+    // avoid variable elimination and dead-end elimination during dual pairwise consistency
+    int elimDegree_copy = ToulBar2::elimDegree_ ;
+    ToulBar2::elimDegree_ = -1;
+    int elimDegree_preprocessing_copy = ToulBar2::elimDegree_preprocessing_;
+    ToulBar2::elimDegree_preprocessing_ = -1;
+    int DEE_copy = ToulBar2::DEE_;
+    ToulBar2::DEE_ = 0;
+
+    int depth = Store::getDepth();
+    Store::store();
+
+    // deconnects all cost functions except non-included binary cost functions
     for (unsigned int i = 0; i < constrs.size(); i++) {
-        if (constrs[i]->connected() && (!constrs[i]->isBinary() || included.find(constrs[i]) != included.end())) {
+        assert(!constrs[i]->connected() || !constrs[i]->isBinary() || included.find(constrs[i]) == included.end());
+        if (constrs[i]->connected() && !constrs[i]->isBinary()) {
             constrs[i]->deconnect();
         }
     }
+#ifndef NDEBUG
     for (int i = 0; i < elimBinOrder; i++) {
-        if (elimBinConstrs[i]->connected() && included.find(elimBinConstrs[i]) != included.end()) {
-            elimBinConstrs[i]->deconnect();
+        if (elimBinConstrs[i]->connected()) {
+            assert(included.find(elimBinConstrs[i]) == included.end());
         }
     }
+#endif
     for (int i = 0; i < elimTernOrder; i++) {
         if (elimTernConstrs[i]->connected()) {
             elimTernConstrs[i]->deconnect();
@@ -3418,15 +3454,25 @@ bool WCSP::dualEncoding()
                     if (compatible) {
                         costs.push_back(MIN_COST);
                         assert(blockIndexX < blockX.size());
-                        blockX[blockIndexX].push_back(vali);
+                        auto it= std::find(blockX[blockIndexX].begin(), blockX[blockIndexX].end(),vali);
+                        if (it==blockX[blockIndexX].end()) {
+                            blockX[blockIndexX].push_back(vali);
+                        }
                         assert(blockIndexY < blockY.size());
-                        blockY[blockIndexY].push_back(valj);
+                        it = std::find(blockY[blockIndexY].begin(), blockY[blockIndexY].end(),valj);
+                        if (it==blockY[blockIndexY].end()) {
+                            blockY[blockIndexY].push_back(valj);
+                        }
                     } else {
                         costs.push_back(MAX_COST);
                     }
                 }
             }
+            assert(listOfDualVars[i]->wcspIndex >= (int)nbvars);
+            assert(listOfDualVars[j]->wcspIndex >= (int)nbvars);
             int channelctr = postIncrementalBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
+            assert(getCtr(channelctr)->isBinary());
+            assert(getCtr(channelctr)->getVar(0) == listOfDualVars[i] && getCtr(channelctr)->getVar(1) == listOfDualVars[j]);
             channelingCtrs.push_back(static_cast<BinaryConstraint*>(getCtr(channelctr)));
             blocks.push_back(make_pair(blockX, blockY));
             nbintersections++;
@@ -3462,12 +3508,16 @@ bool WCSP::dualEncoding()
                         }
                     }
                 }
+                assert(vardual->wcspIndex >= (int)nbvars);
                 int channelctr = postIncrementalBinaryConstraint(var->wcspIndex, vardual->wcspIndex, costs);
+                assert(getCtr(channelctr)->isBinary());
+                assert(getCtr(channelctr)->getVar(0) == var && getCtr(channelctr)->getVar(1) == vardual);
                 channelingCtrs.push_back(static_cast<BinaryConstraint*>(getCtr(channelctr)));
                 blocks.push_back(make_pair(blockX, blockY));
             }
         } else { // constraint i is included into constraint j
             unsigned int j = (*inclus).second;
+            assert(included.find(listOfCtrs[j]) == included.end());
             for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
                 listOfDualCosts[j][valj] += listOfCtrs[i]->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
             }
@@ -3515,7 +3565,7 @@ bool WCSP::dualEncoding()
             }
         }
     }
-    // collects value removals in dual variables and unary costs
+    // collects value removals in dual variables
     vector<pair<unsigned int, unsigned int>> removalCtrs;
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
         for (unsigned int valdual = 0; valdual < listOfDualVars[i]->getDomainInitSize(); valdual++) {
@@ -3530,9 +3580,11 @@ bool WCSP::dualEncoding()
     for (BinaryConstraint *channel: channelingCtrs) {
         deltaCostChanneling.push_back(make_pair(channel->getDeltaCostsX(), channel->getDeltaCostsY()));
     }
-    vector<pair<vector<Cost>,vector<Cost>>> modifiedDeltas;
+    vector<pair<BinaryConstraint *, pair<vector<Cost>,vector<Cost>>>> modifiedDeltas;
     for (BinaryConstraint *binctr: originalBinCtrs) {
-        modifiedDeltas.push_back(make_pair(binctr->getDeltaCostsX(), binctr->getDeltaCostsY()));
+        if (included.find(binctr) == included.end()) {
+            modifiedDeltas.push_back(make_pair(binctr, make_pair(binctr->getDeltaCostsX(), binctr->getDeltaCostsY())));
+        }
     }
 
     // backtracks to initial state
@@ -3550,11 +3602,13 @@ bool WCSP::dualEncoding()
         var->queueEAC1();
         var->queueDEE();
     }
-    // copies delta costs to original binary cost functions
-    for (unsigned int i = 0; i < originalBinCtrs.size(); i++) {
-        originalBinCtrs[i]->setDeltaCostsX(modifiedDeltas[i].first);
-        originalBinCtrs[i]->setDeltaCostsY(modifiedDeltas[i].second);
-        originalBinCtrs[i]->propagate();
+    // copies delta costs to original binary cost functions not included
+    for (unsigned int i = 0; i < modifiedDeltas.size(); i++) {
+        assert(modifiedDeltas[i].first->connected());
+        assert(included.find(modifiedDeltas[i].first) == included.end());
+        modifiedDeltas[i].first->setDeltaCostsX(modifiedDeltas[i].second.first);
+        modifiedDeltas[i].first->setDeltaCostsY(modifiedDeltas[i].second.second);
+        modifiedDeltas[i].first->propagate();
     }
     // applies tuple removals
     for (pair<unsigned int, unsigned int> rem: removalCtrs) {
@@ -3563,23 +3617,6 @@ bool WCSP::dualEncoding()
     // applies value removals
     for (pair<int, Value> rem: removals) {
         remove(rem.first, rem.second);
-    }
-    // extends all included cost functions into the largest including cost functions
-    for (pair<Constraint *, Constraint *> extending: included) {
-        if (ToulBar2::verbose >= 1) {
-            cout << *extending.first;
-            cout << " extended into ";
-            cout << *extending.second;
-            cout << endl;
-        }
-        Constraint *ctrextend = extending.first;
-        Constraint *ctrincluding = extending.second;
-        while (included.find(ctrincluding) != included.end()) {
-            ctrincluding = included[ctrincluding];
-        }
-        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
-        ctrextend->deconnect();
-        ctrincluding->propagate();
     }
     // move costs between dualized constraints
     for (unsigned int i = 0; i < channelingCtrs.size(); i++) {
@@ -3600,11 +3637,11 @@ bool WCSP::dualEncoding()
                 }
                 if (maxcost > MIN_COST) {
                     assert(maxcost < getUb());
-                    for (unsigned int b : blocks[i].first[a]) {
-                        if (x->canbe(x->toValue(b))) {
-                            x->project(x->toValue(b), maxcost);
-                        }
-                    }
+//                    for (unsigned int b : blocks[i].first[a]) {
+//                        if (x->canbe(x->toValue(b))) {
+//                            x->project(x->toValue(b), maxcost);
+//                        }
+//                    }
                     for (unsigned int b : blocks[i].second[a]) {
                         assert(b < listOfDualDomains[ctrIndex].size());
                         dualctr->addtoTuple(listOfDualDomains[ctrIndex][b], -maxcost);
@@ -3618,11 +3655,11 @@ bool WCSP::dualEncoding()
                     }
                     if (maxcost > MIN_COST) {
                         assert(maxcost < getUb());
-                        for (unsigned int b : blocks[i].first[a]) {
-                            if (x->canbe(x->toValue(b))) {
-                                x->extend(x->toValue(b), maxcost);
-                            }
-                        }
+//                        for (unsigned int b : blocks[i].first[a]) {
+//                            if (x->canbe(x->toValue(b))) {
+//                                x->extend(x->toValue(b), maxcost);
+//                            }
+//                        }
                         for (unsigned int b : blocks[i].second[a]) {
                             assert(b < listOfDualDomains[ctrIndex].size());
                             dualctr->addtoTuple(listOfDualDomains[ctrIndex][b], maxcost);
@@ -3683,6 +3720,18 @@ bool WCSP::dualEncoding()
     }
     // increase lower bound
     increaseLb(pwcLowerBound - initialLowerBound);
+
+    // reactivate variable elimination and dead-end elimination if needed
+    ToulBar2::elimDegree_ = elimDegree_copy;
+    ToulBar2::elimDegree_preprocessing_ = elimDegree_preprocessing_copy;
+    ToulBar2::DEE_ = DEE_copy;
+    for (int i = numberOfVariables() - 1; i >= 0; i--) {
+        if (unassigned(i)) {
+            getVar(i)->queueEliminate();
+            getVar(i)->queueDEE();
+        }
+    }
+    enforceUb();
 
     // propagate again
     propagate();

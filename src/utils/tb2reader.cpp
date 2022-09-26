@@ -3606,9 +3606,17 @@ void WCSP::read_wcnf(const char* fileName)
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
+//#ifdef CLAUSE2KNAPSACK
+//            if (CUT(MULT(cost, K), getUb())) {
+//                postKnapsackConstraint(scopeIndex,arity,file,false,false,false,tup);
+//            } else {
+//#endif
             int index = postNaryConstraintBegin(scopeIndex, arity, MIN_COST, 1);
             postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
+//#ifdef CLAUSE2KNAPSACK
+//            }
+//#endif
         } else if (arity == 3) {
             vector<Cost> costs;
             for (int a = 0; a < 2; a++) {
