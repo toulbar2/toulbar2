@@ -10,7 +10,7 @@ class NaryConstraint : public AbstractNaryConstraint {
     typedef map<Tuple, Cost> TUPLES;
     TUPLES* pf;
     Cost* costs;
-    ptrdiff_t costSize;
+    Long costSize;
     Cost default_cost; // default cost returned when tuple t is not found in TUPLES (used by function eval(t))
     StoreInt nonassigned; // nonassigned variables during search, must be backtrackable (StoreInt)!
     ConstraintSet* filters;
@@ -70,10 +70,10 @@ public:
         Constraint::resetConflictWeight();
     }
 
-    ptrdiff_t getCostsIndex(const Tuple& s) const
+    Long getCostsIndex(const Tuple& s) const
     {
-        ptrdiff_t index = 0;
-        ptrdiff_t base = 1;
+        Long index = 0;
+        Long base = 1;
         for (int i = arity_ - 1; i >= 0; --i) {
             index += (s[i]) * base;
             base *= ((EnumeratedVariable*)getVar(i))->getDomainInitSize();
@@ -84,7 +84,7 @@ public:
         return index;
     }
     Long size() const FINAL { return (Long)(pf) ? pf->size() : ((costs) ? costSize : 0); }
-    Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(tValue))) : ((costs) ? ((Long)costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
+    Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(tValue))) : ((costs) ? (costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
     Long space(Long nbtuples) const { return (nbtuples < LONGLONG_MAX / ((Long)(sizeof(Cost) + arity_ * sizeof(tValue)))) ? (nbtuples * (sizeof(Cost) + arity_ * sizeof(tValue))) : LONGLONG_MAX; } // putative memory space
     bool expandtodo() { return space() > getDomainInitSizeProduct(); } // should be getDomainInitSizeProduct() * sizeof(Cost) ?
     bool expandtodo(Long nbtuples) { return space(nbtuples) > getDomainInitSizeProduct(); } // getDomainInitSizeProduct() * sizeof(Cost) ?
@@ -145,6 +145,21 @@ public:
 
     void setTuple(const Tuple& tin, Cost c) FINAL
     {
+        if (ToulBar2::verbose >= 8) {
+            cout << "setcost(C";
+            for (int i = 0; i < arity_; i++) {
+                cout << wcsp->getName(scope[i]->wcspIndex);
+                if (i < arity_ - 1)
+                    cout << ",";
+            }
+            cout << ", [";
+            for (int i = 0; i < arity_; i++) {
+                cout << scope[i]->toValue(tin[i]);
+                if (i < arity_ - 1)
+                    cout << ",";
+            }
+            cout << "], " << c << ")" << endl;
+        }
         if (pf)
             (*pf)[tin] = c;
         else
@@ -152,6 +167,21 @@ public:
     }
     void addtoTuple(const Tuple& tin, Cost c) FINAL
     {
+        if (ToulBar2::verbose >= 8) {
+            cout << "addcost(C";
+            for (int i = 0; i < arity_; i++) {
+                cout << wcsp->getName(scope[i]->wcspIndex);
+                if (i < arity_ - 1)
+                    cout << ",";
+            }
+            cout << ", [";
+            for (int i = 0; i < arity_; i++) {
+                cout << scope[i]->toValue(tin[i]);
+                if (i < arity_ - 1)
+                    cout << ",";
+            }
+            cout << "], " << c << ")" << endl;
+        }
         if (pf)
             (*pf)[tin] += c;
         else

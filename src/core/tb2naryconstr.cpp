@@ -139,7 +139,7 @@ void NaryConstraint::expand()
         return;
     assert(costs == NULL);
 
-    ptrdiff_t sz = getDomainInitSizeProduct();
+    Long sz = getDomainInitSizeProduct();
     if (ToulBar2::elimSpaceMaxMB && (Double)sz * sizeof(Cost) > (Double)ToulBar2::elimSpaceMaxMB * 1024. * 1024.)
         return;
 
@@ -254,7 +254,7 @@ void NaryConstraint::keepAllowedTuples(Cost df)
     } else {
         int a = arity_;
         vector<unsigned int> t(a, 0);
-        for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+        for (Long idx = 0; idx < costSize; idx++) {
             bool ok = true;
             for (int i = 0; i < a && ok; i++) {
                 EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
@@ -800,7 +800,7 @@ void NaryConstraint::setInfiniteCost(Cost ub)
                 it->second = mult_ub;
         }
     } else {
-        for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+        for (Long idx = 0; idx < costSize; idx++) {
             Cost c = costs[idx];
             if (CUT(c, ub))
                 costs[idx] = mult_ub;
@@ -1034,12 +1034,12 @@ void NaryConstraint::project(EnumeratedVariable* x)
         }
 
     } else {
-        ptrdiff_t sz = costSize / x->getDomainInitSize();
+        Long sz = costSize / x->getDomainInitSize();
         Cost* costs_ = new Cost[sz];
         std::fill(costs_, costs_ + sz, Top);
         int a = arity_;
         vector<unsigned int> t(a, 0);
-        for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+        for (Long idx = 0; idx < costSize; idx++) {
             bool ok = true;
             for (int i = 0; i < a && ok; i++) {
                 EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
@@ -1054,8 +1054,8 @@ void NaryConstraint::project(EnumeratedVariable* x)
 
             vector<unsigned int> tswap(t);
             tswap[xindex] = tswap[a - 1];
-            ptrdiff_t idx_ = 0;
-            ptrdiff_t base_ = 1;
+            Long idx_ = 0;
+            Long base_ = 1;
             for (int i = a - 2; i >= 0; --i) {
                 idx_ += tswap[i] * base_;
                 base_ *= ((EnumeratedVariable*)getVar((i == xindex) ? (a - 1) : i))->getDomainInitSize();
@@ -1090,7 +1090,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
                 (*pf)[(*it).first] = (*it).second - negcost;
             }
         } else {
-            for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+            for (Long idx = 0; idx < costSize; idx++) {
                 costs[idx] -= negcost;
             }
         }
@@ -1318,7 +1318,7 @@ double NaryConstraint::computeTightness()
             it++;
         }
     } else {
-        for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+        for (Long idx = 0; idx < costSize; idx++) {
             Cost c = costs[idx];
             sum += to_double(min(wcsp->getUb(), c));
             costs_[count] = min(wcsp->getUb(), c);
@@ -1403,8 +1403,25 @@ void NaryConstraint::print(ostream& os)
             os << "} " << endl;
         } else {
             os << "costs: [";
-            for (ptrdiff_t idx = 0; idx < costSize; idx++) {
-                os << " " << costs[idx];
+            for (Long idx = 0; idx < costSize; idx++) {
+                if (ToulBar2::verbose >= 8) {
+                    Long tvalues = idx;
+                    Long product = costSize;
+                    os << "(" << idx << ",[";
+                    for (int i = 0; i < arity_; i++) {
+                        product /= scope[i]->getDomainInitSize();
+                        os << scope[i]->toValue(tvalues / product);
+                        tvalues %= product;
+                        if (i < arity_ -1)
+                            os << ",";
+                    }
+                    assert(product == 1);
+                    os << "]," << costs[idx] << ")";
+                    if (idx < costSize - 1)
+                        os << ",";
+                } else {
+                    os << " " << costs[idx];
+                }
             }
             os << "] " << endl;
         }
@@ -1432,7 +1449,7 @@ void NaryConstraint::dump(ostream& os, bool original)
         } else {
             int a = arity_;
             vector<unsigned int> t(a, 0);
-            for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+            for (Long idx = 0; idx < costSize; idx++) {
                 for (int i = 0; i < a; i++) {
                     os << scope[i]->toValue(t[i]) << " ";
                 }
@@ -1514,7 +1531,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             int a = arity_;
             vector<unsigned int> t(a, 0);
             printed = false;
-            for (ptrdiff_t idx = 0; idx < costSize; idx++) {
+            for (Long idx = 0; idx < costSize; idx++) {
                 os << endl;
                 for (int i = 0; i < a; i++) {
                     if (printed)
