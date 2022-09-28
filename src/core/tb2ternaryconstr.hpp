@@ -353,7 +353,7 @@ public:
         unsigned int iy = y->toIndex(vy);
         unsigned int iz = z->toIndex(vz);
         Cost res = ((costs.empty()) ? ((vx == functionX[iy * sizeZ + iz]) ? (costsYZ[iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]) : top) : (costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] - deltaCostsX[ix] - deltaCostsY[iy] - deltaCostsZ[iz]));
-        assert(res >= MIN_COST);
+        assert(res >= MIN_COST || ToulBar2::negativeCostAuthorizedTemporarily);
         return res;
     }
 
@@ -364,7 +364,7 @@ public:
         vindex[getIndex(yy)] = yy->toIndex(vy);
         vindex[getIndex(zz)] = zz->toIndex(vz);
         Cost res = ((costs.empty()) ? ((x->toValue(vindex[0]) == functionX[vindex[1] * sizeZ + vindex[2]]) ? (costsYZ[vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]) : top) : (costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] - deltaCostsZ[vindex[2]]));
-        assert(res >= MIN_COST);
+        assert(res >= MIN_COST || ToulBar2::negativeCostAuthorizedTemporarily);
         return res;
     }
 
@@ -388,7 +388,7 @@ public:
             res += xz->getCost(x, z, vx, vz);
         if (yz->connected())
             res += yz->getCost(y, z, vy, vz);
-        assert(res >= MIN_COST);
+        assert(res >= MIN_COST || ToulBar2::negativeCostAuthorizedTemporarily);
         return res;
     }
 
@@ -405,7 +405,7 @@ public:
             res += xz->getCost(x, z, vindex[0].second, vindex[2].second);
         if (yz->connected())
             res += yz->getCost(y, z, vindex[1].second, vindex[2].second);
-        assert(res >= MIN_COST);
+        assert(res >= MIN_COST || ToulBar2::negativeCostAuthorizedTemporarily);
         return res;
     }
 
@@ -480,7 +480,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(c >= MIN_COST || ToulBar2::pwc || !LUBTEST(getCost(vxi, vyi, vzi), -c));
+        assert(c >= MIN_COST || ToulBar2::negativeCostAuthorizedTemporarily || !LUBTEST(getCost(vxi, vyi, vzi), -c));
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
         unsigned int vz = z->toIndex(vzi);
@@ -506,7 +506,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(c >= MIN_COST || ToulBar2::pwc || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
+        assert(c >= MIN_COST || ToulBar2::negativeCostAuthorizedTemporarily || !LUBTEST(getCost(xin, yin, zin, vxi, vyi, vzi), -c));
 
         unsigned int vindex[3];
         unsigned int vx = xin->toIndex(vxi);

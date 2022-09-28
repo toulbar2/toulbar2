@@ -203,7 +203,12 @@ public:
 
     void decreaseLb(Cost cost)
     {
-        negCost += cost;
+        if (ToulBar2::negativeCostAuthorizedTemporarily) {
+            assert(cost < MIN_COST);
+            lb += cost;
+        } else {
+            negCost += cost;
+        }
     } ///< \internal manages negative costs in probabilistic inference
     Cost getNegativeLb() const { return negCost; } ///< \internal manages negative costs in probabilistic inference
 
@@ -814,7 +819,7 @@ public:
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
 
-    bool dualEncoding();
+    bool hiddenEncoding();
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency
