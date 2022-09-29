@@ -1,8 +1,8 @@
 .. _snum:
 
-==================
-Sudoku Application
-==================
+=============
+A sudoku code
+=============
 
 .. include:: menu_backto.rst
 

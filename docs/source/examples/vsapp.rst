@@ -23,7 +23,18 @@ in order to use **toulbar2** solver, from a
 by Adrian Rosebrock (@ PyImageSearch, 2022) :
 `GitHub code <https://forgemia.inra.fr/thomas.schiex/cost-function-library/-/tree/master/crafted/visualsudoku>`_
 |github_logo_vsudoku|
-  
+
+As an APK
+---------
+
+Based on this software, a 'Visual Sudoku' application for Android has been developed to be used from a
+smartphone.
+
+See the :ref:`detailed presentation <vs_app_apk>`
+(description, source, download...).
+
+.. include:: vsapp/vsappapk_overview.rst
+
 As a Web service
 ----------------
 
@@ -42,17 +53,7 @@ The **visual sudoku web service**, hosted by the `ws <http://147.100.179.250>`_ 
 
       curl --output mysolutionfilename.jpg -F 'file=@mygridfilename.jpg' -F 'keep=40' -F 'border=15' http://147.100.179.250/api/tool/vsudoku
 
-As an APK
----------
-
-A 'Visual Sudoku' application for Android has been developed to be used from a
-smartphone.
-
-See the :ref:`detailed presentation <vs_app_apk>`
-(description, source, download...).
-
-.. include:: vsapp/vsappapk_overview.rst
-
+  - The 'Visual Sudoku' APK calls the visual sudoku web service.
 
 .. |github_logo_vsudoku| image:: /_static/img/logo-github.png
    :width: 30

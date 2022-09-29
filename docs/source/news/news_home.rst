@@ -6,8 +6,9 @@
         </br>
         <span style="color:Firebrick; font-weight:bold;"> New! </span>
 
-        Web site now built with Sphinx (with
-        <a href="pdfmanuals.html">pdf downloads</a>)</br>
+        Your Sudoku solved on your smartphone by toulbar2
+        (<a href="examples/vsapp_apk.html">APK</a>)</br>
+
         </br>
         
     </div>

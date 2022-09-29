@@ -33,13 +33,11 @@ They may contain source code, explanations, possibility to run yourself...
 
   - :ref:`vs_app` |ws_logo_ui_vsudoku| |apk_logo_visualsudokuapp|
 
-  - :ref:`snum` |ws_logo_ui_sudoku|
+**Misc** :
 
+  - :ref:`snum`
 
 .. |colab_logo_visualsudoku| image:: /_static/img/logo-colab.png
-   :width: 30
-
-.. |ws_logo_ui_sudoku| image:: /_static/img/logo-ws_ui-sudoku.png
    :width: 30
 
 .. |ws_logo_ui_vsudoku| image:: /_static/img/logo-ws_ui-vsudoku.png

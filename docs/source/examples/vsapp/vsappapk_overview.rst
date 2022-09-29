@@ -22,3 +22,5 @@ have been captured in portrait orientation. Once the grid has been chosen, the
 .. |screen_solution| image:: /examples/vsapp/apk_solution_grid.png    
    :width: 150
 
+:download:`Examples of some input grids and their solved grids </examples/vsapp/visualsudoku_examples.pdf>`
+
