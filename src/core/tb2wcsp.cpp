@@ -3584,7 +3584,7 @@ bool WCSP::hiddenEncoding()
 #endif
 
     // collects value removals or assignments in original variables and unary costs
-    vector<pair<int, Value>> removals;
+    set<pair<int, Value>> removals;
     vector<int> assignVars;
     vector<Value> assignValues;
     vector<vector<Cost>> unaryCosts;
@@ -3603,19 +3603,19 @@ bool WCSP::hiddenEncoding()
             for (Value v: listOfCurrentDomains[i]) {
                 if (cannotbe(i, v)) {
                     pair<int, Value> elt = make_pair(i, v);
-                    removals.push_back(elt);
+                    removals.insert(elt);
                 }
             }
         }
     }
     // collects value removals in dual variables (not included)
-    vector<pair<unsigned int, unsigned int>> removalCtrs;
+    set<pair<unsigned int, unsigned int>> removalCtrs;
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
         if (included.find(listOfCtrs[i]) == included.end()) {
             for (unsigned int valdual = 0; valdual < listOfDualVars[i]->getDomainInitSize(); valdual++) {
                 if (cannotbe(listOfDualVars[i]->wcspIndex, valdual)) {
                     pair<unsigned int, unsigned int> elt = make_pair(i, valdual);
-                    removalCtrs.push_back(elt);
+                    removalCtrs.insert(elt);
                 }
             }
         }
@@ -3675,14 +3675,16 @@ bool WCSP::hiddenEncoding()
         EnumeratedVariable *x = static_cast<EnumeratedVariable*>(getVar(channelingScopes[i].first));
         EnumeratedVariable *y = static_cast<EnumeratedVariable*>(getVar(channelingScopes[i].second));
         if (x->wcspIndex < (int)nbvars) { // channeling constraint between an original variable and a dualized constraint
-            int ctrIndex = y->wcspIndex - (int)nbvars;
-            assert(ctrIndex >= 0 && ctrIndex < (int)listOfCtrs.size());
+            assert(y->wcspIndex >= (int)nbvars);
+            unsigned int ctrIndex = y->wcspIndex - (int)nbvars;
+            assert(ctrIndex < listOfCtrs.size());
             Constraint *dualctr = listOfCtrs[ctrIndex];
             for (unsigned int a = 0; a < blocks[i].first.size(); a++) {
                 Cost maxcost = -MAX_COST;
                 for (unsigned int b : blocks[i].first[a]) {
                     assert(b < deltaCostChanneling[i].first.size());
-                    if (deltaCostChanneling[i].first[b] > maxcost) {
+                    assert(b < x->getDomainInitSize());
+                    if (x->canbe(x->toValue(b)) && deltaCostChanneling[i].first[b] > maxcost && removals.find(make_pair(x->wcspIndex, x->toValue(b))) == removals.end()) {
                         maxcost = deltaCostChanneling[i].first[b];
                     }
                 }
@@ -3697,7 +3699,7 @@ bool WCSP::hiddenEncoding()
                 } else {
                     maxcost = -MAX_COST;
                     for (unsigned int b : blocks[i].second[a]) {
-                        if (deltaCostChanneling[i].second[b] > maxcost) {
+                        if (deltaCostChanneling[i].second[b] > maxcost && removalCtrs.find(make_pair(ctrIndex, b)) == removalCtrs.end()) {
                             maxcost = deltaCostChanneling[i].second[b];
                         }
                     }
@@ -3712,17 +3714,19 @@ bool WCSP::hiddenEncoding()
             }
             dualctr->propagate();
         } else {
-            int ctrIndex1 = x->wcspIndex - (int)nbvars;
-            assert(ctrIndex1 >= 0 && ctrIndex1 < (int)listOfCtrs.size());
-            int ctrIndex2 = y->wcspIndex - (int)nbvars;
-            assert(ctrIndex2 >= 0 && ctrIndex2 < (int)listOfCtrs.size());
+            assert(x->wcspIndex >= (int)nbvars);
+            unsigned int ctrIndex1 = x->wcspIndex - (int)nbvars;
+            assert(ctrIndex1 < listOfCtrs.size());
+            assert(y->wcspIndex >= (int)nbvars);
+            unsigned int ctrIndex2 = y->wcspIndex - (int)nbvars;
+            assert(ctrIndex2 < listOfCtrs.size());
             Constraint *dualctr1 = listOfCtrs[ctrIndex1];
             Constraint *dualctr2 = listOfCtrs[ctrIndex2];
             for (unsigned int a = 0; a < blocks[i].first.size(); a++) {
                 Cost maxcost = -MAX_COST;
                 for (unsigned int b : blocks[i].first[a]) {
                     assert(b < deltaCostChanneling[i].first.size());
-                    if (deltaCostChanneling[i].first[b] > maxcost) {
+                    if (deltaCostChanneling[i].first[b] > maxcost && removalCtrs.find(make_pair(ctrIndex1, b)) == removalCtrs.end()) {
                         maxcost = deltaCostChanneling[i].first[b];
                     }
                 }
@@ -3742,7 +3746,7 @@ bool WCSP::hiddenEncoding()
                     maxcost = -MAX_COST;
                     for (unsigned int b : blocks[i].second[a]) {
                         assert(b < deltaCostChanneling[i].second.size());
-                        if (deltaCostChanneling[i].second[b] > maxcost) {
+                        if (deltaCostChanneling[i].second[b] > maxcost && removalCtrs.find(make_pair(ctrIndex2, b)) == removalCtrs.end()) {
                             maxcost = deltaCostChanneling[i].second[b];
                         }
                     }
