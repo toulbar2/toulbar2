@@ -3357,9 +3357,7 @@ bool WCSP::hiddenEncoding()
             ctrincluding = included[ctrincluding];
         }
         ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
-        if (ctrextend->isBinary()) {
-            static_cast<BinaryConstraint*>(ctrextend)->clearCosts();
-        }
+        ctrextend->clearFiniteCosts();
         ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
         ctrincluding->propagate();
     }
@@ -3804,6 +3802,42 @@ bool WCSP::hiddenEncoding()
     if (ToulBar2::verbose >= 8) {
         cout << "[" << Store::getDepth() << "] After recovering all dual information in the original problem and propagate." << endl;
         cout << *this;
+    }
+
+    if (ToulBar2::preprocessNary > 0) {
+        // projects back to binary cost functions
+        stable_sort(listOfCtrs.begin(), listOfCtrs.end(), [&](Constraint *ctr1, Constraint *ctr2) { return !Constraint::cmpConstraintDAC(ctr1, ctr2); });
+        for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
+            auto inclus = included.find(listOfCtrs[i]);
+            if (inclus == included.end()) {
+                if (listOfCtrs[i]->isNary() && CUT(listOfCtrs[i]->getDefCost(), getUb())) {
+                    ((NaryConstraint*)listOfCtrs[i])->preprojectall2();
+                } else if (listOfCtrs[i]->isTernary()) {
+                    ((TernaryConstraint*)listOfCtrs[i])->projectTernary();
+                }
+            }
+        }
+        // projects back to included ternary cost functions
+        for (pair<Constraint *, Constraint *> extending: included) {
+            Constraint *ctrextend = extending.first;
+            Constraint *ctrincluding = extending.second;
+            while (included.find(ctrincluding) != included.end()) {
+                ctrincluding = included[ctrincluding];
+            }
+            if (ctrincluding->isNary() && ctrextend->isTernary()) {
+                if (ToulBar2::verbose >= 1) {
+                    cout << *ctrincluding;
+                    cout << " projected back into ";
+                    cout << *ctrextend;
+                    cout << endl;
+                }
+                ((NaryConstraint*)ctrincluding)->project((TernaryConstraint*)ctrextend);
+                ctrextend->reconnect();
+                ctrextend->propagate();
+                ((TernaryConstraint*)ctrextend)->projectTernary();
+            }
+        }
+        propagate();
     }
 
     // reactivate variable elimination and dead-end elimination if needed

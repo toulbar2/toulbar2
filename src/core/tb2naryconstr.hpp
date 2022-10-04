@@ -193,12 +193,58 @@ public:
     void addtoTuples(Cost c); // c can be positive or negative (if greater than the minimum cost)
     void addtoTuples(EnumeratedVariable* x, Value v, Cost c); // the same operation but restricted to tuples with x assigned to v
 
+    void clearCosts()
+    {
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in nary cost functions during search!" << endl;
+            throw BadConfiguration();
+        }
+        assert(ToulBar2::verbose < 4 || ((cout << "clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << "," << getVar(3)->getName() << ",...)" << endl), true));
+        default_cost = MIN_COST;
+        if (pf) {
+            pf->clear();
+        } else {
+            for (Long i = 0; i < costSize; i++) {
+                costs[i] = MIN_COST;
+            }
+        }
+    }
+
+    void clearFiniteCosts()
+    {
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify finite costs in nary cost functions during search!" << endl;
+            throw BadConfiguration();
+        }
+        assert(ToulBar2::verbose < 4 || ((cout << "clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << "," << getVar(3)->getName() << ",...)" << endl), true));
+        if (!CUT(default_cost, wcsp->getUb())) {
+            default_cost = MIN_COST;
+        }
+        if (pf) {
+            TUPLES::iterator iter = pf->begin();
+            while (iter != pf->end()) {
+                TUPLES::iterator itercopy = iter;
+                ++iter;
+                if (!CUT(itercopy->second, wcsp->getUb())) {
+                    pf->erase(itercopy);
+                }
+            }
+        } else {
+            for (Long i = 0; i < costSize; i++) {
+                if (!CUT(costs[i], wcsp->getUb())) {
+                    costs[i] = MIN_COST;
+                }
+            }
+        }
+    }
+
     void setInfiniteCost(Cost ub);
     void insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const Tuple& t2, Cost c2, Constraint* ctr2, bool bFilters = false);
     //    void permute( EnumeratedVariable** scope_in );
 
     void projectxy(EnumeratedVariable* x, EnumeratedVariable* y, TUPLES& fproj);
-    //    void projectxyz( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, TUPLES& fproj);
+    void projectxyz( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, TUPLES& fproj);
+    void project(TernaryConstraint *ctr);
     //    void preproject3();
     void preprojectall2();
 

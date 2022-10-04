@@ -1122,49 +1122,57 @@ void NaryConstraint::project(EnumeratedVariable* x)
     evalTuple.resize(arity_);
 }
 
-// THIS CODE IS NEVER USED!!!
-//TODO: make it compatible with table representation rather than Map
 // Projects out all variables except x,y,z
 // and gives the result at fproj
-//void NaryConstraint::projectxyz( EnumeratedVariable* x,
-//        EnumeratedVariable* y,
-//        EnumeratedVariable* z,
-//        TUPLES& fproj)
-//{
-//    assert(CUT(default_cost,wcsp->getUb()));
-//
-//    Tuple stxyz(3,0);
-//    Tuple txyz(stxyz);
-//    Tuple t;
-//    Cost c;
-//    TUPLES::iterator  itproj;
-//
-//    // compute in one pass of all tuples the projection
-//    first();
-//    while(next(t,c)) {
-//        txyz[0] = t[ getIndex(x) ];
-//        txyz[1] = t[ getIndex(y) ];
-//        txyz[2] = t[ getIndex(z) ];
-//
-//        itproj = fproj.find(txyz);
-//        if(itproj != fproj.end()) {
-//            if(c < itproj->second) fproj[txyz] = c;
-//        } else {
-//            fproj[txyz] = c;
-//        }
-//    }
-//
-//    // finially we substract the projection from the initial function
-//    first();
-//    while(next(t,c)) {
-//        txyz[0] = t[ getIndex(x) ];
-//        txyz[1] = t[ getIndex(y) ];
-//        txyz[2] = t[ getIndex(z) ];
-//        itproj = fproj.find(txyz);
-//        if(itproj != fproj.end()) { assert(CUT(c, itproj->second)); (*pf)[t] -= itproj->second; }
-//        else assert(false);
-//    }
-//}
+void NaryConstraint::projectxyz( EnumeratedVariable* x,
+        EnumeratedVariable* y,
+        EnumeratedVariable* z,
+        TUPLES& fproj)
+{
+    assert(CUT(default_cost,wcsp->getUb()));
+    static Tuple t;
+    Tuple txyz(3,0);
+    Cost c;
+    TUPLES::iterator  itproj;
+
+    // compute in one pass of all tuples the projection
+    first();
+    while(next(t,c)) {
+        if (c == default_cost)
+            continue;
+        txyz[0] = t[ getIndex(x) ];
+        txyz[1] = t[ getIndex(y) ];
+        txyz[2] = t[ getIndex(z) ];
+        itproj = fproj.find(txyz);
+        if(itproj != fproj.end()) {
+            if(c < itproj->second)
+                fproj[txyz] = c;
+        } else {
+            fproj[txyz] = c;
+        }
+    }
+
+    // finally we subtract the projection from the initial function
+    first();
+    while(next(t,c)) {
+        if (c == default_cost)
+            continue;
+        txyz[0] = t[ getIndex(x) ];
+        txyz[1] = t[ getIndex(y) ];
+        txyz[2] = t[ getIndex(z) ];
+        itproj = fproj.find(txyz);
+        if(itproj != fproj.end()) {
+            assert(CUT(c, itproj->second));
+            //        if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
+            if (pf)
+                (*pf)[t] -= itproj->second;
+            else
+                costs[getCostsIndex(t)] -= itproj->second;
+            //        }
+        } else
+            assert(false);
+    }
+}
 
 // Projects out all variables except x,y
 // and gives the result at fproj
@@ -1254,6 +1262,41 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
 //        if (deconnected()) return;
 //    }
 //}
+
+void NaryConstraint::project(TernaryConstraint *ctr)
+{
+    EnumeratedVariable* x = (EnumeratedVariable*)ctr->getVar(0);
+    assert(getIndex(x) >= 0);
+    EnumeratedVariable* y = (EnumeratedVariable*)ctr->getVar(1);
+    assert(getIndex(y) >= 0);
+    EnumeratedVariable* z = (EnumeratedVariable*)ctr->getVar(2);
+    assert(getIndex(z) >= 0);
+
+    TUPLES fproj;
+    projectxyz(x, y, z, fproj);
+
+    unsigned int sizex = x->getDomainInitSize();
+    unsigned int sizey = y->getDomainInitSize();
+    unsigned int sizez = z->getDomainInitSize();
+
+    vector<Cost> xyz;
+    for (unsigned int a = 0; a < sizex; a++)
+        for (unsigned int b = 0; b < sizey; b++)
+            for (unsigned int c = 0; c < sizez; c++)
+                xyz.push_back(default_cost);
+
+    TUPLES::iterator it = fproj.begin();
+    while (it != fproj.end()) {
+        unsigned int a = it->first[0];
+        unsigned int b = it->first[1];
+        unsigned int c = it->first[2];
+        xyz[a * sizey * sizez + b * sizez + c] = it->second;
+        it++;
+    }
+    if (fproj.size() > 0 || default_cost > MIN_COST) {
+        wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, xyz);
+    }
+}
 
 inline bool cmp_pairvars(pair<EnumeratedVariable*, EnumeratedVariable*> pv1, pair<EnumeratedVariable*, EnumeratedVariable*> pv2)
 {
