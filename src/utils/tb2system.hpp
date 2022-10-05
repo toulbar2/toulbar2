@@ -221,6 +221,9 @@ inline Long string2Cost(const char* ptr)
 {
     try {
         std::string s(ptr);
+        if (s.size()==0) {
+            return 0;
+        }
         Double d = stold(s);
         if ((d >= 0 && d > LONGLONG_MAX) || (d < 0 && d < -LONGLONG_MAX)) {
             throw std::out_of_range("long long overflow!");
