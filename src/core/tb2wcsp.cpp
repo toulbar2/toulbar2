@@ -3391,6 +3391,16 @@ bool WCSP::hiddenEncoding()
     ToulBar2::elimDegree_preprocessing_ = -1;
     int DEE_copy = ToulBar2::DEE_;
     ToulBar2::DEE_ = 0;
+    int VAC_copy = ToulBar2::vac;
+    if (ToulBar2::vac) {
+        // allows VAC in preprocessing with pairwise consistency
+        if (ToulBar2::vac > 0) {
+            ToulBar2::vac++;
+        } else {
+            assert(ToulBar2::vac < 0);
+            ToulBar2::vac--;
+        }
+    }
 
     int depth = Store::getDepth();
     Store::store();
@@ -3805,8 +3815,7 @@ bool WCSP::hiddenEncoding()
     }
 
     if (ToulBar2::preprocessNary > 0) {
-        // projects back to binary cost functions
-        stable_sort(listOfCtrs.begin(), listOfCtrs.end(), [&](Constraint *ctr1, Constraint *ctr2) { return !Constraint::cmpConstraintDAC(ctr1, ctr2); });
+        // projects back to binary cost functions for all dualized connected cost functions
         for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
             if (listOfCtrs[i]->connected() && included.find(listOfCtrs[i]) == included.end()) {
                 if (listOfCtrs[i]->isNary() && CUT(listOfCtrs[i]->getDefCost(), getUb())) {
@@ -3845,6 +3854,7 @@ bool WCSP::hiddenEncoding()
     ToulBar2::elimDegree_ = elimDegree_copy;
     ToulBar2::elimDegree_preprocessing_ = elimDegree_preprocessing_copy;
     ToulBar2::DEE_ = DEE_copy;
+    ToulBar2::vac = VAC_copy;
     for (int i = numberOfVariables() - 1; i >= 0; i--) {
         if (unassigned(i)) {
             getVar(i)->queueEliminate();

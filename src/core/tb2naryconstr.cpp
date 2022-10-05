@@ -1293,6 +1293,9 @@ void NaryConstraint::project(TernaryConstraint *ctr)
         it++;
     }
     if (fproj.size() > 0 || default_cost > MIN_COST) {
+        if (ToulBar2::verbose >= 3) {
+            cout << "preproject nary " << this << " to ternary (" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
+        }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, xyz);
     }
 }
@@ -1307,13 +1310,10 @@ void NaryConstraint::preprojectall2()
     assert(connected());
     assert(CUT(default_cost, wcsp->getUb()));
 
-    TSCOPE scopeinv;
-    getScope(scopeinv);
-    for (TSCOPE::iterator it1 = scopeinv.begin(); it1 != scopeinv.end(); ++it1) {
-        TSCOPE::iterator it2 = it1;
-        for (++it2; it2 != scopeinv.end(); ++it2) {
-            EnumeratedVariable* x = (EnumeratedVariable*)wcsp->getVar((*it1).first);
-            EnumeratedVariable* y = (EnumeratedVariable*)wcsp->getVar((*it2).first);
+    for (int i=0; i<arity_; i++) {
+        for (int j=i+1; j<arity_; j++) {
+            EnumeratedVariable* x = scope_dac[i]; // (EnumeratedVariable*)wcsp->getVar((*it1).first);
+            EnumeratedVariable* y = scope_dac[j]; // (EnumeratedVariable*)wcsp->getVar((*it2).first);
 
             TUPLES fproj;
             projectxy(x, y, fproj);
@@ -1336,6 +1336,9 @@ void NaryConstraint::preprojectall2()
                 it++;
             }
             if (fproj.size() > 0 || default_cost > MIN_COST) {
+                if (ToulBar2::verbose >= 3) {
+                    cout << "preproject nary " << this << " to binary (" << x->getName() << "," << y->getName() << ")" << endl;
+                }
                 wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
             }
             if (deconnected())

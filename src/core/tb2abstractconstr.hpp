@@ -621,6 +621,7 @@ public:
         for (int i = 0; i < arity_; i++) {
             scope_inv[scope[i]->wcspIndex] = i;
         }
+        //stable_sort(scope_dac, scope_dac + arity_, [&](EnumeratedVariable *var1, EnumeratedVariable *var2) { return var1->getDACOrder() < var2->getDACOrder(); });
         qsort(scope_dac, arity_, sizeof(EnumeratedVariable*), cmpDAC);
     }
     int getSmallestDACIndexInScope(int forbiddenScopeIndex) FINAL

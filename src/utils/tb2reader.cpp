@@ -3524,7 +3524,7 @@ void WCSP::read_wcnf(const char* fileName)
     file >> nbclauses;
     if (format == "wcnf") {
         getline(file, strtop);
-        if (string2Cost((char*)strtop.c_str()) > 0) {
+        if (strtop.size() > 0 && string2Cost((char*)strtop.c_str()) > 0) {
             if (ToulBar2::verbose >= 0)
                 cout << "c (Weighted) Partial Max-SAT input format" << endl;
             top = string2Cost((char*)strtop.c_str());
