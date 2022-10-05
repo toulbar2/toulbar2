@@ -3809,7 +3809,7 @@ bool WCSP::hiddenEncoding()
         stable_sort(listOfCtrs.begin(), listOfCtrs.end(), [&](Constraint *ctr1, Constraint *ctr2) { return !Constraint::cmpConstraintDAC(ctr1, ctr2); });
         for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
             auto inclus = included.find(listOfCtrs[i]);
-            if (inclus == included.end()) {
+            if (inclus == included.end() && listOfCtrs[i]->connected()) {
                 if (listOfCtrs[i]->isNary() && CUT(listOfCtrs[i]->getDefCost(), getUb())) {
                     ((NaryConstraint*)listOfCtrs[i])->preprojectall2();
                 } else if (listOfCtrs[i]->isTernary()) {
@@ -3824,13 +3824,14 @@ bool WCSP::hiddenEncoding()
             while (included.find(ctrincluding) != included.end()) {
                 ctrincluding = included[ctrincluding];
             }
-            if (ctrincluding->isNary() && ctrextend->isTernary()) {
+            if (ctrincluding->isNary() && ctrincluding->connected() && ctrextend->isTernary()) {
                 if (ToulBar2::verbose >= 1) {
                     cout << *ctrincluding;
                     cout << " projected back into ";
                     cout << *ctrextend;
                     cout << endl;
                 }
+                assert(ctrextend->deconnected());
                 ((NaryConstraint*)ctrincluding)->project((TernaryConstraint*)ctrextend);
                 ctrextend->reconnect();
                 ctrextend->propagate();
