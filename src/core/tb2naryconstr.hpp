@@ -10,7 +10,7 @@ class NaryConstraint : public AbstractNaryConstraint {
     typedef map<Tuple, Cost> TUPLES;
     TUPLES* pf;
     Cost* costs;
-    Long costSize;
+    ptrdiff_t costSize;
     Cost default_cost; // default cost returned when tuple t is not found in TUPLES (used by function eval(t))
     StoreInt nonassigned; // nonassigned variables during search, must be backtrackable (StoreInt)!
     ConstraintSet* filters;
@@ -70,10 +70,10 @@ public:
         Constraint::resetConflictWeight();
     }
 
-    Long getCostsIndex(const Tuple& s) const
+    ptrdiff_t getCostsIndex(const Tuple& s) const
     {
-        Long index = 0;
-        Long base = 1;
+        ptrdiff_t index = 0;
+        ptrdiff_t base = 1;
         for (int i = arity_ - 1; i >= 0; --i) {
             index += (s[i]) * base;
             base *= ((EnumeratedVariable*)getVar(i))->getDomainInitSize();
@@ -84,7 +84,7 @@ public:
         return index;
     }
     Long size() const FINAL { return (Long)(pf) ? pf->size() : ((costs) ? costSize : 0); }
-    Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(tValue))) : ((costs) ? (costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
+    Long space() const FINAL { return ((pf) ? ((Long)pf->size() * (sizeof(Cost) + arity_ * sizeof(tValue))) : ((costs) ? ((Long)costSize * sizeof(Cost)) : 0)); } // actual memory space (not taking into account map space overhead)
     Long space(Long nbtuples) const { return (nbtuples < LONGLONG_MAX / ((Long)(sizeof(Cost) + arity_ * sizeof(tValue)))) ? (nbtuples * (sizeof(Cost) + arity_ * sizeof(tValue))) : LONGLONG_MAX; } // putative memory space
     bool expandtodo() { return space() > getDomainInitSizeProduct(); } // should be getDomainInitSizeProduct() * sizeof(Cost) ?
     bool expandtodo(Long nbtuples) { return space(nbtuples) > getDomainInitSizeProduct(); } // getDomainInitSizeProduct() * sizeof(Cost) ?
@@ -244,8 +244,7 @@ public:
 
     void projectxy(EnumeratedVariable* x, EnumeratedVariable* y, TUPLES& fproj);
     void projectxyz( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, TUPLES& fproj);
-    void project(TernaryConstraint *ctr);
-    //    void preproject3();
+    void preproject3(TernaryConstraint *ctr);
     void preprojectall2();
 
     void assign(int varIndex);

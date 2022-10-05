@@ -3839,7 +3839,7 @@ bool WCSP::hiddenEncoding()
                     cout << *ctrextend;
                     cout << endl;
                 }
-                ((NaryConstraint*)ctrincluding)->project((TernaryConstraint*)ctrextend);
+                ((NaryConstraint*)ctrincluding)->preproject3((TernaryConstraint*)ctrextend);
                 ctrextend->reconnect();
                 ctrextend->propagate();
                 if (ctrextend->connected()) {
@@ -4000,7 +4000,6 @@ void WCSP::preprocessing()
                 if ((nbtuples < MAX_NB_TUPLES || nary->size() >= nbtuples) && (nary->size() >= 2 || nary->getDefCost() > MIN_COST)) {
                     nary->keepAllowedTuples(getUb()); // can be very slow!
                     nary->preprojectall2();
-                    //			if (nary->connected() && nary->size() >= 4) nary->preproject3();
                 }
             }
         }
