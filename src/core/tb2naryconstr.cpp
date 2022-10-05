@@ -1224,7 +1224,6 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
 }
 
 // THIS CODE IS NEVER USED!!!
-//TODO: make it compatible with table representation rather than Map
 //void NaryConstraint::preproject3()
 //{
 //    assert(connected());

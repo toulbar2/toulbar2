@@ -3808,8 +3808,7 @@ bool WCSP::hiddenEncoding()
         // projects back to binary cost functions
         stable_sort(listOfCtrs.begin(), listOfCtrs.end(), [&](Constraint *ctr1, Constraint *ctr2) { return !Constraint::cmpConstraintDAC(ctr1, ctr2); });
         for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
-            auto inclus = included.find(listOfCtrs[i]);
-            if (inclus == included.end() && listOfCtrs[i]->connected()) {
+            if (listOfCtrs[i]->connected() && included.find(listOfCtrs[i]) == included.end()) {
                 if (listOfCtrs[i]->isNary() && CUT(listOfCtrs[i]->getDefCost(), getUb())) {
                     ((NaryConstraint*)listOfCtrs[i])->preprojectall2();
                 } else if (listOfCtrs[i]->isTernary()) {
@@ -3831,11 +3830,12 @@ bool WCSP::hiddenEncoding()
                     cout << *ctrextend;
                     cout << endl;
                 }
-                assert(ctrextend->deconnected());
                 ((NaryConstraint*)ctrincluding)->project((TernaryConstraint*)ctrextend);
                 ctrextend->reconnect();
                 ctrextend->propagate();
-                ((TernaryConstraint*)ctrextend)->projectTernary();
+                if (ctrextend->connected()) {
+                    ((TernaryConstraint*)ctrextend)->projectTernary();
+                }
             }
         }
         propagate();
