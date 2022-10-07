@@ -25,12 +25,14 @@ WeightedCSP class
 
 .. doxygenclass:: WeightedCSP
    :members:
+   :undoc-members:
 
 WeightedCSPSolver class
 =======================
 
 .. doxygenclass:: WeightedCSPSolver
    :members:
+   :undoc-members:
 
 ToulBar2 class
 ==============
