@@ -659,7 +659,7 @@ class CFN:
             self.Limit = e
         tb2.store.restore(initdepth)
         if self.CFN.wcsp.getSolutionCost() < initub:
-            return self.CFN.solution(), self.CFN.wcsp.getDPrimalBound(), None   # warning! None: does not return number of found solutions because it is two slow to retrieve all solutions in python
+            return self.CFN.solution(), self.CFN.wcsp.getDPrimalBound(), None   # warning! None: does not return number of found solutions because it is two slow to retrieve all solutions in python
         else:
             return None
 
