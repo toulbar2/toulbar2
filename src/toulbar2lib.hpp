@@ -273,6 +273,7 @@ public:
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false) = 0;
     virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false, bool conflict = false) = 0; /// \deprecated
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
+    virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; /// \brief generic function to post any global cost function
 
     /// \brief post a soft among cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable

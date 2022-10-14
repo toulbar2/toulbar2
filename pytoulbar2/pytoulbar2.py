@@ -16,6 +16,17 @@ except :
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
     
+    Constructor Args:
+        ubinit (decimal cost or None): initial upper bound.
+        resolution (int): decimal precision of costs.
+        vac (int): if non zero, maximum solver depth minus one where virtual arc consistency algorithm is applied (1: VAC only in preprocessing).
+        configuration (bool): if True then special settings for preference learning using incremental solving (see car configuration tutorial).
+        vns (int or None): if None then solves using branch-and-bound methods else using variable neighborhood search heuristic
+                           (-1: initial solution at random, -2: minimum domain values, -3: maximum domain values, 
+                            -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies).
+        seed (int): random seed.
+        verbose (int): verbosity control (-1: no message, 0: search statistics, 1: search tree, 2-7: propagation information).
+    
     Members:
         CFN (WeightedCSPSolver): python interface to C++ class WeightedCSPSolver.
         
@@ -37,20 +48,6 @@ class CFN:
     
     """
     def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1):
-        """CFN constructor to create a cost function network.
-
-        Args:
-            ubinit (decimal cost or None): initial upper bound.
-            resolution (int): decimal precision of costs.
-            vac (int): if non zero, maximum solver depth minus one where virtual arc consistency algorithm is applied (1: VAC only in preprocessing).
-            configuration (bool): if True then special settings for preference learning using incremental solving (see car configuration tutorial).
-            vns (int or None): if None then solves using branch-and-bound methods else using variable neighborhood search heuristic
-                               (-1: initial solution at random, -2: minimum domain values, -3: maximum domain values, 
-                                -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies).
-            seed (int): random seed.
-            verbose (int): verbosity control (-1: no message, 0: search statistics, 1: search tree, 2-7: propagation information).
-    
-        """
         tb2.init()
         
         tb2.option.decimalPoint = resolution   # decimal precision of costs
@@ -347,7 +344,7 @@ class CFN:
         
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
-            encoding (string): encoding used to represent AllDifferent (available choices are 'binary' or 'salldiff' or 'salldiffdp' or 'salldiffkp' or 'walldiff').
+            encoding (str): encoding used to represent AllDifferent (available choices are 'binary' or 'salldiff' or 'salldiffdp' or 'salldiffkp' or 'walldiff').
             excepted (None or list): list of excepted domain values which can be taken by any variable without violating the constraint.
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
@@ -380,7 +377,31 @@ class CFN:
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST);
             elif (encoding=='walldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
+
+    def AddGlobalFunction(self, scope, gcname, *parameters):
+        """AddGlobalFunction creates a soft global cost function. 
+        
+        Args:
+            scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
+            gcname (str): name of the global cost function (see toulbar2 user documentation).
+            parameters (list): list of parameters (str or int) for this global cost function.
             
+        Example:
+            AddGlobalFunction(['x1','x2','x3','x4'], 'wamong', 'hard', 1000, 2, 1, 2, 1, 3) encodes a hard among constraint satisfied iff values {1,2} are assigned to the given variables at least once and at most 3 times, otherwise it returns a cost of 1000.
+        """
+        sscope = set(scope)
+        if len(scope) != len(sscope):
+            raise RuntimeError("Duplicate variable in scope:"+str(scope))
+        iscope = []
+        for i, v in enumerate(scope):
+            if isinstance(v, str):
+                v = self.VariableIndices[v]
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v)
+        params = str(list(parameters))[1:-1].replace(',','').replace('\'','')
+        self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
+        
     def Read(self, filename):
         """Read reads the problem from a file.
 
@@ -535,7 +556,7 @@ class CFN:
         tb2.option.trwsAccuracy = -1
         
     # non-incremental solving method
-    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0):
+    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0):
         """Solve solves the problem (i.e., finds its optimum and proves optimality). It can also enumerate (diverse) solutions depending on the arguments.
 
         Args:
@@ -545,7 +566,8 @@ class CFN:
                                     until a given limit on the number of solutions is reached.
             diversityBound (int): if non-zero, finds a greedy sequence of diverse solutions where a solution in the list is optimal
                                       such that it also has a Hamming-distance from the previously found solutions greater than a given bound.
-                                      The number of diverse solutions is bounded by the argument value of allSolutions. 
+                                      The number of diverse solutions is bounded by the argument value of allSolutions.
+            timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
             
         Returns:
             The best (or last if enumeration/diversity) solution found as a list of domain values, its associated cost, always strictly lower 
@@ -566,6 +588,8 @@ class CFN:
             self.CFN.wcsp.initDivVariables()
         tb2.check()    # checks compatibility between selected options
         self.Limit = None
+        if (timeLimit > 0):
+            self.CFN.timer(timeLimit)
         if self.UbInit is not None:
             integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
             self.CFN.wcsp.updateUb(integercost)
@@ -626,13 +650,14 @@ class CFN:
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
 
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
-    def SolveNext(self, showSolutions = 0):
+    def SolveNext(self, showSolutions = 0, timeLimit = 0):
         """SolveNext solves the problem (i.e., finds its optimum and proves optimality). 
         It should be done after calling SolveFirst and modifying the problem if necessary.
 
         Args:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
                                                                3: variable and value names).  
+            timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
 
         Returns:
             The best solution found as a list of domain values, its associated cost, always strictly lower 
@@ -643,6 +668,8 @@ class CFN:
         tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
         tb2.check()    # checks compatibility between selected options
         self.Limit = None
+        if (timeLimit > 0):
+            self.CFN.timer(timeLimit)
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)

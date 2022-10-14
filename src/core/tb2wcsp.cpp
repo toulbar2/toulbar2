@@ -2154,6 +2154,36 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
     return gc;
 }
 
+/// \brief create a global cost function in intension with a particular semantic
+/// \param scopeIndex array of enumerated variable indexes (as returned by makeEnumeratedVariable)
+/// \param arity size of scopeIndex
+/// \param gcname specific \e keyword name of the global cost function (\e eg salldiff, sgcc, sregulardp, ssame, wamong)
+/// \param file text file with the list of parameters separated by a space
+/// \param constrcounter total number of cost functions (see slinear)
+/// \param mult if true then multiply costs read from file by ToulBar2::costMultiplier
+void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter, bool mult)
+{
+#ifndef NDEBUG
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
+        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
+        decomposableGCF->addToCostFunctionNetwork(this);
+    } else if (gcname == "clique") {
+        postCliqueConstraint(scopeIndex, arity, file);
+    } else if (gcname == "knapsackc") {
+        postKnapsackConstraint(scopeIndex, arity, file, false, true, true);
+    } else if (gcname == "knapsackp") {
+        postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+    } else if (gcname == "knapsack") {
+        postKnapsackConstraint(scopeIndex, arity, file, false, false, false);
+    } else { // monolithic global cost functions
+        postGlobalConstraint(scopeIndex, arity, gcname, file, constrcounter, mult);
+    }
+}
+
 int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 {
 #ifndef NDEBUG
