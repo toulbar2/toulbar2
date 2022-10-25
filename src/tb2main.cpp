@@ -2880,6 +2880,11 @@ int _tmain(int argc, TCHAR* argv[])
 
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
+#ifndef __WIN32__
+    signal(SIGINT, timeOut);
+    if (timeout > 0)
+        timer(timeout);
+#endif
 
     initCosts();
     Cost globalUb = MAX_COST;
@@ -3083,11 +3088,6 @@ int _tmain(int argc, TCHAR* argv[])
             }
             solver->dump_wcsp(problemname.c_str(), true, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)));
         } else if (!certificate || certificateString != NULL || ToulBar2::btdMode >= 2) {
-#ifndef __WIN32__
-            signal(SIGINT, timeOut);
-            if (timeout > 0)
-                timer(timeout);
-#endif
             solver->solve();
         }
     } catch (const Contradiction&) {
