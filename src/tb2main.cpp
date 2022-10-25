@@ -3006,7 +3006,7 @@ int _tmain(int argc, TCHAR* argv[])
         if (world.rank() == WeightedCSPSolver::MASTER) {
 #endif
             if (ToulBar2::writeSolution) {
-                ToulBar2::solutionFile = fopen(solutionFileName, "w");
+                ToulBar2::solutionFile = fopen(solutionFileName, (ToulBar2::uaieval)?"a":"w");
                 if (!ToulBar2::solutionFile) {
                     cerr << "Could not open file " << solutionFileName << endl;
 #ifdef OPENMPI
@@ -3042,7 +3042,7 @@ int _tmain(int argc, TCHAR* argv[])
                 else
                     filename += "MPE";
                 ToulBar2::solution_uai_filename = filename;
-                ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "w");
+                ToulBar2::solution_uai_file = fopen(ToulBar2::solution_uai_filename.c_str(), "a");
                 if (!ToulBar2::solution_uai_file) {
                     cerr << "Could not open file " << ToulBar2::solution_uai_filename << endl;
 #ifdef OPENMPI
