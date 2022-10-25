@@ -445,8 +445,8 @@ public:
 
     virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
     virtual Cost DoubletoCost(const Double& c) const = 0;
-    virtual Double Cost2ADCost(const Cost& c) const = 0;
-    virtual Double Cost2RDCost(const Cost& c) const = 0;
+    virtual Double Cost2ADCost(const Cost& c) const = 0; /// \brief converts an integer cost from a lower or upper bound of the whole problem into a real value
+    virtual Double Cost2RDCost(const Cost& c) const = 0; /// \brief converts an integer cost from a local cost function into a real value
     virtual Cost Prob2Cost(TProb p) const = 0;
     virtual TProb Cost2Prob(Cost c) const = 0;
     virtual TLogProb Cost2LogProb(Cost c) const = 0;
