@@ -3006,7 +3006,14 @@ int _tmain(int argc, TCHAR* argv[])
         if (world.rank() == WeightedCSPSolver::MASTER) {
 #endif
             if (ToulBar2::writeSolution) {
-                ToulBar2::solutionFile = fopen(solutionFileName, (ToulBar2::uaieval)?"a":"w");
+                ToulBar2::solutionFile = fopen(solutionFileName, (ToulBar2::uaieval)?"r+":"w");
+                if (ToulBar2::uaieval) {
+                    if (!ToulBar2::solutionFile) {
+                        ToulBar2::solutionFile = fopen(solutionFileName, "w"); // create an empty file if solution file is not found
+                    } else {
+                        fseek(ToulBar2::solutionFile, 0, SEEK_END); // position to the end of the previous solution found
+                    }
+                }
                 if (!ToulBar2::solutionFile) {
                     cerr << "Could not open file " << solutionFileName << endl;
 #ifdef OPENMPI
@@ -3112,11 +3119,13 @@ int _tmain(int argc, TCHAR* argv[])
         cout << "end." << endl;
 
     if (ToulBar2::solutionFile != NULL) {
+        fflush(ToulBar2::solutionFile);
         if (ftruncate(fileno(ToulBar2::solutionFile), ftell(ToulBar2::solutionFile)))
             throw WrongFileFormat();
         fclose(ToulBar2::solutionFile);
     }
     if (ToulBar2::solution_uai_file != NULL) {
+        fflush(ToulBar2::solution_uai_file);
         if (ftruncate(fileno(ToulBar2::solution_uai_file), ftell(ToulBar2::solution_uai_file)))
             throw WrongFileFormat();
         fclose(ToulBar2::solution_uai_file);
