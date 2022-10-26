@@ -1,6 +1,5 @@
-#!/bin/sh
+#!/bin/tcsh
 
 # usage: toulbar2 problem | bounds.sh 1
 
-./misc/script/ts "%.s" - | awk -v N=$1 -f ./misc/script/bounds.awk
-
+${0:h}/ts "%.s" - | awk -v N=$1 -f ${0:h}/bounds.awk

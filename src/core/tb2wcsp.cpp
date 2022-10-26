@@ -3432,6 +3432,11 @@ bool WCSP::dualEncoding()
     if (ToulBar2::verbose >= 0) {
         cout << "Dual encoding with " << nbdual << " extra variables with maximum domain size " << maxdomsize << " and " << nbintersections << " non-unary intersection edges." << endl;
     }
+    ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
+    if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
+        cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
+        throw BadConfiguration();
+    }
     return true;
 }
 
@@ -3688,6 +3693,15 @@ void WCSP::preprocessing()
         }
         propagate();
     } while (numberOfUnassignedVariables() < nbunvar);
+
+    if (ToulBar2::varOrder) {
+        vector<int> order;
+        if (isAlreadyTreeDec(ToulBar2::varOrder))
+            treeDecFile2Vector(ToulBar2::varOrder, order);
+        else
+            elimOrderFile2Vector(ToulBar2::varOrder, order);
+        setDACOrder(order);
+    }
 
     if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional > 0) {
         ToulBar2::elimDegree_preprocessing_ = -1;

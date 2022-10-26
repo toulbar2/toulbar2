@@ -2244,7 +2244,7 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         throw BadConfiguration();
     }
-    if (ToulBar2::FullEAC && ToulBar2::vac > 1 && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
+    if (!ToulBar2::pwc && ToulBar2::FullEAC && ToulBar2::vac > 1 && wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints()) {
         cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
@@ -2381,6 +2381,25 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 initialUpperBound = finiteUb;
             }
         }
+
+        vector<int> elimorder(wcsp->numberOfVariables(), -1);
+        vector<int> revelimorder(wcsp->numberOfVariables(), -1);
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+            revelimorder[i] = i;
+            elimorder[wcsp->numberOfVariables() - i - 1] = i;
+        }
+        Cost previouslb = wcsp->getLb();
+        do {
+            previouslb = wcsp->getLb();
+            wcsp->setDACOrder(revelimorder);
+            wcsp->setDACOrder(elimorder);
+            if (ToulBar2::verbose >= 0 && wcsp->getLb() > previouslb) {
+                if (ToulBar2::uai)
+                    cout << "Reverse original DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+                else
+                    cout << "Reverse original DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+            }
+        } while (wcsp->getLb() > previouslb && 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > 0.5);
     }
     wcsp->preprocessing(); // preprocessing after initial propagation
     if (!ToulBar2::isZ) {
