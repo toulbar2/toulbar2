@@ -5840,7 +5840,7 @@ void WCSP::ternaryCompletion()
 
     Double nbunvars = numberOfUnassignedVariables();
     Double connectivity = 2. * numberOfConnectedBinaryConstraints() / (nbunvars * (nbunvars - 1));
-    Double domsize = medianDomainSize();
+    Double domsize = getMaxCurrentDomainSize(); // medianDomainSize();
     Double size = domsize;
     size = sizeof(StoreCost) * size * size * size * nbunvars * (nbunvars - 1) * (nbunvars - 2) * connectivity * connectivity * connectivity / 6;
 
