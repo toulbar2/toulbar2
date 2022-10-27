@@ -3434,8 +3434,10 @@ bool WCSP::dualEncoding()
     }
     ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
     if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
-        cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
-        throw BadConfiguration();
+        if (ToulBar2::verbose) {
+            cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
+        }
+        ToulBar2::FullEAC = false;
     }
     return true;
 }
@@ -3694,15 +3696,6 @@ void WCSP::preprocessing()
         propagate();
     } while (numberOfUnassignedVariables() < nbunvar);
 
-    if (ToulBar2::varOrder) {
-        vector<int> order;
-        if (isAlreadyTreeDec(ToulBar2::varOrder))
-            treeDecFile2Vector(ToulBar2::varOrder, order);
-        else
-            elimOrderFile2Vector(ToulBar2::varOrder, order);
-        setDACOrder(order);
-    }
-
     if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0 || ToulBar2::preprocessFunctional > 0) {
         ToulBar2::elimDegree_preprocessing_ = -1;
         if (ToulBar2::elimDegree >= 0) {
@@ -3718,13 +3711,24 @@ void WCSP::preprocessing()
         }
     }
 
-#ifdef BOOST
-    if (ToulBar2::MSTDAC) {
+    // recompute DAC order at the end of preprocessing
+    if (ToulBar2::varOrder) {
         vector<int> order;
-        spanningTreeOrderingBGL(order);
+        if (isAlreadyTreeDec(ToulBar2::varOrder))
+            treeDecFile2Vector(ToulBar2::varOrder, order);
+        else
+            elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
-    }
+    } else {
+#ifdef BOOST
+        if (ToulBar2::MSTDAC) {
+            vector<int> order;
+            spanningTreeOrderingBGL(order);
+            setDACOrder(order);
+        }
 #endif
+    }
+
     if ((ToulBar2::vac && ToulBar2::useRASPS) || (ToulBar2::vac && ToulBar2::VACthreshold)) {
         ToulBar2::RASPSsaveitThresholds = true;
         ToulBar2::RASPSitThresholds.clear();
