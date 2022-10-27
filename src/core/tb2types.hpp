@@ -81,13 +81,13 @@ const Value WRONG_VAL = std::numeric_limits<Value>::max();
 const Value MIN_VAL = -(std::numeric_limits<Value>::max() / 2);
 /// Maximum domain size
 /// \deprecated Should use WCSP::getMaxDomainSize instead.
-const Value MAX_DOMAIN_SIZE = 1000000;
+const Value MAX_DOMAIN_SIZE = 10000;
 
 typedef vector<tValue> Tuple;
 
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
 const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
-const unsigned int NARYPROJECTION3MAXDOMSIZE = 100; // limit on the maximum initial domain size for nary to ternary projection
+const unsigned int NARYPROJECTION3MAXDOMSIZE = 30; // limit on the maximum initial domain size for nary to ternary projection
 const Long NARYDECONNECTSIZE = 4; // maximum number of initial tuples in nary constraints in order to check for its removal (if it is always satisfied by current domains)
 
 const int MAX_BRANCH_SIZE = 1000000;
@@ -489,7 +489,7 @@ const int STORE_SIZE = 16;
 const int MAX_ELIM_BIN = 1000000000;
 const int MAX_ARITY = 1000;
 /// Maximum number of tuples in n-ary cost functions
-const int MAX_NB_TUPLES = 1000000;
+const Long MAX_NB_TUPLES = 100000LL;
 const int LARGE_NB_VARS = 10000;
 
 const int DECIMAL_POINT = 3; // default number of digits after decimal point for printing floating-point values

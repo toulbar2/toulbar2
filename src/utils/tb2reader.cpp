@@ -2392,10 +2392,6 @@ void WCSP::read_legacy(const char* fileName)
                 file >> gcname;
                 postGlobalFunction(scopeIndex, arity, gcname, file, &nbconstr);
             } else {
-                if (arity > MAX_ARITY) {
-                    cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
-                    throw WrongFileFormat();
-                }
                 file >> ntuples;
                 int reusedconstr = -1;
                 bool reused = (ntuples < 0);
@@ -2923,17 +2919,13 @@ void WCSP::read_uai2008(const char* fileName)
         }
         maxarity = max(maxarity, arity);
 
-        if (arity > MAX_ARITY) {
-            cerr << "Nary cost functions of arity > " << MAX_ARITY << " not supported" << endl;
-            throw WrongFileFormat();
-        }
         if (!file) {
             cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
 
         if (arity > 3) {
-            int scopeIndex[MAX_ARITY];
+            int scopeIndex[arity];
             if (ToulBar2::verbose >= 3)
                 cout << "read nary cost function on ";
 
@@ -3494,8 +3486,7 @@ void WCSP::read_wcnf(const char* fileName)
     // Read each clause
     Tuple tup;
     for (int ic = 0; ic < nbclauses; ic++) {
-
-        int scopeIndex[MAX_ARITY];
+        vector<int> scopeIndex;
         tup.clear();
         int arity = 0;
         if (ToulBar2::verbose >= 3)
@@ -3508,6 +3499,7 @@ void WCSP::read_wcnf(const char* fileName)
         do {
             file >> j;
             if (j != 0 && !tautology) {
+                scopeIndex.resize(arity+1);
                 scopeIndex[arity] = abs(j) - 1;
                 if (arity < (int)tup.size()) {
                     tup[arity] = ((j > 0) ? 0 : 1);
@@ -3542,7 +3534,7 @@ void WCSP::read_wcnf(const char* fileName)
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
-            int index = postNaryConstraintBegin(scopeIndex, arity, MIN_COST, 1);
+            int index = postNaryConstraintBegin(scopeIndex, MIN_COST, 1);
             postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
         } else if (arity == 3) {

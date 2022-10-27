@@ -1681,7 +1681,7 @@ int _tmain(int argc, TCHAR* argv[])
                     if (ndegree != 0)
                         ToulBar2::elimDegree_preprocessing = ndegree;
                     if (ndegree < 0)
-                        ToulBar2::elimSpaceMaxMB = 128;
+                        ToulBar2::elimSpaceMaxMB = 16;
                 } else
                     ToulBar2::elimDegree_preprocessing = 3;
                 if (ToulBar2::debug)
@@ -1773,7 +1773,7 @@ int _tmain(int argc, TCHAR* argv[])
                     if (size >= 0)
                         ToulBar2::preprocessTernaryRPC = size;
                 } else
-                    ToulBar2::preprocessTernaryRPC = 128;
+                    ToulBar2::preprocessTernaryRPC = 16;
             } else if (args.OptionId() == NO_OPT_preprocessTernary) {
                 if (ToulBar2::debug)
                     cout << "preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;

@@ -3359,7 +3359,7 @@ bool WCSP::dualEncoding()
         if (inclusions.find(j) != inclusions.end()) {
             continue; // do not create intersection if one dual variable has its constraint included into another constraint
         }
-        if ((Long)listOfDualVars[i]->getDomainInitSize() * listOfDualVars[j]->getDomainInitSize() <= (Long)MAX_NB_TUPLES / 10) {
+        if ((Long)listOfDualVars[i]->getDomainInitSize() * listOfDualVars[j]->getDomainInitSize() <= MAX_NB_TUPLES) {
             initElimConstr();
             TSCOPE scopei;
             listOfCtrs[i]->getScope(scopei);
@@ -3430,7 +3430,7 @@ bool WCSP::dualEncoding()
         }
     }
     if (ToulBar2::verbose >= 0) {
-        cout << "Dual encoding with " << nbdual << " extra variables with maximum domain size " << maxdomsize << " and " << nbintersections << " non-unary intersection edges." << endl;
+        cout << "Dual encoding with " << nbdual << " extra variables with maximum domain size " << maxdomsize << " and " << nbintersections << " intersection edges." << endl;
     }
     ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
     if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
@@ -5844,12 +5844,16 @@ void WCSP::ternaryCompletion()
     Double size = domsize;
     size = sizeof(StoreCost) * size * size * size * nbunvars * (nbunvars - 1) * (nbunvars - 2) * connectivity * connectivity * connectivity / 6;
 
-    //if (ToulBar2::debug>=2) cout << "MAX ESTIMATED RPC SIZE: " << size << " (" << nbunvars << "," << connectivity <<")" << endl;
-    //if (size > 1024. * 1024. * ToulBar2::preprocessTernaryRPC) {
-    //cout << "Restricted path consistency disabled (" << size/1024./1024. << " >= " << ToulBar2::preprocessTernaryRPC << " MB)" << endl;
-    //ToulBar2::preprocessTernaryRPC = 0;
-    //return;
-    //}
+    if (ToulBar2::verbose>=1) {
+        cout << "Maximum estimated PIC memory: " << size << " (" << nbunvars << "," << connectivity <<")" << endl;
+    }
+    if (size > 1024. * 1024. * ToulBar2::preprocessTernaryRPC) {
+        if (ToulBar2::verbose) {
+            cout << "Warning, restricted path consistency disabled (" << size/1024./1024. << " >= " << ToulBar2::preprocessTernaryRPC << " MB, see option -t)." << endl;
+        }
+        ToulBar2::preprocessTernaryRPC = 0;
+        return;
+    }
 
     vector<TripleVarCostSize> triplelist;
     for (unsigned int i = 0; i < vars.size(); i++) {
