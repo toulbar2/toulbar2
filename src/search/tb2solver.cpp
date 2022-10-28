@@ -270,7 +270,9 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
         if (ToulBar2::verifyOpt) {
             ToulBar2::verifiedOptimum = wcsp->getLb();
         } else {
-            wcsp->updateUb(wcsp->getLb() + ((updateValueHeuristic) ? UNIT_COST : MIN_COST));
+            if (wcsp->numberOfUnassignedVariables() == 0) {
+                wcsp->updateUb(wcsp->getLb() + ((updateValueHeuristic) ? UNIT_COST : MIN_COST));
+            }
         }
     }
     Store::restore(depth);
