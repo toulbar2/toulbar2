@@ -1,0 +1,31 @@
+# Cloner le repository debian, avec la branche upstream
+git clone git@salsa.debian.org:science-team/toulbar2.git tb2-debian
+cd tb2-debian
+git checkout upstream
+git checkout master
+# éditer debian/copyright pour enlever le module python (setup.py et pytoulbar2), docker, contrib et travis
+emacs debian/copyright
+git commit -am "copyright excludes python module and non OSI software"
+# récupérer la dernière archive toulbar2 (fichier debian/watch)
+uscan --verbose
+# importer la nouvelle version
+gbp import-orig --pristine-tar ../toulbar2_1.2.0+dfsg.orig.tar.xz
+# changer debian/changelog pour prendre en compte la nouvelle version (ajouter NMU sur la ligne de changelog et utiliser un numéro de sous-version en x.x, ici 0.1)
+dch -v 1.2.0+dfsg-0.1
+# tenter la construction des packages sources et binaires
+# le package toulbar2 patche la version upstream avec quilt (https://wiki.debian.org/UsingQuilt)
+# en général les patchs ne s'appliquent plus ou mal, il faut corriger et "quilt refresh".
+# un coktail de commandes du type ci-dessous est généralement nécessaire (et autres quilt)
+quilt push
+quilt refresh
+quilt push
+quilt refresh
+quilt push
+quilt refresh
+# terminer par un quilt pop -a pour remettre tout en état d'origine
+quilt pop -a
+git commit -am "Adapting changelog and patches to new version"
+# tester la construction d'un binaire avec
+debuild -B -j4
+# si cela fonctionne, push sur salsa (branches master et upstream)
+# sinon s'acharner...
