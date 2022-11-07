@@ -41,7 +41,7 @@ shown how it can learn user preferences or how to play the Sudoku
 without knowing the rules). The current CFN learning code is available
 on [GitHub](https://github.com/toulbar2/CFN-learn).
 
-<!-- ((_README_2)= -->
+<!-- (_README_2)= -->
 ## Installation from binaries
 
 You can install toulbar2 directly using the package manager in Debian
@@ -52,7 +52,7 @@ and Debian derived Linux distributions (Ubuntu, Mint,...):
 
 For the most recent binary or the Python API, compile from source.
 
-<!-- ((_README_3)= -->
+<!-- (_README_3)= -->
 ## Python interface
 
 An alpha-release Python interface can be tested through pip on Linux and MacOS:
@@ -81,7 +81,7 @@ e.g.:
     git clone --branch 1.2.0 https://github.com/toulbar2/toulbar2.git
 
 
-<!-- ((_README_5)= -->
+<!-- (_README_5)= -->
 ## Installation from sources
 
 Compilation requires git, cmake and a C++-11 capable compiler (in C++11 mode). 
