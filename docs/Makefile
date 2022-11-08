@@ -24,6 +24,7 @@ readme:
 	sed -i '/^cpd:/d' $(FILESDIR)/README.md
 	sed -i '1,10 s/# toulbar2//' $(FILESDIR)/README.md
 	sed -i '1,10 s/## Exact optimization/# Exact optimization/' $(FILESDIR)/README.md
+	sed -i 's/<!-- \(.*\) -->/\1/g' $(FILESDIR)/README.md
 
 # build pdf files, get and adapt toulbar2/README.md
 # and install them into FILESDIR
