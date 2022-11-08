@@ -166,8 +166,13 @@ int WCSP::diameter()
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected()) {
+            if (constrs[i]->arity() > MAX_ARITY / 10) {
+                cerr << "warning! cost function arity of " << constrs[i]->arity() << " is too large for diameter computation and will be skipped." << endl;
+                continue;
+            }
             addConstraint(constrs[i], G);
+        }
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
             addConstraint(elimBinConstrs[i], G);

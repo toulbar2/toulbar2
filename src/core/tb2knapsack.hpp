@@ -113,7 +113,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             } else
                 return false;
         } else {
-            if (scope[idx]->getDomainSize() == 1)
+            if (scope[idx]->assigned())
                 return false;
             else
                 return true;
@@ -849,7 +849,7 @@ public:
         } else {
             if (assigned[varIndex] == 0) {
                 assigned[varIndex] = 1;
-                if (scope[varIndex]->getDomainSize() == 1) {
+                if (scope[varIndex]->assigned()) {
                     nonassigned = nonassigned - 1;
                     assigned[varIndex] = 2;
                     deconnect(varIndex);
@@ -1033,7 +1033,7 @@ public:
                     }
                 }
             } else {
-                if (assigned[varIndex] == 1 && scope[varIndex]->getDomainSize() == 1) {
+                if (assigned[varIndex] == 1 && scope[varIndex]->assigned()) {
                     nonassigned = nonassigned - 1;
                     assigned[varIndex] = 2;
                     if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE)) {
@@ -1515,6 +1515,9 @@ public:
     }
     void propagate() override
     {
+        if (ToulBar2::interrupted) {
+          throw TimeOut();
+        }
         // propagates from scratch the constraint
         if (connected()) {
             bool b = false;
@@ -1525,7 +1528,7 @@ public:
                         b = true;
                     } /* indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..) */
                     else
-                        assert(assigned[i] > 0 || scope[i]->getDomainSize() > 1);
+                        assert(assigned[i] > 0 || scope[i]->unassigned());
                 } else {
                     if (assigned[i] == 0 && scope[i]->assigned()) {
                         assign(i);
@@ -1542,7 +1545,7 @@ public:
                     for (int i = 0; i < carity; ++i) {
                         if (VirtualVar[current_scope_idx[i]] == 0) {
                             assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]].back()) || lastval0ok[current_scope_idx[i]]);
-                            assert(scope[current_scope_idx[i]]->getDomainSize() > 1);
+                            assert(scope[current_scope_idx[i]]->unassigned());
                             assert(assigned[current_scope_idx[i]] == 0);
                         }
                         for (int j = 0; j < nbValue[i]; ++j) {
@@ -1567,7 +1570,7 @@ public:
                         for (int i = 0; i < carity; ++i) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {
                                 assert(scope[current_scope_idx[i]]->canbe(VarVal[current_scope_idx[i]].back()) || lastval0ok[current_scope_idx[i]]);
-                                assert(scope[current_scope_idx[i]]->getDomainSize() > 1);
+                                assert(scope[current_scope_idx[i]]->unassigned());
                                 assert(assigned[current_scope_idx[i]] == 0);
                             }
                             for (int j = 0; j < nbValue[i]; ++j) {
@@ -1656,6 +1659,9 @@ public:
                                         });
 
                                     for (int i = 0; i < carity; ++i) {
+                                        if (ToulBar2::interrupted) {
+                                          throw TimeOut();
+                                        }
                                         NewProfforDyn = ProfforDyn;
                                         NewWeightforDyn = WeightforDyn;
                                         NewWeightforDyn.erase(NewWeightforDyn.begin() + EDACORDER[i]);

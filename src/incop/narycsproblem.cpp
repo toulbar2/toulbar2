@@ -528,6 +528,9 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     else {
         // boucle sur les essais
         for (int nessai = 0; nessai < nbessais; nessai++) {
+            if (ToulBar2::interrupted) {
+              throw TimeOut();
+            }
             executer_essai(problem, algo, population, taille, graine1, nessai, &initconfig);
             if (wcsp->getLb() + problem->best_config->valuation < upperbound) {
                 int depth = Store::getDepth();
