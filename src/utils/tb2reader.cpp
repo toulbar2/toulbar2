@@ -1125,7 +1125,7 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                                     assert(costs.size() == unarycf.var->getDomainInitSize());
                                     unarycf.costs = costs;
                                     unaryCFs.push_back(unarycf);
-                                    //this->wcsp->postUnaryConstraint(s[0], costs);
+                                    // this->wcsp->postUnaryConstraint(s[0], costs);
                                     wcsp->negCost -= minCost;
                                     // TODO must remember name too
                                 } else {
@@ -1143,7 +1143,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                     break;
                 case 2: {
                     int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
-                    this->wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (cfIdx < INT_MAX)
+                        this->wcsp->getCtr(cfIdx)->setName(funcName); // TODO: kludge - see Shared below at least
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
@@ -1803,16 +1804,16 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 }
 
 /*
-* Example :
-* metric : var
-* cost : 15
-* nb_symbols : 4
-* nb_values : 2
-* start_symbol : 0
-* terminals : [ [1 0] [3 1] ]
-* non_terminals : [ [0 0 0] [0 1 2] [0 1 3] [2 0 3] ]
-* return stream : [var|weight cost nb_symbols nb_values start_symbol nb_rules ((0 terminal_symbol value)|(1 nonterminal_in nonterminal_out_left nonterminal_out_right)|(2 terminal_symbol value weight)|(3 nonterminal_in nonterminal_out_left nonterminal_out_right weight))∗]
-*/
+ * Example :
+ * metric : var
+ * cost : 15
+ * nb_symbols : 4
+ * nb_values : 2
+ * start_symbol : 0
+ * terminals : [ [1 0] [3 1] ]
+ * non_terminals : [ [0 0 0] [0 1 2] [0 1 3] [2 0 3] ]
+ * return stream : [var|weight cost nb_symbols nb_values start_symbol nb_rules ((0 terminal_symbol value)|(1 nonterminal_in nonterminal_out_left nonterminal_out_right)|(2 terminal_symbol value weight)|(3 nonterminal_in nonterminal_out_left nonterminal_out_right weight))∗]
+ */
 void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream& stream)
 {
 
@@ -1945,12 +1946,12 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
         cout << "Stream for sgrammar : '" << stream.str() << "'" << endl;
 }
 /*
-* Example :
-* cost : 10.8
-* vars1 : [v1 v2 v3]
-* vars2 : [v4 v5 v6]
-* return stream : [cost list_size1 list_size2 (variable_index)∗ (variable_index)∗]
-*/
+ * Example :
+ * cost : 10.8
+ * vars1 : [v1 v2 v3]
+ * vars2 : [v4 v5 v6]
+ * return stream : [cost list_size1 list_size2 (variable_index)∗ (variable_index)∗]
+ */
 void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& stream)
 {
 
@@ -2127,7 +2128,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 #endif
 #else
         cerr << "Error: compiling with Boost iostreams library is needed to allow to read bzip2'd CFN format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::cfn && ToulBar2::xz) {
 #ifdef BOOST
@@ -2218,7 +2219,7 @@ Cost WCSP::read_wcsp(const char* fileName)
         }
 
         // Joint DivMin MDD
-        if (ToulBar2::divWidth > 0) { //add variables for relaxed constraint
+        if (ToulBar2::divWidth > 0) { // add variables for relaxed constraint
             if (ToulBar2::divMethod < 2) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
@@ -2283,7 +2284,7 @@ void WCSP::read_legacy(const char* fileName)
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
         cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
@@ -2522,7 +2523,7 @@ void WCSP::read_legacy(const char* fileName)
                 string gcname;
                 file >> gcname;
                 if (gcname == "clique") {
-                    //postCliqueConstraint(scopeIndex, arity, file);
+                    // postCliqueConstraint(scopeIndex, arity, file);
                     int skipread;
                     file >> skipread;
                     for (int a = 0; a < arity; a++) {
@@ -2537,7 +2538,7 @@ void WCSP::read_legacy(const char* fileName)
                     EnumeratedVariable* y = (EnumeratedVariable*)vars[j];
                     EnumeratedVariable* z = (EnumeratedVariable*)vars[k];
                     vector<Cost> costs((size_t)x->getDomainInitSize() * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize(), MIN_COST);
-                    postTernaryConstraint(i, j, k, costs); //generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
+                    postTernaryConstraint(i, j, k, costs); // generate a zero-cost ternary constraint instead that will absorb all its binary hard constraints
                 } else {
                     postGlobalFunction(scopeIndex, 3, gcname, file, &nbconstr);
                 }
@@ -2833,7 +2834,7 @@ void WCSP::read_uai2008(const char* fileName)
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
         cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
@@ -2892,7 +2893,7 @@ void WCSP::read_uai2008(const char* fileName)
         cout << "Reading " << uaitype << "  file." << endl;
 
     bool markov = (uaitype == string("MARKOV"));
-    //bool bayes = uaitype == string("BAYES");
+    // bool bayes = uaitype == string("BAYES");
 
     file >> nbvar;
     // read variable domain sizes
@@ -3218,12 +3219,12 @@ void WCSP::solution_UAI(Cost res)
         return;
     if (ToulBar2::isZ)
         return;
-    if (((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file) == NULL)
+    if (((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file) == NULL)
         return;
     // UAI 2012 Challenge output format
     //	    ToulBar2::solution_file << "-BEGIN-" << endl;
-    rewind((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file);
-    fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "MPE\n");
+    rewind((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
+    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "MPE\n");
     //	ToulBar2::solution_file << "1" << endl; // we assume a single evidence sample
     //    if (ToulBar2::showSolutions && !ToulBar2::uaieval) {
     //        cout << "t " << cpuTime() - ToulBar2::startCpuTime << endl;
@@ -3231,9 +3232,9 @@ void WCSP::solution_UAI(Cost res)
     //        cout << numberOfVariables();
     //        printSolution(cout);
     //    }
-    fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "%d ", numberOfVariables());
-    printSolution((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file);
-    fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "\n");
+    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "%d ", numberOfVariables());
+    printSolution((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
+    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "\n");
     //	if (opt) {
     //	  if (ToulBar2::showSolutions) cout << " LU" << endl;
     //	  ToulBar2::solution_file << " LU" << endl;
@@ -3257,11 +3258,11 @@ void WCSP::read_XML(const char* fileName)
     if (ToulBar2::gz) {
         zfile.push(boost::iostreams::gzip_decompressor());
     } else if (ToulBar2::bz2) {
-#ifndef NO_BZ2        
+#ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
         cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
@@ -3336,12 +3337,12 @@ void WCSP::solution_XML(bool opt)
         cout << "s SATISFIABLE" << endl;
     }
 
-    //ofstream fsol;
-    //ifstream sol;
-    //sol.open(ToulBar2::writeSolution);
-    //if(!sol) { cout << "cannot open solution file to translate" << endl; throw WrongFileFormat(); }
-    //fsol.open("solution");
-    //fsol << "SOL ";
+    // ofstream fsol;
+    // ifstream sol;
+    // sol.open(ToulBar2::writeSolution);
+    // if(!sol) { cout << "cannot open solution file to translate" << endl; throw WrongFileFormat(); }
+    // fsol.open("solution");
+    // fsol << "SOL ";
 
     //    freopen(NULL, "r", ToulBar2::solutionFile);
     cout << "v ";
@@ -3377,9 +3378,9 @@ void WCSP::solution_XML(bool opt)
     cout << endl;
 //    freopen(NULL, "w", ToulBar2::solutionFile);
 
-//fsol << endl;
-//fsol.close();
-//sol.close();
+// fsol << endl;
+// fsol.close();
+// sol.close();
 #endif
 }
 
@@ -3395,7 +3396,7 @@ void WCSP::read_wcnf(const char* fileName)
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
         cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
@@ -3499,7 +3500,7 @@ void WCSP::read_wcnf(const char* fileName)
         do {
             file >> j;
             if (j != 0 && !tautology) {
-                scopeIndex.resize(arity+1);
+                scopeIndex.resize(arity + 1);
                 scopeIndex[arity] = abs(j) - 1;
                 if (arity < (int)tup.size()) {
                     tup[arity] = ((j > 0) ? 0 : 1);
@@ -3612,7 +3613,7 @@ void WCSP::read_qpbo(const char* fileName)
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
         cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
@@ -3858,7 +3859,7 @@ void WCSP::read_opb(const char* fileName)
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
         cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
-        throw WrongFileFormat();        
+        throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
 #ifndef NO_LZMA
