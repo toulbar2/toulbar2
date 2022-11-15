@@ -31,7 +31,8 @@ file(
   ${My_Source}/pils/src/exe/*.cpp 
   ${My_Source}/search/*.*pp
   ${My_Source}/utils/*.*pp
-  ${My_Source}/vns/*.*pp 
+  ${My_Source}/vns/*.*pp
+  ${My_Source}/mulcrit/*.*pp
   ${My_Source}/ToulbarVersion.*pp
   )
 
