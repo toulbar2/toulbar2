@@ -62,6 +62,7 @@ class StoreStack {
     ptrdiff_t index;
     ptrdiff_t indexMax;
     ptrdiff_t base;
+    ptrdiff_t index_backup;
 
     // make it private because we don't want copy nor assignment
     StoreStack(const StoreStack& s);
@@ -79,6 +80,7 @@ public:
         content = new V[indexMax];
         index = 0;
         base = 0;
+        index_backup = PTRDIFF_MAX;
         if (ToulBar2::verbose > 0) {
             cout << "c " << indexMax * (sizeof(V) + sizeof(T*)) << " Bytes allocated for "
 #ifndef NUMBERJACK
@@ -214,6 +216,20 @@ public:
             base = (ptrdiff_t)pointers[y];
         }
     }
+
+    void freeze()
+    {
+        index_backup = index;
+        index = 0;
+    }
+
+    void unfreeze()
+    {
+        if (index_backup != PTRDIFF_MAX) {
+            index = index_backup;
+            index_backup = PTRDIFF_MAX;
+        }
+    }
 };
 
 /*
@@ -243,6 +259,8 @@ public:
 
     static void store() { mystore.store(); };
     static void restore() { mystore.restore(); };
+    static void freeze() { mystore.freeze(); };
+    static void unfreeze() { mystore.unfreeze(); };
 
     StoreBasic& operator=(const StoreBasic& elt)
     { ///< \note assignment has to be backtrackable
@@ -383,6 +401,52 @@ public:
         assert(depth >= newDepth);
         while (depth > newDepth)
             restore();
+    }
+
+    /// makes the incremental trailing mechanism off temporally
+    static void freeze()
+    {
+        StoreValue::freeze();
+#if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
+        StoreCost::freeze();
+#endif
+#ifdef SHORT_VALUE
+#ifndef INT_COST
+        StoreInt::freeze();
+#endif
+        storeIndexList.freeze();
+#endif
+#ifndef LONGLONG_COST
+        StoreLong::freeze();
+#endif
+        StoreBigInteger::freeze();
+        storeDomain.freeze();
+        storeConstraint.freeze();
+        storeVariable.freeze();
+        storeSeparator.freeze();
+    }
+
+    /// makes the incremental trailing mechanism on again
+    static void unfreeze()
+    {
+        StoreValue::unfreeze();
+#if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
+        StoreCost::unfreeze();
+#endif
+#ifdef SHORT_VALUE
+#ifndef INT_COST
+        StoreInt::unfreeze();
+#endif
+        storeIndexList.unfreeze();
+#endif
+#ifndef LONGLONG_COST
+        StoreLong::unfreeze();
+#endif
+        StoreBigInteger::unfreeze();
+        storeDomain.unfreeze();
+        storeConstraint.unfreeze();
+        storeVariable.unfreeze();
+        storeSeparator.unfreeze();
     }
 };
 

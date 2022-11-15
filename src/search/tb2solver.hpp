@@ -20,6 +20,8 @@ class ClustersNeighborhoodStructure;
 class RandomClusterChoice;
 class ParallelRandomClusterChoice;
 
+typedef int (Solver::*intFunctionCall_t)();
+
 const double epsilon = 1e-6; // 1./100001.
 
 class Solver : public WeightedCSPSolver {
@@ -391,6 +393,7 @@ protected:
     int getVarMinDomainDivMaxDegree();
     int getNextUnassignedVar();
     int getMostUrgent();
+    int greedy(intFunctionCall_t func);
 
     void Manage_Freedom(Cluster* cluster);
     double nbChoices;

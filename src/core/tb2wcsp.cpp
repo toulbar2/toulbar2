@@ -585,11 +585,11 @@ void tb2checkOptions()
         cerr << "Error: Limited Discrepancy Search not compatible with BTD-like search methods." << endl;
         throw BadConfiguration();
     }
-    if (ToulBar2::lds && ToulBar2::hbfs) {
+    if (ToulBar2::lds && ToulBar2::hbfs && ToulBar2::searchMethod == DFBB) {
         // cout << "Warning! Hybrid best-first search not compatible with Limited Discrepancy Search." << endl;
         ToulBar2::hbfs = 0;
     }
-    if (ToulBar2::lds && ToulBar2::solutionBasedPhaseSaving) {
+    if (ToulBar2::lds && ToulBar2::solutionBasedPhaseSaving && ToulBar2::searchMethod == DFBB) {
         // cout << "Warning! Solution based phase saving is not recommended with Limited Discrepancy Search." << endl;
         ToulBar2::solutionBasedPhaseSaving = false;
     }
