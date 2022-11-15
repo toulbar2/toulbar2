@@ -839,7 +839,6 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
 
         if (nbCostInserted < costVecSize) // there are some defaultCost remaining
             minCost = min(defaultCost, minCost);
-        cout << "minCost: " << minCost << "costVector: " << costVector << endl;
     }
     // all is true: we expect a full costs list
     else {
@@ -1032,7 +1031,6 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
 
         if (!skipDefaultCost) { // Set default cost and skip to next token
             defaultCost = wcsp->decimalToCost(token, lineNumber);
-            cout << "defaultCost: " << defaultCost << endl;
             std::tie(lineNumber, token) = this->getNextToken();
         }
 
