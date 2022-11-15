@@ -20,6 +20,13 @@ mulcrit::MultiWCSP::MultiWCSP() {
 }
 
 //---------------------------------------------------------------------------
+mulcrit::MultiWCSP::MultiWCSP(vector<WCSP*>& wcsps, vector<Double>& weights) {
+  for(unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind ++) {
+    addWCSP(wcsps[wcsp_ind], weights[wcsp_ind]);
+  }
+}
+
+//---------------------------------------------------------------------------
 void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
 
   // assert: identical domains for existing variables
@@ -711,6 +718,16 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
     cout << "global_lb >= 0: " << global_lb << endl;
   }
 
+}
+
+//---------------------------------------------------------------------------
+WCSP* mulcrit::MultiWCSP::makeWCSP() {
+
+  WCSP* wcsp = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+
+  exportToWCSP(wcsp);
+
+  return wcsp;
 }
 
 //---------------------------------------------------------------------------

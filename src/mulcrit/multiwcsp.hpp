@@ -106,9 +106,16 @@ class MultiWCSP {
   public:
 
     /*!
-     * \brief constructor
+     * \brief default constructor
      */
     MultiWCSP();
+
+    /*!
+     * \brief constructor: build a multiwcsp combining wcsps given as input
+     * \param wcsps a vector of wcsp objects to combine with weighted sums
+     * \param weights a list of weights for each wcsp
+     */
+    MultiWCSP(std::vector<WCSP*>& wcsps, std::vector<Double>& weights);
 
     /*!
      * \brief add a wcsp to the network, create the variables if they do not exist
@@ -152,6 +159,12 @@ class MultiWCSP {
      * \param wcsp tb2 wcsp
      */
     void exportToWCSP(WCSP* wcsp);
+
+    /*!
+     * \brief make a wcsp from the convex combination of all the wcsps
+     */
+    WCSP* makeWCSP();
+
 
     /*!
      * \brief convert a tuple to a cost index, rightmost value indexed first

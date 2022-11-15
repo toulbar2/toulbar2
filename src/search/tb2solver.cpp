@@ -76,6 +76,7 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
     return solver;
 }
 
+
 Solver::Solver(Cost initUpperBound)
     : nbNodes(0)
     , nbBacktracks(0)
