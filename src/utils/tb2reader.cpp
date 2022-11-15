@@ -787,6 +787,9 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     string token;
     minCost = MAX_COST;
 
+    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
+        defaultCost *= MEDIUM_COST;
+
     // Create a vector filled with defaultCost values
     std::vector<Cost> costVector;
     long unsigned int costVecSize = 1;
@@ -807,6 +810,8 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
             // if we have read a full tuple and cost
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
+                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
+                    cost *= MEDIUM_COST;
                 // the same tuple has already been defined.
                 if (costVector[tableIdx] != defaultCost) {
                     cerr << "Error: tuple on scope [ ";
@@ -845,6 +850,9 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         unsigned int tableIdx = 0;
         while (tableIdx < costVecSize) {
             Cost cost = wcsp->decimalToCost(token, lineNumber);
+
+            if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
+                cost *= MEDIUM_COST;
 
             minCost = min(cost, minCost);
 
@@ -1240,6 +1248,9 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         card *= (size_t)wcsp->getDomainInitSize(i);
     }
 
+    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
+        defaultCost *= MEDIUM_COST;
+
     unsigned int arity = scope.size();
     Tuple tup(arity);
     map<Tuple, Cost> costFunction;
@@ -1257,6 +1268,8 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             // We have read a full tuple: finish the tuple
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
+                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
+                    cost *= MEDIUM_COST;
 
                 if (not costFunction.insert(pair<Tuple, Cost>(tup, cost)).second) {
                     cerr << "Error: tuple on scope [ ";
