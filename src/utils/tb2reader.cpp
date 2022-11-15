@@ -1135,8 +1135,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                     break;
                 case 2: {
                     int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
-                    if (cfIdx < INT_MAX)
-                        this->wcsp->getCtr(cfIdx)->setName(funcName); // TODO: kludge - see Shared below at least
+                    if (cfIdx != INT_MAX)
+                        this->wcsp->getCtr(cfIdx)->setName(funcName);
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
@@ -1144,7 +1144,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                             if ((ns.second.size() == 2) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1) {
                                 cfIdx = this->wcsp->postBinaryConstraint(ns.second[0], ns.second[1], costs);
                                 wcsp->negCost -= minCost;
-                                this->wcsp->getCtr(cfIdx)->setName(ns.first);
+                                if (cfIdx != INT_MAX)
+                                    this->wcsp->getCtr(cfIdx)->setName(ns.first);
                             } else {
                                 cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << "' on scope { ";
                                 for (auto v : ns.second)
@@ -1157,7 +1158,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                 } break;
                 case 3: {
                     int cfIdx = this->wcsp->postTernaryConstraint(scope[0], scope[1], scope[2], costs);
-                    wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (cfIdx != INT_MAX)
+                        wcsp->getCtr(cfIdx)->setName(funcName);
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
@@ -1166,7 +1168,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                             if ((ns.second.size() == 3) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1 && wcsp->getDomainInitSize(ns.second[2]) == domSize2) {
                                 cfIdx = this->wcsp->postTernaryConstraint(ns.second[0], ns.second[1], ns.second[2], costs);
                                 wcsp->negCost -= minCost;
-                                wcsp->getCtr(cfIdx)->setName(ns.first);
+                                if (cfIdx != INT_MAX)
+                                    wcsp->getCtr(cfIdx)->setName(ns.first);
                             } else {
                                 cerr << "Error: cannot share cost function '" << funcName << "' on scope { ";
                                 for (auto v : ns.second)
