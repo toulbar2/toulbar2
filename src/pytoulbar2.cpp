@@ -58,6 +58,9 @@ namespace py = pybind11;
 #include "utils/tb2btlist.hpp"
 #include "search/tb2solver.hpp"
 
+#include "core/tb2wcsp.hpp"
+#include "mulcrit/multiwcsp.hpp"
+
 PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
@@ -239,8 +242,20 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite("upper", &BoundedObjValue::upper)
         .def_readwrite("lower", &BoundedObjValue::lower);
 
-    py::class_<WeightedCSP>(m, "WCSP")
+    py::class_<mulcrit::MultiWCSP>(m, "MultiWCSP")
         //        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
+        .def("addWCSP", &mulcrit::MultiWCSP::addWCSP)
+        .def("setWeight", &mulcrit::MultiWCSP::setWeight)
+        .def("nbNetworks", &mulcrit::MultiWCSP::nbNetworks)
+        .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
+        .def("print", &mulcrit::MultiWCSP::print)
+        .def("makeWeightedWCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
+        .def("getSolution", &mulcrit::MultiWCSP::getSolution);
+
+
+
+    py::class_<WeightedCSP>(m, "WCSP")
+        .def(py::init([](Cost ub) { return WeightedCSP::makeWeightedCSP(ub); })) // create this object to interface with the multiwcsp class
         .def("getIndex", &WeightedCSP::getIndex)
         .def("getName", (string(WeightedCSP::*)() const) & WeightedCSP::getName)
         .def("setName", &WeightedCSP::setName)
@@ -385,7 +400,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp);
 
     py::class_<WeightedCSPSolver>(m, "Solver")
-        .def(py::init([](Cost ub) {
+        .def(py::init([](Cost ub, WeightedCSP* wcsp = nullptr) {
             ToulBar2::startCpuTime = cpuTime();
             ToulBar2::startRealTime = realTime();
             initCosts();
@@ -399,9 +414,10 @@ PYBIND11_MODULE(pytb2, m)
                 string sseed = to_string(ToulBar2::seed);
                 ToulBar2::incop_cmd.replace(2, 1, sseed);
             }
-            return WeightedCSPSolver::makeWeightedCSPSolver(ub);
+            return WeightedCSPSolver::makeWeightedCSPSolver(ub, wcsp);
         }),
-            py::arg("ub") = MAX_COST)
+            py::arg("ub") = MAX_COST,
+            py::arg("wcsp") = nullptr)
         .def_property_readonly("wcsp", &WeightedCSPSolver::getWCSP, py::return_value_policy::reference_internal)
         .def("read", [](WeightedCSPSolver& s, const char* fileName) {
             if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
