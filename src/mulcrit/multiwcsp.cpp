@@ -835,6 +835,16 @@ void mulcrit::MultiWCSP::getSolution(WeightedCSPSolver* solver, vector<Double>* 
 }
 
 //---------------------------------------------------------------------------
+mulcrit::Result mulcrit::MultiWCSP::getResult(WeightedCSPSolver* solver) {
+
+  Result res;
+  getSolution(solver, &res.values, &res.solution);
+
+  return res;
+
+}
+
+//---------------------------------------------------------------------------
 mulcrit::Var::Var(mulcrit::MultiWCSP* multiwcsp) {
   this->multiwcsp = multiwcsp;
 }

@@ -17,6 +17,14 @@ class MultiWCSP; // forward delaration
 typedef std::map<std::string, std::string> Solution; // type representing a solution of a multi-cfn
 
 /*!
+ * \brief small data structure to store a solution and the value of the objective solution
+ */
+struct Result {
+  Solution solution;
+  std::vector<Double> values;
+};
+
+/*!
  * \class Var
  * \brief store variable data: name, value names: the values can only be defined by their name (str)
  */
@@ -167,6 +175,7 @@ class MultiWCSP {
      * \brief convert a tuple to a cost index, rightmost value indexed first
      * \param variables the list of variables from the tuple
      * \param tuple the tuple: value indexes for each variable
+     * \return the index corresponding to the tuple
      */
     unsigned int tupleToIndex(std::vector<Var*> variables, std::vector<unsigned int> tuple);
 
@@ -177,6 +186,13 @@ class MultiWCSP {
      * \param solution optional, the solution returned by the algorithm  
      */
     void getSolution(WeightedCSPSolver* solver, std::vector<Double>* obj_value = nullptr, Solution* solution = nullptr);
+
+    /*!
+     * \brief get the result of the optimization: solution and objective values
+     * \param solver the tb2 solver
+     * \return result the result continaing the solution and the objective values  
+     */
+    Result getResult(WeightedCSPSolver* solver);
 
   private: /* private methods */
 

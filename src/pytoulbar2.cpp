@@ -242,15 +242,18 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite("upper", &BoundedObjValue::upper)
         .def_readwrite("lower", &BoundedObjValue::lower);
 
+
+
     py::class_<mulcrit::MultiWCSP>(m, "MultiWCSP")
-        //        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
-        .def("addWCSP", &mulcrit::MultiWCSP::addWCSP)
+        .def(py::init())
+        .def("addWCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp, double weight) { multiwcsp.addWCSP(dynamic_cast<WCSP*>(wcsp), weight); } )
         .def("setWeight", &mulcrit::MultiWCSP::setWeight)
         .def("nbNetworks", &mulcrit::MultiWCSP::nbNetworks)
         .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
         .def("print", &mulcrit::MultiWCSP::print)
-        .def("makeWeightedWCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
-        .def("getSolution", &mulcrit::MultiWCSP::getSolution);
+        .def("makeWeightedCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
+        // .def("getSolution", &mulcrit::MultiWCSP::getSolution);
+        .def("getSolution", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSPSolver* solver, std::vector<Double>& obj_value, mulcrit::Solution& solution) { multiwcsp.getSolution(solver, &obj_value, &solution);});
 
 
 
