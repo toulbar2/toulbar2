@@ -348,6 +348,7 @@ protected:
     Long nbBacktracks;
     Long nbBacktracksLimit;
     WeightedCSP* wcsp;
+    bool self_wcsp; // true if the wcsp has been created inside the solver object, false otherwise
     vector<DLink<Value>*> allVars;
     BTList<Value>* unassignedVars;
     int lastConflictVar;
@@ -458,7 +459,7 @@ protected:
     void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
 public:
-    Solver(Cost initUpperBound);
+    Solver(Cost initUpperBound, WeightedCSP* wcsp = nullptr);
 
     virtual ~Solver();
 

@@ -32,8 +32,9 @@ class Var {
 
     /*!
      * \brief print the variable data
+     * \param os the stream to print to
      */
-    void print();
+    void print(ostream& os);
 
     /*!
      * \brief number of values in the domaine of the variable
@@ -67,8 +68,9 @@ class CostFunction {
 
     /*!
      * \brief print the cost function data
+     * \brief os the stream to print to
      */
-    void print();
+    void print(std::ostream& os);
 
     /*!
      * \brief return the cost of a given tuple
@@ -151,19 +153,14 @@ class MultiWCSP {
 
     /*!
      * \brief print the cfn
+     * \brief os the stream to print to
      */
-    void print();
-
-    /*!
-     * \brief send the cfn to toulbar2
-     * \param wcsp tb2 wcsp
-     */
-    void exportToWCSP(WCSP* wcsp);
+    void print(std::ostream& os);
 
     /*!
      * \brief make a wcsp from the convex combination of all the wcsps
      */
-    WCSP* makeWCSP();
+    WeightedCSP* makeWeightedCSP();
 
 
     /*!
@@ -180,6 +177,14 @@ class MultiWCSP {
      * \param solution optional, the solution returned by the algorithm  
      */
     void getSolution(WeightedCSPSolver* solver, std::vector<Double>* obj_value = nullptr, Solution* solution = nullptr);
+
+  private: /* private methods */
+
+    /*!
+     * \brief send the cfn to toulbar2
+     * \param wcsp tb2 wcsp
+     */
+    void exportToWCSP(WCSP* wcsp);
 
   private:
 

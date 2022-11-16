@@ -444,49 +444,49 @@ Double mulcrit::MultiWCSP::computeTop() {
 
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::print() {
+void mulcrit::MultiWCSP::print(ostream& os) {
   
-  cout << "n variables: " << nbVariables() << endl;
+  os << "n variables: " << nbVariables() << endl;
   
   for(unsigned int var_ind = 0; var_ind < nbVariables(); var_ind ++) {
-    cout << "var " << var_ind << ": ";
-    var[var_ind].print();
-    cout << endl;
+    os << "var " << var_ind << ": ";
+    var[var_ind].print(os);
+    os << endl;
   }
 
   // for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
   //   cout << "net " << net_ind << ": LB, UB: " << _doriginal_lbs[net_ind] << " ; " << _doriginal_ubs[net_ind] << endl;
   // }
    
-  cout << "number of networks: " << networks.size() << endl;
+  os << "number of networks: " << networks.size() << endl;
   for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
-    cout << "net " << net_ind << ": ";
+    os << "net " << net_ind << ": ";
     for(auto& func_ind: networks[net_ind]) {
-      cout << func_ind << ", ";
+      os << func_ind << ", ";
     }
-    cout << endl;
+    os << endl;
   } 
 
-  cout << "n cost functions: " << cost_function.size() << endl;
+  os << "number of cost functions: " << cost_function.size() << endl;
 
   for(unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
-    cout << "cost function " << func_ind << ": ";
-    cost_function[func_ind].print();
-    cout << ", arity = " << cost_function[func_ind].scope.size();
-    cout << ", n costs: " << cost_function[func_ind].costs.size();
-    cout << ", network id: " << network_index[func_ind] << endl;
-    cout << "costs: " << endl;
+    os << "cost function " << func_ind << ": ";
+    cost_function[func_ind].print(os);
+    os << ", arity = " << cost_function[func_ind].scope.size();
+    os << ", n costs: " << cost_function[func_ind].costs.size();
+    os << ", network id: " << network_index[func_ind] << endl;
+    os << "costs: " << endl;
     int ind = 0;
     for(auto& tuple: cost_function[func_ind].tuples) {
       for(auto& val: tuple) {
-        cout << val << ", ";
+        os << val << ", ";
       }
-      cout << weights[network_index[func_ind]]*cost_function[func_ind].costs[ind] << endl;
+      os << weights[network_index[func_ind]]*cost_function[func_ind].costs[ind] << endl;
       ind ++;
     }
   }
 
-  cout << "weight: " << weights[network_index.front()] << ", cost: " << cost_function[0].costs[0] << endl;
+  os << "weight: " << weights[network_index.front()] << ", cost: " << cost_function[0].costs[0] << endl;
 
 }
 
@@ -503,16 +503,16 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
   // top = wcsp->DoubleToADCost(MAX_COST/3)
   Double top = computeTop();
-  cout << "Top computed: " << top << endl;
+  // cout << "Top computed: " << top << endl;
 
   for(unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind ++) {
-    cout << "original lb for " << net_ind << ": " << _doriginal_lbs[net_ind] << endl;
+    // cout << "original lb for " << net_ind << ": " << _doriginal_lbs[net_ind] << endl;
     global_lb += _doriginal_lbs[net_ind]*weights[net_ind];
 
     if(_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
-      cout << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
-      cout << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
-      cout << "; no upper bound provided" << endl;
+      cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
+      cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
+      cerr << "; no upper bound provided" << endl;
     }
   }
 
@@ -711,17 +711,18 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   if(global_lb < 0) {
     // double to cost removes the negCost of the problem, which is not intended here
     wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb)+wcsp->getNegativeLb());
-    cout << "global_lb < 0" << endl;
+    // cout << "global_lb < 0" << endl;
   } else {
-    cout << "current lb: " << wcsp->Cost2ADCost(wcsp->getLb()) << ", current negCost: " << wcsp->getNegativeLb() << " ; combined lb: " << global_lb << endl;
+    // cout << "current lb: " << wcsp->Cost2ADCost(wcsp->getLb()) << ", current negCost: " << wcsp->getNegativeLb() << " ; combined lb: " << global_lb << endl;
     wcsp->setLb(wcsp->DoubletoCost(global_lb)-wcsp->getNegativeLb());
-    cout << "global_lb >= 0: " << global_lb << endl;
+    // cout << "global_lb >= 0: " << global_lb << endl;
   }
 
 }
 
+
 //---------------------------------------------------------------------------
-WCSP* mulcrit::MultiWCSP::makeWCSP() {
+WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP() {
 
   WCSP* wcsp = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
 
@@ -750,10 +751,9 @@ void mulcrit::MultiWCSP::getSolution(WeightedCSPSolver* solver, vector<Double>* 
   Cost optimum;    
   vector<Value> sol;
   optimum = solver->getSolution(sol);
-  cout << "optimal value: " << wcsp->Cost2ADCost(optimum) << endl;
 
-  cout << "optimal value (2): " << wcsp->getSolutionValue() << endl;
-
+  // cout << "optimal value: " << wcsp->Cost2ADCost(optimum) << endl;
+  // cout << "optimal value (2): " << wcsp->getSolutionValue() << endl;
 
   /* values for all the variables */
   vector<unsigned int> values(var.size());
@@ -818,7 +818,7 @@ void mulcrit::MultiWCSP::getSolution(WeightedCSPSolver* solver, vector<Double>* 
 
     }
 
-    cout << "network " << network_names[net_ind] << ": cost = " << cost << ", weighted cost: " << cost*weights[net_ind] << endl;
+    // cout << "network " << network_names[net_ind] << ": cost = " << cost << ", weighted cost: " << cost*weights[net_ind] << endl;
     
     check_sum += cost*weights[net_ind];
     
@@ -830,7 +830,7 @@ void mulcrit::MultiWCSP::getSolution(WeightedCSPSolver* solver, vector<Double>* 
 
   }
 
-  cout << "check sum: " << check_sum << endl;
+  // cout << "check sum: " << check_sum << endl;
 
 }
 
@@ -845,15 +845,15 @@ unsigned int mulcrit::Var::nbValues() {
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::Var::print() {
+void mulcrit::Var::print(ostream& os) {
 
-  cout << name << ": {";
+  os << name << ": {";
   for(unsigned int i = 0; i < domain_str.size(); i ++) {
-    cout << domain_str[i];
+    os << domain_str[i];
     if(i < domain_str.size()-1) {
-      cout << ", ";
+      os << ", ";
     } else {
-      cout << "}";
+      os << "}";
     }
   }
 
@@ -869,15 +869,15 @@ mulcrit::CostFunction::CostFunction(MultiWCSP* multiwcsp) {
 
 
 //---------------------------------------------------------------------------
-void mulcrit::CostFunction::print() {
+void mulcrit::CostFunction::print(ostream& os) {
 
-  cout << name << ": {";
+  os << name << ": {";
   for(unsigned int i = 0; i < scope.size(); i ++) {
-    cout << multiwcsp->var[scope[i]].name;
+    os << multiwcsp->var[scope[i]].name;
     if(i < scope.size()-1) {
-      cout << ", ";
+      os << ", ";
     } else {
-      cout << "}";
+      os << "}";
     }
   }
 

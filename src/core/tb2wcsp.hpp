@@ -131,6 +131,7 @@ public:
     string getName() const { return (name.size() > 0) ? name : "problem"; }
     void setName(const string& problem) { name = problem; }
     void* getSolver() const { return solver; }
+    void setSolver(void* solver) { this->solver = solver; }
 
     Cost getLb() const { return lb; } ///< \brief gets problem internal lower bound
     Cost getUb() const { return ub; } ///< \brief gets problem internal upper bound
