@@ -519,7 +519,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_preprocessFunctional, (char*)"-f:", SO_NONE },
     { OPT_preprocessNary, (char*)"-n", SO_OPT },
     { NO_OPT_preprocessNary, (char*)"-n:", SO_NONE },
-    { OPT_preprocessPWC, (char*)"-pwc", SO_NONE },
+    { OPT_preprocessPWC, (char*)"-pwc", SO_OPT },
     { NO_OPT_preprocessPWC, (char*)"-pwc:", SO_NONE },
 
     { OPT_QueueComplexity, (char*)"-o", SO_NONE },
@@ -866,16 +866,18 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::preprocessTernaryRPC)
         cout << " (" << ToulBar2::preprocessTernaryRPC << " MB)";
     cout << endl;
-    cout << "   -pwc : preprocessing only: pairwise consistency by dual encoding into a binary cost function network within a given maximum space limit (in MB)";
+    cout << "   -pwc=[integer] : preprocessing only: pairwise consistency by hidden encoding into a binary cost function network within a given maximum space limit (in MB)";
     if (ToulBar2::pwc)
-        cout << " (default option)";
+        cout << " (" << ToulBar2::pwc << " MB)";
     cout << endl;
+    cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
+    cout << "       (see also option -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
     cout << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
     cout << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
     if (ToulBar2::costfuncSeparate)
         cout << " (default option)";
     cout << endl;
-    cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ")" << endl;
+    cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ") (see also option -pwc)" << endl;
 #ifdef BOOST
     cout << "   -mst : maximum spanning tree DAC ordering";
     if (ToulBar2::MSTDAC)
@@ -1767,6 +1769,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::vacValueHeuristic = true;
             else if (args.OptionId() == NO_OPT_vacValueHeuristic)
                 ToulBar2::vacValueHeuristic = false;
+
             if (args.OptionId() == OPT_preprocessTernary) {
                 if (args.OptionArg() != NULL) {
                     int size = atol(args.OptionArg());
@@ -1774,6 +1777,8 @@ int _tmain(int argc, TCHAR* argv[])
                         ToulBar2::preprocessTernaryRPC = size;
                 } else
                     ToulBar2::preprocessTernaryRPC = 16;
+                if (ToulBar2::debug && ToulBar2::preprocessTernaryRPC > 0)
+                    cout << "preprocess triangles of binary cost functions into ternary cost functions ON" << endl;
             } else if (args.OptionId() == NO_OPT_preprocessTernary) {
                 if (ToulBar2::debug)
                     cout << "preprocess triangles of binary cost functions into ternary cost functions OFF" << endl;
@@ -1781,13 +1786,17 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_preprocessPWC) {
-                if (ToulBar2::debug)
+                if (args.OptionArg() != NULL) {
+                    int size = atol(args.OptionArg());
+                    ToulBar2::pwc = size;
+                } else
+                    ToulBar2::pwc = 16;
+                if (ToulBar2::debug && ToulBar2::pwc != 0)
                     cout << "preprocess pairwise consistency ON" << endl;
-                ToulBar2::pwc = true;
             } else if (args.OptionId() == NO_OPT_preprocessPWC) {
                 if (ToulBar2::debug)
                     cout << "preprocess pairwise consistency OFF" << endl;
-                ToulBar2::pwc = false;
+                ToulBar2::pwc = 0;
             }
 
             if (args.OptionId() == OPT_trwsAccuracy) {
@@ -2302,7 +2311,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::trwsAccuracy = -1.;
                 if (ToulBar2::debug)
                     cout << "PWC OFF" << endl;
-                ToulBar2::pwc = false;
+                ToulBar2::pwc = 0;
             }
 
             if (args.OptionId() == OPT_VACINT) {

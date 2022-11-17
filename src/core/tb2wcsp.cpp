@@ -40,6 +40,18 @@ using std::istringstream;
 using std::greater;
 using std::fixed;
 using std::setprecision;
+
+#ifdef BOOST
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_utility.hpp>
+#include <boost/graph/connected_components.hpp>
+
+using namespace boost;
+
+typedef adjacency_list<setS, vecS, undirectedS> BoostGraph;
+#endif
+
 /*
  * Global variables with their default value
  *
@@ -99,7 +111,7 @@ int ToulBar2::elimDegree_;
 int ToulBar2::elimDegree_preprocessing_;
 int ToulBar2::elimSpaceMaxMB;
 int ToulBar2::preprocessTernaryRPC;
-bool ToulBar2::pwc;
+int ToulBar2::pwc;
 int ToulBar2::preprocessFunctional;
 bool ToulBar2::costfuncSeparate;
 int ToulBar2::preprocessNary;
@@ -319,7 +331,7 @@ void tb2init()
     ToulBar2::elimDegree_preprocessing_ = -1;
     ToulBar2::elimSpaceMaxMB = 0;
     ToulBar2::preprocessTernaryRPC = 0;
-    ToulBar2::pwc = false;
+    ToulBar2::pwc = 0;
     ToulBar2::preprocessFunctional = 1;
     ToulBar2::costfuncSeparate = true;
     ToulBar2::preprocessNary = 10;
@@ -3196,7 +3208,7 @@ bool WCSP::dualEncoding()
     vector<vector<Tuple>> listOfDualDomains;
     vector<vector<Cost>> listOfDualCosts;
     map<Constraint *, unsigned int> indexOfCtrs;
-    set<pair<unsigned int, unsigned int>> intersections; // graph of intersections of non-binary cost functions with at least two variables
+    map<pair<unsigned int, unsigned int>, set<int>> intersections; // graph of intersections of non-binary cost functions with at least two variables
     Long nbintersections = 0;
     map<unsigned int, unsigned int> inclusions; // graph of inclusions of non-binary cost functions (map[i]=j means i included into j)
     map<Constraint *, Constraint *> included; // graph of inclusions of any cost functions (map[i]=j means i included into j)
@@ -3205,7 +3217,7 @@ bool WCSP::dualEncoding()
     Long maxtuples = (2 << (sizeof(tValue)*8 - 1)) - 1;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint *ctr = constrs[i];
-        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= 10) {
+        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= ToulBar2::preprocessNary) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3300,7 +3312,7 @@ bool WCSP::dualEncoding()
             for (ConstraintList::iterator iter = neighbor->getConstrs()->begin(); iter != neighbor->getConstrs()->end(); ++iter) {
                 Constraint *ctr = (*iter).constr;
                 assert(ctr->connected());
-                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= 10 && ctr != listOfCtrs[i]) {
+                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= ToulBar2::preprocessNary && ctr != listOfCtrs[i]) {
                     TSCOPE inter;
                     listOfCtrs[i]->scopeCommon(inter, ctr);
                     if (ctr->arity() == (int)inter.size()) {
@@ -3342,14 +3354,30 @@ bool WCSP::dualEncoding()
             } else {
                 elt = make_pair(j,i);
             }
-            intersections.insert(elt);
+            TSCOPE scope;
+            listOfCtrs[i]->scopeCommon(scope, listOfCtrs[j]);
+            set<int> sscope;
+            for (auto elt:scope) {
+                sscope.insert(elt.first);
+            }
+            intersections[elt] = sscope;
         }
     }
 
     for (auto ctr:listOfCtrs) { // deconnect dualized constraints
         ctr->deconnect();
     }
-    for (auto inter:intersections) { // add binary constraints for pairwise consistency
+
+#ifdef BOOST
+    BoostGraph G;
+    for (unsigned int i = 0; i < intersections.size(); i++)
+        add_vertex(G);
+#endif
+    vector<pair<pair<unsigned int, unsigned int>, set<int>>> sorted_intersections(intersections.begin(), intersections.end());
+    sort(sorted_intersections.begin(), sorted_intersections.end(), [](auto p1, auto p2){return p1.second.size() > p2.second.size();});
+    for (auto intermap:sorted_intersections) { // add binary constraints for pairwise consistency
+        auto inter = intermap.first;
+        set<int> interscope = intermap.second;
         assert(inter.first < inter.second);
         int i = inter.first;
         if (inclusions.find(i) != inclusions.end()) {
@@ -3359,7 +3387,7 @@ bool WCSP::dualEncoding()
         if (inclusions.find(j) != inclusions.end()) {
             continue; // do not create intersection if one dual variable has its constraint included into another constraint
         }
-        if ((Long)listOfDualVars[i]->getDomainInitSize() * listOfDualVars[j]->getDomainInitSize() <= MAX_NB_TUPLES) {
+        if ((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc)) {
             initElimConstr();
             TSCOPE scopei;
             listOfCtrs[i]->getScope(scopei);
@@ -3368,6 +3396,7 @@ bool WCSP::dualEncoding()
             TSCOPE scope;
             listOfCtrs[i]->scopeCommon(scope, listOfCtrs[j]);
             assert(scope.size() >= 2);
+            assert(interscope.size() == scope.size());
             vector<unsigned int> subscopei;
             vector<unsigned int> subscopej;
             for (auto var:scope) {
@@ -3399,6 +3428,7 @@ bool WCSP::dualEncoding()
             }
         }
     }
+
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) { // add binary constraints for channeling between dual variables and original variables
         EnumeratedVariable *vardual = listOfDualVars[i];
         auto inclus = inclusions.find(i);
@@ -3421,6 +3451,7 @@ bool WCSP::dualEncoding()
             }
         }
     }
+
     for (unsigned int i = 0; i < listOfDualVars.size(); i++) {
         if (inclusions.find(i) == inclusions.end()) { // add costs of constraint i to its dual variable unary cost function
             postIncrementalUnaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualCosts[i]);
@@ -6090,18 +6121,20 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
             for (int i = numberOfVariables() - 1; i >= 0; i--)
                 order.push_back(i);
         } else {
-            while (file) {
-                int ix;
-                file >> ix;
-                if (file)
-                    order.push_back(ix);
+            set<int> usedvars;
+            int v = -1;
+            while (file >> v) {
+                if (usedvars.find(v) == usedvars.end()) {
+                    order.push_back(v);
+                    usedvars.insert(v);
+                }
             }
         }
 #ifdef BOOST
     }
 #endif
     if (order.size() != numberOfVariables()) {
-        cerr << "Variable elimination order file has incorrect number of variables." << endl;
+        cerr << "Variable elimination order file has incorrect number of variables (or repeated variables)." << endl;
         throw WrongFileFormat();
     }
 }

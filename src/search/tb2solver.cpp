@@ -1805,7 +1805,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                 ToulBar2::elimDegree_ = saveElimDegree;
                 ToulBar2::DEE_ = saveDEE;
                 for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
-                    if (wcsp->unassigned(i)) {
+                    if (wcsp->unassigned(i) && (!cluster || wcsp->getTreeDec()->getCluster(((WCSP*)wcsp)->getVar(i)->getCluster())->isActive())) {
                         ((WCSP*)wcsp)->getVar(i)->queueEliminate();
                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                     }
