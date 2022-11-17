@@ -401,6 +401,11 @@ unsigned int mulcrit::MultiWCSP::nbVariables() {
 }
 
 //---------------------------------------------------------------------------
+std::string mulcrit::MultiWCSP::getNetworkName(unsigned int index) {
+  return network_names[index];
+}
+
+//---------------------------------------------------------------------------
 Double mulcrit::MultiWCSP::computeTop() {
 
   Double top = 0.;

@@ -150,12 +150,12 @@ toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, Fran
 
 
 <!-- (_README_6)= -->
-## Convex Combination for multiple Criteria branch
+## Convex Combination of multiple Criteria branch
 
-# changes regarding the master toulbar2 c++/python API
+### changes regarding the master toulbar2 c++/python API
 
 * one new class: multiwcsp to create a wcsp as the linear combination of wcsp's given as inpue
 * makeWeightedCSPSolver: possibility to give a wcsp as input, which will be used as the instance solved by the solver (works only with the base Solver class, otherwise, a new weightedCSP is created withinin the solver object)
 * adding the multiwcsp object and methods in the python API
 * modification of the python API in makeWeightedCSPSolver to take a weightedCSP as input
-* modification of the python API to create a weightedCSP without solvers
+* modification of the python API to create a weightedCSP object without solvers

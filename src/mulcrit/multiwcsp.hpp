@@ -147,6 +147,13 @@ class MultiWCSP {
     unsigned int nbVariables();
 
     /*!
+     * \brief get the name of one of the network added to the multiwcsp
+     * \param index the index of the network
+     * \return the name associated to hte networks
+     */
+    std::string getNetworkName(unsigned int index);
+
+    /*!
      * \brief load the cfn from toulbar2
      * \param wcsp the original tb2 csp
      */
