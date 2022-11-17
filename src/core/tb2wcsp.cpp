@@ -47,9 +47,7 @@ using std::setprecision;
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/connected_components.hpp>
 
-using namespace boost;
-
-typedef adjacency_list<setS, vecS, undirectedS> BoostGraph;
+typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
 #endif
 
 /*
@@ -3371,7 +3369,7 @@ bool WCSP::dualEncoding()
 #ifdef BOOST
     BoostGraph G;
     for (unsigned int i = 0; i < intersections.size(); i++)
-        add_vertex(G);
+        boost::add_vertex(G);
 #endif
     vector<pair<pair<unsigned int, unsigned int>, set<int>>> sorted_intersections(intersections.begin(), intersections.end());
     sort(sorted_intersections.begin(), sorted_intersections.end(), [](auto p1, auto p2){return p1.second.size() > p2.second.size();});
