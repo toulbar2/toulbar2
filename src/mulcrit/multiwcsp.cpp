@@ -14,7 +14,7 @@ using namespace std;
 
 
 //---------------------------------------------------------------------------
-mulcrit::MultiWCSP::MultiWCSP() {
+mulcrit::MultiWCSP::MultiWCSP(): _sol_extraction(false) {
 
 
 }
@@ -724,11 +724,13 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 //---------------------------------------------------------------------------
 WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP() {
 
-  WCSP* wcsp = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+  _sol_extraction = false;
 
-  exportToWCSP(wcsp);
+  _wcsp = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
 
-  return wcsp;
+  exportToWCSP(_wcsp);
+
+  return _wcsp;
 }
 
 //---------------------------------------------------------------------------
@@ -742,9 +744,114 @@ unsigned int mulcrit::MultiWCSP::tupleToIndex(vector<Var*> variables, vector<uns
   return cost_index;
 }
 
+//---------------------------------------------------------------------------
+mulcrit::Solution mulcrit::MultiWCSP::getSolution() {
+
+  if(!_sol_extraction) {
+    extractSolution();
+    _sol_extraction = true;
+  }
+
+  return _solution;
+
+}
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::getSolution(WeightedCSPSolver* solver, vector<Double>* obj_value, Solution* solution) {
+vector<Double> mulcrit::MultiWCSP::getSolutionValues() {
+
+  if(!_sol_extraction) {
+    extractSolution();
+    _sol_extraction = true;
+  }
+
+  return _obj_values;
+
+}
+
+//---------------------------------------------------------------------------
+void mulcrit::MultiWCSP::extractSolution() {
+
+  _solution.clear();
+
+  Cost optimum = _wcsp->getSolutionCost();    
+  vector<Value> sol = _wcsp->getSolution();
+
+  // cout << "optimal value: " << wcsp->Cost2ADCost(optimum) << endl;
+  // cout << "optimal value (2): " << wcsp->getSolutionValue() << endl;
+
+  /* values for all the variables */
+  vector<unsigned int> values(var.size());
+
+  for(unsigned int tb2_var_ind = 0; tb2_var_ind < _wcsp->numberOfVariables(); tb2_var_ind ++) {
+    
+    auto tb2_var = dynamic_cast<EnumeratedVariable*>(_wcsp->getVar(tb2_var_ind));
+
+    string name = tb2_var->getName();
+    string value_name = tb2_var->getValueName(tb2_var->toIndex(sol[tb2_var_ind]));
+    
+    auto& comb_var = var[var_index[name]];
+    
+    values[var_index[name]] = comb_var.str_to_index[value_name];  
+  
+    // cout << name << " = " << value_name << endl;
+  
+    _solution.insert(make_pair(name, value_name));
+
+  }
+
+  _obj_values.clear();
+
+  // compute the optimal value for all cost function network
+
+  Double check_sum = 0.;
+
+  for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
+    
+    Double cost = _doriginal_lbs[net_ind];
+    
+    // cout << "net index: " << net_ind << endl;
+    // cout << "n cost functions: " << networks[net_ind].size() << endl;
+
+    for(auto func_ind: networks[net_ind]) {
+
+      auto& func = cost_function[func_ind];
+      
+      // Whyyyyyy ?
+      // if(func.arity() < 2) {
+      //   continue;
+      // }
+
+      vector<Var*> variables;
+      vector<unsigned int> tuple;
+
+      for(auto& ind_var: func.scope) {
+        tuple.push_back(values[ind_var]);
+      }
+
+      cost += func.getCost(tuple);
+
+      // cout << "cost func " << func_ind << ": ";
+      // for(auto& var_ind : func.scope) {
+      //   cout << var[var_ind].name << ", ";
+      // }
+      // cout << " cost = " << cost << endl;
+
+    }
+
+    // cout << "network " << network_names[net_ind] << ": cost = " << cost << ", weighted cost: " << cost*weights[net_ind] << endl;
+    
+    check_sum += cost*weights[net_ind];
+    
+    _obj_values.push_back(cost);
+
+  }
+
+  // cout << "check sum: " << check_sum << endl;
+
+}
+
+//---------------------------------------------------------------------------
+void mulcrit::MultiWCSP::getSol(WeightedCSPSolver* solver, vector<Double>* obj_value, Solution* solution) {
 
   WCSP* wcsp = dynamic_cast<WCSP*>(solver->getWCSP());
 
@@ -831,16 +938,6 @@ void mulcrit::MultiWCSP::getSolution(WeightedCSPSolver* solver, vector<Double>* 
   }
 
   // cout << "check sum: " << check_sum << endl;
-
-}
-
-//---------------------------------------------------------------------------
-mulcrit::Result mulcrit::MultiWCSP::getResult(WeightedCSPSolver* solver) {
-
-  Result res;
-  getSolution(solver, &res.values, &res.solution);
-
-  return res;
 
 }
 

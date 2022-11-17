@@ -16,13 +16,6 @@ class MultiWCSP; // forward delaration
 
 typedef std::map<std::string, std::string> Solution; // type representing a solution of a multi-cfn
 
-/*!
- * \brief small data structure to store a solution and the value of the objective solution
- */
-struct Result {
-  Solution solution;
-  std::vector<Double> values;
-};
 
 /*!
  * \class Var
@@ -185,14 +178,21 @@ class MultiWCSP {
      * \param obj_value the values of the sub cost function networks, not provided if null
      * \param solution optional, the solution returned by the algorithm  
      */
-    void getSolution(WeightedCSPSolver* solver, std::vector<Double>* obj_value = nullptr, Solution* solution = nullptr);
+    void getSol(WeightedCSPSolver* solver, std::vector<Double>* obj_value = nullptr, Solution* solution = nullptr);
 
     /*!
-     * \brief get the result of the optimization: solution and objective values
-     * \param solver the tb2 solver
-     * \return result the result continaing the solution and the objective values  
+     * \brief get the solution of the created wcsp after being solved
+     * \return the solution as a dictionary of variable names/value names
+     * \pre the wcsp must have been solved and not been deleted
      */
-    Result getResult(WeightedCSPSolver* solver);
+    Solution getSolution();
+
+    /*!
+     * \brief get the objective values of the different cost function networks from the created wcsp after being solved
+     * \return the objective values as a dictionary of variable names/value names
+     * \pre the wcsp must have been solved and not been deleted
+     */
+    std::vector<Double> getSolutionValues();
 
   private: /* private methods */
 
@@ -202,7 +202,10 @@ class MultiWCSP {
      */
     void exportToWCSP(WCSP* wcsp);
 
-  private:
+    /*!
+     * \brief axtrect the solution and the objective values from the created wcsp
+     */
+    void extractSolution();
 
     /*!
      * \brief add a cost function to the network
@@ -237,6 +240,12 @@ class MultiWCSP {
     std::vector<Double> _original_costMultipliers; // list of cost multipliers of all the original wcsp
 
     unsigned int _tb2_decimalpoint; // precision of the wcsp
+
+    /* solution */
+    WCSP* _wcsp; // pointer to the last wcsp created
+    bool _sol_extraction; // indicates if the solution and objective value have already been extracted
+    std::vector<Double> _obj_values;
+    Solution _solution;
 
 };
 

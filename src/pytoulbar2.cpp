@@ -252,8 +252,8 @@ PYBIND11_MODULE(pytb2, m)
         .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
         .def("print", &mulcrit::MultiWCSP::print)
         .def("makeWeightedCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
-        // .def("getSolution", &mulcrit::MultiWCSP::getSolution);
-        .def("getSolution", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSPSolver* solver, std::vector<Double>& obj_value, mulcrit::Solution& solution) { multiwcsp.getSolution(solver, &obj_value, &solution);});
+        .def("getSolution", &mulcrit::MultiWCSP::getSolution)
+        .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues);
 
 
 
