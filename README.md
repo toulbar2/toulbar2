@@ -156,6 +156,7 @@ toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, Fran
 
 * one new class: multiwcsp to create a wcsp as the linear combination of wcsp's given as inpue
 * makeWeightedCSPSolver: possibility to give a wcsp as input, which will be used as the instance solved by the solver (works only with the base Solver class, otherwise, a new weightedCSP is created withinin the solver object)
+* adding a function for the python API for wieghtedWCSP to read an instance independently from the solver
 * adding the multiwcsp object and methods in the python API
 * modification of the python API in makeWeightedCSPSolver to take a weightedCSP as input
 * modification of the python API to create a weightedCSP object without solvers

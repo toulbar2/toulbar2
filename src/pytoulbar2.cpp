@@ -401,7 +401,38 @@ PYBIND11_MODULE(pytb2, m)
         .def("LogProb2Cost", &WeightedCSP::LogProb2Cost)
         .def("LogSumExp", (Cost(WeightedCSP::*)(Cost c1, Cost c2) const) & WeightedCSP::LogSumExp)
         .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, Cost c2) const) & WeightedCSP::LogSumExp)
-        .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp);
+        .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp)
+        .def("read", [](WeightedCSP& wcsp, const char* fileName) {
+            if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
+                ToulBar2::xz = true;
+            if (strstr(fileName, ".gz") == &fileName[strlen(fileName) - strlen(".gz")])
+                ToulBar2::gz = true;
+            if (strstr(fileName, ".bz2") == &fileName[strlen(fileName) - strlen(".bz2")])
+                ToulBar2::bz2 = true;
+            if (strstr(fileName, ".cfn"))
+                ToulBar2::cfn = true;
+            if (strstr(fileName, ".wcnf") || strstr(fileName, ".cnf"))
+                ToulBar2::wcnf = true;
+            if (strstr(fileName, ".qpbo"))
+                ToulBar2::qpbo = true;
+            if (strstr(fileName, ".opb"))
+                ToulBar2::opb = true;
+            if (strstr(fileName, ".uai")) {
+                ToulBar2::uai = 1;
+                ToulBar2::bayesian = true;
+            }
+            if (strstr(fileName, ".LG")) {
+                ToulBar2::uai = 2;
+                ToulBar2::bayesian = true;
+            }
+#if defined(XMLFLAG) || defined(XMLFLAG3)
+            if (strstr(fileName, ".xml")) {
+                ToulBar2::xmlflag = true;
+            }
+#endif
+            tb2checkOptions();
+            return wcsp.read_wcsp(fileName);
+        });
 
     py::class_<WeightedCSPSolver>(m, "Solver")
         .def(py::init([](Cost ub, WeightedCSP* wcsp = nullptr) {
