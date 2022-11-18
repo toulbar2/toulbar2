@@ -3232,6 +3232,7 @@ void WCSP::solution_UAI(Cost res)
     //	  if (ToulBar2::showSolutions) cout << " L" << endl;
     //	  ToulBar2::solution_file << " L" << endl;
     //	}
+    fflush((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
 }
 
 #if defined(XMLFLAG)
