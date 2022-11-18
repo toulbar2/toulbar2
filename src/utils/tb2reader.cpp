@@ -787,9 +787,6 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     string token;
     minCost = MAX_COST;
 
-    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
-        defaultCost *= MEDIUM_COST;
-
     // Create a vector filled with defaultCost values
     std::vector<Cost> costVector;
     long unsigned int costVecSize = 1;
@@ -810,8 +807,6 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
             // if we have read a full tuple and cost
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
-                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
-                    cost *= MEDIUM_COST;
                 // the same tuple has already been defined.
                 if (costVector[tableIdx] != defaultCost) {
                     cerr << "Error: tuple on scope [ ";
@@ -850,9 +845,6 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         unsigned int tableIdx = 0;
         while (tableIdx < costVecSize) {
             Cost cost = wcsp->decimalToCost(token, lineNumber);
-
-            if (CUT(cost, wcsp->getUb()) && (cost < MEDIUM_COST * wcsp->getUb()) && wcsp->getUb() < (MAX_COST / MEDIUM_COST))
-                cost *= MEDIUM_COST;
 
             minCost = min(cost, minCost);
 
@@ -1143,8 +1135,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                     break;
                 case 2: {
                     int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
-                    if (cfIdx < INT_MAX)
-                        this->wcsp->getCtr(cfIdx)->setName(funcName); // TODO: kludge - see Shared below at least
+                    if (cfIdx != INT_MAX)
+                        this->wcsp->getCtr(cfIdx)->setName(funcName);
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
@@ -1152,7 +1144,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                             if ((ns.second.size() == 2) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1) {
                                 cfIdx = this->wcsp->postBinaryConstraint(ns.second[0], ns.second[1], costs);
                                 wcsp->negCost -= minCost;
-                                this->wcsp->getCtr(cfIdx)->setName(ns.first);
+                                if (cfIdx != INT_MAX)
+                                    this->wcsp->getCtr(cfIdx)->setName(ns.first);
                             } else {
                                 cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << "' on scope { ";
                                 for (auto v : ns.second)
@@ -1165,7 +1158,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                 } break;
                 case 3: {
                     int cfIdx = this->wcsp->postTernaryConstraint(scope[0], scope[1], scope[2], costs);
-                    wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (cfIdx != INT_MAX)
+                        wcsp->getCtr(cfIdx)->setName(funcName);
                     if (isShared) {
                         unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
                         unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
@@ -1174,7 +1168,8 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                             if ((ns.second.size() == 3) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1 && wcsp->getDomainInitSize(ns.second[2]) == domSize2) {
                                 cfIdx = this->wcsp->postTernaryConstraint(ns.second[0], ns.second[1], ns.second[2], costs);
                                 wcsp->negCost -= minCost;
-                                wcsp->getCtr(cfIdx)->setName(ns.first);
+                                if (cfIdx != INT_MAX)
+                                    wcsp->getCtr(cfIdx)->setName(ns.first);
                             } else {
                                 cerr << "Error: cannot share cost function '" << funcName << "' on scope { ";
                                 for (auto v : ns.second)
@@ -1248,9 +1243,6 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         card *= (size_t)wcsp->getDomainInitSize(i);
     }
 
-    if (CUT(defaultCost, this->upperBound) && (defaultCost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
-        defaultCost *= MEDIUM_COST;
-
     unsigned int arity = scope.size();
     Tuple tup(arity);
     map<Tuple, Cost> costFunction;
@@ -1268,8 +1260,6 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             // We have read a full tuple: finish the tuple
             if (scopeIdx == arity) {
                 Cost cost = wcsp->decimalToCost(token, lineNumber);
-                if (CUT(cost, this->upperBound) && (cost < MEDIUM_COST * this->upperBound) && this->upperBound < (MAX_COST / MEDIUM_COST))
-                    cost *= MEDIUM_COST;
 
                 if (not costFunction.insert(pair<Tuple, Cost>(tup, cost)).second) {
                     cerr << "Error: tuple on scope [ ";
@@ -3242,6 +3232,7 @@ void WCSP::solution_UAI(Cost res)
     //	  if (ToulBar2::showSolutions) cout << " L" << endl;
     //	  ToulBar2::solution_file << " L" << endl;
     //	}
+    fflush((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
 }
 
 #if defined(XMLFLAG)

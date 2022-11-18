@@ -135,7 +135,10 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
     lastUb = MAX_COST;
     lastSolution.clear();
     ToulBar2::limited = false;
+    Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // HBFS not compatible with LDS
+    bool solutionBasedPhaseSaving_ = ToulBar2::solutionBasedPhaseSaving;
+    ToulBar2::solutionBasedPhaseSaving = false; // VNS prefers randomization inside neighborhood search
     int storedepth = Store::getDepth();
     Cost lb = wcsp->getLb();
     Store::store();
@@ -165,6 +168,8 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
         wcsp->whenContradiction();
     }
     Store::restore(storedepth);
+    ToulBar2::hbfs = hbfs_;
+    ToulBar2::solutionBasedPhaseSaving = solutionBasedPhaseSaving_;
     return (!ToulBar2::limited || lastUb == lb);
 }
 

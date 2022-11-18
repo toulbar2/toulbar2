@@ -501,6 +501,49 @@ int Solver::getNextUnassignedVar()
     return (unassignedVars->empty()) ? -1 : (*unassignedVars->begin());
 }
 
+int Solver::greedy(intFunctionCall_t varHeurFunc)
+{
+    int varIndex = -1;
+    if (!unassignedVars->empty()) {
+        if (ToulBar2::verbose >= 2)
+            cout << "Fast greedy assignment for " << unassignedVars->getSize() << " variables!" << endl;
+        Cost currentUb = wcsp->getUb();
+        Cost newUb = currentUb;
+        int depth = Store::getDepth();
+        try {
+            Store::store();
+            vector<int> variables;
+            vector<Value> values;
+            for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+                variables.push_back(*iter);
+                values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->getSupport());
+            }
+            // Fast Greedy Assignment
+            wcsp->assignLS(variables, values);
+            nbNodes++;
+            newSolution(); /* it will update ub */
+            newUb = wcsp->getUb();
+        } catch (const Contradiction&) {
+            wcsp->whenContradiction();
+        }
+        Store::restore(depth);
+        if (newUb < currentUb) { /* a better solution has been found */
+            wcsp->enforceUb(); /* it will generate a contradiction if lb >= ub */
+            wcsp->propagate(); /* it will generate a contradiction if lb >= ub */
+        }
+        if (unassignedVars->empty()) // a new solution was found and all vars assigned by propagation
+            varIndex = -1;
+        else {
+            // Wrong heuristic guess
+            ToulBar2::FullEAC = false;
+            varIndex = (this->*varHeurFunc)();
+            ToulBar2::FullEAC = true;
+            assert(varIndex != -1);
+        }
+    }
+    return varIndex;
+}
+
 int Solver::getVarMinDomainDivMaxDegree()
 {
     int varIndex = -1;
@@ -508,12 +551,24 @@ int Solver::getVarMinDomainDivMaxDegree()
     double best = MAX_VAL - MIN_VAL;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - epsilon * best
             || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+    }
+
+    if (varIndex == -1) {
+        if (ToulBar2::FullEAC) {
+            varIndex = greedy(&Solver::getVarMinDomainDivMaxDegree);
         }
     }
     return varIndex;
@@ -528,6 +583,12 @@ int Solver::getVarMinDomainDivMaxDegreeRandomized()
     int nbties = 0;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - epsilon * best
             || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
@@ -543,8 +604,14 @@ int Solver::getVarMinDomainDivMaxDegreeRandomized()
     }
     if (nbties > 1)
         return ties[myrand() % nbties];
-    else
+    else {
+        if (varIndex == -1) {
+            if (ToulBar2::FullEAC) {
+                varIndex = greedy(&Solver::getVarMinDomainDivMaxDegreeRandomized);
+            }
+        }
         return varIndex;
+    }
 }
 
 int Solver::getVarMinDomainDivMaxDegreeLastConflict()
@@ -555,6 +622,12 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < best - epsilon * best
@@ -562,6 +635,12 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
+        }
+    }
+
+    if (varIndex == -1) {
+        if (ToulBar2::FullEAC) {
+            varIndex = greedy(&Solver::getVarMinDomainDivMaxDegreeLastConflict);
         }
     }
     return varIndex;
@@ -578,6 +657,12 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized()
     int nbties = 0;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
         if (varIndex < 0 || heuristic < epsilon * best
@@ -595,8 +680,14 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized()
     }
     if (nbties > 1) {
         return ties[myrand() % nbties];
-    } else
+    } else {
+        if (varIndex == -1) {
+            if (ToulBar2::FullEAC) {
+                varIndex = greedy(&Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized);
+            }
+        }
         return varIndex;
+    }
 }
 
 int Solver::getVarMinDomainDivMaxWeightedDegree()
@@ -606,6 +697,12 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
     double best = MAX_VAL - MIN_VAL;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         Cost unarymediancost = MIN_COST;
         int domsize = wcsp->getDomainSize(*iter);
         if (ToulBar2::weightedTightness) {
@@ -621,6 +718,11 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
         }
     }
+    if (varIndex == -1) {
+        if (ToulBar2::FullEAC) {
+            varIndex = greedy(&Solver::getVarMinDomainDivMaxWeightedDegree);
+        }
+    }
     return varIndex;
 }
 
@@ -633,6 +735,12 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
     int nbties = 0;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         Cost unarymediancost = MIN_COST;
         int domsize = wcsp->getDomainSize(*iter);
         if (ToulBar2::weightedTightness) {
@@ -655,8 +763,14 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
     }
     if (nbties > 1)
         return ties[myrand() % nbties];
-    else
+    else {
+        if (varIndex == -1) {
+            if (ToulBar2::FullEAC) {
+                varIndex = greedy(&Solver::getVarMinDomainDivMaxWeightedDegreeRandomized);
+            }
+        }
         return varIndex;
+    }
 }
 
 int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
@@ -667,6 +781,12 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
     Cost worstUnaryCost = MIN_COST;
     double best = MAX_VAL - MIN_VAL;
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         Cost unarymediancost = MIN_COST;
         int domsize = wcsp->getDomainSize(*iter);
         if (ToulBar2::weightedTightness) {
@@ -678,64 +798,18 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         Long wdeg = wcsp->getWeightedDegree(*iter);
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         //double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
-        if (ToulBar2::FullEAC) {
-            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
-            if (!var->isFullEAC()
-                && ((varIndex < 0)
-                       || (heuristic < best - epsilon * best)
-                       || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost))) {
-                best = heuristic;
-                varIndex = *iter;
-                worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            }
-        } else {
-            if ((varIndex < 0)
+        if ((varIndex < 0)
                 || (heuristic < best - epsilon * best)
                 || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
-                best = heuristic;
-                varIndex = *iter;
-                worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            }
+            best = heuristic;
+            varIndex = *iter;
+            worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
         }
     }
 
     if (varIndex == -1) {
         if (ToulBar2::FullEAC) {
-            if (!unassignedVars->empty()) {
-                if (ToulBar2::verbose >= 2)
-                    cout << "Fast greedy assignment for " << unassignedVars->getSize() << " variables!" << endl;
-                Cost currentUb = wcsp->getUb();
-                Cost newUb = currentUb;
-                int depth = Store::getDepth();
-                try {
-                    Store::store();
-                    vector<int> variables;
-                    vector<Value> values;
-                    for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
-                        variables.push_back(*iter);
-                        values.push_back(((EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter))->getSupport());
-                    }
-                    // Fast Greedy Assignment
-                    wcsp->assignLS(variables, values);
-                    nbNodes++;
-                    newSolution(); /* it will update ub */
-                    newUb = wcsp->getUb();
-                } catch (const Contradiction&) {
-                    wcsp->whenContradiction();
-                }
-                Store::restore(depth);
-                if (newUb < currentUb) { /* a better solution has been found */
-                    wcsp->enforceUb(); /* it will generate a contradiction if lb >= ub */
-                    wcsp->propagate(); /* it will generate a contradiction if lb >= ub */
-                }
-                if (unassignedVars->empty()) // a new solution was found and all vars assigned by propagation
-                    varIndex = -1;
-                else {
-                    // Wrong heuristic guess
-                    varIndex = getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
-                    assert(varIndex != -1);
-                }
-            }
+            varIndex = greedy(&Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict);
         }
     }
     return varIndex;
@@ -752,6 +826,12 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
     int nbties = 0;
 
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
+        if (ToulBar2::FullEAC) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter);
+            if (var->isFullEAC()) {
+                continue;
+            }
+        }
         Cost unarymediancost = MIN_COST;
         int domsize = wcsp->getDomainSize(*iter);
         if (ToulBar2::weightedTightness) {
@@ -778,8 +858,14 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
     }
     if (nbties > 1) {
         return ties[myrand() % nbties];
-    } else
+    } else {
+        if (varIndex == -1) {
+            if (ToulBar2::FullEAC) {
+                varIndex = greedy(&Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized);
+            }
+        }
         return varIndex;
+    }
 }
 
 int Solver::getMostUrgent()
@@ -1719,6 +1805,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         clb = MAX(clb, open_->getLb(delta));
         if (ToulBar2::verbose >= 1 && cluster)
             cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
+        Cost lastUb = MAX_COST;
         while (clb < cub && !open_->finished() && (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
             if (cluster) {
                 cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
@@ -1726,8 +1813,28 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                 wcsp->setUb(cub);
                 assert(cluster->isActive());
                 assert(cluster->getLbRec() == wcsp->getLb());
-            } else
+            } else {
                 hbfsLimit = ((ToulBar2::hbfs > 0) ? (nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
+            }
+            if (cub < lastUb && (!cluster || cluster == wcsp->getTreeDec()->getRoot())) {
+                // enforces best upper bound at current depth to avoid redoing its propagation work when restoring each stored open node
+                int saveElimDegree = ToulBar2::elimDegree_;
+                int saveDEE = ToulBar2::DEE_;
+                ToulBar2::elimDegree_ = -1; // variable elimination or dead-end elimination may be incompatible with stored open nodes!!!
+                ToulBar2::DEE_ = 0;
+                wcsp->enforceUb();
+                wcsp->propagate();
+                lastUb = cub;
+                // reactivate on-the-fly variable elimination and dead-end elimination (undone at this level but at level+1)
+                ToulBar2::elimDegree_ = saveElimDegree;
+                ToulBar2::DEE_ = saveDEE;
+                for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
+                    if (wcsp->unassigned(i) && (!cluster || wcsp->getTreeDec()->getCluster(((WCSP*)wcsp)->getVar(i)->getCluster())->isActive())) {
+                        ((WCSP*)wcsp)->getVar(i)->queueEliminate();
+                        ((WCSP*)wcsp)->getVar(i)->queueDEE();
+                    }
+                }
+            }
             int storedepthBFS = Store::getDepth();
             int storeVAC = ToulBar2::vac;
             try {
@@ -2132,6 +2239,7 @@ pair<Cost, Cost> Solver::hybridSolveWorker(Cluster* cluster, Cost clb, Cost cub)
 
         wcsp->updateUb(work.ub); // update global UB in worker's wcsp object
         open_->updateUb(work.ub); // update cub and clb that are attributes of worker's open queue
+        //TODO: enforceUb() and propagate() at each better solution received (see sequential HBFS)
 
         assert(work.open.size() == 1); // only one open node from the master
 
@@ -2910,7 +3018,6 @@ bool Solver::solve(bool first)
         ToulBar2::interrupted = false;
     }
     Store::restore(initdepth);
-    //  Store::restore();         // see above for Store::store()
 
     if (ToulBar2::divNbSol <= 1)
         endSolve(wcsp->getSolutionCost() < initialUpperBound, wcsp->getSolutionCost(), !ToulBar2::limited);

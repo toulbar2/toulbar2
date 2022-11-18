@@ -16,6 +16,7 @@ bool VNSSolver::solve(bool first)
     beginSolve(MAX_COST);
 
     bool complete = false;
+    bool stop = false;
     bestSolution.clear();
     bestUb = MAX_COST;
     int initdepth = Store::getDepth();
@@ -100,7 +101,6 @@ bool VNSSolver::solve(bool first)
             cout << "Problem decomposition in " << ch->getSize() << " clusters with size distribution: min: " << ch->getMinClusterSize() << " median: " << ch->getMedianClusterSize() << " mean: " << ch->getMeanClusterSize() << " max: " << ch->getMaxClusterSize() << endl;
         }
         //vns/lds+cp
-        bool stop = false;
         Long nbRestart = 1;
         Long restart = 1;
         int lds = ToulBar2::vnsLDSmin;
@@ -209,7 +209,6 @@ bool VNSSolver::solve(bool first)
         }
     } catch (const SolverOut&) {
         wcsp->whenContradiction();
-        ToulBar2::interrupted = false;
     }
     Store::restore(initdepth);
 
@@ -218,6 +217,35 @@ bool VNSSolver::solve(bool first)
 
     if (bestUb < MAX_COST)
         wcsp->setSolution(bestUb, &bestSolution);
+
+    if (stop && !complete && !ToulBar2::interrupted && bestUb > ToulBar2::vnsOptimum) {
+        ToulBar2::lds = 0;
+        ToulBar2::restart = 1; // randomize variable heuristic ordering
+        ToulBar2::limited = false;
+        Store::store();
+        try {
+            try {
+                if (ToulBar2::verbose >= 0)
+                    cout << "****** Restart with " << ((ToulBar2::hbfs)?"HBFS":"DFS") << " and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                wcsp->setUb(bestUb);
+                wcsp->enforceUb();
+                wcsp->propagate();
+                hybridSolve();
+            } catch (const Contradiction&) {
+                wcsp->whenContradiction();
+            }
+        } catch (const SolverOut&) {
+            wcsp->whenContradiction();
+        }
+        Store::restore(initdepth);
+        if (wcsp->getUb() < bestUb) {
+            bestUb = wcsp->getUb();
+        }
+        complete = (!ToulBar2::limited);
+    }
+
+    ToulBar2::interrupted = false; // clear any interruption
+
     endSolve(bestUb < MAX_COST, bestUb, complete);
 
     return (bestUb < MAX_COST);
