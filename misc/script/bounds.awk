@@ -6,6 +6,13 @@ BEGIN {
 FNR==1{start=$1}
 {$1=$1-start}
 
+/Read / {
+  close(N ".ub");
+  close(N ".lb");
+  print "" > N ".ub";
+  print "" > N ".lb";
+}
+
 /Initial lower and upper bounds:/ {
   gsub("[[]","",$0);
   gsub(","," ",$0);
@@ -13,6 +20,11 @@ FNR==1{start=$1}
   print $1,0+$(NF-2) >> N ".lb";
   fflush(N ".ub");
   fflush(N ".lb");
+}
+
+/Input solution cost:/ && 0+$NF==0 {
+  print $1,0+$(NF-5) >> N ".ub";
+  fflush(N ".ub");
 }
 
 /New solution:/ && /backtracks/ {
