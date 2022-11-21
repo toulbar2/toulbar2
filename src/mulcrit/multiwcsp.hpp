@@ -89,7 +89,7 @@ class CostFunction {
     MultiWCSP* multiwcsp;
 
     std::string name;
-    std::vector<unsigned int> scope;
+    std::vector<unsigned int> scope; /* internal variable indexes */
 
 
     // cost table
@@ -200,6 +200,13 @@ class MultiWCSP {
      * \pre the wcsp must have been solved and not been deleted
      */
     std::vector<Double> getSolutionValues();
+
+    /*!
+     * \brief compute the values of a given solution
+     * \param solution the solution given
+     * \return the costs of the solution
+     */
+    std::vector<Double> computeSolutionValues(Solution& solution);
 
   private: /* private methods */
 
