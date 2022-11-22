@@ -230,6 +230,11 @@ public:
             index_backup = PTRDIFF_MAX;
         }
     }
+
+    bool isFrozen()
+    {
+        return (index == 0);
+    }
 };
 
 /*
