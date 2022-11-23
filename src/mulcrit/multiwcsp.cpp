@@ -505,19 +505,21 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
       vector<Double> costs;
 
       // index for variable values in the new wcsp
-      Var& own_var1 = var[cost_function[func_ind].scope[0]];
-      Var& own_var2 = var[cost_function[func_ind].scope[1]];
-      for(unsigned int val1_ind = 0; val1_ind < own_var1.nbValues(); val1_ind ++ ) {
-        for(unsigned int val2_ind = 0; val2_ind < own_var2.nbValues(); val2_ind ++ ) {
-          
-          EnumeratedVariable* tb2_var1 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind].scope[0]].name))); 
-          EnumeratedVariable* tb2_var2 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind].scope[1]].name))); 
+      Var* var1 = &var[cost_function[func_ind].scope[0]];
+      Var* var2 = &var[cost_function[func_ind].scope[1]];
+
+      EnumeratedVariable* tb2_var1 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var1->name))); 
+      EnumeratedVariable* tb2_var2 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var2->name))); 
+
+      /* iterations ordered by tb2 values */
+      for(unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind ++ ) {
+        for(unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind ++ ) {
 
           vector<unsigned int> tuple(2);
-          tuple[0] = own_var1.str_to_index[tb2_var1->getValueName(val1_ind)];
-          tuple[1] = own_var2.str_to_index[tb2_var2->getValueName(val2_ind)];
+          tuple[0] = var1->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
+          tuple[1] = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
 
-          Double cost = cost_function[func_ind].costs[tupleToIndex({&own_var1, &own_var2}, tuple)]; 
+          Double cost = cost_function[func_ind].costs[tupleToIndex({&var1, &var2}, tuple)]; 
 
           if(cost == numeric_limits<Double>::infinity()) {
              costs.push_back(top);
@@ -529,13 +531,12 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
             }
           }
 
-          
         }
       }
 
       // variables are referenced by their name, so that they are linked between tb2 and here
 
-      unsigned int cst_ind = wcsp->postBinaryConstraint(wcsp->getVarIndex(var[cost_function[func_ind].scope[0]].name), wcsp->getVarIndex(var[cost_function[func_ind].scope[1]].name), costs);
+      unsigned int cst_ind = wcsp->postBinaryConstraint(wcsp->getVarIndex(tb2_var1->getName()), wcsp->getVarIndex(tb2_var2->getName()), costs);
 
       // constraint name
       wcsp->getCtr(cst_ind)->setName(cost_function[func_ind].name);
