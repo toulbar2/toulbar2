@@ -151,18 +151,22 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
     // set the cost table
     cost_function.back().default_cost = 0.0;
     cost_function.back().costs.resize(own_var->nbValues(), 0.0);
+    cost_function.back().tuples.resize(tb2_var->getDomainInitSize());
 
-    
+    for(unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind ++) {
 
-    for(unsigned int val_ind = 0; val_ind < tb2_var->getDomainInitSize(); val_ind ++) {
+      /* compute the value index for the variable recorded in the data structure */
+      unsigned int val_ind = var[var_ind].str_to_index[tb2_var->getValueName(tb2_val_ind)];
 
-      vector<unsigned int> tuple = {static_cast<unsigned int>(var[var_ind].str_to_index[tb2_var->getValueName(val_ind)])};
-      cost_function.back().tuples.push_back(tuple);
+      // vector<unsigned int> tuple = {static_cast<unsigned int>(var[var_ind].str_to_index[tb2_var->getValueName(tb2_val_ind)])};
+      cost_function.back().tuples[val_ind] = {val_ind};
 
-      if(tb2_var->getCost(val_ind)+wcsp->getLb() >= wcsp->getUb()) {
+      Cost tb2_cost = tb2_var->getCost(tb2_val_ind);
+
+      if(tb2_cost+wcsp->getLb() >= wcsp->getUb()) {
         cost_function.back().costs[val_ind] = numeric_limits<Double>::infinity();
       } else {
-        cost_function.back().costs[val_ind] = wcsp->Cost2RDCost(tb2_var->getCost(val_ind));
+        cost_function.back().costs[val_ind] = wcsp->Cost2RDCost(tb2_cost);
       }
 
     }
