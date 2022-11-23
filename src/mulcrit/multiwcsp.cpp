@@ -173,8 +173,6 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
 
   }
 
-
-
   // general values
   _doriginal_lbs.push_back(wcsp->Cost2ADCost(wcsp->getLb()));
 
@@ -225,26 +223,36 @@ void mulcrit::MultiWCSP::addCostFunction(WCSP* wcsp, Constraint* cstr) {
     // make sure the variables are enumerated
     assert(bc->getVar(0)->enumerated() && bc->getVar(1)->enumerated());
 
-    EnumeratedVariable* var1 = dynamic_cast<EnumeratedVariable*>(bc->getVar(0));
-    EnumeratedVariable* var2 = dynamic_cast<EnumeratedVariable*>(bc->getVar(1));
+    EnumeratedVariable* tb2_var1 = dynamic_cast<EnumeratedVariable*>(bc->getVar(0));
+    EnumeratedVariable* tb2_var2 = dynamic_cast<EnumeratedVariable*>(bc->getVar(1));
 
     cost_func.default_cost = MIN_COST; // to modify
 
-    for(unsigned int val1_ind = 0; val1_ind < var1->getDomainInitSize(); val1_ind ++ ) {
-      for(unsigned int val2_ind = 0; val2_ind < var2->getDomainInitSize(); val2_ind ++ ) {
-      
-        Cost cost = bc->getCost(var1->toValue(val1_ind), var2->toValue(val2_ind));
+    cost_func.costs.resize(tb2_var1->getDomainInitSize()*tb2_var2->getDomainInitSize());
+    cost_func.tuples.resize(cost_func.costs.size());
+
+    for(unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind ++ ) {
+      for(unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind ++ ) {
+
+        vector<Var*> variables = {&var[cost_func.scope[0]], &var[cost_func.scope[1]]};
+
+        // convert original value indexes to own indexes
+        unsigned int val1_ind = variables[0]->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
+        unsigned int val2_ind = variables[1]->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
+
+        vector<unsigned int> tuple = {val1_ind, val2_ind};
+
+        unsigned int cost_index = tupleToIndex(variables, tuple);
+
+        cost_func.tuples[cost_index] = tuple;
+
+        Cost cost = bc->getCost(tb2_var1->toValue(tb2_val1_ind), tb2_var2->toValue(tb2_val2_ind));
 
         if(cost+wcsp->getLb() >= wcsp->getUb()) {
-          cost_func.costs.push_back(numeric_limits<Double>::infinity());
+          cost_func.costs[cost_index] = numeric_limits<Double>::infinity();
         } else {
-          cost_func.costs.push_back(wcsp->Cost2RDCost(cost));
+          cost_func.costs[cost_index] = wcsp->Cost2RDCost(cost);
         }
-        // convert original value indexes to own indexes
-        unsigned int val1_ind_conv = var[cost_func.scope[0]].str_to_index[var1->getValueName(val1_ind)];
-        unsigned int val2_ind_conv = var[cost_func.scope[1]].str_to_index[var2->getValueName(val2_ind)];
-
-        cost_func.tuples.push_back(vector<unsigned int>({val1_ind_conv, val2_ind_conv}));
 
       }
     }
