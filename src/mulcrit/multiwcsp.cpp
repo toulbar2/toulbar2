@@ -47,13 +47,8 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
 
     // check if the variable already exists
     if(var_index.find(name) != var_index.end()) {
-      
-      cout << endl << endl;
-      cout << "Var is already known !!!!!!!!!!!!!!!!: " << name << endl;
-      cout << endl << endl;
-      
       // the variable already exists
-      // continue;
+      continue;
     }
 
     this->var.push_back(Var(this));
