@@ -112,47 +112,6 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
     addCostFunction(wcsp, c);
 
   }
-
-
-  // add variable costs as unary cost functions
-
-  // for(unsigned int var_ind = new_var_index; var_ind < nbVariables(); var_ind ++) {
-
-  //   // add the unary cost function
-  //   cost_function.push_back(CostFunction(this));
-  //   networks.back().push_back(cost_function.size() - 1); // add the function index to the network
-  //   network_index.push_back(networks.size() - 1);
-
-  //   Var* own_var = &var[var_ind];
-
-  //   // set the name
-  //   cost_function.back().name = own_var->name + "_cost";
-
-  //   // set the scope
-  //   cost_function.back().scope.push_back(var_ind);
-
-
-  //   // set the cost table
-  //   cost_function.back().default_cost = 0.0;
-  //   cost_function.back().costs.resize(own_var->nbValues(), 0.0);
-
-  //   EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(own_var->name)));
-
-  //   for(unsigned int val_ind = 0; val_ind < tb2_var->getDomainInitSize(); val_ind ++) {
-
-  //     vector<unsigned int> tuple = {static_cast<unsigned int>(var[var_ind].str_to_index[tb2_var->getValueName(val_ind)])};
-  //     cost_function.back().tuples.push_back(tuple);
-
-  //     if(tb2_var->getCost(val_ind)+wcsp->getLb() >= wcsp->getUb()) {
-  //       cost_function.back().costs[val_ind] = numeric_limits<Double>::infinity();
-  //     } else {
-  //       cost_function.back().costs[val_ind] = wcsp->Cost2RDCost(tb2_var->getCost(val_ind));
-  //     }
-
-  //   }
-
-  // }
-  
   
   // add variable costs as unary cost functions
   for(unsigned int tb2_var_ind = 0; tb2_var_ind < wcsp->numberOfVariables(); tb2_var_ind ++) {
