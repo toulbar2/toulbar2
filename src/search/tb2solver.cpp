@@ -79,7 +79,8 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub, WeightedCSP
     };
 
     if(wcsp != nullptr && !default_solver) {
-        cerr << "Warning: provided WeightedCSP object will be ignored by the solver." << endl;
+        cerr << "Error: provided WeightedCSP object will be ignored by the solver." << endl;
+        throw BadConfiguration();
     }
 
     return solver;

@@ -797,6 +797,10 @@ void mulcrit::MultiWCSP::extractSolution() {
 
   cout << "check sum: " << check_sum << endl;
 
+  if(fabs(_wcsp->Cost2ADCost(optimum)-check_sum) > 1e-4) {
+    throw runtime_error("Error: non consistent values between tb2 and the recomputation");
+  }
+
 }
 
 //---------------------------------------------------------------------------
