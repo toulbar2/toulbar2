@@ -278,11 +278,20 @@ void mulcrit::MultiWCSP::addCostFunction(WCSP* wcsp, Constraint* cstr) {
     cost_func.tuples.resize(tb2_var1->getDomainInitSize()*tb2_var2->getDomainInitSize()*tb2_var3->getDomainInitSize());
 
     unsigned int cost_ind = 0;
-    for(unsigned int val1_ind = 0; val1_ind < tb2_var1->getDomainInitSize(); val1_ind ++) {
-      for(unsigned int val2_ind = 0; val2_ind < tb2_var2->getDomainInitSize(); val2_ind ++) {
-        for(unsigned int val3_ind = 0; val3_ind < tb2_var3->getDomainInitSize(); val3_ind ++) {
+    for(unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind ++) {
+      for(unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind ++) {
+        for(unsigned int tb2_val3_ind = 0; tb2_val3_ind < tb2_var3->getDomainInitSize(); tb2_val3_ind ++) {
 
-          Cost cost = tc->getCost(tb2_var1->toIndex(val1_ind), tb2_var2->toIndex(val2_ind), tb2_var3->toIndex(val3_ind));
+          unsigned int val1_ind = var1->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
+          unsigned int val2_ind = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
+          unsigned int val3_ind = var3->str_to_index[tb2_var3->getValueName(tb2_val3_ind)];
+
+          vector<Var*> variables = {var1, var2, var3};
+          vector<unsigned int> tuple = {val1_ind, val2_ind, val3_ind};
+
+          unsigned int cost_index = tupleToIndex(variables, tuple);
+
+          Cost cost = tc->getCost(tb2_var1->toIndex(tb2_val1_ind), tb2_var2->toIndex(tb2_val2_ind), tb2_var3->toIndex(tb2_val3_ind));
 
           if(cost+wcsp->getLb() >= wcsp->getUb()) {
             cost_func.costs[cost_ind] = numeric_limits<Double>::infinity();
@@ -290,11 +299,7 @@ void mulcrit::MultiWCSP::addCostFunction(WCSP* wcsp, Constraint* cstr) {
             cost_func.costs[cost_ind] = wcsp->Cost2RDCost(cost);
           }
           
-          unsigned int own_val1_ind = var1->str_to_index[tb2_var1->getValueName(val1_ind)];
-          unsigned int own_val2_ind = var2->str_to_index[tb2_var2->getValueName(val2_ind)];
-          unsigned int own_val3_ind = var3->str_to_index[tb2_var3->getValueName(val3_ind)];
-
-          cost_func.tuples[cost_ind] = vector<unsigned int>({own_val1_ind, own_val2_ind, own_val3_ind});
+          cost_func.tuples[cost_ind] = tuple;
 
           cost_ind ++;
         }
