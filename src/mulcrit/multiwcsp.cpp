@@ -41,9 +41,14 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
   unsigned int new_var_index = this->var.size();
 
   // add the new variables
-  for(unsigned int idx = 0; idx < wcsp->numberOfVariables(); idx ++) {
+  for(unsigned int tb2_var_ind = 0; tb2_var_ind < wcsp->numberOfVariables(); tb2_var_ind ++) {
 
-    string name = wcsp->getVar(idx)->getName();
+    // make sure the variable is enumerated
+    assert(wcsp->getVar(tb2_var_ind)->enumerated());
+
+    EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(tb2_var_ind));
+
+    string name = tb2_var->getName();
 
     // check if the variable already exists
     if(var_index.find(name) != var_index.end()) {
@@ -56,17 +61,11 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
 
     var_index.insert(make_pair(name, var.size()-1));
 
-    // make sure the variable is enumerated
-    assert(wcsp->getVar(idx)->enumerated());
-
-    EnumeratedVariable* var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(idx));
-
-    // read the domain
-    this->var.back().domain_str.resize(var->getDomainInitSize());
-    for(unsigned int val_ind = 0; val_ind < var->getDomainInitSize(); val_ind ++) {
-      Value val = var->toValue(val_ind);
-      this->var.back().domain_str[val_ind] = var->getValueName(val_ind);
-      this->var.back().str_to_index.insert(make_pair(this->var.back().domain_str[val_ind], val_ind));
+    // read the domain: tb2 indexes and indexes here are the same
+    this->var.back().domain_str.resize(tb2_var->getDomainInitSize());
+    for(unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind ++) {
+      this->var.back().domain_str[tb2_val_ind] = tb2_var->getValueName(tb2_val_ind);
+      this->var.back().str_to_index.insert(make_pair(this->var.back().domain_str[tb2_val_ind], tb2_val_ind));
     }
 
   }
@@ -158,7 +157,6 @@ void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
       /* compute the value index for the variable recorded in the data structure */
       unsigned int val_ind = var[var_ind].str_to_index[tb2_var->getValueName(tb2_val_ind)];
 
-      // vector<unsigned int> tuple = {static_cast<unsigned int>(var[var_ind].str_to_index[tb2_var->getValueName(tb2_val_ind)])};
       cost_function.back().tuples[val_ind] = {val_ind};
 
       Cost tb2_cost = tb2_var->getCost(tb2_val_ind);
@@ -275,7 +273,7 @@ void mulcrit::MultiWCSP::addCostFunction(WCSP* wcsp, Constraint* cstr) {
     cost_func.default_cost = 0.;
 
     cost_func.costs.resize(tb2_var1->getDomainInitSize()*tb2_var2->getDomainInitSize()*tb2_var3->getDomainInitSize());
-    cost_func.tuples.resize(tb2_var1->getDomainInitSize()*tb2_var2->getDomainInitSize()*tb2_var3->getDomainInitSize());
+    cost_func.tuples.resize(cost_func.costs.size());
 
     unsigned int cost_ind = 0;
     for(unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind ++) {
@@ -496,7 +494,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
         
       }
       
-      wcsp->postUnaryConstraint(wcsp->getVarIndex(own_var->name), costs);
+      wcsp->postUnaryConstraint(wcsp->getVarIndex(tb2_var->getName()), costs);
 
     } else if(cost_function[func_ind].scope.size() == 2) { // binary cost functions
 
@@ -519,7 +517,9 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
           tuple[0] = var1->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
           tuple[1] = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
 
-          Double cost = cost_function[func_ind].costs[tupleToIndex({&var1, &var2}, tuple)]; 
+          Double cost = cost_function[func_ind].costs[tupleToIndex({var1, var2}, tuple)]; 
+
+          // Double cost = cost_function[func_ind].getCost(tuple);
 
           if(cost == numeric_limits<Double>::infinity()) {
              costs.push_back(top);
@@ -644,17 +644,29 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
   // wcsp->setUb(wcsp->DoubletoCost(top));
 
-  // cout << "global lb: " << global_lb << endl;
+  global_lb += wcsp->Cost2ADCost(wcsp->getLb());
+
+  cout << "global lb after combination: " << global_lb << endl;
 
   if(global_lb < 0) {
     // double to cost removes the negCost of the problem, which is not intended here
-    wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb)+wcsp->getNegativeLb());
+    // wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb)+wcsp->getNegativeLb());
+
+    wcsp->setLb(0);
+    wcsp->decreaseLb(-wcsp->DoubletoCost(0));
+    wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb));
+
     // cout << "global_lb < 0" << endl;
   } else {
     // cout << "current lb: " << wcsp->Cost2ADCost(wcsp->getLb()) << ", current negCost: " << wcsp->getNegativeLb() << " ; combined lb: " << global_lb << endl;
-    wcsp->setLb(wcsp->DoubletoCost(global_lb)-wcsp->getNegativeLb());
+    // wcsp->setLb(wcsp->DoubletoCost(global_lb)-wcsp->getNegativeLb());
     // cout << "global_lb >= 0: " << global_lb << endl;
+
+    wcsp->decreaseLb(-wcsp->DoubletoCost(0));
+    wcsp->setLb(wcsp->DoubletoCost(global_lb));
   }
+
+  cout << "nex global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
 
 }
 
@@ -933,13 +945,13 @@ void mulcrit::MultiWCSP::print(ostream& os) {
   // }
    
   os << "number of networks: " << networks.size() << endl;
-  for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
-    os << "net " << net_ind << ": ";
-    for(auto& func_ind: networks[net_ind]) {
-      os << func_ind << ", ";
-    }
-    os << endl;
-  } 
+  // for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
+  //   os << "net " << net_ind << ": ";
+  //   for(auto& func_ind: networks[net_ind]) {
+  //     os << func_ind << ", ";
+  //   }
+  //   os << endl;
+  // } 
 
   os << "number of cost functions: " << cost_function.size() << endl;
 
