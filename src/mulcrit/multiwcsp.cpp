@@ -646,27 +646,20 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   global_lb += wcsp->Cost2ADCost(wcsp->getLb());
 
-  cout << "global lb after combination: " << global_lb << endl;
+  // cout << "global lb after combination: " << global_lb << endl;
 
   if(global_lb < 0) {
-    // double to cost removes the negCost of the problem, which is not intended here
-    // wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb)+wcsp->getNegativeLb());
-
     wcsp->setLb(0);
     wcsp->decreaseLb(-wcsp->DoubletoCost(0));
     wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb));
 
     // cout << "global_lb < 0" << endl;
   } else {
-    // cout << "current lb: " << wcsp->Cost2ADCost(wcsp->getLb()) << ", current negCost: " << wcsp->getNegativeLb() << " ; combined lb: " << global_lb << endl;
-    // wcsp->setLb(wcsp->DoubletoCost(global_lb)-wcsp->getNegativeLb());
-    // cout << "global_lb >= 0: " << global_lb << endl;
-
     wcsp->decreaseLb(-wcsp->DoubletoCost(0));
     wcsp->setLb(wcsp->DoubletoCost(global_lb));
   }
 
-  cout << "nex global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
+  // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
 
 }
 
@@ -757,18 +750,10 @@ void mulcrit::MultiWCSP::extractSolution() {
   for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
     
     Double cost = _doriginal_lbs[net_ind];
-    
-    // cout << "net index: " << net_ind << endl;
-    // cout << "n cost functions: " << networks[net_ind].size() << endl;
 
     for(auto func_ind: networks[net_ind]) {
 
       auto& func = cost_function[func_ind];
-      
-      // Whyyyyyy ?
-      // if(func.arity() < 2) {
-      //   continue;
-      // }
 
       vector<Var*> variables;
       vector<unsigned int> tuple;
@@ -779,23 +764,15 @@ void mulcrit::MultiWCSP::extractSolution() {
 
       cost += func.getCost(tuple);
 
-      // cout << "cost func " << func_ind << ": ";
-      // for(auto& var_ind : func.scope) {
-      //   cout << var[var_ind].name << ", ";
-      // }
-      // cout << " cost = " << cost << endl;
-
     }
 
-    // cout << "network " << network_names[net_ind] << ": cost = " << cost << ", weighted cost: " << cost*weights[net_ind] << endl;
-    
     check_sum += cost*weights[net_ind];
     
     _obj_values.push_back(cost);
 
   }
 
-  cout << "check sum: " << check_sum << endl;
+  // cout << "check sum: " << check_sum << endl;
 
   if(fabs(_wcsp->Cost2ADCost(optimum)-check_sum) > 1e-4) {
     throw runtime_error("Error: non consistent values between tb2 and the recomputation");
@@ -807,8 +784,6 @@ void mulcrit::MultiWCSP::extractSolution() {
 std::vector<Double> mulcrit::MultiWCSP::computeSolutionValues(Solution& solution) {
 
   vector<Double> obj_values;
-
-  cout << "debug: n cost functions = " << cost_function.size() << endl;
 
   int cpt = 0;
 
@@ -835,8 +810,6 @@ std::vector<Double> mulcrit::MultiWCSP::computeSolutionValues(Solution& solution
     
     obj_values.push_back(cost);
   }
-
-  cout << "debug: n cost function reviewed: " << cpt << endl; 
 
   return obj_values;
 }
@@ -868,22 +841,22 @@ void mulcrit::MultiWCSP::print(ostream& os) {
 
   os << "number of cost functions: " << cost_function.size() << endl;
 
-  // for(unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
-  //   os << "cost function " << func_ind << ": ";
-  //   cost_function[func_ind].print(os);
-  //   os << ", arity = " << cost_function[func_ind].scope.size();
-  //   os << ", n costs: " << cost_function[func_ind].costs.size();
-  //   os << ", network id: " << network_index[func_ind] << endl;
-  //   os << "costs: " << endl;
-  //   int ind = 0;
-  //   for(auto& tuple: cost_function[func_ind].tuples) {
-  //     for(auto& val: tuple) {
-  //       os << val << ", ";
-  //     }
-  //     os << weights[network_index[func_ind]]*cost_function[func_ind].costs[ind] << endl;
-  //     ind ++;
-  //   }
-  // }
+  for(unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+    os << "cost function " << func_ind << ": ";
+    cost_function[func_ind].print(os);
+    os << ", arity = " << cost_function[func_ind].scope.size();
+    os << ", n costs: " << cost_function[func_ind].costs.size();
+    os << ", network id: " << network_index[func_ind] << endl;
+    os << "costs: " << endl;
+    int ind = 0;
+    for(auto& tuple: cost_function[func_ind].tuples) {
+      for(auto& val: tuple) {
+        os << val << ", ";
+      }
+      os << weights[network_index[func_ind]]*cost_function[func_ind].costs[ind] << endl;
+      ind ++;
+    }
+  }
 
   os << "weight: " << weights[network_index.front()] << ", cost: " << cost_function[0].costs[0] << endl;
 
@@ -972,9 +945,6 @@ Double mulcrit::CostFunction::getCost(vector<unsigned int>& tuple) {
     res = costs[multiwcsp->tupleToIndex(variables, tuple)];
 
   }
-
-  
-  // cout << name << ": returned (double) cost: " << res << endl;
 
   return res;
 
