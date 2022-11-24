@@ -1118,22 +1118,9 @@ public:
         Value v0 = x->toValue(t[0]);
         Value v1 = y->toValue(t[1]);
         Value v2 = z->toValue(t[2]);
-        setcost(x, y, z, v0, v1, v2, c);
+        Cost oldc = getCost(v0, v1, v2);
+        addCost(v0, v1, v2, c - oldc);
     }
-
-    //    void setTuple( unsigned int* t, Cost c ) {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        Value v2 = z->toValue(t[2]);
-    //        setcost( x, y, z, v0, v1, v2, c );
-    //    }
-    //
-    //    void addtoTuple( unsigned int* t, Cost c ) {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        Value v2 = z->toValue(t[2]);
-    //        addCost( v0, v1, v2, c );
-    //    }
 
     void addtoTuple(const Tuple& t, Cost c) FINAL
     {

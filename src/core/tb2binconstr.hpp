@@ -397,7 +397,8 @@ public:
     {
         Value v0 = x->toValue(t[0]);
         Value v1 = y->toValue(t[1]);
-        setcost(v0, v1, c);
+        Cost oldc = getCost(v0, v1);
+        addcost(v0, v1, c - oldc);
     }
 
     void addtoTuple(const Tuple& t, Cost c) FINAL
@@ -406,18 +407,6 @@ public:
         Value v1 = y->toValue(t[1]);
         addcost(v0, v1, c);
     }
-
-    //    void setTuple( unsigned int* t, Cost c )  {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        setcost( v0, v1, c );
-    //    }
-    //
-    //    void addtoTuple( unsigned int* t, Cost c )  {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        addcost( v0, v1, c );
-    //    }
 
     void fillElimConstr(EnumeratedVariable* xin, EnumeratedVariable* yin, Constraint* from1, Constraint* from2)
     {
