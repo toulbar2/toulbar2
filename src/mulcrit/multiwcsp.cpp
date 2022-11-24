@@ -22,12 +22,12 @@ mulcrit::MultiWCSP::MultiWCSP(): _sol_extraction(false) {
 //---------------------------------------------------------------------------
 mulcrit::MultiWCSP::MultiWCSP(vector<WCSP*>& wcsps, vector<Double>& weights): _sol_extraction(false)  {
   for(unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind ++) {
-    addWCSP(wcsps[wcsp_ind], weights[wcsp_ind]);
+    push_back(wcsps[wcsp_ind], weights[wcsp_ind]);
   }
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::addWCSP(WCSP* wcsp, double weight) {
+void mulcrit::MultiWCSP::push_back(WCSP* wcsp, double weight) {
 
   // assert: identical domains for existing variables
   // assert: do not add two functions with the same scope (instead add their costs) 

@@ -121,11 +121,11 @@ class MultiWCSP {
     MultiWCSP(std::vector<WCSP*>& wcsps, std::vector<Double>& weights);
 
     /*!
-     * \brief add a wcsp to the network, create the variables if they do not exist
+     * \brief add a wcsp to the network, create the variables if they do not exist, the wcsp is stored internally, the original wcsp will not be referenced
      * \param wcsp the wcsp to add
      * \param weight the weight of the wcsp in the objective function (sum of the cost functions)
      */
-    void addWCSP(WCSP* wcsp, double weight);
+    void push_back(WCSP* wcsp, double weight = 1.0);
 
     /*!
      * \brief set the weight of the cost functions of one of the network

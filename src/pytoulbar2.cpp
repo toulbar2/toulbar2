@@ -246,7 +246,7 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<mulcrit::MultiWCSP>(m, "MultiWCSP")
         .def(py::init())
-        .def("addWCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp, double weight) { multiwcsp.addWCSP(dynamic_cast<WCSP*>(wcsp), weight); } )
+        .def("push_back", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp, double weight) { multiwcsp.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp") = nullptr, py::arg("weight") = 1.)
         .def("setWeight", &mulcrit::MultiWCSP::setWeight)
         .def("nbNetworks", &mulcrit::MultiWCSP::nbNetworks)
         .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
