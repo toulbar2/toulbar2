@@ -154,12 +154,6 @@ class MultiWCSP {
     std::string getNetworkName(unsigned int index);
 
     /*!
-     * \brief load the cfn from toulbar2
-     * \param wcsp the original tb2 csp
-     */
-    void load_cfn(WCSP* wcsp);
-
-    /*!
      * \brief print the cfn
      * \brief os the stream to print to
      */
@@ -194,7 +188,7 @@ class MultiWCSP {
     std::vector<Double> getSolutionValues();
 
     /*!
-     * \brief compute the values of a given solution
+     * \brief compute the values of an existing solution
      * \param solution the solution given
      * \return the costs of the solution
      */
