@@ -180,14 +180,6 @@ class MultiWCSP {
     unsigned int tupleToIndex(std::vector<Var*> variables, std::vector<unsigned int> tuple);
 
     /*!
-     * \brief compute the solution of the separated problems from the combined tb2 wcsp
-     * \param solver the tb2 solver
-     * \param obj_value the values of the sub cost function networks, not provided if null
-     * \param solution optional, the solution returned by the algorithm  
-     */
-    void getSol(WeightedCSPSolver* solver, std::vector<Double>* obj_value = nullptr, Solution* solution = nullptr);
-
-    /*!
      * \brief get the solution of the created wcsp after being solved
      * \return the solution as a dictionary of variable names/value names
      * \pre the wcsp must have been solved and not been deleted
