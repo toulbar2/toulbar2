@@ -4062,7 +4062,6 @@ void WCSP::print(ostream& os)
 
 void printClique(ostream& os, int arity, Constraint* ctr)
 {
-    assert(arity >= 2);
     if (arity > MAX_ARITY / 10) {
         cerr << "warning! cost function arity is too large for primal graph representation." << endl;
         return;
@@ -5727,7 +5726,6 @@ void WCSP::variableElimination(EnumeratedVariable* var)
              << var->getDegree() << " true degree: " << degree << " max elim size: " << var->getMaxElimSize() << endl;
     if (degree > maxDegree)
         maxDegree = degree;
-
     if (var->getDegree() > 0) {
 
         ConstraintList::iterator it1 = var->getConstrs()->begin();

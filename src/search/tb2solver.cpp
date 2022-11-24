@@ -266,13 +266,13 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
             cout << " Input complete assignment " << filename << " is not a valid solution!" << endl;
     } else {
         if (ToulBar2::verbose >= 0) {
-	 if (ToulBar2::bayesian) {
-            cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" <<" energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << endl;
-	if (ToulBar2::uaieval) cout << "Energy_log10: " << (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)/log(10) << endl; 
-	  } else {
-            cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
-	}
-	}
+            if (ToulBar2::bayesian) {
+                cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" <<" energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << endl;
+                if (ToulBar2::uaieval) cout << "Energy_log10: " << (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)/log(10) << endl;
+            } else {
+                cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
+            }
+        }
         if (ToulBar2::verifyOpt) {
             ToulBar2::verifiedOptimum = wcsp->getLb();
         } else {
