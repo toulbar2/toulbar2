@@ -185,6 +185,8 @@ public:
             throw BadConfiguration();
         }
 #endif
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
         for (unsigned int a = 0; a < sizeX; a++)
             for (unsigned int b = 0; b < sizeY; b++)
                 costs[a * sizeY + b] = c;
@@ -199,6 +201,8 @@ public:
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
         if (xin == x)
             costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
         else
@@ -214,6 +218,8 @@ public:
         }
 #endif
         assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
         costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
     }
 
