@@ -542,6 +542,9 @@ public:
             throw BadConfiguration();
         }
 #endif
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsZ.begin(), deltaCostsZ.end(), [](Cost c){return c == MIN_COST;}));
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
         unsigned int vz = z->toIndex(vzi);
@@ -564,6 +567,9 @@ public:
             throw BadConfiguration();
         }
 #endif
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsZ.begin(), deltaCostsZ.end(), [](Cost c){return c == MIN_COST;}));
         unsigned int vindex[3];
         unsigned int vx = xin->toIndex(vxi);
         unsigned int vy = yin->toIndex(vyi);
@@ -1118,22 +1124,9 @@ public:
         Value v0 = x->toValue(t[0]);
         Value v1 = y->toValue(t[1]);
         Value v2 = z->toValue(t[2]);
-        setcost(x, y, z, v0, v1, v2, c);
+        Cost oldc = getCost(v0, v1, v2);
+        addCost(v0, v1, v2, c - oldc);
     }
-
-    //    void setTuple( unsigned int* t, Cost c ) {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        Value v2 = z->toValue(t[2]);
-    //        setcost( x, y, z, v0, v1, v2, c );
-    //    }
-    //
-    //    void addtoTuple( unsigned int* t, Cost c ) {
-    //        Value v0 = x->toValue(t[0]);
-    //        Value v1 = y->toValue(t[1]);
-    //        Value v2 = z->toValue(t[2]);
-    //        addCost( v0, v1, v2, c );
-    //    }
 
     void addtoTuple(const Tuple& t, Cost c) FINAL
     {
