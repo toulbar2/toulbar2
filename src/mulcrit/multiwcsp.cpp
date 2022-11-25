@@ -440,6 +440,8 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   Double top = computeTop();
   // cout << "Top computed: " << top << endl;
 
+  bool dir_consistency = true;
+
   for(unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind ++) {
     // cout << "original lb for " << net_ind << ": " << _doriginal_lbs[net_ind] << endl;
     global_lb += _doriginal_lbs[net_ind]*weights[net_ind];
@@ -448,6 +450,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
       cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
       cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
       cerr << "; no upper bound provided" << endl;
+      dir_consistency = false;
     }
   }
 
@@ -641,8 +644,11 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   }
 
-  wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
-  // wcsp->setUb(wcsp->DoubletoCost(top));
+  if(dir_consistency) {
+    wcsp->setUb(wcsp->DoubletoCost(top));
+  } else {
+    wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
+  }
 
   global_lb += wcsp->Cost2ADCost(wcsp->getLb());
 
