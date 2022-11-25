@@ -160,4 +160,4 @@ toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, Fran
 * adding the multiwcsp object and methods in the python API
 * modification of the python API in makeWeightedCSPSolver to take a weightedCSP as input
 * modification of the python API to create a weightedCSP object without solvers
-* modification of the python API to read an instance directly from a weightedCSP object
+* modification of the python API to read an instance file directly from a weightedCSP object
