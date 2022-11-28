@@ -502,8 +502,14 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 // Clique constraint propagates by including unary and binary cost functions inside its scope (in practice, it can be very time-consuming)
 //#define PROPAGATE_CLIQUE_WITH_BINARIES
 
-// Transforms clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
+// Transforms hard clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
 #define CLIQUE2KNAPSACK
+
+// Transforms hard clause constraint into knapsack constraint
+//#define CLAUSE2KNAPSACK
+
+// Transforms knapsack constraint with unit coefficients into hard clause constraint
+//#define UNITKNAPSACK2CLAUSE
 
 // Transforms hard decomposable among constraint into knapsack constraint
 //#define WAMONG2KNAPSACK

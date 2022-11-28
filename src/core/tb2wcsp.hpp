@@ -820,7 +820,7 @@ public:
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
 
-    bool dualEncoding();
+    bool hiddenEncoding();
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency

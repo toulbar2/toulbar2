@@ -114,7 +114,13 @@ void EnumeratedVariable::print(ostream& os)
         for (iterator iter = begin(); iter != end(); ++iter) {
             os << " " << getCost(*iter);
         }
-        os << " > s:" << support;
+        os << " >";
+    }
+    if (ToulBar2::verbose >= 8) {
+        os << " /" << getDeltaCost();
+    }
+    if (unassigned()) {
+        os << " s:" << support;
         if (ToulBar2::FullEAC && isFullEAC()) {
             os << "!";
         }

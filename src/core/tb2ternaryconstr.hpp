@@ -588,6 +588,73 @@ public:
             costs[(size_t)vindex[0] * sizeY * sizeZ + (size_t)vindex[1] * sizeZ + vindex[2]] = c;
     }
 
+    /// \warning Cannot remove a forbidden tuple in ternary functional cost functions!
+    void clearCosts()
+    {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify costs in ternary cost functions during search!" << endl;
+            throw BadConfiguration();
+        }
+#endif
+        assert(ToulBar2::verbose < 4 || ((cout << "clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ")" << endl), true));
+        for (unsigned int i = 0; i < sizeX; i++)
+            deltaCostsX[i] = MIN_COST;
+        for (unsigned int j = 0; j < sizeY; j++)
+            deltaCostsY[j] = MIN_COST;
+        for (unsigned int k = 0; k < sizeZ; k++)
+            deltaCostsZ[k] = MIN_COST;
+        if (costs.empty()) {
+            cerr << "Cannot remove a forbidden tuple in ternary functional cost functions!" << endl;
+            throw InternalError();
+        } else {
+            for (unsigned int i = 0; i < sizeX; i++) {
+                for (unsigned int j = 0; j < sizeY; j++) {
+                    for (unsigned int k = 0; k < sizeZ; k++) {
+                        costs[i * sizeY * sizeZ + j * sizeZ + k] = MIN_COST;
+                    }
+                }
+            }
+        }
+    }
+
+    void clearFiniteCosts()
+    {
+#ifdef NO_STORE_TERNARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify finite costs in ternary cost functions during search!" << endl;
+            throw BadConfiguration();
+        }
+#endif
+        assert(ToulBar2::verbose < 4 || ((cout << "clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ")" << endl), true));
+        for (unsigned int i = 0; i < sizeX; i++)
+            deltaCostsX[i] = MIN_COST;
+        for (unsigned int j = 0; j < sizeY; j++)
+            deltaCostsY[j] = MIN_COST;
+        for (unsigned int k = 0; k < sizeZ; k++)
+            deltaCostsZ[k] = MIN_COST;
+        if (costs.empty()) {
+            for (unsigned int j = 0; j < sizeY; j++) {
+                for (unsigned int k = 0; k < sizeZ; k++) {
+                    assert(!CUT(costsYZ[j * sizeZ + k], top));
+                    if (!CUT(costsYZ[j * sizeZ + k], wcsp->getUb())) {
+                        costsYZ[j * sizeZ + k] = MIN_COST;
+                    }
+                }
+            }
+        } else {
+            for (unsigned int i = 0; i < sizeX; i++) {
+                for (unsigned int j = 0; j < sizeY; j++) {
+                    for (unsigned int k = 0; k < sizeZ; k++) {
+                        if (!CUT(costs[i * sizeY * sizeZ + j * sizeZ + k], wcsp->getUb())) {
+                            costs[i * sizeY * sizeZ + j * sizeZ + k] = MIN_COST;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Cost getMaxFiniteCost()
     {
         Cost ub = wcsp->getUb();
