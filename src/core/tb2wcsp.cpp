@@ -3216,7 +3216,7 @@ bool WCSP::hiddenEncoding()
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
             }
-            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(constrs[i]->wcspIndex), 0, nbtuples - 1);
+            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(ctr->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
@@ -3260,7 +3260,7 @@ bool WCSP::hiddenEncoding()
                 if (nbtuples > maxdomsize) {
                     maxdomsize = nbtuples;
                 }
-                int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(constrs[i]->wcspIndex), 0, nbtuples - 1);
+                int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(ctr->wcspIndex), 0, nbtuples - 1);
                 EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
                 for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                     theVar->addValueName("t" + to_string(tuples[val]));
@@ -3317,9 +3317,6 @@ bool WCSP::hiddenEncoding()
                                cout << *listOfCtrs[i];
                                cout << endl;
                            }
-                           for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
-                               listOfDualCosts[i][vali] += ctr->evalsubstr(listOfDualDomains[i][vali], listOfCtrs[i]);
-                           }
                            included[ctr] = listOfCtrs[i];
                        }
                     } else if (inter.size() >= 2) { // do not create an intersection edge if the intersection scope contains only one variable
@@ -3355,6 +3352,12 @@ bool WCSP::hiddenEncoding()
         Constraint *ctrincluding = extending.second;
         while (included.find(ctrincluding) != included.end()) {
             ctrincluding = included[ctrincluding];
+        }
+        if (indexOfCtrs.find(ctrincluding) != indexOfCtrs.end()) {
+            unsigned int j = indexOfCtrs[ctrincluding];
+            for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
+                listOfDualCosts[j][valj] += ctrextend->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
+            }
         }
         ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
         ctrextend->clearFiniteCosts();
@@ -3545,24 +3548,15 @@ bool WCSP::hiddenEncoding()
                 channelingCtrs.push_back(binctr);
                 blocks.push_back(make_pair(blockX, blockY));
             }
-        } else { // constraint i is included into constraint j
-            Constraint *ctrj = (*inclus).second;
-            while (included.find(ctrj) != included.end()) {
-                ctrj = included[ctrj];
-            }
-            assert(included.find(ctrj) == included.end());
-            assert(indexOfCtrs.find(ctrj) != indexOfCtrs.end());
-            unsigned int j = indexOfCtrs[ctrj];
-            for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
-                listOfDualCosts[j][valj] += listOfCtrs[i]->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
-            }
         }
     }
+
+    // add costs of constraint i to its dual variable unary cost function
     for (unsigned int i = 0; i < listOfDualVars.size(); i++) {
-        if (included.find(listOfCtrs[i]) == included.end()) { // add costs of constraint i to its dual variable unary cost function
+        if (included.find(listOfCtrs[i]) == included.end()) {
             postIncrementalUnaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualCosts[i]);
         } else {
-            assign(listOfDualVars[i]->wcspIndex, listOfDualVars[i]->getInf()); // assign this dual variable corresponding to an included constraint to a dummy value
+            assign(listOfDualVars[i]->wcspIndex, listOfDualVars[i]->getInf()); // assign a dual variable corresponding to an included constraint to a dummy value
             nbdual--;
         }
     }
