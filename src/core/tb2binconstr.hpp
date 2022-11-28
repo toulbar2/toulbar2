@@ -446,8 +446,9 @@ public:
     {
         Value v0 = x->toValue(t[0]);
         Value v1 = y->toValue(t[1]);
-        setcost(v0, v1, c);
-    }
+        Cost oldc = getCost(v0, v1);
+        addcost(v0, v1, c - oldc);
+     }
 
     void addtoTuple(const Tuple& t, Cost c) FINAL
     {
