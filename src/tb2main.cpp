@@ -255,6 +255,8 @@ enum {
     NO_OPT_preprocessTernary,
     OPT_preprocessPWC,
     NO_OPT_preprocessPWC,
+    OPT_preprocessMinQual,
+    NO_OPT_preprocessMinQual,
     OPT_preprocessFunctional,
     NO_OPT_preprocessFunctional,
     OPT_preprocessNary,
@@ -521,7 +523,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_preprocessNary, (char*)"-n:", SO_NONE },
     { OPT_preprocessPWC, (char*)"-pwc", SO_OPT },
     { NO_OPT_preprocessPWC, (char*)"-pwc:", SO_NONE },
-
+    { OPT_preprocessMinQual, (char*)"-minqual", SO_NONE },
+    { NO_OPT_preprocessMinQual, (char*)"-minqual:", SO_NONE },
     { OPT_QueueComplexity, (char*)"-o", SO_NONE },
     { OPT_MSTDAC, (char*)"-mst", SO_NONE },
     { NO_OPT_MSTDAC, (char*)"-mst:", SO_NONE },
@@ -866,12 +869,16 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::preprocessTernaryRPC)
         cout << " (" << ToulBar2::preprocessTernaryRPC << " MB)";
     cout << endl;
-    cout << "   -pwc=[integer] : preprocessing only: pairwise consistency by hidden encoding into a binary cost function network within a given maximum space limit (in MB)";
+    cout << "   -pwc=[integer] : pairwise consistency by hidden encoding into a binary cost function network within a given maximum space limit (in MB)";
     if (ToulBar2::pwc)
         cout << " (" << ToulBar2::pwc << " MB)";
     cout << endl;
     cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
-    cout << "       (see also option -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
+    cout << "       (see also options -minqual and -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
+    cout << "   -minqual : finds a minimal intersection graph to achieve pairwise consistency (combine with option -pwc)";
+    if (ToulBar2::pwcMinimalDualGraph)
+        cout << " (default option)";
+    cout << endl;
     cout << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
     cout << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
     if (ToulBar2::costfuncSeparate)
@@ -1798,6 +1805,11 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "preprocess pairwise consistency OFF" << endl;
                 ToulBar2::pwc = 0;
             }
+
+            if (args.OptionId() == OPT_preprocessMinQual)
+                ToulBar2::pwcMinimalDualGraph = true;
+            else if (args.OptionId() == NO_OPT_preprocessMinQual)
+                ToulBar2::pwcMinimalDualGraph = false;
 
             if (args.OptionId() == OPT_trwsAccuracy) {
                 if (args.OptionArg() == NULL) {
