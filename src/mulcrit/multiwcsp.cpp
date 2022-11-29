@@ -437,11 +437,6 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   Double global_lb = 0.;
   Double global_ub = 0.;
 
-  // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
-  // top = wcsp->DoubleToADCost(MAX_COST/3)
-  Double top = computeTop();
-  // cout << "Top computed: " << top << endl;
-
   bool dir_consistency = true;
 
   for(unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind ++) {
@@ -456,6 +451,13 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
       cerr << "; no upper bound provided" << endl;
       dir_consistency = false;
     }
+  }
+
+  // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
+  // top = wcsp->DoubleToADCost(MAX_COST/3)
+  Double top = computeTop();
+  if(dir_consistency && top < global_ub) {
+    top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
   }
 
   // create new variables only if they do not exist yet
@@ -665,8 +667,10 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
 
+  cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
+
   if(dir_consistency) {
-    cout << "Setting top value: " << top << endl;
+    cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
     // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
     wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
 
@@ -686,7 +690,7 @@ WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP() {
   exportToWCSP(_wcsp);
 
   /* debug */
-  _wcsp->print(cout);
+  // _wcsp->print(cout);
 
   return _wcsp;
 }
