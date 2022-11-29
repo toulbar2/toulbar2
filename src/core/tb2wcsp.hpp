@@ -393,6 +393,14 @@ public:
                 res++;
         return res;
     }
+    unsigned int numberOfHiddenVariables() const
+    {
+        int res = 0;
+        for (unsigned int i = 0; i < vars.size(); i++)
+            if (getName(i).rfind(HIDDEN_VAR_TAG, 0) == 0)
+                res++;
+        return res;
+    }
     unsigned int numberOfConstraints() const { return constrs.size(); } ///< \brief initial number of cost functions
     unsigned int numberOfConnectedConstraints() const; ///< \brief current number of cost functions
     unsigned int numberOfConnectedBinaryConstraints() const; ///< \brief current number of binary cost functions

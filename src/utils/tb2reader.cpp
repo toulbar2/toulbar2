@@ -3222,7 +3222,7 @@ void WCSP::solution_UAI(Cost res)
     //        cout << numberOfVariables();
     //        printSolution(cout);
     //    }
-    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "%d ", numberOfVariables());
+    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "%d ", numberOfVariables() - numberOfHiddenVariables());
     printSolution((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
     fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "\n");
     //	if (opt) {
