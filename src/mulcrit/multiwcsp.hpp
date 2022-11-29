@@ -236,6 +236,7 @@ class MultiWCSP {
     std::vector<std::vector<unsigned int>> networks; // list of the cost function networks (function indexes for each network)
     std::vector<unsigned int> network_index; // index of the network for each cost function
 
+    std::vector<double> _doriginal_ubs; // list of original upper bounds (as Double) for each network
     std::vector<double> _doriginal_lbs; // list of original lower bounds (as Double) for each network
     std::vector<Double> _original_costMultipliers; // list of cost multipliers of all the original wcsp
 

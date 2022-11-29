@@ -173,6 +173,7 @@ void mulcrit::MultiWCSP::push_back(WCSP* wcsp, double weight) {
 
   // general values
   _doriginal_lbs.push_back(wcsp->Cost2ADCost(wcsp->getLb()));
+  _doriginal_ubs.push_back(wcsp->Cost2ADCost(wcsp->getUb()));
 
   _original_costMultipliers.push_back(ToulBar2::costMultiplier);
 
@@ -433,7 +434,8 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   ToulBar2::costMultiplier = 1.0; // minimization only
 
   // precompute the new upper and lowerbound, and negCost
-  Double global_lb = 0;
+  Double global_lb = 0.;
+  Double global_ub = 0.;
 
   // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
   // top = wcsp->DoubleToADCost(MAX_COST/3)
@@ -445,6 +447,8 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   for(unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind ++) {
     // cout << "original lb for " << net_ind << ": " << _doriginal_lbs[net_ind] << endl;
     global_lb += _doriginal_lbs[net_ind]*weights[net_ind];
+    
+    global_ub += _doriginal_ubs[net_ind]*weights[net_ind];
 
     if(_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
       cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
@@ -662,7 +666,10 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
 
   if(dir_consistency) {
-    wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
+    cout << "Setting top value: " << top << endl;
+    // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
+    wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
+
   } else {
     wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
   }
