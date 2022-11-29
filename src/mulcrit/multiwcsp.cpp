@@ -388,7 +388,7 @@ Double mulcrit::MultiWCSP::computeTop() {
 
   for(unsigned int net_ind = 0; net_ind < networks.size(); net_ind ++) {
 
-    Double lambda = weights[net_ind];
+    Double weight = weights[net_ind];
 
     Double net_top = 0.;
 
@@ -400,7 +400,7 @@ Double mulcrit::MultiWCSP::computeTop() {
       for(unsigned int cost_ind = 0; cost_ind < cost_function[func_ind].costs.size(); cost_ind ++) {
         Double cost = cost_function[func_ind].costs[cost_ind];
         if(cost != numeric_limits<Double>::infinity()) {
-          cost *= lambda;
+          cost *= weight;
           if(uninit_min || cost < min_cost) {
             min_cost = cost;
             uninit_min = false;
@@ -644,12 +644,6 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   }
 
-  if(dir_consistency) {
-    wcsp->setUb(wcsp->DoubletoCost(top));
-  } else {
-    wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
-  }
-
   global_lb += wcsp->Cost2ADCost(wcsp->getLb());
 
   // cout << "global lb after combination: " << global_lb << endl;
@@ -667,6 +661,12 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
 
+  if(dir_consistency) {
+    wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
+  } else {
+    wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
+  }
+
 }
 
 //---------------------------------------------------------------------------
@@ -677,6 +677,9 @@ WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP() {
   _wcsp = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
 
   exportToWCSP(_wcsp);
+
+  /* debug */
+  // _wcsp->print(cout);
 
   return _wcsp;
 }
