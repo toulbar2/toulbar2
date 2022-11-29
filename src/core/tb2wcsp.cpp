@@ -667,6 +667,10 @@ void tb2checkOptions()
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::pwc < 0 && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning PWC assumes AC supports
+        cerr << "Error: PWC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
+        throw BadConfiguration();
+    }
     if (ToulBar2::vac && ToulBar2::FullEAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports in order to make new FullEAC supports based on VAC-integrality
         ToulBar2::vacValueHeuristic = true;
     }
@@ -3203,7 +3207,7 @@ void WCSP::processTernary()
     }
 }
 
-bool WCSP::hiddenEncoding()
+pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncoding()
 {
     vector<Constraint *>listOfCtrs;
     vector<EnumeratedVariable *> listOfDualVars;
@@ -3213,6 +3217,7 @@ bool WCSP::hiddenEncoding()
     map<pair<unsigned int, unsigned int>, set<int>> intersections; // graph of intersections of non-binary cost functions with at least two variables
     Long nbintersections = 0;
     map<Constraint *, Constraint *> included; // graph of inclusions of any cost functions (map[i]=j means i included into j)
+    vector<BinaryConstraint *> channelingPWC; // list of binary cost functions between dual variables for pairwise consistency
     unsigned int nbdual = 0;
     Long maxdomsize = 0;
     Long maxtuples = (2 << (sizeof(tValue)*8 - 1)) - 1;
@@ -3306,7 +3311,7 @@ bool WCSP::hiddenEncoding()
     assert(nbdual == listOfDualCosts.size());
 
     if (listOfCtrs.size() == 0) { // if nothing to dualize then quit
-        return false;
+        return make_pair(listOfDualVars, channelingPWC);
     }
 
     // builds intersection graph
@@ -3454,7 +3459,8 @@ bool WCSP::hiddenEncoding()
                     costs.push_back((compatible) ? MIN_COST : MAX_COST);
                 }
             }
-            postIncrementalBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
+            int ctri = postIncrementalBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
+            channelingPWC.push_back((BinaryConstraint *) getCtr(ctri));
             nbintersections++;
         } else {
             if (ToulBar2::verbose >= 1) {
@@ -3503,7 +3509,8 @@ bool WCSP::hiddenEncoding()
         }
         ToulBar2::FullEAC = false;
     }
-    return true;
+    propagate();
+    return make_pair(listOfDualVars, channelingPWC);
 }
 
 /// \defgroup preprocessing Preprocessing techniques
@@ -3717,7 +3724,61 @@ void WCSP::preprocessing()
     }
 
     if (ToulBar2::pwc) {
-        hiddenEncoding();
+        pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> res = hiddenEncoding();
+
+        // dedualize pairwise consistency
+        if (ToulBar2::pwc < 0 && res.first.size() > 0) {
+            //TODO: run pils here before dedualizing
+            for (BinaryConstraint *channel: res.second) {
+#ifndef NDEBUG
+                Tuple tuple;
+                Cost cost;
+                channel->firstlex();
+                while (channel->nextlex(tuple, cost)) {
+                    assert(cost == 0 || CUT(cost,getUb()));
+                }
+#endif
+                channel->deconnect();
+            }
+            for (EnumeratedVariable *var: res.first) {
+                if (var->unassigned()) {
+                    variableElimination(var);
+                }
+            }
+
+            ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
+
+            if (ToulBar2::costfuncSeparate) {
+                for (unsigned int i = posConstrs; i < constrs.size(); i++) {
+                    if (constrs[i]->connected() && !constrs[i]->isSep()) {
+                        constrs[i]->findConditionalIndependences();
+                    }
+                }
+                posConstrs = constrs.size();
+            }
+            if (ToulBar2::preprocessNary > 0) {
+                for (unsigned int i = 0; i < constrs.size(); i++) {
+                    if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isNary() && constrs[i]->arity() >= 3 && constrs[i]->arity() <= ToulBar2::preprocessNary) {
+                        NaryConstraint* nary = (NaryConstraint*)constrs[i];
+                        Long nbtuples = nary->getDomainSizeProduct();
+                        if ((nbtuples < MAX_NB_TUPLES || nary->size() >= nbtuples) && (nary->size() >= 2 || nary->getDefCost() > MIN_COST)) {
+                            assert(CUT(nary->getDefCost(), getUb()));
+                            nary->preprojectall2();
+                        }
+                    }
+                }
+                processTernary();
+            }
+
+            propagate();
+
+            if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
+                if (ToulBar2::verbose) {
+                    cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
+                }
+                ToulBar2::FullEAC = false;
+            }
+        }
     }
 
     // Deconnect empty cost functions

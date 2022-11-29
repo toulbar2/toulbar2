@@ -820,7 +820,7 @@ public:
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
 
-    bool hiddenEncoding();
+    pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> hiddenEncoding(); /// \brief returns dual variables and channeling constraints for pairwise consistency
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency
