@@ -453,11 +453,26 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
     }
   }
 
+  cout << "global ub: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
+
+  Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
+
+  bool global_ub_overflow = false;
+  if((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
+    cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    global_ub_overflow = true;
+  }
+
   // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
   // top = wcsp->DoubleToADCost(MAX_COST/3)
   Double top = computeTop();
+
+  // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
+
   if(dir_consistency && top < global_ub) {
-    top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
+    if(!global_ub_overflow) {
+      top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
+    }
   }
 
   // create new variables only if they do not exist yet
@@ -666,10 +681,9 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   }
 
   // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
+  // cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
-  cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
-
-  if(dir_consistency) {
+  if(dir_consistency && !global_ub_overflow) {
     cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
     // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
     wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
