@@ -7,6 +7,7 @@
 
 - :ref:`tuto_wnqp`
 - :ref:`tuto_wlsp`
+- :ref:`tuto_biwlsp`
 - :ref:`tuto_rlfap`
 - :ref:`tuto_fapwp`
 - :ref:`tuto_medp`
