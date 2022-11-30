@@ -469,6 +469,10 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
+  // if(global_ub_overflow) {
+  //   top = wcsp->DoubleToADCost(MAX_COST/3)
+  // }
+
   if(dir_consistency && top < global_ub) {
     if(!global_ub_overflow) {
       top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
@@ -505,7 +509,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
         unsigned int own_val_ind = own_var->str_to_index[tb2_var->getValueName(tb2_val_ind)];
         
         if(cost_function[func_ind].costs[own_val_ind] == numeric_limits<Double>::infinity()) {
-          // choose an ub wisely...
+          // choose an top value wisely...
           costs[tb2_val_ind] = top;
         } else {
 
@@ -684,10 +688,9 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   // cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
   if(dir_consistency && !global_ub_overflow) {
-    cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
+    // cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
     // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
     wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
-
   } else {
     wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
   }
@@ -707,6 +710,17 @@ WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP() {
   // _wcsp->print(cout);
 
   return _wcsp;
+}
+
+//---------------------------------------------------------------------------
+void mulcrit::MultiWCSP::makeWeightedCSP(WeightedCSP* wcsp) {
+
+  _sol_extraction = false;
+
+  _wcsp = dynamic_cast<WCSP*>(wcsp);
+
+  exportToWCSP(_wcsp);
+
 }
 
 //---------------------------------------------------------------------------

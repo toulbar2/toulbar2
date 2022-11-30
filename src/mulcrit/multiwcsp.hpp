@@ -164,6 +164,12 @@ class MultiWCSP {
      */
     WeightedCSP* makeWeightedCSP();
 
+    /*!
+     * \brief fill a wcsp with the convex combination of all the wcsps already added
+     * \param wcsp the weighted csp to be filled
+     */
+    void makeWeightedCSP(WeightedCSP* wcsp);
+
 
     /*!
      * \brief convert a tuple to a cost index, rightmost value indexed first
@@ -243,7 +249,7 @@ class MultiWCSP {
     unsigned int _tb2_decimalpoint; // precision of the wcsp
 
     /* solution */
-    WCSP* _wcsp; // pointer to the last wcsp created
+    WCSP* _wcsp; // pointer to the wcsp containing the combniation of the input wcsps
     bool _sol_extraction; // indicates if the solution and objective value have already been extracted
     std::vector<Double> _obj_values;
     Solution _solution;

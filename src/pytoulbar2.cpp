@@ -253,7 +253,9 @@ PYBIND11_MODULE(pytb2, m)
         .def("getNetworkName", &mulcrit::MultiWCSP::getNetworkName)
         // .def("print", &mulcrit::MultiWCSP::print)
         .def("print", [](mulcrit::MultiWCSP& multiwcsp) { multiwcsp.print(cout); } )
-        .def("makeWeightedCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
+        // .def("makeWeightedCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
+        .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp) { return multiwcsp.makeWeightedCSP(); })
+        .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp) { multiwcsp.makeWeightedCSP(wcsp); })
         .def("getSolution", &mulcrit::MultiWCSP::getSolution)
         .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues);
 
