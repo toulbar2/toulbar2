@@ -10,6 +10,9 @@ pytoulbar2 software is the Python interface of toulbar2.
     :members:
     :undoc-members:
 
+.. autoclass:: pytoulbar2.MultiCFN
+    :members:
+    :undoc-members:
 
 .. TEMPORAIRE
 .. ==========

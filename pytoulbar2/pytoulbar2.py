@@ -79,8 +79,6 @@ class MultiCFN:
         self.MultiCFN.print()
 
 
-
-
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
     
@@ -182,8 +180,8 @@ class CFN:
 
         return
 
-    def initFromMultiCFN(self, multicfn):
-        """initFromMultiCFN initialize the cfn from a multiCFN instance (linear combination of multiple CFN).
+    def InitFromMultiCFN(self, multicfn):
+        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFN).
 
         Args:
             multicfn (MultiCFN): the instance containing the CFNs.
