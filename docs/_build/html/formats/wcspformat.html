@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weighted Constraint Satisfaction Problem file format (wcsp) &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/toulbar2.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="UAI and LG formats (.uai, .LG)" href="uailgformat.html" />
+    <link rel="prev" title="CFN format (.cfn suffix)" href="cfnformat.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> toulbar2
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../userdoc.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#what-is-toulbar2">What is toulbar2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-install-it">How do I install it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-test-it">How do I test it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#using-it-as-a-black-box">Using it as a black box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#command-line-options">Command line options</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../userdoc.html#input-formats">Input formats</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../userdoc.html#introduction">Introduction</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../userdoc.html#formats-details">Formats details</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cfnformat.html">cfn format (.cfn, .cfn.gz, .cfn.bz2, and .cfn.xz file extension)</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">wcsp format (.wcsp file extension)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="uailgformat.html">UAI and LG formats (.uai, .LG)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnfwcnfformat.html">Partial Weighted MaxSAT format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qpboformat.html">QPBO format (.qpbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html">OPB format (.opb)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html">XCSP2.1 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html#xcsp3-format-xml">XCSP3 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preformat.html">Linkage format (.pre)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-use-it">How do I use it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=../examples/tutorials.html>Tutorials</a> |
+    <a href=../examples/usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="weighted-constraint-satisfaction-problem-file-format-wcsp">
+<span id="wcsp-format"></span><h1>Weighted Constraint Satisfaction Problem file format (wcsp)<a class="headerlink" href="#weighted-constraint-satisfaction-problem-file-format-wcsp" title="Permalink to this heading"></a></h1>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__wcspformat"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">wcspformat</span></span></dt>
+<dd><p>It is a text format composed of a list of numerical and string terms separated by spaces. Instead of using names for making reference to variables, variable indexes are employed. The same for domain values. All indexes start at zero.</p>
+<p>Cost functions can be defined in intention (see below) or in extension, by their list of tuples. A default cost value is defined per function in order to reduce the size of the list. Only tuples with a different cost value should be given (not mandatory). All the cost values must be positive. The arity of a cost function in extension may be equal to zero. In this case, there is no tuples and the default cost value is added to the cost of any solution. This can be used to represent a global lower bound constant of the problem.</p>
+<p>The wcsp file format is composed of three parts: a problem header, the list of variable domain sizes, and the list of cost functions.</p>
+<p><ul class="simple">
+<li><p>Header definition for a given problem: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Problem</span> <span class="n">name</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">variables</span> <span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Maximum</span> <span class="n">domain</span> <span class="n">size</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">cost</span> <span class="n">functions</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Initial</span> <span class="k">global</span> <span class="n">upper</span> <span class="n">bound</span> <span class="n">of</span> <span class="n">the</span> <span class="n">problem</span> <span class="p">(</span><span class="n">UB</span><span class="p">)</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+ The goal is to find an assignment of all the variables with minimum total cost, strictly lower than UB. Tuples with a cost greater than or equal to UB are forbidden (hard constraint).</p></li>
+<li><p>Definition of domain sizes <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Domain</span> <span class="n">size</span> <span class="n">of</span> <span class="n">variable</span> <span class="k">with</span> <span class="n">index</span> <span class="mi">0</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="o">&lt;</span><span class="n">Domain</span> <span class="n">size</span> <span class="n">of</span> <span class="n">variable</span> <span class="k">with</span> <span class="n">index</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</p></li>
+</ul>
+</p>
+<p>Note : domain values range from zero to <em>size-1</em> </p>
+<p>Note : a negative domain size is interpreted as a variable with an interval domain in <span class="math notranslate nohighlight">\([0,-size-1]\)</span></p>
+<p>Warning : variables with interval domains are restricted to arithmetic and disjunctive cost functions in intention (see below)</p>
+<p><ul class="simple">
+<li><p>General definition of cost functions<ul>
+<li><p>Definition of a cost function in extension <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Arity</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">function</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Index</span> <span class="n">of</span> <span class="n">the</span> <span class="n">first</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">scope</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">function</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="o">&lt;</span><span class="n">Index</span> <span class="n">of</span> <span class="n">the</span> <span class="n">last</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">scope</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">function</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Default</span> <span class="n">cost</span> <span class="n">value</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">tuples</span> <span class="k">with</span> <span class="n">a</span> <span class="n">cost</span> <span class="n">different</span> <span class="n">than</span> <span class="n">the</span> <span class="n">default</span> <span class="n">cost</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+ followed by for every tuple with a cost different than the default cost: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Index</span> <span class="n">of</span> <span class="n">the</span> <span class="n">value</span> <span class="n">assigned</span> <span class="n">to</span> <span class="n">the</span> <span class="n">first</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">scope</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="o">&lt;</span><span class="n">Index</span> <span class="n">of</span> <span class="n">the</span> <span class="n">value</span> <span class="n">assigned</span> <span class="n">to</span> <span class="n">the</span> <span class="n">last</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">scope</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Cost</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">tuple</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p>Note : Shared cost function: A cost function in extension can be shared by several cost functions with the same arity (and same domain sizes) but different scopes. In order to do that, the cost function to be shared must start by a negative scope size. Each shared cost function implicitly receives an occurrence number starting from 1 and incremented at each new shared definition. New cost functions in extension can reuse some previously defined shared cost functions in extension by using a negative number of tuples representing the occurrence number of the desired shared cost function. Note that default costs should be the same in the shared and new cost functions. Here is an example of 4 variables with domain size 4 and one AllDifferent hard constraint decomposed into 6 binary constraints.</p>
+<p><ul class="simple">
+<li><p>Shared CF used inside a small example in wcsp format: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">AllDifferentDecomposedIntoBinaryConstraints</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">6</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span>
+<span class="o">-</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">4</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">1</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">3</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+</p></li>
+<li><p>Definition of a cost function in intension by replacing the default cost value by -1 and by giving its keyword name and its K parameters <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Arity</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">function</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">Index</span> <span class="n">of</span> <span class="n">the</span> <span class="n">first</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">scope</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">function</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="o">&lt;</span><span class="n">Index</span> <span class="n">of</span> <span class="n">the</span> <span class="n">last</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">scope</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">function</span><span class="o">&gt;</span>
+<span class="o">-</span><span class="mi">1</span>
+<span class="o">&lt;</span><span class="n">keyword</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">parameter1</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="o">&lt;</span><span class="n">parameterK</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</p></li>
+</ul>
+</p>
+<p>Possible keywords of cost functions defined in intension followed by their specific parameters:<ul class="simple">
+<li><p>&gt;= <em>cst</em> <em>delta</em> to express soft binary constraint <span class="math notranslate nohighlight">\(x \geq y + cst\)</span> with associated cost function <span class="math notranslate nohighlight">\(max( (y + cst - x \leq delta)?(y + cst - x):UB , 0 )\)</span></p></li>
+<li><p>&gt; <em>cst</em> <em>delta</em> to express soft binary constraint <span class="math notranslate nohighlight">\(x &gt; y + cst\)</span> with associated cost function <span class="math notranslate nohighlight">\(max( (y + cst + 1 - x \leq delta)?(y + cst + 1 - x):UB , 0 )\)</span></p></li>
+<li><p>&lt;= <em>cst</em> <em>delta</em> to express soft binary constraint <span class="math notranslate nohighlight">\(x \leq y + cst\)</span> with associated cost function <span class="math notranslate nohighlight">\(max( (x - cst - y \leq delta)?(x - cst - y):UB , 0 )\)</span></p></li>
+<li><p>&lt; <em>cst</em> <em>delta</em> to express soft binary constraint <span class="math notranslate nohighlight">\(x &lt; y + cst\)</span> with associated cost function <span class="math notranslate nohighlight">\(max( (x - cst + 1 - y \leq delta)?(x - cst + 1 - y):UB , 0 )\)</span></p></li>
+<li><p>= <em>cst</em> <em>delta</em> to express soft binary constraint <span class="math notranslate nohighlight">\(x = y + cst\)</span> with associated cost function <span class="math notranslate nohighlight">\((|y + cst - x| \leq delta)?|y + cst - x|:UB\)</span></p></li>
+<li><p>disj <em>cstx</em> <em>csty</em> <em>penalty</em> to express soft binary disjunctive constraint <span class="math notranslate nohighlight">\(x \geq y + csty \vee y \geq x + cstx\)</span> with associated cost function <span class="math notranslate nohighlight">\((x \geq y + csty \vee y \geq x + cstx)?0:penalty\)</span></p></li>
+<li><p>sdisj <em>cstx</em> <em>csty</em> <em>xinfty</em> <em>yinfty</em> <em>costx</em> <em>costy</em> to express a special disjunctive constraint with three implicit hard constraints <span class="math notranslate nohighlight">\(x \leq xinfty\)</span> and <span class="math notranslate nohighlight">\(y \leq yinfty\)</span> and <span class="math notranslate nohighlight">\(x &lt; xinfty \wedge y &lt; yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\)</span> and an additional cost function <span class="math notranslate nohighlight">\(((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\)</span></p></li>
+<li><p>Global cost functions using a dedicated propagator:<ul>
+<li><p>clique <em>1</em> (<em>nb_values</em> (<em>value</em>)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most <em>1</em> occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)</p></li>
+<li><p>knapsack <em>capacity</em> (<em>weight</em>)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with &gt;= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with &lt;= operator)</p></li>
+<li><p>knapsackp <em>capacity</em> (<em>nb_values</em> (<em>value</em> <em>weight</em>)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight</p></li>
+</ul>
+</p></li>
+<li><p>Global cost functions using a flow-based propagator:<ul>
+<li><p>salldiff var|dec|decbi <em>cost</em> to express a soft alldifferent constraint with either variable-based (<em>var</em> keyword) or decomposition-based (<em>dec</em> and <em>decbi</em> keywords) cost semantic with a given <em>cost</em> per violation (<em>decbi</em> decomposes into a binary cost function complete network)</p></li>
+<li><p>sgcc var|dec|wdec <em>cost</em> <em>nb_values</em> (<em>value</em> <em>lower_bound</em> <em>upper_bound</em> (<em>shortage_weight</em> <em>excess_weight</em>)?)* to express a soft global cardinality constraint with either variable-based (<em>var</em> keyword) or decomposition-based (<em>dec</em> keyword) cost semantic with a given <em>cost</em> per violation and for each value its lower and upper bound (if <em>wdec</em> then violation cost depends on each value shortage or excess weights)</p></li>
+<li><p>ssame <em>cost</em> <em>list_size1</em> <em>list_size2</em> (<em>variable_index</em>)* (<em>variable_index</em>)* to express a permutation constraint on two lists of variables of equal size (implicit variable-based cost semantic)</p></li>
+<li><p>sregular var|edit <em>cost</em> <em>nb_states</em> <em>nb_initial_states</em> (<em>state</em>)* <em>nb_final_states</em> (<em>state</em>)* <em>nb_transitions</em> (<em>start_state</em> <em>symbol_value</em> <em>end_state</em>)* to express a soft regular constraint with either variable-based (<em>var</em> keyword) or edit distance-based (<em>edit</em> keyword) cost semantic with a given <em>cost</em> per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p><ul class="simple">
+<li><p>Global cost functions using a dynamic programming DAG-based propagator:<ul>
+<li><p>sregulardp var <em>cost</em> <em>nb_states</em> <em>nb_initial_states</em> (<em>state</em>)* <em>nb_final_states</em> (<em>state</em>)* <em>nb_transitions</em> (<em>start_state</em> <em>symbol_value</em> <em>end_state</em>)* to express a soft regular constraint with a variable-based (<em>var</em> keyword) cost semantic with a given <em>cost</em> per violation followed by the definition of a deterministic finite automaton with number of states, list of initial and final states, and list of state transitions where symbols are domain values</p></li>
+<li><p>sgrammar|sgrammardp var|weight <em>cost</em> <em>nb_symbols</em> <em>nb_values</em> <em>start_symbol</em> <em>nb_rules</em> ((0 <em>terminal_symbol</em> <em>value</em>)|(1 <em>nonterminal_in</em> <em>nonterminal_out_left</em> <em>nonterminal_out_right</em>)|(2 <em>terminal_symbol</em> <em>value</em> <em>weight</em>)|(3 <em>nonterminal_in</em> <em>nonterminal_out_left</em> <em>nonterminal_out_right</em> <em>weight</em>))* to express a soft/weighted grammar in Chomsky normal form</p></li>
+<li><p>samong|samongdp var <em>cost</em> <em>lower_bound</em> <em>upper_bound</em> <em>nb_values</em> (<em>value</em>)* to express a soft among constraint to restrict the number of variables taking their value into a given set of values</p></li>
+<li><p>salldiffdp var <em>cost</em> to express a soft alldifferent constraint with variable-based (<em>var</em> keyword) cost semantic with a given <em>cost</em> per violation (decomposes into samongdp cost functions)</p></li>
+<li><p>sgccdp var <em>cost</em> <em>nb_values</em> (<em>value</em> <em>lower_bound</em> <em>upper_bound</em>)* to express a soft global cardinality constraint with variable-based (<em>var</em> keyword) cost semantic with a given <em>cost</em> per violation and for each value its lower and upper bound (decomposes into samongdp cost functions)</p></li>
+<li><p>max|smaxdp <em>defCost</em> <em>nbtuples</em> (<em>variable</em> <em>value</em> <em>cost</em>)* to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, <em>defCost</em> if unspecified)</p></li>
+<li><p>MST|smstdp to express a spanning tree hard constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p><ul class="simple">
+<li><p>Global cost functions using a cost function network-based propagator:<ul>
+<li><p>wregular <em>nb_states</em> <em>nb_initial_states</em> (<em>state</em> and cost)* <em>nb_final_states</em> (<em>state</em> and cost)* <em>nb_transitions</em> (<em>start_state</em> <em>symbol_value</em> <em>end_state</em> <em>cost</em>)* to express a weighted regular constraint with weights on initial states, final states, and transitions, followed by the definition of a deterministic finite automaton with number of states, list of initial and final states with their costs, and list of weighted state transitions where symbols are domain values</p></li>
+<li><p>walldiff hard|lin|quad <em>cost</em> to express a soft alldifferent constraint as a set of wamong hard constraint (<em>hard</em> keyword) or decomposition-based (<em>lin</em> and <em>quad</em> keywords) cost semantic with a given <em>cost</em> per violation</p></li>
+<li><p>wgcc hard|lin|quad <em>cost</em> <em>nb_values</em> (<em>value</em> <em>lower_bound</em> <em>upper_bound</em>)* to express a soft global cardinality constraint as either a hard constraint (<em>hard</em> keyword) or with decomposition-based (<em>lin</em> and <em>quad</em> keyword) cost semantic with a given <em>cost</em> per violation and for each value its lower and upper bound</p></li>
+<li><p>wsame hard|lin|quad <em>cost</em> to express a permutation constraint on two lists of variables of equal size (implicitly concatenated in the scope) using implicit decomposition-based cost semantic</p></li>
+<li><p>wsamegcc hard|lin|quad <em>cost</em> <em>nb_values</em> (<em>value</em> <em>lower_bound</em> <em>upper_bound</em>)* to express the combination of a soft global cardinality constraint and a permutation constraint</p></li>
+<li><p>wamong hard|lin|quad <em>cost</em> <em>nb_values</em> (<em>value</em>)* <em>lower_bound</em> <em>upper_bound</em> to express a soft among constraint to restrict the number of variables taking their value into a given set of values</p></li>
+<li><p>wvaramong hard <em>cost</em> <em>nb_values</em> (<em>value</em>)* to express a hard among constraint to restrict the number of variables taking their value into a given set of values to be equal to the last variable in the scope</p></li>
+<li><p>woverlap hard|lin|quad <em>cost</em> <em>comparator</em> <em>righthandside</em> overlaps between two sequences of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero))</p></li>
+<li><p>wsum hard|lin|quad <em>cost</em> <em>comparator</em> <em>righthandside</em> to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-hand-side value</p></li>
+<li><p>wvarsum hard <em>cost</em> <em>comparator</em> to express a hard sum constraint to restrict the sum to be <em>comparator</em> to the value of the last variable in the scope</p></li>
+<li><p>wdiverse <em>distance</em> (<em>value</em>)* to express a hard diversity constraint using a dual encoding such that there is a given minimum Hamming distance to a given variable assignment</p></li>
+<li><p>whdiverse <em>distance</em> (<em>value</em>)* to express a hard diversity constraint using a hidden encoding such that there is a given minimum Hamming distance to a given variable assignment</p></li>
+<li><p>wtdiverse <em>distance</em> (<em>value</em>)* to express a hard diversity constraint using a ternary encoding such that there is a given minimum Hamming distance to a given variable assignment</p>
+<p>Let us note &lt;&gt; the comparator, K the right-hand-side value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:<ul class="simple">
+<li><p>if &lt;&gt; is == : gap = abs(K - Sum)</p></li>
+<li><p>if &lt;&gt; is &lt;= : gap = max(0,Sum - K)</p></li>
+<li><p>if &lt;&gt; is &lt; : gap = max(0,Sum - K - 1)</p></li>
+<li><p>if &lt;&gt; is != : gap = 1 if Sum != K and gap = 0 otherwise</p></li>
+<li><p>if &lt;&gt; is &gt; : gap = max(0,K - Sum + 1);</p></li>
+<li><p>if &lt;&gt; is &gt;= : gap = max(0,K - Sum);</p></li>
+</ul>
+</p>
+</li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p>Warning : The decomposition of wsum and wvarsum may use an exponential size (sum of domain sizes).</p>
+<p>Warning : <em>list_size1</em> and <em>list_size2</em> must be equal in <em>ssame</em>.</p>
+<p>Warning : Cost functions defined in intention cannot be shared.</p>
+<p>Note More about network-based global cost functions can be found on ./misc/doc/DecomposableGlobalCostFunctions.html</p>
+<p>Examples:<ul class="simple">
+<li><p>quadratic cost function <span class="math notranslate nohighlight">\(x0 * x1\)</span> in extension with variable domains <span class="math notranslate nohighlight">\(\{0,1\}\)</span> (equivalent to a soft clause <span class="math notranslate nohighlight">\(\neg x0 \vee \neg x1\)</span>):<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>simple arithmetic hard constraint <span class="math notranslate nohighlight">\(x1 &lt; x2\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="mi">0</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>hard temporal disjunction <span class="math notranslate nohighlight">\(x1 \geq x2 + 2 \vee x2 \geq x1 + 1\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> <span class="o">-</span><span class="mi">1</span> <span class="n">disj</span> <span class="mi">1</span> <span class="mi">2</span> <span class="n">UB</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">clique</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>knapsack constraint ( <span class="math notranslate nohighlight">\(2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 &gt;= 10\)</span>) on four Boolean 0/1 variables:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">knapsack</span> <span class="mi">10</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>knapsackp constraint ( <span class="math notranslate nohighlight">\(2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) &gt;= 10\)</span>) on four {0,1,2}-domain variables:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">knapsackp</span> <span class="mi">10</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">4</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">5</span> <span class="mi">1</span> <span class="mi">5</span>
+</pre></div>
+</div>
+</p></li>
+<li><p>soft_alldifferent({x0,x1,x2,x3}):<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>soft_gcc({x1,x2,x3,x4}) with each value <em>v</em> from 1 to 4 only appearing at least v-1 and at most v+1 times:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">sgcc</span> <span class="n">var</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">2</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">3</span> <span class="mi">5</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}):<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">8</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span> <span class="mi">7</span> <span class="o">-</span><span class="mi">1</span> <span class="n">ssame</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span> <span class="mi">7</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>soft_regular({x1,x2,x3,x4}) with DFA (3*)+(4*):<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">sregular</span> <span class="n">var</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>soft_grammar({x0,x1,x2,x3}) with hard cost (1000) producing well-formed parenthesis expressions:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">sgrammardp</span> <span class="n">var</span> <span class="mi">1000</span> <span class="mi">4</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">6</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">3</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>soft_among({x1,x2,x3,x4}) with hard cost (1000) if <span class="math notranslate nohighlight">\(\sum_{i=1}^4(x_i \in \{1,2\}) &lt; 1\)</span> or <span class="math notranslate nohighlight">\(\sum_{i=1}^4(x_i \in \{1,2\}) &gt; 3\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">samongdp</span> <span class="n">var</span> <span class="mi">1000</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>soft max({x0,x1,x2,x3}) with cost equal to <span class="math notranslate nohighlight">\(\max_{i=0}^3((x_i!=i)?1000:(4-i))\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">smaxdp</span> <span class="mi">1000</span> <span class="mi">4</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>wregular({x0,x1,x2,x3}) with DFA (0(10)*2*):<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">wregular</span> <span class="mi">3</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">9</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>wamong({x1,x2,x3,x4}) with hard cost (1000) if <span class="math notranslate nohighlight">\(\sum_{i=1}^4(x_i \in \{1,2\}) &lt; 1\)</span> or <span class="math notranslate nohighlight">\(\sum_{i=1}^4(x_i \in \{1,2\}) &gt; 3\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">wamong</span> <span class="n">hard</span> <span class="mi">1000</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">3</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>wvaramong({x1,x2,x3,x4}) with hard cost (1000) if <span class="math notranslate nohighlight">\(\sum_{i=1}^3(x_i \in \{1,2\}) \neq x_4\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">wvaramong</span> <span class="n">hard</span> <span class="mi">1000</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>woverlap({x1,x2,x3,x4}) with hard cost (1000) if <span class="math notranslate nohighlight">\(\sum_{i=1}^2(x_i = x_{i+2}) \geq 1\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">woverlap</span> <span class="n">hard</span> <span class="mi">1000</span> <span class="o">&lt;</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</p></li>
+<li><p>wsum({x1,x2,x3,x4}) with hard cost (1000) if <span class="math notranslate nohighlight">\(\sum_{i=1}^4(x_i) \neq 4\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">wsum</span> <span class="n">hard</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">4</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>wvarsum({x1,x2,x3,x4}) with hard cost (1000) if <span class="math notranslate nohighlight">\(\sum_{i=1}^3(x_i) \neq x_4\)</span>:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="o">-</span><span class="mi">1</span> <span class="n">wvarsum</span> <span class="n">hard</span> <span class="mi">1000</span> <span class="o">==</span> 
+</pre></div>
+</div>
+</p></li>
+<li><p>wdiverse({x0,x1,x2,x3}) hard constraint on four variables with minimum Hamming distance of 2 to the value assignment (1,1,0,0):<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">wdiverse</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> 
+</pre></div>
+</div>
+</p></li>
+</ul>
+</p>
+<p>Latin Square 4 x 4 crisp CSP example in wcsp format: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">latin4</span> <span class="mi">16</span> <span class="mi">4</span> <span class="mi">8</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span>
+<span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span> <span class="mi">7</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">8</span> <span class="mi">9</span> <span class="mi">10</span> <span class="mi">11</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">0</span> <span class="mi">4</span> <span class="mi">8</span> <span class="mi">12</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">1</span> <span class="mi">5</span> <span class="mi">9</span> <span class="mi">13</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">2</span> <span class="mi">6</span> <span class="mi">10</span> <span class="mi">14</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+<span class="mi">4</span> <span class="mi">3</span> <span class="mi">7</span> <span class="mi">11</span> <span class="mi">15</span> <span class="o">-</span><span class="mi">1</span> <span class="n">salldiff</span> <span class="n">var</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</p>
+<p>4-queens binary weighted CSP example with random unary costs in wcsp format: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">4</span><span class="o">-</span><span class="n">WQUEENS</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">10</span> <span class="mi">5</span>
+<span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">10</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">0</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">8</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">0</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">6</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">0</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">10</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">0</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">8</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">0</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">10</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">0</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">0</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">2</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">2</span> <span class="mi">5</span>
+<span class="mi">3</span> <span class="mi">3</span> <span class="mi">5</span>
+<span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">2</span>
+<span class="mi">1</span> <span class="mi">1</span>
+<span class="mi">3</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">2</span>
+<span class="mi">1</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mi">2</span>
+<span class="mi">1</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span>
+<span class="mi">1</span> <span class="mi">3</span> <span class="mi">0</span> <span class="mi">2</span>
+<span class="mi">0</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span>
+</pre></div>
+</div>
+ </p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cfnformat.html" class="btn btn-neutral float-left" title="CFN format (.cfn suffix)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="uailgformat.html" class="btn btn-neutral float-right" title="UAI and LG formats (.uai, .LG)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

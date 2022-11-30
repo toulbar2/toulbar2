@@ -16,11 +16,8 @@ except :
 class MultiCFN:
     """pytoulbar2 base class used to combine linearly multiple CFN.
     
-    Constructor Args:
-    
     Members:
         Multi_CFN (MultiWCSP): python interface to C++ class MultiWCSP.
-        
     
     """
     def __init__(self):
@@ -79,7 +76,10 @@ class MultiCFN:
 
         """
 
-        self.MultiCFN.print()    
+        self.MultiCFN.print()
+
+
+
 
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.

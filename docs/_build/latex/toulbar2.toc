@@ -1,0 +1,165 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\numberline {1}About toulbar2}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Authors}{2}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Citations}{3}{chapter.3}%
+\contentsline {chapter}{\numberline {4}Acknowledgements}{4}{chapter.4}%
+\contentsline {chapter}{\numberline {5}License}{5}{chapter.5}%
+\contentsline {chapter}{\numberline {6}Downloads}{6}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Open\sphinxhyphen {}source code}{6}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Packages}{6}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Binaries}{6}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Python package}{6}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Docker images}{6}{section.6.5}%
+\contentsline {chapter}{\numberline {7}Benchmark libraries}{8}{chapter.7}%
+\contentsline {chapter}{\numberline {8}Tutorials}{9}{chapter.8}%
+\contentsline {chapter}{\numberline {9}Use cases}{10}{chapter.9}%
+\contentsline {chapter}{\numberline {10}List of all examples}{11}{chapter.10}%
+\contentsline {section}{\numberline {10.1}Weighted n\sphinxhyphen {}queen problem}{11}{section.10.1}%
+\contentsline {subsection}{\numberline {10.1.1}Brief description}{11}{subsection.10.1.1}%
+\contentsline {subsection}{\numberline {10.1.2}CFN model}{11}{subsection.10.1.2}%
+\contentsline {subsection}{\numberline {10.1.3}Example for N=4 in JSON .cfn format}{11}{subsection.10.1.3}%
+\contentsline {subsection}{\numberline {10.1.4}Python model}{13}{subsection.10.1.4}%
+\contentsline {section}{\numberline {10.2}Weighted latin square problem}{14}{section.10.2}%
+\contentsline {subsection}{\numberline {10.2.1}Brief description}{14}{subsection.10.2.1}%
+\contentsline {subsection}{\numberline {10.2.2}CFN model}{14}{subsection.10.2.2}%
+\contentsline {subsection}{\numberline {10.2.3}Example for N=4 in JSON .cfn format}{14}{subsection.10.2.3}%
+\contentsline {subsection}{\numberline {10.2.4}Python model}{16}{subsection.10.2.4}%
+\contentsline {section}{\numberline {10.3}Radio link frequency assignment problem}{17}{section.10.3}%
+\contentsline {subsection}{\numberline {10.3.1}Brief description}{17}{subsection.10.3.1}%
+\contentsline {subsection}{\numberline {10.3.2}CFN model}{17}{subsection.10.3.2}%
+\contentsline {subsection}{\numberline {10.3.3}Data}{17}{subsection.10.3.3}%
+\contentsline {subsection}{\numberline {10.3.4}Python model}{17}{subsection.10.3.4}%
+\contentsline {section}{\numberline {10.4}Frequency assignment problem with polarization}{19}{section.10.4}%
+\contentsline {subsection}{\numberline {10.4.1}Brief description}{19}{subsection.10.4.1}%
+\contentsline {subsection}{\numberline {10.4.2}CFN model}{20}{subsection.10.4.2}%
+\contentsline {subsection}{\numberline {10.4.3}Data}{20}{subsection.10.4.3}%
+\contentsline {subsection}{\numberline {10.4.4}Python model}{21}{subsection.10.4.4}%
+\contentsline {section}{\numberline {10.5}Mendelian error detection problem}{24}{section.10.5}%
+\contentsline {subsection}{\numberline {10.5.1}Brief description}{24}{subsection.10.5.1}%
+\contentsline {subsection}{\numberline {10.5.2}CFN model}{24}{subsection.10.5.2}%
+\contentsline {subsection}{\numberline {10.5.3}Data}{24}{subsection.10.5.3}%
+\contentsline {subsection}{\numberline {10.5.4}Python model}{24}{subsection.10.5.4}%
+\contentsline {section}{\numberline {10.6}Block modeling problem}{26}{section.10.6}%
+\contentsline {subsection}{\numberline {10.6.1}Brief description}{26}{subsection.10.6.1}%
+\contentsline {subsection}{\numberline {10.6.2}CFN model}{27}{subsection.10.6.2}%
+\contentsline {subsection}{\numberline {10.6.3}Data}{28}{subsection.10.6.3}%
+\contentsline {subsection}{\numberline {10.6.4}Python model}{28}{subsection.10.6.4}%
+\contentsline {section}{\numberline {10.7}Airplane landing problem}{30}{section.10.7}%
+\contentsline {subsection}{\numberline {10.7.1}Brief description}{30}{subsection.10.7.1}%
+\contentsline {subsection}{\numberline {10.7.2}CFN model}{31}{subsection.10.7.2}%
+\contentsline {subsection}{\numberline {10.7.3}Data}{31}{subsection.10.7.3}%
+\contentsline {subsection}{\numberline {10.7.4}Python model solver}{31}{subsection.10.7.4}%
+\contentsline {section}{\numberline {10.8}Warehouse location problem}{32}{section.10.8}%
+\contentsline {subsection}{\numberline {10.8.1}Brief description}{32}{subsection.10.8.1}%
+\contentsline {subsection}{\numberline {10.8.2}CFN model}{33}{subsection.10.8.2}%
+\contentsline {subsection}{\numberline {10.8.3}Data}{33}{subsection.10.8.3}%
+\contentsline {subsection}{\numberline {10.8.4}Python model solver}{33}{subsection.10.8.4}%
+\contentsline {section}{\numberline {10.9}Square packing problem}{35}{section.10.9}%
+\contentsline {subsection}{\numberline {10.9.1}Brief description}{35}{subsection.10.9.1}%
+\contentsline {subsection}{\numberline {10.9.2}CFN model}{35}{subsection.10.9.2}%
+\contentsline {subsection}{\numberline {10.9.3}Python model}{35}{subsection.10.9.3}%
+\contentsline {subsection}{\numberline {10.9.4}C++ program using libtb2.so}{37}{subsection.10.9.4}%
+\contentsline {section}{\numberline {10.10}Square soft packing problem}{39}{section.10.10}%
+\contentsline {subsection}{\numberline {10.10.1}Brief description}{39}{subsection.10.10.1}%
+\contentsline {subsection}{\numberline {10.10.2}CFN model}{39}{subsection.10.10.2}%
+\contentsline {subsection}{\numberline {10.10.3}Python model}{39}{subsection.10.10.3}%
+\contentsline {subsection}{\numberline {10.10.4}C++ program using libtb2.so}{41}{subsection.10.10.4}%
+\contentsline {section}{\numberline {10.11}Golomb ruler problem}{43}{section.10.11}%
+\contentsline {subsection}{\numberline {10.11.1}Brief description}{43}{subsection.10.11.1}%
+\contentsline {subsection}{\numberline {10.11.2}CFN model}{43}{subsection.10.11.2}%
+\contentsline {subsection}{\numberline {10.11.3}Python model}{44}{subsection.10.11.3}%
+\contentsline {section}{\numberline {10.12}Board coloration problem}{45}{section.10.12}%
+\contentsline {subsection}{\numberline {10.12.1}Brief description}{45}{subsection.10.12.1}%
+\contentsline {subsection}{\numberline {10.12.2}CFN basic model}{45}{subsection.10.12.2}%
+\contentsline {subsection}{\numberline {10.12.3}Python model}{46}{subsection.10.12.3}%
+\contentsline {section}{\numberline {10.13}Learning to play the Sudoku}{47}{section.10.13}%
+\contentsline {subsection}{\numberline {10.13.1}Available}{47}{subsection.10.13.1}%
+\contentsline {section}{\numberline {10.14}Learning car configuration preferences}{48}{section.10.14}%
+\contentsline {subsection}{\numberline {10.14.1}Brief description}{48}{subsection.10.14.1}%
+\contentsline {subsection}{\numberline {10.14.2}Available}{48}{subsection.10.14.2}%
+\contentsline {section}{\numberline {10.15}Visual Sudoku Tutorial}{48}{section.10.15}%
+\contentsline {subsection}{\numberline {10.15.1}Brief description}{48}{subsection.10.15.1}%
+\contentsline {subsection}{\numberline {10.15.2}Available}{48}{subsection.10.15.2}%
+\contentsline {section}{\numberline {10.16}Visual Sudoku Application}{48}{section.10.16}%
+\contentsline {subsection}{\numberline {10.16.1}Brief description}{48}{subsection.10.16.1}%
+\contentsline {subsection}{\numberline {10.16.2}Available}{48}{subsection.10.16.2}%
+\contentsline {subsubsection}{Software}{48}{subsubsection*.4}%
+\contentsline {subsubsection}{As an APK}{49}{subsubsection*.5}%
+\contentsline {subsubsection}{As a Web service}{49}{subsubsection*.6}%
+\contentsline {section}{\numberline {10.17}Visual Sudoku App for Android}{50}{section.10.17}%
+\contentsline {subsection}{\numberline {10.17.1}A visual sudoku solver based on cost function networks}{50}{subsection.10.17.1}%
+\contentsline {subsection}{\numberline {10.17.2}Source Code}{50}{subsection.10.17.2}%
+\contentsline {subsection}{\numberline {10.17.3}Download and Install}{50}{subsection.10.17.3}%
+\contentsline {subsection}{\numberline {10.17.4}Description}{51}{subsection.10.17.4}%
+\contentsline {section}{\numberline {10.18}A sudoku code}{52}{section.10.18}%
+\contentsline {subsection}{\numberline {10.18.1}Brief description}{52}{subsection.10.18.1}%
+\contentsline {subsection}{\numberline {10.18.2}Available}{52}{subsection.10.18.2}%
+\contentsline {subsubsection}{Web service to get one sudoku grids (both partial and completed) :}{52}{subsubsection*.7}%
+\contentsline {subsubsection}{Web service to further get a detailed description of what the program does (verbose version) :}{53}{subsubsection*.8}%
+\contentsline {subsubsection}{Example of calling the sudoku web services from a terminal by cURL :}{53}{subsubsection*.9}%
+\contentsline {chapter}{\numberline {11}User Guide}{54}{chapter.11}%
+\contentsline {section}{\numberline {11.1}What is toulbar2}{54}{section.11.1}%
+\contentsline {section}{\numberline {11.2}How do I install it ?}{55}{section.11.2}%
+\contentsline {section}{\numberline {11.3}How do I test it ?}{55}{section.11.3}%
+\contentsline {section}{\numberline {11.4}Using it as a black box}{56}{section.11.4}%
+\contentsline {section}{\numberline {11.5}Quick start}{56}{section.11.5}%
+\contentsline {section}{\numberline {11.6}Command line options}{76}{section.11.6}%
+\contentsline {subsection}{\numberline {11.6.1}General control}{76}{subsection.11.6.1}%
+\contentsline {subsection}{\numberline {11.6.2}Preprocessing}{77}{subsection.11.6.2}%
+\contentsline {subsection}{\numberline {11.6.3}Initial upper bounding}{78}{subsection.11.6.3}%
+\contentsline {subsection}{\numberline {11.6.4}Tree search algorithms and tree decomposition selection}{78}{subsection.11.6.4}%
+\contentsline {subsection}{\numberline {11.6.5}Variable neighborhood search algorithms}{80}{subsection.11.6.5}%
+\contentsline {subsection}{\numberline {11.6.6}Node processing \& bounding options}{81}{subsection.11.6.6}%
+\contentsline {subsection}{\numberline {11.6.7}Branching, variable and value ordering}{81}{subsection.11.6.7}%
+\contentsline {subsection}{\numberline {11.6.8}Diverse solutions}{82}{subsection.11.6.8}%
+\contentsline {subsection}{\numberline {11.6.9}Console output}{82}{subsection.11.6.9}%
+\contentsline {subsection}{\numberline {11.6.10}File output}{83}{subsection.11.6.10}%
+\contentsline {subsection}{\numberline {11.6.11}Probability representation and numerical control}{83}{subsection.11.6.11}%
+\contentsline {subsection}{\numberline {11.6.12}Random problem generation}{83}{subsection.11.6.12}%
+\contentsline {section}{\numberline {11.7}Input formats}{84}{section.11.7}%
+\contentsline {subsection}{\numberline {11.7.1}Introduction}{84}{subsection.11.7.1}%
+\contentsline {subsection}{\numberline {11.7.2}Formats details}{85}{subsection.11.7.2}%
+\contentsline {subsubsection}{CFN format (.cfn suffix)}{85}{subsubsection*.10}%
+\contentsline {subsubsection}{Weighted Constraint Satisfaction Problem file format (wcsp)}{94}{subsubsection*.11}%
+\contentsline {subsubsection}{UAI and LG formats (.uai, .LG)}{102}{subsubsection*.13}%
+\contentsline {subsubsection}{Partial Weighted MaxSAT format}{105}{subsubsection*.14}%
+\contentsline {subsubsection}{QPBO format (.qpbo)}{106}{subsubsection*.15}%
+\contentsline {subsubsection}{OPB format (.opb)}{107}{subsubsection*.16}%
+\contentsline {subsubsection}{XCSP2.1 format (.xml)}{107}{subsubsection*.17}%
+\contentsline {subsubsection}{XCSP3 format (.xml)}{107}{subsubsection*.18}%
+\contentsline {subsubsection}{Linkage format (.pre)}{107}{subsubsection*.19}%
+\contentsline {section}{\numberline {11.8}How do I use it ?}{108}{section.11.8}%
+\contentsline {subsection}{\numberline {11.8.1}Using it as a C++ library}{108}{subsection.11.8.1}%
+\contentsline {subsection}{\numberline {11.8.2}Using it from Python}{108}{subsection.11.8.2}%
+\contentsline {section}{\numberline {11.9}References}{108}{section.11.9}%
+\contentsline {chapter}{\numberline {12}Reference Manual}{109}{chapter.12}%
+\contentsline {section}{\numberline {12.1}Introduction}{109}{section.12.1}%
+\contentsline {section}{\numberline {12.2}Exact optimization for cost function networks and additive graphical models}{109}{section.12.2}%
+\contentsline {subsection}{\numberline {12.2.1}What is toulbar2?}{109}{subsection.12.2.1}%
+\contentsline {subsection}{\numberline {12.2.2}Installation from binaries}{110}{subsection.12.2.2}%
+\contentsline {subsection}{\numberline {12.2.3}Python interface}{110}{subsection.12.2.3}%
+\contentsline {subsection}{\numberline {12.2.4}Download}{110}{subsection.12.2.4}%
+\contentsline {subsection}{\numberline {12.2.5}Installation from sources}{110}{subsection.12.2.5}%
+\contentsline {subsection}{\numberline {12.2.6}Convex Combination of multiple Criteria branch}{112}{subsection.12.2.6}%
+\contentsline {subsubsection}{changes regarding the master toulbar2 c++/python API}{112}{subsubsection*.20}%
+\contentsline {section}{\numberline {12.3}Modules}{112}{section.12.3}%
+\contentsline {subsection}{\numberline {12.3.1}Variable and cost function modeling}{112}{subsection.12.3.1}%
+\contentsline {subsection}{\numberline {12.3.2}Solving cost function networks}{113}{subsection.12.3.2}%
+\contentsline {subsection}{\numberline {12.3.3}Output messages, verbosity options and debugging}{118}{subsection.12.3.3}%
+\contentsline {subsection}{\numberline {12.3.4}Preprocessing techniques}{119}{subsection.12.3.4}%
+\contentsline {subsection}{\numberline {12.3.5}Variable and value search ordering heuristics}{119}{subsection.12.3.5}%
+\contentsline {subsection}{\numberline {12.3.6}Soft arc consistency and problem reformulation}{120}{subsection.12.3.6}%
+\contentsline {subsection}{\numberline {12.3.7}Virtual Arc Consistency enforcing}{120}{subsection.12.3.7}%
+\contentsline {subsection}{\numberline {12.3.8}NC bucket sort}{120}{subsection.12.3.8}%
+\contentsline {subsection}{\numberline {12.3.9}Variable elimination}{121}{subsection.12.3.9}%
+\contentsline {subsection}{\numberline {12.3.10}Propagation loop}{121}{subsection.12.3.10}%
+\contentsline {subsection}{\numberline {12.3.11}Backtrack management}{122}{subsection.12.3.11}%
+\contentsline {section}{\numberline {12.4}Libraries}{122}{section.12.4}%
+\contentsline {chapter}{\numberline {13}Documentation in pdf}{123}{chapter.13}%
+\contentsline {chapter}{\numberline {14}Publications}{124}{chapter.14}%
+\contentsline {section}{\numberline {14.1}Conference talks}{124}{section.14.1}%
+\contentsline {section}{\numberline {14.2}Related publications}{124}{section.14.2}%
+\contentsline {subsection}{\numberline {14.2.1}What are the algorithms inside toulbar2 ?}{124}{subsection.14.2.1}%
+\contentsline {subsection}{\numberline {14.2.2}toulbar2 for Combinatorial Optimization in Life Sciences}{126}{subsection.14.2.2}%
+\contentsline {subsection}{\numberline {14.2.3}Other publications mentioning toulbar2}{127}{subsection.14.2.3}%
+\contentsline {chapter}{Bibliography}{129}{chapter*.32}%

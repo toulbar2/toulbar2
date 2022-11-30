@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Square packing problem &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/toulbar2.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> toulbar2
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=tutorials.html>Tutorials</a> |
+    <a href=usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="square-packing-problem">
+<span id="tuto-spp"></span><h1>Square packing problem<a class="headerlink" href="#square-packing-problem" title="Permalink to this heading"></a></h1>
+<div align=right>
+    <span style="color:Firebrick; font-weight:bold;"> Back to </span>
+    <a href="tutorials.html">Tutorials</a> |
+    <a href="usecases.html">Use cases</a>
+</div><section id="brief-description">
+<h2>Brief description<a class="headerlink" href="#brief-description" title="Permalink to this heading"></a></h2>
+<p>We have N squares of respectives size 1×1, 2×2,…, NxN. We have to fit them without overlaps into a square of size SxS.</p>
+<p>Results up to N=56 are given <a class="reference external" href="https://oeis.org/A005842">here</a>.</p>
+<p>Optimal solution for 15 squares packed into a 36x36 square (Fig. taken from Takehide Soh)</p>
+<a class="reference internal image-reference" href="../_images/square.png"><img alt="../_images/square.png" src="../_images/square.png" style="height: 250px;" /></a>
+</section>
+<section id="cfn-model">
+<h2>CFN model<a class="headerlink" href="#cfn-model" title="Permalink to this heading"></a></h2>
+<p>We create an integer variable of domain size (S-i)x(S-i) for each square.
+The variable represents the position of the top left corner of the square.</p>
+<p>The value of a given variable modulo (S-i) gives the x-coordinate, whereas its value divided by (S-i) gives the y-coordinate.</p>
+<p>We have hard binary constraints to forbid any overlapping pair of squares.</p>
+<p>We make the problem a pure satisfaction problem by fixing the initial upper bound to 1.</p>
+</section>
+<section id="python-model">
+<h2>Python model<a class="headerlink" href="#python-model" title="Permalink to this heading"></a></h2>
+<p>The following code uses the pytoulbar2 library to generate the cost function network and solve it (e.g. “python3 square.py 3 5”).
+<a class="reference download internal" download="" href="../_downloads/768c0faa364892417f2d432d0af49b16/square.py"><code class="xref download docutils literal notranslate"><span class="pre">square.py</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span><span class="p">,</span> <span class="n">seed</span>		
+<span class="n">seed</span><span class="p">(</span><span class="mi">123456789</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">pytoulbar2</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+	<span class="n">S</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+	<span class="k">assert</span> <span class="n">N</span> <span class="o">&lt;=</span> <span class="n">S</span>
+<span class="k">except</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Two integers need to be given as arguments: N and S&#39;</span><span class="p">)</span>
+	<span class="n">exit</span><span class="p">()</span>
+
+<span class="c1">#pure constraint satisfaction problem</span>
+<span class="n">Problem</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">#create a variable for each square</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+	<span class="n">Problem</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;sq&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)])</span>
+
+<span class="c1">#binary hard constraints for overlapping squares</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+	<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+		<span class="n">ListConstraintsOverlaps</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="n">l</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)]:</span>
+			<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">*</span><span class="n">m</span><span class="o">+</span><span class="n">n</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)]:</span>
+				<span class="c1">#calculating the coordinates of the squares</span>
+				<span class="n">X_i</span> <span class="o">=</span> <span class="n">a</span><span class="o">%</span><span class="n">S</span>
+				<span class="n">X_j</span> <span class="o">=</span> <span class="n">b</span><span class="o">%</span><span class="n">S</span>
+				<span class="n">Y_i</span> <span class="o">=</span> <span class="n">a</span><span class="o">//</span><span class="n">S</span>
+				<span class="n">Y_j</span> <span class="o">=</span> <span class="n">b</span><span class="o">//</span><span class="n">S</span>
+				<span class="c1">#calculating if squares are overlapping</span>
+				<span class="k">if</span> <span class="n">X_i</span> <span class="o">&gt;=</span> <span class="n">X_j</span> <span class="p">:</span>
+					<span class="k">if</span> <span class="n">X_i</span> <span class="o">-</span> <span class="n">X_j</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">Y_i</span> <span class="o">&gt;=</span> <span class="n">Y_j</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_i</span> <span class="o">-</span> <span class="n">Y_j</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_j</span> <span class="o">-</span> <span class="n">Y_i</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+				<span class="k">else</span> <span class="p">:</span>
+					<span class="k">if</span> <span class="n">X_j</span> <span class="o">-</span> <span class="n">X_i</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">Y_i</span> <span class="o">&gt;=</span> <span class="n">Y_j</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_i</span> <span class="o">-</span> <span class="n">Y_j</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_j</span> <span class="o">-</span> <span class="n">Y_i</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+		<span class="n">Problem</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="s1">&#39;sq&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;sq&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)],</span> <span class="n">ListConstraintsOverlaps</span><span class="p">)</span>
+
+<span class="c1">#Problem.Dump(&#39;Square.cfn&#39;)</span>
+<span class="n">Problem</span><span class="o">.</span><span class="n">CFN</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">Problem</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">showSolutions</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+		<span class="n">row</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+			<span class="n">row</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">-</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">//</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">-</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">//</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">):</span>
+					<span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">65</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No solution found!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="c-program-using-libtb2-so">
+<h2>C++ program using libtb2.so<a class="headerlink" href="#c-program-using-libtb2-so" title="Permalink to this heading"></a></h2>
+<p>The following code uses the C++ toulbar2 library. Compile toulbar2 with “cmake -DLIBTB2=ON -DPYTB2=ON . ; make” and copy the library in your current directory “cp lib/Linux/libtb2.so .” before compiling “g++ -o square square.cpp -Isrc -Llib/Linux -std=c++11 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY libtb2.so” and running the example (e.g. “./square 15 36”).</p>
+<p><a class="reference download internal" download="" href="../_downloads/3a550a065f1590db2ba49bac5df56c1f/square.cpp"><code class="xref download docutils literal notranslate"><span class="pre">square.cpp</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+/**
+ * Square Packing Problem
+ */
+
+// Compile with cmake option -DLIBTB2=ON -DPYTB2=ON to get C++ toulbar2 library lib/Linux/libtb2.so
+// Then,
+// g++ -o square square.cpp -Isrc -Llib/Linux -std=c++11 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY libtb2.so
+
+#include &quot;toulbar2lib.hpp&quot;
+
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+
+int main(int argc, char* argv[])
+{
+    int N = atoi(argv[1]);
+    int S = atoi(argv[2]);
+
+    tb2init(); // must be call before setting specific ToulBar2 options and creating a model
+
+    ToulBar2::verbose = 0; // change to 0 or higher values to see more trace information
+
+    initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
+
+    Cost top = UNIT_COST;
+    WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
+
+    for (int i=0; i&lt;N; i++) {
+        solver-&gt;getWCSP()-&gt;makeEnumeratedVariable(&quot;sq&quot; + to_string(i+1), 0, (S-i)*(S-i) - 1);
+    }
+
+    for (int i=0; i&lt;N; i++) {
+        for (int j=i+1; j&lt;N; j++) {
+            vector&lt;Cost&gt; costs((S-i)*(S-i)*(S-j)*(S-j), MIN_COST);
+    	    for (int a=0; a&lt;(S-i)*(S-i); a++) {
+    	        for (int b=0; b&lt;(S-j)*(S-j); b++) {
+                    costs[a*(S-j)*(S-j)+b] = ((((a%(S-i)) + i + 1 &lt;= (b%(S-j))) || ((b%(S-j)) + j + 1 &lt;= (a%(S-i))) || ((a/(S-i)) + i + 1 &lt;= (b/(S-j))) || ((b/(S-j)) + j + 1 &lt;= (a/(S-i))))?MIN_COST:top);
+                }
+            }
+            solver-&gt;getWCSP()-&gt;postBinaryConstraint(i, j, costs);
+        }
+    }
+
+    solver-&gt;getWCSP()-&gt;sortConstraints(); // must be done at the end of the modeling
+
+    tb2checkOptions();
+    if (solver-&gt;solve()) {
+            vector&lt;Value&gt; sol;
+            solver-&gt;getSolution(sol);
+    	    for (int y=0; y&lt;S; y++) {
+                for (int x=0; x&lt;S; x++) {
+                    char c = &#39; &#39;;
+                    for (int i=0; i&lt;N; i++) {
+                        if (x &gt;= (sol[i]%(S-i)) &amp;&amp; x &lt; (sol[i]%(S-i) ) + i + 1 &amp;&amp; y &gt;= (sol[i]/(S-i)) &amp;&amp; y &lt; (sol[i]/(S-i)) + i + 1) {
+                            c = 65+i;
+                            break;
+                        }
+                     }
+                     cout &lt;&lt; c;
+                }
+                cout &lt;&lt; endl;
+            }
+    } else {
+            cout &lt;&lt; &quot;No solution found!&quot; &lt;&lt; endl;
+    }
+
+    delete solver;
+    return 0;
+}
+
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

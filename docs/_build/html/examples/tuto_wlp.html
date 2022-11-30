@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warehouse location problem &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/toulbar2.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> toulbar2
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=tutorials.html>Tutorials</a> |
+    <a href=usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="warehouse-location-problem">
+<span id="tuto-wlp"></span><h1>Warehouse location problem<a class="headerlink" href="#warehouse-location-problem" title="Permalink to this heading"></a></h1>
+<div align=right>
+    <span style="color:Firebrick; font-weight:bold;"> Back to </span>
+    <a href="tutorials.html">Tutorials</a> |
+    <a href="usecases.html">Use cases</a>
+</div><section id="brief-description">
+<h2>Brief description<a class="headerlink" href="#brief-description" title="Permalink to this heading"></a></h2>
+<p>A compagny consider opening warehouses at some candidate locations with each of them having a maintenance cost if they are open.</p>
+<p>The compagny control a set of given stores and each of them need to take suplies to one of the warehouse, but depending the warehouse chosen, there will be an additionnal cost.</p>
+<p>The objective is to choose wich warehouse to open and to divide the store among the open warehouse ion order to minimize the total cost of the store’s cost and the maintenance cost.</p>
+</section>
+<section id="cfn-model">
+<h2>CFN model<a class="headerlink" href="#cfn-model" title="Permalink to this heading"></a></h2>
+<p>We create Boolean variables for the warehouses (i.e., open or not) and integer variables for the store, with domain size the number of warehouses to represent to wich warehouse the store will take suplies.</p>
+<p>Hard binary constraints represent that a store cannnot take suplies from a closed warehouse.
+Soft unary constraints represent the maintenance cost of the warehouses.
+Soft unary constraints represent the store’s cost regarding wich warehouse to take supplies from.</p>
+</section>
+<section id="data">
+<h2>Data<a class="headerlink" href="#data" title="Permalink to this heading"></a></h2>
+<p>Original data files can be download from the cost function library <a class="reference external" href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/data/txt">warehouses</a>. Their format is described <a class="reference external" href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/readme.txt">here</a>.</p>
+</section>
+<section id="python-model-solver">
+<h2>Python model solver<a class="headerlink" href="#python-model-solver" title="Permalink to this heading"></a></h2>
+<p>The following code uses the pytoulbar2 module to generate the cost function network and solve it (e.g. “python3 warehouse.py cap44.txt 1” found optimum value equal to 10349757). Other instances are available <a class="reference external" href="https://forgemia.inra.fr/thomas.schiex/cost-function-library/tree/master/crafted/warehouses/instances/cfn">here</a> in cfn format.</p>
+<p><a class="reference download internal" download="" href="../_downloads/55e8d85de2f7262917d545c38d9d009c/warehouse.py"><code class="xref download docutils literal notranslate"><span class="pre">warehouse.py</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pytoulbar2</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="n">precision</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># used to convert cost values from float to integer</span>
+
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">tokens</span> <span class="o">+=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+<span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="nf">token</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">pos</span><span class="p">,</span> <span class="n">tokens</span>
+    <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+    <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">())</span>  <span class="c1"># number of warehouses</span>
+<span class="n">M</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">())</span>  <span class="c1"># number of stores</span>
+
+<span class="n">top</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># sum of all costs plus one</span>
+
+<span class="n">CostW</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># maintenance cost of warehouses</span>
+<span class="n">Capacity</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># capacity limit of warehouses (not used)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="n">Capacity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">())</span>
+    <span class="n">CostW</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">token</span><span class="p">())</span> <span class="o">*</span> <span class="mf">10.</span><span class="o">**</span><span class="n">precision</span><span class="p">))</span>
+
+<span class="n">top</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">CostW</span><span class="p">)</span>
+
+<span class="n">Demand</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># demand for each store</span>
+<span class="n">CostS</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">)]</span>  <span class="c1"># supply cost matrix</span>
+
+<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="n">Demand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">CostS</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">token</span><span class="p">())</span> <span class="o">*</span> <span class="mf">10.</span><span class="o">**</span><span class="n">precision</span><span class="p">))</span>
+    <span class="n">top</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">CostS</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># create a new empty cost function network</span>
+<span class="n">Problem</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+<span class="c1"># add warehouse variables</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="n">Problem</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;w&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="c1"># add store variables</span>
+<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="n">Problem</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;s&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+<span class="c1"># add maintenance costs</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="n">Problem</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">i</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">CostW</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+<span class="c1"># add supply costs for each store</span>
+<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="n">Problem</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">N</span><span class="o">+</span><span class="n">j</span><span class="p">],</span> <span class="n">CostS</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+<span class="c1"># add channeling constraints between warehouses and stores</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+        <span class="n">Constraint</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">b</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
+                    <span class="n">Constraint</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Constraint</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Problem</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">N</span><span class="o">+</span><span class="n">j</span><span class="p">],</span> <span class="n">Constraint</span><span class="p">)</span>
+
+<span class="c1">#Problem.Dump(&#39;warehouse.cfn&#39;)</span>
+<span class="n">Problem</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">showSolutions</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

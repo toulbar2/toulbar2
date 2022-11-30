@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Library &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/toulbar2.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Documentation in pdf" href="../pdfmanuals.html" />
+    <link rel="prev" title="C++ Library" href="ref_cpp.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> toulbar2
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../refman.html">Reference Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ref_intro.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../_files/README.html">Exact optimization for cost function networks and additive graphical models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_modules.html">Modules</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="ref_lib.html">Libraries</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ref_cpp.html">C++ Library</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Python Library</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pytoulbar2.CFN"><code class="docutils literal notranslate"><span class="pre">CFN</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=../examples/tutorials.html>Tutorials</a> |
+    <a href=../examples/usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-library">
+<span id="ref-python"></span><h1>Python Library<a class="headerlink" href="#python-library" title="Permalink to this heading"></a></h1>
+<p>pytoulbar2 software is the Python interface of toulbar2.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pytoulbar2.CFN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pytoulbar2.</span></span><span class="sig-name descname"><span class="pre">CFN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ubinit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN" title="Permalink to this definition"></a></dt>
+<dd><p>pytoulbar2 base class used to manipulate and solve a cost function network.</p>
+<dl>
+<dt>Constructor Args:</dt><dd><p>ubinit (decimal cost or None): initial upper bound.
+resolution (int): decimal precision of costs.
+vac (int): if non zero, maximum solver depth minus one where virtual arc consistency algorithm is applied (1: VAC only in preprocessing).
+configuration (bool): if True then special settings for preference learning using incremental solving (see car configuration tutorial).
+vns (int or None): if None then solves using branch-and-bound methods else using variable neighborhood search heuristic</p>
+<blockquote>
+<div><dl class="simple">
+<dt>(-1: initial solution at random, -2: minimum domain values, -3: maximum domain values,</dt><dd><p>-4: first solution found by DFS, &gt;=0: or by LDS with at most vns discrepancies).</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>seed (int): random seed.
+verbose (int): verbosity control (-1: no message, 0: search statistics, 1: search tree, 2-7: propagation information).</p>
+</dd>
+<dt>Members:</dt><dd><p>CFN (WeightedCSPSolver): python interface to C++ class WeightedCSPSolver.</p>
+<p>Contradiction (exception): python exception corresponding to the same C++ class.</p>
+<p>Limit (exception|None): contains the last SolverOut exception or None if no exception occurs when solving with SolveNext.</p>
+<p>Option (TouBar2): python interface to C++ class ToulBar2.</p>
+<p>SolverOut (exception): python exception corresponding to the same C++ class.</p>
+<p>Top (decimal cost): maximum decimal cost (it can be used to represent a forbidden cost).</p>
+<p>VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).</p>
+<p>VariableNames (list): array of created variable names (str) sorted by their index number.</p>
+</dd>
+</dl>
+<p>See pytoulbar2test.py example in src repository.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddAllDifferent">
+<span class="sig-name descname"><span class="pre">AddAllDifferent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'binary'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excepted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incremental</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddAllDifferent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddAllDifferent" title="Permalink to this definition"></a></dt>
+<dd><p>Add AllDifferent hard global constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<em>list</em>) – input variables of the function. A variable can be represented by its name (str) or its index (int).</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – encoding used to represent AllDifferent (available choices are ‘binary’ or ‘salldiff’ or ‘salldiffdp’ or ‘salldiffkp’ or ‘walldiff’).</p></li>
+<li><p><strong>excepted</strong> (<em>None</em><em> or </em><em>list</em>) – list of excepted domain values which can be taken by any variable without violating the constraint.</p></li>
+<li><p><strong>incremental</strong> (<em>bool</em>) – if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddCompactFunction">
+<span class="sig-name descname"><span class="pre">AddCompactFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defcost</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tcosts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incremental</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddCompactFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddCompactFunction" title="Permalink to this definition"></a></dt>
+<dd><p>AddCompactFunction creates a cost function in extension. The scope corresponds to the input variables of the function.
+The costs are given by a list of assignments with the corresponding list of costs, all the other assignments taking the default cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<em>list</em>) – input variables of the function. A variable can be represented by its name (str) or its index (int).</p></li>
+<li><p><strong>defcost</strong> (<em>decimal cost</em>) – default cost.</p></li>
+<li><p><strong>tuples</strong> (<em>list</em>) – array of assignments (each assignment is a list of domain values, following the scope order).</p></li>
+<li><p><strong>tcosts</strong> (<em>list</em>) – array of corresponding decimal costs (tcosts and tuples have the same size).</p></li>
+<li><p><strong>incremental</strong> (<em>bool</em>) – if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>AddCompactFunction([‘x’,’y’,’z’],0,[[0,0,0],[1,1,1]],[1,-1]) encodes a ternary cost function with the null assignment having a cost of 1,
+the identity assignment having a cost of -1, and all the other assignments a cost of 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddFunction">
+<span class="sig-name descname"><span class="pre">AddFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incremental</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddFunction" title="Permalink to this definition"></a></dt>
+<dd><p>AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function.
+The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<em>list</em>) – input variables of the function. A variable can be represented by its name (str) or its index (int).</p></li>
+<li><p><strong>costs</strong> (<em>list</em>) – array of decimal costs for all possible assignments (iterating first over the domain values of the last variable in the scope).</p></li>
+<li><p><strong>incremental</strong> (<em>bool</em>) – if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>AddFunction([‘x’,’y’], [0,1,1,0]) encodes a binary cost function on Boolean variables x and y such that (x=0,y=0) has a cost of 0,
+(x=0,y=1) has a cost of 1, (x=1,y=0) has a cost of 1, and (x=1,y=1) has a cost of 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddGeneralizedLinearConstraint">
+<span class="sig-name descname"><span class="pre">AddGeneralizedLinearConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tuples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'=='</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rightcoef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddGeneralizedLinearConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddGeneralizedLinearConstraint" title="Permalink to this definition"></a></dt>
+<dd><p>AddGeneralizedLinearConstraint creates a linear constraint with integer coefficients associated to domain values.
+The scope implicitely corresponds to the variables involved in the tuples. Missing domain values have an implicit zero coefficient.
+All constant terms must belong to the right part.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tuples</strong> (<em>list</em>) – array of triplets (variable, domain value, coefficient) in the left part of the constraint.</p></li>
+<li><p><strong>operand</strong> (<em>str</em>) – can be either ‘==’ or ‘&lt;=’ or ‘&gt;=’.</p></li>
+<li><p><strong>rightcoef</strong> (<em>int</em>) – constant term in the right part.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>AddGeneralizedLinearConstraint([(‘x’,1,1),(‘y’,1,1),(‘z’,0,2)], ‘==’, 1) encodes (x==1) + (y==1) + 2*(z==0) = 1 assuming 0/1 variables and (x==u) is equal to 1 if value u is assigned to x else equal to 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddGlobalFunction">
+<span class="sig-name descname"><span class="pre">AddGlobalFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gcname</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddGlobalFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddGlobalFunction" title="Permalink to this definition"></a></dt>
+<dd><p>AddGlobalFunction creates a soft global cost function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scope</strong> (<em>list</em>) – input variables of the function. A variable can be represented by its name (str) or its index (int).</p></li>
+<li><p><strong>gcname</strong> (<em>str</em>) – name of the global cost function (see toulbar2 user documentation).</p></li>
+<li><p><strong>parameters</strong> (<em>list</em>) – list of parameters (str or int) for this global cost function.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>AddGlobalFunction([‘x1’,’x2’,’x3’,’x4’], ‘wamong’, ‘hard’, 1000, 2, 1, 2, 1, 3) encodes a hard among constraint satisfied iff values {1,2} are assigned to the given variables at least once and at most 3 times, otherwise it returns a cost of 1000.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddLinearConstraint">
+<span class="sig-name descname"><span class="pre">AddLinearConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'=='</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rightcoef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddLinearConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddLinearConstraint" title="Permalink to this definition"></a></dt>
+<dd><p>AddLinearConstraint creates a linear constraint with integer coefficients.
+The scope corresponds to the variables involved in the left part of the constraint.
+All variables must belong to the left part (change their coefficient sign if they are originally in the right part).
+All constant terms must belong to the rigt part.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coefs</strong> (<em>list</em>) – array of integer coefficients associated to the left-part variables.</p></li>
+<li><p><strong>scope</strong> (<em>list</em>) – variables involved in the left part of the constraint. A variable can be represented by its name (str) or its index (int).</p></li>
+<li><p><strong>operand</strong> (<em>str</em>) – can be either ‘==’ or ‘&lt;=’ or ‘&gt;=’.</p></li>
+<li><p><strong>rightcoef</strong> (<em>int</em>) – constant term in the right part.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>AddLinearConstraint([1,1,-2], [x,y,z], ‘==’, -1) encodes x + y -2z = -1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.AddVariable">
+<span class="sig-name descname"><span class="pre">AddVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.AddVariable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.AddVariable" title="Permalink to this definition"></a></dt>
+<dd><p>AddVariable creates a new discrete variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – variable name.</p></li>
+<li><p><strong>values</strong> (<em>list</em><em> or </em><em>iterable</em>) – list of domain values represented by numerical (int) or symbolic (str) values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Index of the created variable in the problem (int).</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Symbolic values are implicitely associated to integer values (starting from zero) in the other functions.
+In case of numerical values, the initial domain size is equal to max(values)-min(values)+1 and not equal to len(values).
+Otherwise (symbolic case), the initial domain size is equal to len(values).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Assign">
+<span class="sig-name descname"><span class="pre">Assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Assign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Assign" title="Permalink to this definition"></a></dt>
+<dd><p>Assign assigns a variable to a domain value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varIndex</strong> (<em>int</em>) – index of the variable as returned by AddVariable.</p></li>
+<li><p><strong>value</strong> (<em>int</em>) – domain value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.ClearPropagationQueues">
+<span class="sig-name descname"><span class="pre">ClearPropagationQueues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.ClearPropagationQueues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.ClearPropagationQueues" title="Permalink to this definition"></a></dt>
+<dd><p>ClearPropagationQueues resets propagation queues. It should be called when an exception Contradiction occurs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Deconnect">
+<span class="sig-name descname"><span class="pre">Deconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Deconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Deconnect" title="Permalink to this definition"></a></dt>
+<dd><p>Deconnect deconnects a variable from the rest of the problem and assigns it to its support value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>varIndex</strong> (<em>int</em>) – index of the variable as returned by AddVariable.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Decrease">
+<span class="sig-name descname"><span class="pre">Decrease</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Decrease"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Decrease" title="Permalink to this definition"></a></dt>
+<dd><p>Decrease removes the last values strictly greater than a given value in the domain of a variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varIndex</strong> (<em>int</em>) – index of the variable as returned by AddVariable.</p></li>
+<li><p><strong>value</strong> (<em>int</em>) – domain value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Depth">
+<span class="sig-name descname"><span class="pre">Depth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Depth" title="Permalink to this definition"></a></dt>
+<dd><p>Depth returns the current solver depth value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Current solver depth value (int).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Domain">
+<span class="sig-name descname"><span class="pre">Domain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Domain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Domain" title="Permalink to this definition"></a></dt>
+<dd><p>Domain returns the current domain of a given variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>varIndex</strong> (<em>int</em>) – index of the variable as returned by AddVariable.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of domain values (list).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Dump">
+<span class="sig-name descname"><span class="pre">Dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Dump" title="Permalink to this definition"></a></dt>
+<dd><p>Dump outputs the problem in a file (without doing any preprocessing).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – problem filename. The suffix must be ‘.wcsp’ or ‘.cfn’ to select in which format to save the problem.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetLB">
+<span class="sig-name descname"><span class="pre">GetLB</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetLB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetLB" title="Permalink to this definition"></a></dt>
+<dd><p>GetLB returns the current problem lower bound.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Current lower bound (decimal cost).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetNbBacktracks">
+<span class="sig-name descname"><span class="pre">GetNbBacktracks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetNbBacktracks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetNbBacktracks" title="Permalink to this definition"></a></dt>
+<dd><p>GetNbBacktracks returns the number of backtracks done so far.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Current number of backtracks (int).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetNbConstrs">
+<span class="sig-name descname"><span class="pre">GetNbConstrs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetNbConstrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetNbConstrs" title="Permalink to this definition"></a></dt>
+<dd><p>GetNbConstrs returns the number of non-unary cost functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of non-unary cost functions (int).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetNbNodes">
+<span class="sig-name descname"><span class="pre">GetNbNodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetNbNodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetNbNodes" title="Permalink to this definition"></a></dt>
+<dd><p>GetNbNodes returns the number of search nodes explored so far.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Current number of search nodes (int).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetNbVars">
+<span class="sig-name descname"><span class="pre">GetNbVars</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetNbVars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetNbVars" title="Permalink to this definition"></a></dt>
+<dd><p>GetNbVars returns the number of variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of variables (int).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetSolutions">
+<span class="sig-name descname"><span class="pre">GetSolutions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetSolutions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetSolutions" title="Permalink to this definition"></a></dt>
+<dd><p>GetSolutions returns all the solutions found so far with their associated costs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of pairs (decimal cost, solution) where a solution is a list of domain values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.GetUB">
+<span class="sig-name descname"><span class="pre">GetUB</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.GetUB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.GetUB" title="Permalink to this definition"></a></dt>
+<dd><p>GetUB returns the initial upper bound.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Current initial upper bound (decimal cost).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Increase">
+<span class="sig-name descname"><span class="pre">Increase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Increase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Increase" title="Permalink to this definition"></a></dt>
+<dd><p>Increase removes the first values strictly lower than a given value in the domain of a variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varIndex</strong> (<em>int</em>) – index of the variable as returned by AddVariable.</p></li>
+<li><p><strong>value</strong> (<em>int</em>) – domain value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.MultipleAssign">
+<span class="sig-name descname"><span class="pre">MultipleAssign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndexes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.MultipleAssign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.MultipleAssign" title="Permalink to this definition"></a></dt>
+<dd><p>MultipleAssign assigns several variables at once.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varIndexes</strong> (<em>list</em>) – list of indexes of variables.</p></li>
+<li><p><strong>values</strong> (<em>list</em>) – list of domain values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.MultipleDeconnect">
+<span class="sig-name descname"><span class="pre">MultipleDeconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndexes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.MultipleDeconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.MultipleDeconnect" title="Permalink to this definition"></a></dt>
+<dd><p>MultipleDeconnect deconnects a set of variables from the rest of the problem and assigns them to their support value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>varIndexes</strong> (<em>list</em>) – list of indexes of variables.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.NoPreprocessing">
+<span class="sig-name descname"><span class="pre">NoPreprocessing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.NoPreprocessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.NoPreprocessing" title="Permalink to this definition"></a></dt>
+<dd><p>NoPreprocessing deactivates most preprocessing methods.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Parse">
+<span class="sig-name descname"><span class="pre">Parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Parse" title="Permalink to this definition"></a></dt>
+<dd><p>Parse performs a list of elementary reduction operations on domains of variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>certificate</strong> (<em>str</em>) – a string composed of a list of operations on domains, each operation in the form ‘,varIndex[=#&lt;&gt;]value’
+where varIndex (int) is the index of a variable as returned by AddVariable and value (int) is a domain value
+(comma is mandatory even for the first operation, add no space).
+Possible operations are: assign (‘=’), remove (‘#’), decrease maximum value (‘&lt;’), increase minimum value (‘&gt;’).</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>Parse(‘(,0=1,1=1,2#0)’): assigns the first and second variable to value 1 and remove value 0 from the third variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Read">
+<span class="sig-name descname"><span class="pre">Read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Read"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Read" title="Permalink to this definition"></a></dt>
+<dd><p>Read reads the problem from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – problem filename.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Remove">
+<span class="sig-name descname"><span class="pre">Remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Remove" title="Permalink to this definition"></a></dt>
+<dd><p>Remove removes a value from the domain of a variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>varIndex</strong> (<em>int</em>) – index of the variable as returned by AddVariable.</p></li>
+<li><p><strong>value</strong> (<em>int</em>) – domain value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Restore">
+<span class="sig-name descname"><span class="pre">Restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Restore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Restore" title="Permalink to this definition"></a></dt>
+<dd><p>Restore retrieves the copy made at a given solver depth value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>depth</strong> (<em>int</em>) – solver depth value. It must be lower than the current solver depth.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.SetUB">
+<span class="sig-name descname"><span class="pre">SetUB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.SetUB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.SetUB" title="Permalink to this definition"></a></dt>
+<dd><p>SetUB resets the initial upper bound to a given value. It should be done before modifying the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cost</strong> (<em>decimal cost</em>) – new initial upper bound.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Solve">
+<span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">showSolutions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allSolutions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diversityBound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeLimit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Solve" title="Permalink to this definition"></a></dt>
+<dd><p>Solve solves the problem (i.e., finds its optimum and proves optimality). It can also enumerate (diverse) solutions depending on the arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>showSolutions</strong> (<em>int</em>) – prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
+3: variable and value names).</p></li>
+<li><p><strong>allSolutions</strong> (<em>int</em>) – if non-zero, enumerates all the solutions with a cost strictly better than the initial upper bound
+until a given limit on the number of solutions is reached.</p></li>
+<li><p><strong>diversityBound</strong> (<em>int</em>) – if non-zero, finds a greedy sequence of diverse solutions where a solution in the list is optimal
+such that it also has a Hamming-distance from the previously found solutions greater than a given bound.
+The number of diverse solutions is bounded by the argument value of allSolutions.</p></li>
+<li><p><strong>timeLimit</strong> (<em>int</em>) – CPU-time limit in seconds (or 0 if no time limit)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The best (or last if enumeration/diversity) solution found as a list of domain values, its associated cost, always strictly lower
+than the initial upper bound, and the number of solutions found (returned type: tuple(list, decimal cost, int)).
+or None if no solution has been found (the problem has no solution better than the initial upper bound or a search limit occurs).
+See GetSolutions to retrieve of the solutions found so far.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This operation cannot be called multiple times on the same CFN object (it may modify the problem or its upper bound).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.SolveFirst">
+<span class="sig-name descname"><span class="pre">SolveFirst</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.SolveFirst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.SolveFirst" title="Permalink to this definition"></a></dt>
+<dd><p>SolveFirst performs problem preprocessing before doing incremental solving.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Initial upper bound (decimal cost), possibly improved by considering a worst-case situation
+based on the sum of maximum finite cost per function plus one.
+or None if the problem has no solution (a contradiction occurs during preprocessing).</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This operation must be done at solver depth 0 (see Depth).</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This operation cannot be called multiple times on the same CFN object.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.SolveNext">
+<span class="sig-name descname"><span class="pre">SolveNext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">showSolutions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeLimit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.SolveNext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.SolveNext" title="Permalink to this definition"></a></dt>
+<dd><p>SolveNext solves the problem (i.e., finds its optimum and proves optimality).
+It should be done after calling SolveFirst and modifying the problem if necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>showSolutions</strong> (<em>int</em>) – prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
+3: variable and value names).</p></li>
+<li><p><strong>timeLimit</strong> (<em>int</em>) – CPU-time limit in seconds (or 0 if no time limit)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The best solution found as a list of domain values, its associated cost, always strictly lower
+than the initial upper bound, and None (returned type: tuple(list, decimal cost, None)).
+or None if no solution has been found (the problem has no solution better than the initial upper bound or a search limit occurs, see Limit).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.Store">
+<span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.Store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.Store" title="Permalink to this definition"></a></dt>
+<dd><p>Store makes a copy (incremental) of the current problem and increases the solver depth by one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.UpdateUB">
+<span class="sig-name descname"><span class="pre">UpdateUB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.UpdateUB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.UpdateUB" title="Permalink to this definition"></a></dt>
+<dd><p>UpdateUB decreases the initial upper bound to a given value. Does nothing if this value is greater than the current upper bound.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cost</strong> (<em>decimal cost</em>) – new initial upper bound.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This operation might generate a Contradiction if the new upper bound is lower than or equal to the problem lower bound.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.flatten">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.flatten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.flatten" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.initFromMultiCFN">
+<span class="sig-name descname"><span class="pre">initFromMultiCFN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multicfn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.initFromMultiCFN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.initFromMultiCFN" title="Permalink to this definition"></a></dt>
+<dd><p>initFromMultiCFN initialize the cfn from a multiCFN instance (linear combination of multiple CFN).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>multicfn</strong> (<em>MultiCFN</em>) – the instance containing the CFNs.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytoulbar2.CFN.setName">
+<span class="sig-name descname"><span class="pre">setName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytoulbar2.html#CFN.setName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pytoulbar2.CFN.setName" title="Permalink to this definition"></a></dt>
+<dd><p>setName set the name of the CFN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – the new name of the CFN.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ref_cpp.html" class="btn btn-neutral float-left" title="C++ Library" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pdfmanuals.html" class="btn btn-neutral float-right" title="Documentation in pdf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

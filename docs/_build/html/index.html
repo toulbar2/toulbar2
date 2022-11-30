@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presentation &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/toulbar2.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Presentation" href="presentation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> toulbar2
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=presentation.html>Presentation</a> |
+    <a href=downloads.html>Downloads</a> |
+    <a href=benchmarks.html>Benchmarks</a> |
+    <a href=examples/tutorials.html>Tutorials</a> |
+    <a href=examples/usecases.html>Use cases</a> |
+    <a href=userdoc.html>User</a> |
+    <a href=refman.html>Reference</a> |
+    <a href=pdfmanuals.html>Doc in pdf</a> |
+    <a href=publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class= toulbar2news>
+
+    </br>
+    <span style="color:Firebrick; font-weight:bold;"> New! </span>
+
+    Your Sudoku solved on your smartphone by toulbar2
+    (<a href="examples/vsapp_apk.html">APK</a>)</br>
+
+    </br>
+
+</div><section id="id1">
+<h1>Presentation<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h1>
+<section id="about-toulbar2">
+<span id="id2"></span><h2>About toulbar2<a class="headerlink" href="#about-toulbar2" title="Permalink to this heading"></a></h2>
+<p><strong>toulbar2</strong> is an open-source C++ solver for cost function networks. It solves various combinatorial optimization problems.</p>
+<p>The constraints and objective function are factorized in local functions on discrete variables. Each function returns a cost (a finite positive integer) for any assignment of its variables. Constraints are represented as functions with costs in {0, <span class="math notranslate nohighlight">\(\infty\)</span>} where <span class="math notranslate nohighlight">\(\infty\)</span> is a large integer representing forbidden assignments. toulbar2 looks for a non-forbidden assignment of all variables that minimizes the sum of all functions.</p>
+<p>Its engine uses a hybrid best-first branch-and-bound algorithm exploiting soft arc consistencies. It incorporates a parallel variable neighborhood search method for better performances. See <a class="reference internal" href="publications.html#publications"><span class="std std-ref">Publications</span></a>.</p>
+<p>toulbar2 won several medals in competitions on Max-CSP/COP (<a class="reference external" href="http://www.cril.univ-artois.fr/CPAI08/">CPAI08</a>, <a class="reference external" href="https://xcsp.org/competitions/">2022 XCSP3</a>) and probabilistic graphical models (UAI <a class="reference external" href="https://www.ics.uci.edu/~dechter/softwares/benchmarks/UAI08/uai08-evaluation-2008-09-15.pdf">2008</a>, <a class="reference external" href="http://www.cs.huji.ac.il/project/UAI10/summary.php">2010</a>, <a class="reference external" href="http://auai.org/uai2014/competition.shtml">2014</a> MAP task).</p>
+<p>toulbar2 is now also able to collaborate with ML code that can learn an additive graphical model (with constraints) from data (see example at <a class="reference external" href="https://forgemia.inra.fr/thomas.schiex/cfn-learn">cfn-learn</a>).</p>
+</section>
+<section id="authors">
+<span id="id6"></span><h2>Authors<a class="headerlink" href="#authors" title="Permalink to this heading"></a></h2>
+<p><strong>toulbar2</strong> was originally developped by Toulouse (INRAE MIAT) and Barcelona (UPC, IIIA-CSIC) teams, hence the name of the solver.</p>
+<p>Additional contributions by:</p>
+<ul class="simple">
+<li><p>Caen University, France (GREYC) and University of Oran, Algeria for (parallel) variable neighborhood search methods</p></li>
+<li><p>The Chinese University of Hong Kong and Caen University, France (GREYC) for global cost functions</p></li>
+<li><p>Marseille University, France (LSIS) for tree decomposition heuristics</p></li>
+<li><p>Ecole des Ponts ParisTech, France (CERMICS/LIGM for <a class="reference external" href="http://imagine.enpc.fr/~neveub/incop/incoppresentation.html">INCOP</a> local search solver</p></li>
+<li><p>University College Cork, Ireland (Insight) for a Python interface in <a class="reference external" href="https://github.com/eomahony/Numberjack">Numberjack</a>  and a portfolio dedicated to UAI graphical models <a class="reference external" href="https://github.com/9thbit/uai-proteus">Proteus</a></p></li>
+<li><p>Artois University, France (CRIL) for an XCSP 2.1 format reader of CSP and WCSP instances</p></li>
+<li><p>Université de Toulouse I Capitole (IRIT) and Université du Littoral Côte d’Opale, France (LISIC) for PILS local search solver</p></li>
+</ul>
+</section>
+<section id="citations">
+<span id="id7"></span><h2>Citations<a class="headerlink" href="#citations" title="Permalink to this heading"></a></h2>
+<ul>
+<li><p><a class="reference external" href="https://miat.inrae.fr/degivry/Hurley16b.pdf">Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization</a></p>
+<p>Barry Hurley, Barry O’Sullivan, David Allouche, George Katsirelos, Thomas Schiex, Matthias Zytnicki, Simon de Givry</p>
+<p>Constraints, 21(3):413-434, 2016</p>
+</li>
+<li><p><a class="reference external" href="https://miat.inrae.fr/degivry/Schiex16a.pdf">Tractability-preserving Transformations of Global Cost Functions</a></p>
+<p>David Allouche, Christian Bessiere, Patrice Boizumault, Simon de Givry, Patricia Gutierrez, Jimmy HM. Lee, Ka Lun Leung, Samir Loudni, Jean-Philippe Métivier, Thomas Schiex, Yi Wu</p>
+<p>Artificial Intelligence, 238:166-189, 2016</p>
+</li>
+<li><p><a class="reference external" href="https://miat.inrae.fr/degivry/Cooper10a.pdf">Soft arc consistency revisited</a></p>
+<p>Martin Cooper, Simon de Givry, Marti Sanchez, Thomas Schiex, Matthias Zytnicki, and Thomas Werner</p>
+<p>Artificial Intelligence, 174(7-8):449-478, 2010</p>
+</li>
+</ul>
+</section>
+<section id="acknowledgements">
+<span id="id8"></span><h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this heading"></a></h2>
+<p><strong>toulbar2</strong> has been partly funded by the French <em>Agence Nationale de la Recherche</em> (projects STAL-DEC-OPT from 2006 to 2008, ANR-10-BLA-0214 <a class="reference external" href="http://costfunction.org">Ficolofo</a> from 2011 to 2014, and ANR-16-CE40-0028 <a class="reference external" href="https://anr.fr/Projet-ANR-16-CE40-0028">DemoGraph</a> from 2017 to 2021) and a PHC PROCORE project number 28680VH (from 2013 to 2015). It is currently supported by ANITI ANR-19-P3IA-0004 (2019-).</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MIT</span> <span class="n">License</span>
+
+<span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2022</span> <span class="n">toulbar2</span> <span class="n">team</span>
+
+<span class="n">Permission</span> <span class="ow">is</span> <span class="n">hereby</span> <span class="n">granted</span><span class="p">,</span> <span class="n">free</span> <span class="n">of</span> <span class="n">charge</span><span class="p">,</span> <span class="n">to</span> <span class="nb">any</span> <span class="n">person</span> <span class="n">obtaining</span> <span class="n">a</span> <span class="n">copy</span>
+<span class="n">of</span> <span class="n">this</span> <span class="n">software</span> <span class="ow">and</span> <span class="n">associated</span> <span class="n">documentation</span> <span class="n">files</span> <span class="p">(</span><span class="n">the</span> <span class="s2">&quot;Software&quot;</span><span class="p">),</span> <span class="n">to</span> <span class="n">deal</span>
+<span class="ow">in</span> <span class="n">the</span> <span class="n">Software</span> <span class="n">without</span> <span class="n">restriction</span><span class="p">,</span> <span class="n">including</span> <span class="n">without</span> <span class="n">limitation</span> <span class="n">the</span> <span class="n">rights</span>
+<span class="n">to</span> <span class="n">use</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">modify</span><span class="p">,</span> <span class="n">merge</span><span class="p">,</span> <span class="n">publish</span><span class="p">,</span> <span class="n">distribute</span><span class="p">,</span> <span class="n">sublicense</span><span class="p">,</span> <span class="ow">and</span><span class="o">/</span><span class="ow">or</span> <span class="n">sell</span>
+<span class="n">copies</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span><span class="p">,</span> <span class="ow">and</span> <span class="n">to</span> <span class="n">permit</span> <span class="n">persons</span> <span class="n">to</span> <span class="n">whom</span> <span class="n">the</span> <span class="n">Software</span> <span class="ow">is</span>
+<span class="n">furnished</span> <span class="n">to</span> <span class="n">do</span> <span class="n">so</span><span class="p">,</span> <span class="n">subject</span> <span class="n">to</span> <span class="n">the</span> <span class="n">following</span> <span class="n">conditions</span><span class="p">:</span>
+
+<span class="n">The</span> <span class="n">above</span> <span class="n">copyright</span> <span class="n">notice</span> <span class="ow">and</span> <span class="n">this</span> <span class="n">permission</span> <span class="n">notice</span> <span class="n">shall</span> <span class="n">be</span> <span class="n">included</span> <span class="ow">in</span> <span class="nb">all</span>
+<span class="n">copies</span> <span class="ow">or</span> <span class="n">substantial</span> <span class="n">portions</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span><span class="o">.</span>
+
+<span class="n">THE</span> <span class="n">SOFTWARE</span> <span class="n">IS</span> <span class="n">PROVIDED</span> <span class="s2">&quot;AS IS&quot;</span><span class="p">,</span> <span class="n">WITHOUT</span> <span class="n">WARRANTY</span> <span class="n">OF</span> <span class="n">ANY</span> <span class="n">KIND</span><span class="p">,</span> <span class="n">EXPRESS</span> <span class="n">OR</span>
+<span class="n">IMPLIED</span><span class="p">,</span> <span class="n">INCLUDING</span> <span class="n">BUT</span> <span class="n">NOT</span> <span class="n">LIMITED</span> <span class="n">TO</span> <span class="n">THE</span> <span class="n">WARRANTIES</span> <span class="n">OF</span> <span class="n">MERCHANTABILITY</span><span class="p">,</span>
+<span class="n">FITNESS</span> <span class="n">FOR</span> <span class="n">A</span> <span class="n">PARTICULAR</span> <span class="n">PURPOSE</span> <span class="n">AND</span> <span class="n">NONINFRINGEMENT</span><span class="o">.</span> <span class="n">IN</span> <span class="n">NO</span> <span class="n">EVENT</span> <span class="n">SHALL</span> <span class="n">THE</span>
+<span class="n">AUTHORS</span> <span class="n">OR</span> <span class="n">COPYRIGHT</span> <span class="n">HOLDERS</span> <span class="n">BE</span> <span class="n">LIABLE</span> <span class="n">FOR</span> <span class="n">ANY</span> <span class="n">CLAIM</span><span class="p">,</span> <span class="n">DAMAGES</span> <span class="n">OR</span> <span class="n">OTHER</span>
+<span class="n">LIABILITY</span><span class="p">,</span> <span class="n">WHETHER</span> <span class="n">IN</span> <span class="n">AN</span> <span class="n">ACTION</span> <span class="n">OF</span> <span class="n">CONTRACT</span><span class="p">,</span> <span class="n">TORT</span> <span class="n">OR</span> <span class="n">OTHERWISE</span><span class="p">,</span> <span class="n">ARISING</span> <span class="n">FROM</span><span class="p">,</span>
+<span class="n">OUT</span> <span class="n">OF</span> <span class="n">OR</span> <span class="n">IN</span> <span class="n">CONNECTION</span> <span class="n">WITH</span> <span class="n">THE</span> <span class="n">SOFTWARE</span> <span class="n">OR</span> <span class="n">THE</span> <span class="n">USE</span> <span class="n">OR</span> <span class="n">OTHER</span> <span class="n">DEALINGS</span> <span class="n">IN</span> <span class="n">THE</span>
+<span class="n">SOFTWARE</span><span class="o">.</span>
+</pre></div>
+</div>
+<section id="detailed-content">
+<h3>Detailed Content<a class="headerlink" href="#detailed-content" title="Permalink to this heading"></a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="presentation.html">Presentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="presentation.html#about-toulbar2">About toulbar2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="presentation.html#authors">Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="presentation.html#citations">Citations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="presentation.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="presentation.html#license">License</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="downloads.html#open-source-code">Open-source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="downloads.html#packages">Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="downloads.html#binaries">Binaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="downloads.html#python-package">Python package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="downloads.html#docker-images">Docker images</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userdoc.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#what-is-toulbar2">What is toulbar2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#how-do-i-install-it">How do I install it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#how-do-i-test-it">How do I test it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#using-it-as-a-black-box">Using it as a black box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#command-line-options">Command line options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#general-control">General control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#preprocessing">Preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#initial-upper-bounding">Initial upper bounding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#tree-search-algorithms-and-tree-decomposition-selection">Tree search algorithms and tree decomposition selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#variable-neighborhood-search-algorithms">Variable neighborhood search algorithms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#node-processing-bounding-options">Node processing &amp; bounding options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#branching-variable-and-value-ordering">Branching, variable and value ordering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#diverse-solutions">Diverse solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#console-output">Console output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#file-output">File output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#probability-representation-and-numerical-control">Probability representation and numerical control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#random-problem-generation">Random problem generation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#input-formats">Input formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#formats-details">Formats details</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#how-do-i-use-it">How do I use it ?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#using-it-as-a-c-library">Using it as a C++ library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="userdoc.html#using-it-from-python">Using it from Python</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="userdoc.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Reference Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ref/ref_intro.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_files/README.html">Exact optimization for cost function networks and additive graphical models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_files/README.html#what-is-toulbar2">What is toulbar2?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_files/README.html#installation-from-binaries">Installation from binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_files/README.html#python-interface">Python interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_files/README.html#download">Download</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_files/README.html#installation-from-sources">Installation from sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_files/README.html#convex-combination-of-multiple-criteria-branch">Convex Combination of multiple Criteria branch</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ref/ref_modules.html">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#variable-and-cost-function-modeling">Variable and cost function modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#solving-cost-function-networks">Solving cost function networks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#output-messages-verbosity-options-and-debugging">Output messages, verbosity options and debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#preprocessing-techniques">Preprocessing techniques</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#variable-and-value-search-ordering-heuristics">Variable and value search ordering heuristics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#soft-arc-consistency-and-problem-reformulation">Soft arc consistency and problem reformulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#virtual-arc-consistency-enforcing">Virtual Arc Consistency enforcing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#nc-bucket-sort">NC bucket sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#variable-elimination">Variable elimination</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#propagation-loop">Propagation loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_modules.html#backtrack-management">Backtrack management</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ref/ref_lib.html">Libraries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_cpp.html">C++ Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ref/ref_python.html">Python Library</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="publications.html#conference-talks">Conference talks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="publications.html#related-publications">Related publications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="publications.html#what-are-the-algorithms-inside-toulbar2">What are the algorithms inside toulbar2 ?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="publications.html#toulbar2-for-combinatorial-optimization-in-life-sciences">toulbar2 for Combinatorial Optimization in Life Sciences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="publications.html#other-publications-mentioning-toulbar2">Other publications mentioning toulbar2</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="presentation.html" class="btn btn-neutral float-right" title="Presentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
