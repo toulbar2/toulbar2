@@ -141,6 +141,7 @@ void Stat_GWW::execution_report(int nessai, Long lower_bound)
 int argument2ul(char* arg, const char* message)
 {
     char* error;
+    errno = 0;
     int s = strtoul(arg, &error, 10);
     if (error == arg || errno == ERANGE) {
         cerr << "Error " << message << " not integer " << arg << endl;

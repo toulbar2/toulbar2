@@ -442,7 +442,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
 
     // les divers arguments lus dans la ligne de commande
     int nbvar, nbconst, domsize;
-    Long lbound;
+    Long lbound = 0;
     int taille, nbessais;
     int graine1;
     int narg = 2; // compteur des arguments

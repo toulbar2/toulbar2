@@ -23,7 +23,7 @@ public:
     CSProblem(int nbvar, int nbconst);
     /* constructeur avec borne inférieure */
     /** constructor with lower bound (stopping condition when it is reached) */
-    CSProblem(int nbvar, int nbconst, int lower);
+    CSProblem(int nbvar, int nbconst, Long lower);
     ~CSProblem();
     void move_execution(Configuration* configuration, Move* move);
     /* la taille du domaine de la variable var */
@@ -81,7 +81,7 @@ public:
 	(if not use WeightExtensionBinaryCSP class) */
     int** constraints;
     BinaryCSProblem(int nbvar, int nbconst);
-    BinaryCSProblem(int nbvar, int nbconst, int lower);
+    BinaryCSProblem(int nbvar, int nbconst, Long lower);
     ~BinaryCSProblem() { ; };
 };
 
