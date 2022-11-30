@@ -13,6 +13,74 @@ try :
 except :
     pass
 
+class MultiCFN:
+    """pytoulbar2 base class used to combine linearly multiple CFN.
+    
+    Constructor Args:
+    
+    Members:
+        Multi_CFN (MultiWCSP): python interface to C++ class MultiWCSP.
+        
+    
+    """
+    def __init__(self):
+
+        self.MultiCFN = tb2.MultiWCSP()
+
+        return
+
+    
+    def push_CFN(self, CFN, weight=1.0):
+        """push_CFN add a CFN to the instance.
+
+        Args:
+            CFN (CFN): the new CFN to add.
+            weight (float): the initial weight of the CFN in the combination.
+
+        """
+
+        self.MultiCFN.push_back(CFN.CFN.wcsp, weight)
+
+
+    def setWeight(self, cfn_index, weight):
+        """setWeight set a weight of a CFN.
+
+        Args:
+            cfn_index (int): index of the CFN (in addition order).
+            weight (float): the new weight of the CFN.
+
+        """
+
+        self.MultiCFN.setWeight(cfn_index, weight)
+
+    def getSolution(self):
+        """getSolution returns the solution of a the combined cfn after being solved.
+
+        Returns:
+            The solution of the cfn (dic).
+
+        """
+
+        return self.MultiCFN.getSolution()
+
+
+    def getSolutionValues(self):
+        """getSolutionValues returns the objective values of the combined cfn after being solved.
+
+        Returns:
+            The objective values of the solution of the cfn (list).
+
+        """
+
+        return self.MultiCFN.getSolutionValues()
+
+    def print(self):
+        """print print the content of the multiCFN: variables, cost functions.
+
+        """
+
+        self.MultiCFN.print()    
+
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
     
@@ -100,6 +168,35 @@ class CFN:
         if isinstance(S[0], list):
             return CFN.flatten(S[0]) + CFN.flatten(S[1:])
         return S[:1] + CFN.flatten(S[1:])
+
+    
+    def setName(self, name):
+        """setName set the name of the CFN.
+
+        Args:
+            name (str): the new name of the CFN.
+
+        """
+
+        self.CFN.wcsp.setName(name)
+
+        return
+
+    def initFromMultiCFN(self, multicfn):
+        """initFromMultiCFN initialize the cfn from a multiCFN instance (linear combination of multiple CFN).
+
+        Args:
+            multicfn (MultiCFN): the instance containing the CFNs.
+            
+        Note:
+            After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
+
+        """
+
+        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp)
+
+        return
+    
 
     def AddVariable(self, name, values):
         """AddVariable creates a new discrete variable.
