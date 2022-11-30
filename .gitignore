@@ -5,4 +5,5 @@ src/ToulbarVersion.hpp
 src/MyCPackConf.cmake
 __pycache__
 docs/_build
+docs/_pyvenv
 docs/source/_files
