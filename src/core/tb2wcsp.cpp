@@ -3339,7 +3339,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
         for (Constraint *ctr:neighborCtrs) {
             assert(ctr->connected());
             TSCOPE inter;
-            listOfCtrs[i]->scopeCommon(inter, ctr);
+            listOfCtrs[i]->scopeCommon(inter, ctr); //TODO: remove assigned variables!
             if (ctr->arity() == (int)inter.size()) { // ctr is included inside listOfCtrs[i]
                 assert(ctr->arity() <= listOfCtrs[i]->arity());
                 auto iter = indexOfCtrs.find(ctr);
@@ -3505,7 +3505,6 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
 #endif
             assert(included.find(listOfCtrs[j]) == included.end());
             assert((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc));
-            initElimConstr();
             TSCOPE scopei;
             listOfCtrs[i]->getScope(scopei);
             TSCOPE scopej;
@@ -3541,7 +3540,6 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
         EnumeratedVariable *vardual = listOfDualVars[i];
         if (included.find(listOfCtrs[i]) == included.end()) {
-            initElimConstr();
             for (int a = 0; a < listOfCtrs[i]->arity(); a++) { // link constraint i to all the variables in its scope
                 EnumeratedVariable* var = static_cast<EnumeratedVariable*>(listOfCtrs[i]->getVar(a));
                 vector<Cost> costs; // (var->getDomainInitSize() * vardual->getDomainInitSize(), MAX_COST);
@@ -3558,8 +3556,9 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     // add costs of constraint i to its dual variable unary cost function
     for (unsigned int i = 0; i < listOfDualVars.size(); i++) {
         if (included.find(listOfCtrs[i]) == included.end()) {
-            postIncrementalUnaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualCosts[i]);
+            postUnaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualCosts[i]);
         } else {
+            assert(listOfDualVars[i]->getDegree() == 0);
             assign(listOfDualVars[i]->wcspIndex, listOfDualVars[i]->getInf()); // assign this dual variable corresponding to an included constraint to a dummy value
             nbdual--;
         }
@@ -3567,14 +3566,6 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     if (ToulBar2::verbose >= 0) {
         cout << "Hidden encoding with " << nbdual << " extra variables with maximum domain size " << maxdomsize << " and " << nbintersections << " intersection edges." << endl;
     }
-    ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
-    if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
-        if (ToulBar2::verbose) {
-            cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
-        }
-        ToulBar2::FullEAC = false;
-    }
-    propagate();
     return make_pair(listOfDualVars, channelingPWC);
 }
 
@@ -3790,49 +3781,55 @@ void WCSP::preprocessing()
 
     if (ToulBar2::hve || ToulBar2::pwc) {
         pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> res = hiddenEncoding();
-
-        // dedualize pairwise consistency
-        if ((ToulBar2::hve<=0 || ToulBar2::pwc<=0) && res.first.size() > 0) {
-            //TODO: run pils here before dedualizing
-            for (BinaryConstraint *channel: res.second) {
+        if (res.first.size() > 0) {
+            if ((ToulBar2::hve>=0 && ToulBar2::pwc>=0)) {
+                ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
+            } else {
+                //TODO: run pils here before dedualizing
+                // Dedualize pairwise consistency
+                for (BinaryConstraint *channel: res.second) {
+                    assert(channel->connected());
 #ifndef NDEBUG
-                Tuple tuple;
-                Cost cost;
-                channel->firstlex();
-                while (channel->nextlex(tuple, cost)) {
-                    assert(cost == 0 || CUT(cost,getUb()));
-                }
+                    Tuple tuple;
+                    Cost cost;
+                    channel->firstlex();
+                    while (channel->nextlex(tuple, cost)) {
+                        if (cost > MIN_COST && !CUT(cost,getUb())) cout << *channel << endl;
+                        assert(cost == MIN_COST || CUT(cost,getUb()));
+                    }
 #endif
-                channel->deconnect();
-            }
-            for (EnumeratedVariable *var: res.first) {
-                if (var->unassigned()) {
-                    variableElimination(var);
+                    channel->deconnect();
                 }
-            }
 
-            ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
-
-            if (ToulBar2::costfuncSeparate) {
-                for (unsigned int i = posConstrs; i < constrs.size(); i++) {
-                    if (constrs[i]->connected() && !constrs[i]->isSep()) {
-                        constrs[i]->findConditionalIndependences();
+                for (EnumeratedVariable *var: res.first) {
+                    if (var->unassigned()) {
+                        int elimOrder_ = elimOrder;
+                        variableElimination(var);
+                        elimOrder = elimOrder_; // do not retrieve the value of hidden variables
                     }
                 }
-                posConstrs = constrs.size();
-            }
-            if (ToulBar2::preprocessNary > 0) {
-                for (unsigned int i = 0; i < constrs.size(); i++) {
-                    if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isNary() && constrs[i]->arity() >= 3 && constrs[i]->arity() <= ToulBar2::preprocessNary) {
-                        NaryConstraint* nary = (NaryConstraint*)constrs[i];
-                        Long nbtuples = nary->getDomainSizeProduct();
-                        if ((nbtuples < MAX_NB_TUPLES || nary->size() >= nbtuples) && (nary->size() >= 2 || nary->getDefCost() > MIN_COST)) {
-                            assert(CUT(nary->getDefCost(), getUb()));
-                            nary->preprojectall2();
+
+                if (ToulBar2::costfuncSeparate) {
+                    for (unsigned int i = posConstrs; i < constrs.size(); i++) {
+                        if (constrs[i]->connected() && !constrs[i]->isSep()) {
+                            constrs[i]->findConditionalIndependences();
                         }
                     }
+                    posConstrs = constrs.size();
                 }
-                processTernary();
+                if (ToulBar2::preprocessNary > 0) {
+                    for (unsigned int i = 0; i < constrs.size(); i++) {
+                        if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isNary() && constrs[i]->arity() >= 3 && constrs[i]->arity() <= ToulBar2::preprocessNary) {
+                            NaryConstraint* nary = (NaryConstraint*)constrs[i];
+                            Long nbtuples = nary->getDomainSizeProduct();
+                            if ((nbtuples < MAX_NB_TUPLES || nary->size() >= nbtuples) && (nary->size() >= 2 || nary->getDefCost() > MIN_COST)) {
+                                assert(CUT(nary->getDefCost(), getUb()));
+                                nary->preprojectall2();
+                            }
+                        }
+                    }
+                    processTernary();
+                }
             }
 
             propagate();
