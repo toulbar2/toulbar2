@@ -63,6 +63,8 @@ const string IMPLICIT_VAR_TAG = "#";
 
 /// Special character value at the beginning of a variable's name to identify hidden variables like diverse extra variables corresponding to the current sequence of diverse solutions found so far
 const string HIDDEN_VAR_TAG = "^";
+const string HIDDEN_VAR_TAG_HVE = "^c"; // tag for a hidden variable representing a dualized nary cost function
+const string HIDDEN_VAR_TAG_HVE_PRE = "^!"; // temporary hidden variable which should disappear after dedualization in preprocessing
 
 /// Domain value (can be positive or negative integers)
 #ifdef SHORT_VALUE

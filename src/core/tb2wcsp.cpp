@@ -3260,7 +3260,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
             }
-            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(ctr->wcspIndex), 0, nbtuples - 1);
+            int var = makeEnumeratedVariable(((ToulBar2::hve>=0&&ToulBar2::pwc>=0)?HIDDEN_VAR_TAG_HVE:HIDDEN_VAR_TAG_HVE_PRE) + to_string(ctr->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
@@ -3301,7 +3301,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
             }
-            int var = makeEnumeratedVariable(HIDDEN_VAR_TAG + "dc_" + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
+            int var = makeEnumeratedVariable(((ToulBar2::hve>=0&&ToulBar2::pwc>=0)?HIDDEN_VAR_TAG_HVE:HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
@@ -3566,6 +3566,8 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     if (ToulBar2::verbose >= 0) {
         cout << "Hidden encoding with " << nbdual << " extra variables with maximum domain size " << maxdomsize << " and " << nbintersections << " intersection edges." << endl;
     }
+    ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
+    propagate();
     return make_pair(listOfDualVars, channelingPWC);
 }
 
@@ -3782,23 +3784,23 @@ void WCSP::preprocessing()
     if (ToulBar2::hve || ToulBar2::pwc) {
         pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> res = hiddenEncoding();
         if (res.first.size() > 0) {
-            if ((ToulBar2::hve>=0 && ToulBar2::pwc>=0)) {
-                ToulBar2::elimDegree_preprocessing_ = -1; // avoids creating n-ary cost functions again
-            } else {
+            if (ToulBar2::hve<0 || ToulBar2::pwc<0) {
                 //TODO: run pils here before dedualizing
+
                 // Dedualize pairwise consistency
                 for (BinaryConstraint *channel: res.second) {
-                    assert(channel->connected());
+                    if (channel->connected()) {
 #ifndef NDEBUG
-                    Tuple tuple;
-                    Cost cost;
-                    channel->firstlex();
-                    while (channel->nextlex(tuple, cost)) {
-                        if (cost > MIN_COST && !CUT(cost,getUb())) cout << *channel << endl;
-                        assert(cost == MIN_COST || CUT(cost,getUb()));
-                    }
+                        Tuple tuple;
+                        Cost cost;
+                        channel->firstlex();
+                        while (channel->nextlex(tuple, cost)) {
+                            if (cost > MIN_COST && !CUT(cost,getUb())) cout << *channel << endl;
+                            assert(cost == MIN_COST || CUT(cost,getUb()));
+                        }
 #endif
-                    channel->deconnect();
+                        channel->deconnect();
+                    }
                 }
 
                 for (EnumeratedVariable *var: res.first) {
@@ -3808,6 +3810,8 @@ void WCSP::preprocessing()
                         elimOrder = elimOrder_; // do not retrieve the value of hidden variables
                     }
                 }
+
+                ToulBar2::elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing;
 
                 if (ToulBar2::costfuncSeparate) {
                     for (unsigned int i = posConstrs; i < constrs.size(); i++) {
@@ -3830,16 +3834,15 @@ void WCSP::preprocessing()
                     }
                     processTernary();
                 }
-            }
 
-            propagate();
-
-            if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
-                if (ToulBar2::verbose) {
-                    cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
-                }
-                ToulBar2::FullEAC = false;
+                propagate();
             }
+        }
+        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
+            if (ToulBar2::verbose) {
+                cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
+            }
+            ToulBar2::FullEAC = false;
         }
     }
 

@@ -966,6 +966,9 @@ bool EnumeratedVariable::elimVar(BinaryConstraint* ctr, BinaryConstraint* ctr_du
     assert((getDegree() == 1 && !ctr_duplicate) || (getDegree() == 2 && ctr_duplicate && wcsp->getTreeDec()));
 
     EnumeratedVariable* x = (EnumeratedVariable*)ctr->getVarDiffFrom(this);
+    if (x->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0) {
+        return false;
+    }
 
     TreeDecomposition* td = wcsp->getTreeDec();
     if (td && !td->isSameCluster(cluster, ctr->getCluster())) {
@@ -1045,7 +1048,13 @@ bool EnumeratedVariable::elimVar(BinaryConstraint* ctr, BinaryConstraint* ctr_du
 bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
 {
     EnumeratedVariable* y = (EnumeratedVariable*)wcsp->getVar(xylink.constr->getSmallestVarIndexInScope(xylink.scopeIndex));
+    if (y->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0) {
+        return false;
+    }
     EnumeratedVariable* z = (EnumeratedVariable*)wcsp->getVar(xzlink.constr->getSmallestVarIndexInScope(xzlink.scopeIndex));
+    if (z->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0) {
+        return false;
+    }
     assert(y != z);
 
     TreeDecomposition* td = wcsp->getTreeDec();
@@ -1183,7 +1192,13 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
     }
 
     EnumeratedVariable* y = (EnumeratedVariable*)yz->getVar(0);
+    if (y->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0) {
+        return false;
+    }
     EnumeratedVariable* z = (EnumeratedVariable*)yz->getVar(1);
+    if (z->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0) {
+        return false;
+    }
 
     bool flag_rev = false;
     if (n2links > 0) {
