@@ -253,6 +253,8 @@ enum {
     NO_OPT_vacValueHeuristic,
     OPT_preprocessTernary,
     NO_OPT_preprocessTernary,
+    OPT_preprocessHVE,
+    NO_OPT_preprocessHVE,
     OPT_preprocessPWC,
     NO_OPT_preprocessPWC,
     OPT_preprocessMinQual,
@@ -521,6 +523,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_preprocessFunctional, (char*)"-f:", SO_NONE },
     { OPT_preprocessNary, (char*)"-n", SO_OPT },
     { NO_OPT_preprocessNary, (char*)"-n:", SO_NONE },
+    { OPT_preprocessHVE, (char*)"-hve", SO_OPT },
+    { NO_OPT_preprocessHVE, (char*)"-hve:", SO_NONE },
     { OPT_preprocessPWC, (char*)"-pwc", SO_OPT },
     { NO_OPT_preprocessPWC, (char*)"-pwc:", SO_NONE },
     { OPT_preprocessMinQual, (char*)"-minqual", SO_NONE },
@@ -869,13 +873,15 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::preprocessTernaryRPC)
         cout << " (" << ToulBar2::preprocessTernaryRPC << " MB)";
     cout << endl;
-    cout << "   -pwc=[integer] : pairwise consistency by hidden encoding into a binary cost function network within a given maximum space limit (in MB)";
+    cout << "   -hve=[integer] : hidden variable encoding with a given limit to the maximum domain size of hidden variables (see also option -n) (default value is " << ToulBar2::hve << ")" << endl;
+    cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
+    cout << "   -pwc=[integer] : pairwise consistency by hidden variable encoding plus intersection constraints, each one bounded by a given maximum space limit (in MB)";
     if (ToulBar2::pwc)
         cout << " (" << ToulBar2::pwc << " MB)";
     cout << endl;
     cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
-    cout << "       (see also options -minqual and -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
-    cout << "   -minqual : finds a minimal intersection graph to achieve pairwise consistency (combine with option -pwc)";
+    cout << "       (see also options -minqual, -hve to limit the domain size of hidden variables, and -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
+    cout << "   -minqual : finds a minimal intersection constraint graph to achieve pairwise consistency (combineb with option -pwc)";
     if (ToulBar2::pwcMinimalDualGraph)
         cout << " (default option)";
     cout << endl;
@@ -884,7 +890,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::costfuncSeparate)
         cout << " (default option)";
     cout << endl;
-    cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ") (see also option -pwc)" << endl;
+    cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ") (see also option -hve and -pwc)" << endl;
 #ifdef BOOST
     cout << "   -mst : maximum spanning tree DAC ordering";
     if (ToulBar2::MSTDAC)
@@ -895,7 +901,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
 #endif
-    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws: -pwc:)" << endl;
+    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws: -hve: -pwc:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
     if (ToulBar2::QueueComplexity)
         cout << " (default option)";
@@ -1792,6 +1798,23 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::preprocessTernaryRPC = 0;
             }
 
+            if (args.OptionId() == OPT_preprocessHVE) {
+                if (args.OptionArg() != NULL) {
+                    int size = atol(args.OptionArg());
+                    ToulBar2::hve = size;
+                } else
+                    ToulBar2::hve = (1 << (sizeof(tValue)*8 - 1)) - 1;
+                if (ToulBar2::debug && ToulBar2::hve != 0)
+                    cout << "preprocess hidden variable encoding ON" << endl;
+            } else if (args.OptionId() == NO_OPT_preprocessHVE) {
+                if (ToulBar2::debug)
+                    cout << "preprocess hidden variable encoding OFF" << endl;
+                ToulBar2::hve = 0;
+                if (ToulBar2::pwc)
+                    cout << "preprocess pairwise consistency OFF" << endl;
+                ToulBar2::pwc = 0;
+            }
+
             if (args.OptionId() == OPT_preprocessPWC) {
                 if (args.OptionArg() != NULL) {
                     int size = atol(args.OptionArg());
@@ -1800,6 +1823,11 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::pwc = 16;
                 if (ToulBar2::debug && ToulBar2::pwc != 0)
                     cout << "preprocess pairwise consistency ON" << endl;
+                if (ToulBar2::hve == 0) {
+                    ToulBar2::hve = (1 << (sizeof(tValue)*8 - 1)) - 1;
+                    if (ToulBar2::debug && ToulBar2::hve == 0)
+                        cout << "preprocess hidden variable encoding ON" << endl;
+                }
             } else if (args.OptionId() == NO_OPT_preprocessPWC) {
                 if (ToulBar2::debug)
                     cout << "preprocess pairwise consistency OFF" << endl;
@@ -2321,6 +2349,9 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "TRW-S OFF" << endl;
                 ToulBar2::trwsAccuracy = -1.;
+                if (ToulBar2::debug)
+                    cout << "HVE OFF" << endl;
+                ToulBar2::hve = 0;
                 if (ToulBar2::debug)
                     cout << "PWC OFF" << endl;
                 ToulBar2::pwc = 0;

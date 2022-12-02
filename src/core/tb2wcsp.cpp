@@ -110,6 +110,7 @@ int ToulBar2::elimDegree_;
 int ToulBar2::elimDegree_preprocessing_;
 int ToulBar2::elimSpaceMaxMB;
 int ToulBar2::preprocessTernaryRPC;
+int ToulBar2::hve;
 int ToulBar2::pwc;
 bool ToulBar2::pwcMinimalDualGraph;
 int ToulBar2::preprocessFunctional;
@@ -331,6 +332,7 @@ void tb2init()
     ToulBar2::elimDegree_preprocessing_ = -1;
     ToulBar2::elimSpaceMaxMB = 0;
     ToulBar2::preprocessTernaryRPC = 0;
+    ToulBar2::hve = 0;
     ToulBar2::pwc = 0;
     ToulBar2::pwcMinimalDualGraph = true;
     ToulBar2::preprocessFunctional = 1;
@@ -670,8 +672,12 @@ void tb2checkOptions()
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         throw BadConfiguration();
     }
-    if (ToulBar2::pwc < 0 && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning PWC assumes AC supports
-        cerr << "Error: PWC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
+    if ((ToulBar2::pwc < 0 || ToulBar2::hve < 0) && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning PWC assumes AC supports
+        cerr << "Error: HVE/PWC requires at least AC local consistency to dedualize nary cost functions (select AC, FDAC, or EDAC using -k option)." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::pwc && !ToulBar2::hve) {
+        cerr << "Error: PWC requires HVE (selection -hve option)." << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::vac && ToulBar2::FullEAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports in order to make new FullEAC supports based on VAC-integrality
@@ -3223,7 +3229,6 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     vector<BinaryConstraint *> channelingPWC; // list of binary cost functions between dual variables for pairwise consistency
     unsigned int nbdual = 0;
     Long maxdomsize = 0;
-    Long maxtuples = (2 << (sizeof(tValue)*8 - 1)) - 1;
 
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
@@ -3240,12 +3245,12 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                     tuples.push_back(tuple);
                     costs.push_back(cost);
                     nbtuples++;
-                    if (nbtuples > maxtuples) {
+                    if (nbtuples > abs(ToulBar2::hve)) {
                         break;
                     }
                 }
             }
-            if (nbtuples > maxtuples) {
+            if (nbtuples > abs(ToulBar2::hve)) {
                 if (ToulBar2::verbose >= 1) {
                     cout << "Warning! Cannot dualize this constraint with too many tuples! " << endl;
                     cout << *ctr << endl;
@@ -3281,12 +3286,12 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                     tuples.push_back(tuple);
                     costs.push_back(cost);
                     nbtuples++;
-                    if (nbtuples > maxtuples) {
+                    if (nbtuples > abs(ToulBar2::hve)) {
                         break;
                     }
                 }
             }
-            if (nbtuples > maxtuples) {
+            if (nbtuples > abs(ToulBar2::hve)) {
                 if (ToulBar2::verbose >= 1) {
                     cout << "Warning! Cannot dualize this constraint with too many tuples! " << endl;
                     cout << *ctr << endl;
@@ -3317,7 +3322,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
         return make_pair(listOfDualVars, channelingPWC);
     }
 
-    // builds intersection graph
+    // builds intersection graph and detect cost functions which are included into larger cost functions
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
         TSCOPE scope;
         listOfCtrs[i]->getScope(scope);
@@ -3416,118 +3421,120 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     }
 
     // add binary constraints for pairwise consistency
-    vector<pair<pair<unsigned int, unsigned int>, set<int>>> sorted_intersections;
-    for (pair<pair<unsigned int, unsigned int>, set<int>> intermap:intersections) {
-        auto inter = intermap.first;
-        set<int> interscope = intermap.second;
-        assert(inter.first < inter.second);
-        int i = inter.first;
-        if (included.find(listOfCtrs[i]) != included.end()) {
-            continue; // do not create intersection if one dual variable has its constraint included into another constraint
-        }
-        int j = inter.second;
-        if (included.find(listOfCtrs[j]) != included.end()) {
-            continue; // do not create intersection if one dual variable has its constraint included into another constraint
-        }
-        if ((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc)) {
-            sorted_intersections.push_back(intermap);
-        } else {
-            if (ToulBar2::verbose >= 1) {
-                cout << "Warning! Cannot represent the intersection between constraints " << i << " and " << j << " with too many tuples!" << endl;
-                cout << *listOfCtrs[i];
-                cout << *listOfCtrs[j];
-                cout << endl;
+    if (ToulBar2::pwc) {
+        vector<pair<pair<unsigned int, unsigned int>, set<int>>> sorted_intersections;
+        for (pair<pair<unsigned int, unsigned int>, set<int>> intermap:intersections) {
+            auto inter = intermap.first;
+            set<int> interscope = intermap.second;
+            assert(inter.first < inter.second);
+            int i = inter.first;
+            if (included.find(listOfCtrs[i]) != included.end()) {
+                continue; // do not create intersection if one dual variable has its constraint included into another constraint
+            }
+            int j = inter.second;
+            if (included.find(listOfCtrs[j]) != included.end()) {
+                continue; // do not create intersection if one dual variable has its constraint included into another constraint
+            }
+            if ((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc)) {
+                sorted_intersections.push_back(intermap);
+            } else {
+                if (ToulBar2::verbose >= 1) {
+                    cout << "Warning! Cannot represent the intersection between constraints " << i << " and " << j << " with too many tuples!" << endl;
+                    cout << *listOfCtrs[i];
+                    cout << *listOfCtrs[j];
+                    cout << endl;
+                }
             }
         }
-    }
-    stable_sort(sorted_intersections.begin(), sorted_intersections.end(), [](auto p1, auto p2){return (p1.second.size() > p2.second.size() || (p1.second.size() == p2.second.size() && p1.second < p2.second));});
+        stable_sort(sorted_intersections.begin(), sorted_intersections.end(), [](auto p1, auto p2){return (p1.second.size() > p2.second.size() || (p1.second.size() == p2.second.size() && p1.second < p2.second));});
 #ifdef BOOST
-    BoostGraph G(listOfDualVars.size());
-    if (ToulBar2::pwcMinimalDualGraph) {
-        set<int> lastSeparator;
-        for (auto intermap:sorted_intersections) {
-            if (intermap.second == lastSeparator) continue;
-            lastSeparator = intermap.second;
-            set<int> ssubGraphVertices;
-            ssubGraphVertices.insert(intermap.first.first);
-            ssubGraphVertices.insert(intermap.first.second);
-            for (auto intermap2:sorted_intersections) {
-                if ((intermap.first.first != intermap2.first.first || intermap.first.second != intermap2.first.second) &&
-                    includes(intermap2.second.begin(), intermap2.second.end(), intermap.second.begin(), intermap.second.end())) {
-                    ssubGraphVertices.insert(intermap2.first.first);
-                    ssubGraphVertices.insert(intermap2.first.second);
-                }
-            }
-            vector<int> subGraphVertices(ssubGraphVertices.begin(), ssubGraphVertices.end());
-            BoostGraph& subG = G.create_subgraph();
-            for (auto vertex: subGraphVertices) {
-                add_vertex(vertex, subG);
-            }
-            assert(boost::num_vertices(subG) == subGraphVertices.size());
-            //cout << "subG edges : " << boost::num_edges(subG) << " and G edges : " << boost::num_edges(G) << endl;
-            vector<int> comp(boost::num_vertices(subG));
-            int nbcc = boost::connected_components(subG, &comp[0]);
-            //vector<int> sep(intermap.second.begin(), intermap.second.end());
-            //cout << "separator " << to_string(sep) << " belongs to " << to_string(subGraphVertices) << " dualized constraints " << " in " << nbcc << " connected components." << endl;
-            for (int i=0; i < nbcc - 1; i++) {
-                unsigned int j = 0;
-                while (comp[j] != i && j < boost::num_vertices(subG)) {
-                    j++;
-                }
-                unsigned int k = 0;
-                while (comp[k] != i+1 && k < boost::num_vertices(subG)) {
-                    k++;
-                }
-                assert(j != k);
-                assert(j < boost::num_vertices(subG));
-                assert(k < boost::num_vertices(subG));
-                boost::add_edge(subGraphVertices[j], subGraphVertices[k], G);
-                //cout << "add edge between " << subGraphVertices[j] << " and " << subGraphVertices[k] << " dual variables." << endl;
-            }
-        }
-    }
-#endif
-    for (auto intermap:sorted_intersections) {
-        auto inter = intermap.first;
-        set<int> interscope = intermap.second;
-        assert(inter.first < inter.second);
-        int i = inter.first;
-        assert(included.find(listOfCtrs[i]) == included.end());
-        int j = inter.second;
-#ifdef BOOST
-        if (ToulBar2::pwcMinimalDualGraph && !boost::edge(i, j, G).second) continue;
-#endif
-        assert(included.find(listOfCtrs[j]) == included.end());
-        assert((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc));
-        initElimConstr();
-        TSCOPE scopei;
-        listOfCtrs[i]->getScope(scopei);
-        TSCOPE scopej;
-        listOfCtrs[j]->getScope(scopej);
-        assert(interscope.size() >= 2);
-        vector<unsigned int> subscopei;
-        vector<unsigned int> subscopej;
-        for (int var:interscope) {
-            subscopei.push_back(scopei[var]);
-            subscopej.push_back(scopej[var]);
-        }
-        vector<Cost> costs;
-        for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
-            for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
-                bool compatible = true;
-                unsigned int a = 0;
-                while (compatible && a < interscope.size()) {
-                    if (listOfDualDomains[i][vali][subscopei[a]] != listOfDualDomains[j][valj][subscopej[a]]) {
-                        compatible = false;
+        BoostGraph G(listOfDualVars.size());
+        if (ToulBar2::pwcMinimalDualGraph) {
+            set<int> lastSeparator;
+            for (auto intermap:sorted_intersections) {
+                if (intermap.second == lastSeparator) continue;
+                lastSeparator = intermap.second;
+                set<int> ssubGraphVertices;
+                ssubGraphVertices.insert(intermap.first.first);
+                ssubGraphVertices.insert(intermap.first.second);
+                for (auto intermap2:sorted_intersections) {
+                    if ((intermap.first.first != intermap2.first.first || intermap.first.second != intermap2.first.second) &&
+                            includes(intermap2.second.begin(), intermap2.second.end(), intermap.second.begin(), intermap.second.end())) {
+                        ssubGraphVertices.insert(intermap2.first.first);
+                        ssubGraphVertices.insert(intermap2.first.second);
                     }
-                    a++;
                 }
-                costs.push_back((compatible) ? MIN_COST : MAX_COST);
+                vector<int> subGraphVertices(ssubGraphVertices.begin(), ssubGraphVertices.end());
+                BoostGraph& subG = G.create_subgraph();
+                for (auto vertex: subGraphVertices) {
+                    add_vertex(vertex, subG);
+                }
+                assert(boost::num_vertices(subG) == subGraphVertices.size());
+                //cout << "subG edges : " << boost::num_edges(subG) << " and G edges : " << boost::num_edges(G) << endl;
+                vector<int> comp(boost::num_vertices(subG));
+                int nbcc = boost::connected_components(subG, &comp[0]);
+                //vector<int> sep(intermap.second.begin(), intermap.second.end());
+                //cout << "separator " << to_string(sep) << " belongs to " << to_string(subGraphVertices) << " dualized constraints " << " in " << nbcc << " connected components." << endl;
+                for (int i=0; i < nbcc - 1; i++) {
+                    unsigned int j = 0;
+                    while (comp[j] != i && j < boost::num_vertices(subG)) {
+                        j++;
+                    }
+                    unsigned int k = 0;
+                    while (comp[k] != i+1 && k < boost::num_vertices(subG)) {
+                        k++;
+                    }
+                    assert(j != k);
+                    assert(j < boost::num_vertices(subG));
+                    assert(k < boost::num_vertices(subG));
+                    boost::add_edge(subGraphVertices[j], subGraphVertices[k], G);
+                    //cout << "add edge between " << subGraphVertices[j] << " and " << subGraphVertices[k] << " dual variables." << endl;
+                }
             }
         }
-        int ctri = postBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
-        channelingPWC.push_back((BinaryConstraint *) getCtr(ctri));
-        nbintersections++;
+#endif
+        for (auto intermap:sorted_intersections) {
+            auto inter = intermap.first;
+            set<int> interscope = intermap.second;
+            assert(inter.first < inter.second);
+            int i = inter.first;
+            assert(included.find(listOfCtrs[i]) == included.end());
+            int j = inter.second;
+#ifdef BOOST
+            if (ToulBar2::pwcMinimalDualGraph && !boost::edge(i, j, G).second) continue;
+#endif
+            assert(included.find(listOfCtrs[j]) == included.end());
+            assert((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc));
+            initElimConstr();
+            TSCOPE scopei;
+            listOfCtrs[i]->getScope(scopei);
+            TSCOPE scopej;
+            listOfCtrs[j]->getScope(scopej);
+            assert(interscope.size() >= 2);
+            vector<unsigned int> subscopei;
+            vector<unsigned int> subscopej;
+            for (int var:interscope) {
+                subscopei.push_back(scopei[var]);
+                subscopej.push_back(scopej[var]);
+            }
+            vector<Cost> costs;
+            for (unsigned int vali = 0; vali < listOfDualVars[i]->getDomainInitSize(); vali++) {
+                for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
+                    bool compatible = true;
+                    unsigned int a = 0;
+                    while (compatible && a < interscope.size()) {
+                        if (listOfDualDomains[i][vali][subscopei[a]] != listOfDualDomains[j][valj][subscopej[a]]) {
+                            compatible = false;
+                        }
+                        a++;
+                    }
+                    costs.push_back((compatible) ? MIN_COST : MAX_COST);
+                }
+            }
+            int ctri = postBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
+            channelingPWC.push_back((BinaryConstraint *) getCtr(ctri));
+            nbintersections++;
+        }
     }
 
     // add binary constraints for channeling between dual variables and original variables
@@ -3781,11 +3788,11 @@ void WCSP::preprocessing()
         propagate();
     }
 
-    if (ToulBar2::pwc) {
+    if (ToulBar2::hve || ToulBar2::pwc) {
         pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> res = hiddenEncoding();
 
         // dedualize pairwise consistency
-        if (ToulBar2::pwc < 0 && res.first.size() > 0) {
+        if ((ToulBar2::hve<=0 || ToulBar2::pwc<=0) && res.first.size() > 0) {
             //TODO: run pils here before dedualizing
             for (BinaryConstraint *channel: res.second) {
 #ifndef NDEBUG
