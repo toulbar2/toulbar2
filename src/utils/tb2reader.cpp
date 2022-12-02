@@ -3165,10 +3165,13 @@ void WCSP::read_uai2008(const char* fileName)
         } else if (tmpname.find(".LG") != std::string::npos) {
             tmpname.replace(tmpname.find(".LG"), tmpname.length(), ".LG");
         }
+	if(!(ToulBar2::uaieval) ) { 
+	cout << "vous etes ici" << endl;
         string strevid(string(tmpname) + string(".evid"));
         fevid.open(strevid.c_str());
         if (ToulBar2::verbose >= 0)
             cout << "No evidence file specified. Trying " << strevid << endl;
+	}
         if (!fevid)
             if (ToulBar2::verbose >= 0)
                 cout << "No evidence file. " << endl;
