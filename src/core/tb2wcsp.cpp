@@ -3260,6 +3260,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
             }
+            initElimConstr(); // needed for boosting search by variable elimination
             int var = makeEnumeratedVariable(((ToulBar2::hve>=0&&ToulBar2::pwc>=0)?HIDDEN_VAR_TAG_HVE:HIDDEN_VAR_TAG_HVE_PRE) + to_string(ctr->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
@@ -3301,6 +3302,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             if (nbtuples > maxdomsize) {
                 maxdomsize = nbtuples;
             }
+            initElimConstr(); // needed for boosting search by variable elimination
             int var = makeEnumeratedVariable(((ToulBar2::hve>=0&&ToulBar2::pwc>=0)?HIDDEN_VAR_TAG_HVE:HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
