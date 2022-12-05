@@ -8,15 +8,10 @@ DESCRIPTION
 
 """
 
-# try :
-#     import pytoulbar2.pytb2 as tb2
-# except :
-#     pass
-
-import sys
-toulbar2_path = '~/postdoc_INRAE_MIAT/postdoc/toulbar2/toulbar2'
-sys.path.append(toulbar2_path+'/build/lib/Linux/')
-import pytb2 as tb2
+try :
+    import pytoulbar2.pytb2 as tb2
+except :
+    pass
 
 class MultiCFN:
     """pytoulbar2 base class used to combine linearly multiple CFN.
