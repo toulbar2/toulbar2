@@ -60,6 +60,7 @@ namespace py = pybind11;
 
 #include "core/tb2wcsp.hpp"
 #include "mulcrit/multiwcsp.hpp"
+#include "mulcrit/bicriteria.hpp"
 
 PYBIND11_MODULE(pytb2, m)
 {
@@ -259,7 +260,10 @@ PYBIND11_MODULE(pytb2, m)
         .def("getSolution", &mulcrit::MultiWCSP::getSolution)
         .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues);
 
-
+    py::class_<mulcrit::Bicriteria>(m, "Bicriteria")
+        .def("computeSupportedPoints", &mulcrit::Bicriteria::computeSupportedPoints)
+        .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
+        .def("getPoints", &mulcrit::Bicriteria::getPoints);
 
     py::class_<WeightedCSP>(m, "WCSP")
         .def(py::init([](Cost ub) { return WeightedCSP::makeWeightedCSP(ub); })) // create this object to interface with the multiwcsp class

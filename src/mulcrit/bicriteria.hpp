@@ -40,40 +40,43 @@ class Bicriteria {
 
     static std::vector<mulcrit::Solution> _solutions; // solutions computed
 
+  private: /* static functions */
+
+    /*!
+     * \brief tests if two points are equal or not
+     * \param p1
+     * \param p2
+     * \return true if the two points are not equal to each other
+     */
+    static bool notEqual(Point p1, Point p2);
+
+    /*!
+     * \brief tests if two points are equal or not
+     * \param p1
+     * \param p2
+     * \return true if the two points are equal to each other
+     */
+    static bool equal(Point p1, Point p2);
+
+    /*!
+     * \brief solve the scalarization of two cost function networks registered in a combiner with provided weights
+     * \param multiwcsp the problem containing (at least) the two cost function networks
+     * \param weights the weights applied to the two networks
+     * \param solution the solution returned by the solver, if not null
+     * \param point the point in the objective space computed by the solver, if not null
+     * \return true if a solution has beend found, false otherwise
+     */
+    static bool solveScalarization(mulcrit::MultiWCSP* multiwcsp, pair<Double,Double> weights, mulcrit::Solution* solution = nullptr, Point* point = nullptr);
+
+
 
   public: /* static functions */
 
     /*!
-    * \brief tests if two points are equal or not
-    * \param p1
-    * \param p2
-    * \return true if the two points are not equal to each other
-    */
-    static bool notEqual(Point p1, Point p2);
-
-    /*!
-    * \brief tests if two points are equal or not
-    * \param p1
-    * \param p2
-    * \return true if the two points are equal to each other
-    */
-    static bool equal(Point p1, Point p2);
-
-    /*!
-    * \brief solve the scalarization of two cost function networks registered in a combiner with provided weights
-    * \param multiwcsp the problem containing (at least) the two cost function networks
-    * \param weights the weights applied to the two networks
-    * \param solution the solution returned by the solver, if not null
-    * \param point the point in the objective space computed by the solver, if not null
-    * \return true if a solution has beend found, false otherwise
-    */
-    static bool solveScalarization(mulcrit::MultiWCSP* multiwcsp, pair<Double,Double> weights, mulcrit::Solution* solution = nullptr, Point* point = nullptr);
-
-    /*!
-    * \brief compute a list of supported points for a bi-objective cost function network
-    * \param multiwcsp the problem containing (at least) the two cost function networks
-    * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
-    */
+     * \brief compute a list of supported points for a bi-objective cost function network
+     * \param multiwcsp the problem containing (at least) the two cost function networks
+     * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
+     */
     static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir);
 
     /*!
