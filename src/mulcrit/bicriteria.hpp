@@ -19,6 +19,7 @@ class Bicriteria {
     Bicriteria();
 
     static constexpr Double delta = 1e-3; // constant for defining weights to compute the optimal points individually in the objectives
+    
 
   public: /* types and enum */
 
@@ -31,6 +32,14 @@ class Bicriteria {
     * \brief represenation of the optimization direction: maximization or minimization
     */
     enum OptimDir {Optim_Max, Optim_Min};
+
+
+  private: /* static members to store solutions and points */
+
+    static std::vector<Point> _points; // points in the objective space
+
+    static std::vector<mulcrit::Solution> _solutions; // solutions computed
+
 
   public: /* static functions */
 
@@ -55,19 +64,29 @@ class Bicriteria {
     * \param multiwcsp the problem containing (at least) the two cost function networks
     * \param weights the weights applied to the two networks
     * \param solution the solution returned by the solver, if not null
-    * \return point the point in the objective space of the solution
+    * \param point the point in the objective space computed by the solver, if not null
+    * \return true if a solution has beend found, false otherwise
     */
-    static Point solveScalarization(mulcrit::MultiWCSP* multiwcsp, pair<Double,Double> weights, mulcrit::Solution* solution = nullptr);
+    static bool solveScalarization(mulcrit::MultiWCSP* multiwcsp, pair<Double,Double> weights, mulcrit::Solution* solution = nullptr, Point* point = nullptr);
 
     /*!
     * \brief compute a list of supported points for a bi-objective cost function network
     * \param multiwcsp the problem containing (at least) the two cost function networks
     * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
-    * \param supported_points the list of points computed by the algorithm
-    * \param solutions solutions associated to the supported points
     */
-    static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir, std::vector<Point>* supported_points = nullptr, std::vector<mulcrit::Solution>* solutions = nullptr);
+    static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir);
 
+    /*!
+     * \brief get the list of solutions computed
+     * \return a vector of the solutions
+     */
+    static std::vector<mulcrit::Solution> getSolutions();
+
+    /*!
+     * \brief get the list of points computed in the objective space
+     * \return a vector of the points
+     */
+    static std::vector<Point> getPoints();
 };
 
 } // namespace mulcrit

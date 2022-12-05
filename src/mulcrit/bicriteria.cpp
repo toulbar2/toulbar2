@@ -10,6 +10,10 @@ using namespace std;
 using namespace mulcrit;
 
 //--------------------------------------------------------------------------------------------
+vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
+vector<mulcrit::Solution> Bicriteria::_solutions = vector<mulcrit::Solution>();
+
+//--------------------------------------------------------------------------------------------
 bool Bicriteria::notEqual(Bicriteria::Point p1, Bicriteria::Point p2) {
   return fabs(p1.first-p2.first) >= MultiWCSP::epsilon || fabs(p1.second-p2.second) >= MultiWCSP::epsilon;
 }
@@ -20,7 +24,7 @@ bool Bicriteria::equal(Point p1, Point p2) {
 }
 
 //--------------------------------------------------------------------------------------------
-Bicriteria::Point Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> weights, Solution* solution) {
+bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> weights, Solution* solution, Bicriteria::Point* point) {
 
   cout << "current weights: " << weights.first << ", " << weights.second << endl;
 
@@ -48,25 +52,38 @@ Bicriteria::Point Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Doub
 
   vector<Double> sol_values;
 
-  if(solver->solve()) {
-    cout << "solution found" << endl;
+  bool result = solver->solve();
+
+  if(result) {
+    // cout << "solution found" << endl;
     // combiner.getSolution(solver, &sol_values, solution);
     sol_values = multiwcsp->getSolutionValues();
 
+    if(solution != nullptr) {
+      *solution = multiwcsp->getSolution();
+    }
+
+    if(point != nullptr) {
+      *point = make_pair(sol_values[0], sol_values[1]);
+    }
+
     // solver->getMultiWCSPSolution(sol_values);
   } else {
-    cout << "no solution !" << endl;
+    // cout << "no solution !" << endl;
   }
 
   delete solver;
-  delete wcsp;
+  delete wcsp; 
 
-  return make_pair(sol_values[0], sol_values[1]); 
+  return result;
 
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, std::vector<Point>* supported_points, vector<Solution>* solutions) {
+void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir) {
+
+  _solutions.clear();
+  _points.clear();
 
   tb2init();
 
@@ -74,8 +91,6 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
 
   ToulBar2::cfn = true;
 
-  vector<Point> sol_points;
-  
   Point point1, point2;
 
   Double lambda1 = 1., lambda2 = 1.;
@@ -101,40 +116,41 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
   // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
   // cout << endl << endl;
 
-  // delta is compared to an interna decimalPoint because ToulBar2::decimalPoint is only initialized when created the final wcsp (makeMultiWCSP)
+  // delta is compared to an internal decimalPoint because ToulBar2::decimalPoint is only initialized when created the final wcsp (makeMultiWCSP)
   if(log10(Bicriteria::delta) > multiwcsp->getDecimalPoint()) {
     cerr << "Error: delta constant (" << Bicriteria::delta << ") is incompatible with decimalPoint (" << ToulBar2::decimalPoint << ")" << endl; 
   }
 
-  cout << "optimizing 1 separately: " << endl;
-  if(optim_dir.second == Optim_Min) {
-    point1 = solveScalarization(multiwcsp, make_pair(lambda1,-Bicriteria::delta), &sol1);
-  } else {
-    point1 = solveScalarization(multiwcsp, make_pair(lambda1,Bicriteria::delta), &sol1);
-  }
-  cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
+  bool result1, result2;
 
-  cout << "optimizing 2 separately: " << endl;
-  if(optim_dir.first == Optim_Min) {
-    point2 = solveScalarization(multiwcsp, make_pair(-Bicriteria::delta,lambda2), &sol2);    
+  // cout << "optimizing 1 separately: " << endl;
+  if(optim_dir.second == Optim_Min) {
+    result1 = solveScalarization(multiwcsp, make_pair(lambda1,-Bicriteria::delta), &sol1, &point1);
   } else {
-    point2 = solveScalarization(multiwcsp, make_pair(Bicriteria::delta,lambda2), &sol2);    
+    result1 = solveScalarization(multiwcsp, make_pair(lambda1,Bicriteria::delta), &sol1, &point1);
   }
-  cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
-  cout << endl << endl;
+  // cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
+
+  // cout << "optimizing 2 separately: " << endl;
+  if(optim_dir.first == Optim_Min) {
+    result2 = solveScalarization(multiwcsp, make_pair(-Bicriteria::delta,lambda2), &sol2, &point2);    
+  } else {
+    result2 = solveScalarization(multiwcsp, make_pair(Bicriteria::delta,lambda2), &sol2, &point2);    
+  }
+  // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
+  // cout << endl << endl;
 
   stack<pair<Point, Point>> pending;
 
-  sol_points.push_back(point1);
-  if(solutions != nullptr) {
-    solutions->push_back(sol1);
+  if(result1) { // make sure there is a solution
+    _points.push_back(point1);
+    _solutions.push_back(sol1);
   }
-  if(notEqual(point1, point2)) {
+  
+  if(result2 && notEqual(point1, point2)) {
     pending.push(make_pair(point1, point2));
-    sol_points.push_back(point2);
-    if(solutions != nullptr) {
-      solutions->push_back(sol2);
-    }
+    _points.push_back(point2);
+    _solutions.push_back(sol2);
   }
 
   unsigned int iter = 0;
@@ -159,26 +175,28 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
     }
 
 
-    cout << "weights : " << lambda1 << ", " << lambda2 << endl;
+    // cout << "weights : " << lambda1 << ", " << lambda2 << endl;
+    Point new_point;
+    bool result = solveScalarization(multiwcsp, make_pair(lambda1,lambda2), &new_sol, &new_point);
 
-    auto new_point = solveScalarization(multiwcsp, make_pair(lambda1,lambda2), &new_sol);
+    // jump to the next weights if there is no solution
+    if(!result) {
+      continue;
+    }
 
-
-    cout << "new point: " << new_point.first << ", " << new_point.second << endl;
-    cout << "from " << top.first.first << "," << top.first.second << " and " << top.second.first << ", " << top.second.second << endl;  
+    // cout << "new point: " << new_point.first << ", " << new_point.second << endl;
+    // cout << "from " << top.first.first << "," << top.first.second << " and " << top.second.first << ", " << top.second.second << endl;  
 
     // cut the search if the point was alrady encountered
-    auto it = std::find_if(sol_points.begin(), sol_points.end(), [new_point](Point& point) { return equal(point, new_point); });
-    if(it != sol_points.end()) {
+    auto it = std::find_if(_points.begin(), _points.end(), [new_point](Point& point) { return equal(point, new_point); });
+    if(it != _points.end()) {
       continue;
     }
 
     if(notEqual(new_point, top.first) && notEqual(new_point, top.second)) {
 
-      sol_points.push_back(new_point);
-      if(solutions != nullptr) {
-        solutions->push_back(new_sol);
-      }
+      _points.push_back(new_point);
+      _solutions.push_back(new_sol);
 
       // add two new scalarizations
       if(fabs(top.first.first - new_point.first) >= MultiWCSP::epsilon && fabs(top.first.second - new_point.second) >= MultiWCSP::epsilon) {
@@ -200,40 +218,43 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
 
   }
 
-  cout << "Supported points: " << endl;
-  for(unsigned int point_ind = 0; point_ind < sol_points.size(); point_ind ++) {
-    cout << sol_points[point_ind].first << ", " << sol_points[point_ind].second << endl;
+  // cout << "Supported points: " << endl;
+  // for(unsigned int point_ind = 0; point_ind < sol_points.size(); point_ind ++) {
+  //   cout << sol_points[point_ind].first << ", " << sol_points[point_ind].second << endl;
+  // }
+
+  // the points are sorted from left to right
+  vector<unsigned int> sol_indexes(_points.size());
+  for(unsigned int ind = 0; ind < sol_indexes.size(); ind ++) {
+    sol_indexes[ind] = ind;
   }
 
-  if(supported_points != nullptr) {
-    *supported_points = sol_points;
-  
+  if(optim_dir.first == optim_dir.second) {
+    sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second > _points[ind2].second); } );
+  } else {
+    sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second < _points[ind2].second); } );
+  }
 
-    // the points are sorted from left to right
-    vector<unsigned int> sol_indexes(sol_points.size());
-    for(unsigned int ind = 0; ind < sol_indexes.size(); ind ++) {
-      sol_indexes[ind] = ind;
-    }
+  vector<Point> temp_points = _points;
+  for(unsigned int ind = 0; ind < _points.size(); ind ++) {
+    _points[ind] = temp_points[sol_indexes[ind]];
+  }
 
-    if(optim_dir.first == optim_dir.second) {
-      sort(sol_indexes.begin(), sol_indexes.end(), [supported_points](unsigned int& ind1, unsigned int& ind2) { return ((*supported_points)[ind1].first < (*supported_points)[ind2].first) || ((*supported_points)[ind1].first == (*supported_points)[ind2].first && (*supported_points)[ind1].second > (*supported_points)[ind2].second); } );
-    } else {
-      sort(sol_indexes.begin(), sol_indexes.end(), [supported_points](unsigned int& ind1, unsigned int& ind2) { return ((*supported_points)[ind1].first < (*supported_points)[ind2].first) || ((*supported_points)[ind1].first == (*supported_points)[ind2].first && (*supported_points)[ind1].second < (*supported_points)[ind2].second); } );
-    }
-
-    vector<Point> temp_points = *supported_points;
-    for(unsigned int ind = 0; ind < supported_points->size(); ind ++) {
-      (*supported_points)[ind] = temp_points[sol_indexes[ind]];
-    }
-
-    if(solutions != nullptr) {
-      vector<mulcrit::Solution> temp_sol = *solutions;
-      for(unsigned int ind = 0; ind < solutions->size(); ind ++) {
-        (*solutions)[ind] = temp_sol[sol_indexes[ind]];
-      }
-    }
-
+  vector<mulcrit::Solution> temp_sol = _solutions;
+  for(unsigned int ind = 0; ind < _solutions.size(); ind ++) {
+    _solutions[ind] = temp_sol[sol_indexes[ind]];
   }
 
 
+
+}
+
+//--------------------------------------------------------------------------------------------
+std::vector<mulcrit::Solution> Bicriteria::getSolutions() {
+  return _solutions;
+}
+
+//--------------------------------------------------------------------------------------------
+std::vector<Bicriteria::Point> Bicriteria::getPoints() {
+  return _points;
 }
