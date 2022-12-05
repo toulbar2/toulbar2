@@ -383,6 +383,11 @@ std::string mulcrit::MultiWCSP::getNetworkName(unsigned int index) {
 }
 
 //---------------------------------------------------------------------------
+unsigned int mulcrit::MultiWCSP::getDecimalPoint() {
+  return _tb2_decimalpoint;
+}
+
+//---------------------------------------------------------------------------
 Double mulcrit::MultiWCSP::computeTop() {
 
   Double top = 0.;

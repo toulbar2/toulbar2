@@ -158,6 +158,11 @@ class MultiWCSP {
     std::string getNetworkName(unsigned int index);
 
     /*!
+     * \brief return the precision used in the combined wcsp (max of the decimalPoint of the wcsp given as input)
+     */
+    unsigned int getDecimalPoint();
+
+    /*!
      * \brief print the cfn
      * \brief os the stream to print to
      */

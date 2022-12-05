@@ -101,7 +101,8 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
   // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
   // cout << endl << endl;
 
-  if(log10(Bicriteria::delta) > ToulBar2::decimalPoint) {
+  // delta is compared to an interna decimalPoint because ToulBar2::decimalPoint is only initialized when created the final wcsp (makeMultiWCSP)
+  if(log10(Bicriteria::delta) > multiwcsp->getDecimalPoint()) {
     cerr << "Error: delta constant (" << Bicriteria::delta << ") is incompatible with decimalPoint (" << ToulBar2::decimalPoint << ")" << endl; 
   }
 
