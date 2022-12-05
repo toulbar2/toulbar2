@@ -260,8 +260,14 @@ PYBIND11_MODULE(pytb2, m)
         .def("getSolution", &mulcrit::MultiWCSP::getSolution)
         .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues);
 
+    py::enum_<mulcrit::Bicriteria::OptimDir>(m, "OptimDir")
+        .value("Min", mulcrit::Bicriteria::OptimDir::Optim_Min)
+        .value("Max", mulcrit::Bicriteria::OptimDir::Optim_Max)
+        .export_values();
+
     py::class_<mulcrit::Bicriteria>(m, "Bicriteria")
-        .def("computeSupportedPoints", &mulcrit::Bicriteria::computeSupportedPoints)
+        // .def("computeSupportedPoints", &mulcrit::Bicriteria::computeSupportedPoints)
+        .def("computeSupportedPoints", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir) { mulcrit::Bicriteria::computeSupportedPoints(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>())); } )
         .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
         .def("getPoints", &mulcrit::Bicriteria::getPoints);
 
