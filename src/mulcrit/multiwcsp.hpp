@@ -108,6 +108,10 @@ class MultiWCSP {
 
   public:
 
+    static constexpr Double epsilon = 1e-6;
+
+  public:
+
     /*!
      * \brief default constructor
      */

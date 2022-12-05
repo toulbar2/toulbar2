@@ -515,7 +515,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
           costs[tb2_val_ind] = top;
         } else {
 
-          if(fabs(weight-1.0) > 1e-6) {
+          if(fabs(weight-1.0) > MultiWCSP::epsilon) {
             costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind]*weight;
           } else {
             costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind];
@@ -554,7 +554,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
           if(cost == numeric_limits<Double>::infinity()) {
              costs.push_back(top);
           } else {
-            if(fabs(weight-1.0) > 1e-6) {
+            if(fabs(weight-1.0) > MultiWCSP::epsilon) {
               costs.push_back(cost*weight);
             } else {
               costs.push_back(cost);
@@ -597,7 +597,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
             if(cost == numeric_limits<Double>::infinity()) {
               costs.push_back(top);
             } else {
-              if(fabs(weight-1.0) > 1e-6) {
+              if(fabs(weight-1.0) > MultiWCSP::epsilon) {
                 costs.push_back(cost*weight);
               } else {
                 costs.push_back(cost);
@@ -656,7 +656,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
           wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(top));
         } else {
           // do not forget to convert from double to cost for n-ary cost functions
-          if(fabs(weight-1.) > 1e-6) {
+          if(fabs(weight-1.) > MultiWCSP::epsilon) {
             wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(cost_function[func_ind].costs[ind_tuple]*weight));
           } else {
             wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(cost_function[func_ind].costs[ind_tuple]));

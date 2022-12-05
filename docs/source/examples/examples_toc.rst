@@ -9,6 +9,7 @@ List of all examples
 
    tuto_wnqp.rst
    tuto_wlsp.rst
+   tuto_biwlsp.rst
    tuto_rlfap.rst
    tuto_fapwp.rst
    tuto_medp.rst
