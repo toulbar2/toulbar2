@@ -445,6 +445,8 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
     
     global_ub += _doriginal_ubs[net_ind]*weights[net_ind];
 
+    cout << "net " << net_ind << ": ub=" << _doriginal_ubs[net_ind] << endl;
+
     if(_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
       cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
       cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
