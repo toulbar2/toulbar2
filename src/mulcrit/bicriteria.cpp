@@ -15,6 +15,38 @@ vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
 vector<mulcrit::Solution> Bicriteria::_solutions = vector<mulcrit::Solution>();
 
 //--------------------------------------------------------------------------------------------
+void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir) {
+    
+  // the points are sorted from left to right
+  vector<unsigned int> sol_indexes(_points.size());
+  for(unsigned int ind = 0; ind < sol_indexes.size(); ind ++) {
+    sol_indexes[ind] = ind;
+  }
+
+  if(optim_dir.first == optim_dir.second) {
+    sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second > _points[ind2].second); } );
+  } else {
+    sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second < _points[ind2].second); } );
+  }
+
+  vector<Weights> temp_weights = _weights;
+  for(unsigned int ind = 0; ind < _weights.size(); ind ++) {
+    _weights[ind] = temp_weights[sol_indexes[ind]];
+  }
+
+  vector<Point> temp_points = _points;
+  for(unsigned int ind = 0; ind < _points.size(); ind ++) {
+    _points[ind] = temp_points[sol_indexes[ind]];
+  }
+
+  vector<mulcrit::Solution> temp_sol = _solutions;
+  for(unsigned int ind = 0; ind < _solutions.size(); ind ++) {
+    _solutions[ind] = temp_sol[sol_indexes[ind]];
+  }
+
+}
+
+//--------------------------------------------------------------------------------------------
 bool Bicriteria::notEqual(Bicriteria::Point p1, Bicriteria::Point p2) {
   return fabs(p1.first-p2.first) >= MultiWCSP::epsilon || fabs(p1.second-p2.second) >= MultiWCSP::epsilon;
 }
@@ -27,17 +59,21 @@ bool Bicriteria::equal(Point p1, Point p2) {
 //--------------------------------------------------------------------------------------------
 bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_dir) {
 
-  bool obj_1 = false;
+  unsigned int obj_1 = 0;
   if( (optim_dir.first == Optim_Min && p1.first < p2.first) || (optim_dir.first == Optim_Max && p1.first > p2.first)) {
-    obj_1 = true;
+    obj_1 = 2;
+  } else if(fabs(p1.first-p2.first) <= MultiWCSP::epsilon) {
+    obj_1 = 1;
   }
 
-  bool obj_2 = false;
+  unsigned int obj_2 = 0;
   if( (optim_dir.second == Optim_Min && p1.second < p2.second) || (optim_dir.second == Optim_Max && p1.second > p2.second)) {
-    obj_2 = true;
+    obj_2 = 2;
+  } else if(fabs(p1.second-p2.second) <= MultiWCSP::epsilon) {
+    obj_2 = 1;
   }
 
-  return obj_1 && obj_2;
+  return obj_1 + obj_2 >= 4;
 }
 
 //--------------------------------------------------------------------------------------------
@@ -179,17 +215,23 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<
       } else if(Bicriteria::equal(points[ind], _points[solIndex+1])) {
         add = false;
       }
+      
+      // check if the point is dominated by one of the point given as index
+      if(add && Bicriteria::dominates(points[solIndex], points[ind], optim_dir)) {
+        add = false;
+      } else if(Bicriteria::dominates(points[solIndex+1], points[ind], optim_dir)) {
+        add = false;
+      }
 
-      // check if the points is in the triangle
-      if(add && dominates(points[ind], corner, optim_dir)) {
+      // make sure the point dominates the corner
+      if(add && !Bicriteria::dominates(points[ind], corner, optim_dir)) {
         add = false;
       }
 
       // look for dominating points
-      if(add && find_if(sol_indexes.begin(), sol_indexes.end(), [ind, points, optim_dir](unsigned int ind2) 
-      { return ind != ind2 && dominates(points[ind2], points[ind], optim_dir); }) == sol_indexes.end()) {
+      if(add && find_if(sol_indexes_temp.begin(), sol_indexes_temp.end(), [ind, points, optim_dir](unsigned int ind2) 
+      { return ind != ind2 && dominates(points[ind2], points[ind], optim_dir); }) != sol_indexes_temp.end()) {
         add = false;
-        cout << "cut" << endl;
       }
 
       if(add) {
@@ -216,8 +258,17 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<
     cout << "n solutions: " << sol.size() << endl;
 
     for(unsigned int ind = 0; ind < points.size(); ind ++) {
-      cout << "new additional point: " << points[ind].first << ", " << points[ind].first << endl;
+      cout << "new additional point: " << points[ind].first << ", " << points[ind].second << endl;
     }
+
+    /* solutions are added to the list, then sorted */
+    for(unsigned int ind = 0; ind < sol.size(); ind ++) {
+      _solutions.push_back(sol[ind]);
+      _points.push_back(points[ind]);
+      _weights.push_back(make_pair(0., 0.));
+    }
+
+    sortSolutions(optim_dir);
 
   } else {
     
@@ -384,31 +435,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
   // }
 
   // the points are sorted from left to right
-  vector<unsigned int> sol_indexes(_points.size());
-  for(unsigned int ind = 0; ind < sol_indexes.size(); ind ++) {
-    sol_indexes[ind] = ind;
-  }
-
-  if(optim_dir.first == optim_dir.second) {
-    sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second > _points[ind2].second); } );
-  } else {
-    sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second < _points[ind2].second); } );
-  }
-
-  vector<Weights> temp_weights = _weights;
-  for(unsigned int ind = 0; ind < _weights.size(); ind ++) {
-    _weights[ind] = temp_weights[sol_indexes[ind]];
-  }
-
-  vector<Point> temp_points = _points;
-  for(unsigned int ind = 0; ind < _points.size(); ind ++) {
-    _points[ind] = temp_points[sol_indexes[ind]];
-  }
-
-  vector<mulcrit::Solution> temp_sol = _solutions;
-  for(unsigned int ind = 0; ind < _solutions.size(); ind ++) {
-    _solutions[ind] = temp_sol[sol_indexes[ind]];
-  }
+  sortSolutions(optim_dir);
 
 
 

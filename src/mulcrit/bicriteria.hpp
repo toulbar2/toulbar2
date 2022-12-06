@@ -50,6 +50,12 @@ class Bicriteria {
   private: /* static functions */
 
     /*!
+     * \brief sort the solutions obtained
+     * \param optim_dir the optimization direction
+     */
+    static void sortSolutions(pair<OptimDir, OptimDir> optim_dir);
+
+    /*!
      * \brief tests if two points are equal or not
      * \param p1
      * \param p2
