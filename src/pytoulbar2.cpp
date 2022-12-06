@@ -264,6 +264,7 @@ PYBIND11_MODULE(pytb2, m)
     py::class_<mulcrit::Bicriteria> bcrit(m, "Bicriteria");
     
     bcrit.def("computeSupportedPoints", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, Double delta) { mulcrit::Bicriteria::computeSupportedPoints(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), delta); }, py::arg("optim_dir"), py::arg("delta") = 1e-3)
+        .def("computeAdditionalSolutions", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit) { mulcrit::Bicriteria::computeAdditionalSolutions(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), solIndex, nbLimit); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100)
         .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
         .def("getPoints", &mulcrit::Bicriteria::getPoints)
         .def("getWeights", &mulcrit::Bicriteria::getWeights);

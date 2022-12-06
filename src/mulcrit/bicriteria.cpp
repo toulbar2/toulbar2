@@ -25,6 +25,22 @@ bool Bicriteria::equal(Point p1, Point p2) {
 }
 
 //--------------------------------------------------------------------------------------------
+bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_dir) {
+
+  bool obj_1 = false;
+  if( (optim_dir.first == Optim_Min && p1.first < p2.first) || (optim_dir.first == Optim_Max && p1.first > p2.first)) {
+    obj_1 = true;
+  }
+
+  bool obj_2 = false;
+  if( (optim_dir.second == Optim_Min && p1.second < p2.second) || (optim_dir.second == Optim_Max && p1.second > p2.second)) {
+    obj_2 = true;
+  }
+
+  return obj_1 && obj_2;
+}
+
+//--------------------------------------------------------------------------------------------
 bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> weights, Solution* solution, Bicriteria::Point* point) {
 
   cout << "current weights: " << weights.first << ", " << weights.second << endl;
@@ -77,6 +93,138 @@ bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> we
   delete wcsp; 
 
   return result;
+
+}
+
+//--------------------------------------------------------------------------------------------
+void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit) {
+
+  tb2init();
+  ToulBar2::allSolutions = nbLimit;
+
+  Weights weights = make_pair(fabs(_points[solIndex+1].second-_points[solIndex].second), fabs(_points[solIndex+1].first-_points[solIndex].first));
+
+  if(optim_dir.first == Optim_Max && weights.first > 0) {
+    weights.first = -weights.first;
+  }
+
+  if(optim_dir.second == Optim_Max && weights.second > 0) {
+    weights.second = -weights.second;
+  }
+
+  cout << "selected weights: " << weights.first << ", " << weights.second << endl;
+
+  // compute the "corner" to determine a new ub
+  Point corner;
+  if(optim_dir.first == Optim_Min) {
+    corner.first = max(_points[solIndex].first, _points[solIndex+1].first);
+  } else {
+    corner.first = min(_points[solIndex].first, _points[solIndex+1].first);
+  }
+  if(optim_dir.second == Optim_Min) {
+    corner.second = max(_points[solIndex].second, _points[solIndex+1].second);
+  } else {
+    corner.second = min(_points[solIndex].second, _points[solIndex+1].second);
+  }
+
+  Double new_ub = corner.first*weights.first + corner.second*weights.second;
+
+  multiwcsp->setWeight(0, weights.first);
+  multiwcsp->setWeight(1, weights.second);
+
+  WeightedCSP* wcsp = multiwcsp->makeWeightedCSP();
+  wcsp->setUb(wcsp->DoubletoCost(new_ub));
+
+  WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST, wcsp);
+  solver->getWCSP()->sortConstraints();
+
+  vector<Double> sol_values;
+
+  bool result = solver->solve();
+
+  if(result) {
+
+    vector<pair<Double, vector<Value>>> tb2_sol = solver->getSolutions();
+
+    cout << "number of solutions: " << tb2_sol.size() << endl;
+
+    /* compute the solutions and points */
+    vector<mulcrit::Solution> sol;
+    for(unsigned int ind = 0; ind < tb2_sol.size(); ind ++) {
+      sol.push_back(multiwcsp->convertToSolution(tb2_sol[ind].second));
+    }
+
+    vector<Point> points;
+    for(unsigned int ind = 0; ind < sol.size(); ind ++) {
+      vector<Double> values = multiwcsp->computeSolutionValues(sol[ind]);
+      points.push_back(make_pair(values[0], values[1]));
+    }
+
+
+    // build a list of indexes on the solutions
+    vector<unsigned int> sol_indexes_temp(sol.size());
+    for(unsigned int ind = 0; ind < sol.size(); ind ++) {
+      sol_indexes_temp[ind] = ind;
+    }
+
+    // filter the points by indexes
+    vector<unsigned int> sol_indexes;
+    for(unsigned int ind: sol_indexes_temp) {
+      
+      bool add = true;
+
+      // check if the point correspond to one the the supported points
+      if(Bicriteria::equal(points[ind], _points[solIndex])) {
+        add = false;
+      } else if(Bicriteria::equal(points[ind], _points[solIndex+1])) {
+        add = false;
+      }
+
+      // check if the points is in the triangle
+      if(add && dominates(points[ind], corner, optim_dir)) {
+        add = false;
+      }
+
+      // look for dominating points
+      if(add && find_if(sol_indexes.begin(), sol_indexes.end(), [ind, points, optim_dir](unsigned int ind2) 
+      { return ind != ind2 && dominates(points[ind2], points[ind], optim_dir); }) == sol_indexes.end()) {
+        add = false;
+        cout << "cut" << endl;
+      }
+
+      if(add) {
+        sol_indexes.push_back(ind);
+      }
+
+    }
+
+    cout << "sol indexes temp size: " << sol_indexes_temp.size() << endl;
+
+    cout << "sol indexes size: " << sol_indexes.size() << endl;
+
+    vector<mulcrit::Solution> temp_sol;
+    vector<Point> temp_points;
+
+    for(unsigned int index: sol_indexes) {
+      temp_sol.push_back(sol[index]);
+      temp_points.push_back(points[index]);
+    }
+
+    sol = temp_sol;
+    points = temp_points;
+
+    cout << "n solutions: " << sol.size() << endl;
+
+    for(unsigned int ind = 0; ind < points.size(); ind ++) {
+      cout << "new additional point: " << points[ind].first << ", " << points[ind].first << endl;
+    }
+
+  } else {
+    
+  }
+
+  delete solver;
+  delete wcsp; 
 
 }
 

@@ -66,6 +66,14 @@ class Bicriteria {
     static bool equal(Point p1, Point p2);
 
     /*!
+     * \brief returns true if p1 dominates p2
+     * \param p1
+     * \param p2
+     * \param optim_dir the optimization direction on the two criteria
+     */
+    static bool dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_dir);
+
+    /*!
      * \brief solve the scalarization of two cost function networks registered in a combiner with provided weights
      * \param multiwcsp the problem containing (at least) the two cost function networks
      * \param weights the weights applied to the two networks
@@ -74,8 +82,6 @@ class Bicriteria {
      * \return true if a solution has beend found, false otherwise
      */
     static bool solveScalarization(mulcrit::MultiWCSP* multiwcsp, pair<Double,Double> weights, mulcrit::Solution* solution = nullptr, Point* point = nullptr);
-
-
 
   public: /* static functions */
 
@@ -86,6 +92,15 @@ class Bicriteria {
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
     static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
+
+    /*!
+     * \brief compute additional (potentially non dominated) solutions via enumeration
+     * \param multiwcsp the bicriteria cost function network
+     * \param optim_dir the direction of the optimization for the two criteria
+     * \param solIndex the index of the solution from which searching new solutions
+     * \param nbLimit maximum number of solutions to obtain
+     */
+    static void computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit = 100);
 
     /*!
      * \brief get the list of solutions computed
