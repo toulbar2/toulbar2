@@ -869,6 +869,19 @@ std::vector<Double> mulcrit::MultiWCSP::computeSolutionValues(Solution& solution
   return obj_values;
 }
 
+//---------------------------------------------------------------------------
+mulcrit::Solution mulcrit::MultiWCSP::convertToSolution(std::vector<Value>& solution) {
+
+  Solution res;
+  
+  for(unsigned int var_ind = 0; var_ind < solution.size(); var_ind ++) {
+    auto var = dynamic_cast<EnumeratedVariable*>(_wcsp->getVar(var_ind));
+    string val_name = var->getValueName(var->toIndex(solution[var_ind]));
+    res.insert(std::make_pair(var->getName(), val_name));
+  }
+
+  return res;
+}
 
 //---------------------------------------------------------------------------
 void mulcrit::MultiWCSP::print(ostream& os) {

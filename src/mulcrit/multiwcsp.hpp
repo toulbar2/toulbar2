@@ -209,6 +209,13 @@ class MultiWCSP {
      */
     std::vector<Double> computeSolutionValues(Solution& solution);
 
+    /*!
+     * \brief convert a solution returned by ToulBar2 to a dictionary with variable names and values as labels
+     * \param solution the solution given bu ToulBar2
+     * \return the solution as a dictionary
+     */
+    Solution convertToSolution(std::vector<Value>& solution);
+
   private: /* private methods */
 
     /*!

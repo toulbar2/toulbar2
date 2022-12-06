@@ -256,7 +256,9 @@ PYBIND11_MODULE(pytb2, m)
         .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp) { return multiwcsp.makeWeightedCSP(); })
         .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp) { multiwcsp.makeWeightedCSP(wcsp); })
         .def("getSolution", &mulcrit::MultiWCSP::getSolution)
-        .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues);
+        .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues)
+        .def("computeSolutionValues", &mulcrit::MultiWCSP::computeSolutionValues)
+        .def("convertToSolution", &mulcrit::MultiWCSP::convertToSolution);
 
 
     py::class_<mulcrit::Bicriteria> bcrit(m, "Bicriteria");
