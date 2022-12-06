@@ -252,24 +252,24 @@ PYBIND11_MODULE(pytb2, m)
         .def("nbNetworks", &mulcrit::MultiWCSP::nbNetworks)
         .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
         .def("getNetworkName", &mulcrit::MultiWCSP::getNetworkName)
-        // .def("print", &mulcrit::MultiWCSP::print)
         .def("print", [](mulcrit::MultiWCSP& multiwcsp) { multiwcsp.print(cout); } )
-        // .def("makeWeightedCSP", &mulcrit::MultiWCSP::makeWeightedCSP)
         .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp) { return multiwcsp.makeWeightedCSP(); })
         .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp) { multiwcsp.makeWeightedCSP(wcsp); })
         .def("getSolution", &mulcrit::MultiWCSP::getSolution)
         .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues);
 
-    py::enum_<mulcrit::Bicriteria::OptimDir>(m, "OptimDir")
+
+    py::class_<mulcrit::Bicriteria> bcrit(m, "Bicriteria");
+    
+    bcrit.def("computeSupportedPoints", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, Double delta) { mulcrit::Bicriteria::computeSupportedPoints(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), delta); }, py::arg("optim_dir"), py::arg("delta") = 1e-3)
+        .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
+        .def("getPoints", &mulcrit::Bicriteria::getPoints)
+        .def("getWeights", &mulcrit::Bicriteria::getWeights);
+
+    py::enum_<mulcrit::Bicriteria::OptimDir>(bcrit, "OptimDir")
         .value("Min", mulcrit::Bicriteria::OptimDir::Optim_Min)
         .value("Max", mulcrit::Bicriteria::OptimDir::Optim_Max)
         .export_values();
-
-    py::class_<mulcrit::Bicriteria>(m, "Bicriteria")
-        // .def("computeSupportedPoints", &mulcrit::Bicriteria::computeSupportedPoints)
-        .def("computeSupportedPoints", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir) { mulcrit::Bicriteria::computeSupportedPoints(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>())); } )
-        .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
-        .def("getPoints", &mulcrit::Bicriteria::getPoints);
 
     py::class_<WeightedCSP>(m, "WCSP")
         .def(py::init([](Cost ub) { return WeightedCSP::makeWeightedCSP(ub); })) // create this object to interface with the multiwcsp class

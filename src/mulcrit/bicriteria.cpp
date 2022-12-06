@@ -10,6 +10,7 @@ using namespace std;
 using namespace mulcrit;
 
 //--------------------------------------------------------------------------------------------
+vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
 vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
 vector<mulcrit::Solution> Bicriteria::_solutions = vector<mulcrit::Solution>();
 
@@ -80,10 +81,11 @@ bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> we
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir) {
+void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta) {
 
   _solutions.clear();
   _points.clear();
+  _weights.clear();
 
   tb2init();
 
@@ -117,38 +119,45 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
   // cout << endl << endl;
 
   // delta is compared to an internal decimalPoint because ToulBar2::decimalPoint is only initialized when created the final wcsp (makeMultiWCSP)
-  if(log10(Bicriteria::delta) > multiwcsp->getDecimalPoint()) {
-    cerr << "Error: delta constant (" << Bicriteria::delta << ") is incompatible with decimalPoint (" << ToulBar2::decimalPoint << ")" << endl; 
+  if(log10(delta) > multiwcsp->getDecimalPoint()) {
+    cerr << "Error: delta constant (" << delta << ") is incompatible with decimalPoint (" << ToulBar2::decimalPoint << ")" << endl; 
   }
 
   bool result1, result2;
+  Weights weights1, weights2;
 
   // cout << "optimizing 1 separately: " << endl;
   if(optim_dir.second == Optim_Min) {
-    result1 = solveScalarization(multiwcsp, make_pair(lambda1,-Bicriteria::delta), &sol1, &point1);
+    weights1 = make_pair(lambda1,-delta);
   } else {
-    result1 = solveScalarization(multiwcsp, make_pair(lambda1,Bicriteria::delta), &sol1, &point1);
+    weights1 = make_pair(lambda1,delta);
   }
+  result1 = solveScalarization(multiwcsp, weights1, &sol1, &point1);
+
   // cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
 
   // cout << "optimizing 2 separately: " << endl;
   if(optim_dir.first == Optim_Min) {
-    result2 = solveScalarization(multiwcsp, make_pair(-Bicriteria::delta,lambda2), &sol2, &point2);    
+    weights2 = make_pair(-delta,lambda2);
   } else {
-    result2 = solveScalarization(multiwcsp, make_pair(Bicriteria::delta,lambda2), &sol2, &point2);    
+    weights2 = make_pair(delta,lambda2);
   }
+  result2 = solveScalarization(multiwcsp, weights2, &sol2, &point2);    
+
   // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
   // cout << endl << endl;
 
   stack<pair<Point, Point>> pending;
 
   if(result1) { // make sure there is a solution
+    _weights.push_back(weights1);
     _points.push_back(point1);
     _solutions.push_back(sol1);
   }
   
   if(result2 && notEqual(point1, point2)) {
     pending.push(make_pair(point1, point2));
+    _weights.push_back(weights2);
     _points.push_back(point2);
     _solutions.push_back(sol2);
   }
@@ -177,7 +186,9 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
 
     // cout << "weights : " << lambda1 << ", " << lambda2 << endl;
     Point new_point;
-    bool result = solveScalarization(multiwcsp, make_pair(lambda1,lambda2), &new_sol, &new_point);
+
+    Weights new_weights = make_pair(lambda1,lambda2);
+    bool result = solveScalarization(multiwcsp, new_weights, &new_sol, &new_point);
 
     // jump to the next weights if there is no solution
     if(!result) {
@@ -195,6 +206,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
 
     if(notEqual(new_point, top.first) && notEqual(new_point, top.second)) {
 
+      _weights.push_back(new_weights);
       _points.push_back(new_point);
       _solutions.push_back(new_sol);
 
@@ -235,6 +247,11 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
     sort(sol_indexes.begin(), sol_indexes.end(), [](unsigned int& ind1, unsigned int& ind2) { return (_points[ind1].first < _points[ind2].first) || (_points[ind1].first == _points[ind2].first && _points[ind1].second < _points[ind2].second); } );
   }
 
+  vector<Weights> temp_weights = _weights;
+  for(unsigned int ind = 0; ind < _weights.size(); ind ++) {
+    _weights[ind] = temp_weights[sol_indexes[ind]];
+  }
+
   vector<Point> temp_points = _points;
   for(unsigned int ind = 0; ind < _points.size(); ind ++) {
     _points[ind] = temp_points[sol_indexes[ind]];
@@ -257,4 +274,9 @@ std::vector<mulcrit::Solution> Bicriteria::getSolutions() {
 //--------------------------------------------------------------------------------------------
 std::vector<Bicriteria::Point> Bicriteria::getPoints() {
   return _points;
+}
+
+//--------------------------------------------------------------------------------------------
+std::vector<Bicriteria::Weights> Bicriteria::getWeights() {
+  return _weights;
 }

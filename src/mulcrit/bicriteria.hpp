@@ -18,7 +18,7 @@ class Bicriteria {
      */
     Bicriteria();
 
-    static constexpr Double delta = 1e-3; // constant for defining weights to compute the optimal points individually in the objectives
+    // static constexpr Double delta = 1e-3; // constant for defining weights to compute the optimal points individually in the objectives
     
 
   public: /* types and enum */
@@ -29,6 +29,11 @@ class Bicriteria {
     typedef pair<Double, Double> Point;
 
     /*!
+    * \brief type representing a pair of weights for the scalarization
+    */
+    typedef pair<Double, Double> Weights;
+
+    /*!
     * \brief represenation of the optimization direction: maximization or minimization
     */
     enum OptimDir {Optim_Max, Optim_Min};
@@ -37,6 +42,8 @@ class Bicriteria {
   private: /* static members to store solutions and points */
 
     static std::vector<Point> _points; // points in the objective space
+
+    static std::vector<Weights> _weights; // the weights used to compute the points
 
     static std::vector<mulcrit::Solution> _solutions; // solutions computed
 
@@ -76,8 +83,9 @@ class Bicriteria {
      * \brief compute a list of supported points for a bi-objective cost function network
      * \param multiwcsp the problem containing (at least) the two cost function networks
      * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
+     * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
-    static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir);
+    static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
 
     /*!
      * \brief get the list of solutions computed
@@ -90,6 +98,13 @@ class Bicriteria {
      * \return a vector of the points
      */
     static std::vector<Point> getPoints();
+
+    /*!
+     * \brief get the list of weights used to obtain the supported points
+     * \return a vector of the pairs of weights
+     */
+    static std::vector<Weights> getWeights();
+
 };
 
 } // namespace mulcrit
