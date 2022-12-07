@@ -100,13 +100,14 @@ class Bicriteria {
     static void computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
 
     /*!
-     * \brief compute additional (potentially non dominated) solutions via enumeration
+     * \brief compute additional (potentially non dominated) solutions via enumeration in a nondominated triangle
      * \param multiwcsp the bicriteria cost function network
      * \param optim_dir the direction of the optimization for the two criteria
      * \param solIndex the index of the solution from which searching new solutions
      * \param nbLimit maximum number of solutions to obtain
+     * \param pct the percentage of the search space, 1.0 = complete triangle
      */
-    static void computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit = 100);
+    static void computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit = 100, Double pct = 1.0);
 
     /*!
      * \brief compute all the non supported solutions

@@ -133,7 +133,7 @@ bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> we
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit) {
+void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) {
 
   tb2init();
   ToulBar2::allSolutions = nbLimit;
@@ -164,6 +164,13 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<
   }
 
   Double new_ub = corner.first*weights.first + corner.second*weights.second;
+
+  Double new_lb = _points[solIndex].first*weights.first + _points[solIndex].second*weights.second;
+
+  // lower the upper bound if the percentage is not one
+  if(fabs(1.-pct) > MultiWCSP::epsilon) {
+    new_ub -= (new_ub-new_lb)*(1.-pct);  
+  }
 
   multiwcsp->setWeight(0, weights.first);
   multiwcsp->setWeight(1, weights.second);
