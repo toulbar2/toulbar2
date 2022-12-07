@@ -4,9 +4,14 @@ import random
 
 # printing a solution as a grid
 def print_solution(sol, N):
+  
+  grid = [0 for _ in range(N*N)]
+  for k,v in sol.items():
+    grid[ int(k[5])*N+int(k[7]) ] = int(v[1:])
+
   output = ''
   for var_ind in range(len(sol)):
-    output += str(sol[var_ind]) + ' '
+    output += str(grid[var_ind]) + ' '
     if var_ind % N == N-1:
       output += '\n'
   print(output)
@@ -21,7 +26,7 @@ def create_base_cfn(cfn, N, top):
   # create N^2 variables, with N values in their domains
   for row in range(N):
     for col in range(N):
-      index = cfn.AddVariable('Cell_' + str(row) + ',' + str(col), [str(val) for val in range(N)])
+      index = cfn.AddVariable('Cell_' + str(row) + '_' + str(col), ['v' + str(val) for val in range(N)])
       var_indexes.append(index)
 
   # all permutation constraints: pairwise all different
@@ -82,14 +87,15 @@ multicfn.setWeight(1, weights[1])
 cfn = pytoulbar2.CFN()
 cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined cfn
 
-# solver.dump_wcsp('python_latin_square_bicriteria.cfn', True, 2)
+# cfn.Dump('python_latin_square_bicriteria.cfn')
 
 res = cfn.Solve()
 
 if res:
   print('Solution found with weights', weights, ':')
   sol_costs = multicfn.getSolutionCosts()
-  print_solution(res[0], N)
+  solution = multicfn.getSolution()
+  print_solution(solution, N)
   print('With values:', sol_costs, '(sum=', res[1], ')')
 
 print('\n')
@@ -103,13 +109,14 @@ multicfn.setWeight(1, weights[1])
 cfn = pytoulbar2.CFN()
 cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined cfn
 
-# solver.dump_wcsp('python_latin_square_bicriteria.cfn', True, 2)
+# cfn.Dump('python_latin_square_bicriteria.cfn')
 
 res = cfn.Solve()
 
 if res:
   print('Solution found with weights', weights, ':')
   sol_costs = multicfn.getSolutionCosts()
-  print_solution(res[0], N)
+  solution = multicfn.getSolution()
+  print_solution(solution, N)
   print('With values:', sol_costs, '(sum=', res[1], ')')
 

@@ -8,10 +8,15 @@ DESCRIPTION
 
 """
 
-try :
-    import pytoulbar2.pytb2 as tb2
-except :
-    pass
+# try :
+#     import pytoulbar2.pytb2 as tb2
+# except :
+#     pass
+
+import sys
+toulbar2_path = '/home/sbuchet/code/toulbar2'
+sys.path.append(toulbar2_path+'/build/lib/Linux/')
+import pytb2 as tb2
 
 class MultiCFN:
     """pytoulbar2 base class used to combine linearly multiple CFN.
@@ -37,7 +42,7 @@ class MultiCFN:
         """
 
         if CFN.UbInit is not None:
-            CFN.setUb(CFN.UbInit) # might throw a contradiction
+            CFN.SetUB(CFN.UbInit) # might throw a contradiction
 
         # this should be done in the CFN class, but the update occurs only when solving the problem
         # this is because DoubletoCost function depends on the negCost and LB, which may be updated when adding cost functions
