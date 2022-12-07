@@ -89,14 +89,14 @@ cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined 
 
 # cfn.Dump('python_latin_square_bicriteria.cfn')
 
-res = cfn.Solve()
+result = cfn.Solve()
 
-if res:
+if result:
   print('Solution found with weights', weights, ':')
   sol_costs = multicfn.getSolutionCosts()
   solution = multicfn.getSolution()
   print_solution(solution, N)
-  print('With values:', sol_costs, '(sum=', res[1], ')')
+  print('With values:', sol_costs, '(sum=', result[1], ')')
 
 print('\n')
 
@@ -111,12 +111,12 @@ cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined 
 
 # cfn.Dump('python_latin_square_bicriteria.cfn')
 
-res = cfn.Solve()
+result = cfn.Solve()
 
-if res:
+if result:
   print('Solution found with weights', weights, ':')
   sol_costs = multicfn.getSolutionCosts()
   solution = multicfn.getSolution()
   print_solution(solution, N)
-  print('With values:', sol_costs, '(sum=', res[1], ')')
+  print('With values:', sol_costs, '(sum=', result[1], ')')
 
