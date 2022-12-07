@@ -63,6 +63,8 @@ const string IMPLICIT_VAR_TAG = "#";
 
 /// Special character value at the beginning of a variable's name to identify hidden variables like diverse extra variables corresponding to the current sequence of diverse solutions found so far
 const string HIDDEN_VAR_TAG = "^";
+const string HIDDEN_VAR_TAG_HVE = "^c"; // tag for a hidden variable representing a dualized nary cost function
+const string HIDDEN_VAR_TAG_HVE_PRE = "^!"; // temporary hidden variable which should disappear after dedualization in preprocessing
 
 /// Domain value (can be positive or negative integers)
 #ifdef SHORT_VALUE
@@ -502,8 +504,14 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 // Clique constraint propagates by including unary and binary cost functions inside its scope (in practice, it can be very time-consuming)
 //#define PROPAGATE_CLIQUE_WITH_BINARIES
 
-// Transforms clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
+// Transforms hard clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
 #define CLIQUE2KNAPSACK
+
+// Transforms hard clause constraint into knapsack constraint
+//#define CLAUSE2KNAPSACK
+
+// Transforms knapsack constraint with unit coefficients into hard clause constraint
+//#define UNITKNAPSACK2CLAUSE
 
 // Transforms hard decomposable among constraint into knapsack constraint
 //#define WAMONG2KNAPSACK
@@ -745,6 +753,8 @@ public:
     static int minsumDiffusion; /// < \brief in preprocessing, applies Min Sum Diffusion algorithm a given number of iterations (command line option -M)
     static int preprocessTernaryRPC; /// < \brief in preprocessing, simulates restricted path consistency by adding ternary cost functions on most-promising triangles of binary cost functions (maximum space size in MegaByte) (command line option -t)
     static int pwc; /// \brief pairwise consistency by dual encoding into a binary WCSP
+    static int hve; /// \brief hidden variable encoding into a binary WCSP
+    static bool pwcMinimalDualGraph; /// \brief minimizes dual intersection graph by removing redundant edges
     static int preprocessFunctional; /// < \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
     static bool costfuncSeparate; /// < \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
     static int preprocessNary; /// < \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)

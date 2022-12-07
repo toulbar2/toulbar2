@@ -126,6 +126,32 @@ public:
         return minCost;
     }
 
+    vector<Cost> getDeltaCostsX() {
+        vector<Cost> deltas;
+        for (Cost cost: deltaCostsX) {
+            deltas.push_back(cost);
+        }
+        return deltas;
+    }
+    vector<Cost> getDeltaCostsY() {
+        vector<Cost> deltas;
+        for (Cost cost: deltaCostsY) {
+            deltas.push_back(cost);
+        }
+        return deltas;
+    }
+    void setDeltaCostsX(const vector<Cost>& update) {
+        assert(update.size() == sizeX);
+        for (unsigned int a = 0; a < sizeX; a++) {
+            deltaCostsX[a] = update[a];
+        }
+    }
+    void setDeltaCostsY(const vector<Cost>& update) {
+        assert(update.size() == sizeY);
+        for (unsigned int b = 0; b < sizeY; b++) {
+            deltaCostsY[b] = update[b];
+        }
+    }
     Cost getCost(EnumeratedVariable* xx, EnumeratedVariable* yy, Value vx, Value vy)
     {
         unsigned int vindex[2];
@@ -278,7 +304,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "clear cost (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         for (unsigned int i = 0; i < sizeX; i++)
             deltaCostsX[i] = MIN_COST;
         for (unsigned int j = 0; j < sizeY; j++)
@@ -286,6 +312,28 @@ public:
         for (unsigned int i = 0; i < sizeX; i++) {
             for (unsigned int j = 0; j < sizeY; j++) {
                 costs[i * sizeY + j] = MIN_COST;
+            }
+        }
+    }
+
+    void clearFiniteCosts()
+    {
+#ifdef NO_STORE_BINARY_COSTS
+        if (Store::getDepth() > 0) {
+            cerr << "Cannot modify finite costs in binary cost functions during search!" << endl;
+            throw BadConfiguration();
+        }
+#endif
+        assert(ToulBar2::verbose < 4 || ((cout << "clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
+        for (unsigned int i = 0; i < sizeX; i++)
+            deltaCostsX[i] = MIN_COST;
+        for (unsigned int j = 0; j < sizeY; j++)
+            deltaCostsY[j] = MIN_COST;
+        for (unsigned int i = 0; i < sizeX; i++) {
+            for (unsigned int j = 0; j < sizeY; j++) {
+                if (!CUT(costs[i * sizeY + j], wcsp->getUb())) {
+                    costs[i * sizeY + j] = MIN_COST;
+                }
             }
         }
     }

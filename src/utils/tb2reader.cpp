@@ -3165,10 +3165,12 @@ void WCSP::read_uai2008(const char* fileName)
         } else if (tmpname.find(".LG") != std::string::npos) {
             tmpname.replace(tmpname.find(".LG"), tmpname.length(), ".LG");
         }
-        string strevid(string(tmpname) + string(".evid"));
-        fevid.open(strevid.c_str());
-        if (ToulBar2::verbose >= 0)
-            cout << "No evidence file specified. Trying " << strevid << endl;
+        if(!(ToulBar2::uaieval) ) {
+            string strevid(string(tmpname) + string(".evid"));
+            fevid.open(strevid.c_str());
+            if (ToulBar2::verbose >= 0)
+                cout << "No evidence file specified. Trying " << strevid << endl;
+        }
         if (!fevid)
             if (ToulBar2::verbose >= 0)
                 cout << "No evidence file. " << endl;
@@ -3222,7 +3224,7 @@ void WCSP::solution_UAI(Cost res)
     //        cout << numberOfVariables();
     //        printSolution(cout);
     //    }
-    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "%d ", numberOfVariables());
+    fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "%d ", numberOfVariables() - numberOfHiddenVariables());
     printSolution((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
     fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "\n");
     //	if (opt) {
@@ -3444,7 +3446,7 @@ void WCSP::read_wcnf(const char* fileName)
     file >> nbclauses;
     if (format == "wcnf") {
         getline(file, strtop);
-        if (string2Cost((char*)strtop.c_str()) > 0) {
+        if (strtop.size() > 0 && string2Cost((char*)strtop.c_str()) > 0) {
             if (ToulBar2::verbose >= 0)
                 cout << "c (Weighted) Partial Max-SAT input format" << endl;
             top = string2Cost((char*)strtop.c_str());
@@ -3526,9 +3528,17 @@ void WCSP::read_wcnf(const char* fileName)
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
+//#ifdef CLAUSE2KNAPSACK
+//            if (CUT(MULT(cost, K), getUb())) {
+//                postKnapsackConstraint(scopeIndex,arity,file,false,false,false,tup);
+//            } else {
+//#endif
             int index = postNaryConstraintBegin(scopeIndex, MIN_COST, 1);
             postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
+//#ifdef CLAUSE2KNAPSACK
+//            }
+//#endif
         } else if (arity == 3) {
             vector<Cost> costs;
             for (int a = 0; a < 2; a++) {

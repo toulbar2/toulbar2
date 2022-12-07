@@ -67,13 +67,22 @@ void BinaryConstraint::print(ostream& os)
         }
     }
     if (ToulBar2::verbose >= 8) {
-        os << "supportX:[";
+        os << " supportX:[";
         for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
             os << " " << supportX[x->toIndex(*iterX)];
         }
         os << " ] supportY:[";
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             os << " " << supportY[y->toIndex(*iterY)];
+        }
+        os << " ]";
+        os << " deltaX:[";
+        for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+            os << " " << deltaCostsX[x->toIndex(*iterX)];
+        }
+        os << " ] deltaY:[";
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            os << " " << deltaCostsY[y->toIndex(*iterY)];
         }
         os << " ]";
     }

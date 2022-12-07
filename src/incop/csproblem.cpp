@@ -53,7 +53,7 @@ CSProblem::CSProblem(int nvar, int nconst)
     lower_bound = 0;
 }
 
-CSProblem::CSProblem(int nvar, int nconst, int lower)
+CSProblem::CSProblem(int nvar, int nconst, Long lower)
 {
     nbvar = nvar;
     nbconst = nconst;
@@ -65,7 +65,7 @@ BinaryCSProblem::BinaryCSProblem(int nbvar, int nbconst)
 {
     ;
 }
-BinaryCSProblem::BinaryCSProblem(int nbvar, int nbconst, int lower)
+BinaryCSProblem::BinaryCSProblem(int nbvar, int nbconst, Long lower)
     : CSProblem(nbvar, nbconst, lower)
 {
     ;

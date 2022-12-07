@@ -181,6 +181,8 @@ public:
 
     virtual void setTuple(const Tuple& t, Cost c) {}
     virtual void addtoTuple(const Tuple& t, Cost c) {}
+    virtual void clearCosts() { cout << "dummy clearcosts on (" << this << ")!" << endl; }
+    virtual void clearFiniteCosts() { cout << "dummy clearfinitecosts on (" << this << ")!" << endl; }
 
     virtual void getScope(TSCOPE& scope_inv) {}
     virtual Cost evalsubstr(const Tuple& s, Constraint* ctr)
@@ -206,7 +208,7 @@ public:
 
     Constraint* copy(); ///< \brief returns a copy of itself as a new deconnected NaryConstraint (DO NOT USE DURING SEARCH!)
 
-    void sumScopeIncluded(Constraint* ctr);
+    void sumScopeIncluded(Constraint* ctr); ///< \brief adds a cost function into ourself ; scope of ctr must be included in our scope
 
     bool scopeIncluded(Constraint* ctr)
     {

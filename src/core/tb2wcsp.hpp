@@ -394,6 +394,14 @@ public:
                 res++;
         return res;
     }
+    unsigned int numberOfHiddenVariables() const
+    {
+        int res = 0;
+        for (unsigned int i = 0; i < vars.size(); i++)
+            if (getName(i).rfind(HIDDEN_VAR_TAG, 0) == 0)
+                res++;
+        return res;
+    }
     unsigned int numberOfConstraints() const { return constrs.size(); } ///< \brief initial number of cost functions
     unsigned int numberOfConnectedConstraints() const; ///< \brief current number of cost functions
     unsigned int numberOfConnectedBinaryConstraints() const; ///< \brief current number of binary cost functions
@@ -821,7 +829,7 @@ public:
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
 
-    bool dualEncoding();
+    pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> hiddenEncoding(); /// \brief returns dual variables and channeling constraints for pairwise consistency
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency

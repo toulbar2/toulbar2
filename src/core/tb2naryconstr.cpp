@@ -1113,6 +1113,17 @@ void NaryConstraint::project(EnumeratedVariable* x)
         links[arity_ - 1]->content.scopeIndex = arity_ - 1;
         scope_inv[scope[xindex]->wcspIndex] = xindex;
     }
+
+    //shift left scope_dac array starting at position of variable x in scope_dac
+    int dacindex = 0;
+    while (dacindex < arity_ - 1 && scope_dac[dacindex] != x) {
+        dacindex++;
+    }
+    assert(dacindex == arity_ - 1 || scope_dac[dacindex] == x);
+    for ( ; dacindex < arity_ - 1; dacindex++) {
+        scope_dac[dacindex] = scope_dac[dacindex+1];
+    }
+
     if (x->unassigned()) {
         x->deconnect(links[arity_ - 1]);
         nonassigned = nonassigned - 1;
@@ -1122,49 +1133,57 @@ void NaryConstraint::project(EnumeratedVariable* x)
     evalTuple.resize(arity_);
 }
 
-// THIS CODE IS NEVER USED!!!
-//TODO: make it compatible with table representation rather than Map
 // Projects out all variables except x,y,z
 // and gives the result at fproj
-//void NaryConstraint::projectxyz( EnumeratedVariable* x,
-//        EnumeratedVariable* y,
-//        EnumeratedVariable* z,
-//        TUPLES& fproj)
-//{
-//    assert(CUT(default_cost,wcsp->getUb()));
-//
-//    Tuple stxyz(3,0);
-//    Tuple txyz(stxyz);
-//    Tuple t;
-//    Cost c;
-//    TUPLES::iterator  itproj;
-//
-//    // compute in one pass of all tuples the projection
-//    first();
-//    while(next(t,c)) {
-//        txyz[0] = t[ getIndex(x) ];
-//        txyz[1] = t[ getIndex(y) ];
-//        txyz[2] = t[ getIndex(z) ];
-//
-//        itproj = fproj.find(txyz);
-//        if(itproj != fproj.end()) {
-//            if(c < itproj->second) fproj[txyz] = c;
-//        } else {
-//            fproj[txyz] = c;
-//        }
-//    }
-//
-//    // finially we substract the projection from the initial function
-//    first();
-//    while(next(t,c)) {
-//        txyz[0] = t[ getIndex(x) ];
-//        txyz[1] = t[ getIndex(y) ];
-//        txyz[2] = t[ getIndex(z) ];
-//        itproj = fproj.find(txyz);
-//        if(itproj != fproj.end()) { assert(CUT(c, itproj->second)); (*pf)[t] -= itproj->second; }
-//        else assert(false);
-//    }
-//}
+void NaryConstraint::projectxyz( EnumeratedVariable* x,
+        EnumeratedVariable* y,
+        EnumeratedVariable* z,
+        TUPLES& fproj)
+{
+    assert(CUT(default_cost,wcsp->getUb()));
+    static Tuple t;
+    Tuple txyz(3,0);
+    Cost c;
+    TUPLES::iterator  itproj;
+
+    // compute in one pass of all tuples the projection
+    first();
+    while(next(t,c)) {
+        if (c == default_cost)
+            continue;
+        txyz[0] = t[ getIndex(x) ];
+        txyz[1] = t[ getIndex(y) ];
+        txyz[2] = t[ getIndex(z) ];
+        itproj = fproj.find(txyz);
+        if(itproj != fproj.end()) {
+            if(c < itproj->second)
+                fproj[txyz] = c;
+        } else {
+            fproj[txyz] = c;
+        }
+    }
+
+    // finally we subtract the projection from the initial function
+    first();
+    while(next(t,c)) {
+        if (c == default_cost)
+            continue;
+        txyz[0] = t[ getIndex(x) ];
+        txyz[1] = t[ getIndex(y) ];
+        txyz[2] = t[ getIndex(z) ];
+        itproj = fproj.find(txyz);
+        if(itproj != fproj.end()) {
+            assert(CUT(c, itproj->second));
+            //        if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
+            if (pf)
+                (*pf)[t] -= itproj->second;
+            else
+                costs[getCostsIndex(t)] -= itproj->second;
+            //        }
+        } else
+            assert(false);
+    }
+}
 
 // Projects out all variables except x,y
 // and gives the result at fproj
@@ -1215,45 +1234,43 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
     }
 }
 
-// THIS CODE IS NEVER USED!!!
-//TODO: make it compatible with table representation rather than Map
-//void NaryConstraint::preproject3()
-//{
-//    assert(connected());
-//    assert(CUT(default_cost,wcsp->getUb()));
-//
-//    for(int i = 0; i < arity_ - 2; i++) {
-//        EnumeratedVariable* x = scope[i];
-//        EnumeratedVariable* y = scope[i+1];
-//        EnumeratedVariable* z = scope[i+2];
-//
-//        TUPLES fproj;
-//        projectxyz(x,y,z,fproj);
-//
-//        Tuple t;
-//        vector<Cost> xyz;
-//        unsigned int a,b,c;
-//        unsigned int sizex = x->getDomainInitSize();
-//        unsigned int sizey = y->getDomainInitSize();
-//        unsigned int sizez = z->getDomainInitSize();
-//
-//        for (a = 0; a < sizex; a++)
-//            for (b = 0; b < sizey; b++)
-//                for (c = 0; c < sizez; c++) xyz.push_back(default_cost);
-//
-//        TUPLES::iterator it =  fproj.begin();
-//        while(it != fproj.end()) {
-//            t = it->first;
-//            a = t[0];
-//            b = t[1];
-//            c = t[2];
-//            xyz[ a * sizey * sizez + b * sizez + c ]	= it->second;
-//            it++;
-//        }
-//        if(fproj.size() > 0 || default_cost > MIN_COST) wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex,xyz);
-//        if (deconnected()) return;
-//    }
-//}
+void NaryConstraint::preproject3(TernaryConstraint *ctr)
+{
+    EnumeratedVariable* x = (EnumeratedVariable*)ctr->getVar(0);
+    assert(getIndex(x) >= 0);
+    EnumeratedVariable* y = (EnumeratedVariable*)ctr->getVar(1);
+    assert(getIndex(y) >= 0);
+    EnumeratedVariable* z = (EnumeratedVariable*)ctr->getVar(2);
+    assert(getIndex(z) >= 0);
+
+    TUPLES fproj;
+    projectxyz(x, y, z, fproj);
+
+    unsigned int sizex = x->getDomainInitSize();
+    unsigned int sizey = y->getDomainInitSize();
+    unsigned int sizez = z->getDomainInitSize();
+
+    vector<Cost> xyz;
+    for (unsigned int a = 0; a < sizex; a++)
+        for (unsigned int b = 0; b < sizey; b++)
+            for (unsigned int c = 0; c < sizez; c++)
+                xyz.push_back(default_cost);
+
+    TUPLES::iterator it = fproj.begin();
+    while (it != fproj.end()) {
+        unsigned int a = it->first[0];
+        unsigned int b = it->first[1];
+        unsigned int c = it->first[2];
+        xyz[a * sizey * sizez + b * sizez + c] = it->second;
+        it++;
+    }
+    if (fproj.size() > 0 || default_cost > MIN_COST) {
+        if (ToulBar2::verbose >= 3) {
+            cout << "preproject nary " << this << " to ternary (" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
+        }
+        wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, xyz);
+    }
+}
 
 inline bool cmp_pairvars(pair<EnumeratedVariable*, EnumeratedVariable*> pv1, pair<EnumeratedVariable*, EnumeratedVariable*> pv2)
 {
@@ -1265,13 +1282,10 @@ void NaryConstraint::preprojectall2()
     assert(connected());
     assert(CUT(default_cost, wcsp->getUb()));
 
-    TSCOPE scopeinv;
-    getScope(scopeinv);
-    for (TSCOPE::iterator it1 = scopeinv.begin(); it1 != scopeinv.end(); ++it1) {
-        TSCOPE::iterator it2 = it1;
-        for (++it2; it2 != scopeinv.end(); ++it2) {
-            EnumeratedVariable* x = (EnumeratedVariable*)wcsp->getVar((*it1).first);
-            EnumeratedVariable* y = (EnumeratedVariable*)wcsp->getVar((*it2).first);
+    for (int i=0; i<arity_; i++) {
+        for (int j=i+1; j<arity_; j++) {
+            EnumeratedVariable* x = scope_dac[i]; // (EnumeratedVariable*)wcsp->getVar((*it1).first);
+            EnumeratedVariable* y = scope_dac[j]; // (EnumeratedVariable*)wcsp->getVar((*it2).first);
 
             TUPLES fproj;
             projectxy(x, y, fproj);
@@ -1294,6 +1308,9 @@ void NaryConstraint::preprojectall2()
                 it++;
             }
             if (fproj.size() > 0 || default_cost > MIN_COST) {
+                if (ToulBar2::verbose >= 3) {
+                    cout << "preproject nary " << this << " to binary (" << x->getName() << "," << y->getName() << ")" << endl;
+                }
                 wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
             }
             if (deconnected())
@@ -1404,7 +1421,24 @@ void NaryConstraint::print(ostream& os)
         } else {
             os << "costs: [";
             for (ptrdiff_t idx = 0; idx < costSize; idx++) {
-                os << " " << costs[idx];
+                if (ToulBar2::verbose >= 8) {
+                    Long tvalues = idx;
+                    Long product = costSize;
+                    os << "(" << idx << ",[";
+                    for (int i = 0; i < arity_; i++) {
+                        product /= scope[i]->getDomainInitSize();
+                        os << scope[i]->toValue(tvalues / product);
+                        tvalues %= product;
+                        if (i < arity_ -1)
+                            os << ",";
+                    }
+                    assert(product == 1);
+                    os << "]," << costs[idx] << ")";
+                    if (idx < costSize - 1)
+                        os << ",";
+                } else {
+                    os << " " << costs[idx];
+                }
             }
             os << "] " << endl;
         }
