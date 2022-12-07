@@ -453,9 +453,11 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
     // cout << "net " << net_ind << ": ub=" << _doriginal_ubs[net_ind] << endl;
 
     if(_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
-      cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
-      cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
-      cerr << "; no upper bound provided" << endl;
+      if (ToulBar2::verbose >= 0) {
+        cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
+        cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
+        cerr << "; no upper bound provided" << endl;
+      }
       dir_consistency = false;
     }
   }
@@ -466,7 +468,9 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   bool global_ub_overflow = false;
   if((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
-    cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    if (ToulBar2::verbose >= 0) {
+      cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    }
     global_ub_overflow = true;
   }
 
