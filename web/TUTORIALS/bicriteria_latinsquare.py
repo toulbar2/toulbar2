@@ -61,7 +61,7 @@ cfn.setName('first half')
 create_base_cfn(cfn, N, top)
 for variable_index in range(split_index):
   cfn.AddFunction([variable_index], cell_costs[variable_index])
-multicfn.push_CFN(cfn, 1.)
+multicfn.push_CFN(cfn)
 
 
 # second cfn: second half of the grid
@@ -70,7 +70,7 @@ cfn.setName('second half')
 create_base_cfn(cfn, N, top)
 for variable_index in range(split_index+1, N*N):
   cfn.AddFunction([variable_index], cell_costs[variable_index])
-multicfn.push_CFN(cfn, 1.)
+multicfn.push_CFN(cfn)
 
 
 # solve with a first pair of weights
@@ -88,9 +88,9 @@ res = cfn.Solve()
 
 if res:
   print('Solution found with weights', weights, ':')
-  sol_values = multicfn.getSolutionValues()
+  sol_costs = multicfn.getSolutionCosts()
   print_solution(res[0], N)
-  print('With values:', sol_values, '(sum=', res[1], ')')
+  print('With values:', sol_costs, '(sum=', res[1], ')')
 
 print('\n')
 
@@ -109,7 +109,7 @@ res = cfn.Solve()
 
 if res:
   print('Solution found with weights', weights, ':')
-  sol_values = multicfn.getSolutionValues()
+  sol_costs = multicfn.getSolutionCosts()
   print_solution(res[0], N)
-  print('With values:', sol_values, '(sum=', res[1], ')')
+  print('With values:', sol_costs, '(sum=', res[1], ')')
 

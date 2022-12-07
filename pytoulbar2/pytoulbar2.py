@@ -36,11 +36,14 @@ class MultiCFN:
 
         """
 
+        if CFN.UbInit is not None:
+            CFN.setUb(CFN.UbInit) # might throw a contradiction
+
         # this should be done in the CFN class, but the update occurs only when solving the problem
         # this is because DoubletoCost function depends on the negCost and LB, which may be updated when adding cost functions
-        if CFN.UbInit is not None:
-            CFN.integercost = CFN.CFN.wcsp.DoubletoCost(CFN.UbInit)
-            CFN.CFN.wcsp.updateUb(CFN.integercost)
+        # if CFN.UbInit is not None:
+            # CFN.integercost = CFN.CFN.wcsp.DoubletoCost(CFN.UbInit)
+            # CFN.CFN.wcsp.updateUb(CFN.integercost)
 
         self.MultiCFN.push_back(CFN.CFN.wcsp, weight)
 
@@ -67,11 +70,11 @@ class MultiCFN:
         return self.MultiCFN.getSolution()
 
 
-    def getSolutionValues(self):
-        """getSolutionValues returns the objective values of the combined cfn after being solved.
+    def getSolutionCosts(self):
+        """getSolutionCosts returns the costs of the combined cfn after being solved.
 
         Returns:
-            The objective values of the solution of the cfn (list).
+            The costs of the solution of the cfn (list).
 
         """
 
