@@ -425,7 +425,7 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
       vector<pair<Double, vector<Value>>> tb2_sol = solver->getSolutions();
 
       if(tb2_sol.size() == nbLimit && ToulBar2::verbose >= 0) {
-        cerr << "Enumeration: the maximum number of solutions set has been reached, some solutions might have been missed !" << endl;
+        cerr << "Warning: the limit on maximum number of solutions has been reached, some solutions might have been missed !" << endl;
       }
 
       /* compute the solutions and points */
