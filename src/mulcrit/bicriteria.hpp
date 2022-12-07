@@ -109,6 +109,14 @@ class Bicriteria {
     static void computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit = 100);
 
     /*!
+     * \brief compute all the non supported solutions
+     * \param multiwcsp the bicriteria problem
+     * \param optim_dir the optimization direction
+     * \param nbLimit maximum number of points to enumerate
+     */
+    static void computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<OptimDir, OptimDir> optim_dir, unsigned int nbLimit = 100);
+
+    /*!
      * \brief get the list of solutions computed
      * \return a vector of the solutions
      */
