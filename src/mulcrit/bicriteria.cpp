@@ -520,6 +520,8 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
 
     }
 
+    
+
     // mark the triangle and the sub triangles as processed
     processed[indTri] = true;
     for(auto& indTri2: subTriangles[indTri]) {
@@ -529,6 +531,37 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
   }
 
   // cout << "n solutions: " << sol.size() << endl;
+
+  // filter the points by domination one more time
+  vector<unsigned int> nondom_indexes;
+  for(unsigned int sol_ind = 0; sol_ind < all_nonsup_points.size(); sol_ind ++) {
+    bool dom = false;
+    for(unsigned int sol_ind2 = 0; sol_ind2 < all_nonsup_points.size(); sol_ind2 ++) {
+      if(sol_ind == sol_ind2) {
+        continue;
+      }
+      if(dominates(all_nonsup_points[sol_ind2], all_nonsup_points[sol_ind], optim_dir)) {
+        dom = true;
+        break;
+      }
+    }
+    if(!dom) {
+      nondom_indexes.push_back(sol_ind);
+    }
+  }
+
+  vector<Solution> all_nonsup_solutions_temp = all_nonsup_solutions;
+  vector<Point> all_nonsup_points_temp = all_nonsup_points;
+
+  all_nonsup_points.clear();
+  all_nonsup_solutions.clear();
+
+  for(unsigned int sol_ind: nondom_indexes) {
+    all_nonsup_points.push_back(all_nonsup_points_temp[sol_ind]);
+    all_nonsup_solutions.push_back(all_nonsup_solutions_temp[sol_ind]);
+  }
+
+
 
   /* solutions are added to the list, then sorted */
   for(unsigned int ind = 0; ind < all_nonsup_points.size(); ind ++) {
