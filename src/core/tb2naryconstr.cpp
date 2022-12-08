@@ -1553,8 +1553,8 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (int i = 0; i < a; i++) {
                     if (printed)
                         os << ",";
-                    printed = true;
                     os << t[i];
+                    printed = true;
                 }
                 os << "," << wcsp->Cost2RDCost(costs[idx]);
                 int i = a - 1;
@@ -1588,15 +1588,16 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
         Tuple t;
         Cost cost;
         first();
-        printed = false;
         while (next(t, cost)) {
             os << endl;
+            printed = false;
             for (unsigned int i = 0; i < t.size(); i++) {
-                if (printed)
-                    os << ",";
-                printed = true;
-                if (scope[i]->unassigned())
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << ",";
                     os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
+                    printed = true;
+                }
             }
             os << "," << ((original) ? wcsp->Cost2RDCost(cost) : wcsp->Cost2RDCost(min(wcsp->getUb(), cost)));
         }
