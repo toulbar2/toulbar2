@@ -273,7 +273,7 @@ public:
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false) = 0;
     virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false, bool conflict = false) = 0; /// \deprecated
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
-    virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; /// \brief generic function to post any global cost function
+    virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; ///< \brief generic function to post any global cost function
 
     /// \brief post a soft among cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -428,7 +428,7 @@ public:
     virtual Double getSolutionValue() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual Cost getSolutionCost() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
     virtual const vector<Value> getSolution(Cost* cost_ptr) = 0; ///< \deprecated \brief returns current best solution and its cost
-    virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///\brief returns all solutions found
+    virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///< \brief returns all solutions found
     virtual void initSolutionCost() = 0; ///< \brief invalidate best solution by changing its cost to MAX_COST
     virtual void setSolution(Cost cost, TAssign* sol = NULL) = 0; ///< \brief set best solution from current assigned values or from a given assignment (for BTD-like methods)
     virtual void printSolution() = 0; ///< \brief prints current best solution on standard output (using variable and value names if cfn format and ToulBar2::showSolution>1)
@@ -445,8 +445,8 @@ public:
 
     virtual Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const = 0;
     virtual Cost DoubletoCost(const Double& c) const = 0;
-    virtual Double Cost2ADCost(const Cost& c) const = 0; /// \brief converts an integer cost from a lower or upper bound of the whole problem into a real value
-    virtual Double Cost2RDCost(const Cost& c) const = 0; /// \brief converts an integer cost from a local cost function into a real value
+    virtual Double Cost2ADCost(const Cost& c) const = 0; ///< \brief converts an integer cost from a lower or upper bound of the whole problem into a real value
+    virtual Double Cost2RDCost(const Cost& c) const = 0; ///< \brief converts an integer cost from a local cost function into a real value
     virtual Cost Prob2Cost(TProb p) const = 0;
     virtual TProb Cost2Prob(Cost c) const = 0;
     virtual TLogProb Cost2LogProb(Cost c) const = 0;

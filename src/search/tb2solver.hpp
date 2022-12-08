@@ -472,7 +472,7 @@ public:
     Long getNbBacktracks() const FINAL { return nbBacktracks; }
     set<int> getUnassignedVars() const;
     int numberOfUnassignedVariables() const; // faster than its WCSP linear-time counterpart, but it is valid only during search (otherwise returns -1)
-    void updateVarHeuristic(); /// \brief to be called if DAC order has been changed after preprocessing (initVarHeuristic call)
+    void updateVarHeuristic(); ///< \brief to be called if DAC order has been changed after preprocessing (initVarHeuristic call)
 
     virtual bool solve(bool first = true);
 

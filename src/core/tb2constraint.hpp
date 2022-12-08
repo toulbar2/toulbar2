@@ -289,7 +289,7 @@ public:
     }
 
     //   added for tree decomposition
-    int cluster; ///\brief warning! this value should not change during search (except for initialization in binary/ternary elimination pool)
+    int cluster; ///< \brief warning! this value should not change during search (except for initialization in binary/ternary elimination pool)
     int getCluster() { return cluster; }
     void setCluster(int i)
     {
@@ -298,11 +298,11 @@ public:
     }
     void assignCluster();
 
-    bool isSep_; ///\brief true if the constraint is used to record nogoods associated to a Separator
+    bool isSep_; ///< \brief true if the constraint is used to record nogoods associated to a Separator
     void setSep() { isSep_ = true; }
     bool isSep() { return isSep_; }
 
-    bool isDuplicate_; ///\brief true if it exists another binary constraint with the same scope or if it is a ternary constraint with a duplicated binary constraint inside
+    bool isDuplicate_; ///< \brief true if it exists another binary constraint with the same scope or if it is a ternary constraint with a duplicated binary constraint inside
     void setDuplicate()
     {
         isDuplicate_ = true;
