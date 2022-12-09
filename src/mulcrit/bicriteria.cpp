@@ -5,6 +5,8 @@
 
 #include <algorithm>
 
+#include <iomanip>
+
 using namespace std;
 
 using namespace mulcrit;
@@ -79,7 +81,7 @@ bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_di
 //--------------------------------------------------------------------------------------------
 bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double,Double> weights, Solution* solution, Bicriteria::Point* point) {
 
-  cout << "current weights: " << weights.first << ", " << weights.second << endl;
+  cout << "current weights: " << std::setprecision(10) << weights.first << ", " << weights.second << endl;
 
   multiwcsp->setWeight(0, weights.first);
   multiwcsp->setWeight(1, weights.second);
@@ -686,6 +688,10 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
       lambda2 = top.first.first - top.second.first;
     }
 
+    // normalize the weights
+    Double length = sqrt(lambda1*lambda1+lambda2*lambda2);
+    lambda1 *= 2./length;
+    lambda2 *= 2./length;
 
     // cout << "weights : " << lambda1 << ", " << lambda2 << endl;
     Point new_point;

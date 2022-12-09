@@ -110,6 +110,8 @@ class MultiWCSP {
 
     static constexpr Double epsilon = 1e-6;
 
+    static constexpr Double accuracy = 1e-3;
+
   public:
 
     /*!
@@ -137,6 +139,13 @@ class MultiWCSP {
      * \param weight the new weight
      */
     void setWeight(unsigned int wcsp_index, double weight);
+
+    /*!
+     * \brief get the wieght of a network
+     * \param wcsp_index the index of the network (by adding order)
+     * \return the weight assigned to the network
+     */
+    Double getWeight(unsigned int wcsp_index);
 
     /*!
      * \brief number of networks loaded in the combiner

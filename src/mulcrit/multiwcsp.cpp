@@ -368,6 +368,11 @@ void mulcrit::MultiWCSP::setWeight(unsigned int network_index, double weight) {
 }
 
 //---------------------------------------------------------------------------
+Double mulcrit::MultiWCSP::getWeight(unsigned int wcsp_index) {
+  return weights[wcsp_index];
+}
+
+//---------------------------------------------------------------------------
 unsigned int mulcrit::MultiWCSP::nbNetworks() {
   return networks.size();
 }
@@ -463,6 +468,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   }
 
   // cout << "global ub: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
+  cout << "global lb: " << global_lb << ", " << wcsp->DoubletoCost(global_lb) << endl;
 
   Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
 
@@ -475,7 +481,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   }
 
   // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
-  // top = wcsp->DoubleToADCost(MAX_COST/3)
+  // Double top = wcsp->Cost2ADCost(MAX_COST/3);
   Double top = computeTop();
 
   // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
@@ -507,6 +513,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
   for(unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
 
     double weight = weights[network_index[func_ind]];
+
 
     if(cost_function[func_ind].scope.size() == 1) { // unary cost functions
 
@@ -682,29 +689,33 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp) {
 
   global_lb += wcsp->Cost2ADCost(wcsp->getLb());
 
-  // cout << "global lb after combination: " << global_lb << endl;
+  cout << "target global lb, after combination: " << global_lb << endl;
 
   if(global_lb < 0) {
     wcsp->setLb(0);
     wcsp->decreaseLb(-wcsp->DoubletoCost(0));
     wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb));
 
-    // cout << "global_lb < 0" << endl;
+    cout << "global_lb < 0: " << global_lb << endl;
   } else {
     wcsp->decreaseLb(-wcsp->DoubletoCost(0));
     wcsp->setLb(wcsp->DoubletoCost(global_lb));
+    cout << "global_lb > 0" << endl;
   }
 
   // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
   // cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
   if(dir_consistency && !global_ub_overflow) {
-    // cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
+    cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
     // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
     wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
   } else {
     wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
   }
+
+  cout << "Lb of the combined wcsp: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
+
 
 }
 
@@ -835,6 +846,9 @@ void mulcrit::MultiWCSP::extractSolution() {
 
   if(fabs(_wcsp->Cost2ADCost(optimum)-check_sum) > 1e-4) {
     throw runtime_error("Error: non consistent values between tb2 and the recomputation: " + to_string(_wcsp->Cost2ADCost(optimum)) + " and " + to_string(check_sum));
+    
+    // cout << "Error: non consistent values between tb2 and the recomputation: " << to_string(_wcsp->Cost2ADCost(optimum)) << " and " << to_string(check_sum) << endl;
+
   }
 
 }
