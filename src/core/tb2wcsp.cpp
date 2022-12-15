@@ -6048,6 +6048,7 @@ void WCSP::ternaryCompletion()
     vector<TripleVarCostSize> triplelist;
     for (unsigned int i = 0; i < vars.size(); i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
+        if (x->assigned()) continue;
         for (ConstraintList::iterator it = x->getConstrs()->begin(); it != x->getConstrs()->end(); ++it) {
             Constraint* ctr = (*it).constr;
             if (ctr->isBinary()) {
