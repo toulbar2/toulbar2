@@ -1,14 +1,14 @@
 # toulbar2
 ## Exact optimization for cost function networks and additive graphical models 
 
-master: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
-cpd: [![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=cpd)](https://travis-ci.com/toulbar2/toulbar2) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/toulbar2/toulbar2.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/toulbar2/toulbar2/context:cpp)[![PyPi version](https://img.shields.io/pypi/v/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi wheel](https://img.shields.io/pypi/wheel/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi python versions](https://img.shields.io/pypi/pyversions/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)
+[![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://travis-ci.com/toulbar2/toulbar2)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/toulbar2/toulbar2.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/toulbar2/toulbar2/context:cpp)[![PyPi version](https://img.shields.io/pypi/v/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi wheel](https://img.shields.io/pypi/wheel/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi python versions](https://img.shields.io/pypi/pyversions/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)
 
 <!-- (_README_1)= -->
 ## What is toulbar2?
 
 toulbar2 is an open-source black-box C++ optimizer for cost function
-networks and discrete additive graphical models. It can read a variety
+networks and discrete additive graphical models. This also covers Max-SAT, Max-Cut, QUBO (and constrained variants), among others. It can read a variety
 of formats. The optimized criteria and feasibility should be provided
 factorized in local cost functions on discrete variables. Constraints
 are represented as functions that produce costs that exceed a
