@@ -2863,19 +2863,13 @@ void WCSP::read_uai2008(const char* fileName)
     int i, j, k, ic;
     string varname;
     int domsize;
-    EnumeratedVariable* x;
-    EnumeratedVariable* y;
-    EnumeratedVariable* z;
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
     Cost cost;
+    Tuple s;
     int ntuples;
     int arity;
     int maxarity = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
-
-    list<int> lctrs;
+    vector<vector<int>> scopes;
 
     file >> uaitype;
 
@@ -2916,7 +2910,7 @@ void WCSP::read_uai2008(const char* fileName)
         }
 
         if (arity > 3) {
-            int scopeIndex[arity];
+            vector<int> scopeIndex(arity, INT_MAX);
             if (ToulBar2::verbose >= 3)
                 cout << "read nary cost function on ";
 
@@ -2928,8 +2922,7 @@ void WCSP::read_uai2008(const char* fileName)
             }
             if (ToulBar2::verbose >= 3)
                 cout << endl;
-            lctrs.push_back(postNaryConstraintBegin(scopeIndex, arity, MIN_COST, LONGLONG_MAX));
-            assert(lctrs.back() >= 0);
+            scopes.push_back(scopeIndex);
         } else if (arity == 3) {
             file >> i;
             file >> j;
@@ -2938,21 +2931,9 @@ void WCSP::read_uai2008(const char* fileName)
                 cerr << "Error: ternary cost function!" << endl;
                 throw WrongFileFormat();
             }
-            x = (EnumeratedVariable*)vars[i];
-            y = (EnumeratedVariable*)vars[j];
-            z = (EnumeratedVariable*)vars[k];
             if (ToulBar2::verbose >= 3)
                 cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
-            vector<Cost> costs;
-            for (a = 0; a < x->getDomainInitSize(); a++) {
-                for (b = 0; b < y->getDomainInitSize(); b++) {
-                    for (c = 0; c < z->getDomainInitSize(); c++) {
-                        costs.push_back(MIN_COST);
-                    }
-                }
-            }
-            lctrs.push_back(postTernaryConstraint(i, j, k, costs));
-            assert(lctrs.back() >= 0);
+            scopes.push_back({i,j,k});
         } else if (arity == 2) {
             file >> i;
             file >> j;
@@ -2962,45 +2943,28 @@ void WCSP::read_uai2008(const char* fileName)
                 cerr << "Error: binary cost function with only one variable in its scope!" << endl;
                 throw WrongFileFormat();
             }
-            x = (EnumeratedVariable*)vars[i];
-            y = (EnumeratedVariable*)vars[j];
-            vector<Cost> costs;
-            for (a = 0; a < x->getDomainInitSize(); a++) {
-                for (b = 0; b < y->getDomainInitSize(); b++) {
-                    costs.push_back(MIN_COST);
-                }
-            }
-            lctrs.push_back(postBinaryConstraint(i, j, costs));
-            assert(lctrs.back() >= 0);
+            scopes.push_back({i,j});
         } else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3)
                 cout << "read unary cost function " << ic << " on " << i << endl;
-            x = (EnumeratedVariable*)vars[i];
             TemporaryUnaryConstraint unaryconstr;
-            unaryconstr.var = x;
+            unaryconstr.var = (EnumeratedVariable*)vars[i];
             unaryconstrs.push_back(unaryconstr);
-            lctrs.push_back(-1);
+            scopes.push_back({i});
         } else if (arity == 0) {
-            lctrs.push_back(-2);
+            scopes.push_back({});
         }
     }
 
-    int iunaryctr = 0;
-    int ictr = 0;
-    Constraint* ctr = NULL;
-    TernaryConstraint* tctr = NULL;
-    BinaryConstraint* bctr = NULL;
-    NaryConstraint* nctr = NULL;
-    Tuple s;
-
     ToulBar2::markov_log = 0; // for the MARKOV Case
 
-    int ntuplesarray[lctrs.size()];
-    vector<vector<Cost>> costs;
-    costs.resize(lctrs.size());
-    list<int>::iterator it = lctrs.begin();
-    while (it != lctrs.end()) {
+    vector<int> ntuplesarray(scopes.size(), 0);
+    vector<vector<Cost>> costs(scopes.size());
+    int iunaryctr = 0;
+    int ictr = 0;
+    vector<vector<int>>::iterator it = scopes.begin();
+    while (it != scopes.end()) {
         file >> ntuples;
         if (!file) {
             cerr << "Warning: EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
@@ -3065,26 +3029,15 @@ void WCSP::read_uai2008(const char* fileName)
     updateUb(upperbound);
 
     ictr = 0;
-    it = lctrs.begin();
-    while (it != lctrs.end()) {
+    it = scopes.begin();
+    while (it != scopes.end()) {
         ntuples = ntuplesarray[ictr];
         for (k = 0; k < ntuples; k++) {
             if (CUT(costs[ictr][k], getUb()))
                 costs[ictr][k] = getUb() * MEDIUM_COST;
         }
 
-        int arity;
-        if (*it == -1) {
-            ctr = NULL;
-            arity = 1;
-        } else if (*it == -2) {
-            ctr = NULL;
-            arity = 0;
-        } else {
-            assert(*it >= 0);
-            ctr = getCtr(*it);
-            arity = ctr->arity();
-        }
+        int arity = (*it).size();
         switch (arity) {
         case 0: {
             inclowerbound += costs[ictr][0];
@@ -3092,8 +3045,9 @@ void WCSP::read_uai2008(const char* fileName)
         }
 
         case 1: {
+            assert(unaryconstrs[iunaryctr].var->wcspIndex == scopes[ictr][0]);
             unaryconstrs[iunaryctr].costs.clear();
-            for (a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
+            for (unsigned int a = 0; a < unaryconstrs[iunaryctr].var->getDomainInitSize(); a++) {
                 unaryconstrs[iunaryctr].costs.push_back(costs[ictr][a]);
             }
             iunaryctr++;
@@ -3103,35 +3057,31 @@ void WCSP::read_uai2008(const char* fileName)
         }
 
         case 2: {
-            bctr = (BinaryConstraint*)ctr;
-            x = (EnumeratedVariable*)bctr->getVar(0);
-            y = (EnumeratedVariable*)bctr->getVar(1);
-            postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs[ictr]);
+            postBinaryConstraint(scopes[ictr][0], scopes[ictr][1], costs[ictr]);
             if (ToulBar2::verbose >= 3)
                 cout << "read binary costs." << endl;
             break;
         }
 
         case 3: {
-            tctr = (TernaryConstraint*)ctr;
-            x = (EnumeratedVariable*)tctr->getVar(0);
-            y = (EnumeratedVariable*)tctr->getVar(1);
-            z = (EnumeratedVariable*)tctr->getVar(2);
-            postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs[ictr]);
+            postTernaryConstraint(scopes[ictr][0], scopes[ictr][1], scopes[ictr][2], costs[ictr]);
             if (ToulBar2::verbose >= 3)
                 cout << "read ternary costs." << endl;
             break;
         }
 
         default: {
-            nctr = (NaryConstraint*)ctr;
-            j = 0;
+            int nctridx = postNaryConstraintBegin(scopes[ictr], MIN_COST, LONGLONG_MAX);
+            NaryConstraint* nctr = (NaryConstraint *) getCtr(nctridx);
+            assert(nctr->isNary());
+            unsigned int j = 0;
             nctr->firstlex();
             while (nctr->nextlex(s, cost)) {
                 //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
                 postNaryConstraintTuple(nctr->wcspIndex, s, costs[ictr][j]);
                 j++;
             }
+            assert(j == costs[ictr].size());
             if (ToulBar2::verbose >= 3)
                 cout << "read arity " << arity << " table costs." << endl;
             postNaryConstraintEnd(nctr->wcspIndex);
@@ -3245,6 +3195,7 @@ void WCSP::solution_UAI(Cost res)
 
 void WCSP::read_XML(const char* fileName)
 {
+#if defined(XMLFLAG) || defined(XMLFLAG3)
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
@@ -3283,6 +3234,7 @@ void WCSP::read_XML(const char* fileName)
         throw WrongFileFormat();
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
 #endif
 #if defined(XMLFLAG)
     MyCallback xmlCallBack;

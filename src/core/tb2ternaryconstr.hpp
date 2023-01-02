@@ -927,7 +927,7 @@ public:
         return true;
     }
 
-    bool checkTreeDecomposition(); ///\brief if tree decomposition then xy, xz, xz binary constraints attached to this ternary should all belong to the same cluster
+    bool checkTreeDecomposition(); ///< \brief if tree decomposition then xy, xz, xz binary constraints attached to this ternary should all belong to the same cluster
 
     void findFullSupportEAC(int varIndex)
     {

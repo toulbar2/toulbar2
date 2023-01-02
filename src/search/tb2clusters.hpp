@@ -91,10 +91,10 @@ public:
     void set(Cost clb, Cost cub, Solver::OpenList** open = NULL);
     bool get(Cost& clb, Cost& cub, Solver::OpenList** open = NULL);
 
-    void setF(bool free); ///\brief update freedom status of a given separator assignment
-    bool getF(bool& free); ///\brief return true if the corresponding freedom status is found (and update free status), false otherwise
-    bool setFInc(); ///\brief initialize freedom counter if needed (freesLimit) and return true if it is below a given limit (\see ToulBar2::heuristicFreedomLimit)
-    void freeIncS(); ///\brief increase freedom counter
+    void setF(bool free); ///< \brief update freedom status of a given separator assignment
+    bool getF(bool& free); ///< \brief return true if the corresponding freedom status is found (and update free status), false otherwise
+    bool setFInc(); ///< \brief initialize freedom counter if needed (freesLimit) and return true if it is below a given limit (\see ToulBar2::heuristicFreedomLimit)
+    void freeIncS(); ///< \brief increase freedom counter
 
     void setSg(Cost c, BigInteger nb);
     BigInteger getSg(Cost& res, BigInteger& nb);
@@ -542,12 +542,12 @@ public:
     void dump(Cluster* c = NULL);
 
     //manage freedom
-    void updateInTD(Cluster* c); ///\brief deconnect cluster subtree and its separators according to the current tree decomposition
+    void updateInTD(Cluster* c); ///< \brief deconnect cluster subtree and its separators according to the current tree decomposition
 
-    void computeDepths(Cluster* c, int parent_depth); ///\brief recursively set depth of all clusters in a given cluster subtree
+    void computeDepths(Cluster* c, int parent_depth); ///< \brief recursively set depth of all clusters in a given cluster subtree
     int getMaxDepth() { return max_depth; }
-    Cluster* lowestCommonAncestor(Cluster* c1, Cluster* c2); ///\brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
-    bool isSameCluster(Cluster* c1, Cluster* c2); ///\brief return true if both clusters are the same or they have been merged together by adaptive BTD
+    Cluster* lowestCommonAncestor(Cluster* c1, Cluster* c2); ///< \brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
+    bool isSameCluster(Cluster* c1, Cluster* c2); ///< \brief return true if both clusters are the same or they have been merged together by adaptive BTD
     bool isSameCluster(int c1, int c2) { return isSameCluster(getCluster(c1), getCluster(c2)); }
 };
 

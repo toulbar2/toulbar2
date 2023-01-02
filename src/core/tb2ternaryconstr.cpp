@@ -310,14 +310,13 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
-                if (printed)
-                    os << ",\n";
                 if (getCost(*iterX, *iterY, *iterZ) != MIN_COST) {
+                    if (printed)
+                        os << ",\n";
                     os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << "," << ((original) ? z->toIndex(*iterZ) : k) << ","
                        << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))));
                     printed = true;
-                } else
-                    printed = false;
+                }
             }
         }
     }

@@ -712,208 +712,208 @@ class ToulBar2 {
 protected:
     virtual ~ToulBar2() = 0; // Trick to avoid any instantiation of ToulBar2
 public:
-    static string version; /// < \brief toulbar2 version number
-    static int verbose; /// < \brief verbosity level (-1:no output, 0: new solutions found, 1: choice points, 2: current domains, 3: basic EPTs, 4: active cost functions, 5: detailed cost functions, 6: more EPTs, 7: detailed EPTs) (command line option -v)
+    static string version; ///< \brief toulbar2 version number
+    static int verbose; ///< \brief verbosity level (-1:no output, 0: new solutions found, 1: choice points, 2: current domains, 3: basic EPTs, 4: active cost functions, 5: detailed cost functions, 6: more EPTs, 7: detailed EPTs) (command line option -v)
 
-    static bool FullEAC; /// < \brief VAC-integrality/Full-EAC variable ordering heuristic (command line option -vacint and optionally -A)
-    static bool VACthreshold; /// < \brief automatic threshold cost value selection for VAC during search (command line option -vacthr)
-    static int nbTimesIsVAC; /// < \internal do not use
-    static int nbTimesIsVACitThresholdMoreThanOne; /// < \internal do not use
-    static bool RASPS; /// < \internal do not use
-    static int useRASPS; /// < \brief VAC-based upper bound probing heuristic (0: no rasps, 1: rasps using DFS, >1: using LDS with bounded discrepancy + 1) (command line option -raspslds or -rasps)
-    static bool RASPSreset; /// < \brief reset weighted degree variable ordering heuristic after doing upper bound probing (command line option -raspsini)
-    static int RASPSangle; /// < \brief automatic threshold cost value selection for probing heuristic (command line option -raspsdeg)
-    static Long RASPSnbBacktracks; /// < \brief number of backtracks of VAC-based upper bound probing heuristic (command line option -rasps)
-    static int RASPSnbStrictACVariables; /// < \internal do not use
-    static Cost RASPSlastitThreshold; /// < \internal do not use
-    static bool RASPSsaveitThresholds; /// < \internal do not use
-    static vector<pair<Cost, double>> RASPSitThresholds; /// < \internal do not use
+    static bool FullEAC; ///< \brief VAC-integrality/Full-EAC variable ordering heuristic (command line option -vacint and optionally -A)
+    static bool VACthreshold; ///< \brief automatic threshold cost value selection for VAC during search (command line option -vacthr)
+    static int nbTimesIsVAC; ///< \internal do not use
+    static int nbTimesIsVACitThresholdMoreThanOne; ///< \internal do not use
+    static bool RASPS; ///< \internal do not use
+    static int useRASPS; ///< \brief VAC-based upper bound probing heuristic (0: no rasps, 1: rasps using DFS, >1: using LDS with bounded discrepancy + 1) (command line option -raspslds or -rasps)
+    static bool RASPSreset; ///< \brief reset weighted degree variable ordering heuristic after doing upper bound probing (command line option -raspsini)
+    static int RASPSangle; ///< \brief automatic threshold cost value selection for probing heuristic (command line option -raspsdeg)
+    static Long RASPSnbBacktracks; ///< \brief number of backtracks of VAC-based upper bound probing heuristic (command line option -rasps)
+    static int RASPSnbStrictACVariables; ///< \internal do not use
+    static Cost RASPSlastitThreshold; ///< \internal do not use
+    static bool RASPSsaveitThresholds; ///< \internal do not use
+    static vector<pair<Cost, double>> RASPSitThresholds; ///< \internal do not use
 
-    static int debug; /// < \brief debug mode(0: no debug, 1: current search depth and statics on nogoods for BTD, 2: idem plus some information on heuristics, 3: idem plus save problem at each node if verbose >= 1) (command line option -Z)
-    static string externalUB; /// < \brief initial upper bound in CFN format
-    static int showSolutions; /// < \brief shows each solution found (0: nothing, 1: value indexes, 2: value names, 3: variable&value names) (command line option -s)
-    static bool showHidden; /// < \brief shows hidden variables for each solution found (command line option -s with a negative value)
-    static int writeSolution; /// < \brief writes each solution found (0: nothing, 1: value indexes, 2: value names, 3: variable&value names) (command line option -w)
-    static FILE* solutionFile; /// < \internal do not use
-    static long solutionFileRewindPos; /// < \internal do not use
-    static Long allSolutions; /// < \brief finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops (or counts the number of zero-cost satisfiable solutions in conjunction with BTD) (command line option -a)
-    static int dumpWCSP; /// < \brief saves the problem in wcsp (0: do not save, 1: original or 2: after preprocessing) or cfn (3: original or 4: after preprocessing) format (command line option -z)
-    static bool approximateCountingBTD; /// < \brief approximate zero-cost satisfiable solution counting using BTD (command line options -D and -a and -B=1)
-    static bool binaryBranching; /// < \brief tree search using binary branching instead of n-ary branching for enumerated domains (command line option -b)
-    static int dichotomicBranching; /// < \brief tree search using dichotomic branching if current domain size is strictly greater than ToulBar2::dichotomicBranchingSize (0: no dichotomic branching, 1: splitting in the middle of domain range, 2: splitting in the middle of sorted unary costs) (command line option -d)
-    static unsigned int dichotomicBranchingSize; /// < \brief dichotomic branching threshold (related to command line option -d)
-    static bool sortDomains; /// < \brief sorts domains in preprocessing based on increasing unary costs (command line option -sortd) \warning Works only for binary WCSPs.
-    static map<int, ValueCost*> sortedDomains; /// < \internal do not use
-    static bool solutionBasedPhaseSaving; /// < \brief solution-based phase saving value heuristic (command line option -solr)
-    static int elimDegree; /// < \brief boosting search with variable elimination of small degree (0: no variable elimination, 1: linked to at most one binary cost function, 2: linked to at most two binary cost functions, 3: linked to at most one ternary cost function and two scope-included cost functions) (command line option -e)
-    static int elimDegree_preprocessing; /// < \brief  in preprocessing, generic variable elimination of degree less than or equal to a given value (0: no variable elimination) (command line option -p)
-    static int elimDegree_; /// < \internal do not use
-    static int elimDegree_preprocessing_; /// < \internal do not use
-    static int elimSpaceMaxMB; /// < \brief maximum space size for generic variable elimination (in MegaByte) (related to command line option -p)
-    static int minsumDiffusion; /// < \brief in preprocessing, applies Min Sum Diffusion algorithm a given number of iterations (command line option -M)
-    static int preprocessTernaryRPC; /// < \brief in preprocessing, simulates restricted path consistency by adding ternary cost functions on most-promising triangles of binary cost functions (maximum space size in MegaByte) (command line option -t)
-    static int pwc; /// \brief pairwise consistency by dual encoding into a binary WCSP
-    static int hve; /// \brief hidden variable encoding into a binary WCSP
-    static bool pwcMinimalDualGraph; /// \brief minimizes dual intersection graph by removing redundant edges
-    static int preprocessFunctional; /// < \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
-    static bool costfuncSeparate; /// < \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
-    static int preprocessNary; /// < \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)
-    static bool QueueComplexity; /// < \brief ensures optimal worst-case time complexity of DAC and EAC (command line option -o)
-    static bool Static_variable_ordering; /// < \brief tree search using a static variable ordering heuristic (same order as DAC) (command line option -svo)
-    static bool lastConflict; /// < \brief tree search using binary branching with last conflict backjumping variable ordering heuristic (command line options -c and -b)
-    static int weightedDegree; /// < \brief weighted degree variable ordering heuristic if the number of cost functions is less than a given value (command line option -q)
-    static int weightedTightness; /// < \brief in preprocessing, initializes weighted degrees associated to cost functions by their 1: average or 2: median costs (command line options -m and -q)
-    static int constrOrdering; /// < \brief in preprocessing, sorts constraints based on 0: do not sort, 1: lexicographic ordering, 2: decreasing DAC ordering, 3: decreasing constraint tightness, 4: DAC then tightness, 5: tightness then DAC, 6: random order, or the opposite order if using a negative value (command line option -sortc)
-    static bool MSTDAC; /// < \brief maximum spanning tree DAC ordering (command line option -mst)
-    static int DEE; /// < \brief soft neighborhood substitutability, a.k.a., dead-end elimination (0: no elimination, 1: restricted form during search, 2: full in preprocessing and restricted during search, 3: full always, 4: full in preprocessing) (command line option -dee)
-    static int DEE_; /// < \internal do not use
-    static int nbDecisionVars; /// < \brief tree search by branching only on the first variables having a lexicographic order position below a given value, assuming the remaining variables are completely assigned by this first group of variables (0: branch on all variables) (command line option -var)
-    static int lds; /// < \brief iterative limited discrepancy search (0: no LDS), use a negative value to stop the search after the given absolute number of discrepancies has been explored (command line option -l)
-    static bool limited; /// < \internal do not use
-    static Long restart; /// < \brief randomly breaks ties in variable ordering heuristics and Luby restarts until a given number of search nodes (command line option -L)
-    static Long backtrackLimit; /// < \brief limit on the number of backtracks (command line option -bt)
-    static externalevent setvalue; /// < \internal do not use
-    static externalevent setmin; /// < \internal do not use
-    static externalevent setmax; /// < \internal do not use
-    static externalevent removevalue; /// < \internal do not use
-    static externalcostevent setminobj; /// < \internal do not use
-    static externalsolution newsolution; /// < \internal do not use
-    static Pedigree* pedigree; /// < \internal do not use
-    static Haplotype* haplotype; /// < \internal do not use
-    static string map_file; /// < \internal do not use
-    static bool cfn; /// < \internal do not use
-    static bool gz; /// < \internal do not use
-    static bool bz2; /// < \internal do not use
-    static bool xz; /// < \internal do not use
-    static bool bayesian; /// < \internal do not use
-    static int uai; /// < \internal do not use
-    static int resolution; /// < \brief defines the number of digits that should be representable in UAI/OPB/QPBO formats (command line option -precision)
-    static TProb errorg; /// < \internal do not use
-    static TLogProb NormFactor; /// < \internal do not use
-    static int foundersprob_class; /// < \internal do not use
-    static vector<TProb> allelefreqdistrib; /// < \internal do not use
-    static bool consecutiveAllele; /// < \internal do not use
-    static bool generation; /// < \internal do not use
-    static int pedigreeCorrectionMode; /// < \internal do not use
-    static int pedigreePenalty; /// < \internal do not use
-    static int vac; /// < \brief enforces VAC at each search node having a search depth less than the absolute value of a given value (0: no VAC, 1: VAC in preprocessing, >1: VAC during search up to a given search depth), if given a negative value then VAC is not performed inside depth-first search of hybrid best-first search method (command line option -A and possibly -hbfs)
-    static string costThresholdS; /// < \brief threshold cost value for VAC in CFN format (command line option -T)
-    static string costThresholdPreS; /// < \brief in preprocessing, threshold cost value for VAC in CFN format (command line option -P)
-    static Cost costThreshold; /// < \brief threshold cost value for VAC (command line option -T)
-    static Cost costThresholdPre; /// < \brief in preprocessing, threshold cost value for VAC (command line option -P)
-    static double trwsAccuracy; /// < \brief in preprocessing , enforces TRW-S until a given accuracy is reached (command line option -trws)
-    static bool trwsOrder; /// < \brief replaces DAC order by Kolmogorov's TRW-S order (command line option --trws-order)
-    static unsigned int trwsNIter; /// < \brief enforces at most n iterations of TRW-S (command line option --trws-n-iters)
-    static unsigned int trwsNIterNoChange; /// < \brief stops TRW-S when n iterations did not change the lower bound (command line option --trws-n-iters-no-change)
-    static unsigned int trwsNIterComputeUb; /// < \brief computes an upper bound every n steps in TRW-S (command line option --trws-n-iters-compute-ub)
-    static double costMultiplier; /// < \brief multiplies all costs internally by this number when loading a problem in WCSP format (command line option -C)
-    static unsigned int decimalPoint; /// < \internal do not use
-    static string deltaUbS; /// < \brief stops search if the absolute optimality gap reduces below a given value in CFN format (command line option -agap)
-    static Cost deltaUb; /// < \internal do not use
-    static Cost deltaUbAbsolute; /// < \brief stops search if the absolute optimality gap reduces below a given value (command line option -agap)
-    static Double deltaUbRelativeGap; /// < \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
-    static bool singletonConsistency; /// < \brief in preprocessing, performs singleton soft local consistency (command line option -S)
-    static bool vacValueHeuristic; /// < \brief VAC-based value ordering heuristic (command line options -V and -A)
-    static BEP* bep; /// < \internal do not use
-    static LcLevelType LcLevel; /// < \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
-    static int maxEACIter; /// < \brief maximum number of iterations in EDAC before switching to FDAC
-    static bool wcnf; /// < \internal do not use
-    static bool qpbo; /// < \internal do not use
-    static double qpboQuadraticCoefMultiplier; /// < \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
-    static bool opb; /// < \internal do not use
+    static int debug; ///< \brief debug mode(0: no debug, 1: current search depth and statics on nogoods for BTD, 2: idem plus some information on heuristics, 3: idem plus save problem at each node if verbose >= 1) (command line option -Z)
+    static string externalUB; ///< \brief initial upper bound in CFN format
+    static int showSolutions; ///< \brief shows each solution found (0: nothing, 1: value indexes, 2: value names, 3: variable&value names) (command line option -s)
+    static bool showHidden; ///< \brief shows hidden variables for each solution found (command line option -s with a negative value)
+    static int writeSolution; ///< \brief writes each solution found (0: nothing, 1: value indexes, 2: value names, 3: variable&value names) (command line option -w)
+    static FILE* solutionFile; ///< \internal do not use
+    static long solutionFileRewindPos; ///< \internal do not use
+    static Long allSolutions; ///< \brief finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops (or counts the number of zero-cost satisfiable solutions in conjunction with BTD) (command line option -a)
+    static int dumpWCSP; ///< \brief saves the problem in wcsp (0: do not save, 1: original or 2: after preprocessing) or cfn (3: original or 4: after preprocessing) format (command line option -z)
+    static bool approximateCountingBTD; ///< \brief approximate zero-cost satisfiable solution counting using BTD (command line options -D and -a and -B=1)
+    static bool binaryBranching; ///< \brief tree search using binary branching instead of n-ary branching for enumerated domains (command line option -b)
+    static int dichotomicBranching; ///< \brief tree search using dichotomic branching if current domain size is strictly greater than ToulBar2::dichotomicBranchingSize (0: no dichotomic branching, 1: splitting in the middle of domain range, 2: splitting in the middle of sorted unary costs) (command line option -d)
+    static unsigned int dichotomicBranchingSize; ///< \brief dichotomic branching threshold (related to command line option -d)
+    static bool sortDomains; ///< \brief sorts domains in preprocessing based on increasing unary costs (command line option -sortd) \warning Works only for binary WCSPs.
+    static map<int, ValueCost*> sortedDomains; ///< \internal do not use
+    static bool solutionBasedPhaseSaving; ///< \brief solution-based phase saving value heuristic (command line option -solr)
+    static int elimDegree; ///< \brief boosting search with variable elimination of small degree (0: no variable elimination, 1: linked to at most one binary cost function, 2: linked to at most two binary cost functions, 3: linked to at most one ternary cost function and two scope-included cost functions) (command line option -e)
+    static int elimDegree_preprocessing; ///< \brief  in preprocessing, generic variable elimination of degree less than or equal to a given value (0: no variable elimination) (command line option -p)
+    static int elimDegree_; ///< \internal do not use
+    static int elimDegree_preprocessing_; ///< \internal do not use
+    static int elimSpaceMaxMB; ///< \brief maximum space size for generic variable elimination (in MegaByte) (related to command line option -p)
+    static int minsumDiffusion; ///< \brief in preprocessing, applies Min Sum Diffusion algorithm a given number of iterations (command line option -M)
+    static int preprocessTernaryRPC; ///< \brief in preprocessing, simulates restricted path consistency by adding ternary cost functions on most-promising triangles of binary cost functions (maximum space size in MegaByte) (command line option -t)
+    static int pwc; ///< \brief pairwise consistency by dual encoding into a binary WCSP
+    static int hve; ///< \brief hidden variable encoding into a binary WCSP
+    static bool pwcMinimalDualGraph; ///< \brief minimizes dual intersection graph by removing redundant edges
+    static int preprocessFunctional; ///< \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
+    static bool costfuncSeparate; ///< \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
+    static int preprocessNary; ///< \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)
+    static bool QueueComplexity; ///< \brief ensures optimal worst-case time complexity of DAC and EAC (command line option -o)
+    static bool Static_variable_ordering; ///< \brief tree search using a static variable ordering heuristic (same order as DAC) (command line option -svo)
+    static bool lastConflict; ///< \brief tree search using binary branching with last conflict backjumping variable ordering heuristic (command line options -c and -b)
+    static int weightedDegree; ///< \brief weighted degree variable ordering heuristic if the number of cost functions is less than a given value (command line option -q)
+    static int weightedTightness; ///< \brief in preprocessing, initializes weighted degrees associated to cost functions by their 1: average or 2: median costs (command line options -m and -q)
+    static int constrOrdering; ///< \brief in preprocessing, sorts constraints based on 0: do not sort, 1: lexicographic ordering, 2: decreasing DAC ordering, 3: decreasing constraint tightness, 4: DAC then tightness, 5: tightness then DAC, 6: random order, or the opposite order if using a negative value (command line option -sortc)
+    static bool MSTDAC; ///< \brief maximum spanning tree DAC ordering (command line option -mst)
+    static int DEE; ///< \brief soft neighborhood substitutability, a.k.a., dead-end elimination (0: no elimination, 1: restricted form during search, 2: full in preprocessing and restricted during search, 3: full always, 4: full in preprocessing) (command line option -dee)
+    static int DEE_; ///< \internal do not use
+    static int nbDecisionVars; ///< \brief tree search by branching only on the first variables having a lexicographic order position below a given value, assuming the remaining variables are completely assigned by this first group of variables (0: branch on all variables) (command line option -var)
+    static int lds; ///< \brief iterative limited discrepancy search (0: no LDS), use a negative value to stop the search after the given absolute number of discrepancies has been explored (command line option -l)
+    static bool limited; ///< \internal do not use
+    static Long restart; ///< \brief randomly breaks ties in variable ordering heuristics and Luby restarts until a given number of search nodes (command line option -L)
+    static Long backtrackLimit; ///< \brief limit on the number of backtracks (command line option -bt)
+    static externalevent setvalue; ///< \internal do not use
+    static externalevent setmin; ///< \internal do not use
+    static externalevent setmax; ///< \internal do not use
+    static externalevent removevalue; ///< \internal do not use
+    static externalcostevent setminobj; ///< \internal do not use
+    static externalsolution newsolution; ///< \internal do not use
+    static Pedigree* pedigree; ///< \internal do not use
+    static Haplotype* haplotype; ///< \internal do not use
+    static string map_file; ///< \internal do not use
+    static bool cfn; ///< \internal do not use
+    static bool gz; ///< \internal do not use
+    static bool bz2; ///< \internal do not use
+    static bool xz; ///< \internal do not use
+    static bool bayesian; ///< \internal do not use
+    static int uai; ///< \internal do not use
+    static int resolution; ///< \brief defines the number of digits that should be representable in UAI/OPB/QPBO formats (command line option -precision)
+    static TProb errorg; ///< \internal do not use
+    static TLogProb NormFactor; ///< \internal do not use
+    static int foundersprob_class; ///< \internal do not use
+    static vector<TProb> allelefreqdistrib; ///< \internal do not use
+    static bool consecutiveAllele; ///< \internal do not use
+    static bool generation; ///< \internal do not use
+    static int pedigreeCorrectionMode; ///< \internal do not use
+    static int pedigreePenalty; ///< \internal do not use
+    static int vac; ///< \brief enforces VAC at each search node having a search depth less than the absolute value of a given value (0: no VAC, 1: VAC in preprocessing, >1: VAC during search up to a given search depth), if given a negative value then VAC is not performed inside depth-first search of hybrid best-first search method (command line option -A and possibly -hbfs)
+    static string costThresholdS; ///< \brief threshold cost value for VAC in CFN format (command line option -T)
+    static string costThresholdPreS; ///< \brief in preprocessing, threshold cost value for VAC in CFN format (command line option -P)
+    static Cost costThreshold; ///< \brief threshold cost value for VAC (command line option -T)
+    static Cost costThresholdPre; ///< \brief in preprocessing, threshold cost value for VAC (command line option -P)
+    static double trwsAccuracy; ///< \brief in preprocessing , enforces TRW-S until a given accuracy is reached (command line option -trws)
+    static bool trwsOrder; ///< \brief replaces DAC order by Kolmogorov's TRW-S order (command line option --trws-order)
+    static unsigned int trwsNIter; ///< \brief enforces at most n iterations of TRW-S (command line option --trws-n-iters)
+    static unsigned int trwsNIterNoChange; ///< \brief stops TRW-S when n iterations did not change the lower bound (command line option --trws-n-iters-no-change)
+    static unsigned int trwsNIterComputeUb; ///< \brief computes an upper bound every n steps in TRW-S (command line option --trws-n-iters-compute-ub)
+    static double costMultiplier; ///< \brief multiplies all costs internally by this number when loading a problem in WCSP format (command line option -C)
+    static unsigned int decimalPoint; ///< \internal do not use
+    static string deltaUbS; ///< \brief stops search if the absolute optimality gap reduces below a given value in CFN format (command line option -agap)
+    static Cost deltaUb; ///< \internal do not use
+    static Cost deltaUbAbsolute; ///< \brief stops search if the absolute optimality gap reduces below a given value (command line option -agap)
+    static Double deltaUbRelativeGap; ///< \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
+    static bool singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
+    static bool vacValueHeuristic; ///< \brief VAC-based value ordering heuristic (command line options -V and -A)
+    static BEP* bep; ///< \internal do not use
+    static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
+    static int maxEACIter; ///< \brief maximum number of iterations in EDAC before switching to FDAC
+    static bool wcnf; ///< \internal do not use
+    static bool qpbo; ///< \internal do not use
+    static double qpboQuadraticCoefMultiplier; ///< \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
+    static bool opb; ///< \internal do not use
 
-    static bool addAMOConstraints; /// < \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
-    static bool addAMOConstraints_; /// < \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
-    static int knapsackDP; /// < \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
+    static bool addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
+    static bool addAMOConstraints_; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
+    static int knapsackDP; ///< \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
 
-    static unsigned int divNbSol; /// < \brief upper bound on the number of diverse solutions (0: no diverse solution) (keep it small as it controls model size)
-    static unsigned int divBound; /// < \brief minimum Hamming distance between diverse solutions (command line options -div and -a)
-    static unsigned int divWidth; /// < \brief adds a global MDD constraint with a given maximum relaxed width for finding diverse solutions (command line option -mdd)
-    static unsigned int divMethod; /// < \brief diversity encoding method (0: Dual, 1: Hidden, 2: Ternary, 3: Knapsack) (command line option -divm)
-    static unsigned int divRelax; /// < \brief MDD relaxation heuristic (0: random, 1: high diversity, 2: small diversity, 3: high unary costs) (command line option -mddh)
+    static unsigned int divNbSol; ///< \brief upper bound on the number of diverse solutions (0: no diverse solution) (keep it small as it controls model size)
+    static unsigned int divBound; ///< \brief minimum Hamming distance between diverse solutions (command line options -div and -a)
+    static unsigned int divWidth; ///< \brief adds a global MDD constraint with a given maximum relaxed width for finding diverse solutions (command line option -mdd)
+    static unsigned int divMethod; ///< \brief diversity encoding method (0: Dual, 1: Hidden, 2: Ternary, 3: Knapsack) (command line option -divm)
+    static unsigned int divRelax; ///< \brief MDD relaxation heuristic (0: random, 1: high diversity, 2: small diversity, 3: high unary costs) (command line option -mddh)
 
-    static char* varOrder; /// < \brief variable elimination order for DAC, BTD, and VNS methods (0: lexicographic ordering, -1: maximum cardinality search ordering, -2: minimum degree ordering, -3: minimum fill-in ordering, -4: maximum spanning tree ordering, -5: reverse Cuthill-Mckee ordering, -6: approximate minimum degree ordering, -7: same as 0, 8: lexicographic ordering using variable names, string: variable ordering filename) (command line option -O)
-    static int btdMode; /// < \brief tree search exploiting tree/path decomposition (0: no tree decomposition, 1: BTD with tree decomposition, 2: RDS-BTD with tree decomposition, 3: RDS-BTD with path decomposition) (command line option -B)
-    static int btdSubTree; /// < \brief in RDS-BTD, cluster index for solving only this particular rooted cluster subtree (command line option -I)
-    static int btdRootCluster; /// < \brief chooses the root cluster index (command line option -R)
-    static int rootHeuristic; /// < \brief root cluster heuristic (0: maximum size, 1: maximum ratio of size by height-size, 2: minimum ratio of size by height-size, 3: minimum height) (command line option -root)
-    static bool reduceHeight; /// < \brief minimize cluster tree height when searching for the root cluster (command line option -minheight)
+    static char* varOrder; ///< \brief variable elimination order for DAC, BTD, and VNS methods (0: lexicographic ordering, -1: maximum cardinality search ordering, -2: minimum degree ordering, -3: minimum fill-in ordering, -4: maximum spanning tree ordering, -5: reverse Cuthill-Mckee ordering, -6: approximate minimum degree ordering, -7: same as 0, 8: lexicographic ordering using variable names, string: variable ordering filename) (command line option -O)
+    static int btdMode; ///< \brief tree search exploiting tree/path decomposition (0: no tree decomposition, 1: BTD with tree decomposition, 2: RDS-BTD with tree decomposition, 3: RDS-BTD with path decomposition) (command line option -B)
+    static int btdSubTree; ///< \brief in RDS-BTD, cluster index for solving only this particular rooted cluster subtree (command line option -I)
+    static int btdRootCluster; ///< \brief chooses the root cluster index (command line option -R)
+    static int rootHeuristic; ///< \brief root cluster heuristic (0: maximum size, 1: maximum ratio of size by height-size, 2: minimum ratio of size by height-size, 3: minimum height) (command line option -root)
+    static bool reduceHeight; ///< \brief minimize cluster tree height when searching for the root cluster (command line option -minheight)
 
-    static bool maxsateval; /// < \internal do not use
-    static bool xmlflag; /// < \internal do not use
-    static bool xmlcop; /// < \internal do not use
-    static TLogProb markov_log; /// < \internal do not use
-    static string evidence_file; /// < \internal do not use
-    static FILE* solution_uai_file; /// < \internal do not use
-    static string solution_uai_filename; /// < \internal do not use
-    static string problemsaved_filename; /// < \internal do not use
-    static bool isZ; /// < \brief computes logarithm of probability of evidence (a.k.a. log-partition function) in UAI format (command line option -logz)
-    static TLogProb logZ; /// < \internal do not use (lower bound on log-partition function)
-    static TLogProb logU; /// < \internal do not use (upper bound on rejected potentials)
-    static TLogProb logepsilon; /// < \brief approximation factor for computing the log-partition function (command line option -epsilon)
-    static bool uaieval; /// < \internal do not use
-    static string stdin_format; /// < \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb") (command line option --stdin)
+    static bool maxsateval; ///< \internal do not use
+    static bool xmlflag; ///< \internal do not use
+    static bool xmlcop; ///< \internal do not use
+    static TLogProb markov_log; ///< \internal do not use
+    static string evidence_file; ///< \internal do not use
+    static FILE* solution_uai_file; ///< \internal do not use
+    static string solution_uai_filename; ///< \internal do not use
+    static string problemsaved_filename; ///< \internal do not use
+    static bool isZ; ///< \brief computes logarithm of probability of evidence (a.k.a. log-partition function) in UAI format (command line option -logz)
+    static TLogProb logZ; ///< \internal do not use (lower bound on log-partition function)
+    static TLogProb logU; ///< \internal do not use (upper bound on rejected potentials)
+    static TLogProb logepsilon; ///< \brief approximation factor for computing the log-partition function (command line option -epsilon)
+    static bool uaieval; ///< \internal do not use
+    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb") (command line option --stdin)
 
-    static double startCpuTime; /// < \internal do not use
-    static double startRealTime; /// < \internal do not use
-    static double startRealTimeAfterPreProcessing; /// < \internal do not use (for parallel execution of HBFS and VNS)
+    static double startCpuTime; ///< \internal do not use
+    static double startRealTime; ///< \internal do not use
+    static double startRealTimeAfterPreProcessing; ///< \internal do not use (for parallel execution of HBFS and VNS)
 
-    static int splitClusterMaxSize; /// < \brief splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than a given value (command line option -j)
-    static double boostingBTD; /// < \brief in BTD, merges recursively leaf clusters with their fathers if separator size smaller than ToulBar2::elimDegree, else in VNS, merges clusters if the ratio of number of separator variables by number of cluster variables is above a given threshold (command line option -E and possibly -e)
-    static int maxSeparatorSize; /// < \brief merges recursively clusters with their fathers if separator size greater than a given threshold (command line option -r)
-    static int minProperVarSize; /// < \brief merges recursively clusters with their fathers if the number of proper variables is less than a given threshold (command line option -X)
+    static int splitClusterMaxSize; ///< \brief splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than a given value (command line option -j)
+    static double boostingBTD; ///< \brief in BTD, merges recursively leaf clusters with their fathers if separator size smaller than ToulBar2::elimDegree, else in VNS, merges clusters if the ratio of number of separator variables by number of cluster variables is above a given threshold (command line option -E and possibly -e)
+    static int maxSeparatorSize; ///< \brief merges recursively clusters with their fathers if separator size greater than a given threshold (command line option -r)
+    static int minProperVarSize; ///< \brief merges recursively clusters with their fathers if the number of proper variables is less than a given threshold (command line option -X)
 
-    static bool heuristicFreedom; /// < \brief merges clusters automatically to give more freedom to variable ordering heuristics in BTD methods (command line option -F)
-    static int heuristicFreedomLimit; /// < \brief stops merging a cluster subtree during BTD search if we tried repeatedly to solve this cluster for the same separator assignment more than a given number of times (-1: no merging) (command line option -F)
+    static bool heuristicFreedom; ///< \brief merges clusters automatically to give more freedom to variable ordering heuristics in BTD methods (command line option -F)
+    static int heuristicFreedomLimit; ///< \brief stops merging a cluster subtree during BTD search if we tried repeatedly to solve this cluster for the same separator assignment more than a given number of times (-1: no merging) (command line option -F)
 
-    static bool Berge_Dec; /// < \internal do not use
-    static bool learning; /// < \internal do not use
-    static externalfunc timeOut; /// < \internal do not use
-    static std::atomic<bool> interrupted; /// < \internal do not use
-    static int seed; /// < \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
+    static bool Berge_Dec; ///< \internal do not use
+    static bool learning; ///< \internal do not use
+    static externalfunc timeOut; ///< \internal do not use
+    static std::atomic<bool> interrupted; ///< \internal do not use
+    static int seed; ///< \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
 
-    static string incop_cmd; /// < \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
-    static string pils_cmd; /// < \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)
+    static string incop_cmd; ///< \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
+    static string pils_cmd; ///< \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)
 
-    static SearchMethod searchMethod; /// < \brief chooses between tree search and variable neighborhood search methods (0: tree search, 1: sequential unified VNS, 2: sequential unified decomposition guided VNS, 3: synchronous parallel UDGVNS, 4: asynchronous parallel UDGVNS, 5: tree decomposition heuristic) (command line option -vns)
+    static SearchMethod searchMethod; ///< \brief chooses between tree search and variable neighborhood search methods (0: tree search, 1: sequential unified VNS, 2: sequential unified decomposition guided VNS, 3: synchronous parallel UDGVNS, 4: asynchronous parallel UDGVNS, 5: tree decomposition heuristic) (command line option -vns)
 
-    static string clusterFile; /// < \brief cluster tree decomposition filename in COV or DEC format (with or without running intersection property)
-    static ofstream vnsOutput; /// < \internal do not use
+    static string clusterFile; ///< \brief cluster tree decomposition filename in COV or DEC format (with or without running intersection property)
+    static ofstream vnsOutput; ///< \internal do not use
 
-    static VNSSolutionInitMethod vnsInitSol; /// < \brief initial solution for VNS-like methods (-1: random, -2: minimum domain values, -3: maximum domain values, -4: first solution found by DFS, >=0: or by LDS with at most n discrepancies (command line option -vnsini)
-    static int vnsLDSmin; /// < \brief minimum discrepancy value for VNS-like methods (command line option -ldsmin)
-    static int vnsLDSmax; /// < \brief maximum discrepancy value for VNS-like methods (command line option -ldsmax)
-    static VNSInc vnsLDSinc; /// < \brief discrepancy increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator) (command line option -ldsinc)
-    static int vnsKmin; /// < \brief minimum neighborhood size for VNS-like methods (command line option -kmin)
-    static int vnsKmax; /// < \brief maximum neighborhood size for VNS-like methods (command line option -kmax)
-    static VNSInc vnsKinc; /// < \brief neighborhood size increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator, 4: Increment by 1 until maximum cluster size then considers all variables) (command line option -kinc)
+    static VNSSolutionInitMethod vnsInitSol; ///< \brief initial solution for VNS-like methods (-1: random, -2: minimum domain values, -3: maximum domain values, -4: first solution found by DFS, >=0: or by LDS with at most n discrepancies (command line option -vnsini)
+    static int vnsLDSmin; ///< \brief minimum discrepancy value for VNS-like methods (command line option -ldsmin)
+    static int vnsLDSmax; ///< \brief maximum discrepancy value for VNS-like methods (command line option -ldsmax)
+    static VNSInc vnsLDSinc; ///< \brief discrepancy increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator) (command line option -ldsinc)
+    static int vnsKmin; ///< \brief minimum neighborhood size for VNS-like methods (command line option -kmin)
+    static int vnsKmax; ///< \brief maximum neighborhood size for VNS-like methods (command line option -kmax)
+    static VNSInc vnsKinc; ///< \brief neighborhood size increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator, 4: Increment by 1 until maximum cluster size then considers all variables) (command line option -kinc)
 
-    static int vnsLDScur; /// < \internal do not use (current LDS discrepancy value, used only for debugging display)
-    static int vnsKcur; /// < \internal do not use (current neighborhood size, used only for debugging display)
-    static VNSVariableHeuristic vnsNeighborVarHeur; /// < \brief neighborhood heuristic method (0: random variables, 1: variables in conflict, 2: connected variables in conflict, 3: random cluster, 4: variables in conflict with maximum degree, 5: sorted cluster, 6: sorted cluster separator, 7: similar to 6, 8: randomized root cluster, 9: variables in partial conflict)
-    static bool vnsNeighborChange; /// < \internal do not use // (in RADGVNS, true if change neighborhood cluster only when not improved)
-    static bool vnsNeighborSizeSync; /// < \internal do not use // (in RADGVNS, true if neighborhood size is synchronized)
-    static bool vnsParallelLimit; /// < \internal do not use // (in RSDGVNS and RADGVNS, true if number of parallel slaves limited by number of clusters)
-    static bool vnsParallelSync; /// < \internal do not use // (true if RSGDVNS else RADGVNS)
-    static string vnsOptimumS; /// < \brief stops VNS if a solution is found with a given cost (or better) in CFN format (command line option -best)
-    static Cost vnsOptimum; /// < \brief stops VNS if a solution is found with a given cost (or better) (command line option -best)
+    static int vnsLDScur; ///< \internal do not use (current LDS discrepancy value, used only for debugging display)
+    static int vnsKcur; ///< \internal do not use (current neighborhood size, used only for debugging display)
+    static VNSVariableHeuristic vnsNeighborVarHeur; ///< \brief neighborhood heuristic method (0: random variables, 1: variables in conflict, 2: connected variables in conflict, 3: random cluster, 4: variables in conflict with maximum degree, 5: sorted cluster, 6: sorted cluster separator, 7: similar to 6, 8: randomized root cluster, 9: variables in partial conflict)
+    static bool vnsNeighborChange; ///< \internal do not use // (in RADGVNS, true if change neighborhood cluster only when not improved)
+    static bool vnsNeighborSizeSync; ///< \internal do not use // (in RADGVNS, true if neighborhood size is synchronized)
+    static bool vnsParallelLimit; ///< \internal do not use // (in RSDGVNS and RADGVNS, true if number of parallel slaves limited by number of clusters)
+    static bool vnsParallelSync; ///< \internal do not use // (true if RSGDVNS else RADGVNS)
+    static string vnsOptimumS; ///< \brief stops VNS if a solution is found with a given cost (or better) in CFN format (command line option -best)
+    static Cost vnsOptimum; ///< \brief stops VNS if a solution is found with a given cost (or better) (command line option -best)
 
-    static bool parallel; /// < \brief parallel mode for tree search and VNS (see mpirun toulbar2)
+    static bool parallel; ///< \brief parallel mode for tree search and VNS (see mpirun toulbar2)
 
-    static Long hbfs; /// < \brief performs hybrid best-first search with a given limit in the number of backtracks for depth-first search before visiting another open node (0: always DFS, 1: HBFS) (related to command line option -hbfs)
-    static Long hbfsGlobalLimit; /// < \brief restarts BTD-HBFS from the root cluster after a given number of backtracks (command line option -hbfs)
-    static Long hbfsAlpha; /// < \brief minimum recomputation node redundancy percentage threshold value (command line option -hbfsmin)
-    static Long hbfsBeta; /// < \brief  maximum recomputation node redundancy percentage threshold value (command line option -hbfsmax)
-    static ptrdiff_t hbfsCPLimit; /// < \brief maximum number of stored choice points before switching to normal DFS (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
-    static ptrdiff_t hbfsOpenNodeLimit; /// < \brief maximum number of stored open nodes before switching to normal DFS (command line option -open) (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
+    static Long hbfs; ///< \brief performs hybrid best-first search with a given limit in the number of backtracks for depth-first search before visiting another open node (0: always DFS, 1: HBFS) (related to command line option -hbfs)
+    static Long hbfsGlobalLimit; ///< \brief restarts BTD-HBFS from the root cluster after a given number of backtracks (command line option -hbfs)
+    static Long hbfsAlpha; ///< \brief minimum recomputation node redundancy percentage threshold value (command line option -hbfsmin)
+    static Long hbfsBeta; ///< \brief  maximum recomputation node redundancy percentage threshold value (command line option -hbfsmax)
+    static ptrdiff_t hbfsCPLimit; ///< \brief maximum number of stored choice points before switching to normal DFS (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
+    static ptrdiff_t hbfsOpenNodeLimit; ///< \brief maximum number of stored open nodes before switching to normal DFS (command line option -open) (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
 #ifdef OPENMPI
-    static bool burst; /// < \brief in parallel HBFS, workers send open nodes as soon as possible to the master (command line option -burst)
+    static bool burst; ///< \brief in parallel HBFS, workers send open nodes as soon as possible to the master (command line option -burst)
 #endif
-    static Long eps; /// < \brief performs HBFS until a given number of open nodes are collected and exits (command line option -eps)
-    static string epsFilename; /// < \brief a given filename to print remaining valid (lower bound less than current upper bound) open nodes as partial assignments before exits (command line option -eps)
+    static Long eps; ///< \brief performs HBFS until a given number of open nodes are collected and exits (command line option -eps)
+    static string epsFilename; ///< \brief a given filename to print remaining valid (lower bound less than current upper bound) open nodes as partial assignments before exits (command line option -eps)
 
-    static bool verifyOpt; /// < \brief compiled in debug, checks if a given (optimal) solution is never pruned by propagation when the current upper bound is greater than the cost of this solution (see Solver::read_solution, related to command line option -opt)
-    static Cost verifiedOptimum; /// < \brief compiled in debug, a given (optimal) solution cost (see Solver::read_solution, related to command line option -opt)
+    static bool verifyOpt; ///< \brief compiled in debug, checks if a given (optimal) solution is never pruned by propagation when the current upper bound is greater than the cost of this solution (see Solver::read_solution, related to command line option -opt)
+    static Cost verifiedOptimum; ///< \brief compiled in debug, a given (optimal) solution cost (see Solver::read_solution, related to command line option -opt)
 };
 
 #if defined(INT_COST) || defined(SHORT_COST)
@@ -1004,7 +1004,7 @@ public:
     }
 };
 
-/// < \brief allows one to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
+/// \brief allows one to sort pointers to WCSPLink objects (Constraints or Variables) by their wcspIndex rather than pointer values
 template <class T>
 bool compareWCSPIndex(const T* lhs, const T* rhs)
 {

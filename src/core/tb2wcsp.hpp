@@ -553,7 +553,7 @@ public:
         const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (maximum cost of a set of unary cost functions associated to a set of variables)
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
-    void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
+    void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
     void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
 
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
@@ -829,12 +829,12 @@ public:
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
 
-    pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> hiddenEncoding(); /// \brief returns dual variables and channeling constraints for pairwise consistency
+    pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> hiddenEncoding(); ///< \brief returns dual variables and channeling constraints for pairwise consistency
 
     // -----------------------------------------------------------
     // Data and methods for Virtual Arc Consistency
 
-    void histogram(Cost c); /// \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool\f$_\theta\f$ of P)
+    void histogram(Cost c); ///< \brief initializes histogram of costs used by Virtual Arc Consistency to speed up its convergence (Bool\f$_\theta\f$ of P)
     void iniSingleton();
     void updateSingleton();
     void removeSingleton();
