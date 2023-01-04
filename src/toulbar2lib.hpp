@@ -617,6 +617,7 @@ public:
     virtual Cost getSolutionCost() const = 0; ///< \brief after solving the problem, return the optimal solution nonnegative integer cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual Cost getSolution(vector<Value>& solution) const = 0; ///< \deprecated \brief after solving the problem, add the optimal solution in the input/output vector and returns its optimum cost (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual vector<pair<Double, vector<Value>>> getSolutions() const = 0; ///< \brief after solving the problem, return all solutions found with their corresponding value
+    virtual Double getDDualBound() const = 0; ///< \brief after (partially) solving the problem (possibly interrupted before the search is complete), return a global problem dual bound as a Double representing a decimal cost (lower resp. upper bound for minimization resp. maximization)
 
     // -----------------------------------------------------------
     // Internal Solver functions DO NOT USE THEM

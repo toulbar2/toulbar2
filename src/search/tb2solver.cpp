@@ -2611,6 +2611,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 bool Solver::solve(bool first)
 {
     beginSolve(wcsp->getUb());
+    initGap(wcsp->getLb(), wcsp->getUb());
     int _DEE_ = ToulBar2::DEE;
     int _elimDegree_ = ToulBar2::elimDegree;
 
@@ -2710,7 +2711,8 @@ bool Solver::solve(bool first)
                                 }
                                 ToulBar2::lds = 0;
                                 initialDepth = Store::getDepth();
-                                hybridSolve();
+                                pair<Cost, Cost> res = hybridSolve();
+                                globalLowerBound = res.first;
                             } else {
                                 int storedepth = Store::getDepth();
                                 try {
@@ -2765,6 +2767,7 @@ bool Solver::solve(bool first)
                                             initialDepth = Store::getDepth();
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;
+                                            globalLowerBound = res.first;
                                         } catch (const Contradiction&) {
                                             wcsp->whenContradiction();
                                             res.first = res.second;
@@ -2980,7 +2983,8 @@ bool Solver::solve(bool first)
                                 }
                             } else {
                                 initialDepth = Store::getDepth();
-                                hybridSolve();
+                                pair<Cost, Cost> res = hybridSolve();
+                                globalLowerBound = res.first;
                             }
                         }
                     }
@@ -3105,14 +3109,19 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             if (ToulBar2::haplotype)
                 cout << endl;
 
-            if (isLimited == 2)
+            if (isLimited == 2) {
                 cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
-            if (ToulBar2::haplotype)
+            }
+            if (ToulBar2::haplotype) {
                 cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
-            else if (!ToulBar2::bayesian)
+            } else if (!ToulBar2::bayesian) {
+                if (!isComplete) {
+                    cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+                }
                 cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
-            else
+            } else {
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+            }
         } else {
 #ifdef OPENMPI
             if (ToulBar2::xmlflag && (!ToulBar2::parallel || world.rank() == MASTER)) {
