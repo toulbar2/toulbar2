@@ -645,6 +645,15 @@ class CFN:
         """
         return self.CFN.solutions()
 
+    def GetDDualBound(self):
+        """GetDDualBound returns the global problem lower bound in minimization (resp. upper bound in maximization) found after doing an incomplete search with Solve.
+
+        Returns:
+            Global lower bound (decimal cost).
+
+        """
+        return self.CFN.getDDualBound()
+
     def NoPreprocessing(self):
         """NoPreprocessing deactivates most preprocessing methods.
 
@@ -678,6 +687,7 @@ class CFN:
             than the initial upper bound, and the number of solutions found (returned type: tuple(list, decimal cost, int)).
             or None if no solution has been found (the problem has no solution better than the initial upper bound or a search limit occurs).
             See GetSolutions to retrieve of the solutions found so far.
+            See GetDDualBound to retrieve of the global problem dual bound found so far.
             
         Warning:
             This operation cannot be called multiple times on the same CFN object (it may modify the problem or its upper bound).
