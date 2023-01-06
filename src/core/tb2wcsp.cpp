@@ -386,7 +386,7 @@ void tb2init()
     ToulBar2::xmlflag = false;
     ToulBar2::xmlcop = false;
     ToulBar2::maxsateval = false;
-    ToulBar2::uaieval = false;
+    ToulBar2::uaieval = true;
 
     ToulBar2::resolution = 7;
     ToulBar2::errorg = 0.05;
