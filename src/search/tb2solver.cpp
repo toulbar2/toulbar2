@@ -2508,6 +2508,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     Cost initialLowerBound = wcsp->getLb();
     wcsp->enforceUb();
     wcsp->propagate(); // initial propagation
+    initGap(wcsp->getLb(), wcsp->getUb());
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound || wcsp->getLb() > initialLowerBound) {
@@ -2520,6 +2521,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 wcsp->enforceUb();
                 wcsp->propagate();
                 initialUpperBound = finiteUb;
+                initGap(wcsp->getLb(), wcsp->getUb());
             }
         }
 
@@ -2534,6 +2536,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             previouslb = wcsp->getLb();
             wcsp->setDACOrder(revelimorder);
             wcsp->setDACOrder(elimorder);
+            initGap(wcsp->getLb(), wcsp->getUb());
             if (ToulBar2::verbose >= 0 && wcsp->getLb() > previouslb) {
                 if (ToulBar2::uai)
                     cout << "Reverse original DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
@@ -2543,6 +2546,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         } while (wcsp->getLb() > previouslb && 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > 0.5);
     }
     wcsp->preprocessing(); // preprocessing after initial propagation
+    initGap(wcsp->getLb(), wcsp->getUb());
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
@@ -2554,6 +2558,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             wcsp->enforceUb();
             wcsp->propagate();
             initialUpperBound = finiteUb;
+            initGap(wcsp->getLb(), wcsp->getUb());
         }
     }
 
