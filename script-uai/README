@@ -1,0 +1,33 @@
+UAI 2022 command line script :
+
+tb2-vns.sh tb2-vacint.sh tb2-ipr.sh  are bash script corresponding to uai vns , vac-int and ipr uai2022 solver 
+
+note that the competition use ENV variable:
+$MODEL $EVID $RESULTS 
+$TIMESEC is the runing time 
+in command line :
+
+TIMESEC by default is set to 999999 sec for vns and vacint
+
+( 3600 for ipr  ) ipr performs iterative precision restart during TIMESEC/2 sec and optimality proof search
+on the remaining half time.
+
+all script uses as arguments:
+
+$1 = uai instance
+$2 = evidence file
+$3 = results 
+
+default value :
+TIMESEC = 999999 for vns and vac-int  3600 for ipr
+
+MODEL=$1 or env variable $MODEL
+EVID = $1.evid or variable $EVID
+RESULTS=$1.MPE or env variable $RESULTS
+
+
+
+NOTE that by default : the toulbar2 bin file must be locate in ../build/bin/Linux directory
+
+(resulting of a classical toulbar2 compilation process in the toulbar2 root directory  :
+  mkdir build ; cd build ; cmake .. ; make 
