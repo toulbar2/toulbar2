@@ -349,9 +349,9 @@ class CFN:
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
         """
-        if incremental and model is not 'binary':
+        if incremental and model != 'binary':
             raise RuntimeError("Implementation of AllDifferent constraint requires 'binary' encoding in incremental mode!")
-        if excepted is not None and model is not 'binary':
+        if excepted is not None and model != 'binary':
             raise RuntimeError("Excepted domain values in AllDifferent constraint requires 'binary' encoding!")
         sscope = set(scope)
         if len(scope) != len(sscope):
