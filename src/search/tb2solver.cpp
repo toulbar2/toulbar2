@@ -30,9 +30,15 @@ const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DE
  *
  */
 
-WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
+WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub, WeightedCSP* wcsp)
 {
     WeightedCSPSolver* solver = NULL;
+
+    if(wcsp != NULL && ToulBar2::searchMethod != DFBB) {
+        cerr << "Error: provided WeightedCSP object not taken into account by this solver method " << ToulBar2::searchMethod << endl;
+        throw BadConfiguration();
+    }
+
     switch (ToulBar2::searchMethod) {
     case VNS:
     case DGVNS:
@@ -70,14 +76,15 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub)
 #endif
         break;
     default:
-        solver = new Solver(ub);
+        solver = new Solver(ub, wcsp);
         break;
     };
     return solver;
 }
 
-Solver::Solver(Cost initUpperBound)
-    : nbNodes(0)
+Solver::Solver(Cost initUpperBound, WeightedCSP* wcsp)
+    : self_wcsp(true)
+    , nbNodes(0)
     , nbBacktracks(0)
     , nbBacktracksLimit(LONGLONG_MAX)
     , wcsp(NULL)
@@ -115,7 +122,14 @@ Solver::Solver(Cost initUpperBound)
 #endif
 {
     searchSize = new StoreInt(0);
-    wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
+
+    if(wcsp == NULL) {
+        this->wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
+    } else { /* the provided wcsp will be solved */
+        self_wcsp = false;
+        this->wcsp = wcsp;
+        dynamic_cast<WCSP*>(wcsp)->setSolver((void*)this);
+    }
 }
 
 Solver::~Solver()
@@ -126,7 +140,12 @@ Solver::~Solver()
     for (unsigned int i = 0; i < allVars.size(); i++) {
         delete allVars[i];
     }
-    delete wcsp;
+
+    // if the wcsp has been created internally, then it is deleted else must be done by the user
+    if(self_wcsp) {
+        delete wcsp;
+    }
+
     delete ((StoreInt*)searchSize);
 }
 

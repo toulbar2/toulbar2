@@ -28,8 +28,8 @@ SET(CMAKE_MACOSX_RPATH 1)
 project("toulbar2")
 
 MESSAGE(STATUS "##########################################")
-MESSAGE(STATUS "project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
-MESSAGE(STATUS "source:${CMAKE_CURRENT_SOURCE_DIR} ")
+MESSAGE(STATUS "project: ${PROJECT_NAME} toolkit compilation cmake file version 0.99")
+MESSAGE(STATUS "source: ${CMAKE_CURRENT_SOURCE_DIR} ")
 MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
@@ -97,7 +97,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on
 #SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
-  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1271")
+  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1210")
   SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DILOGCPLEX -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
   SET(CPLEXLIB "-L${CPLEX_LOCATION}/cplex/lib/x86-64_linux/static_pic -L${CPLEX_LOCATION}/concert/lib/x86-64_linux/static_pic") 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPLEXFLAGS}")
@@ -171,7 +171,7 @@ IF(MENDELSOFT)
   SET(MPI OFF)
   
   #basename for packaging and versioning
-  set (Toulbar2_NAME "mendelsoft")
+  set(Toulbar2_NAME "mendelsoft")
   #description used in the package building
   SET (Toulbar2_PACKAGE_DESCRIPTION 
     "MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.") 

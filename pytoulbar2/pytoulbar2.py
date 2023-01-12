@@ -550,6 +550,27 @@ class CFN:
         """
         return self.CFN.getDDualBound()
 
+    def GetName(self):
+        """GetName get the name of the CFN.
+
+        Returns:
+            Name of the CFN (string).
+        """
+
+        return self.CFN.wcsp.getName(name)
+
+    def SetName(self, name):
+        """SetName set the name of the CFN.
+
+        Args:
+            name (str): the new name of the CFN.
+
+        """
+
+        self.CFN.wcsp.setName(name)
+
+        return
+
     def NoPreprocessing(self):
         """NoPreprocessing deactivates most preprocessing methods.
 
@@ -807,3 +828,92 @@ class CFN:
 
         """
         self.CFN.wcsp.whenContradiction()
+
+    def InitFromMultiCFN(self, multicfn):
+        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFN).
+
+        Args:
+            multicfn (MultiCFN): the instance containing the CFNs.
+            
+        Note:
+            After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
+
+        """
+
+        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp)
+
+        return
+
+class MultiCFN:
+    """pytoulbar2 base class used to combine linearly multiple CFN.
+    
+    Members:
+        Multi_CFN (MultiWCSP): python interface to C++ class MultiWCSP.
+    
+    """
+    def __init__(self):
+
+        self.MultiCFN = tb2.MultiWCSP()
+
+        return
+
+    
+    def PushCFN(self, CFN, weight=1.0):
+        """PushCFN add a CFN to the instance.
+
+        Args:
+            CFN (CFN): the new CFN to add.
+            weight (float): the initial weight of the CFN in the combination.
+
+        """
+
+        if CFN.UbInit is not None:
+            CFN.SetUB(CFN.UbInit) # might throw a contradiction
+
+        # this should be done in the CFN class, but the update occurs only when solving the problem
+        # this is because DoubletoCost function depends on the negCost and LB, which may be updated when adding cost functions
+        # if CFN.UbInit is not None:
+            # CFN.integercost = CFN.CFN.wcsp.DoubletoCost(CFN.UbInit)
+            # CFN.CFN.wcsp.updateUb(CFN.integercost)
+
+        self.MultiCFN.push_back(CFN.CFN.wcsp, weight)
+
+
+    def SetWeight(self, cfn_index, weight):
+        """SetWeight set a weight of a CFN.
+
+        Args:
+            cfn_index (int): index of the CFN (in addition order).
+            weight (float): the new weight of the CFN.
+
+        """
+
+        self.MultiCFN.setWeight(cfn_index, weight)
+
+    def GetSolution(self):
+        """GetSolution returns the solution of a the combined cfn after being solved.
+
+        Returns:
+            The solution of the cfn (dic).
+
+        """
+
+        return self.MultiCFN.getSolution()
+
+
+    def GetSolutionCosts(self):
+        """GetSolutionCosts returns the costs of the combined cfn after being solved.
+
+        Returns:
+            The costs of the solution of the cfn (list).
+
+        """
+
+        return self.MultiCFN.getSolutionValues()
+
+    def Print(self):
+        """Print print the content of the multiCFN: variables, cost functions.
+
+        """
+
+        self.MultiCFN.print()

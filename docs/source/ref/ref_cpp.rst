@@ -34,6 +34,13 @@ WeightedCSPSolver class
    :members:
    :undoc-members:
 
+MultiWCSP class
+=================
+
+.. doxygenclass:: MultiWCSP
+   :members:
+   :undoc-members:
+
 ToulBar2 class
 ==============
 

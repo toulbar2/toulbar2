@@ -32,6 +32,7 @@ file(
   ${My_Source}/search/*.*pp
   ${My_Source}/utils/*.*pp
   ${My_Source}/vns/*.*pp 
+  ${My_Source}/mcriteria/*.*pp
   ${My_Source}/ToulbarVersion.*pp
   )
 

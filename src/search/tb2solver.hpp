@@ -346,6 +346,7 @@ protected:
     friend class ParallelRandomClusterChoice;
     friend class VACExtension;
 
+    bool self_wcsp; // true if the wcsp has been created inside the solver object, false otherwise
     Long nbNodes;
     Long nbBacktracks;
     Long nbBacktracksLimit;
@@ -462,7 +463,7 @@ protected:
     void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
 public:
-    Solver(Cost initUpperBound);
+    Solver(Cost initUpperBound, WeightedCSP* wcsp = NULL);
 
     virtual ~Solver();
 

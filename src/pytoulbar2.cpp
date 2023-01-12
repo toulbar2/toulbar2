@@ -57,6 +57,9 @@ namespace py = pybind11;
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 #include "search/tb2solver.hpp"
+#include "core/tb2wcsp.hpp"
+#include "mcriteria/multiwcsp.hpp"
+#include "mcriteria/bicriteria.hpp"
 
 PYBIND11_MODULE(pytb2, m)
 {
@@ -241,8 +244,37 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite("upper", &BoundedObjValue::upper)
         .def_readwrite("lower", &BoundedObjValue::lower);
 
+    py::class_<mulcrit::MultiWCSP>(m, "MultiWCSP")
+        .def(py::init())
+        .def("push_back", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp, double weight) { multiwcsp.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
+        .def("setWeight", &mulcrit::MultiWCSP::setWeight)
+        .def("nbNetworks", &mulcrit::MultiWCSP::nbNetworks)
+        .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
+        .def("getNetworkName", &mulcrit::MultiWCSP::getNetworkName)
+        .def("print", [](mulcrit::MultiWCSP& multiwcsp) { multiwcsp.print(cout); } )
+        .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp) { return multiwcsp.makeWeightedCSP(); })
+        .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp) { multiwcsp.makeWeightedCSP(wcsp); })
+        .def("getSolution", &mulcrit::MultiWCSP::getSolution)
+        .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues)
+        .def("computeSolutionValues", &mulcrit::MultiWCSP::computeSolutionValues)
+        .def("convertToSolution", &mulcrit::MultiWCSP::convertToSolution);
+
+    py::class_<mulcrit::Bicriteria> bcrit(m, "Bicriteria");
+    
+    bcrit.def("computeSupportedPoints", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, Double delta) { mulcrit::Bicriteria::computeSupportedPoints(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), delta); }, py::arg("optim_dir"), py::arg("delta") = 1e-3)
+        .def("computeAdditionalSolutions", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { mulcrit::Bicriteria::computeAdditionalSolutions(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
+        .def("computeNonSupported", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, unsigned int nbLimit) {mulcrit::Bicriteria::computeNonSupported(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
+        .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
+        .def("getPoints", &mulcrit::Bicriteria::getPoints)
+        .def("getWeights", &mulcrit::Bicriteria::getWeights);
+
+    py::enum_<mulcrit::Bicriteria::OptimDir>(bcrit, "OptimDir")
+        .value("Min", mulcrit::Bicriteria::OptimDir::Optim_Min)
+        .value("Max", mulcrit::Bicriteria::OptimDir::Optim_Max)
+        .export_values();
+
     py::class_<WeightedCSP>(m, "WCSP")
-        //        .def(py::init([](Cost ub, WeightedCSPSolver *solver) { return WeightedCSP::makeWeightedCSP(ub, solver); })) // do not create this object directly, but create a Solver object instead and use wcsp property
+        .def(py::init([](Cost ub) { return WeightedCSP::makeWeightedCSP(ub); })) // create this object to interface with the multiwcsp class
         .def("getIndex", &WeightedCSP::getIndex)
         .def("getName", (string(WeightedCSP::*)() const) & WeightedCSP::getName)
         .def("setName", &WeightedCSP::setName)
@@ -384,10 +416,41 @@ PYBIND11_MODULE(pytb2, m)
         .def("LogProb2Cost", &WeightedCSP::LogProb2Cost)
         .def("LogSumExp", (Cost(WeightedCSP::*)(Cost c1, Cost c2) const) & WeightedCSP::LogSumExp)
         .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, Cost c2) const) & WeightedCSP::LogSumExp)
-        .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp);
+        .def("LogSumExp", (TLogProb(WeightedCSP::*)(TLogProb logc1, TLogProb logc2) const) & WeightedCSP::LogSumExp)
+        .def("read", [](WeightedCSP& wcsp, const char* fileName) {
+            if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
+                ToulBar2::xz = true;
+            if (strstr(fileName, ".gz") == &fileName[strlen(fileName) - strlen(".gz")])
+                ToulBar2::gz = true;
+            if (strstr(fileName, ".bz2") == &fileName[strlen(fileName) - strlen(".bz2")])
+                ToulBar2::bz2 = true;
+            if (strstr(fileName, ".cfn"))
+                ToulBar2::cfn = true;
+            if (strstr(fileName, ".wcnf") || strstr(fileName, ".cnf"))
+                ToulBar2::wcnf = true;
+            if (strstr(fileName, ".qpbo"))
+                ToulBar2::qpbo = true;
+            if (strstr(fileName, ".opb"))
+                ToulBar2::opb = true;
+            if (strstr(fileName, ".uai")) {
+                ToulBar2::uai = 1;
+                ToulBar2::bayesian = true;
+            }
+            if (strstr(fileName, ".LG")) {
+                ToulBar2::uai = 2;
+                ToulBar2::bayesian = true;
+            }
+#if defined(XMLFLAG) || defined(XMLFLAG3)
+            if (strstr(fileName, ".xml")) {
+                ToulBar2::xmlflag = true;
+            }
+#endif
+            tb2checkOptions();
+            return wcsp.read_wcsp(fileName);
+        });
 
     py::class_<WeightedCSPSolver>(m, "Solver")
-        .def(py::init([](Cost ub) {
+        .def(py::init([](Cost ub, WeightedCSP* wcsp) {
             ToulBar2::startCpuTime = cpuTime();
             ToulBar2::startRealTime = realTime();
             initCosts();
@@ -401,9 +464,10 @@ PYBIND11_MODULE(pytb2, m)
                 string sseed = to_string(ToulBar2::seed);
                 ToulBar2::incop_cmd.replace(2, 1, sseed);
             }
-            return WeightedCSPSolver::makeWeightedCSPSolver(ub);
+            return WeightedCSPSolver::makeWeightedCSPSolver(ub, wcsp);
         }),
-            py::arg("ub") = MAX_COST)
+            py::arg("ub") = MAX_COST,
+            py::arg("wcsp") = nullptr)
         .def_property_readonly("wcsp", &WeightedCSPSolver::getWCSP, py::return_value_policy::reference_internal)
         .def("read", [](WeightedCSPSolver& s, const char* fileName) {
             if (strstr(fileName, ".xz") == &fileName[strlen(fileName) - strlen(".xz")])
