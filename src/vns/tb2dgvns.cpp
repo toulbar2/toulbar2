@@ -226,7 +226,7 @@ bool VNSSolver::solve(bool first)
         try {
             try {
                 if (ToulBar2::verbose >= 0)
-                    cout << "****** Restart with " << ((ToulBar2::hbfs)?"HBFS":"DFS") << " and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                    cout << "****** Restart with " << ((ToulBar2::hbfs) ? "HBFS" : "DFS") << " and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
                 wcsp->setUb(bestUb);
                 wcsp->enforceUb();
                 wcsp->propagate();

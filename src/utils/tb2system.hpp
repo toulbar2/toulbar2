@@ -221,7 +221,7 @@ inline Long string2Cost(const char* ptr)
 {
     try {
         std::string s(ptr);
-        if (s.size()==0) {
+        if (s.size() == 0) {
             return 0;
         }
         Double d = stold(s);

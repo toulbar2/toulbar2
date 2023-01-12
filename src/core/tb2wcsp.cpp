@@ -48,7 +48,7 @@ using std::setprecision;
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/connected_components.hpp>
 
-typedef boost::subgraph< boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, boost::no_property, boost::property< boost::edge_index_t, int >>> BoostGraph;
+typedef boost::subgraph<boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS, boost::no_property, boost::property<boost::edge_index_t, int>>> BoostGraph;
 #endif
 
 /*
@@ -2252,8 +2252,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     unsigned int size;
     int readnbval;
     Long minweight;
-//    vector<tValue> clausetuple(arity, 0);
-//    bool isclause = 0;
+    //    vector<tValue> clausetuple(arity, 0);
+    //    bool isclause = 0;
     vector<EnumeratedVariable*> scopeVars;
     int ar = arity;
     if (!isclique) {
@@ -2491,18 +2491,18 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         MaxWeight += *max_element(weights[i].begin(), weights[i].end());
     }
     AbstractNaryConstraint* cc = NULL;
-//#ifdef UNITKNAPSACK2CLAUSE
-//    if (isclause) {
-//        assert(ar == (int)clausetuple.size());
-//        if (ToulBar2::verbose >= 3)
-//            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
-//        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
-//    } else {
-//#endif
-        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
-//#ifdef UNITKNAPSACK2CLAUSE
-//    }
-//#endif
+    //#ifdef UNITKNAPSACK2CLAUSE
+    //    if (isclause) {
+    //        assert(ar == (int)clausetuple.size());
+    //        if (ToulBar2::verbose >= 3)
+    //            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
+    //        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
+    //    } else {
+    //#endif
+    cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
+    //#ifdef UNITKNAPSACK2CLAUSE
+    //    }
+    //#endif
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
     else {
@@ -3216,24 +3216,24 @@ void WCSP::processTernary()
     }
 }
 
-pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncoding()
+pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncoding()
 {
-    vector<Constraint *>listOfCtrs;
-    vector<EnumeratedVariable *> listOfDualVars;
+    vector<Constraint*> listOfCtrs;
+    vector<EnumeratedVariable*> listOfDualVars;
     vector<vector<Tuple>> listOfDualDomains;
     vector<vector<Cost>> listOfDualCosts;
-    map<Constraint *, unsigned int> indexOfCtrs;
+    map<Constraint*, unsigned int> indexOfCtrs;
     map<pair<unsigned int, unsigned int>, set<int>> intersections; // graph of intersections of non-binary cost functions with at least two variables
     Long nbintersections = 0;
-    map<Constraint *, Constraint *> included; // graph of inclusions of any cost functions (map[i]=j means i included into j)
-    vector<BinaryConstraint *> channelingPWC; // list of binary cost functions between dual variables for pairwise consistency
+    map<Constraint*, Constraint*> included; // graph of inclusions of any cost functions (map[i]=j means i included into j)
+    vector<BinaryConstraint*> channelingPWC; // list of binary cost functions between dual variables for pairwise consistency
     unsigned int nbdual = 0;
     Long maxdomsize = 0;
 
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
-        Constraint *ctr = constrs[i];
-        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= max(3,ToulBar2::preprocessNary)) {
+        Constraint* ctr = constrs[i];
+        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary)) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3261,7 +3261,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                 maxdomsize = nbtuples;
             }
             initElimConstr(); // needed for boosting search by variable elimination
-            int var = makeEnumeratedVariable(((ToulBar2::hve>=0&&ToulBar2::pwc>=0)?HIDDEN_VAR_TAG_HVE:HIDDEN_VAR_TAG_HVE_PRE) + to_string(ctr->wcspIndex), 0, nbtuples - 1);
+            int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(ctr->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
@@ -3303,7 +3303,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                 maxdomsize = nbtuples;
             }
             initElimConstr(); // needed for boosting search by variable elimination
-            int var = makeEnumeratedVariable(((ToulBar2::hve>=0&&ToulBar2::pwc>=0)?HIDDEN_VAR_TAG_HVE:HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
+            int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
                 theVar->addValueName("t" + to_string(tuples[val]));
@@ -3328,17 +3328,17 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
         TSCOPE scope;
         listOfCtrs[i]->getScope(scope);
-        set<Constraint *> neighborCtrs;
-        for (auto var:scope) {
+        set<Constraint*> neighborCtrs;
+        for (auto var : scope) {
             EnumeratedVariable* neighbor = static_cast<EnumeratedVariable*>(getVar(var.first));
             for (ConstraintList::iterator iter = neighbor->getConstrs()->begin(); iter != neighbor->getConstrs()->end(); ++iter) {
-                Constraint *ctr = (*iter).constr;
-                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= max(3,ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
+                Constraint* ctr = (*iter).constr;
+                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
                     neighborCtrs.insert(ctr);
                 }
             }
         }
-        for (Constraint *ctr:neighborCtrs) {
+        for (Constraint* ctr : neighborCtrs) {
             assert(ctr->connected());
             TSCOPE inter;
             listOfCtrs[i]->scopeCommon(inter, ctr); //TODO: remove assigned variables!
@@ -3347,8 +3347,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                 auto iter = indexOfCtrs.find(ctr);
                 if (iter != indexOfCtrs.end()) {
                     unsigned int j = (*iter).second;
-                    if (ctr->arity() < listOfCtrs[i]->arity() ||
-                        ctr->wcspIndex > listOfCtrs[i]->wcspIndex) {
+                    if (ctr->arity() < listOfCtrs[i]->arity() || ctr->wcspIndex > listOfCtrs[i]->wcspIndex) {
                         if (ToulBar2::verbose >= 1) {
                             cout << "Constraint of index " << j << " is included in dualized constraint of index " << i << endl;
                             cout << *ctr;
@@ -3374,12 +3373,12 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                     assert(i != j);
                     pair<unsigned int, unsigned int> elt;
                     if (i < j) {
-                        elt = make_pair(i,j);
+                        elt = make_pair(i, j);
                     } else {
-                        elt = make_pair(j,i);
+                        elt = make_pair(j, i);
                     }
                     set<int> sscope;
-                    for (auto var:inter) {
+                    for (auto var : inter) {
                         sscope.insert(var.first);
                     }
                     intersections[elt] = sscope;
@@ -3389,9 +3388,9 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     }
 
     // extends all included cost functions into their largest including cost functions
-    for (pair<Constraint *, Constraint *> extending: included) {
-        Constraint *ctrextend = extending.first;
-        Constraint *ctrincluding = extending.second;
+    for (pair<Constraint*, Constraint*> extending : included) {
+        Constraint* ctrextend = extending.first;
+        Constraint* ctrincluding = extending.second;
         assert(ctrextend != ctrincluding);
         while (included.find(ctrincluding) != included.end()) {
             ctrincluding = included[ctrincluding];
@@ -3408,14 +3407,14 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
         for (unsigned int valj = 0; valj < listOfDualVars[j]->getDomainInitSize(); valj++) {
             listOfDualCosts[j][valj] += ctrextend->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
         }
-//        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
+        //        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
         ctrextend->clearFiniteCosts();
         ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
-//        ctrincluding->propagate();
+        //        ctrincluding->propagate();
     }
 
     // deconnect all dualized constraints
-    for (auto ctr:listOfCtrs) {
+    for (auto ctr : listOfCtrs) {
         if (ctr->connected()) {
             assert(included.find(ctr) == included.end());
             ctr->deconnect();
@@ -3425,7 +3424,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
     // add binary constraints for pairwise consistency
     if (ToulBar2::pwc) {
         vector<pair<pair<unsigned int, unsigned int>, set<int>>> sorted_intersections;
-        for (pair<pair<unsigned int, unsigned int>, set<int>> intermap:intersections) {
+        for (pair<pair<unsigned int, unsigned int>, set<int>> intermap : intersections) {
             auto inter = intermap.first;
             set<int> interscope = intermap.second;
             assert(inter.first < inter.second);
@@ -3448,27 +3447,27 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                 }
             }
         }
-        stable_sort(sorted_intersections.begin(), sorted_intersections.end(), [](auto p1, auto p2){return (p1.second.size() > p2.second.size() || (p1.second.size() == p2.second.size() && p1.second < p2.second));});
+        stable_sort(sorted_intersections.begin(), sorted_intersections.end(), [](auto p1, auto p2) { return (p1.second.size() > p2.second.size() || (p1.second.size() == p2.second.size() && p1.second < p2.second)); });
 #ifdef BOOST
         BoostGraph G(listOfDualVars.size());
         if (ToulBar2::pwcMinimalDualGraph) {
             set<int> lastSeparator;
-            for (auto intermap:sorted_intersections) {
-                if (intermap.second == lastSeparator) continue;
+            for (auto intermap : sorted_intersections) {
+                if (intermap.second == lastSeparator)
+                    continue;
                 lastSeparator = intermap.second;
                 set<int> ssubGraphVertices;
                 ssubGraphVertices.insert(intermap.first.first);
                 ssubGraphVertices.insert(intermap.first.second);
-                for (auto intermap2:sorted_intersections) {
-                    if ((intermap.first.first != intermap2.first.first || intermap.first.second != intermap2.first.second) &&
-                            includes(intermap2.second.begin(), intermap2.second.end(), intermap.second.begin(), intermap.second.end())) {
+                for (auto intermap2 : sorted_intersections) {
+                    if ((intermap.first.first != intermap2.first.first || intermap.first.second != intermap2.first.second) && includes(intermap2.second.begin(), intermap2.second.end(), intermap.second.begin(), intermap.second.end())) {
                         ssubGraphVertices.insert(intermap2.first.first);
                         ssubGraphVertices.insert(intermap2.first.second);
                     }
                 }
                 vector<int> subGraphVertices(ssubGraphVertices.begin(), ssubGraphVertices.end());
                 BoostGraph& subG = G.create_subgraph();
-                for (auto vertex: subGraphVertices) {
+                for (auto vertex : subGraphVertices) {
                     add_vertex(vertex, subG);
                 }
                 assert(boost::num_vertices(subG) == subGraphVertices.size());
@@ -3477,13 +3476,13 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                 int nbcc = boost::connected_components(subG, &comp[0]);
                 //vector<int> sep(intermap.second.begin(), intermap.second.end());
                 //cout << "separator " << to_string(sep) << " belongs to " << to_string(subGraphVertices) << " dualized constraints " << " in " << nbcc << " connected components." << endl;
-                for (int i=0; i < nbcc - 1; i++) {
+                for (int i = 0; i < nbcc - 1; i++) {
                     unsigned int j = 0;
                     while (comp[j] != i && j < boost::num_vertices(subG)) {
                         j++;
                     }
                     unsigned int k = 0;
-                    while (comp[k] != i+1 && k < boost::num_vertices(subG)) {
+                    while (comp[k] != i + 1 && k < boost::num_vertices(subG)) {
                         k++;
                     }
                     assert(j != k);
@@ -3495,7 +3494,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             }
         }
 #endif
-        for (auto intermap:sorted_intersections) {
+        for (auto intermap : sorted_intersections) {
             auto inter = intermap.first;
             set<int> interscope = intermap.second;
             assert(inter.first < inter.second);
@@ -3503,7 +3502,8 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             assert(included.find(listOfCtrs[i]) == included.end());
             int j = inter.second;
 #ifdef BOOST
-            if (ToulBar2::pwcMinimalDualGraph && !boost::edge(i, j, G).second) continue;
+            if (ToulBar2::pwcMinimalDualGraph && !boost::edge(i, j, G).second)
+                continue;
 #endif
             assert(included.find(listOfCtrs[j]) == included.end());
             assert((Long)listOfDualVars[i]->getDomainInitSize() * (Long)listOfDualVars[j]->getDomainInitSize() * (Long)sizeof(StoreCost) <= (Long)1024 * (Long)1024 * (Long)abs(ToulBar2::pwc));
@@ -3514,7 +3514,7 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
             assert(interscope.size() >= 2);
             vector<unsigned int> subscopei;
             vector<unsigned int> subscopej;
-            for (int var:interscope) {
+            for (int var : interscope) {
                 subscopei.push_back(scopei[var]);
                 subscopej.push_back(scopej[var]);
             }
@@ -3533,14 +3533,14 @@ pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> WCSP::hiddenEncod
                 }
             }
             int ctri = postBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
-            channelingPWC.push_back((BinaryConstraint *) getCtr(ctri));
+            channelingPWC.push_back((BinaryConstraint*)getCtr(ctri));
             nbintersections++;
         }
     }
 
     // add binary constraints for channeling between dual variables and original variables
     for (unsigned int i = 0; i < listOfCtrs.size(); i++) {
-        EnumeratedVariable *vardual = listOfDualVars[i];
+        EnumeratedVariable* vardual = listOfDualVars[i];
         if (included.find(listOfCtrs[i]) == included.end()) {
             for (int a = 0; a < listOfCtrs[i]->arity(); a++) { // link constraint i to all the variables in its scope
                 EnumeratedVariable* var = static_cast<EnumeratedVariable*>(listOfCtrs[i]->getVar(a));
@@ -3784,28 +3784,29 @@ void WCSP::preprocessing()
     }
 
     if (ToulBar2::hve || ToulBar2::pwc) {
-        pair<vector<EnumeratedVariable *>, vector<BinaryConstraint *>> res = hiddenEncoding();
+        pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> res = hiddenEncoding();
         if (res.first.size() > 0) {
-            if (ToulBar2::hve<0 || ToulBar2::pwc<0) {
+            if (ToulBar2::hve < 0 || ToulBar2::pwc < 0) {
                 //TODO: run pils here before dedualizing
 
                 // Dedualize pairwise consistency
-                for (BinaryConstraint *channel: res.second) {
+                for (BinaryConstraint* channel : res.second) {
                     if (channel->connected()) {
 #ifndef NDEBUG
                         Tuple tuple;
                         Cost cost;
                         channel->firstlex();
                         while (channel->nextlex(tuple, cost)) {
-                            if (cost > MIN_COST && !CUT(cost,getUb())) cout << *channel << endl;
-                            assert(cost == MIN_COST || CUT(cost,getUb()));
+                            if (cost > MIN_COST && !CUT(cost, getUb()))
+                                cout << *channel << endl;
+                            assert(cost == MIN_COST || CUT(cost, getUb()));
                         }
 #endif
                         channel->deconnect();
                     }
                 }
 
-                for (EnumeratedVariable *var: res.first) {
+                for (EnumeratedVariable* var : res.first) {
                     if (var->unassigned()) {
                         int elimOrder_ = elimOrder;
                         variableElimination(var);
@@ -6034,12 +6035,12 @@ void WCSP::ternaryCompletion()
     Double size = domsize;
     size = sizeof(StoreCost) * size * size * size * nbunvars * (nbunvars - 1) * (nbunvars - 2) * connectivity * connectivity * connectivity / 6;
 
-    if (ToulBar2::verbose>=1) {
-        cout << "Maximum estimated PIC memory: " << size << " (" << nbunvars << "," << connectivity <<")" << endl;
+    if (ToulBar2::verbose >= 1) {
+        cout << "Maximum estimated PIC memory: " << size << " (" << nbunvars << "," << connectivity << ")" << endl;
     }
     if (size > 1024. * 1024. * ToulBar2::preprocessTernaryRPC) {
         if (ToulBar2::verbose) {
-            cout << "Warning, restricted path consistency disabled (" << size/1024./1024. << " >= " << ToulBar2::preprocessTernaryRPC << " MB, see option -t)." << endl;
+            cout << "Warning, restricted path consistency disabled (" << size / 1024. / 1024. << " >= " << ToulBar2::preprocessTernaryRPC << " MB, see option -t)." << endl;
         }
         ToulBar2::preprocessTernaryRPC = 0;
         return;
@@ -6048,7 +6049,8 @@ void WCSP::ternaryCompletion()
     vector<TripleVarCostSize> triplelist;
     for (unsigned int i = 0; i < vars.size(); i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)vars[i];
-        if (x->assigned()) continue;
+        if (x->assigned())
+            continue;
         for (ConstraintList::iterator it = x->getConstrs()->begin(); it != x->getConstrs()->end(); ++it) {
             Constraint* ctr = (*it).constr;
             if (ctr->isBinary()) {

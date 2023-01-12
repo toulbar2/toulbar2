@@ -157,33 +157,33 @@ public:
         assert(last != NULL || head == NULL);
     }
 
-// older version with no learned constraints and only push_back operations
-//    void undoErase(DLink<T>* elt, DLink<T>* prev)
-//    {
-//        assert(elt->removed);
-//        size++;
-//        elt->removed = false;
-//        if (prev != NULL) {
-//            assert(!prev->removed);
-//            elt->prev = prev;
-//            elt->next = prev->next;
-//            if (prev->next != NULL)
-//                prev->next->prev = elt;
-//            else
-//                last = elt;
-//            prev->next = elt;
-//        } else {
-//            if (head != NULL)
-//                head->prev = elt;
-//            else
-//                last = elt;
-//            elt->prev = NULL;
-//            elt->next = head;
-//            head = elt;
-//        }
-//        assert(head != NULL || last == NULL);
-//        assert(last != NULL || head == NULL);
-//    }
+    // older version with no learned constraints and only push_back operations
+    //    void undoErase(DLink<T>* elt, DLink<T>* prev)
+    //    {
+    //        assert(elt->removed);
+    //        size++;
+    //        elt->removed = false;
+    //        if (prev != NULL) {
+    //            assert(!prev->removed);
+    //            elt->prev = prev;
+    //            elt->next = prev->next;
+    //            if (prev->next != NULL)
+    //                prev->next->prev = elt;
+    //            else
+    //                last = elt;
+    //            prev->next = elt;
+    //        } else {
+    //            if (head != NULL)
+    //                head->prev = elt;
+    //            else
+    //                last = elt;
+    //            elt->prev = NULL;
+    //            elt->next = head;
+    //            head = elt;
+    //        }
+    //        assert(head != NULL || last == NULL);
+    //        assert(last != NULL || head == NULL);
+    //    }
 
     void undoErase(DLink<T>* elt, DLink<T>* next)
     {
@@ -217,30 +217,30 @@ public:
         assert(last != NULL || head == NULL);
     }
 
-// does not work because elt->prev and elt->next may be null???
-//    void undoErase(DLink<T> *elt) {
-//        assert(elt->removed);
-//        size++;
-//        elt->removed = false;
-//        if (elt->prev != NULL) {
-//            assert(!elt->prev->removed);
-//            assert(elt->prev->next == elt->next);
-//            elt->prev->next = elt;
-//        } else {
-//            assert(head == elt->next);
-//            head = elt;
-//        }
-//        if (elt->next != NULL) {
-//            assert(!elt->next->removed);
-//            assert(elt->next->prev == elt->prev);
-//            elt->next->prev = elt;
-//        } else {
-//            assert(last == elt->prev);
-//            last = elt;
-//        }
-//        assert(head != NULL || last == NULL);
-//        assert(last != NULL || head == NULL);
-//    }
+    // does not work because elt->prev and elt->next may be null???
+    //    void undoErase(DLink<T> *elt) {
+    //        assert(elt->removed);
+    //        size++;
+    //        elt->removed = false;
+    //        if (elt->prev != NULL) {
+    //            assert(!elt->prev->removed);
+    //            assert(elt->prev->next == elt->next);
+    //            elt->prev->next = elt;
+    //        } else {
+    //            assert(head == elt->next);
+    //            head = elt;
+    //        }
+    //        if (elt->next != NULL) {
+    //            assert(!elt->next->removed);
+    //            assert(elt->next->prev == elt->prev);
+    //            elt->next->prev = elt;
+    //        } else {
+    //            assert(last == elt->prev);
+    //            last = elt;
+    //        }
+    //        assert(head != NULL || last == NULL);
+    //        assert(last != NULL || head == NULL);
+    //    }
 
     DLink<T>* pop_back(bool backtrack)
     {

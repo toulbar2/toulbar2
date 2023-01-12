@@ -1803,7 +1803,7 @@ int _tmain(int argc, TCHAR* argv[])
                     int size = atol(args.OptionArg());
                     ToulBar2::hve = size;
                 } else
-                    ToulBar2::hve = (1 << (sizeof(tValue)*8 - 1)) - 1;
+                    ToulBar2::hve = (1 << (sizeof(tValue) * 8 - 1)) - 1;
                 if (ToulBar2::debug && ToulBar2::hve != 0)
                     cout << "preprocess hidden variable encoding ON" << endl;
             } else if (args.OptionId() == NO_OPT_preprocessHVE) {
@@ -1824,7 +1824,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug && ToulBar2::pwc != 0)
                     cout << "preprocess pairwise consistency ON" << endl;
                 if (ToulBar2::hve == 0) {
-                    ToulBar2::hve = (1 << (sizeof(tValue)*8 - 1)) - 1;
+                    ToulBar2::hve = (1 << (sizeof(tValue) * 8 - 1)) - 1;
                     if (ToulBar2::debug && ToulBar2::hve == 0)
                         cout << "preprocess hidden variable encoding ON" << endl;
                 }
@@ -3058,7 +3058,7 @@ int _tmain(int argc, TCHAR* argv[])
         if (world.rank() == WeightedCSPSolver::MASTER) {
 #endif
             if (ToulBar2::writeSolution) {
-                ToulBar2::solutionFile = fopen(solutionFileName, (ToulBar2::uaieval)?"r+":"w");
+                ToulBar2::solutionFile = fopen(solutionFileName, (ToulBar2::uaieval) ? "r+" : "w");
                 if (ToulBar2::uaieval) {
                     if (!ToulBar2::solutionFile) {
                         ToulBar2::solutionFile = fopen(solutionFileName, "w"); // create an empty file if solution file is not found

@@ -23,7 +23,7 @@ Domain::Domain(vector<Value>& dom)
     , distanceToZero(*min_element(dom.begin(), dom.end()))
 {
     assert(dom.size() >= 1);
-    assert(dom.size() <= ((2 << (sizeof(tValue)*8 - 1)) - 1));
+    assert(dom.size() <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
     qsort(&dom[0], dom.size(), sizeof(Value), cmpValue);
     init(dom[0], dom[dom.size() - 1]);
     int i = 0;
@@ -38,7 +38,7 @@ Domain::Domain(vector<Value>& dom)
 void Domain::init(Value inf, Value sup)
 {
     assert(sup - inf + 1 >= 1);
-    assert(sup - inf + 1 <= ((2 << (sizeof(tValue)*8 - 1)) - 1));
+    assert(sup - inf + 1 <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     assert(distanceToZero == 0);
 #endif

@@ -597,7 +597,6 @@ public:
     /// \warning cannot solve problems with non-binary cost functions
     virtual Cost pils(string cmd, vector<Value>& solution) = 0;
 
-
     /// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its
     /// non-zero half squared matrix costs (can be positive or negative, with \f$\forall i, posx[i] \leq posy[i]\f$)

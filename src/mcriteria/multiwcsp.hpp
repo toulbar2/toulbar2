@@ -16,15 +16,13 @@ class MultiWCSP; // forward delaration
 
 typedef std::map<std::string, std::string> Solution; // type representing a solution of a multi-cfn
 
-
 /*!
  * \class Var
  * \brief store variable data: name, value names: the values can only be defined by their name (str)
  */
 class Var {
 
-  public:
-
+public:
     /*!
      * \brief constructor
      * \param multiwcsp the global problem
@@ -43,15 +41,12 @@ class Var {
      */
     unsigned int nbValues();
 
-
-  public:
-
+public:
     MultiWCSP* multiwcsp; //!< pointer to the MultiWCSP instance
 
     std::string name;
     std::vector<std::string> domain_str;
     std::map<string, int> str_to_index;
-
 };
 
 /*!
@@ -60,8 +55,7 @@ class Var {
  */
 class CostFunction {
 
-  public:
-
+public:
     /*!
      * \brief constructor
      */
@@ -84,21 +78,17 @@ class CostFunction {
      */
     unsigned int arity();
 
-  public:
-
+public:
     MultiWCSP* multiwcsp;
 
     std::string name;
     std::vector<unsigned int> scope; /* internal variable indexes */
 
-
     // cost table
     Double default_cost;
     std::vector<Double> costs;
-    std::vector<std::vector<unsigned int> > tuples; // value indexes of the variables
-
+    std::vector<std::vector<unsigned int>> tuples; // value indexes of the variables
 };
-
 
 /*!
  * \class MultiWCSP
@@ -106,14 +96,12 @@ class CostFunction {
  */
 class MultiWCSP {
 
-  public:
-
+public:
     static constexpr Double epsilon = 1e-6;
 
     static constexpr Double accuracy = 1e-3;
 
-  public:
-
+public:
     /*!
      * \brief default constructor
      */
@@ -188,7 +176,6 @@ class MultiWCSP {
      */
     void makeWeightedCSP(WeightedCSP* wcsp);
 
-
     /*!
      * \brief convert a tuple to a cost index, rightmost value indexed first
      * \param variables the list of variables from the tuple
@@ -225,8 +212,7 @@ class MultiWCSP {
      */
     Solution convertToSolution(std::vector<Value>& solution);
 
-  private: /* private methods */
-
+private: /* private methods */
     /*!
      * \brief send the cfn to toulbar2
      * \param wcsp tb2 wcsp
@@ -250,8 +236,7 @@ class MultiWCSP {
      */
     Double computeTop();
 
-  public: // public attributes
-
+public: // public attributes
     // variables
     std::vector<Var> var; // variables
     std::map<std::string, int> var_index; // index of variables
@@ -260,8 +245,7 @@ class MultiWCSP {
     std::vector<CostFunction> cost_function; // list of the cost functions
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
-  private: // private attributes
-
+private: // private attributes
     std::vector<double> weights; // list of weights for all the loaded networks
     std::vector<std::string> network_names; // names of the networks
     std::vector<std::vector<unsigned int>> networks; // list of the cost function networks (function indexes for each network)
@@ -278,7 +262,6 @@ class MultiWCSP {
     bool _sol_extraction; // indicates if the solution and objective value have already been extracted
     std::vector<Double> _obj_values;
     Solution _solution;
-
 };
 
 } // namespace mulcrit

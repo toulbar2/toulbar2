@@ -119,23 +119,27 @@ public:
     Cost getBinaryCost(ConstraintLink c, Value myvalue, Value itsvalue);
     Cost getBinaryCost(BinaryConstraint* c, Value myvalue, Value itsvalue);
 
-    vector<Cost> getCosts() {
+    vector<Cost> getCosts()
+    {
         vector<Cost> costs_;
-        for (Cost cost: costs) {
+        for (Cost cost : costs) {
             costs_.push_back(cost);
         }
         return costs_;
     }
-    void setCosts(const vector<Cost>& update) {
+    void setCosts(const vector<Cost>& update)
+    {
         assert(costs.size() == update.size());
         for (unsigned int a = 0; a < costs.size(); a++) {
             costs[a] = update[a];
         }
     }
-    Cost getDeltaCost() {
+    Cost getDeltaCost()
+    {
         return deltaCost;
     }
-    void setDeltaCost(Cost cost) {
+    void setDeltaCost(Cost cost)
+    {
         deltaCost = cost;
     }
 
