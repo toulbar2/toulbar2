@@ -28,8 +28,8 @@ SET(CMAKE_MACOSX_RPATH 1)
 project("toulbar2")
 
 MESSAGE(STATUS "##########################################")
-MESSAGE(STATUS "project: ${PROJECT_NAME} toolkit compilation cmake file version 0.99")
-MESSAGE(STATUS "source: ${CMAKE_CURRENT_SOURCE_DIR} ")
+MESSAGE(STATUS "project :${PROJECT_NAME} toolkit compilation cmake file version 0.99")
+MESSAGE(STATUS "source:${CMAKE_CURRENT_SOURCE_DIR} ")
 MESSAGE(STATUS "MAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "##########################################")
 
@@ -97,7 +97,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on
 #SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
-  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1210")
+  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1271")
   SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DILOGCPLEX -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
   SET(CPLEXLIB "-L${CPLEX_LOCATION}/cplex/lib/x86-64_linux/static_pic -L${CPLEX_LOCATION}/concert/lib/x86-64_linux/static_pic") 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPLEXFLAGS}")
@@ -135,7 +135,9 @@ MARK_AS_ADVANCED(FORCE Default_test_option Default_test_timeout Default_validati
 # static building
 ##########################################
 IF(STATIC)
-  MESSAGE(STATUS "STATIC COMPILATION ON (warning: MPI option not compliant with static link)")
+  MESSAGE(STATUS "STATIC COMPILATION ON (warning: jemalloc, xml, and MPI options not compliant with static link)")
+  SET(WITH_MEM_JEMALLOC OFF)
+  SET(XML OFF)
   SET(MPI OFF)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
@@ -169,7 +171,7 @@ IF(MENDELSOFT)
   SET(MPI OFF)
   
   #basename for packaging and versioning
-  set(Toulbar2_NAME "mendelsoft")
+  set (Toulbar2_NAME "mendelsoft")
   #description used in the package building
   SET (Toulbar2_PACKAGE_DESCRIPTION 
     "MendelSoft is an open source software which detects marker genotyping incompatibilities (Mendelian errors only) in complex pedigrees using weighted constraint satisfaction techniques. The input of the software is a pedigree data with genotyping data at a single locus. The output of the software is a list of individuals for which the removal of their genotyping data restores consistency. This list is of minimum size when the program ends.") 
@@ -216,13 +218,12 @@ IF(PYTB2)
   MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 
   if(EXISTS "${Python3_EXECUTABLE}-config")
-	 SET(Python3_config "${Python3_EXECUTABLE}-config")
+    SET(Python3_config "${Python3_EXECUTABLE}-config")
+    EXECUTE_PROCESS(COMMAND ${Python3_config} --extension-suffix OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
   else()
-	 SET(Python3_config "${Python3_EXECUTABLE}3-config")
+    EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE} -c "import sysconfig;print(sysconfig.get_config_var('EXT_SUFFIX'))" OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
-	  
-  EXECUTE_PROCESS(COMMAND ${Python3_config} --extension-suffix 
-  OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
 
   EXECUTE_PROCESS(
