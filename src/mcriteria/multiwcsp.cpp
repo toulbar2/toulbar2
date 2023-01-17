@@ -396,7 +396,7 @@ Double mulcrit::MultiWCSP::computeTop()
 
         for (auto& func_ind : networks[net_ind]) {
 
-            Double min_cost, max_cost;
+            Double min_cost = 0., max_cost = 0.;
             bool uninit_min = true, uninit_max = true;
 
             for (unsigned int cost_ind = 0; cost_ind < cost_function[func_ind].costs.size(); cost_ind++) {
