@@ -545,6 +545,7 @@ WARN_LOGFILE           =
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/src/toulbar2lib.hpp \
                          @CMAKE_CURRENT_SOURCE_DIR@/src \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/core/tb2types.hpp \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/mcriteria/multiwcsp.hpp \
                          @CMAKE_CURRENT_SOURCE_DIR@/README.md \
                          @CMAKE_CURRENT_BINARY_DIR@
 
