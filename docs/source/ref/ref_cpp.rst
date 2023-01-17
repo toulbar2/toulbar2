@@ -37,7 +37,7 @@ WeightedCSPSolver class
 MultiWCSP class
 =================
 
-.. doxygenclass:: MultiWCSP
+.. doxygenclass:: mulcrit::MultiWCSP
    :members:
    :undoc-members:
 
