@@ -43,6 +43,10 @@ private: /* static members to store solutions and points */
 
     static std::vector<mulcrit::Solution> _solutions; // solutions computed
 
+    static unsigned int _first_cfn_index;
+
+    static unsigned int _second_cfn_index;
+
 private: /* static functions */
     /*!
      * \brief sort the solutions obtained
@@ -88,11 +92,21 @@ public: /* static functions */
     /*!
      * \brief compute a list of supported points for a bi-objective cost function network
      * \param multicfn the problem containing (at least) the two cost function networks
+     * \param first_cfn_index index of the first cfn to optimize in the multicfn object
+     * \param second_cfn_index index of the second cfn to optimize in the multicfn object
+     * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
+     * \param delta constant for defining weights to compute the optimal points individually in the objectives
+     */
+    static void computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
+
+    /*!
+     * \brief compute a list of supported points for a bi-objective cost function network when optimizing respectively the first and the second cfn in the multicfn object
+     * \param multicfn the problem containing (at least) the two cost function networks
      * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
     static void computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
-
+    
     /*!
      * \brief compute additional (potentially non dominated) solutions via enumeration in a nondominated triangle
      * \param multicfn the bicriteria cost function network

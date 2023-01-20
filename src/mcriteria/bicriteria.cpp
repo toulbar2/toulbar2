@@ -16,6 +16,9 @@ vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
 vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
 vector<mulcrit::Solution> Bicriteria::_solutions = vector<mulcrit::Solution>();
 
+unsigned int Bicriteria::_first_cfn_index = 0;
+unsigned int Bicriteria::_second_cfn_index = 0;
+
 //--------------------------------------------------------------------------------------------
 void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)
 {
@@ -87,8 +90,8 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
 
     // cout << "current weights: " << std::setprecision(10) << weights.first << ", " << weights.second << endl;
 
-    multicfn->setWeight(0, weights.first);
-    multicfn->setWeight(1, weights.second);
+    multicfn->setWeight(_first_cfn_index, weights.first);
+    multicfn->setWeight(_second_cfn_index, weights.second);
 
     tb2init();
 
@@ -569,8 +572,16 @@ void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteri
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta)
+void computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta = 1e-3) {
+    Bicriteria::computeSupportedPoints(multicfn, 0, 1, optim_dir, delta);
+}
+
+//--------------------------------------------------------------------------------------------
+void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta)
 {
+
+    _first_cfn_index = first_cfn_index;
+    _second_cfn_index = second_cfn_index;
 
     _solutions.clear();
     _points.clear();
@@ -578,7 +589,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<Bicrit
 
     tb2init();
 
-    ToulBar2::verbose = -1;
+    // ToulBar2::verbose = -1;
 
     ToulBar2::cfn = true;
 
@@ -616,17 +627,18 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<Bicrit
     Weights weights1, weights2;
 
     // cout << "optimizing 1 separately: " << endl;
-    if (optim_dir.second == Optim_Min) {
+    if (optim_dir.second == Optim_Max) {
         weights1 = make_pair(lambda1, -delta);
     } else {
         weights1 = make_pair(lambda1, delta);
     }
+    
     result1 = solveScalarization(multicfn, weights1, &sol1, &point1);
 
     // cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
 
     // cout << "optimizing 2 separately: " << endl;
-    if (optim_dir.first == Optim_Min) {
+    if (optim_dir.first == Optim_Max) {
         weights2 = make_pair(-delta, lambda2);
     } else {
         weights2 = make_pair(delta, lambda2);
