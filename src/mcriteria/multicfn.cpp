@@ -1,5 +1,5 @@
 
-#include "multiwcsp.hpp"
+#include "multicfn.hpp"
 
 // WCSP class
 #include "core/tb2wcsp.hpp"
@@ -13,13 +13,13 @@
 using namespace std;
 
 //---------------------------------------------------------------------------
-mulcrit::MultiWCSP::MultiWCSP()
+mulcrit::MultiCFN::MultiCFN()
     : _sol_extraction(false)
 {
 }
 
 //---------------------------------------------------------------------------
-mulcrit::MultiWCSP::MultiWCSP(vector<WCSP*>& wcsps, vector<Double>& weights)
+mulcrit::MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
     : _sol_extraction(false)
 {
     for (unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind++) {
@@ -28,7 +28,7 @@ mulcrit::MultiWCSP::MultiWCSP(vector<WCSP*>& wcsps, vector<Double>& weights)
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::push_back(WCSP* wcsp, double weight)
+void mulcrit::MultiCFN::push_back(WCSP* wcsp, double weight)
 {
 
     // assert: identical domains for existing variables
@@ -174,7 +174,7 @@ void mulcrit::MultiWCSP::push_back(WCSP* wcsp, double weight)
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::addCostFunction(WCSP* wcsp, Constraint* cstr)
+void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 {
 
     cost_function.push_back(CostFunction(this));
@@ -347,43 +347,43 @@ void mulcrit::MultiWCSP::addCostFunction(WCSP* wcsp, Constraint* cstr)
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::setWeight(unsigned int network_index, double weight)
+void mulcrit::MultiCFN::setWeight(unsigned int network_index, double weight)
 {
     weights[network_index] = weight;
 }
 
 //---------------------------------------------------------------------------
-Double mulcrit::MultiWCSP::getWeight(unsigned int wcsp_index)
+Double mulcrit::MultiCFN::getWeight(unsigned int wcsp_index)
 {
     return weights[wcsp_index];
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiWCSP::nbNetworks()
+unsigned int mulcrit::MultiCFN::nbNetworks()
 {
     return networks.size();
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiWCSP::nbVariables()
+unsigned int mulcrit::MultiCFN::nbVariables()
 {
     return var.size();
 }
 
 //---------------------------------------------------------------------------
-std::string mulcrit::MultiWCSP::getNetworkName(unsigned int index)
+std::string mulcrit::MultiCFN::getNetworkName(unsigned int index)
 {
     return network_names[index];
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiWCSP::getDecimalPoint()
+unsigned int mulcrit::MultiCFN::getDecimalPoint()
 {
     return _tb2_decimalpoint;
 }
 
 //---------------------------------------------------------------------------
-Double mulcrit::MultiWCSP::computeTop()
+Double mulcrit::MultiCFN::computeTop()
 {
 
     Double top = 0.;
@@ -424,7 +424,7 @@ Double mulcrit::MultiWCSP::computeTop()
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp)
+void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
 {
 
     // floating point precision
@@ -516,7 +516,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp)
                     costs[tb2_val_ind] = top;
                 } else {
 
-                    if (fabs(weight - 1.0) > MultiWCSP::epsilon) {
+                    if (fabs(weight - 1.0) > MultiCFN::epsilon) {
                         costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind] * weight;
                     } else {
                         costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind];
@@ -554,7 +554,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp)
                     if (cost == numeric_limits<Double>::infinity()) {
                         costs.push_back(top);
                     } else {
-                        if (fabs(weight - 1.0) > MultiWCSP::epsilon) {
+                        if (fabs(weight - 1.0) > MultiCFN::epsilon) {
                             costs.push_back(cost * weight);
                         } else {
                             costs.push_back(cost);
@@ -596,7 +596,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp)
                         if (cost == numeric_limits<Double>::infinity()) {
                             costs.push_back(top);
                         } else {
-                            if (fabs(weight - 1.0) > MultiWCSP::epsilon) {
+                            if (fabs(weight - 1.0) > MultiCFN::epsilon) {
                                 costs.push_back(cost * weight);
                             } else {
                                 costs.push_back(cost);
@@ -654,7 +654,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp)
                     wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(top));
                 } else {
                     // do not forget to convert from double to cost for n-ary cost functions
-                    if (fabs(weight - 1.) > MultiWCSP::epsilon) {
+                    if (fabs(weight - 1.) > MultiCFN::epsilon) {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(cost_function[func_ind].costs[ind_tuple] * weight));
                     } else {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(cost_function[func_ind].costs[ind_tuple]));
@@ -696,7 +696,7 @@ void mulcrit::MultiWCSP::exportToWCSP(WCSP* wcsp)
 }
 
 //---------------------------------------------------------------------------
-WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP()
+WeightedCSP* mulcrit::MultiCFN::makeWeightedCSP()
 {
 
     _sol_extraction = false;
@@ -712,7 +712,7 @@ WeightedCSP* mulcrit::MultiWCSP::makeWeightedCSP()
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::makeWeightedCSP(WeightedCSP* wcsp)
+void mulcrit::MultiCFN::makeWeightedCSP(WeightedCSP* wcsp)
 {
 
     _sol_extraction = false;
@@ -723,7 +723,7 @@ void mulcrit::MultiWCSP::makeWeightedCSP(WeightedCSP* wcsp)
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiWCSP::tupleToIndex(vector<Var*> variables, vector<unsigned int> tuple)
+unsigned int mulcrit::MultiCFN::tupleToIndex(vector<Var*> variables, vector<unsigned int> tuple)
 {
     unsigned int cost_index = 0;
     unsigned int acc = 1;
@@ -735,7 +735,7 @@ unsigned int mulcrit::MultiWCSP::tupleToIndex(vector<Var*> variables, vector<uns
 }
 
 //---------------------------------------------------------------------------
-mulcrit::Solution mulcrit::MultiWCSP::getSolution()
+mulcrit::Solution mulcrit::MultiCFN::getSolution()
 {
 
     if (!_sol_extraction) {
@@ -747,7 +747,7 @@ mulcrit::Solution mulcrit::MultiWCSP::getSolution()
 }
 
 //---------------------------------------------------------------------------
-vector<Double> mulcrit::MultiWCSP::getSolutionValues()
+vector<Double> mulcrit::MultiCFN::getSolutionValues()
 {
 
     if (!_sol_extraction) {
@@ -759,7 +759,7 @@ vector<Double> mulcrit::MultiWCSP::getSolutionValues()
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::extractSolution()
+void mulcrit::MultiCFN::extractSolution()
 {
 
     _solution.clear();
@@ -821,12 +821,12 @@ void mulcrit::MultiWCSP::extractSolution()
     // cout << "check sum: " << check_sum << endl;
 
     if (ToulBar2::verbose >= 0 && fabs(_wcsp->Cost2ADCost(optimum) - check_sum) >= Pow(1.l, (Double)-_tb2_decimalpoint)) {
-        cout << "Warning: non consistent solution costs between WCSP and MultiWCSP representations: " << to_string(_wcsp->Cost2ADCost(optimum)) << " and " << to_string(check_sum) << endl;
+        cout << "Warning: non consistent solution costs between WCSP and MultiCFN representations: " << to_string(_wcsp->Cost2ADCost(optimum)) << " and " << to_string(check_sum) << endl;
     }
 }
 
 //---------------------------------------------------------------------------
-std::vector<Double> mulcrit::MultiWCSP::computeSolutionValues(Solution& solution)
+std::vector<Double> mulcrit::MultiCFN::computeSolutionValues(Solution& solution)
 {
 
     vector<Double> obj_values;
@@ -860,7 +860,7 @@ std::vector<Double> mulcrit::MultiWCSP::computeSolutionValues(Solution& solution
 }
 
 //---------------------------------------------------------------------------
-mulcrit::Solution mulcrit::MultiWCSP::convertToSolution(std::vector<Value>& solution)
+mulcrit::Solution mulcrit::MultiCFN::convertToSolution(std::vector<Value>& solution)
 {
 
     Solution res;
@@ -875,7 +875,7 @@ mulcrit::Solution mulcrit::MultiWCSP::convertToSolution(std::vector<Value>& solu
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiWCSP::print(ostream& os)
+void mulcrit::MultiCFN::print(ostream& os)
 {
 
     os << "n variables: " << nbVariables() << endl;
@@ -922,9 +922,9 @@ void mulcrit::MultiWCSP::print(ostream& os)
 }
 
 //---------------------------------------------------------------------------
-mulcrit::Var::Var(mulcrit::MultiWCSP* multiwcsp)
+mulcrit::Var::Var(mulcrit::MultiCFN* multicfn)
 {
-    this->multiwcsp = multiwcsp;
+    this->multicfn = multicfn;
 }
 
 //---------------------------------------------------------------------------
@@ -949,9 +949,9 @@ void mulcrit::Var::print(ostream& os)
 }
 
 //---------------------------------------------------------------------------
-mulcrit::CostFunction::CostFunction(MultiWCSP* multiwcsp)
+mulcrit::CostFunction::CostFunction(MultiCFN* multicfn)
 {
-    this->multiwcsp = multiwcsp;
+    this->multicfn = multicfn;
 }
 
 //---------------------------------------------------------------------------
@@ -960,7 +960,7 @@ void mulcrit::CostFunction::print(ostream& os)
 
     os << name << ": {";
     for (unsigned int i = 0; i < scope.size(); i++) {
-        os << multiwcsp->var[scope[i]].name;
+        os << multicfn->var[scope[i]].name;
         if (i < scope.size() - 1) {
             os << ", ";
         } else {
@@ -997,10 +997,10 @@ Double mulcrit::CostFunction::getCost(vector<unsigned int>& tuple)
 
         vector<Var*> variables;
         for (auto& var_ind : scope) {
-            variables.push_back(&multiwcsp->var[var_ind]);
+            variables.push_back(&multicfn->var[var_ind]);
         }
 
-        res = costs[multiwcsp->tupleToIndex(variables, tuple)];
+        res = costs[multicfn->tupleToIndex(variables, tuple)];
     }
 
     return res;

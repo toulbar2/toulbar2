@@ -848,12 +848,12 @@ class MultiCFN:
     """pytoulbar2 base class used to combine linearly multiple CFN.
     
     Members:
-        Multi_CFN (MultiWCSP): python interface to C++ class MultiWCSP.
+        MultiCFN: python interface to C++ class MultiCFN.
     
     """
     def __init__(self):
 
-        self.MultiCFN = tb2.MultiWCSP()
+        self.MultiCFN = tb2.MultiCFN()
 
         return
 
