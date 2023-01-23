@@ -93,7 +93,8 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
     multicfn->setWeight(_first_cfn_index, weights.first);
     multicfn->setWeight(_second_cfn_index, weights.second);
 
-    tb2init();
+    // ToulBar2::verbose = -1;
+    // tb2init();
 
     // WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
@@ -587,7 +588,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned in
     _points.clear();
     _weights.clear();
 
-    tb2init();
+    // tb2init();
 
     // ToulBar2::verbose = -1;
 
