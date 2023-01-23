@@ -495,7 +495,7 @@ public:
     static const int DIETAG = 2; // MPI tag value for stop working
     static const int IDLETAG = 3; // MPI tag value for no more working
 #endif
-    static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound, WeightedCSP* wcsp = nullptr); ///< \brief WeightedCSP Solver factory
+    static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound, WeightedCSP* wcsp = NULL); ///< \brief WeightedCSP Solver factory
 
     virtual ~WeightedCSPSolver() {}
 
@@ -596,7 +596,6 @@ public:
     /// \param cmd command line argument for PILS local search solver (cmd format: nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC nbEvalMax strengthMin strengthMax incrFactor decrFactor)
     /// \warning cannot solve problems with non-binary cost functions
     virtual Cost pils(string cmd, vector<Value>& solution) = 0;
-
 
     /// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its

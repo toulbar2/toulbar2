@@ -236,10 +236,7 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
     Cost gap = wcsp->getUb() - wcsp->getLb();
     int nbconst_ = 0;
     for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-        if (wcsp->getCtr(i)->connected() &&
-            !wcsp->getCtr(i)->isSep() &&
-            wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary &&
-            wcsp->getCtr(i)->getDomainSizeProduct() <= MAX_NB_TUPLES) {
+        if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && wcsp->getCtr(i)->arity() <= ToulBar2::preprocessNary && wcsp->getCtr(i)->getDomainSizeProduct() <= MAX_NB_TUPLES) {
             int arity = 0;
             for (int j = 0; j < wcsp->getCtr(i)->arity(); j++)
                 if (wcsp->getCtr(i)->getVar(j)->unassigned())
@@ -529,7 +526,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
         // boucle sur les essais
         for (int nessai = 0; nessai < nbessais; nessai++) {
             if (ToulBar2::interrupted) {
-              throw TimeOut();
+                throw TimeOut();
             }
             executer_essai(problem, algo, population, taille, graine1, nessai, &initconfig);
             if (wcsp->getLb() + problem->best_config->valuation < upperbound) {

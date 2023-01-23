@@ -57,10 +57,9 @@ namespace py = pybind11;
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 #include "search/tb2solver.hpp"
-
 #include "core/tb2wcsp.hpp"
-#include "mulcrit/multiwcsp.hpp"
-#include "mulcrit/bicriteria.hpp"
+#include "mcriteria/multicfn.hpp"
+#include "mcriteria/bicriteria.hpp"
 
 PYBIND11_MODULE(pytb2, m)
 {
@@ -245,29 +244,26 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite("upper", &BoundedObjValue::upper)
         .def_readwrite("lower", &BoundedObjValue::lower);
 
-
-
-    py::class_<mulcrit::MultiWCSP>(m, "MultiWCSP")
+    py::class_<mulcrit::MultiCFN>(m, "MultiCFN")
         .def(py::init())
-        .def("push_back", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp, double weight) { multiwcsp.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
-        .def("setWeight", &mulcrit::MultiWCSP::setWeight)
-        .def("nbNetworks", &mulcrit::MultiWCSP::nbNetworks)
-        .def("nbVariables", &mulcrit::MultiWCSP::nbVariables)
-        .def("getNetworkName", &mulcrit::MultiWCSP::getNetworkName)
-        .def("print", [](mulcrit::MultiWCSP& multiwcsp) { multiwcsp.print(cout); } )
-        .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp) { return multiwcsp.makeWeightedCSP(); })
-        .def("makeWeightedCSP", [](mulcrit::MultiWCSP& multiwcsp, WeightedCSP* wcsp) { multiwcsp.makeWeightedCSP(wcsp); })
-        .def("getSolution", &mulcrit::MultiWCSP::getSolution)
-        .def("getSolutionValues", &mulcrit::MultiWCSP::getSolutionValues)
-        .def("computeSolutionValues", &mulcrit::MultiWCSP::computeSolutionValues)
-        .def("convertToSolution", &mulcrit::MultiWCSP::convertToSolution);
-
+        .def("push_back", [](mulcrit::MultiCFN& multicfn, WeightedCSP* wcsp, double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
+        .def("setWeight", &mulcrit::MultiCFN::setWeight)
+        .def("nbNetworks", &mulcrit::MultiCFN::nbNetworks)
+        .def("nbVariables", &mulcrit::MultiCFN::nbVariables)
+        .def("getNetworkName", &mulcrit::MultiCFN::getNetworkName)
+        .def("print", [](mulcrit::MultiCFN& multicfn) { multicfn.print(cout); })
+        .def("makeWeightedCSP", [](mulcrit::MultiCFN& multicfn) { return multicfn.makeWeightedCSP(); })
+        .def("makeWeightedCSP", [](mulcrit::MultiCFN& multicfn, WeightedCSP* wcsp) { multicfn.makeWeightedCSP(wcsp); })
+        .def("getSolution", &mulcrit::MultiCFN::getSolution)
+        .def("getSolutionValues", &mulcrit::MultiCFN::getSolutionValues)
+        .def("computeSolutionValues", &mulcrit::MultiCFN::computeSolutionValues)
+        .def("convertToSolution", &mulcrit::MultiCFN::convertToSolution);
 
     py::class_<mulcrit::Bicriteria> bcrit(m, "Bicriteria");
-    
-    bcrit.def("computeSupportedPoints", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, Double delta) { mulcrit::Bicriteria::computeSupportedPoints(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), delta); }, py::arg("optim_dir"), py::arg("delta") = 1e-3)
-        .def("computeAdditionalSolutions", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { mulcrit::Bicriteria::computeAdditionalSolutions(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
-        .def("computeNonSupported", [](mulcrit::MultiWCSP* multiwcsp, py::tuple optim_dir, unsigned int nbLimit) {mulcrit::Bicriteria::computeNonSupported(multiwcsp, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
+
+    bcrit.def("computeSupportedPoints", [](mulcrit::MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { mulcrit::Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"),  py::arg("optim_dir"), py::arg("delta") = 1e-3)
+        .def("computeAdditionalSolutions", [](mulcrit::MultiCFN* multicfn, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { mulcrit::Bicriteria::computeAdditionalSolutions(multicfn, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
+        .def("computeNonSupported", [](mulcrit::MultiCFN* multicfn, py::tuple optim_dir, unsigned int nbLimit) { mulcrit::Bicriteria::computeNonSupported(multicfn, std::make_pair(optim_dir[0].cast<mulcrit::Bicriteria::OptimDir>(), optim_dir[1].cast<mulcrit::Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
         .def("getSolutions", &mulcrit::Bicriteria::getSolutions)
         .def("getPoints", &mulcrit::Bicriteria::getPoints)
         .def("getWeights", &mulcrit::Bicriteria::getWeights);
@@ -278,7 +274,7 @@ PYBIND11_MODULE(pytb2, m)
         .export_values();
 
     py::class_<WeightedCSP>(m, "WCSP")
-        .def(py::init([](Cost ub) { return WeightedCSP::makeWeightedCSP(ub); })) // create this object to interface with the multiwcsp class
+        .def(py::init([](Cost ub) { return WeightedCSP::makeWeightedCSP(ub); })) // create this object to interface with the multicfn class
         .def("getIndex", &WeightedCSP::getIndex)
         .def("getName", (string(WeightedCSP::*)() const) & WeightedCSP::getName)
         .def("setName", &WeightedCSP::setName)
@@ -454,7 +450,7 @@ PYBIND11_MODULE(pytb2, m)
         });
 
     py::class_<WeightedCSPSolver>(m, "Solver")
-        .def(py::init([](Cost ub, WeightedCSP* wcsp = nullptr) {
+        .def(py::init([](Cost ub, WeightedCSP* wcsp) {
             ToulBar2::startCpuTime = cpuTime();
             ToulBar2::startRealTime = realTime();
             initCosts();

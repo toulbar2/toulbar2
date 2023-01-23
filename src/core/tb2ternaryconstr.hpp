@@ -542,9 +542,9 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
-        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
-        assert(std::all_of(deltaCostsZ.begin(), deltaCostsZ.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c) { return c == MIN_COST; }));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c) { return c == MIN_COST; }));
+        assert(std::all_of(deltaCostsZ.begin(), deltaCostsZ.end(), [](Cost c) { return c == MIN_COST; }));
         unsigned int vx = x->toIndex(vxi);
         unsigned int vy = y->toIndex(vyi);
         unsigned int vz = z->toIndex(vzi);
@@ -567,9 +567,9 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c){return c == MIN_COST;}));
-        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c){return c == MIN_COST;}));
-        assert(std::all_of(deltaCostsZ.begin(), deltaCostsZ.end(), [](Cost c){return c == MIN_COST;}));
+        assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c) { return c == MIN_COST; }));
+        assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c) { return c == MIN_COST; }));
+        assert(std::all_of(deltaCostsZ.begin(), deltaCostsZ.end(), [](Cost c) { return c == MIN_COST; }));
         unsigned int vindex[3];
         unsigned int vx = xin->toIndex(vxi);
         unsigned int vy = yin->toIndex(vyi);

@@ -242,8 +242,8 @@ public:
     //    void permute( EnumeratedVariable** scope_in );
 
     void projectxy(EnumeratedVariable* x, EnumeratedVariable* y, TUPLES& fproj);
-    void projectxyz( EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, TUPLES& fproj);
-    void preproject3(TernaryConstraint *ctr);
+    void projectxyz(EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, TUPLES& fproj);
+    void preproject3(TernaryConstraint* ctr);
     void preprojectall2();
 
     void assign(int varIndex);

@@ -34,7 +34,10 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub, WeightedCSP
 {
     WeightedCSPSolver* solver = NULL;
 
-    bool default_solver = false;
+    if (wcsp != NULL && ToulBar2::searchMethod != DFBB) {
+        cerr << "Error: provided WeightedCSP object not taken into account by this solver method " << ToulBar2::searchMethod << endl;
+        throw BadConfiguration();
+    }
 
     switch (ToulBar2::searchMethod) {
     case VNS:
@@ -74,21 +77,14 @@ WeightedCSPSolver* WeightedCSPSolver::makeWeightedCSPSolver(Cost ub, WeightedCSP
         break;
     default:
         solver = new Solver(ub, wcsp);
-        default_solver = true;
         break;
     };
-
-    if(wcsp != nullptr && !default_solver) {
-        cerr << "Error: provided WeightedCSP object will be ignored by the solver." << endl;
-        throw BadConfiguration();
-    }
-
     return solver;
 }
 
-
 Solver::Solver(Cost initUpperBound, WeightedCSP* wcsp)
-    : nbNodes(0)
+    : self_wcsp(true)
+    , nbNodes(0)
     , nbBacktracks(0)
     , nbBacktracksLimit(LONGLONG_MAX)
     , wcsp(NULL)
@@ -126,16 +122,14 @@ Solver::Solver(Cost initUpperBound, WeightedCSP* wcsp)
 #endif
 {
     searchSize = new StoreInt(0);
-    
-    if(wcsp == nullptr) {
+
+    if (wcsp == NULL) {
         this->wcsp = WeightedCSP::makeWeightedCSP(initUpperBound, (void*)this);
-        self_wcsp = true;
     } else { /* the provided wcsp will be solved */
         self_wcsp = false;
         this->wcsp = wcsp;
         dynamic_cast<WCSP*>(wcsp)->setSolver((void*)this);
     }
-    
 }
 
 Solver::~Solver()
@@ -147,11 +141,11 @@ Solver::~Solver()
         delete allVars[i];
     }
 
-    // if the wcsp has been created internally, then it is deleted
-    if(self_wcsp) {
+    // if the wcsp has been created internally, then it is deleted else must be done by the user
+    if (self_wcsp) {
         delete wcsp;
     }
-    
+
     delete ((StoreInt*)searchSize);
 }
 
@@ -292,8 +286,10 @@ void Solver::read_solution(const char* filename, bool updateValueHeuristic)
     } else {
         if (ToulBar2::verbose >= 0) {
             if (ToulBar2::bayesian) {
-                cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" <<" energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << endl;
-                if (ToulBar2::uaieval) cout << "Energy_log10: " << (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log)/log(10) << endl;
+                cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")"
+                     << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) << " prob: " << std::scientific << wcsp->Cost2Prob(wcsp->getLb() + wcsp->getNegativeLb()) * Exp(ToulBar2::markov_log) << std::fixed << endl;
+                if (ToulBar2::uaieval)
+                    cout << "Energy_log10: " << (wcsp->Cost2LogProb(wcsp->getLb() + wcsp->getNegativeLb()) + ToulBar2::markov_log) / log(10) << endl;
             } else {
                 cout << " Input solution cost: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (nb. of unassigned variables: " << wcsp->numberOfUnassignedVariables() << ")" << endl;
             }
@@ -806,8 +802,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         //double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
         if ((varIndex < 0)
-                || (heuristic < best - epsilon * best)
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            || (heuristic < best - epsilon * best)
+            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -2385,7 +2381,7 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         throw BadConfiguration();
     }
-    if ((ToulBar2::hve<=0 || ToulBar2::pwc<0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
+    if ((ToulBar2::hve <= 0 || ToulBar2::pwc < 0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
         cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
@@ -3054,10 +3050,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         if (ToulBar2::verbose >= 1)
             cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
         if (ToulBar2::uaieval) {
-            rewind((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file);
-            fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "PR\n");
-            fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
-            fprintf((ToulBar2::writeSolution)?ToulBar2::solutionFile:ToulBar2::solution_uai_file, "\n");
+            rewind((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file);
+            fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "PR\n");
+            fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
+            fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "\n");
         }
         cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
         cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;

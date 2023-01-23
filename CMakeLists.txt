@@ -135,7 +135,9 @@ MARK_AS_ADVANCED(FORCE Default_test_option Default_test_timeout Default_validati
 # static building
 ##########################################
 IF(STATIC)
-  MESSAGE(STATUS "STATIC COMPILATION ON (warning: MPI option not compliant with static link)")
+  MESSAGE(STATUS "STATIC COMPILATION ON (warning: jemalloc, xml, and MPI options not compliant with static link)")
+  SET(WITH_MEM_JEMALLOC OFF)
+  SET(XML OFF)
   SET(MPI OFF)
   set(Boost_USE_STATIC_LIBS ON)  # only find static libs
   SET(BUILD_SHARED_LIBS OFF)
@@ -216,13 +218,12 @@ IF(PYTB2)
   MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 
   if(EXISTS "${Python3_EXECUTABLE}-config")
-	 SET(Python3_config "${Python3_EXECUTABLE}-config")
+    SET(Python3_config "${Python3_EXECUTABLE}-config")
+    EXECUTE_PROCESS(COMMAND ${Python3_config} --extension-suffix OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
   else()
-	 SET(Python3_config "${Python3_EXECUTABLE}3-config")
+    EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE} -c "import sysconfig;print(sysconfig.get_config_var('EXT_SUFFIX'))" OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
-	  
-  EXECUTE_PROCESS(COMMAND ${Python3_config} --extension-suffix 
-  OUTPUT_VARIABLE Python3_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
 
   EXECUTE_PROCESS(

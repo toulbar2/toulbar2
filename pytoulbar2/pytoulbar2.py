@@ -453,9 +453,9 @@ class CFN:
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
         """
-        if incremental and model is not 'binary':
+        if incremental and model != 'binary':
             raise RuntimeError("Implementation of AllDifferent constraint requires 'binary' encoding in incremental mode!")
-        if excepted is not None and model is not 'binary':
+        if excepted is not None and model != 'binary':
             raise RuntimeError("Excepted domain values in AllDifferent constraint requires 'binary' encoding!")
         sscope = set(scope)
         if len(scope) != len(sscope):
@@ -653,6 +653,27 @@ class CFN:
 
         """
         return self.CFN.getDDualBound()
+
+    def GetName(self):
+        """GetName get the name of the CFN.
+
+        Returns:
+            Name of the CFN (string).
+        """
+
+        return self.CFN.wcsp.getName(name)
+
+    def SetName(self, name):
+        """SetName set the name of the CFN.
+
+        Args:
+            name (str): the new name of the CFN.
+
+        """
+
+        self.CFN.wcsp.setName(name)
+
+        return
 
     def NoPreprocessing(self):
         """NoPreprocessing deactivates most preprocessing methods.
@@ -911,3 +932,117 @@ class CFN:
 
         """
         self.CFN.wcsp.whenContradiction()
+
+    def InitFromMultiCFN(self, multicfn):
+        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFN).
+
+        Args:
+            multicfn (MultiCFN): the instance containing the CFNs.
+            
+        Note:
+            After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
+
+        """
+
+        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp)
+
+        return
+
+class MultiCFN:
+    """pytoulbar2 base class used to combine linearly multiple CFN.
+    
+    Members:
+        MultiCFN: python interface to C++ class MultiCFN.
+    
+    """
+    def __init__(self):
+
+        self.MultiCFN = tb2.MultiCFN()
+
+        return
+
+    
+    def PushCFN(self, CFN, weight=1.0):
+        """PushCFN add a CFN to the instance.
+
+        Args:
+            CFN (CFN): the new CFN to add.
+            weight (float): the initial weight of the CFN in the combination.
+
+        """
+
+        if CFN.UbInit is not None:
+            CFN.SetUB(CFN.UbInit) # might throw a contradiction
+
+        # this should be done in the CFN class, but the update occurs only when solving the problem
+        # this is because DoubletoCost function depends on the negCost and LB, which may be updated when adding cost functions
+        # if CFN.UbInit is not None:
+            # CFN.integercost = CFN.CFN.wcsp.DoubletoCost(CFN.UbInit)
+            # CFN.CFN.wcsp.updateUb(CFN.integercost)
+
+        self.MultiCFN.push_back(CFN.CFN.wcsp, weight)
+
+
+    def SetWeight(self, cfn_index, weight):
+        """SetWeight set a weight of a CFN.
+
+        Args:
+            cfn_index (int): index of the CFN (in addition order).
+            weight (float): the new weight of the CFN.
+
+        """
+
+        self.MultiCFN.setWeight(cfn_index, weight)
+
+    def GetSolution(self):
+        """GetSolution returns the solution of a the combined cfn after being solved.
+
+        Returns:
+            The solution of the cfn (dic).
+
+        """
+
+        return self.MultiCFN.getSolution()
+
+
+    def GetSolutionCosts(self):
+        """GetSolutionCosts returns the costs of the combined cfn after being solved.
+
+        Returns:
+            The costs of the solution of the cfn (list).
+
+        """
+
+        return self.MultiCFN.getSolutionValues()
+
+    def ApproximateParetoFront(self, first_criterion, first_direction, second_criterion, second_direction):
+        """ApproximateParetoFront returns the set of supported solutions of the problem on two criteria (on the convex hull of the non dominated solutions).
+        
+        Args:
+            first_criterion (int): index of the first CFN to optimize.
+            first_direction (str): direction of the first criterion: 'min' or 'max'.
+            second_criterion (int): index of the second CFN to optimize.
+            first_directop, (str): direction of the second criterion: 'min' or 'max'.
+
+        Returns:
+            The non dominated solutions belonging to the convex hull of the pareto front and their costs (tuple).
+
+        """
+
+        optim_dir_first = (tb2.Bicriteria.OptimDir.Min if first_direction == 'min'  else tb2.Bicriteria.OptimDir.Max)
+        optim_dir_second = (tb2.Bicriteria.OptimDir.Min if second_direction == 'min' else tb2.Bicriteria.OptimDir.Max)
+
+        tb2.option.verbose = -1
+
+        tb2.Bicriteria.computeSupportedPoints(self.MultiCFN, first_criterion, second_criterion, (optim_dir_first,optim_dir_second))
+        # tb2.Bicriteria.computeNonSupported(self.MultiCFN, (optim_dir_first,optim_dir_second), 500)
+
+        return (tb2.Bicriteria.getSolutions(), tb2.Bicriteria.getPoints()) 
+
+
+    def Print(self):
+        """Print print the content of the multiCFN: variables, cost functions.
+
+        """
+
+        self.MultiCFN.print()

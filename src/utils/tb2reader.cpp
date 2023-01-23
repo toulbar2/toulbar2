@@ -2933,7 +2933,7 @@ void WCSP::read_uai2008(const char* fileName)
             }
             if (ToulBar2::verbose >= 3)
                 cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
-            scopes.push_back({i,j,k});
+            scopes.push_back({ i, j, k });
         } else if (arity == 2) {
             file >> i;
             file >> j;
@@ -2943,7 +2943,7 @@ void WCSP::read_uai2008(const char* fileName)
                 cerr << "Error: binary cost function with only one variable in its scope!" << endl;
                 throw WrongFileFormat();
             }
-            scopes.push_back({i,j});
+            scopes.push_back({ i, j });
         } else if (arity == 1) {
             file >> i;
             if (ToulBar2::verbose >= 3)
@@ -2951,7 +2951,7 @@ void WCSP::read_uai2008(const char* fileName)
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = (EnumeratedVariable*)vars[i];
             unaryconstrs.push_back(unaryconstr);
-            scopes.push_back({i});
+            scopes.push_back({ i });
         } else if (arity == 0) {
             scopes.push_back({});
         }
@@ -3072,7 +3072,7 @@ void WCSP::read_uai2008(const char* fileName)
 
         default: {
             int nctridx = postNaryConstraintBegin(scopes[ictr], MIN_COST, LONGLONG_MAX);
-            NaryConstraint* nctr = (NaryConstraint *) getCtr(nctridx);
+            NaryConstraint* nctr = (NaryConstraint*)getCtr(nctridx);
             assert(nctr->isNary());
             unsigned int j = 0;
             nctr->firstlex();
@@ -3115,7 +3115,7 @@ void WCSP::read_uai2008(const char* fileName)
         } else if (tmpname.find(".LG") != std::string::npos) {
             tmpname.replace(tmpname.find(".LG"), tmpname.length(), ".LG");
         }
-        if(!(ToulBar2::uaieval) ) {
+        if (!(ToulBar2::uaieval)) {
             string strevid(string(tmpname) + string(".evid"));
             fevid.open(strevid.c_str());
             if (ToulBar2::verbose >= 0)
@@ -3480,17 +3480,17 @@ void WCSP::read_wcnf(const char* fileName)
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
-//#ifdef CLAUSE2KNAPSACK
-//            if (CUT(MULT(cost, K), getUb())) {
-//                postKnapsackConstraint(scopeIndex,arity,file,false,false,false,tup);
-//            } else {
-//#endif
+            //#ifdef CLAUSE2KNAPSACK
+            //            if (CUT(MULT(cost, K), getUb())) {
+            //                postKnapsackConstraint(scopeIndex,arity,file,false,false,false,tup);
+            //            } else {
+            //#endif
             int index = postNaryConstraintBegin(scopeIndex, MIN_COST, 1);
             postNaryConstraintTuple(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
-//#ifdef CLAUSE2KNAPSACK
-//            }
-//#endif
+            //#ifdef CLAUSE2KNAPSACK
+            //            }
+            //#endif
         } else if (arity == 3) {
             vector<Cost> costs;
             for (int a = 0; a < 2; a++) {

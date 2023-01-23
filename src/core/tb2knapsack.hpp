@@ -1516,7 +1516,7 @@ public:
     void propagate() override
     {
         if (ToulBar2::interrupted) {
-          throw TimeOut();
+            throw TimeOut();
         }
         // propagates from scratch the constraint
         if (connected()) {
@@ -1660,7 +1660,7 @@ public:
 
                                     for (int i = 0; i < carity; ++i) {
                                         if (ToulBar2::interrupted) {
-                                          throw TimeOut();
+                                            throw TimeOut();
                                         }
                                         NewProfforDyn = ProfforDyn;
                                         NewWeightforDyn = WeightforDyn;

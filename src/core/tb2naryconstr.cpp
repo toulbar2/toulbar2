@@ -1120,8 +1120,8 @@ void NaryConstraint::project(EnumeratedVariable* x)
         dacindex++;
     }
     assert(dacindex == arity_ - 1 || scope_dac[dacindex] == x);
-    for ( ; dacindex < arity_ - 1; dacindex++) {
-        scope_dac[dacindex] = scope_dac[dacindex+1];
+    for (; dacindex < arity_ - 1; dacindex++) {
+        scope_dac[dacindex] = scope_dac[dacindex + 1];
     }
 
     if (x->unassigned()) {
@@ -1135,28 +1135,28 @@ void NaryConstraint::project(EnumeratedVariable* x)
 
 // Projects out all variables except x,y,z
 // and gives the result at fproj
-void NaryConstraint::projectxyz( EnumeratedVariable* x,
-        EnumeratedVariable* y,
-        EnumeratedVariable* z,
-        TUPLES& fproj)
+void NaryConstraint::projectxyz(EnumeratedVariable* x,
+    EnumeratedVariable* y,
+    EnumeratedVariable* z,
+    TUPLES& fproj)
 {
-    assert(CUT(default_cost,wcsp->getUb()));
+    assert(CUT(default_cost, wcsp->getUb()));
     static Tuple t;
-    Tuple txyz(3,0);
+    Tuple txyz(3, 0);
     Cost c;
-    TUPLES::iterator  itproj;
+    TUPLES::iterator itproj;
 
     // compute in one pass of all tuples the projection
     first();
-    while(next(t,c)) {
+    while (next(t, c)) {
         if (c == default_cost)
             continue;
-        txyz[0] = t[ getIndex(x) ];
-        txyz[1] = t[ getIndex(y) ];
-        txyz[2] = t[ getIndex(z) ];
+        txyz[0] = t[getIndex(x)];
+        txyz[1] = t[getIndex(y)];
+        txyz[2] = t[getIndex(z)];
         itproj = fproj.find(txyz);
-        if(itproj != fproj.end()) {
-            if(c < itproj->second)
+        if (itproj != fproj.end()) {
+            if (c < itproj->second)
                 fproj[txyz] = c;
         } else {
             fproj[txyz] = c;
@@ -1165,14 +1165,14 @@ void NaryConstraint::projectxyz( EnumeratedVariable* x,
 
     // finally we subtract the projection from the initial function
     first();
-    while(next(t,c)) {
+    while (next(t, c)) {
         if (c == default_cost)
             continue;
-        txyz[0] = t[ getIndex(x) ];
-        txyz[1] = t[ getIndex(y) ];
-        txyz[2] = t[ getIndex(z) ];
+        txyz[0] = t[getIndex(x)];
+        txyz[1] = t[getIndex(y)];
+        txyz[2] = t[getIndex(z)];
         itproj = fproj.find(txyz);
-        if(itproj != fproj.end()) {
+        if (itproj != fproj.end()) {
             assert(CUT(c, itproj->second));
             //        if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
             if (pf)
@@ -1234,7 +1234,7 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
     }
 }
 
-void NaryConstraint::preproject3(TernaryConstraint *ctr)
+void NaryConstraint::preproject3(TernaryConstraint* ctr)
 {
     EnumeratedVariable* x = (EnumeratedVariable*)ctr->getVar(0);
     assert(getIndex(x) >= 0);
@@ -1282,8 +1282,8 @@ void NaryConstraint::preprojectall2()
     assert(connected());
     assert(CUT(default_cost, wcsp->getUb()));
 
-    for (int i=0; i<arity_; i++) {
-        for (int j=i+1; j<arity_; j++) {
+    for (int i = 0; i < arity_; i++) {
+        for (int j = i + 1; j < arity_; j++) {
             EnumeratedVariable* x = scope_dac[i]; // (EnumeratedVariable*)wcsp->getVar((*it1).first);
             EnumeratedVariable* y = scope_dac[j]; // (EnumeratedVariable*)wcsp->getVar((*it2).first);
 
@@ -1429,7 +1429,7 @@ void NaryConstraint::print(ostream& os)
                         product /= scope[i]->getDomainInitSize();
                         os << scope[i]->toValue(tvalues / product);
                         tvalues %= product;
-                        if (i < arity_ -1)
+                        if (i < arity_ - 1)
                             os << ",";
                     }
                     assert(product == 1);
