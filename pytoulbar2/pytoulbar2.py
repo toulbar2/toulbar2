@@ -7,7 +7,7 @@ DESCRIPTION
 
 
 """
-
+from math import isinf
 try :
     import pytoulbar2.pytb2 as tb2
 except :
@@ -289,7 +289,9 @@ class CFN:
             idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0), True)
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
-                if cost > mincost:
+                if (isinf(cost)):
+                    self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, tb2.MAX_COST)
+                elif cost > mincost:
                     self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, int((cost-mincost) * 10 ** tb2.option.decimalPoint))
                 for r in range(len(iscope)):
                     i = len(iscope)-1-r
