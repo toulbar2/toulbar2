@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <cfenv>
 #include <thread>
+#include <iostream>
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
@@ -1173,10 +1174,17 @@ int _tmain(int argc, TCHAR* argv[])
         cout << "  version : " << ToulBar2::version << ", copyright (c) 2006-2022, toulbar2 team" << endl;
     }
 
+///////print command line /////
+  cout <<"cmd: "<< CurrentBinaryPath << "toulbar2 " ;
+	 int counter;
+        for(counter=1;counter<argc;counter++) printf(" %s", argv[counter]);
+  cout << endl;
+////////////////
     // --------------------------simple opt ----------------------
 
     // declare our options parser, pass in the arguments from main
     // as well as our array of valid options.
+    
     CSimpleOpt args(argc, argv, g_rgOptions);
 
     while (args.Next()) {
@@ -2929,6 +2937,8 @@ int _tmain(int argc, TCHAR* argv[])
     }
 
     //TODO: If --show_options then dump ToulBar2 object here
+
+
 
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
