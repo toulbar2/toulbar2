@@ -80,7 +80,6 @@ e.g.:
 
     git clone --branch 1.2.0 https://github.com/toulbar2/toulbar2.git
 
-
 <!-- (_README_5)= -->
 ## Installation from sources
 
