@@ -6431,10 +6431,7 @@ inline pair<Cost, int> WCSP::Decimal2Cost(const string& decimalToken, const unsi
     } else if (decimalToken[pos] == '+') {
         pos = 1;
     } else if ((dot == 2) && decimalToken == "inf") {
-        if (ToulBar2::costMultiplier < 0.0)
-            return pair<Cost, size_t>(-MAX_COST, 0);
-        else
-            return pair<Cost, size_t>(MAX_COST, 0);
+        return pair<Cost, size_t>(MAX_COST, 0);
     }
 
     while ((pos < decimalToken.length()) && (pos <= ToulBar2::decimalPoint + dot)) {
