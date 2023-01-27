@@ -182,7 +182,12 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     }
 #endif
 
-    propagate();
+    if (ToulBar2::bilevel>=2) {
+        deconnect(true);
+        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].push_back(wcspIndex);
+    } else {
+        propagate();
+    }
 }
 
 TernaryConstraint::TernaryConstraint(WCSP* wcsp)

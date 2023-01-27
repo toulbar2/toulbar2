@@ -113,7 +113,8 @@ public:
         assert(posvar < vars.size());
         delta[posvar][wcsp->toIndex(posvar, value)] += cost;
     }
-    Cost getCurrentDelta(); // separator variables may be unassigned
+    Cost getCurrentDeltaUb(); // separator variables may be unassigned, returns sum of maximum delta per variable
+    Cost getCurrentDeltaLb(); // separator variables may be unassigned, returns sum of minimum delta per variable
 
     bool used() { return isUsed; }
 
@@ -173,9 +174,10 @@ public:
     int getId() const { return id; } ///< \brief temporary/final index of the cluster in the current tree decomposition
     void setId(int iid) { id = iid; }
 
-    WCSP* getWCSP() { return wcsp; }
+    WCSP* getWCSP() const { return wcsp; }
+    TreeDecomposition* getTreeDec() const { return td; }
 
-    Separator* getSep() { return sep; }
+    Separator* getSep() const { return sep; }
     void setSep(Separator* sepin) { sep = sepin; }
     int sepSize() const
     {
@@ -222,7 +224,7 @@ public:
     void removeVar(Variable* x);
 
     void setParent(Cluster* p) { parent = p; }
-    Cluster* getParent() { return parent; }
+    Cluster* getParent() const { return parent; }
     TClusters& getEdges() { return edges; }
     void addEdges(TClusters& cls);
     void addEdge(Cluster* c);
@@ -232,7 +234,7 @@ public:
     TClusters& getDescendants() { return descendants; }
     bool isEdge(Cluster* c);
     void accelerateDescendants();
-    bool isDescendant(Cluster* c) { return quickdescendants[c->getId()]; }
+    bool isDescendant(Cluster* c) { return quickdescendants[c->getId()]; } ///< test if c is a descendant of this
 
     void accelerateIntersections();
     void quickIntersection(Cluster* cj, TVars& cjsep);
@@ -257,12 +259,12 @@ public:
     void setUb(Cost c) { ub = c; }
     Cost getLbRDS()
     {
-        Cost delta = getCurrentDelta();
+        Cost delta = getCurrentDeltaUb();
         return MAX(lbRDS - delta, MIN_COST);
     }
     void setLbRDS(Cost c)
     {
-        assert(!sep || sep->getCurrentDelta() == MIN_COST);
+        assert(!sep || sep->getCurrentDeltaUb() == MIN_COST);
         lbRDS = c;
     }
     Cost getLbRec() const;
@@ -273,7 +275,8 @@ public:
         assert(sep);
         sep->addDelta(posvar, value, cost);
     }
-    Cost getCurrentDelta() { return (sep) ? sep->getCurrentDelta() : MIN_COST; }
+    Cost getCurrentDeltaUb() { return (sep) ? sep->getCurrentDeltaUb() : MIN_COST; }
+    Cost getCurrentDeltaLb() { return (sep) ? sep->getCurrentDeltaLb() : MIN_COST; }
 
     void nogoodRec(Cost clb, Cost cub, Solver::OpenList** open = NULL)
     {
@@ -373,6 +376,8 @@ public:
     TCtrs::iterator endCtrs() { return ctrs.end(); }
     TClusters::iterator beginEdges() const { return edges.begin(); }
     TClusters::iterator endEdges() const { return edges.end(); }
+    TClusters::reverse_iterator rbeginEdges() const { return edges.rbegin(); }
+    TClusters::reverse_iterator rendEdges() const { return edges.rend(); }
     TClusters::iterator beginDescendants() { return descendants.begin(); }
     TClusters::iterator endDescendants() { return descendants.end(); }
 

@@ -91,6 +91,29 @@ Long Constraint::getDomainSizeProduct() const
     return cartesianProduct;
 }
 
+/// \return size of the cartesian product of all initial domains in the constraint scope.
+/// \warning use deprecated MAX_DOMAIN_SIZE for performance.
+Long Constraint::getDomainInitSizeProduct() const
+{
+    if (arity() == 0)
+        return 1;
+    Long cartesianProduct = 1;
+    for (int i = 0; i < arity(); i++) {
+// trap overflow numbers
+#if __GNUC__ >= 5
+        if (__builtin_smulll_overflow(cartesianProduct,
+                (getVar(i)->enumerated())?((EnumeratedVariable *)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize(),
+                &cartesianProduct))
+            return LONGLONG_MAX;
+#else
+        if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE)
+            return LONGLONG_MAX;
+        cartesianProduct *= (getVar(i)->enumerated())?((EnumeratedVariable *)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize();
+#endif
+    }
+    return cartesianProduct;
+}
+
 void Constraint::conflict()
 {
     wcsp->conflict();

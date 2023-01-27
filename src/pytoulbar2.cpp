@@ -218,7 +218,8 @@ PYBIND11_MODULE(pytb2, m)
 #endif
         .def_readwrite_static("epsFilename", &ToulBar2::epsFilename)
         .def_readwrite_static("verifyOpt", &ToulBar2::verifyOpt)
-        .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum);
+        .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum)
+        .def_readwrite_static("bilevel", &ToulBar2::bilevel);
     m.def("check", &tb2checkOptions); // should be called after setting the options (and before reading a problem)
 
     py::class_<Store, std::unique_ptr<Store, py::nodelete>>(m, "store")

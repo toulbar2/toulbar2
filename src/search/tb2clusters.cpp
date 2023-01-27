@@ -21,7 +21,12 @@ bool CmpClusterStructBasic::operator()(const Cluster* lhs, const Cluster* rhs) c
 }
 bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
 {
-    return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs->getIndex() < rhs->getIndex()))));
+    if (ToulBar2::bilevel  && lhs->getParent() == lhs->getTreeDec()->getRoot()) {
+        // do not sort clusters by size if bilevel at depth 1 (keep id ordering)
+        return lhs && rhs && (lhs->getIndex() < rhs->getIndex());
+    } else {
+        return lhs && rhs && (lhs->sepSize() < rhs->sepSize() || (lhs->sepSize() == rhs->sepSize() && (lhs->getNbVarsTree() < rhs->getNbVarsTree() || (lhs->getNbVarsTree() == rhs->getNbVarsTree() && lhs->getIndex() < rhs->getIndex()))));
+    }
 }
 
 /*
@@ -108,6 +113,7 @@ void Separator::assign(int varIndex)
         nonassigned = nonassigned - 1;
         assert(nonassigned >= 0);
         if (nonassigned == 0) {
+            if (ToulBar2::bilevel && cluster->getParent() == wcsp->getTreeDec()->getRoot()) return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
             queueSep();
         }
@@ -206,7 +212,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
         cout << t;
         cout << "," << MAX(MIN_COST, clb + deltares) << "," << MAX(MIN_COST, cub + deltares) << ">" << endl;
     }
-    if (open) {
+    if (open && ToulBar2::hbfs) {
         if (*open) {
             // open node list already found => the corresponding nogood has been created before
             assert(itng != nogoods.end());
@@ -228,6 +234,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
             if (ToulBar2::verbose >= 1)
                 cout << " Learn nogood " << nogoods[t].first << ", cub= " << nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         } else {
+            if (ToulBar2::bilevel && ToulBar2::verbose >= 0) cout << "Warning! nogood already solved on cluster " << cluster->getId() << " !?!" << endl;
             itng->second.first = MAX(itng->second.first, clb + deltares);
             itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST) ? deltares : MIN_COST)));
             if (ToulBar2::verbose >= 1)
@@ -331,7 +338,7 @@ void Separator::freeIncS()
     }
 }
 
-Cost Separator::getCurrentDelta()
+Cost Separator::getCurrentDeltaUb()
 {
     int i = 0;
     WCSP* wcsp = cluster->getWCSP();
@@ -353,6 +360,37 @@ Cost Separator::getCurrentDelta()
                         del = delta[i][val];
                 }
                 assert(del > -MAX_COST);
+                sumdelta += del;
+            }
+        }
+        ++it;
+        i++;
+    }
+    return sumdelta;
+}
+
+Cost Separator::getCurrentDeltaLb()
+{
+    int i = 0;
+    WCSP* wcsp = cluster->getWCSP();
+    Cost sumdelta = MIN_COST;
+    TVars::iterator it = vars.begin();
+    while (it != vars.end()) {
+        if (wcsp->assigned(*it)) {
+            tValue val = wcsp->toIndex(*it, wcsp->getValue(*it));
+            sumdelta += delta[i][val];
+        } else {
+            EnumeratedVariable* x = (EnumeratedVariable*)wcsp->getVar(*it);
+            if (wcsp->td->isDeltaModified(x->wcspIndex)) {
+                Cost del = MAX_COST;
+                for (EnumeratedVariable::iterator itx = x->begin(); itx != x->end(); ++itx) {
+                    tValue val = x->toIndex(*itx);
+                    // Cost unaryc = x->getCost(val);
+                    // Could use delta[i][val]-unaryc for pure RDS with only one separator per variable
+                    if (del > delta[i][val])
+                        del = delta[i][val];
+                }
+                assert(del < MAX_COST);
                 sumdelta += del;
             }
         }
@@ -922,6 +960,7 @@ void Cluster::getSolution(TAssign& sol)
     if (!free) {
         for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
             Cluster* cluster = *iter;
+            if (ToulBar2::bilevel && td->getRoot() == this && cluster == *rbeginEdges()) break; // Do not reconstruct solution for NegProblem2
             cluster->getSolution(sol);
         }
     }
@@ -2051,7 +2090,9 @@ void TreeDecomposition::buildFromCovering(string filename)
     ConstraintSet usedctrs;
     //    vector<int> order;
 
-    std::ifstream file(filename.c_str(), std::ios::in);
+    istringstream sfile(filename.c_str());
+    ifstream ffile(filename.c_str(), std::ios::in);
+    istream &file = (ToulBar2::bilevel)? reinterpret_cast<istream&>(sfile) : reinterpret_cast<istream&>(ffile);  // use filename as a string containing an explicit covering when doing bilevel optimization
     string fstr;
     while (getline(file, fstr)) {
         std::istringstream file(fstr);
@@ -2105,7 +2146,9 @@ void TreeDecomposition::buildFromCovering(string filename)
             }
         }
     }
-    file.close();
+    if (!ToulBar2::bilevel) {
+        ffile.close();
+    }
     //    reverse(order.begin(), order.end()); // must return an elimination order, the reverse of a topological order
 
     // buildFromOrderNext(order);

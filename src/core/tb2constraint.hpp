@@ -132,7 +132,8 @@ public:
     virtual void dump_CFN(ostream& os, bool original = true) { os << this << " Unknown constraint!"; }
 
     virtual Long getDomainSizeProduct() const; // warning! return LONGLONG_MAX if overflow occurs
-    virtual Long size() const { return getDomainSizeProduct(); } ///< \brief number of tuples stored by the cost function
+    virtual Long getDomainInitSizeProduct() const; // warning! return LONGLONG_MAX if overflow occurs
+    virtual Long size() const { return getDomainInitSizeProduct(); } ///< \brief number of tuples stored by the cost function
     virtual Long space() const
     {
         Long sz = size();

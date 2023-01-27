@@ -59,6 +59,7 @@ const string PILS_cmd = "3 0 0.333 100 500 10000 0.1 0.5 0.1 0.1";
 // under gdb: p ((BinaryConstraint *) constrs[13])->dump
 // under gdb: p $2(constrs[13], myCout)
 ostream myCout(cout.rdbuf());
+// under gdb: p 'ToulBar2::varOrder'
 
 void conflict() {}
 
@@ -215,6 +216,8 @@ enum {
     OPT_costfuncSeparate,
     NO_OPT_costfuncSeparate,
     OPT_nopre,
+    OPT_bilevel,
+    NO_OPT_bilevel,
 
     // VAC OPTION
     OPT_minsumDiffusion,
@@ -468,6 +471,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costfuncSeparate, (char*)"-dec", SO_NONE },
     { NO_OPT_costfuncSeparate, (char*)"-dec:", SO_NONE },
     { OPT_nopre, (char*)"-nopre", SO_NONE },
+    { OPT_bilevel, (char*)"-bilevel", SO_NONE },
+    { NO_OPT_bilevel, (char*)"-bilevel:", SO_NONE },
     // vac option
     { OPT_vac, (char*)"-A", SO_OPT },
     { NO_OPT_vac, (char*)"-A:", SO_NONE },
@@ -1025,6 +1030,10 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::approximateCountingBTD)
         cout << " (default option)";
     cout << endl;
+    cout << "   -bilevel : bilevel optimization (it requires two input problems in cfn format)";
+    if (ToulBar2::bilevel)
+        cout << " (default option)";
+    cout << endl;
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
     cout << "   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cout << endl;
@@ -1575,6 +1584,18 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::approximateCountingBTD = true;
                 ToulBar2::allSolutions = LONGLONG_MAX;
                 ToulBar2::btdMode = 1;
+            }
+
+            // bilevel optimization
+            if (args.OptionId() == OPT_bilevel) {
+                ToulBar2::bilevel = 1;
+                ToulBar2::btdMode = 1;
+                ToulBar2::hbfs = 0;
+                ToulBar2::hbfsGlobalLimit = 0;
+                ToulBar2::DEE = 0;
+                ToulBar2::elimDegree = -1;
+            } else if (args.OptionId() == NO_OPT_bilevel) {
+                ToulBar2::bilevel = 0;
             }
 
             if (args.OptionId() == OPT_binaryBranching) {
@@ -3019,6 +3040,10 @@ int _tmain(int argc, TCHAR* argv[])
         if (randomproblem)
             solver->read_random(n, m, p, ToulBar2::seed, forceSubModular, randomglobal);
         else {
+            if (ToulBar2::bilevel && strfile.size() != 2) {
+                cerr << "Sorry, bilevel optimization requires two input files in cfn format!" << endl;
+                throw BadConfiguration();
+            }
             if (strfile.size() == 0) {
                 cerr << "No problem file given as input!" << endl;
                 throw BadConfiguration();
@@ -3036,11 +3061,116 @@ int _tmain(int argc, TCHAR* argv[])
                     cerr << "Sorry, multiple problem files must have a file extension which contains either '.wcsp' or '.cfn' or '.xml'!" << endl;
                     throw BadConfiguration();
                 }
+                if (ToulBar2::bilevel && strext.begin()->find(".cfn") == string::npos) {
+                    cerr << "Sorry, bilevel optimization requires input files in cfn format!" << endl;
+                    throw BadConfiguration();
+                }
+                if (ToulBar2::bilevel) {
+                    strfile.push_back(strfile.back()); // read again problem2 as NegP2
+                }
                 for (auto f : strfile) {
+                    if (ToulBar2::bilevel) {
+                        ((WCSP*)solver->getWCSP())->varsBLP.push_back(set<int>());
+                        ((WCSP*)solver->getWCSP())->delayedCtrBLP.push_back(vector<int>());
+                    }
                     globalUb = solver->read_wcsp((char*)f.c_str());
                     if (globalUb <= MIN_COST) {
                         THROWCONTRADICTION;
                     }
+                    if (ToulBar2::bilevel) {
+                        ToulBar2::decimalPointBLP.push_back(ToulBar2::decimalPoint);
+                        if (ToulBar2::decimalPointBLP.back() != ToulBar2::decimalPointBLP.front()) {
+                            cerr << "Sorry, bilevel optimization requires the same precision value in all its input files! " << strfile.front() << " and " << f  << " differ!!"<< endl;
+                            throw WrongFileFormat();
+                        }
+                        ToulBar2::costMultiplierBLP.push_back(ToulBar2::costMultiplier);
+                        if (ToulBar2::bilevel != 3 && ToulBar2::costMultiplierBLP.back() != ToulBar2::costMultiplierBLP.front()) {
+                            cerr << "Sorry, bilevel optimization requires the same objective sense in all its input files! " << strfile.front() << " and " << f  << " differ!!"<< endl;
+                            throw WrongFileFormat();
+                        }
+                        ToulBar2::costMultiplier = UNIT_COST;
+                        ToulBar2::negCostBLP.push_back(solver->getWCSP()->getNegativeLb());
+                        solver->getWCSP()->decreaseLb(-solver->getWCSP()->getNegativeLb()); // reset negCost
+                        assert(solver->getWCSP()->getNegativeLb() == MIN_COST);
+                        ToulBar2::initialLbBLP.push_back(solver->getWCSP()->getLb());
+                        solver->getWCSP()->setLb(MIN_COST);
+                        ToulBar2::initialUbBLP.push_back(solver->getWCSP()->getUb());
+                        solver->getWCSP()->setUb(MAX_COST);
+                        ToulBar2::bilevel++;
+                    }
+                }
+                if (ToulBar2::bilevel) { // deduce a valid covering for tree decomposition
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "\t\t P1\t P2\t NegP2";
+                        cout << endl << "decimalPoint  ";
+                        for (auto value: ToulBar2::decimalPointBLP) {
+                            cout << "\t " << value;
+                        }
+                        cout << endl << "costMultiplier";
+                        for (auto value: ToulBar2::costMultiplierBLP) {
+                            cout << "\t " << value;
+                        }
+                        cout << endl << "negCost       ";
+                        for (auto value: ToulBar2::negCostBLP) {
+                            cout << "\t " << value;
+                        }
+                        cout << endl << "initialLb     ";
+                        for (auto value: ToulBar2::initialLbBLP) {
+                            cout << "\t " << value;
+                        }
+                        cout << endl << "initialUb     ";
+                        for (auto value: ToulBar2::initialUbBLP) {
+                            cout << "\t " << value;
+                        }
+                        cout << endl;
+                    }
+                    assert(ToulBar2::decimalPoint == ToulBar2::decimalPointBLP.front());
+                    ToulBar2::costMultiplier = ToulBar2::costMultiplierBLP.front();
+                    solver->getWCSP()->decreaseLb(ToulBar2::negCostBLP[0] + ToulBar2::negCostBLP[2]); // Problem1.shift + ProblemNeg2.shift
+                    solver->getWCSP()->setLb(ToulBar2::initialLbBLP[0] + ToulBar2::initialLbBLP[2]); // Problem1.lb + ProblemNeg2.lb
+                    solver->getWCSP()->setUb(max(UNIT_COST, ToulBar2::initialUbBLP[0] - (ToulBar2::initialLbBLP[1] - ToulBar2::negCostBLP[1]))); // Problem1.ub - Problem2.lb
+                    string varOrder = "0 -1";
+                    vector<set<int>> &varsBLP = ((WCSP*)solver->getWCSP())->varsBLP;
+                    set<int> intersect;
+                    set_intersection(varsBLP[0].begin(), varsBLP[0].end(), varsBLP[1].begin(), varsBLP[1].end(),
+                                     std::inserter(intersect, intersect.begin()));
+                    for (int v: intersect) {
+                        varOrder += " " + to_string(v);
+                    }
+                    varOrder += "\n1 0";
+                    for (int v: intersect) {
+                        varOrder += " " + to_string(v);
+                    }
+                    set<int> difference1;
+                    set_difference(varsBLP[0].begin(), varsBLP[0].end(), intersect.begin(), intersect.end(),
+                                     std::inserter(difference1, difference1.begin()));
+                    for (int v: difference1) {
+                        varOrder += " " + to_string(v);
+                    }
+                    varOrder += "\n2 0";
+                    for (int v: intersect) {
+                        varOrder += " " + to_string(v);
+                    }
+                    set<int> difference2;
+                    set_difference(varsBLP[1].begin(), varsBLP[1].end(), intersect.begin(), intersect.end(),
+                                     std::inserter(difference2, difference2.begin()));
+                    for (int v: difference2) {
+                        varOrder += " " + to_string(v);
+                    }
+                    varOrder += "\n3 0";
+                    for (int v: intersect) {
+                        varOrder += " " + to_string(v);
+                    }
+                    set<int> difference3;
+                    set_difference(varsBLP[2].begin(), varsBLP[2].end(), intersect.begin(), intersect.end(),
+                                     std::inserter(difference3, difference3.begin()));
+                    for (int v: difference3) {
+                        varOrder += " " + to_string(v);
+                    }
+                    varOrder += "\n";
+                    ToulBar2::varOrder = new char[varOrder.size()+1];
+                    sprintf(ToulBar2::varOrder, "%s", varOrder.c_str());
+                    if (ToulBar2::verbose >= 1) cout << "Build tree decomposition from covering:" << endl << ToulBar2::varOrder << endl;
                 }
             }
         }

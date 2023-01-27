@@ -115,6 +115,9 @@ public:
 
     VACExtension* vac; ///< link to VAC management system
 
+    vector<set<int>> varsBLP; ///< internal sets of variables inside problems (Problem1, Problem2, NegProblem2) waiting for tree decomposition initialization in bilevel optimization
+    vector<vector<int>> delayedCtrBLP; ///< internal lists of deconnected ternary constraints between clusters waiting for tree decomposition initialization in bilevel optimization
+
 #ifdef XMLFLAG
     map<int, int> varsDom; ///< structures for solution translation: we don't have to parse the XML file again
     vector<vector<int>> Doms; ///< structures for solution translation: we don't have to parse the XML file again
@@ -215,7 +218,11 @@ public:
     {
         int i = std::distance(vars.begin(), find_if(vars.begin(), vars.end(), [&s](const Variable* var) { return (var->getName() == s); }));
         assert(i >= 0);
-        return static_cast<unsigned>(i);
+        if (ToulBar2::bilevel == 3 && i >= (int)varsBLP[0].size()) { // Does not find variable names specific to Problem2 when reading NegProblem2
+            return INT_MAX;
+        } else {
+            return static_cast<unsigned int>(i);
+        }
     }
     Value getInf(int varIndex) const { return vars[varIndex]->getInf(); } ///< \brief minimum current domain value
     Value getSup(int varIndex) const { return vars[varIndex]->getSup(); } ///< \brief maximum current domain value
