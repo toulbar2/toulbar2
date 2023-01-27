@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <cfenv>
 #include <thread>
+#include <iostream>
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
@@ -1172,20 +1173,33 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["clusterdec_ext"] = ".dec";
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
-    if (ToulBar2::verbose >= 0) {
-        cout << "c " << CurrentBinaryPath;
+
+ string VER; //  release version
+ string CMD; //  command line option
+ string BIN="toulbar2";
+    if (!(ToulBar2::verbose < 0)) {
+	VER="c "+to_string(CurrentBinaryPath);
 #ifdef MENDELSOFT
-        cout << "mendelsoft";
+	VER.append("mendelsoft");
+	BIN="mendelsoft";
 #else
-        cout << "toulbar2";
+	VER.append("toulbar2");
 #endif
-        cout << "  version : " << ToulBar2::version << ", copyright (c) 2006-2022, toulbar2 team" << endl;
+        VER.append("  version : "+ to_string(ToulBar2::version) + ", copyright (c) 2006-2022, toulbar2 team");
     }
 
+///////print command line /////
+ CMD="cmd: "+ to_string(CurrentBinaryPath)+ BIN;
+	 int counter;
+        for(counter=1;counter<argc;counter++) CMD.append(" "+to_string(argv[counter]));
+  
+
+////////////////
     // --------------------------simple opt ----------------------
 
     // declare our options parser, pass in the arguments from main
     // as well as our array of valid options.
+    
     CSimpleOpt args(argc, argv, g_rgOptions);
 
     while (args.Next()) {
@@ -2193,13 +2207,13 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_verbose) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::verbose = atoi(args.OptionArg());
+		 
                 } else {
                     ToulBar2::verbose = 0;
                 }
                 if (ToulBar2::debug)
                     cout << "verbose level = " << ToulBar2::verbose << endl;
             }
-
             //  z: save problem in wcsp/cfn format in filename \"problem.wcsp/cfn\" (1/3:before, 2/4:current problem after preprocessing)
 
             if (args.OptionId() == OPT_dumpWCSP) {
@@ -2475,6 +2489,12 @@ int _tmain(int argc, TCHAR* argv[])
         _tprintf(_T("Error while globbing files\n"));
         return 1;
     }
+// SHOW VERSION and command line option
+		if (ToulBar2::verbose >=0 ) { 
+		cout << VER << endl;
+		cout << CMD << endl;
+	    }
+
 
     // dump all of the details, the script that was passed on the
     // command line and the expanded file names
@@ -2950,6 +2970,7 @@ int _tmain(int argc, TCHAR* argv[])
     }
 
     //TODO: If --show_options then dump ToulBar2 object here
+
 
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();

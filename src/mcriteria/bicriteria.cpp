@@ -16,6 +16,9 @@ vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
 vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
 vector<mulcrit::Solution> Bicriteria::_solutions = vector<mulcrit::Solution>();
 
+unsigned int Bicriteria::_first_cfn_index = 0;
+unsigned int Bicriteria::_second_cfn_index = 0;
+
 //--------------------------------------------------------------------------------------------
 void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)
 {
@@ -51,13 +54,13 @@ void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)
 //--------------------------------------------------------------------------------------------
 bool Bicriteria::notEqual(Bicriteria::Point p1, Bicriteria::Point p2)
 {
-    return fabs(p1.first - p2.first) >= MultiWCSP::epsilon || fabs(p1.second - p2.second) >= MultiWCSP::epsilon;
+    return fabs(p1.first - p2.first) >= MultiCFN::epsilon || fabs(p1.second - p2.second) >= MultiCFN::epsilon;
 }
 
 //--------------------------------------------------------------------------------------------
 bool Bicriteria::equal(Point p1, Point p2)
 {
-    return fabs(p1.first - p2.first) <= MultiWCSP::epsilon && fabs(p1.second - p2.second) <= MultiWCSP::epsilon;
+    return fabs(p1.first - p2.first) <= MultiCFN::epsilon && fabs(p1.second - p2.second) <= MultiCFN::epsilon;
 }
 
 //--------------------------------------------------------------------------------------------
@@ -67,14 +70,14 @@ bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_di
     unsigned int obj_1 = 0;
     if ((optim_dir.first == Optim_Min && p1.first < p2.first) || (optim_dir.first == Optim_Max && p1.first > p2.first)) {
         obj_1 = 2;
-    } else if (fabs(p1.first - p2.first) <= MultiWCSP::epsilon) {
+    } else if (fabs(p1.first - p2.first) <= MultiCFN::epsilon) {
         obj_1 = 1;
     }
 
     unsigned int obj_2 = 0;
     if ((optim_dir.second == Optim_Min && p1.second < p2.second) || (optim_dir.second == Optim_Max && p1.second > p2.second)) {
         obj_2 = 2;
-    } else if (fabs(p1.second - p2.second) <= MultiWCSP::epsilon) {
+    } else if (fabs(p1.second - p2.second) <= MultiCFN::epsilon) {
         obj_2 = 1;
     }
 
@@ -82,15 +85,17 @@ bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_di
 }
 
 //--------------------------------------------------------------------------------------------
-bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double, Double> weights, Solution* solution, Bicriteria::Point* point)
+bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> weights, Solution* solution, Bicriteria::Point* point)
 {
 
-    cout << "current weights: " << std::setprecision(10) << weights.first << ", " << weights.second << endl;
+    // cout << "current weights: " << std::setprecision(10) << weights.first << ", " << weights.second << endl;
 
-    multiwcsp->setWeight(0, weights.first);
-    multiwcsp->setWeight(1, weights.second);
+    multicfn->setWeight(_first_cfn_index, weights.first);
+    multicfn->setWeight(_second_cfn_index, weights.second);
 
+    // /!\ this initialization restores the state of the solver but also disrupt the user options (such as verbosity level) 
     tb2init();
+    ToulBar2::verbose = -1;
 
     // WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
@@ -102,9 +107,9 @@ bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double, Double> w
     // pb->dump_CFN(file);
     // file.close();
 
-    WeightedCSP* wcsp = multiwcsp->makeWeightedCSP();
+    WeightedCSP* wcsp = multicfn->makeWeightedCSP();
 
-    cout << "n variables in the final wcsp: " << wcsp->numberOfVariables() << ", " << wcsp->numberOfConstraints() << endl;
+    // cout << "n variables in the final wcsp: " << wcsp->numberOfVariables() << ", " << wcsp->numberOfConstraints() << endl;
 
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST, wcsp);
     solver->getWCSP()->sortConstraints();
@@ -116,17 +121,17 @@ bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double, Double> w
     if (result) {
         // cout << "solution found" << endl;
         // combiner.getSolution(solver, &sol_values, solution);
-        sol_values = multiwcsp->getSolutionValues();
+        sol_values = multicfn->getSolutionValues();
 
         if (solution != nullptr) {
-            *solution = multiwcsp->getSolution();
+            *solution = multicfn->getSolution();
         }
 
         if (point != nullptr) {
             *point = make_pair(sol_values[0], sol_values[1]);
         }
 
-        // solver->getMultiWCSPSolution(sol_values);
+        // solver->getMultiFNSolution(sol_values);
     } else {
         // cout << "no solution !" << endl;
     }
@@ -138,7 +143,7 @@ bool Bicriteria::solveScalarization(MultiWCSP* multiwcsp, pair<Double, Double> w
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct)
+void Bicriteria::computeAdditionalSolutions(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct)
 {
 
     tb2init();
@@ -174,14 +179,14 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<
     Double new_lb = _points[solIndex].first * weights.first + _points[solIndex].second * weights.second;
 
     // lower the upper bound if the percentage is not one
-    if (fabs(1. - pct) > MultiWCSP::epsilon) {
+    if (fabs(1. - pct) > MultiCFN::epsilon) {
         new_ub -= (new_ub - new_lb) * (1. - pct);
     }
 
-    multiwcsp->setWeight(0, weights.first);
-    multiwcsp->setWeight(1, weights.second);
+    multicfn->setWeight(0, weights.first);
+    multicfn->setWeight(1, weights.second);
 
-    WeightedCSP* wcsp = multiwcsp->makeWeightedCSP();
+    WeightedCSP* wcsp = multicfn->makeWeightedCSP();
     wcsp->setUb(wcsp->DoubletoCost(new_ub));
 
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST, wcsp);
@@ -198,12 +203,12 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<
         /* compute the solutions and points */
         vector<mulcrit::Solution> sol;
         for (unsigned int ind = 0; ind < tb2_sol.size(); ind++) {
-            sol.push_back(multiwcsp->convertToSolution(tb2_sol[ind].second));
+            sol.push_back(multicfn->convertToSolution(tb2_sol[ind].second));
         }
 
         vector<Point> points;
         for (unsigned int ind = 0; ind < sol.size(); ind++) {
-            vector<Double> values = multiwcsp->computeSolutionValues(sol[ind]);
+            vector<Double> values = multicfn->computeSolutionValues(sol[ind]);
             points.push_back(make_pair(values[0], values[1]));
         }
 
@@ -279,7 +284,7 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiWCSP* multiwcsp, pair<
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int nbLimit)
+void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int nbLimit)
 {
 
     // for all nondominated triangles, compute the list of triangles that will be solved together by solution enumeration
@@ -289,10 +294,10 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
     vector<bool> isTriangle(_solutions.size() - 1, true); // false if the triangle is flat
     for (unsigned int ind = 0; ind < corners.size(); ind++) {
 
-        if (fabs(_points[ind].first - _points[ind + 1].first) <= MultiWCSP::epsilon) {
+        if (fabs(_points[ind].first - _points[ind + 1].first) <= MultiCFN::epsilon) {
             isTriangle[ind] = false;
             continue;
-        } else if (fabs(_points[ind].second - _points[ind + 1].second) <= MultiWCSP::epsilon) {
+        } else if (fabs(_points[ind].second - _points[ind + 1].second) <= MultiCFN::epsilon) {
             isTriangle[ind] = false;
             continue;
         }
@@ -406,10 +411,10 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
         tb2init();
         ToulBar2::allSolutions = nbLimit;
 
-        multiwcsp->setWeight(0, triangleWeights[indTri].first);
-        multiwcsp->setWeight(1, triangleWeights[indTri].second);
+        multicfn->setWeight(0, triangleWeights[indTri].first);
+        multicfn->setWeight(1, triangleWeights[indTri].second);
 
-        WeightedCSP* wcsp = multiwcsp->makeWeightedCSP();
+        WeightedCSP* wcsp = multicfn->makeWeightedCSP();
         wcsp->setUb(wcsp->DoubletoCost(corners[indTri].first * triangleWeights[indTri].first + corners[indTri].second * triangleWeights[indTri].second));
 
         WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST, wcsp);
@@ -429,12 +434,12 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
             /* compute the solutions and points */
             vector<mulcrit::Solution> sol;
             for (unsigned int ind = 0; ind < tb2_sol.size(); ind++) {
-                sol.push_back(multiwcsp->convertToSolution(tb2_sol[ind].second));
+                sol.push_back(multicfn->convertToSolution(tb2_sol[ind].second));
             }
 
             vector<Point> points;
             for (unsigned int indSol = 0; indSol < sol.size(); indSol++) {
-                vector<Double> values = multiwcsp->computeSolutionValues(sol[indSol]);
+                vector<Double> values = multicfn->computeSolutionValues(sol[indSol]);
                 points.push_back(make_pair(values[0], values[1]));
             }
 
@@ -569,16 +574,24 @@ void Bicriteria::computeNonSupported(mulcrit::MultiWCSP* multiwcsp, pair<Bicrite
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta)
+void computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta = 1e-3) {
+    Bicriteria::computeSupportedPoints(multicfn, 0, 1, optim_dir, delta);
+}
+
+//--------------------------------------------------------------------------------------------
+void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta)
 {
+
+    _first_cfn_index = first_cfn_index;
+    _second_cfn_index = second_cfn_index;
 
     _solutions.clear();
     _points.clear();
     _weights.clear();
 
-    tb2init();
+    // tb2init();
 
-    ToulBar2::verbose = -1;
+    // ToulBar2::verbose = -1;
 
     ToulBar2::cfn = true;
 
@@ -596,19 +609,19 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
 
     // cout << endl << endl;
     // cout << "optimizing 1 separately: " << endl;
-    // // point1 = solve_scalarization(multiwcsp, make_pair(lambda1,-0.01), &sol1);
-    // point1 = solve_scalarization(multiwcsp, make_pair(lambda1,0), &sol1);
+    // // point1 = solve_scalarization(multicfn, make_pair(lambda1,-0.01), &sol1);
+    // point1 = solve_scalarization(multicfn, make_pair(lambda1,0), &sol1);
     // cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
 
     // cout << endl << endl;
     // cout << "optimizing 2 separately: " << endl;
-    // // point2 = solve_scalarization(multiwcsp, make_pair(-0.01,lambda2), &sol2);
-    // point2 = solve_scalarization(multiwcsp, make_pair(0,lambda2), &sol2);
+    // // point2 = solve_scalarization(multicfn, make_pair(-0.01,lambda2), &sol2);
+    // point2 = solve_scalarization(multicfn, make_pair(0,lambda2), &sol2);
     // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
     // cout << endl << endl;
 
-    // delta is compared to an internal decimalPoint because ToulBar2::decimalPoint is only initialized when created the final wcsp (makeMultiWCSP)
-    if (log10(delta) > multiwcsp->getDecimalPoint() && ToulBar2::verbose >= 0) {
+    // delta is compared to an internal decimalPoint because ToulBar2::decimalPoint is only initialized when created the final wcsp (makeMultiCFN)
+    if (log10(delta) > multicfn->getDecimalPoint() && ToulBar2::verbose >= 0) {
         cerr << "Error: delta constant (" << delta << ") is incompatible with decimalPoint (" << ToulBar2::decimalPoint << ")" << endl;
     }
 
@@ -616,22 +629,23 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
     Weights weights1, weights2;
 
     // cout << "optimizing 1 separately: " << endl;
-    if (optim_dir.second == Optim_Min) {
+    if (optim_dir.second == Optim_Max) {
         weights1 = make_pair(lambda1, -delta);
     } else {
         weights1 = make_pair(lambda1, delta);
     }
-    result1 = solveScalarization(multiwcsp, weights1, &sol1, &point1);
+    
+    result1 = solveScalarization(multicfn, weights1, &sol1, &point1);
 
     // cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
 
     // cout << "optimizing 2 separately: " << endl;
-    if (optim_dir.first == Optim_Min) {
+    if (optim_dir.first == Optim_Max) {
         weights2 = make_pair(-delta, lambda2);
     } else {
         weights2 = make_pair(delta, lambda2);
     }
-    result2 = solveScalarization(multiwcsp, weights2, &sol2, &point2);
+    result2 = solveScalarization(multicfn, weights2, &sol2, &point2);
 
     // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
     // cout << endl << endl;
@@ -681,7 +695,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
         Point new_point;
 
         Weights new_weights = make_pair(lambda1, lambda2);
-        bool result = solveScalarization(multiwcsp, new_weights, &new_sol, &new_point);
+        bool result = solveScalarization(multicfn, new_weights, &new_sol, &new_point);
 
         // jump to the next weights if there is no solution
         if (!result) {
@@ -704,10 +718,10 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiWCSP* multiwcsp, pair<Bicr
             _solutions.push_back(new_sol);
 
             // add two new scalarizations
-            if (fabs(top.first.first - new_point.first) >= MultiWCSP::epsilon && fabs(top.first.second - new_point.second) >= MultiWCSP::epsilon) {
+            if (fabs(top.first.first - new_point.first) >= MultiCFN::epsilon && fabs(top.first.second - new_point.second) >= MultiCFN::epsilon) {
                 pending.push(make_pair(top.first, new_point));
             }
-            if (fabs(top.second.first - new_point.first) >= MultiWCSP::epsilon && fabs(top.second.second - new_point.second) >= MultiWCSP::epsilon) {
+            if (fabs(top.second.first - new_point.first) >= MultiCFN::epsilon && fabs(top.second.second - new_point.second) >= MultiCFN::epsilon) {
                 pending.push(make_pair(new_point, top.second));
             }
         }

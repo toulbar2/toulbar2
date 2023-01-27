@@ -35,10 +35,11 @@
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
 
-using std::ifstream;
-using std::istringstream;
-using std::greater;
 using std::fixed;
+using std::greater;
+using std::ifstream;
+using std::isinf;
+using std::istringstream;
 using std::setprecision;
 
 #ifdef BOOST
@@ -963,7 +964,11 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
     icosts.resize(dcosts.size());
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
-            icosts[a * y->getDomainInitSize() + b] = (Cost)(round((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
+            if (isinf(dcosts[a * y->getDomainInitSize() + b])) {
+                icosts[a * y->getDomainInitSize() + b] = MAX_COST;
+            } else {
+                icosts[a * y->getDomainInitSize() + b] = (Cost)(round((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
+            }
         }
     }
     negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
@@ -1006,7 +1011,8 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                icosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] = (Cost)(round((dcosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] - minCost) * pow(10, ToulBar2::decimalPoint)));
+                double cost = dcosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c];
+                icosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] = (isinf(cost) ? MAX_COST : (Cost)(round((cost - minCost) * pow(10, ToulBar2::decimalPoint))));
             }
         }
     }
@@ -1440,13 +1446,13 @@ void WCSP::addDivConstraint(vector<Variable*>& divVars, unsigned int distance, m
     for (Variable* x : divVars) {
 
         ex = (EnumeratedVariable*)x;
-        int xId = x->wcspIndex; //index of variable x
+        int xId = x->wcspIndex; // index of variable x
 
         // Add constraint between x and c_j_x
-        cId = divVarsIdMap[xId]; //index of variable c
+        cId = divVarsIdMap[xId]; // index of variable c
         c = (EnumeratedVariable*)getVar(cId);
         vc.clear();
-        for (unsigned val_x = 0; val_x < ex->getDomainInitSize(); val_x++) { //val_x = value index ?
+        for (unsigned val_x = 0; val_x < ex->getDomainInitSize(); val_x++) { // val_x = value index ?
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) { // Si les domaines sont réduits, ça ne marche pas!
                 // val_c = delta(divBound+1) + qp
                 unsigned delta = val_c / (distance + 1); // the first divBound+1 values of c (delta = 0) are (d,d) transitions, the rest is (d,d+1)
@@ -1493,7 +1499,7 @@ void WCSP::addDivConstraint(vector<Variable*>& divVars, unsigned int distance, m
         cpId = cId;
     }
 
-    //Unary constraint on last var_c to ensure diversity
+    // Unary constraint on last var_c to ensure diversity
     if (!divVars.empty()) {
         vc.clear();
         for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
@@ -1529,10 +1535,10 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
 
     for (unsigned divVarPos = 0; divVarPos < divVars.size(); divVarPos++) {
         ex = (EnumeratedVariable*)divVars[divVarPos];
-        int xId = ex->wcspIndex; //wcsp index of current divVariable
+        int xId = ex->wcspIndex; // wcsp index of current divVariable
 
         // Add constraint between ex and c_j_x
-        cId = divVarsIdMap[xId]; //index of variable c
+        cId = divVarsIdMap[xId]; // index of variable c
         c = (EnumeratedVariable*)getVar(cId);
         vc.clear();
         for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) { // val_x = value index ?
@@ -1578,7 +1584,7 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
         // Add constraint between c_j_x and h_j_x a (except last var, done after loop)
         vc.clear();
         if (divVarPos < divVars.size() - 1) {
-            hId = divHVarsIdMap[xId]; //index of variable h
+            hId = divHVarsIdMap[xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
                 for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
@@ -1594,14 +1600,14 @@ void WCSP::addHDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             }
             getListSuccessors()->at(cId).push_back(hId);
         } else {
-            hId = divHVarsIdMap[xId]; //index of variable h
+            hId = divHVarsIdMap[xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             assign(hId, h->getInf()); // h variable is unused and cannot be determined before sorting divVariables
         }
         hp = h;
         hpId = hId;
     }
-    //Unary constraint on last var_c to ensure diversity
+    // Unary constraint on last var_c to ensure diversity
     if (!divVars.empty()) {
         vc.clear();
         for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
@@ -1635,12 +1641,12 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
 
     for (unsigned divVarPos = 0; divVarPos < divVars.size(); divVarPos++) { // follow divVars variable order (can be sorted by DAC order)
         ex = (EnumeratedVariable*)divVars[divVarPos];
-        int xId = ex->wcspIndex; //wcsp index of current divVariable
+        int xId = ex->wcspIndex; // wcsp index of current divVariable
 
         // Add constraint between hp ex and h (except on extremities)
         vc.clear();
         if (divVarPos == 0) { // first position, no hp, only distance 0
-            hId = divHVarsIdMap[xId]; //index of variable h
+            hId = divHVarsIdMap[xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
                 for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
@@ -1655,7 +1661,7 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             }
             getListSuccessors()->at(xId).push_back(hId);
         } else if (divVarPos + 1 == divVars.size()) { // last position
-            hId = divHVarsIdMap[xId]; //index of variable h
+            hId = divHVarsIdMap[xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             assign(hId, h->getInf()); // h variable is unused and cannot be determined before sorting divVariables
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
@@ -1670,12 +1676,12 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
             }
             getListSuccessors()->at(hpId).push_back(xId);
         } else {
-            hId = divHVarsIdMap[xId]; //index of variable h
+            hId = divHVarsIdMap[xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
                 for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
                     for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
-                        //cout << "hp " << val_hp << " x " << val_ex << " h " << val_h << "(" << ((val_hp + (val_ex != (unsigned)solution[xId]) == val_h) ? MIN_COST : getUb()) << ")" << endl;
+                        // cout << "hp " << val_hp << " x " << val_ex << " h " << val_h << "(" << ((val_hp + (val_ex != (unsigned)solution[xId]) == val_h) ? MIN_COST : getUb()) << ")" << endl;
                         vc.push_back((min(distance, val_hp + (ex->toValue(val_ex) != solution[xId])) == val_h) ? MIN_COST : getUb());
                     }
                 }
@@ -1694,7 +1700,7 @@ void WCSP::addTDivConstraint(vector<Variable*>& divVars, unsigned int distance, 
 }
 
 void WCSP::addMDDConstraint(Mdd mdd, int relaxed)
-{ //sol_j: to recognize the set of variables to use
+{ // sol_j: to recognize the set of variables to use
     if (ToulBar2::verbose >= 1)
         cout << "adding relaxed mdd constraint" << endl;
 
@@ -1716,10 +1722,10 @@ void WCSP::addMDDConstraint(Mdd mdd, int relaxed)
     unsigned target;
     for (int layer = 0; layer < nLayers; layer++) {
         x = (EnumeratedVariable*)varReverse[layer];
-        int xId = x->wcspIndex; //index of variable x
+        int xId = x->wcspIndex; // index of variable x
 
         // Add constraint between x and c_j_x
-        cId = divVarsId[relaxed][xId]; //index of variable c
+        cId = divVarsId[relaxed][xId]; // index of variable c
         c = (EnumeratedVariable*)getVar(cId);
         vc.clear();
         for (unsigned val_x = 0; val_x < x->getDomainInitSize(); val_x++) {
@@ -1784,14 +1790,14 @@ void WCSP::addHMDDConstraint(Mdd mdd, int relaxed)
 
     for (unsigned layer = 0; layer < nLayers; layer++) {
         ex = (EnumeratedVariable*)varReverse[layer];
-        int xId = ex->wcspIndex; //wcsp index of current divVariable
+        int xId = ex->wcspIndex; // wcsp index of current divVariable
 
-        hId = divHVarsId[relaxed][xId]; //index of variable h
+        hId = divHVarsId[relaxed][xId]; // index of variable h
         h = (EnumeratedVariable*)getVar(hId);
         cId = divVarsId[relaxed][xId];
         c = (EnumeratedVariable*)getVar(cId);
         vc.clear();
-        //add constraint between hp and c, except on layer 0
+        // add constraint between hp and c, except on layer 0
         if (layer == 0) {
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
                 source = val_c / (ToulBar2::divWidth);
@@ -1808,7 +1814,7 @@ void WCSP::addHMDDConstraint(Mdd mdd, int relaxed)
             postIncrementalBinaryConstraint(cId, hpId, vc);
         }
         vc.clear();
-        //add constraint between c and h
+        // add constraint between c and h
         if (layer != nLayers - 1) {
             for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
                 source = val_c / (ToulBar2::divWidth);
@@ -1820,7 +1826,7 @@ void WCSP::addHMDDConstraint(Mdd mdd, int relaxed)
             postIncrementalBinaryConstraint(cId, hId, vc);
         }
         vc.clear();
-        //Add constraint between c and ex
+        // Add constraint between c and ex
         for (unsigned val_c = 0; val_c < c->getDomainInitSize(); val_c++) {
             source = val_c / (ToulBar2::divWidth);
             target = val_c % (ToulBar2::divWidth);
@@ -1856,12 +1862,12 @@ void WCSP::addTMDDConstraint(Mdd mdd, int relaxed)
 
     for (unsigned layer = 0; layer < nLayers; layer++) {
         ex = (EnumeratedVariable*)varReverse[layer];
-        int xId = ex->wcspIndex; //wcsp index of current divVariable
+        int xId = ex->wcspIndex; // wcsp index of current divVariable
 
         vc.clear();
         // Add constraint between hp ex and h (except on extremities)
         if (layer == 0) { // first position, no hp, only distance 0
-            hId = divHVarsId[relaxed][xId]; //index of variable h
+            hId = divHVarsId[relaxed][xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
                 for (unsigned val_h = 0; val_h < h->getDomainInitSize(); val_h++) {
@@ -1877,7 +1883,7 @@ void WCSP::addTMDDConstraint(Mdd mdd, int relaxed)
             }
             postIncrementalBinaryConstraint(hpId, xId, vc);
         } else {
-            hId = divHVarsId[relaxed][xId]; //index of variable h
+            hId = divHVarsId[relaxed][xId]; // index of variable h
             h = (EnumeratedVariable*)getVar(hId);
             for (unsigned val_hp = 0; val_hp < hp->getDomainInitSize(); val_hp++) {
                 for (unsigned val_ex = 0; val_ex < ex->getDomainInitSize(); val_ex++) {
@@ -1941,7 +1947,7 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
     decomposableGCF->setBounds(lb, ub);
     decomposableGCF->addToCostFunctionNetwork(this);
     delete[] values;
-    //delete [] decomposableGCF;
+    // delete [] decomposableGCF;
 }
 
 void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
@@ -2270,7 +2276,7 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 
 int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict)
 {
-    //Eliminate variable with weight 0
+    // Eliminate variable with weight 0
     Long readw;
     Value readv1;
     Long capacity;
@@ -2291,7 +2297,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     }
     vector<int> tobedel;
     vector<int> VarIdx;
-    vector<int> RealScopeIdx; //Remove redundant var from scopeIndex
+    vector<int> RealScopeIdx; // Remove redundant var from scopeIndex
     for (int i = 0; i < arity; ++i) {
         auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
         if (it == scopeVars.end()) {
@@ -2518,18 +2524,18 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         MaxWeight += *max_element(weights[i].begin(), weights[i].end());
     }
     AbstractNaryConstraint* cc = NULL;
-    //#ifdef UNITKNAPSACK2CLAUSE
-    //    if (isclause) {
-    //        assert(ar == (int)clausetuple.size());
-    //        if (ToulBar2::verbose >= 3)
-    //            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
-    //        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
-    //    } else {
-    //#endif
+    // #ifdef UNITKNAPSACK2CLAUSE
+    //     if (isclause) {
+    //         assert(ar == (int)clausetuple.size());
+    //         if (ToulBar2::verbose >= 3)
+    //             cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
+    //         cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
+    //     } else {
+    // #endif
     cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
-    //#ifdef UNITKNAPSACK2CLAUSE
-    //    }
-    //#endif
+    // #ifdef UNITKNAPSACK2CLAUSE
+    //     }
+    // #endif
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
     else {
@@ -2691,7 +2697,7 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
         return gc->wcspIndex;
     } else { // DAG-based propagator
         for (unsigned int i = 0; i < values.size(); i++) {
-            //Adding a wamong
+            // Adding a wamong
             vector<Value> values_;
             values_.push_back(values[i].val);
             postWAmong(scopeIndex, arity, semantics, "DAG", baseCost, values_, values[i].lower, values[i].upper);
@@ -2916,7 +2922,7 @@ void WCSP::postNullaryConstraint(Cost cost)
 
 void WCSP::postNullaryConstraint(Double cost)
 {
-    postNullaryConstraint((Cost)(round(cost * pow(10, ToulBar2::decimalPoint))));
+    postNullaryConstraint((isinf(cost) ? MAX_COST : (Cost)(round(cost * pow(10, ToulBar2::decimalPoint)))));
 }
 
 /// \brief add unary costs to enumerated variable \e xIndex
@@ -2963,7 +2969,7 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
     vector<Cost> icosts;
     icosts.reserve(dcosts.size());
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        icosts[a] = (Cost)(round((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint)));
+        icosts[a] = (isinf(dcosts[a]) ? MAX_COST : (Cost)(round((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint))));
     }
     negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
     if (incremental) {
@@ -3368,7 +3374,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
         for (Constraint* ctr : neighborCtrs) {
             assert(ctr->connected());
             TSCOPE inter;
-            listOfCtrs[i]->scopeCommon(inter, ctr); //TODO: remove assigned variables!
+            listOfCtrs[i]->scopeCommon(inter, ctr); // TODO: remove assigned variables!
             if (ctr->arity() == (int)inter.size()) { // ctr is included inside listOfCtrs[i]
                 assert(ctr->arity() <= listOfCtrs[i]->arity());
                 auto iter = indexOfCtrs.find(ctr);
@@ -3498,11 +3504,11 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                     add_vertex(vertex, subG);
                 }
                 assert(boost::num_vertices(subG) == subGraphVertices.size());
-                //cout << "subG edges : " << boost::num_edges(subG) << " and G edges : " << boost::num_edges(G) << endl;
+                // cout << "subG edges : " << boost::num_edges(subG) << " and G edges : " << boost::num_edges(G) << endl;
                 vector<int> comp(boost::num_vertices(subG));
                 int nbcc = boost::connected_components(subG, &comp[0]);
-                //vector<int> sep(intermap.second.begin(), intermap.second.end());
-                //cout << "separator " << to_string(sep) << " belongs to " << to_string(subGraphVertices) << " dualized constraints " << " in " << nbcc << " connected components." << endl;
+                // vector<int> sep(intermap.second.begin(), intermap.second.end());
+                // cout << "separator " << to_string(sep) << " belongs to " << to_string(subGraphVertices) << " dualized constraints " << " in " << nbcc << " connected components." << endl;
                 for (int i = 0; i < nbcc - 1; i++) {
                     unsigned int j = 0;
                     while (comp[j] != i && j < boost::num_vertices(subG)) {
@@ -3516,7 +3522,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                     assert(j < boost::num_vertices(subG));
                     assert(k < boost::num_vertices(subG));
                     boost::add_edge(subGraphVertices[j], subGraphVertices[k], G);
-                    //cout << "add edge between " << subGraphVertices[j] << " and " << subGraphVertices[k] << " dual variables." << endl;
+                    // cout << "add edge between " << subGraphVertices[j] << " and " << subGraphVertices[k] << " dual variables." << endl;
                 }
             }
         }
@@ -3814,7 +3820,7 @@ void WCSP::preprocessing()
         pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> res = hiddenEncoding();
         if (res.first.size() > 0) {
             if (ToulBar2::hve < 0 || ToulBar2::pwc < 0) {
-                //TODO: run pils here before dedualizing
+                // TODO: run pils here before dedualizing
 
                 // Dedualize pairwise consistency
                 for (BinaryConstraint* channel : res.second) {
@@ -4358,7 +4364,7 @@ void WCSP::dump(ostream& os, bool original)
     }
 
     if (!ToulBar2::uaieval && ToulBar2::verbose >= 0) {
-        //####################" dump dot file ###############################""
+        // ####################" dump dot file ###############################""
         strcat(Pb_graph, ".dot");
         cout << " Graph structure saved in problem.dot " << endl;
         ofstream pb(Pb_graph);
@@ -4404,8 +4410,8 @@ void WCSP::dump(ostream& os, bool original)
             }
         pb << "}" << endl;
 
-//####################" end dump dot file ###############################""
-//#######################dump degree distribution ###################
+// ####################" end dump dot file ###############################""
+// #######################dump degree distribution ###################
 #ifdef BOOST
         cout << "Connected components: " << connectedComponents() << endl;
         cout << "Biconnected components: " << biConnectedComponents() << endl;
@@ -4432,7 +4438,7 @@ void WCSP::dump(ostream& os, bool original)
                 file << i << " " << degDistrib[i] << endl;
         delete[] degDistrib;
 
-        //#######################dump degree distribution ###################
+        // #######################dump degree distribution ###################
     }
 
     if (ToulBar2::pedigree) {
@@ -5223,7 +5229,7 @@ void WCSP::propagate()
         }
     }
 
-    propagateNC(); //TODO: checks if it is slower or not. Inside knapsack constraints all projects corresponding to value removals are delayed, then enforcing EDAC on removed values is a waste of time and could result in integer overflow
+    propagateNC(); // TODO: checks if it is slower or not. Inside knapsack constraints all projects corresponding to value removals are delayed, then enforcing EDAC on removed values is a waste of time and could result in integer overflow
     do {
         do {
             do {
@@ -5232,7 +5238,7 @@ void WCSP::propagate()
                     int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
-                               && !DAC.empty())
+                            && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
                         eac_iter++;
                         propagateIncDec();
@@ -5257,17 +5263,17 @@ void WCSP::propagate()
                                 (*(it))->propagate();
                                 if (ToulBar2::LcLevel == LC_SNIC)
                                     if (!IncDec.empty())
-                                        cont = true; //For detecting value removal during SNIC enforcement
+                                        cont = true; // For detecting value removal during SNIC enforcement
                                 propagateIncDec();
                             }
                             if (ToulBar2::LcLevel == LC_SNIC)
                                 if (!NC.empty() || objectiveChanged)
-                                    cont = true; //For detecting value removal and upper bound change
+                                    cont = true; // For detecting value removal and upper bound change
                             propagateNC();
                             if (ToulBar2::LcLevel == LC_SNIC)
                                 if (oldLb != getLb() || !AC.empty()) {
                                     cont = true;
-                                    AC.clear(); //For detecting value removal and lower bound change
+                                    AC.clear(); // For detecting value removal and lower bound change
                                 }
                         }
                         propagateNC();
@@ -5390,13 +5396,13 @@ void WCSP::restoreSolution(Cluster* c)
                 cctr = ctr->evalsubstr(tctr, ctr);
             }
             Cost loc = x->getCost(vx) + cxy + cxz + cxyz + cctr;
-            //cout << "test " << vx << "," << x->getCost(vx) << "," << cxy << "," << cxz << "," << cxyz << endl;
+            // cout << "test " << vx << "," << x->getCost(vx) << "," << cxy << "," << cxz << "," << cxyz << endl;
             if (loc < mincost) {
                 mincost = loc;
                 minv = vx;
             }
         }
-        //cout << i << ": elim " << x->getName() << "_" << minv << ", y= " << ((y)?y->getName():"-") << "_" << vy << ", z= " << ((z)?z->getName():"-") << "_" << vz << endl;
+        // cout << i << ": elim " << x->getName() << "_" << minv << ", y= " << ((y)?y->getName():"-") << "_" << vy << ", z= " << ((z)?z->getName():"-") << "_" << vz << endl;
         assert(minv != WRONG_VAL);
         x->assignWhenEliminated(minv);
     }
@@ -5603,7 +5609,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     vector<Cost> costs;
 
     if (arityU > NARYPROJECTIONSIZE) { // || isGlobal()) {
-        ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size() * ctr2->size(), true); //TODO: improve estimated number of tuples
+        ctrIndex = postNaryConstraintBegin(scopeUi, arityU, Top, ctr1->size() * ctr2->size(), true); // TODO: improve estimated number of tuples
         ctr = getCtr(ctrIndex);
         assert(ctr->isNary());
         NaryConstraint* nary = (NaryConstraint*)ctr;
@@ -6050,7 +6056,7 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
     return added;
 }
 
-//TODO: add dummy binary cost functions to make the constraint graph chordal before creating dummy ternary cost functions
+// TODO: add dummy binary cost functions to make the constraint graph chordal before creating dummy ternary cost functions
 void WCSP::ternaryCompletion()
 {
     if (numberOfUnassignedVariables() < 3)
@@ -6340,7 +6346,7 @@ vector<int> WCSP::getBergeDecElimOrder()
     }
     assert(all_of(dacorder.begin(), dacorder.end(), [](int idx) { return idx != -1; }));
 
-    //Mark native variable
+    // Mark native variable
     for (int j = numberOfVariables() - 1; j >= 0; j--) {
         int i = dacorder[j];
         if (ToulBar2::nbDecisionVars == 0 || i < ToulBar2::nbDecisionVars) {
@@ -6349,7 +6355,7 @@ vector<int> WCSP::getBergeDecElimOrder()
             }
         }
     }
-    //Mark other variables
+    // Mark other variables
     for (int j = numberOfVariables() - 1; j >= 0; j--) {
         int i = dacorder[j];
         if (!marked[i]) {
@@ -6596,7 +6602,7 @@ TLogProb WCSP::LogSumExp(TLogProb logc1, TLogProb logc2) const // log[exp(c1) + 
 }
 
 //----------------------------------------
-//procedure when berge acycl constant are present in the problem
+// procedure when berge acycl constant are present in the problem
 // toulbar2::Berge_Dec has to be initialized > 0;
 
 void WCSP::visit(int i, vector<int>& revdac, vector<bool>& marked, const vector<vector<int>>& listofsuccessors)

@@ -1,10 +1,10 @@
 /**
- * \file multiwcsp.hpp
+ * \file multicfn.hpp
  * \brief Data structure combining multiple wcsp objects in the same problem with weights
  */
 
-#ifndef MULTI_WCSP_HPP
-#define MULTI_WCSP_HPP
+#ifndef MULTI_CFN_HPP
+#define MULTI_CFN_HPP
 
 #include <string>
 
@@ -12,7 +12,7 @@
 
 namespace mulcrit {
 
-class MultiWCSP; // forward delaration
+class MultiCFN; // forward delaration
 
 typedef std::map<std::string, std::string> Solution; // type representing a solution of a multi-cfn
 
@@ -25,9 +25,9 @@ class Var {
 public:
     /*!
      * \brief constructor
-     * \param multiwcsp the global problem
+     * \param multicfn the global problem
      */
-    Var(MultiWCSP* multiwcsp);
+    Var(MultiCFN* multicfn);
 
     /*!
      * \brief print the variable data
@@ -42,7 +42,7 @@ public:
     unsigned int nbValues();
 
 public:
-    MultiWCSP* multiwcsp; //!< pointer to the MultiWCSP instance
+    MultiCFN* multicfn; //!< pointer to the MultiCFN instance
 
     std::string name;
     std::vector<std::string> domain_str;
@@ -59,7 +59,7 @@ public:
     /*!
      * \brief constructor
      */
-    CostFunction(MultiWCSP* multiwcsp);
+    CostFunction(MultiCFN* multicfn);
 
     /*!
      * \brief print the cost function data
@@ -79,7 +79,7 @@ public:
     unsigned int arity();
 
 public:
-    MultiWCSP* multiwcsp;
+    MultiCFN* multicfn;
 
     std::string name;
     std::vector<unsigned int> scope; /* internal variable indexes */
@@ -91,10 +91,10 @@ public:
 };
 
 /*!
- * \class MultiWCSP
+ * \class MultiCFN
  * \brief store a combination of several cost function network
  */
-class MultiWCSP {
+class MultiCFN {
 
 public:
     static constexpr Double epsilon = 1e-6;
@@ -105,14 +105,14 @@ public:
     /*!
      * \brief default constructor
      */
-    MultiWCSP();
+    MultiCFN();
 
     /*!
-     * \brief constructor: build a multiwcsp combining wcsps given as input
+     * \brief constructor: build a multicfn combining wcsps given as input
      * \param wcsps a vector of wcsp objects to combine with weighted sums
      * \param weights a list of weights for each wcsp
      */
-    MultiWCSP(std::vector<WCSP*>& wcsps, std::vector<Double>& weights);
+    MultiCFN(std::vector<WCSP*>& wcsps, std::vector<Double>& weights);
 
     /*!
      * \brief add a wcsp to the network, create the variables if they do not exist, the wcsp is stored internally, the original wcsp will not be referenced
@@ -266,4 +266,4 @@ private: // private attributes
 
 } // namespace mulcrit
 
-#endif // MULTI_WCSP_HPP
+#endif // MULTI_CFN_HPP

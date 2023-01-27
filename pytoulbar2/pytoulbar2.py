@@ -7,7 +7,7 @@ DESCRIPTION
 
 
 """
-
+from math import isinf
 try :
     import pytoulbar2.pytb2 as tb2
 except :
@@ -185,7 +185,9 @@ class CFN:
             idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0), True)
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
-                if cost > mincost:
+                if (isinf(cost)):
+                    self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, tb2.MAX_COST)
+                elif cost > mincost:
                     self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, int((cost-mincost) * 10 ** tb2.option.decimalPoint))
                 for r in range(len(iscope)):
                     i = len(iscope)-1-r
@@ -848,12 +850,12 @@ class MultiCFN:
     """pytoulbar2 base class used to combine linearly multiple CFN.
     
     Members:
-        Multi_CFN (MultiWCSP): python interface to C++ class MultiWCSP.
+        MultiCFN: python interface to C++ class MultiCFN.
     
     """
     def __init__(self):
 
-        self.MultiCFN = tb2.MultiWCSP()
+        self.MultiCFN = tb2.MultiCFN()
 
         return
 
@@ -910,6 +912,31 @@ class MultiCFN:
         """
 
         return self.MultiCFN.getSolutionValues()
+
+    def ApproximateParetoFront(self, first_criterion, first_direction, second_criterion, second_direction):
+        """ApproximateParetoFront returns the set of supported solutions of the problem on two criteria (on the convex hull of the non dominated solutions).
+        
+        Args:
+            first_criterion (int): index of the first CFN to optimize.
+            first_direction (str): direction of the first criterion: 'min' or 'max'.
+            second_criterion (int): index of the second CFN to optimize.
+            first_directop, (str): direction of the second criterion: 'min' or 'max'.
+
+        Returns:
+            The non dominated solutions belonging to the convex hull of the pareto front and their costs (tuple).
+
+        """
+
+        optim_dir_first = (tb2.Bicriteria.OptimDir.Min if first_direction == 'min'  else tb2.Bicriteria.OptimDir.Max)
+        optim_dir_second = (tb2.Bicriteria.OptimDir.Min if second_direction == 'min' else tb2.Bicriteria.OptimDir.Max)
+
+        tb2.option.verbose = -1
+
+        tb2.Bicriteria.computeSupportedPoints(self.MultiCFN, first_criterion, second_criterion, (optim_dir_first,optim_dir_second))
+        # tb2.Bicriteria.computeNonSupported(self.MultiCFN, (optim_dir_first,optim_dir_second), 500)
+
+        return (tb2.Bicriteria.getSolutions(), tb2.Bicriteria.getPoints()) 
+
 
     def Print(self):
         """Print print the content of the multiCFN: variables, cost functions.

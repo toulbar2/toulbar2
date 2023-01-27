@@ -2,6 +2,7 @@ import sys
 from random import seed, randint
 seed(123456789)
 import pytoulbar2
+from matplotlib import pyplot as plt
 
 N = int(sys.argv[1])
 
@@ -118,3 +119,21 @@ if result:
   print_solution(solution, N)
   print('with costs:', sol_costs, '(sum=', result[1], ')')
 
+
+# approximate the pareto front
+(solutions, costs) = multicfn.ApproximateParetoFront(0, 'min', 1, 'min')
+
+fig, ax = plt.subplots()
+ax.scatter([c[0] for c in costs], [c[1] for c in costs], marker='x')
+for index in range(len(costs)-1):
+  ax.plot([costs[index][0], costs[index+1][0]], [costs[index][1],costs[index+1][1]], '--', c='k')
+  ax.plot([costs[index][0], costs[index+1][0]], [costs[index][1],costs[index][1]], '--', c='red')
+  ax.plot([costs[index+1][0], costs[index+1][0]], [costs[index][1],costs[index+1][1]], '--', c='red')
+
+ax.set_xlabel('first half cost')
+ax.set_ylabel('second half cost')
+ax.set_title('approximation of the pareto front')
+ax.set_aspect('equal')
+
+plt.grid()
+plt.show()
