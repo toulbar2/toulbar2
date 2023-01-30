@@ -920,7 +920,7 @@ class MultiCFN:
             first_criterion (int): index of the first CFN to optimize.
             first_direction (str): direction of the first criterion: 'min' or 'max'.
             second_criterion (int): index of the second CFN to optimize.
-            first_directop, (str): direction of the second criterion: 'min' or 'max'.
+            second_direction (str): direction of the second criterion: 'min' or 'max'.
 
         Returns:
             The non dominated solutions belonging to the convex hull of the pareto front and their costs (tuple).
