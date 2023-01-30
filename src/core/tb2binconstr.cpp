@@ -32,8 +32,12 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];
-
-    propagate();
+    if (ToulBar2::bilevel>=2) {
+        deconnect(true);
+        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].push_back(wcspIndex);
+    } else {
+        propagate();
+    }
 }
 
 BinaryConstraint::BinaryConstraint(WCSP* wcsp)

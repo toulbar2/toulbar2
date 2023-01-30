@@ -34,10 +34,10 @@ WeightedCSPSolver class
    :members:
    :undoc-members:
 
-MultiWCSP class
+MultiCFN class
 =================
 
-.. doxygenclass:: mulcrit::MultiWCSP
+.. doxygenclass:: mulcrit::MultiCFN
    :members:
    :undoc-members:
 

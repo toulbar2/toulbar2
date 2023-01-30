@@ -291,6 +291,13 @@ string ToulBar2::epsFilename;
 bool ToulBar2::verifyOpt;
 Cost ToulBar2::verifiedOptimum;
 
+int ToulBar2::bilevel;
+vector<unsigned int> ToulBar2::decimalPointBLP;
+vector<double> ToulBar2::costMultiplierBLP;
+vector<Cost> ToulBar2::negCostBLP;
+vector<Cost> ToulBar2::initialLbBLP;
+vector<Cost> ToulBar2::initialUbBLP;
+
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
@@ -504,6 +511,13 @@ void tb2init()
 
     ToulBar2::verifyOpt = false;
     ToulBar2::verifiedOptimum = MAX_COST;
+
+    ToulBar2::bilevel = 0;
+    ToulBar2::decimalPointBLP.clear();
+    ToulBar2::costMultiplierBLP.clear();
+    ToulBar2::negCostBLP.clear();
+    ToulBar2::initialLbBLP.clear();
+    ToulBar2::initialUbBLP.clear();
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
@@ -734,6 +748,18 @@ void tb2checkOptions()
     if (ToulBar2::verifyOpt && ToulBar2::DEE >= 1) {
         cout << "Warning! Cannot perform dead-end elimination while verifying that the optimal solution is preserved." << endl;
         ToulBar2::DEE = 0;
+    }
+    if (ToulBar2::bilevel && ToulBar2::DEE >= 1) {
+        cout << "Warning! Cannot perform dead-end elimination in bilevel optimization (use '-dee:')." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::bilevel && ToulBar2::btdMode != 1) {
+        cerr << "Error: BTD search mode required for bilevel optimization (use '-B=1')." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::bilevel && ToulBar2::hbfs) {
+        cout << "Warning! Hybrid best-first search not compatible with bilevel optimization (use '-hbfs:')." << endl;
+        throw BadConfiguration();
     }
     if (ToulBar2::heuristicFreedom && !ToulBar2::hbfs) {
         cout << "Warning! adaptive BTD requires HBFS (remove -hbfs: option)." << endl;
@@ -985,7 +1011,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
-                double cost = dcosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c];
+                Double cost = dcosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c];
                 icosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] = (isinf(cost) ? MAX_COST : (Cost)(round((cost - minCost) * pow(10, ToulBar2::decimalPoint))));
             }
         }
@@ -1284,7 +1310,7 @@ void WCSP::postNaryConstraintEnd(int ctrindex)
 // Add a temporary (backtrackable) binary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 {
-    assert(getTreeDec() == NULL);
+    assert(getTreeDec() == NULL || ToulBar2::bilevel);
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
 
@@ -1327,6 +1353,7 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
 // Add a temporary (backtrackable) ternary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs)
 {
+    assert(getTreeDec() == NULL || ToulBar2::bilevel);
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
     EnumeratedVariable* z = (EnumeratedVariable*)getVar(zIndex);
@@ -6168,7 +6195,7 @@ void WCSP::buildTreeDecomposition()
     double time = cpuTime();
     CmpVarStruct::wcsp = this; // hook pointer for connection between TVarsSorted and current WCSP
     td = new TreeDecomposition(this);
-    if (isAlreadyTreeDec(ToulBar2::varOrder))
+    if (ToulBar2::bilevel || isAlreadyTreeDec(ToulBar2::varOrder))
         td->buildFromCovering(ToulBar2::varOrder);
     else if (ToulBar2::approximateCountingBTD)
         td->buildFromOrderForApprox();
@@ -6431,10 +6458,7 @@ inline pair<Cost, int> WCSP::Decimal2Cost(const string& decimalToken, const unsi
     } else if (decimalToken[pos] == '+') {
         pos = 1;
     } else if ((dot == 2) && decimalToken == "inf") {
-        if (ToulBar2::costMultiplier < 0.0)
-            return pair<Cost, size_t>(-MAX_COST, 0);
-        else
-            return pair<Cost, size_t>(MAX_COST, 0);
+        return pair<Cost, size_t>(MAX_COST, 0);
     }
 
     while ((pos < decimalToken.length()) && (pos <= ToulBar2::decimalPoint + dot)) {

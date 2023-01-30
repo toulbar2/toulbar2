@@ -390,7 +390,7 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
         ToulBar2::vnsOptimum = wcsp->decimalToCost(ToulBar2::vnsOptimumS, 0) + wcsp->getNegativeLb();
 
     // merge unary cost functions if they are on the same variable
-    vector<int> seen(nvar, -1);
+    vector<int> seen(wcsp->numberOfVariables(), -1);
     vector<TemporaryUnaryConstraint> newunaryCFs;
     for (unsigned int u = 0; u < unaryCFs.size(); u++) {
         if (seen[unaryCFs[u].var->wcspIndex] == -1) {
@@ -624,6 +624,9 @@ Cost CFNStreamReader::readHeader()
     if (token[0] == '>') {
         ToulBar2::costMultiplier *= -1.0;
     }
+    if (ToulBar2::bilevel == 3) {
+        ToulBar2::costMultiplier *= -1.0;
+    }
 
     if (ToulBar2::verbose >= 1)
         cout << "Read bound: " << pbBound << " with precision " << ToulBar2::decimalPoint << endl;
@@ -697,7 +700,10 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     }
 
     unsigned int varIndex = wcsp->getVarIndex(varName);
-    bool newvar = (varIndex == wcsp->numberOfVariables());
+    bool newvar = (varIndex >= wcsp->numberOfVariables());
+    if (varIndex > wcsp->numberOfVariables()) {
+        varName += "_neg";
+    }
     if (ToulBar2::verbose >= 1)
         cout << "Variable " << varName << ((newvar) ? " new " : " known ") << "with domain size " << domainSize << " read";
     // Create the toulbar2 variable and store its name in the variable map.
@@ -735,6 +741,9 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         }
     }
 
+    if (ToulBar2::bilevel) {
+        wcsp->varsBLP[ToulBar2::bilevel-1].insert(varIndex);
+    }
     return domainSize;
 }
 
@@ -895,7 +904,9 @@ void CFNStreamReader::enforceUB()
         }
     }
 
-    wcsp->updateUb(this->upperBound);
+    if (ToulBar2::bilevel != 3) {
+        wcsp->updateUb(this->upperBound);
+    }
 }
 
 // Returns the index of the value name for the given variable
@@ -939,7 +950,10 @@ void CFNStreamReader::readScope(vector<int>& scope)
         // It's a name, convert to index
         if (not isdigit(token[0])) {
             map<string, int>::iterator it;
-            if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
+            string tokenNeg = token + "_neg";
+            if (ToulBar2::bilevel == 3 && (it = varNameToIdx.find(tokenNeg)) != varNameToIdx.end()) { // change variable names specific to NegProblem2 by adding "_neg" suffix to their names
+                scope.push_back(it->second);
+            } else if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
                 scope.push_back(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;

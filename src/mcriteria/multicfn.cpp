@@ -13,13 +13,13 @@
 using namespace std;
 
 //---------------------------------------------------------------------------
-mulcrit::MultiCFN::MultiCFN()
+MultiCFN::MultiCFN()
     : _sol_extraction(false)
 {
 }
 
 //---------------------------------------------------------------------------
-mulcrit::MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
+MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
     : _sol_extraction(false)
 {
     for (unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind++) {
@@ -28,7 +28,7 @@ mulcrit::MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::push_back(WCSP* wcsp, double weight)
+void MultiCFN::push_back(WCSP* wcsp, double weight)
 {
 
     // assert: identical domains for existing variables
@@ -56,7 +56,7 @@ void mulcrit::MultiCFN::push_back(WCSP* wcsp, double weight)
             continue;
         }
 
-        this->var.push_back(Var(this));
+        this->var.push_back(mcriteria::Var(this));
         this->var.back().name = name;
 
         var_index.insert(make_pair(name, var.size() - 1));
@@ -127,12 +127,12 @@ void mulcrit::MultiCFN::push_back(WCSP* wcsp, double weight)
         }
 
         // add the unary cost function
-        cost_function.push_back(mulcrit::CostFunction(this));
+        cost_function.push_back(mcriteria::CostFunction(this));
         networks.back().push_back(cost_function.size() - 1); // add the function index to the network
         network_index.push_back(networks.size() - 1);
 
         unsigned int var_ind = var_index[tb2_var->getName()];
-        Var* own_var = &var[var_ind];
+        mcriteria::Var* own_var = &var[var_ind];
 
         // set the name
         cost_function.back().name = own_var->name + "_cost_" + to_string(networks.size() - 1);
@@ -174,14 +174,14 @@ void mulcrit::MultiCFN::push_back(WCSP* wcsp, double weight)
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
+void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 {
 
-    cost_function.push_back(CostFunction(this));
+    cost_function.push_back(mcriteria::CostFunction(this));
     networks.back().push_back(cost_function.size() - 1); // add the function index to the network
     network_index.push_back(networks.size() - 1);
 
-    CostFunction& cost_func = cost_function.back();
+    mcriteria::CostFunction& cost_func = cost_function.back();
 
     cost_func.name = cstr->getName();
 
@@ -227,7 +227,7 @@ void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         for (unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind++) {
             for (unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind++) {
 
-                vector<Var*> variables = { &var[cost_func.scope[0]], &var[cost_func.scope[1]] };
+                vector<mcriteria::Var*> variables = { &var[cost_func.scope[0]], &var[cost_func.scope[1]] };
 
                 // convert original value indexes to own indexes
                 unsigned int val1_ind = variables[0]->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
@@ -260,9 +260,9 @@ void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         EnumeratedVariable* tb2_var3 = dynamic_cast<EnumeratedVariable*>(tc->getVar(2));
 
         // create a tuple for our own variables
-        Var* var1 = &var[var_index[tb2_var1->getName()]];
-        Var* var2 = &var[var_index[tb2_var2->getName()]];
-        Var* var3 = &var[var_index[tb2_var3->getName()]];
+        mcriteria::Var* var1 = &var[var_index[tb2_var1->getName()]];
+        mcriteria::Var* var2 = &var[var_index[tb2_var2->getName()]];
+        mcriteria::Var* var3 = &var[var_index[tb2_var3->getName()]];
 
         cost_func.default_cost = 0.;
 
@@ -277,7 +277,7 @@ void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
                     unsigned int val2_ind = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
                     unsigned int val3_ind = var3->str_to_index[tb2_var3->getValueName(tb2_val3_ind)];
 
-                    vector<Var*> variables = { var1, var2, var3 };
+                    vector<mcriteria::Var*> variables = { var1, var2, var3 };
                     vector<unsigned int> tuple = { val1_ind, val2_ind, val3_ind };
 
                     unsigned int cost_index = tupleToIndex(variables, tuple);
@@ -310,7 +310,7 @@ void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             tb2_vars.push_back(dynamic_cast<EnumeratedVariable*>(nc->getVar(var_ind)));
         }
 
-        vector<Var*> own_vars;
+        vector<mcriteria::Var*> own_vars;
         for (unsigned int var_ind = 0; var_ind < static_cast<unsigned int>(nc->arity()); var_ind++) {
             own_vars.push_back(&var[var_index[tb2_vars[var_ind]->getName()]]);
         }
@@ -347,43 +347,43 @@ void mulcrit::MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::setWeight(unsigned int network_index, double weight)
+void MultiCFN::setWeight(unsigned int network_index, double weight)
 {
     weights[network_index] = weight;
 }
 
 //---------------------------------------------------------------------------
-Double mulcrit::MultiCFN::getWeight(unsigned int wcsp_index)
+Double MultiCFN::getWeight(unsigned int wcsp_index)
 {
     return weights[wcsp_index];
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiCFN::nbNetworks()
+unsigned int MultiCFN::nbNetworks()
 {
     return networks.size();
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiCFN::nbVariables()
+unsigned int MultiCFN::nbVariables()
 {
     return var.size();
 }
 
 //---------------------------------------------------------------------------
-std::string mulcrit::MultiCFN::getNetworkName(unsigned int index)
+std::string MultiCFN::getNetworkName(unsigned int index)
 {
     return network_names[index];
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiCFN::getDecimalPoint()
+unsigned int MultiCFN::getDecimalPoint()
 {
     return _tb2_decimalpoint;
 }
 
 //---------------------------------------------------------------------------
-Double mulcrit::MultiCFN::computeTop()
+Double MultiCFN::computeTop()
 {
 
     Double top = 0.;
@@ -424,7 +424,7 @@ Double mulcrit::MultiCFN::computeTop()
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
+void MultiCFN::exportToWCSP(WCSP* wcsp)
 {
 
     // floating point precision
@@ -503,7 +503,7 @@ void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
         if (cost_function[func_ind].scope.size() == 1) { // unary cost functions
 
             EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind].scope[0]].name)));
-            Var* own_var = &var[cost_function[func_ind].scope[0]];
+            mcriteria::Var* own_var = &var[cost_function[func_ind].scope[0]];
 
             // cout << "arity 1" << endl;
             vector<Double> costs(tb2_var->getDomainInitSize());
@@ -533,8 +533,8 @@ void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
             vector<Double> costs;
 
             // index for variable values in the new wcsp
-            Var* var1 = &var[cost_function[func_ind].scope[0]];
-            Var* var2 = &var[cost_function[func_ind].scope[1]];
+            mcriteria::Var* var1 = &var[cost_function[func_ind].scope[0]];
+            mcriteria::Var* var2 = &var[cost_function[func_ind].scope[1]];
 
             EnumeratedVariable* tb2_var1 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var1->name)));
             EnumeratedVariable* tb2_var2 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var2->name)));
@@ -574,9 +574,9 @@ void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
 
             vector<Double> costs;
 
-            Var* var1 = &var[cost_function[func_ind].scope[0]];
-            Var* var2 = &var[cost_function[func_ind].scope[1]];
-            Var* var3 = &var[cost_function[func_ind].scope[2]];
+            mcriteria::Var* var1 = &var[cost_function[func_ind].scope[0]];
+            mcriteria::Var* var2 = &var[cost_function[func_ind].scope[1]];
+            mcriteria::Var* var3 = &var[cost_function[func_ind].scope[2]];
 
             EnumeratedVariable* tb2_var1 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind].scope[0]].name)));
             EnumeratedVariable* tb2_var2 = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind].scope[1]].name)));
@@ -618,7 +618,7 @@ void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
             }
 
             // variables are stored here for simplicity
-            vector<Var*> own_vars;
+            vector<mcriteria::Var*> own_vars;
             for (auto& var_ind : cost_function[func_ind].scope) {
                 own_vars.push_back(&var[var_ind]);
             }
@@ -696,7 +696,7 @@ void mulcrit::MultiCFN::exportToWCSP(WCSP* wcsp)
 }
 
 //---------------------------------------------------------------------------
-WeightedCSP* mulcrit::MultiCFN::makeWeightedCSP()
+WeightedCSP* MultiCFN::makeWeightedCSP()
 {
 
     _sol_extraction = false;
@@ -712,7 +712,7 @@ WeightedCSP* mulcrit::MultiCFN::makeWeightedCSP()
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::makeWeightedCSP(WeightedCSP* wcsp)
+void MultiCFN::makeWeightedCSP(WeightedCSP* wcsp)
 {
 
     _sol_extraction = false;
@@ -723,7 +723,7 @@ void mulcrit::MultiCFN::makeWeightedCSP(WeightedCSP* wcsp)
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::MultiCFN::tupleToIndex(vector<Var*> variables, vector<unsigned int> tuple)
+unsigned int MultiCFN::tupleToIndex(vector<mcriteria::Var*> variables, vector<unsigned int> tuple)
 {
     unsigned int cost_index = 0;
     unsigned int acc = 1;
@@ -735,7 +735,7 @@ unsigned int mulcrit::MultiCFN::tupleToIndex(vector<Var*> variables, vector<unsi
 }
 
 //---------------------------------------------------------------------------
-mulcrit::Solution mulcrit::MultiCFN::getSolution()
+MultiCFN::Solution MultiCFN::getSolution()
 {
 
     if (!_sol_extraction) {
@@ -747,7 +747,7 @@ mulcrit::Solution mulcrit::MultiCFN::getSolution()
 }
 
 //---------------------------------------------------------------------------
-vector<Double> mulcrit::MultiCFN::getSolutionValues()
+vector<Double> MultiCFN::getSolutionValues()
 {
 
     if (!_sol_extraction) {
@@ -759,7 +759,7 @@ vector<Double> mulcrit::MultiCFN::getSolutionValues()
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::extractSolution()
+void MultiCFN::extractSolution()
 {
 
     _solution.clear();
@@ -803,7 +803,7 @@ void mulcrit::MultiCFN::extractSolution()
 
             auto& func = cost_function[func_ind];
 
-            vector<Var*> variables;
+            vector<mcriteria::Var*> variables;
             vector<unsigned int> tuple;
 
             for (auto& ind_var : func.scope) {
@@ -826,7 +826,7 @@ void mulcrit::MultiCFN::extractSolution()
 }
 
 //---------------------------------------------------------------------------
-std::vector<Double> mulcrit::MultiCFN::computeSolutionValues(Solution& solution)
+std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution)
 {
 
     vector<Double> obj_values;
@@ -860,7 +860,7 @@ std::vector<Double> mulcrit::MultiCFN::computeSolutionValues(Solution& solution)
 }
 
 //---------------------------------------------------------------------------
-mulcrit::Solution mulcrit::MultiCFN::convertToSolution(std::vector<Value>& solution)
+MultiCFN::Solution MultiCFN::convertToSolution(std::vector<Value>& solution)
 {
 
     Solution res;
@@ -875,7 +875,7 @@ mulcrit::Solution mulcrit::MultiCFN::convertToSolution(std::vector<Value>& solut
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::MultiCFN::print(ostream& os)
+void MultiCFN::print(ostream& os)
 {
 
     os << "n variables: " << nbVariables() << endl;
@@ -922,19 +922,19 @@ void mulcrit::MultiCFN::print(ostream& os)
 }
 
 //---------------------------------------------------------------------------
-mulcrit::Var::Var(mulcrit::MultiCFN* multicfn)
+mcriteria::Var::Var(MultiCFN* multicfn)
 {
     this->multicfn = multicfn;
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::Var::nbValues()
+unsigned int mcriteria::Var::nbValues()
 {
     return domain_str.size();
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::Var::print(ostream& os)
+void mcriteria::Var::print(ostream& os)
 {
 
     os << name << ": {";
@@ -949,13 +949,13 @@ void mulcrit::Var::print(ostream& os)
 }
 
 //---------------------------------------------------------------------------
-mulcrit::CostFunction::CostFunction(MultiCFN* multicfn)
+mcriteria::CostFunction::CostFunction(MultiCFN* multicfn)
 {
     this->multicfn = multicfn;
 }
 
 //---------------------------------------------------------------------------
-void mulcrit::CostFunction::print(ostream& os)
+void mcriteria::CostFunction::print(ostream& os)
 {
 
     os << name << ": {";
@@ -970,7 +970,7 @@ void mulcrit::CostFunction::print(ostream& os)
 }
 
 //---------------------------------------------------------------------------
-Double mulcrit::CostFunction::getCost(vector<unsigned int>& tuple)
+Double mcriteria::CostFunction::getCost(vector<unsigned int>& tuple)
 {
 
     Double res = 0.;
@@ -1007,7 +1007,7 @@ Double mulcrit::CostFunction::getCost(vector<unsigned int>& tuple)
 }
 
 //---------------------------------------------------------------------------
-unsigned int mulcrit::CostFunction::arity()
+unsigned int mcriteria::CostFunction::arity()
 {
     return scope.size();
 }
