@@ -9,12 +9,10 @@
 
 using namespace std;
 
-using namespace mulcrit;
-
 //--------------------------------------------------------------------------------------------
 vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
 vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
-vector<mulcrit::Solution> Bicriteria::_solutions = vector<mulcrit::Solution>();
+vector<MultiCFN::Solution> Bicriteria::_solutions = vector<MultiCFN::Solution>();
 
 unsigned int Bicriteria::_first_cfn_index = 0;
 unsigned int Bicriteria::_second_cfn_index = 0;
@@ -45,7 +43,7 @@ void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)
         _points[ind] = temp_points[sol_indexes[ind]];
     }
 
-    vector<mulcrit::Solution> temp_sol = _solutions;
+    vector<MultiCFN::Solution> temp_sol = _solutions;
     for (unsigned int ind = 0; ind < _solutions.size(); ind++) {
         _solutions[ind] = temp_sol[sol_indexes[ind]];
     }
@@ -85,7 +83,7 @@ bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_di
 }
 
 //--------------------------------------------------------------------------------------------
-bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> weights, Solution* solution, Bicriteria::Point* point)
+bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> weights, MultiCFN::Solution* solution, Bicriteria::Point* point)
 {
 
     // cout << "current weights: " << std::setprecision(10) << weights.first << ", " << weights.second << endl;
@@ -143,7 +141,7 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeAdditionalSolutions(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct)
+void Bicriteria::computeAdditionalSolutions(MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct)
 {
 
     tb2init();
@@ -201,7 +199,7 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiCFN* multicfn, pair<Bi
         // cout << "number of solutions: " << tb2_sol.size() << endl;
 
         /* compute the solutions and points */
-        vector<mulcrit::Solution> sol;
+        vector<MultiCFN::Solution> sol;
         for (unsigned int ind = 0; ind < tb2_sol.size(); ind++) {
             sol.push_back(multicfn->convertToSolution(tb2_sol[ind].second));
         }
@@ -254,7 +252,7 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiCFN* multicfn, pair<Bi
         }
 
         // non filtered solutions are added to the list
-        vector<mulcrit::Solution> temp_sol;
+        vector<MultiCFN::Solution> temp_sol;
         vector<Point> temp_points;
 
         for (unsigned int index : sol_indexes) {
@@ -284,7 +282,7 @@ void Bicriteria::computeAdditionalSolutions(mulcrit::MultiCFN* multicfn, pair<Bi
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int nbLimit)
+void Bicriteria::computeNonSupported(MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int nbLimit)
 {
 
     // for all nondominated triangles, compute the list of triangles that will be solved together by solution enumeration
@@ -397,7 +395,7 @@ void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteri
     vector<bool> processed(corners.size(), false);
 
     // list of all non supported solutions and points
-    vector<mulcrit::Solution> all_nonsup_solutions;
+    vector<MultiCFN::Solution> all_nonsup_solutions;
     vector<Point> all_nonsup_points;
 
     // computation of the nonsupported nondominated points
@@ -432,7 +430,7 @@ void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteri
             }
 
             /* compute the solutions and points */
-            vector<mulcrit::Solution> sol;
+            vector<MultiCFN::Solution> sol;
             for (unsigned int ind = 0; ind < tb2_sol.size(); ind++) {
                 sol.push_back(multicfn->convertToSolution(tb2_sol[ind].second));
             }
@@ -513,7 +511,7 @@ void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteri
                 sol_indexes.push_back(ind_sol);
             }
 
-            vector<mulcrit::Solution> temp_sol;
+            vector<MultiCFN::Solution> temp_sol;
             vector<Point> temp_points;
 
             for (unsigned int index : sol_indexes) {
@@ -552,7 +550,7 @@ void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteri
         }
     }
 
-    vector<Solution> all_nonsup_solutions_temp = all_nonsup_solutions;
+    vector<MultiCFN::Solution> all_nonsup_solutions_temp = all_nonsup_solutions;
     vector<Point> all_nonsup_points_temp = all_nonsup_points;
 
     all_nonsup_points.clear();
@@ -574,12 +572,12 @@ void Bicriteria::computeNonSupported(mulcrit::MultiCFN* multicfn, pair<Bicriteri
 }
 
 //--------------------------------------------------------------------------------------------
-void computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta = 1e-3) {
+void computeSupportedPoints(MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta = 1e-3) {
     Bicriteria::computeSupportedPoints(multicfn, 0, 1, optim_dir, delta);
 }
 
 //--------------------------------------------------------------------------------------------
-void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta)
+void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta)
 {
 
     _first_cfn_index = first_cfn_index;
@@ -605,7 +603,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned in
         lambda2 = -1.;
     }
 
-    Solution sol1, sol2;
+    MultiCFN::Solution sol1, sol2;
 
     // cout << endl << endl;
     // cout << "optimizing 1 separately: " << endl;
@@ -667,7 +665,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned in
 
     unsigned int iter = 0;
 
-    mulcrit::Solution new_sol;
+    MultiCFN::Solution new_sol;
 
     while (!pending.empty()) {
 
@@ -745,7 +743,7 @@ void Bicriteria::computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned in
 }
 
 //--------------------------------------------------------------------------------------------
-std::vector<mulcrit::Solution> Bicriteria::getSolutions()
+std::vector<MultiCFN::Solution> Bicriteria::getSolutions()
 {
     return _solutions;
 }

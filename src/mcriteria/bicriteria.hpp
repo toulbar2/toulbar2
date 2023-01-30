@@ -3,8 +3,6 @@
 
 #include "multicfn.hpp"
 
-namespace mulcrit {
-
 /*!
  * \class Bicriteria
  * \brief functions to compute supported points in bi-criteria problem
@@ -41,7 +39,7 @@ private: /* static members to store solutions and points */
 
     static std::vector<Weights> _weights; // the weights used to compute the points
 
-    static std::vector<mulcrit::Solution> _solutions; // solutions computed
+    static std::vector<MultiCFN::Solution> _solutions; // solutions computed
 
     static unsigned int _first_cfn_index;
 
@@ -86,7 +84,7 @@ private: /* static functions */
      * \param point the point in the objective space computed by the solver, if not null
      * \return true if a solution has beend found, false otherwise
      */
-    static bool solveScalarization(mulcrit::MultiCFN* multicfn, pair<Double, Double> weights, mulcrit::Solution* solution = nullptr, Point* point = nullptr);
+    static bool solveScalarization(MultiCFN* multicfn, pair<Double, Double> weights, MultiCFN::Solution* solution = nullptr, Point* point = nullptr);
 
 public: /* static functions */
     /*!
@@ -97,7 +95,7 @@ public: /* static functions */
      * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
-    static void computeSupportedPoints(mulcrit::MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
+    static void computeSupportedPoints(MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
 
     /*!
      * \brief compute a list of supported points for a bi-objective cost function network when optimizing respectively the first and the second cfn in the multicfn object
@@ -105,7 +103,7 @@ public: /* static functions */
      * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
-    static void computeSupportedPoints(mulcrit::MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
+    static void computeSupportedPoints(MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
     
     /*!
      * \brief compute additional (potentially non dominated) solutions via enumeration in a nondominated triangle
@@ -115,7 +113,7 @@ public: /* static functions */
      * \param nbLimit maximum number of solutions to obtain
      * \param pct the percentage of the search space, 1.0 = complete triangle
      */
-    static void computeAdditionalSolutions(mulcrit::MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit = 100, Double pct = 1.0);
+    static void computeAdditionalSolutions(MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, unsigned int solIndex, unsigned int nbLimit = 100, Double pct = 1.0);
 
     /*!
      * \brief compute all the non supported solutions
@@ -123,13 +121,13 @@ public: /* static functions */
      * \param optim_dir the optimization direction
      * \param nbLimit maximum number of points to enumerate
      */
-    static void computeNonSupported(mulcrit::MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, unsigned int nbLimit = 100);
+    static void computeNonSupported(MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, unsigned int nbLimit = 100);
 
     /*!
      * \brief get the list of solutions computed
      * \return a vector of the solutions
      */
-    static std::vector<mulcrit::Solution> getSolutions();
+    static std::vector<MultiCFN::Solution> getSolutions();
 
     /*!
      * \brief get the list of points computed in the objective space
@@ -143,7 +141,5 @@ public: /* static functions */
      */
     static std::vector<Weights> getWeights();
 };
-
-} // namespace mulcrit
 
 #endif // BI_CRITERIA_HPP
