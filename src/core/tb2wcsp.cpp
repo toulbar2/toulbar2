@@ -34,6 +34,7 @@
 #include "tb2clause.hpp"
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
+#include "tb2globalwcsp.hpp"
 
 using std::fixed;
 using std::greater;
@@ -2238,6 +2239,33 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
     } else { // monolithic global cost functions
         postGlobalConstraint(scopeIndex, arity, gcname, file, constrcounter, mult);
     }
+}
+
+int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub)
+{
+    assert(scope.size() == problem->numberOfVariables());
+    assert(problem->numberOfVariables() == negproblem->numberOfVariables());
+    vector<EnumeratedVariable *> scope2;
+    for (unsigned int i = 0; i < scope.size(); i++) {
+        scope2.push_back((EnumeratedVariable *) getVar(scope[i]));
+    }
+    auto ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP *) problem, (WCSP *) negproblem, lb, ub);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(ctr->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        ctr->propagate();
+    }
+    return ctr->wcspIndex;
 }
 
 int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)

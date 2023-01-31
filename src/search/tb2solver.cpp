@@ -166,7 +166,9 @@ void Solver::initVarHeuristic()
     }
     wcsp->resetTightnessAndWeightedDegree();
     // Now function setvalue can be called safely!
-    ToulBar2::setvalue = setvalue;
+    if (ToulBar2::setvalue == NULL) {
+        ToulBar2::setvalue = setvalue;
+    }
 }
 
 // keep consistent order of allVars with getDACOrder, needed by setvalue function
@@ -478,9 +480,10 @@ int Solver::numberOfUnassignedVariables() const
 void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
 {
     //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
+    assert(_solver_);
     Solver* solver = (Solver*)_solver_;
     unsigned int i = solver->getWCSP()->getDACOrder(varIndex);
-    if (!solver->allVars[i]->removed) {
+    if (i < solver->allVars.size() && !solver->allVars[i]->removed) {
         solver->unassignedVars->erase(solver->allVars[i], true);
     }
 }
