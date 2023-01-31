@@ -10,11 +10,10 @@
 
 #include "toulbar2lib.hpp"
 
-namespace mulcrit {
-
 class MultiCFN; // forward delaration
 
-typedef std::map<std::string, std::string> Solution; // type representing a solution of a multi-cfn
+// namespace preventing collisions with tb2 Var and Cost functions classes
+namespace mcriteria {
 
 /*!
  * \class Var
@@ -90,11 +89,18 @@ public:
     std::vector<std::vector<unsigned int>> tuples; // value indexes of the variables
 };
 
+} // namespace mcriteria
+
 /*!
  * \class MultiCFN
  * \brief store a combination of several cost function network
  */
 class MultiCFN {
+
+public:
+
+    // type representing a solution of a multicfn
+    typedef std::map<std::string, std::string> Solution;
 
 public:
     static constexpr Double epsilon = 1e-6;
@@ -182,7 +188,7 @@ public:
      * \param tuple the tuple: value indexes for each variable
      * \return the index corresponding to the tuple
      */
-    unsigned int tupleToIndex(std::vector<Var*> variables, std::vector<unsigned int> tuple);
+    unsigned int tupleToIndex(std::vector<mcriteria::Var*> variables, std::vector<unsigned int> tuple);
 
     /*!
      * \brief get the solution of the created wcsp after being solved
@@ -238,11 +244,11 @@ private: /* private methods */
 
 public: // public attributes
     // variables
-    std::vector<Var> var; // variables
+    std::vector<mcriteria::Var> var; // variables
     std::map<std::string, int> var_index; // index of variables
 
     // cost functions
-    std::vector<CostFunction> cost_function; // list of the cost functions
+    std::vector<mcriteria::CostFunction> cost_function; // list of the cost functions
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
 private: // private attributes
@@ -264,6 +270,6 @@ private: // private attributes
     Solution _solution;
 };
 
-} // namespace mulcrit
+
 
 #endif // MULTI_CFN_HPP
