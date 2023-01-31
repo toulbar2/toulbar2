@@ -26,12 +26,22 @@ readme:
 	sed -i '1,10 s/## Exact optimization/# Exact optimization/' $(FILESDIR)/README.md
 	sed -i 's/<!-- \(.*\) -->/\1/g' $(FILESDIR)/README.md
 
+# the two first lines (with svg's) are removed (build status and deployment)
+readme_latex:
+	make readme
+	sed -i '/Build Status/d' $(FILESDIR)/README.md
+	sed -i '/PyPi version/d' $(FILESDIR)/README.md
+
+readme_html:
+	rm -f $(FILESDIR)/README.md
+	make readme
+
 # build pdf files, get and adapt toulbar2/README.md
 # and install them into FILESDIR
 # Note : has to be done before html pages
 files:
 	rm -f $(FILESDIR)/*.*
-	make readme
+	make readme_latex
 	make latexpdf
 	cp $(BUILDDIR)/latex/*.pdf $(FILESDIR)/.
 
@@ -39,6 +49,7 @@ files:
 docs:
 	make clean
 	make files
+	make readme_html
 	make html
 	make files
 	mkdir $(BUILDDIR)/html/pdf
