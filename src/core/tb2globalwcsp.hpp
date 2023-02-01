@@ -14,6 +14,7 @@ extern void tb2setmax(int wcspId, int varIndex, Value value, void* solver);
 class WeightedCSPConstraint : public AbstractNaryConstraint {
     Cost lb; // encapsulated slave problem lower bound hard constraint (must be greater or equal to this bound)
     Cost ub; // encapsulated slave problem upper bound hard constraint (must be strictly less than this bound)
+    Cost negcost; // sum of negative cost shift from slave problem and its negation form
     WCSP *problem; // encapsulated slave problem
     WCSP *negproblem; // encapsulated slave problem in negation form
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
@@ -29,6 +30,7 @@ public:
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , lb(lb_in)
         , ub(ub_in)
+        , negcost(problem_in->getNegativeLb() + negproblem_in->getNegativeLb())
         , problem(problem_in)
         , negproblem(negproblem_in)
         , nonassigned(arity_in)
@@ -53,7 +55,9 @@ public:
         problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
         negproblem->setSolver(wcsp->getSolver());
         problem->updateUb(ub);
-        negproblem->updateUb(-lb + negproblem->getNegativeLb() + UNIT_COST);
+        problem->enforceUb();
+        negproblem->updateUb(-lb + negcost + UNIT_COST);
+        negproblem->enforceUb();
     }
 
     virtual ~WeightedCSPConstraint() {}
@@ -108,7 +112,7 @@ public:
     //FIXME: only valid if all hard constraints in the slave problem are also present in the master
     bool universal() override
     {
-        if (problem->getLb() >= lb && -(negproblem->getLb() - negproblem->getNegativeLb()) < ub) {
+        if (problem->getLb() >= lb && -(negproblem->getLb() - negcost) < ub) {
             return true;
         } else {
             return false;
@@ -212,7 +216,7 @@ public:
                 return;
             }
 
-            if (nonassigned <= 3) {
+            if (nonassigned <= NARYPROJECTIONSIZE) {
                 deconnect();
                 projectNary();
             }
@@ -227,17 +231,17 @@ public:
     {
         //FIXME: synchronize current domains between master and slave problems at initialization?
         wcsp->revise(this);
+        problem->enforceUb();
+        negproblem->enforceUb();
         assigns();
         if (connected()) {
-            problem->enforceUb();
             problem->propagate();
-        }
-        if (connected()) {
-            negproblem->enforceUb();
-            negproblem->propagate();
+            if (connected()) {
+                negproblem->propagate();
+            }
         }
         assert(problem->getLb() < ub);
-        assert(negproblem->getLb() < -lb + negproblem->getNegativeLb() + UNIT_COST);
+        assert(negproblem->getLb() < -lb + negcost + UNIT_COST);
     }
 
     void print(ostream& os) override

@@ -5339,7 +5339,7 @@ void WCSP::propagate()
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->end();
     }
-    assert(verify());
+    assert(verify() || (getSolver() && ((Solver *)getSolver())->getWCSP() != this && WeightedCSPConstraint::WeightedCSPConstraints[getIndex()]->deconnected()));
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());
