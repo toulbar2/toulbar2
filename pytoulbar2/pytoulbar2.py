@@ -453,6 +453,13 @@ class CFN:
         else:
             print('Error unknown format!')
 
+    def Print(self):
+        """Print prints the content of the CFN (variables, cost functions).
+
+        """
+
+        self.CFN.wcsp.print()
+
     def GetNbVars(self):
         """GetNbVars returns the number of variables.
 
