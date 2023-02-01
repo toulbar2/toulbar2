@@ -395,7 +395,7 @@ public:
     /// \brief returns current number of unassigned variables
     unsigned int numberOfUnassignedVariables() const
     {
-        int res = 0;
+        unsigned int res = 0;
         for (unsigned int i = 0; i < vars.size(); i++)
             if (unassigned(i))
                 res++;

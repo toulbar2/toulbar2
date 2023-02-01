@@ -693,6 +693,8 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     }
 
     //cout << "Lb of the combined wcsp: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
+
+    wcsp->sortConstraints(); // close the WCSP model
 }
 
 //---------------------------------------------------------------------------

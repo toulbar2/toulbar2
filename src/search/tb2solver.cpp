@@ -1665,6 +1665,7 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve(Cost lb)
 {
+    assert(numberOfUnassignedVariables() == (int)getWCSP()->numberOfUnassignedVariables());
     int varIndex = -1;
     if (ToulBar2::bep)
         varIndex = getMostUrgent();

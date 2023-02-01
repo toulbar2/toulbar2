@@ -403,6 +403,34 @@ class CFN:
             iscope.append(v)
         params = str(list(parameters))[1:-1].replace(',','').replace('\'','')
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
+
+    def AddWeightedCSPConstraint(self, problem, lb, ub):
+        """AddWeightedCSPConstraint creates a hard global constraint on the cost of an input weighted constraint satisfaction problem such that its valid solutions must have a cost value in [lb,ub[. 
+        
+        Args:
+            problem (CFN): input problem.
+            lb (decimal cost): any valid solution in the input problem must have a cost greater than or equal to lb.
+            ub (decimal cost): any valid solution in the input problem must have a cost strictly less than ub.
+            
+        Note:
+            All variables in the input problem must exist in the current problem (with the same names).
+            
+        Example:
+            m=tb2.CFN(); m.Read("master.cfn");s=tb2.CFN();s.Read("slave.cfn");m.AddWeightedCSPConstraint(s, lb, ub);m.Solve()
+        """
+        iscope = []
+        for i, v in enumerate(problem.VariableNames):
+            if isinstance(v, str):
+                v = self.VariableIndices[v]
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v))
+            iscope.append(v)
+        multicfn = tb2.MultiCFN()
+        multicfn.PushCFN(problem, -1)
+        negproblem = tb2.CFN()
+        negproblem.InitFromMultiCFN(multicfn)
+        negproblem.UpdateUB(1. - problem.GetLB())        
+        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcp.decimalToCost(lb), problem.CFN.wcp.decimalToCost(ub))
         
     def Read(self, filename):
         """Read reads the problem from a file.

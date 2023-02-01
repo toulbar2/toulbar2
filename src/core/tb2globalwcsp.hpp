@@ -30,16 +30,20 @@ public:
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , lb(lb_in)
         , ub(ub_in)
-        , negcost(problem_in->getNegativeLb() + negproblem_in->getNegativeLb())
+        , negcost(MIN_COST)
         , problem(problem_in)
         , negproblem(negproblem_in)
         , nonassigned(arity_in)
     {
         assert(arity_in == (int)problem_in->numberOfVariables());
         assert(arity_in == (int)negproblem_in->numberOfVariables());
+        if (lb >= ub) {
+            cerr << "Wrong bounds in WeightedCSPConstraint: " << lb << " < " << ub << endl;
+            throw WrongFileFormat();
+        }
         for (int i = 0; i < arity_in; i++) {
-            assert(scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)problem->getVar(i))->getDomainInitSize());
-            assert(scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)negproblem->getVar(i))->getDomainInitSize());
+            assert(!problem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)problem->getVar(i))->getDomainInitSize());
+            assert(!negproblem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)negproblem->getVar(i))->getDomainInitSize());
             varIndexes.push_back(i);
             newValues.push_back(scope_in[i]->getInf());
             conflictWeights.push_back(0);
@@ -48,16 +52,22 @@ public:
         ToulBar2::removevalue = ::tb2removevalue;
         ToulBar2::setmin = ::tb2setmin;
         ToulBar2::setmax = ::tb2setmax;
-        WeightedCSPConstraints[problem->getIndex()] = this;
-        WeightedCSPConstraints[negproblem->getIndex()] = this;
         assert(MasterWeightedCSP == NULL || MasterWeightedCSP == wcsp); //FIXME: the slave problem cannot contain a WeightedCSPConstraint inside!
         MasterWeightedCSP = wcsp;
-        problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
-        negproblem->setSolver(wcsp->getSolver());
-        problem->updateUb(ub);
-        problem->enforceUb();
-        negproblem->updateUb(-lb + negcost + UNIT_COST);
-        negproblem->enforceUb();
+        if (problem) {
+            negcost += problem->getNegativeLb();
+            WeightedCSPConstraints[problem->getIndex()] = this;
+            problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
+            problem->updateUb(ub);
+            problem->enforceUb();
+        }
+        if (negproblem) {
+            negcost += negproblem->getNegativeLb();
+            WeightedCSPConstraints[negproblem->getIndex()] = this;
+            negproblem->setSolver(wcsp->getSolver());
+            negproblem->updateUb(-lb + negcost + UNIT_COST);
+            negproblem->enforceUb();
+        }
     }
 
     virtual ~WeightedCSPConstraint() {}
@@ -112,7 +122,7 @@ public:
     //FIXME: only valid if all hard constraints in the slave problem are also present in the master
     bool universal() override
     {
-        if (problem->getLb() >= lb && -(negproblem->getLb() - negcost) < ub) {
+        if ((!problem || problem->getLb() >= lb) && (!negproblem || -(negproblem->getLb() - negcost) < ub)) {
             return true;
         } else {
             return false;
@@ -135,11 +145,11 @@ public:
         bool unsat = false;
         try {
             Store::store();
-            problem->assignLS(varIndexes, newValues); // throw a Contradiction if unsatisfied
-            negproblem->assignLS(varIndexes, newValues); // idem
+            if (problem) problem->assignLS(varIndexes, newValues); // throw a Contradiction if unsatisfied
+            if (negproblem) negproblem->assignLS(varIndexes, newValues); // idem
         } catch (const Contradiction&) {
-            problem->whenContradiction();
-            negproblem->whenContradiction();
+            if (problem) problem->whenContradiction();
+            if (negproblem) negproblem->whenContradiction();
             unsat = true;
         }
         Store::restore(depth);
@@ -191,12 +201,23 @@ public:
     double computeTightness() override
     {
         double res = 0.; //FIXME: take into account elimBinConstr and elimTernConstr
-        for (unsigned int c=0; c < problem->numberOfConstraints(); c++) {
-            if (problem->getCtr(c)->connected()) {
-                res += problem->getCtr(c)->getTightness();
+        if (problem) {
+            for (unsigned int c=0; c < problem->numberOfConstraints(); c++) {
+                if (problem->getCtr(c)->connected()) {
+                    res += problem->getCtr(c)->getTightness();
+                }
             }
+            return res / problem->numberOfConnectedConstraints();
+        } else if (negproblem) {
+            for (unsigned int c=0; c < negproblem->numberOfConstraints(); c++) {
+                if (negproblem->getCtr(c)->connected()) {
+                    res += negproblem->getCtr(c)->getTightness();
+                }
+            }
+            return res / negproblem->numberOfConnectedConstraints();
+        } else {
+            return 1.;
         }
-        return res / problem->numberOfConnectedConstraints();
     }
 
     Cost getMaxFiniteCost() override
@@ -231,17 +252,17 @@ public:
     {
         //FIXME: synchronize current domains between master and slave problems at initialization?
         wcsp->revise(this);
-        problem->enforceUb();
-        negproblem->enforceUb();
+        if (problem) problem->enforceUb();
+        if (negproblem) negproblem->enforceUb();
         assigns();
         if (connected()) {
-            problem->propagate();
+            if (problem) problem->propagate();
             if (connected()) {
-                negproblem->propagate();
+                if (negproblem) negproblem->propagate();
             }
         }
-        assert(problem->getLb() < ub);
-        assert(negproblem->getLb() < -lb + negcost + UNIT_COST);
+        assert(!problem || problem->getLb() < ub);
+        assert(!negproblem || negproblem->getLb() < -lb + negcost + UNIT_COST);
     }
 
     void print(ostream& os) override
@@ -265,7 +286,8 @@ public:
         }
         os << " arity: " << arity_;
         os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
-        os << *problem << endl << *negproblem << endl;
+        if (problem) os << *problem << endl;
+        if (negproblem) os << *negproblem << endl;
     }
 
     //TODO:
@@ -294,10 +316,10 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
     if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
         masterVar = WeightedCSPConstraint::WeightedCSPConstraints[wcspId]->getVar(varIndex);
         masterVar->assign(value);
-        setvalue(WeightedCSPConstraint::MasterWeightedCSP->getIndex(), masterVar->wcspIndex, value, WeightedCSPConstraint::MasterWeightedCSP->getSolver());
     } else {
         // we came from the master
         masterVar = WeightedCSPConstraint::MasterWeightedCSP->getVar(varIndex);
+        setvalue(WeightedCSPConstraint::MasterWeightedCSP->getIndex(), masterVar->wcspIndex, value, WeightedCSPConstraint::MasterWeightedCSP->getSolver());
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " = " << value << endl;
@@ -306,10 +328,10 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) { // only for slave problems which are concerned by this variable
-            if (wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->problem->getVar(varCtrIndex)->assign(value);
             }
-            if (wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->negproblem->getVar(varCtrIndex)->assign(value);
             }
         }
@@ -335,10 +357,10 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
-            if (wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->problem->getVar(varCtrIndex)->remove(value);
             }
-            if (wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->negproblem->getVar(varCtrIndex)->remove(value);
             }
         }
@@ -364,10 +386,10 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
-            if (wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->problem->getVar(varCtrIndex)->increase(value);
             }
-            if (wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->negproblem->getVar(varCtrIndex)->increase(value);
             }
         }
@@ -393,10 +415,10 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
-            if (wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->problem->getVar(varCtrIndex)->decrease(value);
             }
-            if (wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+            if (gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->negproblem->getVar(varCtrIndex)->decrease(value);
             }
         }
