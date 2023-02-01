@@ -50,6 +50,8 @@ public:
         WeightedCSPConstraints[negproblem->getIndex()] = this;
         assert(MasterWeightedCSP == NULL || MasterWeightedCSP == wcsp); //FIXME: the slave problem cannot contain a WeightedCSPConstraint inside!
         MasterWeightedCSP = wcsp;
+        problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
+        negproblem->setSolver(wcsp->getSolver());
         problem->updateUb(ub);
         negproblem->updateUb(-lb + negproblem->getNegativeLb() + UNIT_COST);
     }
@@ -115,21 +117,33 @@ public:
 
     Cost eval(const Tuple& s) override
     {
+        assert((int)s.size() == arity_);
         for (int i=0; i < arity_; i++) {
             newValues[i] = ((EnumeratedVariable *)getVar(i))->toValue(s[i]);
         }
+        ToulBar2::setvalue = NULL;
+        ToulBar2::removevalue = NULL;
+        ToulBar2::setmin = NULL;
+        ToulBar2::setmax = NULL;
+        bool rasps = ToulBar2::RASPS;
+        ToulBar2::RASPS = false;
         int depth = Store::getDepth();
         bool unsat = false;
         try {
             Store::store();
             problem->assignLS(varIndexes, newValues); // throw a Contradiction if unsatisfied
-            negproblem->assignLS(varIndexes, newValues);
+            negproblem->assignLS(varIndexes, newValues); // idem
         } catch (const Contradiction&) {
             problem->whenContradiction();
             negproblem->whenContradiction();
             unsat = true;
         }
         Store::restore(depth);
+        ToulBar2::setvalue = ::tb2setvalue;
+        ToulBar2::removevalue = ::tb2removevalue;
+        ToulBar2::setmin = ::tb2setmin;
+        ToulBar2::setmax = ::tb2setmax;
+        ToulBar2::RASPS = rasps;
         if (unsat) {
             return MAX_COST;
         } else {
@@ -271,21 +285,23 @@ map<int, WeightedCSPConstraint *> WeightedCSPConstraint::WeightedCSPConstraints;
 void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
 {
     assert(WeightedCSPConstraint::MasterWeightedCSP);
+    assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
     Variable *masterVar = NULL;
     if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
         masterVar = WeightedCSPConstraint::WeightedCSPConstraints[wcspId]->getVar(varIndex);
         masterVar->assign(value);
-        assert(solver && ((Solver *)solver)->getWCSP() == WeightedCSPConstraint::MasterWeightedCSP);
-        setvalue(WeightedCSPConstraint::MasterWeightedCSP->getIndex(), masterVar->wcspIndex, value, solver);
+        setvalue(WeightedCSPConstraint::MasterWeightedCSP->getIndex(), masterVar->wcspIndex, value, WeightedCSPConstraint::MasterWeightedCSP->getSolver());
     } else {
         // we came from the master
         masterVar = WeightedCSPConstraint::MasterWeightedCSP->getVar(varIndex);
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " = " << value << endl;
+    bool rasps = ToulBar2::RASPS;
+    ToulBar2::RASPS = false;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
-        if (varCtrIndex != -1) {
+        if (varCtrIndex != -1) { // only for slave problems which are concerned by this variable
             if (wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 gc.second->problem->getVar(varCtrIndex)->assign(value);
             }
@@ -294,6 +310,7 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
             }
         }
     }
+    ToulBar2::RASPS = rasps;
 }
 
 void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
@@ -309,6 +326,8 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " != " << value << endl;
+    bool rasps = ToulBar2::RASPS;
+    ToulBar2::RASPS = false;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
@@ -320,6 +339,7 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
             }
         }
     }
+    ToulBar2::RASPS = rasps;
 }
 
 void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
@@ -335,6 +355,8 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " >= " << value << endl;
+    bool rasps = ToulBar2::RASPS;
+    ToulBar2::RASPS = false;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
@@ -346,6 +368,7 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
             }
         }
     }
+    ToulBar2::RASPS = rasps;
 }
 
 void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
@@ -361,6 +384,8 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " <= " << value << endl;
+    bool rasps = ToulBar2::RASPS;
+    ToulBar2::RASPS = false;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
@@ -372,6 +397,7 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
             }
         }
     }
+    ToulBar2::RASPS = rasps;
 }
 #endif /*TB2GLOBALWCSP_HPP_*/
 
