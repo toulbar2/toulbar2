@@ -425,7 +425,7 @@ class CFN:
                 vname = v
                 v = self.VariableIndices.get(vname, -1)
                 if (v < 0 or v >= len(self.VariableNames)):
-                    v = self.AddVariable(vname, problem.Domain(vname))
+                    v = self.AddVariable(vname, [(problem.CFN.wcsp.getValueName(i, value) if len(problem.CFN.wcsp.getValueName(i, value)) > 0 else value) for value in problem.Domain(vname)])
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v)

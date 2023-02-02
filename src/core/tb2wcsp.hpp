@@ -442,6 +442,7 @@ public:
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, vector<Value>& dom);
     void addValueName(int xIndex, const string& name);
+    const string& getValueName(int xIndex, Value value) { return vars[xIndex]->getValueName(toIndex(xIndex, value)); }
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
     void postNullaryConstraint(Double cost);

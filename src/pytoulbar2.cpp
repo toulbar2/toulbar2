@@ -354,6 +354,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getNbDEE", &WeightedCSP::getNbDEE)
         .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
+        .def("getValueName", &WeightedCSP::getValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
         .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
         .def(

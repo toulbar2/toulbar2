@@ -245,6 +245,7 @@ public:
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, vector<Value>& dom) = 0; ///< \brief create an enumerated variable with its domain values
     virtual void addValueName(int xIndex, const string& valuename) = 0; ///< \brief add next value name \warning should be called on EnumeratedVariable object as many times as its number of initial domain values
+    virtual const string& getValueName(int xIndex, Value value) = 0; ///< \brief return the name associated to a value as defined by addValueName or an empty string if no name found
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
     virtual void postNullaryConstraint(Double cost) = 0;
     virtual void postNullaryConstraint(Cost cost) = 0;
