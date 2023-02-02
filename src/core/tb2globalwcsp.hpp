@@ -267,8 +267,7 @@ public:
 
     void print(ostream& os) override
     {
-        os << endl
-           << "WeightedWCSPConstraint(";
+        os << this << "WeightedWCSPConstraint(";
         int unassigned_ = 0;
         for (int i = 0; i < arity_; i++) {
             if (scope[i]->unassigned())

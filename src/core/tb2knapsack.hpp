@@ -1959,8 +1959,7 @@ public:
 
     void print(ostream& os) override
     {
-        os << endl
-           << this << " knapsackp(";
+        os << this << " knapsackp(";
 
         int unassigned_ = 0;
         int unassignedAMO = 0;

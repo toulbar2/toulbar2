@@ -78,6 +78,7 @@ class CFN:
         self.VariableNames = []
         
         self.CFN = tb2.Solver() # initialize VAC algorithm depending on tb2.option.vac
+        self.InternalCFNs = list() # keep alive internal CFNs created by AddWeightedCSPConstraint
         
         self.UbInit = ubinit # warning! cannot convert initial upper bound into an integer cost before knowing the rest of the problem        
         self.Contradiction = tb2.Contradiction
@@ -157,7 +158,7 @@ class CFN:
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
@@ -222,7 +223,7 @@ class CFN:
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
@@ -284,7 +285,7 @@ class CFN:
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
@@ -321,7 +322,7 @@ class CFN:
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
@@ -361,7 +362,7 @@ class CFN:
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v)
@@ -397,7 +398,7 @@ class CFN:
         iscope = []
         for i, v in enumerate(scope):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v)
@@ -413,7 +414,7 @@ class CFN:
             ub (decimal cost): any valid solution in the input problem must have a cost strictly less than ub.
             
         Note:
-            All variables in the input problem must exist in the current problem (with the same names).
+            If a variable in the input problem does not exist in the current problem (with the same name), it is automatically added.
             
         Example:
             m=tb2.CFN(); m.Read("master.cfn");s=tb2.CFN();s.Read("slave.cfn");m.AddWeightedCSPConstraint(s, lb, ub);m.Solve()
@@ -421,16 +422,20 @@ class CFN:
         iscope = []
         for i, v in enumerate(problem.VariableNames):
             if isinstance(v, str):
-                v = self.VariableIndices[v]
+                vname = v
+                v = self.VariableIndices.get(vname, -1)
+                if (v < 0 or v >= len(self.VariableNames)):
+                    v = self.AddVariable(vname, problem.Domain(vname))
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v)
-        multicfn = tb2.MultiCFN()
+        multicfn = MultiCFN()
         multicfn.PushCFN(problem, -1)
-        negproblem = tb2.CFN()
+        negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose)
         negproblem.InitFromMultiCFN(multicfn)
-        negproblem.UpdateUB(1. - problem.GetLB())        
-        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcp.decimalToCost(lb), problem.CFN.wcp.decimalToCost(ub))
+        negproblem.UpdateUB(1. - problem.GetLB())
+        self.InternalCFNs.append(negproblem)
+        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcsp.DoubletoCost(lb), problem.CFN.wcsp.DoubletoCost(ub))
         
     def Read(self, filename):
         """Read reads the problem from a file.
@@ -457,7 +462,7 @@ class CFN:
                                Possible operations are: assign ('='), remove ('#'), decrease maximum value ('<'), increase minimum value ('>').
                                
         Example:
-            Parse('(,0=1,1=1,2#0)'): assigns the first and second variable to value 1 and remove value 0 from the third variable. 
+            Parse(',0=1,1=1,2#0'): assigns the first and second variable to value 1 and remove value 0 from the third variable. 
             
         """
         self.CFN.parse_solution(certificate, False if self.configuration else True)    # WARNING! False: do not reuse certificate in future searches used by structure learning evaluation procedure!
@@ -497,17 +502,17 @@ class CFN:
         """
         return self.CFN.wcsp.numberOfVariables()
 
-    def Domain(self, varIndex):
+    def Domain(self, var):
         """Domain returns the current domain of a given variable.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
+            var (int|str): variable name or its index as returned by AddVariable.
 
         Returns:
             List of domain values (list).
 
         """
-        return self.CFN.wcsp.getEnumDomain(varIndex)
+        return self.CFN.wcsp.getEnumDomain(self.VariableIndices[var] if isinstance(var, str) else var)
 
     def GetNbConstrs(self):
         """GetNbConstrs returns the number of non-unary cost functions.
@@ -786,79 +791,79 @@ class CFN:
         """
         tb2.store.restore(depth)
 
-    def Assign(self, varIndex, value):
+    def Assign(self, var, value):
         """Assign assigns a variable to a domain value.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
+            var (int|str): variable name or its index as returned by AddVariable.
             value (int): domain value.
 
         """
-        self.CFN.wcsp.assign(varIndex, value)
+        self.CFN.wcsp.assign(self.VariableIndices[var] if isinstance(var, str) else var, value)
         self.CFN.wcsp.propagate()
 
-    def MultipleAssign(self, varIndexes, values):
+    def MultipleAssign(self, vars, values):
         """MultipleAssign assigns several variables at once.
 
         Args:
-            varIndexes (list): list of indexes of variables.
+            vars (list): list of indexes or names of variables.
             values (list): list of domain values.
 
         """
-        self.CFN.wcsp.assignLS(varIndexes, values, false)
+        self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, false)
         
-    def Remove(self, varIndex, value):
+    def Remove(self, var, value):
         """Remove removes a value from the domain of a variable.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
+            var (int|str): variable name or its index as returned by AddVariable.
             value (int): domain value.
 
         """
-        self.CFN.wcsp.remove(varIndex, value)
+        self.CFN.wcsp.remove(self.VariableIndices[var] if isinstance(var, str) else var, value)
         self.CFN.wcsp.propagate()
         
-    def Increase(self, varIndex, value):
+    def Increase(self, var, value):
         """Increase removes the first values strictly lower than a given value in the domain of a variable.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
+            var (int|str): variable name or its index as returned by AddVariable.
             value (int): domain value.
 
         """
-        self.CFN.wcsp.increase(varIndex, value)
+        self.CFN.wcsp.increase(self.VariableIndices[var] if isinstance(var, str) else var, value)
         self.CFN.wcsp.propagate()
         
-    def Decrease(self, varIndex, value):
+    def Decrease(self, var, value):
         """Decrease removes the last values strictly greater than a given value in the domain of a variable.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
+            var (int|str): variable name or its index as returned by AddVariable.
             value (int): domain value.
 
         """
-        self.CFN.wcsp.decrease(varIndex, value)
+        self.CFN.wcsp.decrease(self.VariableIndices[var] if isinstance(var, str) else var, value)
         self.CFN.wcsp.propagate()
         
-    def Deconnect(self, varIndex):
+    def Deconnect(self, var):
         """Deconnect deconnects a variable from the rest of the problem and assigns it to its support value.
 
         Args:
-            varIndex (int): index of the variable as returned by AddVariable.
+            var (int|str): variable name or its index as returned by AddVariable.
 
         """
         varIndexes = []
-        varIndexes.append(varIndex)
+        varIndexes.append(self.VariableIndices[var] if isinstance(var, str) else var)
         self.MultipleDeconnect(varIndexes)
 
-    def MultipleDeconnect(self, varIndexes):
+    def MultipleDeconnect(self, vars):
         """MultipleDeconnect deconnects a set of variables from the rest of the problem and assigns them to their support value.
 
         Args:
-            varIndexes (list): list of indexes of variables.
+            vars (list): list of indexes or names of variables.
 
         """
-        self.CFN.wcsp.deconnect(varIndexes)
+        self.CFN.wcsp.deconnect([self.VariableIndices[var] if isinstance(var, str) else var for var in vars])
         
     def ClearPropagationQueues(self):
         """ClearPropagationQueues resets propagation queues. It should be called when an exception Contradiction occurs.
