@@ -22,6 +22,7 @@
 #include <thread>
 
 extern void setvalue(int wcspId, int varIndex, Value value, void* solver);
+extern void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);
 
 const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
@@ -2474,7 +2475,7 @@ void Solver::beginSolve(Cost ub)
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
 
-    if (CSP(wcsp->getLb(), wcsp->getUb())) {
+    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) {
         ToulBar2::LcLevel = LC_AC;
     }
 

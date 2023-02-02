@@ -67,7 +67,11 @@ public:
             negproblem->setSolver(wcsp->getSolver());
             negproblem->updateUb(-lb + negcost + UNIT_COST);
             negproblem->enforceUb();
+//            negproblem->preprocessing();
         }
+//        if (problem) {
+//            problem->preprocessing();
+//        }
     }
 
     virtual ~WeightedCSPConstraint() {}
