@@ -41,6 +41,26 @@ public:
             cerr << "Wrong bounds in WeightedCSPConstraint: " << lb << " < " << ub << endl;
             throw WrongFileFormat();
         }
+        if (ToulBar2::preprocessFunctional > 0) {
+            cout << "Warning! Cannot perform functional elimination with WeightedCSPConstraint." << endl;
+            ToulBar2::preprocessFunctional = 0;
+        }
+        if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {
+            cout << "Warning! Cannot perform variable elimination with WeightedCSPConstraint." << endl;
+            ToulBar2::elimDegree = -1;
+            ToulBar2::elimDegree_preprocessing = -1;
+            ToulBar2::elimDegree_ = -1;
+            ToulBar2::elimDegree_preprocessing_ = -1;
+        }
+        if (ToulBar2::DEE >= 1) {
+            cout << "Warning! Cannot perform dead-end elimination with WeightedCSPConstraint." << endl;
+            ToulBar2::DEE = 0;
+            ToulBar2::DEE_ = 0;
+        }
+        if (ToulBar2::FullEAC) {
+            cout << "Warning! Cannot perform VAC-integrality heuristic with WeightedCSPConstraint." << endl;
+            ToulBar2::FullEAC = false;
+        }
         for (int i = 0; i < arity_in; i++) {
             assert(!problem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)problem->getVar(i))->getDomainInitSize());
             assert(!negproblem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)negproblem->getVar(i))->getDomainInitSize());
@@ -328,6 +348,8 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " = " << value << endl;
     bool rasps = ToulBar2::RASPS;
     ToulBar2::RASPS = false;
+    int userasps = ToulBar2::useRASPS;
+    ToulBar2::useRASPS = 0;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) { // only for slave problems which are concerned by this variable
@@ -340,6 +362,7 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
         }
     }
     ToulBar2::RASPS = rasps;
+    ToulBar2::useRASPS = userasps;
 }
 
 void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
@@ -357,6 +380,8 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " != " << value << endl;
     bool rasps = ToulBar2::RASPS;
     ToulBar2::RASPS = false;
+    int userasps = ToulBar2::useRASPS;
+    ToulBar2::useRASPS = 0;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
@@ -369,6 +394,7 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
         }
     }
     ToulBar2::RASPS = rasps;
+    ToulBar2::useRASPS = userasps;
 }
 
 void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
@@ -386,6 +412,8 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " >= " << value << endl;
     bool rasps = ToulBar2::RASPS;
     ToulBar2::RASPS = false;
+    int userasps = ToulBar2::useRASPS;
+    ToulBar2::useRASPS = 0;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
@@ -398,6 +426,7 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
         }
     }
     ToulBar2::RASPS = rasps;
+    ToulBar2::useRASPS = userasps;
 }
 
 void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
@@ -415,6 +444,8 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " <= " << value << endl;
     bool rasps = ToulBar2::RASPS;
     ToulBar2::RASPS = false;
+    int userasps = ToulBar2::useRASPS;
+    ToulBar2::useRASPS = 0;
     for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
         int varCtrIndex = gc.second->getIndex(masterVar);
         if (varCtrIndex != -1) {
@@ -427,6 +458,7 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
         }
     }
     ToulBar2::RASPS = rasps;
+    ToulBar2::useRASPS = userasps;
 }
 #endif /*TB2GLOBALWCSP_HPP_*/
 

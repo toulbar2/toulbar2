@@ -944,7 +944,7 @@ void Solver::increase(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << "(" << wcsp->getValueName(varIndex, value) << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->increase(varIndex, value);
     wcsp->propagate();
@@ -972,7 +972,7 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << "(" << wcsp->getValueName(varIndex, value) << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
     }
     wcsp->decrease(varIndex, value);
     wcsp->propagate();
@@ -1025,7 +1025,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
+        cout << "] Try " << wcsp->getName(varIndex) << " == " << value << "(" << wcsp->getValueName(varIndex, value) << ")" << endl;
     }
     wcsp->assign(varIndex, value);
     wcsp->propagate();
@@ -1053,7 +1053,7 @@ void Solver::remove(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
+        cout << "] Try " << wcsp->getName(varIndex) << " != " << value << "(" << wcsp->getValueName(varIndex, value) << ")" << endl;
     }
     wcsp->remove(varIndex, value);
     wcsp->propagate();

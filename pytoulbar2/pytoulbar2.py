@@ -56,7 +56,7 @@ class CFN:
         tb2.option.verbose = verbose   # verbosity level of toulbar2 (-1:no message, 0:search statistics, 1:search tree, 2-7: propagation information)
 
         # default options (can be modified later by the user)
-        tb2.option.FullEAC = True   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable
+        tb2.option.FullEAC = False   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable
         tb2.option.VACthreshold = False  # if True, reuse VAC auto-threshold value found in preprocessing during search 
         tb2.option.useRASPS = 0   # if 1 or greater, perform iterative RASPS depth-first search (or LDS if greater than 1) in preprocessing during 1000 backtracks to find a good initial upperbound (to be used with VAC)
         tb2.option.weightedTightness = 0   # if 1 or 2, variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
