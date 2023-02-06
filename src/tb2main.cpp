@@ -1608,6 +1608,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfsGlobalLimit = 0;
                 ToulBar2::DEE = 0;
                 ToulBar2::elimDegree = -1;
+                ToulBar2::preprocessFunctional = 0;
             } else if (args.OptionId() == NO_OPT_bilevel) {
                 ToulBar2::bilevel = 0;
             }

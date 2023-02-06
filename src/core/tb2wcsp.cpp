@@ -762,6 +762,14 @@ void tb2checkOptions()
         cout << "Warning! Hybrid best-first search not compatible with bilevel optimization (use '-hbfs:')." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::bilevel && ToulBar2::elimDegree >= 0) {
+        cout << "Warning! Boosting search by bounded variable elimination not compatible with bilevel optimization (use '-e:')." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::bilevel && ToulBar2::preprocessFunctional > 0) {
+        cout << "Warning! Cannot perform functional elimination with bilevel optimization (use '-f:')." << endl;
+        throw BadConfiguration();
+    }
     if (ToulBar2::heuristicFreedom && !ToulBar2::hbfs) {
         cout << "Warning! adaptive BTD requires HBFS (remove -hbfs: option)." << endl;
         ToulBar2::heuristicFreedom = false;
