@@ -6135,11 +6135,13 @@ void WCSP::ternaryCompletion()
                                             // 		bctr2, bctr3);
                                             // if (added)
                                             float tight = bctr->computeTightness() + bctr2->computeTightness() + bctr3->computeTightness();
-                                            long unsigned xsize = x->getDomainInitSize();
-                                            long unsigned ysize = y->getDomainInitSize();
-                                            long unsigned zsize = z->getDomainInitSize();
-                                            TripleVarCostSize tvcs = { x, y, z, tight, (size_t)xsize * (size_t)ysize * (size_t)zsize };
-                                            triplelist.push_back(tvcs);
+                                            if (tight > 0.) {
+                                                long unsigned xsize = x->getDomainInitSize();
+                                                long unsigned ysize = y->getDomainInitSize();
+                                                long unsigned zsize = z->getDomainInitSize();
+                                                TripleVarCostSize tvcs = { x, y, z, tight, (size_t)xsize * (size_t)ysize * (size_t)zsize };
+                                                triplelist.push_back(tvcs);
+                                            }
                                         }
                                     }
                                 }
