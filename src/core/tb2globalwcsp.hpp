@@ -14,8 +14,9 @@ extern void tb2setmax(int wcspId, int varIndex, Value value, void* solver);
 class WeightedCSPConstraint : public AbstractNaryConstraint {
     Cost lb; // encapsulated slave problem lower bound hard constraint (must be greater or equal to this bound)
     Cost ub; // encapsulated slave problem upper bound hard constraint (must be strictly less than this bound)
+    Cost negCost; // sum of cost shifts from slave problem and from its negative form
     WCSP *problem; // encapsulated slave problem
-    WCSP *negproblem; // encapsulated slave problem in negation form (should be equivalent to -problem)
+    WCSP *negproblem; // encapsulated slave problem in negative form (should be equivalent to -problem)
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<int> varIndexes; // copy of scope using integer identifiers inside slave problem (should be equal to [0, 1, 2, ..., arity-1])
     vector<Value> newValues; // used to convert Tuples into variable assignments
@@ -29,6 +30,7 @@ public:
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , lb(lb_in)
         , ub(ub_in)
+        , negCost(MIN_COST)
         , problem(problem_in)
         , negproblem(negproblem_in)
         , nonassigned(arity_in)
@@ -73,15 +75,17 @@ public:
         assert(MasterWeightedCSP == NULL || MasterWeightedCSP == wcsp); //FIXME: the slave problem cannot contain a WeightedCSPConstraint inside!
         MasterWeightedCSP = wcsp;
         if (problem) {
+            negCost += problem->getNegativeLb();
             WeightedCSPConstraints[problem->getIndex()] = this;
             problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
-            problem->updateUb(ub + problem->getNegativeLb());
+            problem->updateUb(ub);
             problem->enforceUb();
         }
         if (negproblem) {
+            negCost += negproblem->getNegativeLb();
             WeightedCSPConstraints[negproblem->getIndex()] = this;
             negproblem->setSolver(wcsp->getSolver());
-            negproblem->updateUb(-lb + negproblem->getNegativeLb() + UNIT_COST);
+            negproblem->updateUb(-lb + negCost + UNIT_COST);
             negproblem->enforceUb();
 //            negproblem->preprocessing();
         }
@@ -142,7 +146,7 @@ public:
     //FIXME: only valid if all hard constraints in the slave problem are also present in the master
     bool universal() override
     {
-        if (problem && negproblem && problem->getLb() - problem->getNegativeLb() >= lb && -(negproblem->getLb() - negproblem->getNegativeLb()) < ub) {
+        if (problem && negproblem && problem->getLb() >= lb && negproblem->getLb() > -ub + negCost) {
             return true;
         } else {
             return false;
@@ -165,8 +169,17 @@ public:
         bool unsat = false;
         try {
             Store::store();
-            if (problem) problem->assignLS(varIndexes, newValues); // throw a Contradiction if unsatisfied
-            if (negproblem) negproblem->assignLS(varIndexes, newValues); // idem
+            if (problem) {
+                problem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates ub
+                if (problem->getLb() < lb) { // checks if the solution violates lb
+                    unsat = true;
+                }
+            } else if (negproblem) {
+                negproblem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates lb
+                if (negproblem->getLb() <= -ub + negCost) { // checks if the solution violates ub
+                    unsat = true;
+                }
+            }
         } catch (const Contradiction&) {
             if (problem) problem->whenContradiction();
             if (negproblem) negproblem->whenContradiction();
@@ -281,8 +294,8 @@ public:
                 if (negproblem) negproblem->propagate();
             }
         }
-        assert(!problem || problem->getLb() < ub + problem->getNegativeLb());
-        assert(!negproblem || negproblem->getLb() < -lb + negproblem->getNegativeLb() + UNIT_COST);
+        assert(!problem || problem->getLb() < ub);
+        assert(!negproblem || negproblem->getLb() < -lb + negCost + UNIT_COST);
     }
 
     void print(ostream& os) override

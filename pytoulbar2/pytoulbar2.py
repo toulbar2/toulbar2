@@ -475,8 +475,7 @@ class CFN:
 
         """
         if self.UbInit is not None:
-            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
-            self.CFN.wcsp.updateUb(integercost)
+            self.CFN.wcsp.updateDUb(self.UbInit)
         if '.wcsp' in filename:
             if self.CFN.wcsp.getNegativeLb() > 0 or tb2.option.decimalPoint != 0:
                 print('Warning! Problem optimum has been' + (' multiplied by ' + str(10 ** tb2.option.decimalPoint) if tb2.option.decimalPoint != 0 else '') + (' and' if self.CFN.wcsp.getNegativeLb() > 0 and tb2.option.decimalPoint != 0 else '') + (' shifted by ' + str(self.CFN.wcsp.getNegativeLb()) if self.CFN.wcsp.getNegativeLb() > 0 else '') + ' in wcp format')
@@ -552,8 +551,7 @@ class CFN:
             This operation might generate a Contradiction if the new upper bound is lower than or equal to the problem lower bound.
             
         """
-        icost = self.CFN.wcsp.DoubletoCost(cost)
-        self.CFN.wcsp.updateUb(icost)
+        self.CFN.wcsp.updateDUb(cost)
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
 
     def GetNbNodes(self):
@@ -664,8 +662,7 @@ class CFN:
         if (timeLimit > 0):
             self.CFN.timer(timeLimit)
         if self.UbInit is not None:
-            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
-            self.CFN.wcsp.updateUb(integercost)
+            self.CFN.wcsp.updateDUb(self.UbInit)
         self.CFN.wcsp.sortConstraints()
         solved = self.CFN.solve()
         if (len(self.CFN.solutions()) > 0):
@@ -692,8 +689,7 @@ class CFN:
 
         """
         if self.UbInit is not None:
-            integercost = self.CFN.wcsp.DoubletoCost(self.UbInit)
-            self.CFN.wcsp.updateUb(integercost)
+            self.CFN.wcsp.updateDUb(self.UbInit)
         tb2.check()    # checks compatibility between selected options
         assert(self.Depth() == 0)
         self.Limit = None
@@ -915,8 +911,7 @@ class MultiCFN:
         # this should be done in the CFN class, but the update occurs only when solving the problem
         # this is because DoubletoCost function depends on the negCost and LB, which may be updated when adding cost functions
         # if CFN.UbInit is not None:
-            # CFN.integercost = CFN.CFN.wcsp.DoubletoCost(CFN.UbInit)
-            # CFN.CFN.wcsp.updateUb(CFN.integercost)
+            # CFN.CFN.wcsp.updateDUb(CFN.UbInit)
 
         self.MultiCFN.push_back(CFN.CFN.wcsp, weight)
 
