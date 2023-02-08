@@ -2251,8 +2251,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
 
 int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub)
 {
-    assert(scope.size() == problem->numberOfVariables());
-    assert(problem->numberOfVariables() == negproblem->numberOfVariables());
+    assert(!problem || scope.size() == problem->numberOfVariables());
+    assert(!negproblem || scope.size() == negproblem->numberOfVariables());
     vector<EnumeratedVariable *> scope2;
     for (unsigned int i = 0; i < scope.size(); i++) {
         scope2.push_back((EnumeratedVariable *) getVar(scope[i]));
@@ -4274,7 +4274,7 @@ void WCSP::printNCBuckets()
 void WCSP::print(ostream& os)
 {
     //    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
-    os << "Objective: [" << getLb() << "," << getUb() << "]" << endl;
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb()?" - ":"") << (getNegativeLb()?to_string(getNegativeLb()):"") << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -4394,7 +4394,7 @@ void WCSP::dump(ostream& os, bool original)
     }
     if (getLb() > MIN_COST || getNegativeLb() != MIN_COST) {
         if (getLb() < getNegativeLb()) {
-            cerr << "Warning! Negative problem lower bound cannot be represented in wcp format! (fixed to zero)" << endl;
+            cerr << "Warning! Negative problem lower bound cannot be represented in wcsp format! (fixed to zero)" << endl;
         }
         os << "0 " << max(MIN_COST, getLb() - getNegativeLb()) << " 0" << endl;
     }

@@ -14,9 +14,8 @@ extern void tb2setmax(int wcspId, int varIndex, Value value, void* solver);
 class WeightedCSPConstraint : public AbstractNaryConstraint {
     Cost lb; // encapsulated slave problem lower bound hard constraint (must be greater or equal to this bound)
     Cost ub; // encapsulated slave problem upper bound hard constraint (must be strictly less than this bound)
-    Cost negcost; // sum of negative cost shift from slave problem and its negation form
     WCSP *problem; // encapsulated slave problem
-    WCSP *negproblem; // encapsulated slave problem in negation form
+    WCSP *negproblem; // encapsulated slave problem in negation form (should be equivalent to -problem)
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<int> varIndexes; // copy of scope using integer identifiers inside slave problem (should be equal to [0, 1, 2, ..., arity-1])
     vector<Value> newValues; // used to convert Tuples into variable assignments
@@ -30,13 +29,12 @@ public:
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , lb(lb_in)
         , ub(ub_in)
-        , negcost(MIN_COST)
         , problem(problem_in)
         , negproblem(negproblem_in)
         , nonassigned(arity_in)
     {
-        assert(arity_in == (int)problem_in->numberOfVariables());
-        assert(arity_in == (int)negproblem_in->numberOfVariables());
+        assert(!problem || arity_ == (int)problem->numberOfVariables());
+        assert(!negproblem || arity_ == (int)negproblem->numberOfVariables());
         if (lb >= ub) {
             cerr << "Wrong bounds in WeightedCSPConstraint: " << lb << " < " << ub << endl;
             throw WrongFileFormat();
@@ -75,17 +73,15 @@ public:
         assert(MasterWeightedCSP == NULL || MasterWeightedCSP == wcsp); //FIXME: the slave problem cannot contain a WeightedCSPConstraint inside!
         MasterWeightedCSP = wcsp;
         if (problem) {
-            negcost += problem->getNegativeLb();
             WeightedCSPConstraints[problem->getIndex()] = this;
             problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
-            problem->updateUb(ub);
+            problem->updateUb(ub + problem->getNegativeLb());
             problem->enforceUb();
         }
         if (negproblem) {
-            negcost += negproblem->getNegativeLb();
             WeightedCSPConstraints[negproblem->getIndex()] = this;
             negproblem->setSolver(wcsp->getSolver());
-            negproblem->updateUb(-lb + negcost + UNIT_COST);
+            negproblem->updateUb(-lb + negproblem->getNegativeLb() + UNIT_COST);
             negproblem->enforceUb();
 //            negproblem->preprocessing();
         }
@@ -146,7 +142,7 @@ public:
     //FIXME: only valid if all hard constraints in the slave problem are also present in the master
     bool universal() override
     {
-        if ((!problem || problem->getLb() >= lb) && (!negproblem || -(negproblem->getLb() - negcost) < ub)) {
+        if (problem && negproblem && problem->getLb() - problem->getNegativeLb() >= lb && -(negproblem->getLb() - negproblem->getNegativeLb()) < ub) {
             return true;
         } else {
             return false;
@@ -285,13 +281,13 @@ public:
                 if (negproblem) negproblem->propagate();
             }
         }
-        assert(!problem || problem->getLb() < ub);
-        assert(!negproblem || negproblem->getLb() < -lb + negcost + UNIT_COST);
+        assert(!problem || problem->getLb() < ub + problem->getNegativeLb());
+        assert(!negproblem || negproblem->getLb() < -lb + negproblem->getNegativeLb() + UNIT_COST);
     }
 
     void print(ostream& os) override
     {
-        os << this << "WeightedWCSPConstraint(";
+        os << this << " WeightedWCSPConstraint(";
         int unassigned_ = 0;
         for (int i = 0; i < arity_; i++) {
             if (scope[i]->unassigned())
