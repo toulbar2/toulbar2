@@ -744,6 +744,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     if (ToulBar2::bilevel) {
         wcsp->varsBLP[ToulBar2::bilevel-1].insert(varIndex);
     }
+
     return domainSize;
 }
 
