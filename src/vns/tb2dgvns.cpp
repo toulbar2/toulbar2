@@ -227,9 +227,14 @@ bool VNSSolver::solve(bool first)
             try {
                 if (ToulBar2::verbose >= 0)
                     cout << "****** Restart with " << ((ToulBar2::hbfs) ? "HBFS" : "DFS") << " and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                int vac = ToulBar2::vac;
+                if (ToulBar2::vac) {
+                    ToulBar2::vac = Store::getDepth() + 1; // make sure VAC is performed before complete search if required
+                }
                 wcsp->setUb(bestUb);
                 wcsp->enforceUb();
                 wcsp->propagate();
+                ToulBar2::vac = vac;
                 hybridSolve();
             } catch (const Contradiction&) {
                 wcsp->whenContradiction();
