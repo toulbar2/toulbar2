@@ -3091,10 +3091,10 @@ int _tmain(int argc, TCHAR* argv[])
                     strfile.push_back(strfile.back()); // read again problem2 as NegP2
                 }
                 for (auto f : strfile) {
-                    if (ToulBar2::bilevel) {
-                        ((WCSP*)solver->getWCSP())->varsBLP.push_back(set<int>());
-                        ((WCSP*)solver->getWCSP())->delayedCtrBLP.push_back(vector<int>());
-                    }
+//                    if (ToulBar2::bilevel) {
+//                        ((WCSP*)solver->getWCSP())->varsBLP.push_back(set<int>());
+//                        ((WCSP*)solver->getWCSP())->delayedCtrBLP.push_back(vector<int>());
+//                    }
                     globalUb = solver->read_wcsp((char*)f.c_str());
                     if (globalUb <= MIN_COST) {
                         THROWCONTRADICTION;

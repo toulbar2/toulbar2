@@ -157,7 +157,7 @@ void VACExtension::nextScaleCost()
     if (!done)
         c = itThreshold / (UNIT_COST + UNIT_COST);
 
-    if (Store::getDepth() == 0) {
+    if (Store::getDepth() <= 1) {
         if (c < ToulBar2::costThresholdPre)
             c = MIN_COST;
     } else if (c < ToulBar2::costThreshold)

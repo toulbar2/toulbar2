@@ -157,7 +157,21 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
         .def_readwrite_static("divMethod", &ToulBar2::divMethod)
         .def_readwrite_static("divRelax", &ToulBar2::divRelax)
-        .def_readwrite_static("varOrder", &ToulBar2::varOrder)
+        .def("getVarOrder", []() -> string  {
+            if (reinterpret_cast<uintptr_t>(ToulBar2::varOrder) < ELIM_MAX) {
+                return to_string(-reinterpret_cast<uintptr_t>(ToulBar2::varOrder));
+            } else {
+                return to_string(ToulBar2::varOrder);
+            }
+        })
+        .def("setVarOrder", [](const string& fileName) {
+            if (fileName[0]=='-') {
+                ToulBar2::varOrder = reinterpret_cast<char*>(-atoi(fileName.data()));
+            } else {
+                ToulBar2::varOrder = new char[fileName.size() + 1];
+                strcpy(ToulBar2::varOrder, fileName.data());
+            }
+        })
         .def_readwrite_static("btdMode", &ToulBar2::btdMode)
         .def_readwrite_static("btdSubTree", &ToulBar2::btdSubTree)
         .def_readwrite_static("btdRootCluster", &ToulBar2::btdRootCluster)

@@ -815,6 +815,8 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
         vac = NULL;
 
     td = NULL;
+    varsBLP = vector<set<int>>(3, set<int>());
+    delayedCtrBLP = vector<vector<int>>(3, vector<int>());
 }
 
 WCSP::~WCSP()
