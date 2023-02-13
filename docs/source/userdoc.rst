@@ -689,7 +689,7 @@ File output
         1 or 3: saves original instance in 1-wcsp or 3-cfn format
         (1 by default), 2 or 4: saves
         after preprocessing in 2-wcsp or 4-cfn format (this option can be
-        used in combination with -z=filename)
+        used in combination with -z=filename). If the problem is saved after preprocessing, some variables may be lost (due to variable elimination, see -e or -p or -f).
 
 -x=[(,i[:math:`=\#<>`]a)*]
         performs an elementary operation (':math:`=`':assign, ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with value a on variable of index i (multiple

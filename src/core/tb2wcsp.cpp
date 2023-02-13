@@ -4506,6 +4506,15 @@ void WCSP::dump_CFN(ostream& os, bool original)
     unsigned int nvars = numberOfUnassignedVariables();
     unsigned int ivar = 0;
     os << "\"variables\":{\n";
+    set<int> elimvars;
+    if (!original && nvars != vars.size()) {
+        cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
+        int elimo = getElimOrder();
+        for (int i = elimo - 1; i >= 0; i--) {
+            elimInfo ei = elimInfos[i];
+            elimvars.insert(ei.x->wcspIndex);
+        }
+    }
     for (unsigned int i = 0; i < vars.size(); i++) {
         assert(enumerated(i));
         EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
@@ -4541,7 +4550,13 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << ",";
             ivar++;
             os << "\n";
+        } else {
+            assert(s->assigned());
+            cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end())?"*":((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
         }
+    }
+    if (!original && nvars != vars.size()) {
+        cout << endl;
     }
 
     os << "},\n\"functions\": {\n";
