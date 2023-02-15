@@ -854,6 +854,9 @@ int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
     if ((int)maxdomainsize < isup - iinf + 1)
         maxdomainsize = isup - iinf + 1;
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
+    if (ToulBar2::bilevel) {
+        varsBLP[ToulBar2::bilevel-1].insert(x->wcspIndex);
+    }
     return x->wcspIndex;
 }
 
@@ -869,6 +872,9 @@ int WCSP::makeEnumeratedVariable(string n, vector<Value>& dom)
     if (maxdomainsize < dom.size())
         maxdomainsize = dom.size();
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
+    if (ToulBar2::bilevel) {
+        varsBLP[ToulBar2::bilevel-1].insert(x->wcspIndex);
+    }
     return x->wcspIndex;
 }
 
@@ -908,6 +914,8 @@ int WCSP::makeIntervalVariable(string n, Value iinf, Value isup)
 /// \warning Vector costs must have the same size as Cartesian product of original domains.
 int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 {
+    assert(xIndex < (int)vars.size() && vars[xIndex]->enumerated());
+    assert(yIndex < (int)vars.size() && vars[yIndex]->enumerated());
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
 
@@ -966,6 +974,23 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
 
     assert(dcosts.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
 
+    int res = INT_MAX;
+    bool bilevel3 = false;
+    Cost negcost3 = MIN_COST;
+    Cost initlb3 = MIN_COST;
+    if (ToulBar2::bilevel) {
+        if (xIndex < (int)varsBLP[0].size() && yIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
+            if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                return res;
+            } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                bilevel3 = true;
+                ToulBar2::bilevel = 1;
+                negcost3 = getNegativeLb();
+                initlb3 = getLb();
+            }
+        }
+    }
+
     long double minCost = std::numeric_limits<long double>::infinity();
     for (long double cost : dcosts) {
         minCost = min(minCost, cost);
@@ -984,10 +1009,26 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
     }
     negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
     if (incremental) {
-        return postIncrementalBinaryConstraint(xIndex, yIndex, icosts);
+        res = postIncrementalBinaryConstraint(xIndex, yIndex, icosts);
     } else {
-        return postBinaryConstraint(xIndex, yIndex, icosts);
+        res = postBinaryConstraint(xIndex, yIndex, icosts);
     }
+
+    if (bilevel3) {
+        ToulBar2::bilevel = 3;
+        Cost deltaneg = getNegativeLb() - negcost3;
+        if (deltaneg != MIN_COST) {
+            ToulBar2::negCostBLP[0] += deltaneg;
+            decreaseLb(-deltaneg);
+        }
+        Cost deltalb = getLb() - initlb3;
+        if (deltalb != MIN_COST) {
+            ToulBar2::initialLbBLP[0] += deltalb;
+            setLb(initlb3);
+        }
+    }
+
+    return res;
 }
 
 /// \brief create a binary cost function from a vector of floating point values that will be approximated to the ToulBar2:decimalPoint precision
@@ -2966,7 +3007,7 @@ void WCSP::postNullaryConstraint(Double cost)
 /// \note a unary cost function associated to an enumerated variable is not a Constraint object, it is directly managed inside the EnumeratedVariable class, this is why this function does not return any Constraint index. By doing so, unary costs are better shared inside the cost function network.
 void WCSP::postUnary(int xIndex, vector<Cost>& costs)
 {
-    assert(vars[xIndex]->enumerated());
+    assert(xIndex < (int)vars.size() && vars[xIndex]->enumerated());
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
 
     if (ToulBar2::vac) {
@@ -2998,6 +3039,22 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
     assert(vars[xIndex]->enumerated());
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
 
+    bool bilevel3 = false;
+    Cost negcost3 = MIN_COST;
+    Cost initlb3 = MIN_COST;
+    if (ToulBar2::bilevel) {
+        if (xIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
+            if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                return;
+            } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                bilevel3 = true;
+                ToulBar2::bilevel = 1;
+                negcost3 = getNegativeLb();
+                initlb3 = getLb();
+            }
+        }
+    }
+
     // normalize the cost function to make it positive
     Double minCost = std::numeric_limits<Double>::infinity();
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
@@ -3013,6 +3070,20 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
         postIncrementalUnaryConstraint(xIndex, icosts);
     } else {
         postUnaryConstraint(xIndex, icosts);
+    }
+
+    if (bilevel3) {
+        ToulBar2::bilevel = 3;
+        Cost deltaneg = getNegativeLb() - negcost3;
+        if (deltaneg != MIN_COST) {
+            ToulBar2::negCostBLP[0] += deltaneg;
+            decreaseLb(-deltaneg);
+        }
+        Cost deltalb = getLb() - initlb3;
+        if (deltalb != MIN_COST) {
+            ToulBar2::initialLbBLP[0] += deltalb;
+            setLb(initlb3);
+        }
     }
 }
 

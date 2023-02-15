@@ -412,7 +412,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
                             if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
                                 generateBinCtr(indexs[0], indexs[1], nogoods);
                             else
-                                generateSubModularBinCtr(indexs[0], indexs[1], SMALL_COST, LARGE_COST);
+                                generateSubModularBinCtr(indexs[0], indexs[1]);
                             break;
                         case 3:
                             generateTernCtr(indexs[0], indexs[1], indexs[2], nogoods);
@@ -437,7 +437,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     for (i = 0; i < n; i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-            x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, LARGE_COST), true);
+            x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, MEDIUM_COST), true);
         }
         x->findSupport();
     }
