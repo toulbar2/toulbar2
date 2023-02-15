@@ -284,7 +284,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to C(" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         assert(((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)));
         unsigned int ix, iy;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {

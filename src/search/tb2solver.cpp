@@ -2615,7 +2615,13 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 
     if (ToulBar2::btdMode) {
-        if (wcsp->numberOfUnassignedVariables() == 0 || wcsp->numberOfConnectedConstraints() == 0) {
+        int nbdelayedblp = 0;
+        if (ToulBar2::bilevel) {
+            for (auto s: ((WCSP*)wcsp)->delayedCtrBLP) {
+                nbdelayedblp += s.size();
+            }
+        }
+        if (wcsp->numberOfUnassignedVariables() == 0 || (wcsp->numberOfConnectedConstraints() == 0 && nbdelayedblp == 0)) {
             ToulBar2::approximateCountingBTD = 0;
             ToulBar2::btdMode = 0;
         } else {
@@ -2634,6 +2640,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 // propagate (partially) channeling constraints between Problem1 (P0) and NegProblem2 (NegP2) only
                 for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
                     Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
+                    assert(ctr->deconnected());
                     ctr->reconnect();
                     ctr->assignCluster();
                     ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds

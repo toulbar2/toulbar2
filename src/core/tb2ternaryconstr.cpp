@@ -184,6 +184,16 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
 
     if (ToulBar2::bilevel>=2) {
         deconnect(true);
+        assert(xy->deconnected());
+        assert(xz->deconnected());
+        assert(yz->deconnected());
+        assert(wcsp->delayedCtrBLP[ToulBar2::bilevel-1].size() >= 3); // fresh new binary cost functions must have been automatically created and added
+        assert(yz->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel-1].back());
+        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].pop_back();
+        assert(xz->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel-1].back());
+        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].pop_back();
+        assert(xy->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel-1].back());
+        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].pop_back();
         wcsp->delayedCtrBLP[ToulBar2::bilevel-1].push_back(wcspIndex);
     } else {
         propagate();

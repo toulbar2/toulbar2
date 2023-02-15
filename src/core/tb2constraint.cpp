@@ -189,6 +189,12 @@ void Constraint::assignCluster()
                 lowest = c;
         }
     setCluster(lowest->getId());
+    if (isTernary() && connected() && !isSep()) { // side-effect: if it is a ternary cost function then its internal binary cost functions must belong to the same cluster
+        TernaryConstraint* tctr = (TernaryConstraint*)this;
+        tctr->xy->setCluster(tctr->getCluster());
+        tctr->xz->setCluster(tctr->getCluster());
+        tctr->yz->setCluster(tctr->getCluster());
+    }
 }
 
 /// \warning always returns 0 for cost functions in intention

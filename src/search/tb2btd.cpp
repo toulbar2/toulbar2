@@ -708,10 +708,10 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         }
                         bool csolution = (csol < MAX_COST && ubSon < cub - csol + lbSon);
                         assert(!csolution || ubSon < cub - clb + lbSon);
-                        ubSon = MIN(ubSon, cub - clb + lbSon);
+                        ubSon = MIN(ubSon, cub - clb + lbSon); // this rule is not valid for bilevel optimization
                         td->setCurrentCluster(c);
                         wcsp->setUb(ubSon);
-                        wcsp->setLb((good) ? c->getLbRec() : lbSon);
+                        wcsp->setLb((good) ? c->getLbRec() : lbSon); //FIXME: good=true in bilevel but c->getLbRec is always zero???
                         // Compute an initial bound for Problem2
                         assert(!ToulBar2::bilevel || td->getRoot() != cluster || c != *cluster->rbeginEdges()); // child cluster c cannot be NegP2
                         Cost bestLbP2 = MIN_COST;
@@ -720,12 +720,12 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             Cost deltaNegP2Lb = (*cluster->rbeginEdges())->getCurrentDeltaLb();
                             Cost deltaNegP2Ub = (*cluster->rbeginEdges())->getCurrentDeltaUb();
                             assert(c->getLbRec() == MIN_COST);
-                            Cost lbP1 = cluster->getLb() + (*cluster->rbeginEdges())->getLb() - ToulBar2::initialLbBLP[2] - deltaNegP2Ub;
+                            Cost lbP1 = cluster->getLb() + (*cluster->beginEdges())->getLb() - ToulBar2::initialLbBLP[2] - deltaNegP2Ub;
                             Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbBLP[2] + deltaNegP2Lb;
-                            ubSon = -(ToulBar2::initialLbBLP[1] - ToulBar2::negCostBLP[1]) - (lbNegP2 - ToulBar2::negCostBLP[2]) + UNIT_COST;
+                            ubSon = - ToulBar2::initialLbBLP[1] - lbNegP2 + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2] + UNIT_COST;
                             assert(ubSon >= UNIT_COST);
                             lbSon = MIN_COST;
-                            bestLbP2 = max(MIN_COST, lbP1 - cub + ToulBar2::negCostBLP[2]);
+                            bestLbP2 = max(MIN_COST, lbP1 - cub + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2]);
                             assert(bestLbP2 < ubSon);
                             if (ToulBar2::verbose>=2 && bestLbP2>MIN_COST) cout << bestLbP2 << " <= P2 < "<< ubSon << endl;
                             wcsp->setUb(ubSon);
@@ -739,6 +739,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                                 // add channeling constraints between Problem0 and Problem2
                                 for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[1]) {
                                     Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
+                                    assert(ctr->deconnected());
                                     static vector<Cost> costs;
                                     Constraint *incCtr = NULL;
                                     if (ctr->isBinary()) {
@@ -778,7 +779,9 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                                 assert(res.first == res.second); // Problem 1 && Problem2 must be solved to optimality
                                 assert(c->getCurrentDeltaUb() == MIN_COST); // we assume no cost moves from Problem2 to Problem1
                                 assert((*cluster->rbeginEdges())->getCurrentDeltaLb() == (*cluster->rbeginEdges())->getCurrentDeltaUb());
+                                cout << "clb: " << clb << " - C3.lb: " << (*cluster->rbeginEdges())->getLb() << " - C3.initlb: " << ToulBar2::initialLbBLP[2] << " - C3.deltalb: " << (*cluster->rbeginEdges())->getCurrentDeltaLb() << " - C2.opt: " << res.first << " - C2.initlb: " << ToulBar2::initialLbBLP[1] << " + C2.negcost: " << ToulBar2::negCostBLP[1] << " + C3.negcost: " << ToulBar2::negCostBLP[2] << endl;
                                 csol = clb - (*cluster->rbeginEdges())->getLb() - ToulBar2::initialLbBLP[2] - (*cluster->rbeginEdges())->getCurrentDeltaLb() - res.first - ToulBar2::initialLbBLP[1] + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2];
+                                cout << "csol: " << csol << endl;
                                 clb = csol;
                                 Store::restore(depth);
                                 break;
@@ -801,6 +804,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                         }
                         Store::restore(depth);
                     } else {
+                        assert(!ToulBar2::bilevel);
                         if (csol < MAX_COST) {
                             assert(ubSon < MAX_COST);
                             csol += ubSon - lbSon;
