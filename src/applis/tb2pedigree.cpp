@@ -432,7 +432,7 @@ void Pedigree::buildWCSP(const char* fileName, WCSP* wcsp)
             nbfounders++;
         if (pedigree[i].typed) {
             string varname;
-            varname = to_string(pedigree[i].individual);
+            varname = "X" + to_string(pedigree[i].individual);
             wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
@@ -563,7 +563,7 @@ void Pedigree::buildWCSP_bayesian(const char* fileName, WCSP* wcsp)
             nbfounders++;
         if (pedigree[i].typed) {
             string varname;
-            varname = to_string(pedigree[i].individual);
+            varname = "X" + to_string(pedigree[i].individual);
             wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;

@@ -381,7 +381,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     }
 
     for (i = 0; i < n; i++) {
-        string varname = to_string(i);
+        string varname = "X" + to_string(i);
         wcsp.makeEnumeratedVariable(varname, 0, m - 1);
     }
 
