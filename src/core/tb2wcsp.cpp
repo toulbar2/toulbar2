@@ -1395,7 +1395,6 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
         return postIncrementalBinaryConstraint(xIndex, yIndex, bcosts);
     }
 
-    assert(getTreeDec() == NULL);
     BinaryConstraint* bctr;
     TernaryConstraint* xyz = new TernaryConstraint(this);
     elimTernConstrs.push_back(xyz);
@@ -4028,6 +4027,7 @@ void WCSP::shrink()
 
 Cost WCSP::finiteUb() const
 {
+    if (ToulBar2::bilevel) return MAX_COST;
     Cost summaxcost = getLb() + UNIT_COST;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         if (constrs[i]->connected() && !constrs[i]->isSep()) {
@@ -4074,6 +4074,7 @@ Cost WCSP::finiteUb() const
 
 void WCSP::setInfiniteCost()
 {
+    if (ToulBar2::bilevel) return;
     assert(Store::getDepth() == 0);
     Cost ub = getUb() - getLb();
     assert(ub > 0);
