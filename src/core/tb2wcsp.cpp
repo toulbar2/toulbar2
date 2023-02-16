@@ -921,6 +921,10 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
 
+    if (ToulBar2::bilevel == 5) {
+        return INT_MAX;
+    }
+
     if (xIndex == yIndex) {
         vector<Cost> ucosts;
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
@@ -980,9 +984,9 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
     Cost initlb3 = MIN_COST;
     if (ToulBar2::bilevel) {
         if (xIndex < (int)varsBLP[0].size() && yIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
-            if (ToulBar2::bilevel==2) { // skip when reading Problem2
+            if (ToulBar2::bilevel==2) { // skip when reading the follower problem
                 return res;
-            } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+            } else if (ToulBar2::bilevel==3) { // incorporate directly in the restricted leader problem when building the negative follower problem
                 bilevel3 = true;
                 ToulBar2::bilevel = 1;
                 negcost3 = getNegativeLb();
@@ -1019,6 +1023,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
         Cost deltaneg = getNegativeLb() - negcost3;
         if (deltaneg != MIN_COST) {
             ToulBar2::negCostBLP[0] += deltaneg;
+            ToulBar2::initialUbBLP[0] += deltaneg;
             decreaseLb(-deltaneg);
         }
         Cost deltalb = getLb() - initlb3;
@@ -1053,6 +1058,23 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
 
     assert(dcosts.size() == (size_t)x->getDomainInitSize() * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize());
 
+    int res = INT_MAX;
+    bool bilevel3 = false;
+    Cost negcost3 = MIN_COST;
+    Cost initlb3 = MIN_COST;
+    if (ToulBar2::bilevel) {
+        if (xIndex < (int)varsBLP[0].size() && yIndex < (int)varsBLP[0].size() && zIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
+            if (ToulBar2::bilevel==2) { // skip when reading the follower problem
+                return res;
+            } else if (ToulBar2::bilevel==3) { // incorporate directly in the restricted leader problem when building the negative follower problem
+                bilevel3 = true;
+                ToulBar2::bilevel = 1;
+                negcost3 = getNegativeLb();
+                initlb3 = getLb();
+            }
+        }
+    }
+
     long double minCost = std::numeric_limits<long double>::infinity();
     for (long double cost : dcosts) {
         minCost = min(minCost, cost);
@@ -1070,10 +1092,27 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
     }
     negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
     if (incremental) {
-        return postIncrementalTernaryConstraint(xIndex, yIndex, zIndex, icosts);
+        res = postIncrementalTernaryConstraint(xIndex, yIndex, zIndex, icosts);
     } else {
-        return postTernaryConstraint(xIndex, yIndex, zIndex, icosts);
+        res = postTernaryConstraint(xIndex, yIndex, zIndex, icosts);
     }
+
+    if (bilevel3) {
+        ToulBar2::bilevel = 3;
+        Cost deltaneg = getNegativeLb() - negcost3;
+        if (deltaneg != MIN_COST) {
+            ToulBar2::negCostBLP[0] += deltaneg;
+            ToulBar2::initialUbBLP[0] += deltaneg;
+            decreaseLb(-deltaneg);
+        }
+        Cost deltalb = getLb() - initlb3;
+        if (deltalb != MIN_COST) {
+            ToulBar2::initialLbBLP[0] += deltalb;
+            setLb(initlb3);
+        }
+    }
+
+    return res;
 }
 
 /// \brief create a ternary cost function from a flat vector of costs (z indexes moving first)
@@ -1082,6 +1121,10 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
+
+    if (ToulBar2::bilevel == 5) {
+        return INT_MAX;
+    }
 
     if (xIndex == yIndex) {
         vector<Cost> bcosts;
@@ -1353,6 +1396,10 @@ void WCSP::postNaryConstraintTuple(int ctrindex, const Tuple& tuple, Cost cost)
 void WCSP::postNaryConstraintEnd(int ctrindex)
 {
     AbstractNaryConstraint* ctr = (AbstractNaryConstraint*)getCtr(ctrindex);
+    if (ToulBar2::bilevel == 5) {
+        ctr->deconnect(true);
+        return;
+    }
     if (ctr->arity() <= NARYPROJECTIONSIZE)
         ctr->projectNaryBeforeSearch();
     else if (!isDelayedNaryCtr)
@@ -1362,7 +1409,7 @@ void WCSP::postNaryConstraintEnd(int ctrindex)
 // Add a temporary (backtrackable) binary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 {
-    assert(getTreeDec() == NULL || ToulBar2::bilevel);
+    assert((getTreeDec() == NULL && !ToulBar2::bilevel) || (getTreeDec() != NULL &&  ToulBar2::bilevel == 4));
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
 
@@ -1405,7 +1452,7 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
 // Add a temporary (backtrackable) ternary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs)
 {
-    assert(getTreeDec() == NULL || ToulBar2::bilevel);
+    assert((getTreeDec() == NULL && !ToulBar2::bilevel) || (getTreeDec() != NULL &&  ToulBar2::bilevel == 4));
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
     EnumeratedVariable* z = (EnumeratedVariable*)getVar(zIndex);
@@ -1952,6 +1999,7 @@ void WCSP::addTMDDConstraint(Mdd mdd, int relaxed)
 
 void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -1968,6 +2016,7 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
 
 void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -1984,6 +2033,7 @@ void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCo
 
 void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2003,6 +2053,7 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
 
 void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2022,6 +2073,7 @@ void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Co
 void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions,
     vector<Cost> transitionsCosts)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2044,6 +2096,7 @@ void WCSP::postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<in
 
 void WCSP::postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2064,6 +2117,7 @@ void WCSP::postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost,
 
 void WCSP::postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity / 2; i++)
         for (int j = i + 1; j < arity / 2; j++)
@@ -2083,6 +2137,7 @@ void WCSP::postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost
 
 void WCSP::postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2096,6 +2151,7 @@ void WCSP::postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseC
 
 void WCSP::postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity / 2; i++)
         for (int j = i + 1; j < arity / 2; j++)
@@ -2122,6 +2178,7 @@ void WCSP::postWSameGcc(int* scopeIndex, int arity, string semantics, Cost baseC
 
 void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity / 2; i++)
         for (int j = i + 1; j < arity / 2; j++)
@@ -2143,6 +2200,7 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
 
 void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, vector<Value>& values, int method)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (unsigned int i = 0; i < scopeIndex.size(); i++)
         for (unsigned int j = i + 1; j < scopeIndex.size(); j++)
@@ -2179,6 +2237,7 @@ void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, ve
 /// \deprecated should use postWXXX methods
 int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter, bool mult)
 {
+    assert(ToulBar2::bilevel <= 1);
     if (gcname == "salldiffdp") {
         string semantics;
         Cost baseCost;
@@ -2216,6 +2275,7 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
 
 GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const string& gcname, int* constrcounter)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2270,6 +2330,7 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
 /// \param mult if true then multiply costs read from file by ToulBar2::costMultiplier
 void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter, bool mult)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2293,6 +2354,7 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
 
 int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub)
 {
+    assert(ToulBar2::bilevel <= 1);
     assert(!problem || scope.size() == problem->numberOfVariables());
     assert(!negproblem || scope.size() == negproblem->numberOfVariables());
     vector<EnumeratedVariable *> scope2;
@@ -2320,6 +2382,7 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, Wei
 
 int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2354,6 +2417,7 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 
 int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict)
 {
+    assert(ToulBar2::bilevel <= 1);
     // Eliminate variable with weight 0
     Long readw;
     Value readv1;
@@ -2635,6 +2699,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
 int WCSP::postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
     const vector<Value>& values, int lb, int ub)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2667,6 +2732,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
     const vector<WeightedObjInt>& accepting_States,
     const vector<DFATransition>& Wtransitions)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2741,6 +2807,7 @@ int WCSP::postWRegular(int* scopeIndex, int arity, const string& semantics, cons
 int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
     const vector<BoundedObjValue>& values)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2786,6 +2853,7 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
 
 int WCSP::postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)
 {
+    assert(ToulBar2::bilevel <= 1);
     assert(arityG1 >= 2); // does not work for binary or ternary cost functions!!!
     assert(arityG1 == arityG2);
 #ifndef NDEBUG
@@ -2840,6 +2908,7 @@ int WCSP::postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arity
 
 int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2911,6 +2980,7 @@ int WCSP::postWGrammarCNF(int* scopeIndex, int arity, const string& semantics, c
     int startSymbol,
     const vector<CFGProductionRule> WRuleToTerminal)
 {
+    assert(ToulBar2::bilevel <= 1);
 
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
@@ -2947,6 +3017,7 @@ int WCSP::postWGrammarCNF(int* scopeIndex, int arity, const string& semantics, c
 
 int WCSP::postMST(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -2964,6 +3035,7 @@ int WCSP::postMST(int* scopeIndex, int arity, const string& semantics, const str
 int WCSP::postMaxWeight(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
     const vector<WeightedVarValPair> weightFunction)
 {
+    assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
     for (int i = 0; i < arity; i++)
         for (int j = i + 1; j < arity; j++)
@@ -3000,7 +3072,34 @@ void WCSP::postNullaryConstraint(Cost cost)
 
 void WCSP::postNullaryConstraint(Double cost)
 {
+    bool bilevel3 = false;
+    Cost negcost3 = MIN_COST;
+    Cost initlb3 = MIN_COST;
+    if (ToulBar2::bilevel==2) { // skip when reading Problem2
+        return;
+    } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+        bilevel3 = true;
+        ToulBar2::bilevel = 1;
+        negcost3 = getNegativeLb();
+        initlb3 = getLb();
+    }
+
     postNullaryConstraint((isinf(cost) ? MAX_COST : (Cost)(round(cost * pow(10, ToulBar2::decimalPoint)))));
+
+    if (bilevel3) {
+        ToulBar2::bilevel = 3;
+        Cost deltaneg = getNegativeLb() - negcost3;
+        if (deltaneg != MIN_COST) {
+            ToulBar2::negCostBLP[0] += deltaneg;
+            ToulBar2::initialUbBLP[0] += deltaneg;
+            decreaseLb(-deltaneg);
+        }
+        Cost deltalb = getLb() - initlb3;
+        if (deltalb != MIN_COST) {
+            ToulBar2::initialLbBLP[0] += deltalb;
+            setLb(initlb3);
+        }
+    }
 }
 
 /// \brief add unary costs to enumerated variable \e xIndex
@@ -3009,6 +3108,10 @@ void WCSP::postUnary(int xIndex, vector<Cost>& costs)
 {
     assert(xIndex < (int)vars.size() && vars[xIndex]->enumerated());
     EnumeratedVariable* x = (EnumeratedVariable*)vars[xIndex];
+
+    if (ToulBar2::bilevel == 5) {
+        return;
+    }
 
     if (ToulBar2::vac) {
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
@@ -3027,6 +3130,9 @@ void WCSP::postUnary(int xIndex, vector<Cost>& costs)
 /// \brief add unary costs to interval variable \e xIndex
 int WCSP::postUnary(int xIndex, Value* d, int dsize, Cost penalty)
 {
+    if (ToulBar2::bilevel == 5) {
+        return INT_MAX;
+    }
     assert(!vars[xIndex]->enumerated());
     Unary* ctr = new Unary(this, (IntervalVariable*)vars[xIndex], d, dsize, penalty);
     return ctr->wcspIndex;
@@ -3044,9 +3150,9 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
     Cost initlb3 = MIN_COST;
     if (ToulBar2::bilevel) {
         if (xIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
-            if (ToulBar2::bilevel==2) { // skip when reading Problem2
+            if (ToulBar2::bilevel==2) { // skip when reading the follower problem
                 return;
-            } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+            } else if (ToulBar2::bilevel==3) { // incorporate directly in the restricted leader problem when building the negative follower problem
                 bilevel3 = true;
                 ToulBar2::bilevel = 1;
                 negcost3 = getNegativeLb();
@@ -3077,6 +3183,7 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
         Cost deltaneg = getNegativeLb() - negcost3;
         if (deltaneg != MIN_COST) {
             ToulBar2::negCostBLP[0] += deltaneg;
+            ToulBar2::initialUbBLP[0] += deltaneg;
             decreaseLb(-deltaneg);
         }
         Cost deltalb = getLb() - initlb3;
@@ -3090,6 +3197,7 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
 /// \brief create a soft constraint \f$x \geq y + cst\f$ with the associated cost function \f$max( (y + cst - x \leq delta)?(y + cst - x):top , 0 )\f$
 int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
 {
+    assert(ToulBar2::bilevel <= 1);
     assert(xIndex != yIndex);
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         Supxyc* ctr = new Supxyc(this, (IntervalVariable*)vars[xIndex], (IntervalVariable*)vars[yIndex], cst, delta);
@@ -3113,6 +3221,7 @@ int WCSP::postSupxyc(int xIndex, int yIndex, Value cst, Value delta)
 /// \brief soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
 int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty)
 {
+    assert(ToulBar2::bilevel <= 1);
     assert(xIndex != yIndex);
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         Disjunction* ctr = new Disjunction(this, (IntervalVariable*)vars[xIndex], (IntervalVariable*)vars[yIndex], cstx, csty, penalty);
@@ -3136,6 +3245,7 @@ int WCSP::postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost p
 /// \brief special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
 int WCSP::postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy)
 {
+    assert(ToulBar2::bilevel <= 1);
     assert(xIndex != yIndex);
     if (!vars[xIndex]->enumerated() && !vars[yIndex]->enumerated()) {
         SpecialDisjunction* ctr = new SpecialDisjunction(this, (IntervalVariable*)vars[xIndex], (IntervalVariable*)vars[yIndex], cstx, csty, xinfty, yinfty, costx, costy);

@@ -425,7 +425,53 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     }
 
     for (auto& cf : unaryCFs) {
+
+        bool bilevel2 = false;
+        bool bilevel3 = false;
+        Cost negcost23 = MIN_COST;
+        Cost initlb23 = MIN_COST;
+        if (ToulBar2::bilevel) {
+            if (cf.var->wcspIndex < (int)wcsp->varsBLP[0].size()) { // cost function on leader variable(s) only
+                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                    bilevel2 = true;
+                    ToulBar2::bilevel = 5;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                    bilevel3 = true;
+                    ToulBar2::bilevel = 1;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                }
+            }
+        }
+
         wcsp->postUnaryConstraint(cf.var->wcspIndex, cf.costs);
+
+        if (bilevel2) { // we must ignore this constraint
+            ToulBar2::bilevel = 2;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                wcsp->setLb(initlb23);
+            }
+        } else if (bilevel3) { // we move the corresponding negcost and lb to the restricted leader problem
+            ToulBar2::bilevel = 3;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                ToulBar2::negCostBLP[0] += deltaneg;
+                ToulBar2::initialUbBLP[0] += deltaneg;
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                ToulBar2::initialLbBLP[0] += deltalb;
+                wcsp->setLb(initlb23);
+            }
+        }
     }
 
     wcsp->sortConstraints();
@@ -891,20 +937,22 @@ void CFNStreamReader::enforceUB()
     // if the shifted/scaled bound is less than zero, we equivalently set it to zero
     if (this->upperBound < MIN_COST)
         this->upperBound = MIN_COST;
-    if (ToulBar2::externalUB.length() != 0) {
-        this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
-    }
-    if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(this->upperBound, wcsp->getUb())));
-        if (ToulBar2::deltaUb > MIN_COST) {
-            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-            this->upperBound += ToulBar2::deltaUb;
-        }
-    }
 
-    if (ToulBar2::bilevel != 3) {
+    if (ToulBar2::bilevel == 0) {
+        if (ToulBar2::externalUB.length() != 0) {
+            this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
+        }
+        if (ToulBar2::deltaUbS.length() != 0) {
+            ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(this->upperBound, wcsp->getUb())));
+            if (ToulBar2::deltaUb > MIN_COST) {
+                // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+                this->upperBound += ToulBar2::deltaUb;
+            }
+        }
         wcsp->updateUb(this->upperBound);
+    } else if (ToulBar2::bilevel >= 1 && ToulBar2::bilevel <= 2) {
+        wcsp->setUb(this->upperBound);
     }
 }
 
@@ -1023,6 +1071,33 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
             funcName[funcName.size() - 1] = ')';
         }
 
+        bool bilevel2 = false;
+        bool bilevel3 = false;
+        Cost negcost23 = MIN_COST;
+        Cost initlb23 = MIN_COST;
+        if (ToulBar2::bilevel) {
+            bool inleader = true;
+            for (int idx: scope) {
+                if (idx >= (int)wcsp->varsBLP[0].size()) {
+                    inleader = false;
+                    break;
+                }
+            }
+            if (inleader) { // cost function on leader variable(s) only
+                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                    bilevel2 = true;
+                    ToulBar2::bilevel = 5;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                    bilevel3 = true;
+                    ToulBar2::bilevel = 1;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                }
+            }
+        }
+
         if (ToulBar2::verbose >= 1)
             cout << "Cost function header for " << funcName << " read" << endl;
 
@@ -1099,34 +1174,6 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
 
         // Table cost function
         if (!isGlobal && !isReused) {
-
-            bool bilevel2 = false;
-            bool bilevel3 = false;
-            Cost negcost23 = MIN_COST;
-            Cost initlb23 = MIN_COST;
-            if (ToulBar2::bilevel) {
-                bool inleader = true;
-                for (int idx: scope) {
-                    if (idx >= (int)wcsp->varsBLP[0].size()) {
-                        inleader = false;
-                        break;
-                    }
-                }
-                if (inleader) { // cost function on leader variable(s) only
-                    if (ToulBar2::bilevel==2) { // skip when reading Problem2
-                        bilevel2 = true;
-                        ToulBar2::bilevel = 5;
-                        negcost23 = wcsp->getNegativeLb();
-                        initlb23 = wcsp->getLb();
-                    } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
-                        bilevel3 = true;
-                        ToulBar2::bilevel = 1;
-                        negcost23 = wcsp->getNegativeLb();
-                        initlb23 = wcsp->getLb();
-                    }
-                }
-            }
-
             if (scope.size() == 0) {
                 this->readZeroAryCostFunction(skipDefaultCost, defaultCost);
             } else if (scope.size() > NARYPROJECTIONSIZE) {
@@ -1141,55 +1188,28 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                 else
                     readIntervalUnaryTable(scope[0], authorized);
 
-                if (!bilevel2) {
-                    switch (scope.size()) {
-                    case 1:
-                        if (wcsp->getVar(scope[0])->enumerated()) {
-                            TemporaryUnaryConstraint unarycf;
-                            unarycf.var = (EnumeratedVariable*)wcsp->getVar(scope[0]);
-                            assert(costs.size() == unarycf.var->getDomainInitSize());
-                            unarycf.costs = costs;
-                            unaryCFs.push_back(unarycf);
-                            if (isShared) {
-                                unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
-                                for (const auto& ns : tableShares[funcName]) {
-                                    if ((ns.second.size() == 1) && wcsp->getVar(ns.second[0])->enumerated() && wcsp->getDomainInitSize(ns.second[0]) == domSize) {
-                                        TemporaryUnaryConstraint unarycf;
-                                        unarycf.var = (EnumeratedVariable*)wcsp->getVar(ns.second[0]);
-                                        assert(costs.size() == unarycf.var->getDomainInitSize());
-                                        unarycf.costs = costs;
-                                        unaryCFs.push_back(unarycf);
-                                        // this->wcsp->postUnaryConstraint(s[0], costs);
-                                        wcsp->negCost -= minCost;
-                                        // TODO must remember name too
-                                    } else {
-                                        cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << " on scope { ";
-                                        for (auto v : ns.second)
-                                            cerr << wcsp->getVar(v)->getName() << " ";
-                                        cerr << "}" << endl;
-                                        throw WrongFileFormat();
-                                    }
-                                }
-                            }
-                        } else {
-                            wcsp->postUnaryConstraint(scope[0], authorized.data(), authorized.size(), defaultCost);
-                        }
-                        break;
-                    case 2: {
-                        int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
-                        if (cfIdx != INT_MAX)
-                            this->wcsp->getCtr(cfIdx)->setName(funcName);
+                switch (scope.size()) {
+                case 1:
+                    if (wcsp->getVar(scope[0])->enumerated()) {
+                        TemporaryUnaryConstraint unarycf;
+                        unarycf.var = (EnumeratedVariable*)wcsp->getVar(scope[0]);
+                        assert(costs.size() == unarycf.var->getDomainInitSize());
+                        unarycf.costs = costs;
+                        unaryCFs.push_back(unarycf);
                         if (isShared) {
-                            unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
-                            unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
+                            unsigned int domSize = wcsp->getDomainInitSize(scope[0]);
                             for (const auto& ns : tableShares[funcName]) {
-                                if ((ns.second.size() == 2) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1) {
-                                    cfIdx = this->wcsp->postBinaryConstraint(ns.second[0], ns.second[1], costs);
+                                if ((ns.second.size() == 1) && wcsp->getVar(ns.second[0])->enumerated() && wcsp->getDomainInitSize(ns.second[0]) == domSize) {
+                                    TemporaryUnaryConstraint unarycf;
+                                    unarycf.var = (EnumeratedVariable*)wcsp->getVar(ns.second[0]);
+                                    assert(costs.size() == unarycf.var->getDomainInitSize());
+                                    unarycf.costs = costs;
+                                    unaryCFs.push_back(unarycf);
+                                    // this->wcsp->postUnaryConstraint(s[0], costs);
                                     wcsp->negCost -= minCost;
-                                    if (cfIdx != INT_MAX)
-                                        this->wcsp->getCtr(cfIdx)->setName(ns.first);
+                                    // TODO must remember name too
                                 } else {
-                                    cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << "' on scope { ";
+                                    cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << " on scope { ";
                                     for (auto v : ns.second)
                                         cerr << wcsp->getVar(v)->getName() << " ";
                                     cerr << "}" << endl;
@@ -1197,59 +1217,59 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                                 }
                             }
                         }
-                    } break;
-                    case 3: {
-                        int cfIdx = this->wcsp->postTernaryConstraint(scope[0], scope[1], scope[2], costs);
-                        if (cfIdx != INT_MAX)
-                            wcsp->getCtr(cfIdx)->setName(funcName);
-                        if (isShared) {
-                            unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
-                            unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
-                            unsigned int domSize2 = wcsp->getDomainInitSize(scope[2]);
-                            for (const auto& ns : tableShares[funcName]) {
-                                if ((ns.second.size() == 3) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1 && wcsp->getDomainInitSize(ns.second[2]) == domSize2) {
-                                    cfIdx = this->wcsp->postTernaryConstraint(ns.second[0], ns.second[1], ns.second[2], costs);
-                                    wcsp->negCost -= minCost;
-                                    if (cfIdx != INT_MAX)
-                                        wcsp->getCtr(cfIdx)->setName(ns.first);
-                                } else {
-                                    cerr << "Error: cannot share cost function '" << funcName << "' on scope { ";
-                                    for (auto v : ns.second)
-                                        cerr << wcsp->getVar(v)->getName() << " ";
-                                    cerr << "}" << endl;
-                                    throw WrongFileFormat();
-                                }
-                            }
-                        }
-                    } break;
+                    } else {
+                        wcsp->postUnaryConstraint(scope[0], authorized.data(), authorized.size(), defaultCost);
                     }
+                    break;
+                case 2: {
+                    int cfIdx = this->wcsp->postBinaryConstraint(scope[0], scope[1], costs);
+                    if (cfIdx != INT_MAX)
+                        this->wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (isShared) {
+                        unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
+                        unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
+                        for (const auto& ns : tableShares[funcName]) {
+                            if ((ns.second.size() == 2) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1) {
+                                cfIdx = this->wcsp->postBinaryConstraint(ns.second[0], ns.second[1], costs);
+                                wcsp->negCost -= minCost;
+                                if (cfIdx != INT_MAX)
+                                    this->wcsp->getCtr(cfIdx)->setName(ns.first);
+                            } else {
+                                cerr << "Error: cannot share cost function '" << funcName << "' with '" << ns.first << "' on scope { ";
+                                for (auto v : ns.second)
+                                    cerr << wcsp->getVar(v)->getName() << " ";
+                                cerr << "}" << endl;
+                                throw WrongFileFormat();
+                            }
+                        }
+                    }
+                } break;
+                case 3: {
+                    int cfIdx = this->wcsp->postTernaryConstraint(scope[0], scope[1], scope[2], costs);
+                    if (cfIdx != INT_MAX)
+                        wcsp->getCtr(cfIdx)->setName(funcName);
+                    if (isShared) {
+                        unsigned int domSize0 = wcsp->getDomainInitSize(scope[0]);
+                        unsigned int domSize1 = wcsp->getDomainInitSize(scope[1]);
+                        unsigned int domSize2 = wcsp->getDomainInitSize(scope[2]);
+                        for (const auto& ns : tableShares[funcName]) {
+                            if ((ns.second.size() == 3) && wcsp->getDomainInitSize(ns.second[0]) == domSize0 && wcsp->getDomainInitSize(ns.second[1]) == domSize1 && wcsp->getDomainInitSize(ns.second[2]) == domSize2) {
+                                cfIdx = this->wcsp->postTernaryConstraint(ns.second[0], ns.second[1], ns.second[2], costs);
+                                wcsp->negCost -= minCost;
+                                if (cfIdx != INT_MAX)
+                                    wcsp->getCtr(cfIdx)->setName(ns.first);
+                            } else {
+                                cerr << "Error: cannot share cost function '" << funcName << "' on scope { ";
+                                for (auto v : ns.second)
+                                    cerr << wcsp->getVar(v)->getName() << " ";
+                                cerr << "}" << endl;
+                                throw WrongFileFormat();
+                            }
+                        }
+                    }
+                } break;
                 }
             }
-
-            if (bilevel2) { // we must ignore this constraint
-                ToulBar2::bilevel = 2;
-                Cost deltaneg = wcsp->getNegativeLb() - negcost23;
-                if (deltaneg != MIN_COST) {
-                    wcsp->decreaseLb(-deltaneg);
-                }
-                Cost deltalb = wcsp->getLb() - initlb23;
-                if (deltalb != MIN_COST) {
-                    wcsp->setLb(initlb23);
-                }
-            } else if (bilevel3) {
-                ToulBar2::bilevel = 3;
-                Cost deltaneg = wcsp->getNegativeLb() - negcost23;
-                if (deltaneg != MIN_COST) {
-                    ToulBar2::negCostBLP[0] += deltaneg;
-                    wcsp->decreaseLb(-deltaneg);
-                }
-                Cost deltalb = wcsp->getLb() - initlb23;
-                if (deltalb != MIN_COST) {
-                    ToulBar2::initialLbBLP[0] += deltalb;
-                    wcsp->setLb(initlb23);
-                }
-            }
-
         } else if (isReused) {
             if ((scope.size() <= 1) || (scope.size() > NARYPROJECTIONSIZE) || isGlobal) {
                 cerr << "Error: only unary, binary and ternary cost functions can share cost tables for '" << funcName << " at line " << lineNumber << endl;
@@ -1257,6 +1277,31 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
             }
         } else if (isGlobal) {
             this->readGlobalCostFunction(scope, token, lineNumber);
+        }
+
+        if (bilevel2) { // we must ignore this constraint
+            ToulBar2::bilevel = 2;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                wcsp->setLb(initlb23);
+            }
+        } else if (bilevel3) { // we move the corresponding negcost and lb to the restricted leader problem
+            ToulBar2::bilevel = 3;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                ToulBar2::negCostBLP[0] += deltaneg;
+                ToulBar2::initialUbBLP[0] += deltaneg;
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                ToulBar2::initialLbBLP[0] += deltalb;
+                wcsp->setLb(initlb23);
+            }
         }
 
         std::tie(lineNumber, token) = this->getNextToken();

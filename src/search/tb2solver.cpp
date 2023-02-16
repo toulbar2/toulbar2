@@ -2636,8 +2636,8 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 ++iter;
                 Cluster *negproblem2 = *iter;
                 //problem2.isused = false //FIXME???
-                problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem 0
-                // propagate (partially) channeling constraints between Problem1 (P0) and NegProblem2 (NegP2) only
+                problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem0
+                // propagate (partially) channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
                 for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
                     Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
                     assert(ctr->deconnected());
@@ -2645,10 +2645,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                     ctr->assignCluster();
                     ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds
                 }
-                //wcsp->increaseLb(ToulBar2::negCostBLP[1]); // compensate Problem2 shift not done in NegProblem2 nor Problem1
-                //FIXME: what if NC prune values and not after this lb decreasing???
-                //assert(wcsp->getLb() >= ToulBar2::initialLbBLP[1]);
-                //wcsp->setLb(wcsp->getLb() - ToulBar2::initialLbBLP[1]); // subtract initialLbP2 because it should not be added to Problem1 + NegProblem2 lower bounds
                 assert(problem1->getLb() == MIN_COST);
                 assert(problem1->getCurrentDeltaUb() == MIN_COST);
                 assert(problem2->getLb() == MIN_COST);
@@ -2841,14 +2837,14 @@ bool Solver::solve(bool first)
                                                 Cluster *negproblem2 = *iter;
                                                 assert(problem2->getLb() == MIN_COST);
                                                 assert(problem2->getCurrentDeltaUb() == MIN_COST);
-                                                //cout << "C0.lb: " << problem0->getLb() << " C1.lb: " << problem1->getLb() << " C2.lb: " << problem2->getLb() << " NegC2.lb: " << negproblem2->getLb() << " NegC2.delta <= " << negproblem2->getCurrentDeltaUb() << endl;
+                                                //cout << "C0.lb: " << problem0->getLb() << " C1.lb: " << problem1->getLb() << " C2.lb: " << problem2->getLb() << " NegC2.lb: " << negproblem2->getLb() << " NegC2.delta >= " << negproblem2->getCurrentDeltaLb() << " NegC2.delta <= " << negproblem2->getCurrentDeltaUb() << endl;
                                                 Cost lbP1 = problem0->getLb() + problem1->getLb() - ToulBar2::initialLbBLP[2] - negproblem2->getCurrentDeltaUb();
                                                 Cost lbP2 = ToulBar2::initialLbBLP[1];
                                                 Cost lbNegP2 = negproblem2->getLb() + ToulBar2::initialLbBLP[2] + negproblem2->getCurrentDeltaLb();
-                                                cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(lbP1 - ToulBar2::negCostBLP[0]) << endl;
-                                                cout << "Initial lower bound for Problem2: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::negCostBLP[1]) << endl;
-                                                cout << "Initial upper bound for Problem2: " << wcsp->Cost2RDCost(-(lbNegP2 - ToulBar2::negCostBLP[2])) << endl;
-                                                cout << "Initial lower bound for Problem1-Problem2: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
+                                                cout << "Initial lower bound for the restricted leader problem (without subtracting the follower objective): " << wcsp->Cost2RDCost(lbP1 - ToulBar2::negCostBLP[0]) << endl;
+                                                cout << "Initial lower bound for the follower problem: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::negCostBLP[1]) << endl;
+                                                cout << "Initial strict upper bound for the follower problem: " << wcsp->Cost2RDCost(-(lbNegP2 - ToulBar2::negCostBLP[2]) + UNIT_COST) << endl;
+                                                cout << "Initial lower bound for the leader problem: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
                                             }
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;

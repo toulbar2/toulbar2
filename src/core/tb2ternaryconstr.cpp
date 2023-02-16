@@ -183,6 +183,7 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
 #endif
 
     if (ToulBar2::bilevel>=2) {
+        assert(ToulBar2::bilevel <= 3);
         deconnect(true);
         assert(xy->deconnected());
         assert(xz->deconnected());

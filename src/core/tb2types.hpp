@@ -915,7 +915,7 @@ public:
     static bool verifyOpt; ///< \brief compiled in debug, checks if a given (optimal) solution is never pruned by propagation when the current upper bound is greater than the cost of this solution (see Solver::read_solution, related to command line option -opt)
     static Cost verifiedOptimum; ///< \brief compiled in debug, a given (optimal) solution cost (see Solver::read_solution, related to command line option -opt)
 
-    static int bilevel; ///< \brief bilevel optimization using modified BTD with (at least) four clusters (P0 -> P1, P0 -> P2, P0 -> NegP2) (command line option -bilevel)
+    static int bilevel; ///< \brief bilevel optimization using modified BTD with (at least) four clusters (P0 -> P1, P0 -> P2, P0 -> NegP2) corresponding to the restricted leader problem (P0 and P1), the follower problem (P2), and the negative follower problem (NegP2) (command line option -bilevel)
     static vector<unsigned int> decimalPointBLP;
     static vector<double> costMultiplierBLP;
     static vector<Cost> negCostBLP;
