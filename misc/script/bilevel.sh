@@ -19,11 +19,11 @@ else
    @ N += $3
 endif
 
-./bin/Linux/toulbar2 $1 -s=3 -a -svo -nopre -hbfs: -k=0 | awk -v N=$N '/solution.*[)]:/{sub("solution[(]","",$2); for (i=1;i<=N;i++) printf(":%s",$(2+i)); for (j=3+N;j<=NF;j++) printf(" %s",$j); printf(" %d",0+$2); print ""}' | sort >! ${1:r}.all
+toulbar2 $1 -s=3 -a -svo -nopre -hbfs: -k=0 | awk -v N=$N '/solution.*[)]:/{sub("solution[(]","",$2); for (i=1;i<=N;i++) printf(":%s",$(2+i)); for (j=3+N;j<=NF;j++) printf(" %s",$j); printf(" %d",0+$2); print ""}' | sort >! ${1:r}.all
 
 set T = `head -1 ${1:r}.all | wc -w`
 
-./bin/Linux/toulbar2 $2 -s=3 -a -svo -nopre -hbfs: -k=0 | awk -v N=$N '/solution.*[)]:/{sub("solution[(]","",$2); for (i=1;i<=N;i++) printf(":%s",$(2+i)); for (j=3+N;j<=NF;j++) printf(" %s",$j); printf(" %d",0+$2); print ""}' | sort >! ${2:r}.all
+toulbar2 $2 -s=3 -a -svo -nopre -hbfs: -k=0 | awk -v N=$N '/solution.*[)]:/{sub("solution[(]","",$2); for (i=1;i<=N;i++) printf(":%s",$(2+i)); for (j=3+N;j<=NF;j++) printf(" %s",$j); printf(" %d",0+$2); print ""}' | sort >! ${2:r}.all
 
 set F = `head -1 ${2:r}.all | wc -w`
 
