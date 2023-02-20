@@ -2498,6 +2498,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // do not perform hbfs operations in preprocessing except for building tree decomposition
     if (!ToulBar2::isZ) {
+        wcsp->enforceUb();
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;

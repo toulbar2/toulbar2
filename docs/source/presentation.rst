@@ -33,7 +33,7 @@ Additional contributions by:
 - Caen University, France (GREYC) and University of Oran, Algeria for (parallel) variable neighborhood search methods
 - The Chinese University of Hong Kong and Caen University, France (GREYC) for global cost functions
 - Marseille University, France (LSIS) for tree decomposition heuristics
-- Ecole des Ponts ParisTech, France (CERMICS/LIGM for `INCOP <http://imagine.enpc.fr/~neveub/incop/incoppresentation.html>`_ local search solver
+- Ecole des Ponts ParisTech, France (CERMICS/LIGM) for `INCOP <http://imagine.enpc.fr/~neveub/incop/incoppresentation.html>`_ local search solver
 - University College Cork, Ireland (Insight) for a Python interface in `Numberjack <https://github.com/eomahony/Numberjack>`_  and a portfolio dedicated to UAI graphical models `Proteus <https://github.com/9thbit/uai-proteus>`_
 - Artois University, France (CRIL) for an XCSP 2.1 format reader of CSP and WCSP instances
 - Université de Toulouse I Capitole (IRIT) and Université du Littoral Côte d'Opale, France (LISIC) for PILS local search solver
