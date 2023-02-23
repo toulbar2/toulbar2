@@ -116,7 +116,7 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
         /* check all the costs of the variable: if everything is 0, this can be skipped */
         bool all_zeros = true;
         for (unsigned int val_ind = 0; val_ind < tb2_var->getDomainInitSize(); val_ind++) {
-            if (tb2_var->getCost(val_ind) != 0) {
+            if (tb2_var->getCost(tb2_var->toValue(val_ind)) != 0) {
                 all_zeros = false;
                 break;
             }
@@ -154,7 +154,7 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
 
             cost_function.back().tuples[val_ind] = { val_ind };
 
-            Cost tb2_cost = tb2_var->getCost(tb2_val_ind);
+            Cost tb2_cost = tb2_var->getCost(tb2_var->toValue(tb2_val_ind));
 
             if (tb2_cost + wcsp->getLb() >= wcsp->getUb()) {
                 cost_function.back().costs[val_ind] = numeric_limits<Double>::infinity();
