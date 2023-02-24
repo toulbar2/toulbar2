@@ -282,7 +282,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 
                     unsigned int cost_index = tupleToIndex(variables, tuple);
 
-                    Cost cost = tc->getCost(tb2_var1->toIndex(tb2_val1_ind), tb2_var2->toIndex(tb2_val2_ind), tb2_var3->toIndex(tb2_val3_ind));
+                    Cost cost = tc->getCost(tb2_var1->toValue(tb2_val1_ind), tb2_var2->toValue(tb2_val2_ind), tb2_var3->toValue(tb2_val3_ind));
 
                     if (cost + wcsp->getLb() >= wcsp->getUb()) {
                         cost_func.costs[cost_index] = numeric_limits<Double>::infinity();
