@@ -28,11 +28,33 @@ MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
 }
 
 //---------------------------------------------------------------------------
+void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var) {
+
+    // assert(multicfn_var.nbValues() == tb2_var->getDomainInitSize());
+    if(multicfn_var.nbValues() != tb2_var->getDomainInitSize()) {
+        cerr << "error: two variables with same name have different domain size between wcsp and multicfn!" << endl;
+        throw WrongFileFormat();
+    }
+
+    /* check consistencies between domain value names */
+    unsigned int cpt_check = 0;
+    for(unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind ++) {
+        string value_name = tb2_var->getValueName(tb2_val_ind);
+        if(multicfn_var.str_to_index.find(value_name) != multicfn_var.str_to_index.end()) {
+            cpt_check ++;
+        }
+    }
+
+    // assert(cpt_check == tb2_var->getDomainInitSize());
+    if(cpt_check != tb2_var->getDomainInitSize()) {
+        cerr << "error: two variables with same name have different domain value names between wcsp and multicfn!" << endl;
+        throw WrongFileFormat();
+    }
+}
+
+//---------------------------------------------------------------------------
 void MultiCFN::push_back(WCSP* wcsp, double weight)
 {
-
-    // assert: identical domains for existing variables
-    // assert: do not add two functions with the same scope (instead add their costs)
 
     // create a new network
     weights.push_back(weight);
@@ -44,24 +66,37 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
     for (unsigned int tb2_var_ind = 0; tb2_var_ind < wcsp->numberOfVariables(); tb2_var_ind++) {
 
         // make sure the variable is enumerated
-        assert(wcsp->getVar(tb2_var_ind)->enumerated());
+        if(!wcsp->getVar(tb2_var_ind)->enumerated()) {
+            cerr << "error: wcsp variables must be enumerated to be inserted in a multicfn !" << endl;
+            throw WrongFileFormat(); 
+        }
+
+        // assert(wcsp->getVar(tb2_var_ind)->enumerated());
 
         EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(tb2_var_ind));
 
-        string name = tb2_var->getName();
-
-        // check if the variable already exists
-        if (var_index.find(name) != var_index.end()) {
-            // the variable already exists
-            continue;
+        // make sure the variable has value names
+        // assert(tb2_var->isValueNames());
+        if(!tb2_var->isValueNames()) {
+            cerr << "error: the wcsp variables must have value names to be inserted in a multicfn!" << endl;
+            throw WrongFileFormat();
         }
 
+        string name = tb2_var->getName();
+
+        // check if the multicfn variable already exists
+        if (var_index.find(name) != var_index.end()) {
+            MultiCFN::checkVariablesConsistency(tb2_var, var[var_index[name]]);
+            continue; // the variable already exists, jump to the next one
+        }
+
+        // create the new multicfn variable otherwise
         this->var.push_back(mcriteria::Var(this));
         this->var.back().name = name;
 
         var_index.insert(make_pair(name, var.size() - 1));
 
-        // read the domain: tb2 indexes and indexes here are the same
+        // read the domain: tb2 indexes and local indexes here are the same, i.e. values are inserted in the same order
         this->var.back().domain_str.resize(tb2_var->getDomainInitSize());
         for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
             this->var.back().domain_str[tb2_val_ind] = tb2_var->getValueName(tb2_val_ind);
@@ -204,10 +239,10 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
     // read the cost table
     if (cstr->arity() == 1) {
 
-        cerr << "Warning! Cost function with arity 1 in current WCSP!" << endl;
+        cerr << "Warning! Cost function with arity 1 in current WCSP will be ignored by MultiCFN!" << endl;
         throw WrongFileFormat();
 
-        /* presumably empty -> unary costs are sent to the variables */
+        /* presumably empty -> unary costs are sent to the variables by tb2 */
 
     } else if (cstr->arity() == 2) {
 
@@ -226,6 +261,8 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 
         for (unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind++) {
             for (unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind++) {
+
+                /* todo: check existance of the corresponding variable */
 
                 vector<mcriteria::Var*> variables = { &var[cost_func.scope[0]], &var[cost_func.scope[1]] };
 
@@ -426,6 +463,7 @@ Double MultiCFN::computeTop()
 //---------------------------------------------------------------------------
 void MultiCFN::exportToWCSP(WCSP* wcsp)
 {
+    /* to do: do not erase the content of the wcsp passed as parameter -> addition of negcost and c0 */
 
     // floating point precision
     ToulBar2::decimalPoint = _tb2_decimalpoint;
@@ -487,11 +525,35 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
 
         if (wcsp->getVarIndex(var[var_ind].name) == wcsp->numberOfVariables()) {
+
             wcsp->makeEnumeratedVariable(var[var_ind].name, 0, var[var_ind].nbValues() - 1);
+
             unsigned int tb2ind = wcsp->getVarIndex(var[var_ind].name);
+
             for (auto& val : var[var_ind].domain_str) {
                 wcsp->addValueName(tb2ind, val);
             }
+
+        } else { /* the wcsp variable already exist */
+
+            /* check consistencies between the domains */
+
+            Variable* tb2_var = wcsp->getVar(wcsp->getVarIndex(var[var_ind].name));
+
+            if(!tb2_var->enumerated()) {
+                cerr << "error when exporting a multicfn: the target wcsp has a variable with same name but not enumerated!" << endl;
+                throw WrongFileFormat();
+            }
+
+            EnumeratedVariable* tb2_enumvar = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[var_ind].name)));
+
+            if(!tb2_enumvar->isValueNames()) {
+                cerr << "error when exporting a multicfn: the target wcsp has a variable with the same name no associated value names!" << endl;
+                throw WrongFileFormat();
+            }
+
+            checkVariablesConsistency(tb2_enumvar, var[var_ind]);
+
         }
     }
 
