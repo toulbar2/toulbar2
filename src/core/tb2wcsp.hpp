@@ -444,7 +444,7 @@ public:
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, vector<Value>& dom);
     void addValueName(int xIndex, const string& name);
-    const string& getValueName(int xIndex, Value value) { return vars[xIndex]->getValueName(toIndex(xIndex, value)); }
+    const string& getValueName(int xIndex, Value value) { return vars[xIndex]->getValueName((vars[xIndex]->enumerated())?toIndex(xIndex, value):WRONG_VAL); }
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
     // a limited number of cost functions accept floating-point costs directly and are able to disappear when backtrack occurs (used in incremental search)

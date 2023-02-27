@@ -944,7 +944,12 @@ void Solver::increase(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << "(" << wcsp->getValueName(varIndex, value) << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (" << valname << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        }
     }
     wcsp->increase(varIndex, value);
     wcsp->propagate();
@@ -972,7 +977,12 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << "(" << wcsp->getValueName(varIndex, value) << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (" << valname << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        }
     }
     wcsp->decrease(varIndex, value);
     wcsp->propagate();
@@ -1025,7 +1035,12 @@ void Solver::assign(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " == " << value << "(" << wcsp->getValueName(varIndex, value) << ")" << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " == " << value << " (" << valname << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
+        }
     }
     wcsp->assign(varIndex, value);
     wcsp->propagate();
@@ -1053,7 +1068,12 @@ void Solver::remove(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " != " << value << "(" << wcsp->getValueName(varIndex, value) << ")" << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " != " << value << " (" << valname << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
+        }
     }
     wcsp->remove(varIndex, value);
     wcsp->propagate();
@@ -1082,8 +1102,14 @@ void Solver::remove(int varIndex, ValueCost* array, int first, int last, bool re
             }
         }
         cout << "] Try " << wcsp->getName(varIndex) << " !=";
-        for (int i = first; i <= last; i++)
-            cout << " " << array[i].value;
+        for (int i = first; i <= last; i++) {
+            string valname = wcsp->getValueName(varIndex, array[i].value);
+            if (valname.size() > 0) {
+                cout << " " << array[i].value << " (" << valname << ")";
+            } else {
+                cout << " " << array[i].value;
+            }
+        }
         cout << endl;
     }
     for (int i = first; i <= last; i++)
