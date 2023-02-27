@@ -4759,11 +4759,11 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
-            os << vars[i]->getName() << "\"],\"defaultcost\":" << Cost2RDCost(ub) << ",\n";
+            os << vars[i]->getName() << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
                 os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
-                   << ((original) ? Cost2RDCost(domcost[v].cost) : min(Cost2RDCost(ub), Cost2RDCost(domcost[v].cost)));
+                   << ((original) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : ((ub > domcost[v].cost)?DCost2Decimal(Cost2RDCost(domcost[v].cost)):"inf"));
                 if (v != (size - 1)) {
                     os << ",";
                 }

@@ -330,7 +330,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
                     if (printed)
                         os << ",\n";
                     os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << "," << ((original) ? z->toIndex(*iterZ) : k) << ","
-                       << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))));
+                       << ((original) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ))) : ((wcsp->getUb() > getCost(*iterX, *iterY, *iterZ)) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ))) : "inf"));
                     printed = true;
                 }
             }

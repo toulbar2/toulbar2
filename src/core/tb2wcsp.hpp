@@ -878,6 +878,12 @@ public:
     Cost DoubletoCost(const Double& c) const { return Round(c * pow10Cache[ToulBar2::decimalPoint]) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
     Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / pow10Cache[ToulBar2::decimalPoint] / ToulBar2::costMultiplier); } //Relative costs
+    std::string DCost2Decimal(const Double& c)
+    {
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(ToulBar2::decimalPoint) << c << std::setprecision(DECIMAL_POINT);
+        return ss.str();
+    }
     Cost Prob2Cost(TProb p) const;
     TProb Cost2Prob(Cost c) const;
     TLogProb Cost2LogProb(Cost c) const;

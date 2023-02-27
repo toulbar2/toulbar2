@@ -138,7 +138,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
                 if (printed)
                     os << ",\n";
                 os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << ","
-                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY))));
+                   << ((original) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))) : ((wcsp->getUb() > getCost(*iterX, *iterY))?wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))):"inf"));
                 printed = true;
             }
         }

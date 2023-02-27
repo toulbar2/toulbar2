@@ -1583,7 +1583,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
-        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+        os << "],\"defaultcost\":" << ((wcsp->getUb() > default_cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) : "inf") << ",\n\"costs\":[";
 
         Tuple t;
         Cost cost;
@@ -1599,7 +1599,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     printed = true;
                 }
             }
-            os << "," << ((original) ? wcsp->Cost2RDCost(cost) : wcsp->Cost2RDCost(min(wcsp->getUb(), cost)));
+            os << "," << ((wcsp->getUb() > cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost)) : "inf");
         }
     }
     os << "]},\n";
