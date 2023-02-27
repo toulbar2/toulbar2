@@ -560,7 +560,7 @@ Node processing \& bounding options
 -V      VAC-based value ordering heuristic (default option)
 
 -T=[decimal]
-        threshold cost value for VAC (default value is 1)
+        threshold cost value for VAC (any decimal cost below this threshold is considered as null by VAC thus speeding-up its convergence, default value is 1)
 
 -P=[decimal]
         threshold cost value for VAC during the preprocessing phase only (default value is 1)
@@ -689,7 +689,7 @@ File output
         1 or 3: saves original instance in 1-wcsp or 3-cfn format
         (1 by default), 2 or 4: saves
         after preprocessing in 2-wcsp or 4-cfn format (this option can be
-        used in combination with -z=filename)
+        used in combination with -z=filename). If the problem is saved after preprocessing, some variables may be lost (due to variable elimination, see -e or -p or -f).
 
 -x=[(,i[:math:`=\#<>`]a)*]
         performs an elementary operation (':math:`=`':assign, ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with value a on variable of index i (multiple
@@ -704,12 +704,16 @@ Probability representation and numerical control
 -precision=[integer]
         probability/real precision is a conversion
         factor (a power of ten) for representing fixed point numbers
-        (default value is 7)
+        (default value is 7). It is used by UAI/QPBO/OPB/Pedigree formats.
+        It has no effect in CFN format (the number of significant digits is given in the problem description). 
 
 -epsilon=[float]
         approximation factor for computing the partition
         function (greater than 1, default value is infinity)
- 
+
+Note that in CFN format, costs are given as decimal numbers (the same for giving an initial upper bound, an absolute optimality gap or VAC threshold values)
+whereas in WCSP format costs are non-negative integers only.
+
 Random problem generation
 -------------------------
 

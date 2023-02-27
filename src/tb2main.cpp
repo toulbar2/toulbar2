@@ -1608,6 +1608,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfsGlobalLimit = 0;
                 ToulBar2::DEE = 0;
                 ToulBar2::elimDegree = -1;
+                ToulBar2::preprocessFunctional = 0;
             } else if (args.OptionId() == NO_OPT_bilevel) {
                 ToulBar2::bilevel = 0;
             }
@@ -3087,13 +3088,9 @@ int _tmain(int argc, TCHAR* argv[])
                     throw BadConfiguration();
                 }
                 if (ToulBar2::bilevel) {
-                    strfile.push_back(strfile.back()); // read again problem2 as NegP2
+                    strfile.push_back(strfile.back()); // read again the follower problem to build its negative form
                 }
                 for (auto f : strfile) {
-                    if (ToulBar2::bilevel) {
-                        ((WCSP*)solver->getWCSP())->varsBLP.push_back(set<int>());
-                        ((WCSP*)solver->getWCSP())->delayedCtrBLP.push_back(vector<int>());
-                    }
                     globalUb = solver->read_wcsp((char*)f.c_str());
                     if (globalUb <= MIN_COST) {
                         THROWCONTRADICTION;
@@ -3122,7 +3119,7 @@ int _tmain(int argc, TCHAR* argv[])
                 }
                 if (ToulBar2::bilevel) { // deduce a valid covering for tree decomposition
                     if (ToulBar2::verbose >= 1) {
-                        cout << "\t\t P1\t P2\t NegP2";
+                        cout << "\t\t Leader\t Follower\t NegativeFollower";
                         cout << endl << "decimalPoint  ";
                         for (auto value: ToulBar2::decimalPointBLP) {
                             cout << "\t " << value;
@@ -3150,6 +3147,17 @@ int _tmain(int argc, TCHAR* argv[])
                     solver->getWCSP()->decreaseLb(ToulBar2::negCostBLP[0] + ToulBar2::negCostBLP[2]); // Problem1.shift + ProblemNeg2.shift
                     solver->getWCSP()->setLb(ToulBar2::initialLbBLP[0] + ToulBar2::initialLbBLP[2]); // Problem1.lb + ProblemNeg2.lb
                     solver->getWCSP()->setUb(max(UNIT_COST, ToulBar2::initialUbBLP[0] - (ToulBar2::initialLbBLP[1] - ToulBar2::negCostBLP[1]))); // Problem1.ub - Problem2.lb
+                    if (ToulBar2::externalUB.length() != 0) {
+                        solver->getWCSP()->updateUb(MIN(solver->getWCSP()->getUb(), solver->getWCSP()->decimalToCost(ToulBar2::externalUB, 0) + solver->getWCSP()->getNegativeLb()));
+                    }
+                    if (ToulBar2::deltaUbS.length() != 0) {
+                        ToulBar2::deltaUbAbsolute = MAX(MIN_COST, solver->getWCSP()->decimalToCost(ToulBar2::deltaUbS, 0));
+                        ToulBar2::deltaUb = MAX(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)solver->getWCSP()->getUb()));
+                        if (ToulBar2::deltaUb > MIN_COST) {
+                            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+                            solver->getWCSP()->updateUb(ToulBar2::deltaUb);
+                        }
+                    }
                     string varOrder = "0 -1";
                     vector<set<int>> &varsBLP = ((WCSP*)solver->getWCSP())->varsBLP;
                     set<int> intersect;

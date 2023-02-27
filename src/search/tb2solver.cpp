@@ -22,6 +22,7 @@
 #include <thread>
 
 extern void setvalue(int wcspId, int varIndex, Value value, void* solver);
+extern void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);
 
 const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
@@ -166,7 +167,9 @@ void Solver::initVarHeuristic()
     }
     wcsp->resetTightnessAndWeightedDegree();
     // Now function setvalue can be called safely!
-    ToulBar2::setvalue = setvalue;
+    if (ToulBar2::setvalue == NULL) {
+        ToulBar2::setvalue = setvalue;
+    }
 }
 
 // keep consistent order of allVars with getDACOrder, needed by setvalue function
@@ -478,9 +481,10 @@ int Solver::numberOfUnassignedVariables() const
 void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
 {
     //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
+    assert(_solver_);
     Solver* solver = (Solver*)_solver_;
     unsigned int i = solver->getWCSP()->getDACOrder(varIndex);
-    if (!solver->allVars[i]->removed) {
+    if (i < solver->allVars.size() && !solver->allVars[i]->removed) {
         solver->unassignedVars->erase(solver->allVars[i], true);
     }
 }
@@ -940,7 +944,12 @@ void Solver::increase(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (" << valname << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " >= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        }
     }
     wcsp->increase(varIndex, value);
     wcsp->propagate();
@@ -968,7 +977,12 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (" << valname << ") (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " <= " << value << " (s:" << wcsp->getSupport(varIndex) << ")" << endl;
+        }
     }
     wcsp->decrease(varIndex, value);
     wcsp->propagate();
@@ -1021,7 +1035,12 @@ void Solver::assign(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " == " << value << " (" << valname << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " == " << value << endl;
+        }
     }
     wcsp->assign(varIndex, value);
     wcsp->propagate();
@@ -1049,7 +1068,12 @@ void Solver::remove(int varIndex, Value value, bool reverse)
                 cout << "," << wcsp->getTreeDec()->getCurrentCluster()->getFreedom();
             }
         }
-        cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
+        string valname = wcsp->getValueName(varIndex, value);
+        if (valname.size() > 0) {
+            cout << "] Try " << wcsp->getName(varIndex) << " != " << value << " (" << valname << ")" << endl;
+        } else {
+            cout << "] Try " << wcsp->getName(varIndex) << " != " << value << endl;
+        }
     }
     wcsp->remove(varIndex, value);
     wcsp->propagate();
@@ -1078,8 +1102,14 @@ void Solver::remove(int varIndex, ValueCost* array, int first, int last, bool re
             }
         }
         cout << "] Try " << wcsp->getName(varIndex) << " !=";
-        for (int i = first; i <= last; i++)
-            cout << " " << array[i].value;
+        for (int i = first; i <= last; i++) {
+            string valname = wcsp->getValueName(varIndex, array[i].value);
+            if (valname.size() > 0) {
+                cout << " " << array[i].value << " (" << valname << ")";
+            } else {
+                cout << " " << array[i].value;
+            }
+        }
         cout << endl;
     }
     for (int i = first; i <= last; i++)
@@ -1662,6 +1692,7 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve(Cost lb)
 {
+    assert(numberOfUnassignedVariables() == (int)getWCSP()->numberOfUnassignedVariables());
     int varIndex = -1;
     if (ToulBar2::bep)
         varIndex = getMostUrgent();
@@ -2470,7 +2501,7 @@ void Solver::beginSolve(Cost ub)
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
 
-    if (CSP(wcsp->getLb(), wcsp->getUb())) {
+    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) {
         ToulBar2::LcLevel = LC_AC;
     }
 
@@ -2493,6 +2524,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // do not perform hbfs operations in preprocessing except for building tree decomposition
     if (!ToulBar2::isZ) {
+        wcsp->enforceUb();
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
         if (finiteUb < initialUpperBound) {
             initialUpperBound = finiteUb;
@@ -2610,7 +2642,13 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         cout << "NegativeShiftingCost= " << wcsp->getNegativeLb() << endl;
 
     if (ToulBar2::btdMode) {
-        if (wcsp->numberOfUnassignedVariables() == 0 || wcsp->numberOfConnectedConstraints() == 0) {
+        int nbdelayedblp = 0;
+        if (ToulBar2::bilevel) {
+            for (auto s: ((WCSP*)wcsp)->delayedCtrBLP) {
+                nbdelayedblp += s.size();
+            }
+        }
+        if (wcsp->numberOfUnassignedVariables() == 0 || (wcsp->numberOfConnectedConstraints() == 0 && nbdelayedblp == 0)) {
             ToulBar2::approximateCountingBTD = 0;
             ToulBar2::btdMode = 0;
         } else {
@@ -2625,18 +2663,15 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 ++iter;
                 Cluster *negproblem2 = *iter;
                 //problem2.isused = false //FIXME???
-                problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem 0
-                // propagate (partially) channeling constraints between Problem1 (P0) and NegProblem2 (NegP2) only
+                problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem0
+                // propagate (partially) channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
                 for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
                     Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
+                    assert(ctr->deconnected());
                     ctr->reconnect();
                     ctr->assignCluster();
                     ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds
                 }
-                //wcsp->increaseLb(ToulBar2::negCostBLP[1]); // compensate Problem2 shift not done in NegProblem2 nor Problem1
-                //FIXME: what if NC prune values and not after this lb decreasing???
-                //assert(wcsp->getLb() >= ToulBar2::initialLbBLP[1]);
-                //wcsp->setLb(wcsp->getLb() - ToulBar2::initialLbBLP[1]); // subtract initialLbP2 because it should not be added to Problem1 + NegProblem2 lower bounds
                 assert(problem1->getLb() == MIN_COST);
                 assert(problem1->getCurrentDeltaUb() == MIN_COST);
                 assert(problem2->getLb() == MIN_COST);
@@ -2829,13 +2864,14 @@ bool Solver::solve(bool first)
                                                 Cluster *negproblem2 = *iter;
                                                 assert(problem2->getLb() == MIN_COST);
                                                 assert(problem2->getCurrentDeltaUb() == MIN_COST);
+                                                //cout << "C0.lb: " << problem0->getLb() << " C1.lb: " << problem1->getLb() << " C2.lb: " << problem2->getLb() << " NegC2.lb: " << negproblem2->getLb() << " NegC2.delta >= " << negproblem2->getCurrentDeltaLb() << " NegC2.delta <= " << negproblem2->getCurrentDeltaUb() << endl;
                                                 Cost lbP1 = problem0->getLb() + problem1->getLb() - ToulBar2::initialLbBLP[2] - negproblem2->getCurrentDeltaUb();
                                                 Cost lbP2 = ToulBar2::initialLbBLP[1];
                                                 Cost lbNegP2 = negproblem2->getLb() + ToulBar2::initialLbBLP[2] + negproblem2->getCurrentDeltaLb();
-                                                cout << "Initial lower bound for Problem1: " << wcsp->Cost2RDCost(lbP1 - ToulBar2::negCostBLP[0]) << endl;
-                                                cout << "Initial lower bound for Problem2: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::negCostBLP[1]) << endl;
-                                                cout << "Initial upper bound for Problem2: " << wcsp->Cost2RDCost(-(lbNegP2 - ToulBar2::negCostBLP[2])) << endl;
-                                                cout << "Initial lower bound for Problem1-Problem2: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
+                                                cout << "Initial lower bound for the restricted leader problem (without subtracting the follower objective): " << wcsp->Cost2RDCost(lbP1 - ToulBar2::negCostBLP[0]) << endl;
+                                                cout << "Initial lower bound for the follower problem: " << wcsp->Cost2RDCost(lbP2 - ToulBar2::negCostBLP[1]) << endl;
+                                                cout << "Initial strict upper bound for the follower problem: " << wcsp->Cost2RDCost(-(lbNegP2 - ToulBar2::negCostBLP[2]) + UNIT_COST) << endl;
+                                                cout << "Initial lower bound for the leader problem: " << wcsp->Cost2RDCost(wcsp->getLb() - wcsp->getNegativeLb()) << endl;
                                             }
                                             res = hybridSolve(start, MAX(wcsp->getLb(), res.first), res.second);
                                             //				                if (res.first < res.second) cout << "Optimality gap: [ " <<  res.first << " , " << res.second << " ] " << (100. * (res.second-res.first)) / res.second << " % (" << nbBacktracks << " backtracks, " << nbNodes << " nodes)" << endl;

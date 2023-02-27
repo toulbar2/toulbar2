@@ -157,7 +157,21 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
         .def_readwrite_static("divMethod", &ToulBar2::divMethod)
         .def_readwrite_static("divRelax", &ToulBar2::divRelax)
-        .def_readwrite_static("varOrder", &ToulBar2::varOrder)
+        .def("getVarOrder", []() -> string  {
+            if (reinterpret_cast<uintptr_t>(ToulBar2::varOrder) < ELIM_MAX) {
+                return to_string(-reinterpret_cast<uintptr_t>(ToulBar2::varOrder));
+            } else {
+                return to_string(ToulBar2::varOrder);
+            }
+        })
+        .def("setVarOrder", [](const string& fileName) {
+            if (fileName[0]=='-') {
+                ToulBar2::varOrder = reinterpret_cast<char*>(-atoi(fileName.data()));
+            } else {
+                ToulBar2::varOrder = new char[fileName.size() + 1];
+                strcpy(ToulBar2::varOrder, fileName.data());
+            }
+        })
         .def_readwrite_static("btdMode", &ToulBar2::btdMode)
         .def_readwrite_static("btdSubTree", &ToulBar2::btdSubTree)
         .def_readwrite_static("btdRootCluster", &ToulBar2::btdRootCluster)
@@ -219,7 +233,12 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("epsFilename", &ToulBar2::epsFilename)
         .def_readwrite_static("verifyOpt", &ToulBar2::verifyOpt)
         .def_readwrite_static("verifiedOptimum", &ToulBar2::verifiedOptimum)
-        .def_readwrite_static("bilevel", &ToulBar2::bilevel);
+        .def_readwrite_static("bilevel", &ToulBar2::bilevel)
+        .def_readwrite_static("decimalPointBLP", &ToulBar2::decimalPointBLP)
+        .def_readwrite_static("costMultiplierBLP", &ToulBar2::costMultiplierBLP)
+        .def_readwrite_static("negCostBLP", &ToulBar2::negCostBLP)
+        .def_readwrite_static("initialLbBLP", &ToulBar2::initialLbBLP)
+        .def_readwrite_static("initialUbBLP", &ToulBar2::initialUbBLP);
     m.def("check", &tb2checkOptions); // should be called after setting the options (and before reading a problem)
 
     py::class_<Store, std::unique_ptr<Store, py::nodelete>>(m, "store")
@@ -285,6 +304,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getDDualBound", &WeightedCSP::getDDualBound)
         .def("getDLb", &WeightedCSP::getDLb)
         .def("getDUb", &WeightedCSP::getDUb)
+        .def("updateDUb", &WeightedCSP::updateDUb)
         .def("setLb", &WeightedCSP::setLb)
         .def("setUb", &WeightedCSP::setUb)
         .def("updateUb", &WeightedCSP::updateUb)
@@ -354,6 +374,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getNbDEE", &WeightedCSP::getNbDEE)
         .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
+        .def("getValueName", &WeightedCSP::getValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
         .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
         .def(
@@ -380,6 +401,10 @@ PYBIND11_MODULE(pytb2, m)
             return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
         },
             py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
+        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub) {
+                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub);
+        },
+            py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
@@ -404,7 +429,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getSolutions", &WeightedCSP::getSolutions)
         //        .def("setSolution", &WeightedCSP::setSolution)
         .def("printSolution", (void (WeightedCSP::*)(ostream&)) & WeightedCSP::printSolution)
-        .def("print", &WeightedCSP::print)
+        .def("print", [](WeightedCSP& wcsp) { wcsp.print(cout); })
         .def("dump", &WeightedCSP::dump)
         .def("dump_CFN", &WeightedCSP::dump_CFN)
         .def("decimalToCost", &WeightedCSP::decimalToCost)

@@ -572,7 +572,7 @@ void Bicriteria::computeNonSupported(MultiCFN* multicfn, pair<Bicriteria::OptimD
 }
 
 //--------------------------------------------------------------------------------------------
-void computeSupportedPoints(MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta = 1e-3) {
+void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, pair<Bicriteria::OptimDir, Bicriteria::OptimDir> optim_dir, Double delta) {
     Bicriteria::computeSupportedPoints(multicfn, 0, 1, optim_dir, delta);
 }
 

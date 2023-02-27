@@ -145,6 +145,8 @@ public:
     Double getDUb() const { return (ToulBar2::costMultiplier < 0 ? Cost2ADCost(lb) : Cost2ADCost(ub)); } ///< \brief gets problem upper bound as a Double representing a decimal cost
     Double getDLb() const { return (ToulBar2::costMultiplier < 0 ? Cost2ADCost(ub) : Cost2ADCost(lb)); } ///< \brief gets problem lower bound as a Double representing a decimal cost
 
+    void updateDUb(Double newDUb) { updateUb(DoubletoCost(newDUb)); } ///< \brief sets problem upper bound as a Double representing a decimal cost
+
     void setLb(Cost newLb) { lb = newLb; } ///< \internal sets problem lower bound
     void setUb(Cost newUb) { ub = newUb; } ///< \internal sets problem upper bound
 
@@ -395,7 +397,7 @@ public:
     /// \brief returns current number of unassigned variables
     unsigned int numberOfUnassignedVariables() const
     {
-        int res = 0;
+        unsigned int res = 0;
         for (unsigned int i = 0; i < vars.size(); i++)
             if (unassigned(i))
                 res++;
@@ -442,23 +444,26 @@ public:
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, vector<Value>& dom);
     void addValueName(int xIndex, const string& name);
+    const string& getValueName(int xIndex, Value value) { return vars[xIndex]->getValueName((vars[xIndex]->enumerated())?toIndex(xIndex, value):WRONG_VAL); }
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
+    // a limited number of cost functions accept floating-point costs directly and are able to disappear when backtrack occurs (used in incremental search)
     void postNullaryConstraint(Double cost);
+    void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false);
+    int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false);
+    int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false);
+
     void postNullaryConstraint(Cost cost);
     void postUnary(int xIndex, vector<Cost>& costs);
     int postUnary(int xIndex, Value* d, int dsize, Cost penalty);
-    void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false);
     void postUnaryConstraint(int xIndex, vector<Cost>& costs) { postUnary(xIndex, costs); }
     void postIncrementalUnaryConstraint(int xIndex, vector<Cost>& costs) { postUnary(xIndex, costs); }
     int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) { return postUnary(xIndex, d, dsize, penalty); }
     int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL);
     int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty);
     int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy);
-    int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false);
     int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
-    int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
@@ -516,6 +521,8 @@ public:
         return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict);
     }
     int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict); // warning! scopeIndex may be modified internally.
+
+    int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST);
 
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);

@@ -484,7 +484,7 @@ void Haplotype::buildWCSP(const char* fileName, WCSP* wcsp)
             nbfounders++;
         if (pedigree[i].typed) {
             string varname;
-            varname = to_string(pedigree[i].individual);
+            varname = "X" + to_string(pedigree[i].individual);
             wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
@@ -618,7 +618,7 @@ void Haplotype::buildWCSP_bayesian(const char* fileName, WCSP* wcsp)
             nbfounders++;
         if (pedigree[i].typed) {
             string varname;
-            varname = to_string(pedigree[i].individual);
+            varname = "X" + to_string(pedigree[i].individual);
             wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
@@ -833,7 +833,7 @@ void Haplotype::buildWCSP_haplotype(const char* fileName, WCSP* wcsp)
 
     //create Boolean variables
     for (int i = 0; i < nbloci; i++) {
-        wcsp->makeEnumeratedVariable(to_string(i), 0, 1);
+        wcsp->makeEnumeratedVariable("X" + to_string(i), 0, 1);
     }
 
     vector<Cost> unaryCosts0(nbloci, 0);

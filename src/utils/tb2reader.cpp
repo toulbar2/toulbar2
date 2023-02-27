@@ -425,7 +425,53 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     }
 
     for (auto& cf : unaryCFs) {
+
+        bool bilevel2 = false;
+        bool bilevel3 = false;
+        Cost negcost23 = MIN_COST;
+        Cost initlb23 = MIN_COST;
+        if (ToulBar2::bilevel) {
+            if (cf.var->wcspIndex < (int)wcsp->varsBLP[0].size()) { // cost function on leader variable(s) only
+                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                    bilevel2 = true;
+                    ToulBar2::bilevel = 5;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                    bilevel3 = true;
+                    ToulBar2::bilevel = 1;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                }
+            }
+        }
+
         wcsp->postUnaryConstraint(cf.var->wcspIndex, cf.costs);
+
+        if (bilevel2) { // we must ignore this constraint
+            ToulBar2::bilevel = 2;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                wcsp->setLb(initlb23);
+            }
+        } else if (bilevel3) { // we move the corresponding negcost and lb to the restricted leader problem
+            ToulBar2::bilevel = 3;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                ToulBar2::negCostBLP[0] += deltaneg;
+                ToulBar2::initialUbBLP[0] += deltaneg;
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                ToulBar2::initialLbBLP[0] += deltalb;
+                wcsp->setLb(initlb23);
+            }
+        }
     }
 
     wcsp->sortConstraints();
@@ -709,6 +755,8 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     // Create the toulbar2 variable and store its name in the variable map.
     if (newvar) {
         varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
+    } else if (ToulBar2::bilevel) {
+        wcsp->varsBLP[ToulBar2::bilevel-1].insert(varIndex);
     }
     if (ToulBar2::verbose >= 1)
         cout << " # " << varIndex << endl;
@@ -741,9 +789,6 @@ unsigned CFNStreamReader::readVariable(unsigned i)
         }
     }
 
-    if (ToulBar2::bilevel) {
-        wcsp->varsBLP[ToulBar2::bilevel-1].insert(varIndex);
-    }
     return domainSize;
 }
 
@@ -892,20 +937,22 @@ void CFNStreamReader::enforceUB()
     // if the shifted/scaled bound is less than zero, we equivalently set it to zero
     if (this->upperBound < MIN_COST)
         this->upperBound = MIN_COST;
-    if (ToulBar2::externalUB.length() != 0) {
-        this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
-    }
-    if (ToulBar2::deltaUbS.length() != 0) {
-        ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(this->upperBound, wcsp->getUb())));
-        if (ToulBar2::deltaUb > MIN_COST) {
-            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
-            this->upperBound += ToulBar2::deltaUb;
-        }
-    }
 
-    if (ToulBar2::bilevel != 3) {
+    if (ToulBar2::bilevel == 0) {
+        if (ToulBar2::externalUB.length() != 0) {
+            this->upperBound = min(this->upperBound, wcsp->decimalToCost(ToulBar2::externalUB, 0) + wcsp->negCost);
+        }
+        if (ToulBar2::deltaUbS.length() != 0) {
+            ToulBar2::deltaUbAbsolute = max(MIN_COST, wcsp->decimalToCost(ToulBar2::deltaUbS, 0));
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(this->upperBound, wcsp->getUb())));
+            if (ToulBar2::deltaUb > MIN_COST) {
+                // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+                this->upperBound += ToulBar2::deltaUb;
+            }
+        }
         wcsp->updateUb(this->upperBound);
+    } else if (ToulBar2::bilevel >= 1 && ToulBar2::bilevel <= 2) {
+        wcsp->setUb(this->upperBound);
     }
 }
 
@@ -1022,6 +1069,33 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
                 funcName += ",";
             }
             funcName[funcName.size() - 1] = ')';
+        }
+
+        bool bilevel2 = false;
+        bool bilevel3 = false;
+        Cost negcost23 = MIN_COST;
+        Cost initlb23 = MIN_COST;
+        if (ToulBar2::bilevel) {
+            bool inleader = true;
+            for (int idx: scope) {
+                if (idx >= (int)wcsp->varsBLP[0].size()) {
+                    inleader = false;
+                    break;
+                }
+            }
+            if (inleader) { // cost function on leader variable(s) only
+                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                    bilevel2 = true;
+                    ToulBar2::bilevel = 5;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                    bilevel3 = true;
+                    ToulBar2::bilevel = 1;
+                    negcost23 = wcsp->getNegativeLb();
+                    initlb23 = wcsp->getLb();
+                }
+            }
         }
 
         if (ToulBar2::verbose >= 1)
@@ -1204,6 +1278,32 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
         } else if (isGlobal) {
             this->readGlobalCostFunction(scope, token, lineNumber);
         }
+
+        if (bilevel2) { // we must ignore this constraint
+            ToulBar2::bilevel = 2;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                wcsp->setLb(initlb23);
+            }
+        } else if (bilevel3) { // we move the corresponding negcost and lb to the restricted leader problem
+            ToulBar2::bilevel = 3;
+            Cost deltaneg = wcsp->getNegativeLb() - negcost23;
+            if (deltaneg != MIN_COST) {
+                ToulBar2::negCostBLP[0] += deltaneg;
+                ToulBar2::initialUbBLP[0] += deltaneg;
+                wcsp->decreaseLb(-deltaneg);
+            }
+            Cost deltalb = wcsp->getLb() - initlb23;
+            if (deltalb != MIN_COST) {
+                ToulBar2::initialLbBLP[0] += deltalb;
+                wcsp->setLb(initlb23);
+            }
+        }
+
         std::tie(lineNumber, token) = this->getNextToken();
     } // end of while (token != closing braces = EOF)
 

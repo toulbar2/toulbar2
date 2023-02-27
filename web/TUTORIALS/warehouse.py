@@ -3,7 +3,7 @@ import pytoulbar2
 
 f = open(sys.argv[1], 'r').readlines()
 
-precision = int(sys.argv[2])  # used to convert cost values from float to integer
+precision = int(sys.argv[2])  # in [0,9], used to convert cost values from float to integer (by 10**precision)
 
 tokens = []
 for l in f:
@@ -41,7 +41,7 @@ for j in range(M):
     Demand.append(int(token()))
     for i in range(N):
         CostS[j].append(int(float(token()) * 10.**precision))
-    top += sum(CostS[-1])
+    top += sum(CostS[j])
 
 # create a new empty cost function network
 Problem = pytoulbar2.CFN(top)

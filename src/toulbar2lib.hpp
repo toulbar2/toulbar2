@@ -97,6 +97,9 @@ public:
     virtual Double getDLb() const = 0; ///< \brief gets problem lower bound as a Double representing a decimal cost
     virtual Double getDUb() const = 0; ///< \brief gets problem upper bound as a Double representing a decimal cost
 
+    /// \brief sets problem upper bound as a Double representing a decimal cost
+    virtual void updateDUb(Double newDUb) = 0;
+
     /// \brief sets initial problem upper bound and each time a new solution is found
     virtual void updateUb(Cost newUb) = 0;
     /// \brief enforces problem upper bound when exploring an alternative search node
@@ -245,17 +248,20 @@ public:
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, vector<Value>& dom) = 0; ///< \brief create an enumerated variable with its domain values
     virtual void addValueName(int xIndex, const string& valuename) = 0; ///< \brief add next value name \warning should be called on EnumeratedVariable object as many times as its number of initial domain values
+    virtual const string& getValueName(int xIndex, Value value) = 0; ///< \brief return the name associated to a value as defined by addValueName or an empty string if no name found
     virtual int makeIntervalVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an interval variable with its domain bounds
-    virtual void postNullaryConstraint(Double cost) = 0;
+
+    virtual void postNullaryConstraint(Double cost) = 0; ///< \brief add a zero-arity cost function with floating-point cost
+    virtual void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false) = 0; ///< \brief add a unary cost function with floating-point costs (if incremental is true then it disappears upon backtrack)
+    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false) = 0; ///< \brief add a binary cost function with floating-point costs (if incremental is true then it disappears upon backtrack)
+    virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false) = 0; ///< \brief add a ternary cost function with floating-point costs (if incremental is true then it disappears upon backtrack)
+
     virtual void postNullaryConstraint(Cost cost) = 0;
     virtual void postUnary(int xIndex, vector<Cost>& costs) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
-    virtual void postUnaryConstraint(int xIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual void postUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
     virtual void postIncrementalUnaryConstraint(int xIndex, vector<Cost>& costs) = 0;
-    virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual int postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
     virtual int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
-    virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental = false) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
@@ -272,6 +278,7 @@ public:
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false) = 0;
     virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false, bool conflict = false) = 0; /// \deprecated
+    virtual int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST) = 0; ///< \brief create a hard constraint such that the input cost function network (problem) must have its optimum cost in [lb,ub[ interval. \warning The input scope must contain all variables in problem in the same order.
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
     virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; ///< \brief generic function to post any global cost function
 

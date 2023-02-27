@@ -1,19 +1,18 @@
+
 import pytoulbar2 as tb2
-tb2.init()
-m = tb2.Solver(1)
-w=m.wcsp.makeEnumeratedVariable('w', 0,1)
-x=m.wcsp.makeEnumeratedVariable('x', 0,1)
-y=m.wcsp.makeEnumeratedVariable('y', 0,1)
-z=m.wcsp.makeEnumeratedVariable('z', 0,1)
-m.wcsp.postCliqueConstraint([x,y,z,w],'1 1 1 1 1 1 1 1 1')
+
+m = tb2.CFN(1, verbose=0)
+w=m.AddVariable('w', range(2))
+x=m.AddVariable('x', range(2))
+y=m.AddVariable('y', range(2))
+z=m.AddVariable('z', range(2))
+
+m.CFN.wcsp.postCliqueConstraint([x,y,z,w],'1 1 1 1 1 1 1 1 1')
+
 for u in [w,x,y,z]:
 	for v in [w,x,y,z]:
 		if u<v:
-			m.wcsp.postBinaryConstraint(u,v,[0, 0, 0, 1000])
-m.wcsp.sortConstraints()
-tb2.option.showSolutions=1
-tb2.option.allSolutions=1000000
-tb2.option.verbose=0
-tb2.check()
-m.solve()
+			m.AddFunction([u,v],[0, 0, 0, 1000])
+
+m.Solve(showSolutions=1, allSolutions=16)
 

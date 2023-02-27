@@ -37,7 +37,7 @@ WeightedCSPSolver class
 MultiCFN class
 =================
 
-.. doxygenclass:: mulcrit::MultiCFN
+.. doxygenclass:: MultiCFN
    :members:
    :undoc-members:
 

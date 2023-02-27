@@ -381,7 +381,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     }
 
     for (i = 0; i < n; i++) {
-        string varname = to_string(i);
+        string varname = "X" + to_string(i);
         wcsp.makeEnumeratedVariable(varname, 0, m - 1);
     }
 
@@ -412,7 +412,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
                             if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
                                 generateBinCtr(indexs[0], indexs[1], nogoods);
                             else
-                                generateSubModularBinCtr(indexs[0], indexs[1], SMALL_COST, LARGE_COST);
+                                generateSubModularBinCtr(indexs[0], indexs[1]);
                             break;
                         case 3:
                             generateTernCtr(indexs[0], indexs[1], indexs[2], nogoods);
