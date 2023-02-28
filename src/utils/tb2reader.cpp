@@ -643,11 +643,23 @@ Cost CFNStreamReader::readHeader()
         auto pos = token.find('.');
         string integerPart = token.substr(1, token.find('.'));
         string decimalPart;
-
+// precision option management :
         if (pos == string::npos) {
             ToulBar2::decimalPoint = 0;
         } else {
             decimalPart = token.substr(token.find('.') + 1);
+	cout << "Default precision= "<< decimalPart.size() << " UB="<< token ;
+
+	//if ( ( ToulBar2::resolution < (int) decimalPart.size() ) &&  (ToulBar2::resolution > 0)) {
+	if ( ToulBar2::resolution > 0) {
+	string str;
+	str =  decimalPart.substr(0,ToulBar2::resolution); 
+	decimalPart= str;
+	cout << " : New precision =" << decimalPart.size() << " New UB="<< integerPart << decimalPart<<endl;
+	} else { cout << endl;}
+	
+	   if ( ToulBar2::resolution  < 0 ) { cout << "Warning : Negatif argument for precision param ( default precision used during search)" << endl; }
+
             ToulBar2::decimalPoint = decimalPart.size();
         }
 
@@ -2999,7 +3011,7 @@ void WCSP::read_uai2008(const char* fileName)
         string varname;
         varname = "x" + to_string(i);
         file >> domsize;
-        if (ToulBar2::verbose >= 3)
+        if (ToulBar2::verbose >= 1)
             cout << "read variable " << i << " of size " << domsize << endl;
         if (domsize > nbval)
             nbval = domsize;
@@ -3023,7 +3035,7 @@ void WCSP::read_uai2008(const char* fileName)
             break;
         }
 
-        if (arity > 3) {
+        if (arity > 1) {
             vector<int> scopeIndex(arity, INT_MAX);
             if (ToulBar2::verbose >= 3)
                 cout << "read nary cost function on ";
@@ -3034,7 +3046,7 @@ void WCSP::read_uai2008(const char* fileName)
                 if (ToulBar2::verbose >= 3)
                     cout << j << " ";
             }
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << endl;
             scopes.push_back(scopeIndex);
         } else if (arity == 3) {
@@ -3045,13 +3057,13 @@ void WCSP::read_uai2008(const char* fileName)
                 cerr << "Error: ternary cost function!" << endl;
                 throw WrongFileFormat();
             }
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
             scopes.push_back({ i, j, k });
         } else if (arity == 2) {
             file >> i;
             file >> j;
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
             if (i == j) {
                 cerr << "Error: binary cost function with only one variable in its scope!" << endl;
@@ -3060,7 +3072,7 @@ void WCSP::read_uai2008(const char* fileName)
             scopes.push_back({ i, j });
         } else if (arity == 1) {
             file >> i;
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read unary cost function " << ic << " on " << i << endl;
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = (EnumeratedVariable*)vars[i];
