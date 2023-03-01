@@ -1951,7 +1951,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
             clb = cub;
         }
     }
-    assert(clb <= cub);
+    assert(ToulBar2::bilevel || clb <= cub);
     return make_pair(clb, cub);
 }
 
@@ -2906,8 +2906,6 @@ bool Solver::solve(bool first)
                                 throw BadConfiguration();
                             }
                             }
-                            if (ToulBar2::debug)
-                                start->printStatsRec();
                             if (ToulBar2::verbose >= 0 && nbHybrid >= 1)
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
@@ -3127,6 +3125,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     static string solType[4] = { "Optimum: ", "Primal bound: ", "Guaranteed primal bound: ", "Primal bound: " };
 
     int isLimited = (!isComplete) | ((ToulBar2::deltaUb != MIN_COST) << 1);
+
+    if (ToulBar2::debug && wcsp->getTreeDec()) {
+        wcsp->getTreeDec()->getRoot()->printStatsRec();
+    }
 
     if (ToulBar2::isZ) {
         if (ToulBar2::verbose >= 1)

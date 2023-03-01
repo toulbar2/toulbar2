@@ -1,8 +1,8 @@
 VERBOSE=0
 PROBLEM1="../../validation/bilevel/bilevel1.cfn"
 PROBLEM2="../../validation/bilevel/bilevel2.cfn"
-LB=-5
-UB=-4
+LB=11
+UB=20
 
 import pytoulbar2 as tb2
 

@@ -185,7 +185,7 @@ void Separator::propagate()
 
 void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
 {
-    assert(clb <= cub);
+    assert(ToulBar2::bilevel || clb <= cub);
     int i = 0;
     WCSP* wcsp = cluster->getWCSP();
     Cost deltares = MIN_COST;
