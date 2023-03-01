@@ -788,6 +788,7 @@ public:
     static bool bayesian; ///< \internal do not use
     static int uai; ///< \internal do not use
     static int resolution; ///< \brief defines the number of digits that should be representable in UAI/OPB/QPBO formats (command line option -precision)
+    static bool resolution_Update; ///< \internal flag true when default cfn precision is modified
     static TProb errorg; ///< \internal do not use
     static TLogProb NormFactor; ///< \internal do not use
     static int foundersprob_class; ///< \internal do not use

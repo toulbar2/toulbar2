@@ -648,14 +648,15 @@ Cost CFNStreamReader::readHeader()
             ToulBar2::decimalPoint = 0;
         } else {
             decimalPart = token.substr(token.find('.') + 1);
+	if( ToulBar2::verbose >= 0 ) {
 	cout << "Default precision= "<< decimalPart.size() << " UB="<< token ;
+	}
 
-	//if ( ( ToulBar2::resolution < (int) decimalPart.size() ) &&  (ToulBar2::resolution > 0)) {
-	if ( ToulBar2::resolution > 0) {
+	if ( ( ToulBar2::resolution > 0 ) &&  (ToulBar2::resolution_Update)) {
 	string str;
 	str =  decimalPart.substr(0,ToulBar2::resolution); 
 	decimalPart= str;
-	cout << " : New precision =" << decimalPart.size() << " New UB="<< integerPart << decimalPart<<endl;
+	cout << " : precision Upate = " << decimalPart.size() << " : New UB="<< integerPart << decimalPart<<endl;
 	} else { cout << endl;}
 	
 	   if ( ToulBar2::resolution  < 0 ) { cout << "Warning : Negatif argument for precision param ( default precision used during search)" << endl; }

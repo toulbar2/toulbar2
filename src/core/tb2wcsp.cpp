@@ -173,6 +173,7 @@ bool ToulBar2::maxsateval;
 bool ToulBar2::uaieval;
 
 int ToulBar2::resolution;
+bool ToulBar2::resolution_Update;
 TProb ToulBar2::errorg;
 TLogProb ToulBar2::NormFactor;
 /// Allele frequencies of founders
@@ -398,6 +399,7 @@ void tb2init()
     ToulBar2::uaieval = false;
 
     ToulBar2::resolution = 7;
+    ToulBar2::resolution_Update = false;
     ToulBar2::errorg = 0.05;
     ToulBar2::NormFactor = 1;
     ToulBar2::foundersprob_class = 0;

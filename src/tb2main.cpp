@@ -2162,6 +2162,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == MENDEL_OPT_resolution) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::resolution = atoi(args.OptionArg());
+                    ToulBar2::resolution_Update = true;
                     if (ToulBar2::debug)
                         cout << "New assignment for precision = " << ToulBar2::resolution << endl;
                 }
