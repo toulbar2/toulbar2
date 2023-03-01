@@ -2652,16 +2652,20 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             ToulBar2::approximateCountingBTD = 0;
             ToulBar2::btdMode = 0;
         } else {
-            ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
+            //ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
             wcsp->buildTreeDecomposition();
             if (ToulBar2::bilevel) {
                 Cluster *problem0 = wcsp->getTreeDec()->getRoot();
                 auto iter = problem0->beginEdges();
+#ifndef NDEBUG
                 Cluster *problem1 = *iter;
+#endif
                 ++iter;
                 Cluster *problem2 = *iter;
                 ++iter;
+#ifndef NDEBUG
                 Cluster *negproblem2 = *iter;
+#endif
                 //problem2.isused = false //FIXME???
                 problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem0
                 // propagate (partially) channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
@@ -2859,7 +2863,9 @@ bool Solver::solve(bool first)
                                                 auto iter = problem0->beginEdges();
                                                 Cluster *problem1 = *iter;
                                                 ++iter;
+#ifndef NDEBUG
                                                 Cluster *problem2 = *iter;
+#endif
                                                 ++iter;
                                                 Cluster *negproblem2 = *iter;
                                                 assert(problem2->getLb() == MIN_COST);
