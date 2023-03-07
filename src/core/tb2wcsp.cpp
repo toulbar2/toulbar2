@@ -646,10 +646,10 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #endif
-//    if (abs(ToulBar2::vac) > 1 && ToulBar2::btdMode >= 1 && ToulBar2::bilevel == 0) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
-//        cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
-//        throw BadConfiguration();
-//    }
+    if (abs(ToulBar2::vac) > 1 && ToulBar2::btdMode >= 1 && ToulBar2::bilevel == 0) { /// \warning VAC supports can break EAC supports (e.g. SPOT5 404.wcsp)
+        cerr << "Error: VAC during search not implemented with BTD-like search methods (use -A only or unset -B)." << endl;
+        throw BadConfiguration();
+    }
     if (ToulBar2::FullEAC && ToulBar2::btdMode >= 1) {
         cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -vacint option)." << endl;
         throw BadConfiguration();
@@ -5402,7 +5402,7 @@ void WCSP::eliminate()
         EnumeratedVariable* x = (EnumeratedVariable*)Eliminate.pop();
         if (x->unassigned()) {
             if (td) {
-                if (td->isInCurrentClusterSubTree(x->getCluster()))
+                if (td->isActiveAndInCurrentClusterSubTree(x->getCluster()))
                     x->eliminate();
             } else
                 x->eliminate();
