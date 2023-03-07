@@ -575,7 +575,7 @@ void VACExtension::enforcePass1()
         for (ConstraintList::iterator itc = xj->getConstrs()->begin();
              itc != xj->getConstrs()->end(); ++itc) {
             Constraint* c = (*itc).constr;
-            if (c->isBinary()) {
+            if (c->isBinary() && !c->isDuplicate()) {
                 cij = (VACBinaryConstraint*)c;
                 if (enforcePass1(xj, cij))
                     return;
@@ -599,7 +599,7 @@ bool VACExtension::checkPass1() const
         for (ConstraintList::iterator iter = xi->getConstrs()->begin();
              iter != xj->getConstrs()->end(); ++iter) {
             Constraint* c = (*iter).constr;
-            if (c->isBinary()) {
+            if (c->isBinary() && !c->isDuplicate()) {
                 cij = (VACBinaryConstraint*)c;
                 xj = (VACVariable*)cij->getVarDiffFrom(xi);
                 for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
@@ -661,8 +661,9 @@ void VACExtension::enforcePass2()
             j = xi->getKiller(v);
             xj = (VACVariable*)wcsp->getVar(j);
             queueR->push(pair<int, int>(i, v));
-            cij = (VACBinaryConstraint*)xi->getConstr(xj);
+            cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
             assert(cij);
+            assert(!cij->isDuplicate());
             //if (ToulBar2::verbose > 6) cout << "x" << xi->wcspIndex << "," << v << "   killer: " << xj->wcspIndex << endl;
 
             for (EnumeratedVariable::iterator itj = xj->begin();
@@ -792,8 +793,9 @@ bool VACExtension::enforcePass3()
         xj = (VACVariable*)wcsp->getVar(j);
         i = xj->getKiller(w);
         xi = (VACVariable*)wcsp->getVar(i);
-        cij = (VACBinaryConstraint*)xi->getConstr(xj);
+        cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
         assert(cij);
+        assert(!cij->isDuplicate());
 
         int xjk = xj->getK(w, nbIterations);
         if (maxk < xjk)

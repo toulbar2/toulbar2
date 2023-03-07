@@ -147,6 +147,7 @@ public:
     }
     int getCluster() { return cluster; }
 
+    BinaryConstraint* getConstrNotDuplicate(Variable* x);
     BinaryConstraint* getConstr(Variable* x, int cid);
     TernaryConstraint* getConstr(Variable* x, Variable* y, int cid);
 

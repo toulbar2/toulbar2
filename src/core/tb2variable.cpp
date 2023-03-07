@@ -306,6 +306,36 @@ BinaryConstraint* Variable::getConstr(Variable* x)
     return NULL;
 }
 
+// Looks for the constraint that links this variable with x and which is not a duplicated constraint
+BinaryConstraint* Variable::getConstrNotDuplicate(Variable* x)
+{
+    BinaryConstraint* ctr2;
+    TernaryConstraint* ctr3;
+    for (ConstraintList::iterator iter = constrs.begin(); iter != constrs.end(); ++iter) {
+        if ((*iter).constr->isDuplicate() || (*iter).constr->isSep() || (*iter).constr->isGlobal())
+            continue;
+
+        if ((*iter).constr->isBinary()) {
+            ctr2 = (BinaryConstraint*)(*iter).constr;
+            if (ctr2->getIndex(x) >= 0)
+                return ctr2;
+        } else if ((*iter).constr->isTernary()) {
+            ctr3 = (TernaryConstraint*)(*iter).constr;
+            int idx = ctr3->getIndex(x);
+            if (idx >= 0) {
+                int idt = (*iter).scopeIndex;
+                if ((0 != idx) && (0 != idt))
+                    return ctr3->yz;
+                else if ((1 != idx) && (1 != idt))
+                    return ctr3->xz;
+                else
+                    return ctr3->xy;
+            }
+        }
+    }
+    return NULL;
+}
+
 BinaryConstraint* Variable::getConstr(Variable* x, int cid)
 {
     BinaryConstraint* res;
