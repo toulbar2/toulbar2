@@ -643,24 +643,34 @@ Cost CFNStreamReader::readHeader()
         auto pos = token.find('.');
         string integerPart = token.substr(1, token.find('.'));
         string decimalPart;
-// precision option management :
+
+        // precision option management :
         if (pos == string::npos) {
             ToulBar2::decimalPoint = 0;
         } else {
             decimalPart = token.substr(token.find('.') + 1);
-	if( ToulBar2::verbose >= 0 ) {
-	cout << "Default precision= "<< decimalPart.size() << " UB="<< token ;
-	}
-
-	if ( ( ToulBar2::resolution > 0 ) &&  (ToulBar2::resolution_Update)) {
-	string str;
-	str =  decimalPart.substr(0,ToulBar2::resolution); 
-	decimalPart= str;
-	cout << " : precision Upate = " << decimalPart.size() << " : New UB="<< integerPart << decimalPart<<endl;
-	} else { cout << endl;}
-	
-	   if ( ToulBar2::resolution  < 0 ) { cout << "Warning : Negatif argument for precision param ( default precision used during search)" << endl; }
-
+            if( ToulBar2::verbose >= 0 ) {
+                cout << "Initial cost precision of " << decimalPart.size() << " digits";
+                //cout << " (primal bound: " << token << ")";
+            }
+            if (ToulBar2::resolution_Update) {
+                if (ToulBar2::resolution >= 0) {
+                    string str;
+                    str =  decimalPart.substr(0,ToulBar2::resolution);
+                    decimalPart= str;
+                    if( ToulBar2::verbose >= 0 ) {
+                        cout << " : changed to " << decimalPart.size() << " digits.";
+                        //cout << " (new primal bound: " << integerPart << decimalPart << ")";
+                    }
+                } else if (ToulBar2::resolution < 0) {
+                    if (ToulBar2::verbose >= 0) {
+                        cout << endl << "Sorry, cannot use a negative value for precision! (see option -precision)";
+                    }
+                }
+            }
+            if( ToulBar2::verbose >= 0 ) {
+                cout << endl;
+            }
             ToulBar2::decimalPoint = decimalPart.size();
         }
 
@@ -3036,15 +3046,15 @@ void WCSP::read_uai2008(const char* fileName)
             break;
         }
 
-        if (arity > 1) {
+        if (arity > 3) {
             vector<int> scopeIndex(arity, INT_MAX);
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read nary cost function on ";
 
             for (i = 0; i < arity; i++) {
                 file >> j;
                 scopeIndex[i] = j;
-                if (ToulBar2::verbose >= 3)
+                if (ToulBar2::verbose >= 1)
                     cout << j << " ";
             }
             if (ToulBar2::verbose >= 1)
@@ -3054,13 +3064,13 @@ void WCSP::read_uai2008(const char* fileName)
             file >> i;
             file >> j;
             file >> k;
+            if (ToulBar2::verbose >=    1)
+                cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
+            scopes.push_back({ i, j, k });
             if ((i == j) || (i == k) || (k == j)) {
                 cerr << "Error: ternary cost function!" << endl;
                 throw WrongFileFormat();
             }
-            if (ToulBar2::verbose >= 1)
-                cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
-            scopes.push_back({ i, j, k });
         } else if (arity == 2) {
             file >> i;
             file >> j;
