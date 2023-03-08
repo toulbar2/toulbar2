@@ -703,7 +703,7 @@ void TernaryConstraint::setDuplicates()
         } else {
             wcsp->initElimConstr();
             xy = wcsp->newBinaryConstr(x, y);
-            xy->setCluster(cluster);
+            xy->setCluster(getCluster());
             xy->setDuplicate();
             wcsp->elimBinOrderInc();
             setDuplicate();

@@ -242,6 +242,8 @@ public:
     TCtrs& getCtrs() { return ctrs; }
     void addCtrs(TCtrs& ctrsin);
     void addCtr(Constraint* c);
+    void removeCtr(Constraint* c);
+    void clearCtrs();
     void sum(TCtrs& c1, TCtrs& c2, TCtrs& ctout);
 
     bool isActive() const
@@ -514,7 +516,7 @@ public:
     Cluster* getRoot() { return roots.front(); }
     Cluster* getRootRDS() { return rootRDS; }
     void setRootRDS(Cluster* rdsroot) { rootRDS = rdsroot; }
-    void setDuplicates(); // deal with two or more ternary constraints having the same included binary constraint belonging to different clusters
+    void setDuplicates(bool init = false); // deal with two or more ternary constraints having the same included binary constraint belonging to different clusters
 
     int height(Cluster* r);
     int height(Cluster* r, Cluster* father);

@@ -175,9 +175,26 @@ void Constraint::sumScopeIncluded(Constraint* ctr)
     }
 }
 
+void Constraint::setCluster(int i)
+{
+    assert(cluster == -1 || Store::getDepth() == 0);
+    if (ToulBar2::verbose >= 1 && cluster != -1 && i != cluster) {
+        cout << *this << " change to cluster " << i << endl;
+    }
+    TreeDecomposition *td = wcsp->getTreeDec();
+    if (td && cluster != -1) {
+        td->getCluster(cluster)->removeCtr(this);
+    }
+    cluster = i;
+    if (td) {
+        td->getCluster(cluster)->addCtr(this);
+    }
+}
+
 void Constraint::assignCluster()
 {
     TreeDecomposition* td = wcsp->getTreeDec();
+    assert(!td || !isDuplicate());
     if (!td)
         return;
     Cluster* lowest = td->getRoot();

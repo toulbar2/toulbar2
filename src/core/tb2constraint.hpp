@@ -292,11 +292,7 @@ public:
     //   added for tree decomposition
     int cluster; ///< \brief warning! this value should not change during search (except for initialization in binary/ternary elimination pool)
     int getCluster() { return cluster; }
-    void setCluster(int i)
-    {
-        assert(cluster == -1 || Store::getDepth() == 0);
-        cluster = i;
-    }
+    void setCluster(int i);
     void assignCluster();
 
     bool isSep_; ///< \brief true if the constraint is used to record nogoods associated to a Separator
