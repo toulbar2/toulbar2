@@ -820,7 +820,7 @@ void help_msg(char* toulbar2filename)
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)" << endl;
-    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or cfn files resp. (default value is " << ToulBar2::resolution << ")" << endl;
     cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
@@ -2163,6 +2163,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == MENDEL_OPT_resolution) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::resolution = atoi(args.OptionArg());
+                    ToulBar2::resolution_Update = true;
                     if (ToulBar2::debug)
                         cout << "New assignment for precision = " << ToulBar2::resolution << endl;
                 }
