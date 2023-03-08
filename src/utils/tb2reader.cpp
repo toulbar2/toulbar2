@@ -658,8 +658,11 @@ Cost CFNStreamReader::readHeader()
                     string str;
                     str =  decimalPart.substr(0,ToulBar2::resolution);
                     decimalPart= str;
+                    if (decimalPart.size() == 0) {
+                        pos = string::npos;
+                    }
                     if( ToulBar2::verbose >= 0 ) {
-                        cout << " : changed to " << decimalPart.size() << " digits.";
+                        cout << " changed to " << decimalPart.size() << " digits";
                         //cout << " (new primal bound: " << integerPart << decimalPart << ")";
                     }
                 } else if (ToulBar2::resolution < 0) {
@@ -669,7 +672,7 @@ Cost CFNStreamReader::readHeader()
                 }
             }
             if( ToulBar2::verbose >= 0 ) {
-                cout << endl;
+                cout << "." << endl;
             }
             ToulBar2::decimalPoint = decimalPart.size();
         }
