@@ -72,8 +72,11 @@ public:
         ToulBar2::removevalue = ::tb2removevalue;
         ToulBar2::setmin = ::tb2setmin;
         ToulBar2::setmax = ::tb2setmax;
-        assert(MasterWeightedCSP == NULL || MasterWeightedCSP == wcsp); //FIXME: the slave problem cannot contain a WeightedCSPConstraint inside!
-        MasterWeightedCSP = wcsp;
+
+        if (MasterWeightedCSP != NULL && MasterWeightedCSP != wcsp) {
+            WeightedCSPConstraints.clear();
+        }
+        MasterWeightedCSP = wcsp; //FIXME: the slave problem should not contain a WeightedCSPConstraint inside!
         if (problem) {
             negCost += problem->getNegativeLb();
             WeightedCSPConstraints[problem->getIndex()] = this;
