@@ -17,7 +17,7 @@ The constraints and objective function are factorized in local functions on disc
 
 Its engine uses a hybrid best-first branch-and-bound algorithm exploiting soft arc consistencies. It incorporates a parallel variable neighborhood search method for better performances. See :ref:`publications`.
 
-toulbar2 won several medals in competitions on Max-CSP/COP (`CPAI08 <http://www.cril.univ-artois.fr/CPAI08/>`_, `2022 XCSP3 <https://xcsp.org/competitions/>`_) and probabilistic graphical models (UAI `2008 <https://www.ics.uci.edu/~dechter/softwares/benchmarks/UAI08/uai08-evaluation-2008-09-15.pdf>`_, `2010 <http://www.cs.huji.ac.il/project/UAI10/summary.php>`_, `2014 <http://auai.org/uai2014/competition.shtml>`_ MAP task).
+toulbar2 won several medals in competitions on Max-CSP/COP (`CPAI08 <http://www.cril.univ-artois.fr/CPAI08/>`_, `2022 XCSP3 <https://xcsp.org/competitions/>`_) and probabilistic graphical models (UAI `2008 <https://www.ics.uci.edu/~dechter/softwares/benchmarks/UAI08/uai08-evaluation-2008-09-15.pdf>`_, `2010 <http://www.cs.huji.ac.il/project/UAI10/summary.php>`_, `2014 <http://auai.org/uai2014/competition.shtml>`_, `2022 <http://https://uaicompetition.github.io/uci-2022>`_ MAP task).
 
 toulbar2 is now also able to collaborate with ML code that can learn an additive graphical model (with constraints) from data (see example at `cfn-learn <https://forgemia.inra.fr/thomas.schiex/cfn-learn>`_).
 
