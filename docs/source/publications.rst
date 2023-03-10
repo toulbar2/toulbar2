@@ -7,6 +7,8 @@ Publications
 Conference talks
 ================
 
+- talk on toulbar2 at `ROADEF 2023 <http://miat.inrae.fr/degivry/Givry23d.pdf>`_, Rennes, France, February 21, 2023.
+
 - ANITI webinar on toulbar2 for industrial applications :
   `slides <https://miat.inrae.fr/degivry/GivryANITI2021.pdf>`_ in English |
   `talk <https://youtu.be/lH04asuheo8>`_ in French
@@ -144,7 +146,13 @@ What are the algorithms inside toulbar2 ?
   `Parallel Hybrid Best-First Search <https://miat.inrae.fr/degivry/Beldjilali22a.pdf>`_,
   A Beldjilali, P Montalbano, D Allouche, G Katsirelos, and S de Givry,
   In Proc. of CP-22, volume 235, pages 7:1-7:10, Haifa, Israel, 2022.
+  
+- **Virtual Pairwise Consistency (pwc, hve)**
 
+  `Virtual Pairwise Consistency in Cost Function Networks <https://miat.inrae.fr/degivry/Montalbano23a.pdf>`_,
+  P Montalbano, D Allouche, S de Givry, G Katsirelos, and Tomas Werner
+  In Proc. of CP-AI-OR'2023, Nice, France, 2023.
+   
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------
 
