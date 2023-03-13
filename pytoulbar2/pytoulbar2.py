@@ -434,6 +434,8 @@ class CFN:
         negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose)
         negproblem.InitFromMultiCFN(multicfn)
         negproblem.UpdateUB(1. - problem.GetLB())
+        # keep alive both problem and negproblem
+        self.InternalCFNs.append(problem)
         self.InternalCFNs.append(negproblem)
         self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcsp.DoubletoCost(lb), problem.CFN.wcsp.DoubletoCost(ub))
         
