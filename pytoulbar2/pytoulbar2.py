@@ -405,13 +405,15 @@ class CFN:
         params = str(list(parameters))[1:-1].replace(',','').replace('\'','')
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
 
-    def AddWeightedCSPConstraint(self, problem, lb, ub):
+    def AddWeightedCSPConstraint(self, problem, lb, ub, duplicateHard = False, strongDuality = False):
         """AddWeightedCSPConstraint creates a hard global constraint on the cost of an input weighted constraint satisfaction problem such that its valid solutions must have a cost value in [lb,ub[. 
         
         Args:
             problem (CFN): input problem.
             lb (decimal cost): any valid solution in the input problem must have a cost greater than or equal to lb.
             ub (decimal cost): any valid solution in the input problem must have a cost strictly less than ub.
+            duplicateHard (bool): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+            strongDuality (bool): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
             
         Note:
             If a variable in the input problem does not exist in the current problem (with the same name), it is automatically added.
@@ -437,7 +439,7 @@ class CFN:
         # keep alive both problem and negproblem
         self.InternalCFNs.append(problem)
         self.InternalCFNs.append(negproblem)
-        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcsp.DoubletoCost(lb), problem.CFN.wcsp.DoubletoCost(ub))
+        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcsp.DoubletoCost(lb), problem.CFN.wcsp.DoubletoCost(ub), duplicateHard, strongDuality)
         
     def Read(self, filename):
         """Read reads the problem from a file.

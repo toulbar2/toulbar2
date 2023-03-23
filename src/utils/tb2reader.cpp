@@ -2944,7 +2944,11 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 void WCSP::read_uai2008(const char* fileName)
 {
     // Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
-    ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
+    if (ToulBar2::resolution == 0) {
+        ToulBar2::NormFactor = 1.;
+    } else {
+        ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
+    }
     if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
         throw BadConfiguration();

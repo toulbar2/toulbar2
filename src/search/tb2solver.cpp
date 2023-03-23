@@ -1692,7 +1692,7 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve(Cost lb)
 {
-    assert(numberOfUnassignedVariables() == (int)getWCSP()->numberOfUnassignedVariables());
+    assert(ToulBar2::nbDecisionVars > 0 || numberOfUnassignedVariables() == (int)getWCSP()->numberOfUnassignedVariables());
     int varIndex = -1;
     if (ToulBar2::bep)
         varIndex = getMostUrgent();
@@ -3523,9 +3523,12 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     ptrdiff_t maxsize = nd.last - nd.first;
     if (maxsize == 0) {
         wcsp->enforceUb();
+        assert(wcsp->isactivatePropagate());
         wcsp->propagate();
         return;
     }
+
+    wcsp->deactivatePropagate();
     nbRecomputationNodes += maxsize;
     ChoicePoint* permute[maxsize];
     int assignLS[maxsize];
@@ -3605,6 +3608,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
         }
         }
     }
+    wcsp->reactivatePropagate();
     wcsp->propagate();
     //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
 }

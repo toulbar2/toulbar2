@@ -41,6 +41,7 @@ class WCSP FINAL : public WeightedCSP {
     StoreCost lb; ///< current problem lower bound
     Cost ub; ///< current problem upper bound
     StoreCost negCost; ///< shifting value to be added to problem lowerbound when computing the partition function
+    StoreValue reentrant; ///< avoid recursive calls in WCSP::propagate
     vector<Variable*> vars; ///< list of all variables
     vector<Variable*> divVariables; ///< list of variables submitted to diversity requirements
     vector<Value> bestValues; ///< hint for some value ordering heuristics (ONLY used by RDS)
@@ -206,6 +207,9 @@ public:
     /// \brief updates infinite costs in all cost functions accordingly to the problem global lower and upper bounds
     /// \warning to be used in preprocessing only
     void setInfiniteCost();
+
+    /// \brief returns true if any complete assignment using current domains is a valid tuple with finite cost (i.e., cost strictly less than the problem upper bound)
+    bool isfinite() const;
 
     void decreaseLb(Cost cost)
     {
@@ -390,8 +394,23 @@ public:
     //  }
 
     void whenContradiction(); ///< \brief after a contradiction, resets propagation queues and increases \ref WCSP::nbNodes
-    void propagate(); ///< \brief propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
+    void deactivatePropagate() { reentrant = true; } ///< \brief forbids propagate calls
+    bool isactivatePropagate() { return reentrant == false; } ///< \brief are propagate calls authorized?
+    void reactivatePropagate() { reentrant = false; } ///< \brief re-authorizes propagate calls
+    void propagate(); ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
     bool verify(); ///< \brief checks the propagation fix point is reached \warning might change EAC supports
+
+    bool isFullEAC(int varIndex) const { return vars[varIndex]->isFullEAC(); } ///< \brief returns true if variable varIndex is full EAC
+    /// \brief returns true if all unassigned variables are full EAC, i.e., a valid solution can be directly extracted from EAC supports with cost equal to current lower bound (plus VAC thresholds if VAC is used)
+    bool isFullEAC() const
+    {
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            if (unassigned(i) && !isFullEAC(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     unsigned int numberOfVariables() const { return vars.size(); } ///< \brief current number of created variables
     /// \brief returns current number of unassigned variables
@@ -522,7 +541,7 @@ public:
     }
     int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict); // warning! scopeIndex may be modified internally.
 
-    int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST);
+    int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
 
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);

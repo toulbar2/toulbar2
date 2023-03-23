@@ -785,6 +785,7 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
     , lb(MIN_COST)
     , ub(upperBound)
     , negCost(MIN_COST)
+    , reentrant(false)
     , solutionCost(MAX_COST)
     , NCBucketSize(cost2log2gub(upperBound) + 1)
     , NCBuckets(NCBucketSize, VariableList(&Store::storeVariable))
@@ -2350,7 +2351,7 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
     }
 }
 
-int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub)
+int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality)
 {
     assert(ToulBar2::bilevel <= 1);
     assert(!problem || scope.size() == problem->numberOfVariables());
@@ -2359,7 +2360,7 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, Wei
     for (unsigned int i = 0; i < scope.size(); i++) {
         scope2.push_back((EnumeratedVariable *) getVar(scope[i]));
     }
-    auto ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP *) problem, (WCSP *) negproblem, lb, ub);
+    auto ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP *) problem, (WCSP *) negproblem, lb, ub, duplicateHard, strongDuality);
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(ctr->wcspIndex);
     else {
@@ -4276,6 +4277,29 @@ void WCSP::setInfiniteCost()
     }
 }
 
+bool WCSP::isfinite() const
+{
+    for (unsigned int i = 0; i < constrs.size(); i++) {
+        if (constrs[i]->connected() && !constrs[i]->isSep()) {
+            if (!constrs[i]->isfinite())
+                return false;
+        }
+    }
+    for (int i = 0; i < elimBinOrder; i++) {
+        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()) {
+            if (!elimBinConstrs[i]->isfinite())
+                return false;
+        }
+    }
+    for (int i = 0; i < elimTernOrder; i++) {
+        if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep()) {
+            if (!elimTernConstrs[i]->isfinite())
+                return false;
+        }
+    }
+    return true;
+}
+
 unsigned int WCSP::getMaxCurrentDomainSize() const
 {
     unsigned int max = (vars.size() > 0) ? 1 : 0;
@@ -4866,6 +4890,7 @@ void WCSP::whenContradiction()
     DEE.clear();
     FEAC.clear();
     objectiveChanged = false;
+    reactivatePropagate();
     nbNodes++;
 }
 
@@ -5283,7 +5308,7 @@ void WCSP::propagateTRWS()
 
 void WCSP::fillEAC2()
 {
-    assert(EAC2.empty());
+    assert((getSolver() && ((Solver *)getSolver())->getWCSP() != this) || EAC2.empty());
     if (ToulBar2::verbose >= 2)
         cout << "EAC1Queue size: " << EAC1.getSize() << endl;
     while (!EAC1.empty()) {
@@ -5446,6 +5471,11 @@ void WCSP::propagate()
 {
     if (ToulBar2::interrupted)
         throw TimeOut();
+    if (!isactivatePropagate()) {
+        if (ToulBar2::verbose >= 3) cout << "skip recursive call to propagate of WCSP " << getIndex() << endl;
+        return;
+    }
+    deactivatePropagate();
     revise(NULL);
     if (ToulBar2::vac)
         vac->iniThreshold();
@@ -5540,10 +5570,10 @@ void WCSP::propagate()
     } while (objectiveChanged);
     propagateFEAC();
     revise(NULL);
-
     for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
         (*(it))->end();
     }
+    reactivatePropagate();
     assert((getSolver() && ((Solver *)getSolver())->getWCSP() != this && WeightedCSPConstraint::WeightedCSPConstraints[getIndex()]->deconnected()) || verify());
     assert(!objectiveChanged);
     assert(NC.empty());

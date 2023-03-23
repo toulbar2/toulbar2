@@ -118,6 +118,8 @@ public:
     /// \brief updates infinite costs in all cost functions accordingly to the problem global lower and upper bounds
     /// \warning to be used in preprocessing only
     virtual void setInfiniteCost() = 0;
+    /// \brief returns true if any complete assignment using current domains is a valid tuple with finite cost (i.e., cost strictly less than the problem upper bound)
+    virtual bool isfinite() const = 0;
 
     virtual bool enumerated(int varIndex) const = 0; ///< \brief true if the variable has an enumerated domain
 
@@ -183,7 +185,10 @@ public:
     virtual void sortConstraints() = 0;
 
     virtual void whenContradiction() = 0; ///< \brief after a contradiction, resets propagation queues
-    virtual void propagate() = 0; ///< \brief propagates until a fix point is reached (or throws a contradiction)
+    virtual void deactivatePropagate() = 0; ///< \brief forbids propagate calls
+    virtual bool isactivatePropagate() = 0; ///< \brief are propagate calls authorized?
+    virtual void reactivatePropagate() = 0; ///< \brief re-authorizes propagate calls
+    virtual void propagate() = 0; ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction)
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
     virtual void addAMOConstraints() = 0;
 
@@ -278,7 +283,7 @@ public:
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false) = 0;
     virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false, bool conflict = false) = 0; /// \deprecated
-    virtual int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST) = 0; ///< \brief create a hard constraint such that the input cost function network (problem) must have its optimum cost in [lb,ub[ interval. \warning The input scope must contain all variables in problem in the same order.
+    virtual int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false) = 0; ///< \brief create a hard constraint such that the input cost function network (problem) must have its optimum cost in [lb,ub[ interval. \warning The input scope must contain all variables in problem in the same order. \warning if duplicateHard is true it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model). \warning if strongDuality is true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum on the remaining variables is between lb and ub.
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
     virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; ///< \brief generic function to post any global cost function
 

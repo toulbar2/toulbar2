@@ -315,6 +315,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getNegativeLb", &WeightedCSP::getNegativeLb)
         .def("finiteUb", &WeightedCSP::finiteUb)
         .def("setInfiniteCost", &WeightedCSP::setInfiniteCost)
+        .def("isfinite", &WeightedCSP::isfinite)
         .def("enumerated", &WeightedCSP::enumerated)
         .def("getName", (string(WeightedCSP::*)(int) const) & WeightedCSP::getName)
         .def("getVarIndex", &WeightedCSP::getVarIndex)
@@ -359,6 +360,9 @@ PYBIND11_MODULE(pytb2, m)
         .def("getBergeDecElimOrder", &WeightedCSP::getBergeDecElimOrder)
         .def("setDACOrder", &WeightedCSP::setDACOrder)
         .def("whenContradiction", &WeightedCSP::whenContradiction)
+        .def("deactivatePropagate", &WeightedCSP::deactivatePropagate)
+        .def("isactivatePropagate", &WeightedCSP::isactivatePropagate)
+        .def("reactivatePropagate", &WeightedCSP::reactivatePropagate)
         .def("propagate", &WeightedCSP::propagate)
         .def("verify", &WeightedCSP::verify)
         .def("numberOfVariables", &WeightedCSP::numberOfVariables)
@@ -402,10 +406,10 @@ PYBIND11_MODULE(pytb2, m)
             return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
         },
             py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
-        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub) {
-                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub);
+        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
+                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
         },
-            py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST)
+            py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)

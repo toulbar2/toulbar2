@@ -324,6 +324,22 @@ bool Constraint::ishard()
     return true;
 }
 
+/// \warning always returns false for cost functions in intention
+bool Constraint::isfinite()
+{
+    static Tuple tuple;
+    if (!extension())
+        return false;
+
+    Cost cost;
+    firstlex();
+    while (nextlex(tuple, cost)) {
+        if (CUT(cost, wcsp->getUb()))
+            return false;
+    }
+    return true;
+}
+
 bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
 {
     assert(scopeIncluded(ctr1));
