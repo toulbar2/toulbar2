@@ -74,7 +74,7 @@ public:
     }
 
     double tight;
-    void resetTightness() { tight = -1; }
+    virtual void resetTightness() { tight = -1; }
     double getTightness()
     {
         if (tight < 0)

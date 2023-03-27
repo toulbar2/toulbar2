@@ -17,6 +17,7 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     Cost lb; // encapsulated slave problem lower bound hard constraint (must be greater or equal to this bound)
     Cost ub; // encapsulated slave problem upper bound hard constraint (must be strictly less than this bound)
     Cost negCost; // sum of cost shifts from slave problem and from its negative form
+    Cost top; // forbidden cost returned if evaluated as unsatisfied
     WCSP *problem; // encapsulated slave problem
     WCSP *negproblem; // encapsulated slave problem in negative form (should be equivalent to -problem)
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
@@ -28,6 +29,7 @@ public:
     static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
     static map<int, WeightedCSPConstraint *> WeightedCSPConstraints;
 
+    //TODO: add local NARYPROJECTIONSIZE parameter
     WeightedCSPConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, WCSP *problem_in, WCSP *negproblem_in, Cost lb_in, Cost ub_in, bool duplicateHard = false, bool strongDuality_ = false)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , isfinite(true)
@@ -35,6 +37,7 @@ public:
         , lb(lb_in)
         , ub(ub_in)
         , negCost(MIN_COST)
+        , top(MAX_COST)
         , problem(problem_in)
         , negproblem(negproblem_in)
         , nonassigned(arity_in)
@@ -122,7 +125,7 @@ public:
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
-        return conflictWeights[varIndex] + Constraint::getConflictWeight();
+        return conflictWeights[varIndex] + Constraint::getConflictWeight() + ((problem)?problem->getWeightedDegree(varIndex):0) + ((negproblem)?negproblem->getWeightedDegree(varIndex):0);
     }
     void incConflictWeight(Constraint* from) override
     {
@@ -151,6 +154,12 @@ public:
     {
         conflictWeights.assign(conflictWeights.size(), 0);
         Constraint::resetConflictWeight();
+        if (problem) {
+            problem->resetWeightedDegree();
+        }
+        if (negproblem) {
+            negproblem->resetWeightedDegree();
+        }
     }
 
     bool universal() override
@@ -278,7 +287,7 @@ public:
         ToulBar2::setmin = ::tb2setmin;
         ToulBar2::setmax = ::tb2setmax;
         if (unsat) {
-            return MAX_COST;
+            return top;
         } else {
             return MIN_COST;
         }
@@ -317,6 +326,17 @@ public:
         return eval(evalTuple);
     }
 
+    void resetTightness() override
+    {
+        Constraint::resetTightness();
+        if (problem) {
+            problem->resetTightness();
+        }
+        if (negproblem) {
+            negproblem->resetTightness();
+        }
+    }
+
     double computeTightness() override
     {
         double res = 0.; //FIXME: take into account elimBinConstr and elimTernConstr
@@ -343,6 +363,13 @@ public:
     {
         return MIN_COST;
     }
+    void setInfiniteCost(Cost ub) override
+    {
+        Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
+        if (CUT(top, ub)) {
+            top = mult_ub;
+        }
+    }
 
     void assign(int varIndex) override
     {
@@ -368,6 +395,27 @@ public:
 //    void increase(int varIndex) override {}
 //    void decrease(int varIndex) override {}
 //    void remove(int varIndex) override {}
+    bool verify() override
+    {
+        for (int i = 0; i < arity_; i++) {
+            vector<Value> vals = wcsp->getEnumDomain(getVar(i)->wcspIndex);
+            if (problem) {
+                vector<Value> vals2 = problem->getEnumDomain(i);
+                if (vals2 != vals) {
+                    cout << "Error WeightedCSPConstraint(" << problem->getIndex() << "): wrong domain values " << vals2 << " in variable " << *getVar(i) << endl;
+                    return false;
+                }
+            }
+            if (negproblem) {
+                vector<Value> vals2 = negproblem->getEnumDomain(i);
+                if (vals2 != vals) {
+                    cout << "Error WeightedCSPConstraint(" << negproblem->getIndex() << "): wrong domain values " << vals2 << " in variable " << *getVar(i) << endl;
+                    return false;
+                }
+            }
+        }
+        return (!problem || problem->verify()) && (!negproblem || negproblem->verify());
+    }
 
     // propagates from scratch
     void propagate() override
@@ -414,6 +462,30 @@ public:
         }
         assert(!problem || problem->getLb() < ub);
         assert(!negproblem || negproblem->getLb() < -lb + negCost + UNIT_COST);
+    }
+
+    bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        for (int i = 0; i < arity_; i++) {
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+            evalTuple[i] = var->toIndex((i == index) ? supportValue : var->getSupport());
+        }
+        return eval(evalTuple) == MIN_COST;
+    }
+
+    bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
+    {
+        bool result = checkEACGreedySolution(index, supportValue);
+        if (!result) {
+            if (index >= 0) {
+                getVar(index)->unsetFullEAC();
+            } else {
+                for (int i = 0; i < arity_; i++) {
+                    getVar(i)->unsetFullEAC();
+                }
+            }
+        }
+        return result;
     }
 
     void print(ostream& os) override
