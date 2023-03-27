@@ -4480,6 +4480,7 @@ void WCSP::printNCBuckets()
 void WCSP::print(ostream& os)
 {
     //    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
+    if (getIndex() > 0) os << "WCSP: " << getIndex() << " ";
     os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb()?" - ":"") << (getNegativeLb()?to_string(getNegativeLb()):"") << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)

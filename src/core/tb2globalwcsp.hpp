@@ -39,6 +39,7 @@ public:
         , negproblem(negproblem_in)
         , nonassigned(arity_in)
     {
+        assert(problem || negproblem);
         assert(!problem || arity_ == (int)problem->numberOfVariables());
         assert(!negproblem || arity_ == (int)negproblem->numberOfVariables());
         if (lb >= ub) {
@@ -250,17 +251,18 @@ public:
                 problemActive = problem->isactivatePropagate();
                 problem->reactivatePropagate();
                 problem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates ub
-                if (problem->getLb() < lb) { // checks if the solution violates lb
-                    unsat = true;
-                }
-            } else if (negproblem) {
+//                if (problem->getLb() < lb) { // checks if the solution violates lb
+//                    unsat = true;
+//                }
+            }
+            if (negproblem) {
                 negproblem->enforceUb();
                 negproblemActive = negproblem->isactivatePropagate();
                 negproblem->reactivatePropagate();
                 negproblem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates lb
-                if (negproblem->getLb() <= -ub + negCost) { // checks if the solution violates ub
-                    unsat = true;
-                }
+//                if (negproblem->getLb() <= -ub + negCost) { // checks if the solution violates ub
+//                    unsat = true;
+//                }
             }
         } catch (const Contradiction&) {
             if (problem) problem->whenContradiction();
@@ -344,6 +346,7 @@ public:
 
     void assign(int varIndex) override
     {
+        if ((problem && !problem->isactivatePropagate()) || (negproblem && !negproblem->isactivatePropagate())) return; // wait until recursive calls of tb2setvalue are done
         if (connected(varIndex)) {
             deconnect(varIndex);
             nonassigned = nonassigned - 1;
@@ -371,8 +374,14 @@ public:
     {
         //FIXME: synchronize current domains between master and slave problems at initialization?
         wcsp->revise(this);
-        if (problem) problem->enforceUb();
-        if (negproblem) negproblem->enforceUb();
+        if (problem) {
+            problem->enforceUb();
+            if (!problem->isactivatePropagate()) return; // do not propagate during recursive calls of tb2setvalue/tb2removevalue/tb2setmin/tb2setmax
+        }
+        if (negproblem) {
+            negproblem->enforceUb();
+            if (!negproblem->isactivatePropagate()) return; // idem
+        }
         assigns();
         if (connected()) {
             try {
