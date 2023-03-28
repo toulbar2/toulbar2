@@ -891,8 +891,8 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
                 if (costVector[tableIdx] != defaultCost) {
                     cerr << "Error: tuple on scope [ ";
                     for (int i : scope)
-                        cout << i << " ";
-                    cout << "] with cost " << cost << " redefined at line " << lineNumber << endl;
+                        cerr << i << " ";
+                    cerr << "] with cost " << cost << " redefined at line " << lineNumber << endl;
                     throw WrongFileFormat();
                 } else {
                     costVector[tableIdx] = cost;
@@ -923,7 +923,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     // all is true: we expect a full costs list
     else {
         unsigned int tableIdx = 0;
-        while (tableIdx < costVecSize) {
+        while (tableIdx < costVecSize && !isCBrace(token)) {
             Cost cost = wcsp->decimalToCost(token, lineNumber);
 
             minCost = min(cost, minCost);
@@ -935,6 +935,11 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         }
         if (tableIdx != costVecSize) {
             cerr << "Error: incorrect number of costs in cost table ending at line " << lineNumber << endl;
+            throw WrongFileFormat();
+        }
+        if (!isCBrace(token)) {
+            cerr << "Error: too many costs in cost table ending at line " << lineNumber << endl;
+            throw WrongFileFormat();
         }
     }
 
