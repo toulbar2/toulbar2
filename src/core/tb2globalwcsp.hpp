@@ -3,6 +3,8 @@
 
 #include "tb2abstractconstr.hpp"
 #include "tb2enumvar.hpp"
+#include "tb2naryconstr.hpp"
+#include "tb2vac.hpp"
 #include "tb2wcsp.hpp"
 
 extern void setvalue(int wcspId, int varIndex, Value value, void* solver);

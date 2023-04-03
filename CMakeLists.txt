@@ -362,7 +362,9 @@ IF(LIBTB2)
     ENDIF(MPI_LINK_FLAGS)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
-    TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+    IF(PYTB2)
+      TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+    ENDIF(PYTB2)
   ENDIF(MPI)
   
   INSTALL(TARGETS tb2
