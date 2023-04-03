@@ -158,6 +158,14 @@ toulbar2 for Combinatorial Optimization in Life Sciences
 
 - **Computational Protein Design**
 
+  Colom, Mireia Solà, et al.
+  Deep Evolutionary Forecasting identifies highly-mutated SARS-CoV-2 variants via functional sequence-landscape enumeration.
+  Research Square, 2022.
+  
+  XENet: Using a new graph convolution to accelerate the timeline for protein design on quantum computers
+  Jack B. Maguire, Daniele Grattarola, Vikram Khipple Mulligan, Eugene Klyshko, Hans Melo.
+  Plos Comp. Biology, 2021.
+
   Designing Peptides on a Quantum Computer,
   Vikram Khipple Mulligan, Hans Melo, Haley Irene Merritt, Stewart Slocum, Brian D. Weitzner, Andrew M. Watkins, P. Douglas Renfrew, Craig Pelissier, Paramjit S. Arora, and Richard Bonneau,
   bioRxiv, 2019.
@@ -276,6 +284,10 @@ Other publications mentioning toulbar2
 
 - **Inference, Sampling, and Diagnostic**
 
+  Dubray, A., Derval, G., Nijssen, S., Schaus, P.
+  Optimal Decoding of Hidden Markov Models with Consistency Constraints. 
+  In Proc. of Discovery Science (DS), LNCS 13601, 2022.
+  
   Mohamed-Hamza Ibrahim, Christopher Pal and Gilles Pesant,
   Leveraging cluster backbones for improving MAP inference in statistical relational models,
   In Ann. Math. Artif. Intell. 88, No. 8, 907-949, 2020.
