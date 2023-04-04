@@ -183,7 +183,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] addcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(mincost >= MIN_COST || !LUBTEST(getCost(vx, vy), -mincost) || ToulBar2::isZ); // Warning! negative costs can be added temporally by variable elimination on the fly
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
@@ -198,7 +198,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] addcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(mincost >= MIN_COST || !LUBTEST(getCost(xin, yin, vx, vy), -mincost));
         if (xin == x) {
             costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] += mincost;
@@ -230,7 +230,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] setcost(C" << xin->getName() << "," << yin->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c) { return c == MIN_COST; }));
         assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c) { return c == MIN_COST; }));
         if (xin == x)
@@ -247,7 +247,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] setcost(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << vx << "," << vy << "), " << mincost << ")" << endl), true));
         assert(std::all_of(deltaCostsX.begin(), deltaCostsX.end(), [](Cost c) { return c == MIN_COST; }));
         assert(std::all_of(deltaCostsY.begin(), deltaCostsY.end(), [](Cost c) { return c == MIN_COST; }));
         costs[x->toIndex(vx) * sizeY + y->toIndex(vy)] = mincost;
@@ -261,7 +261,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] add binary cost vector to (C" << getVar(0)->getName() << "," << getVar(1)->getName() << ") " << costsin[0] << "," << costsin[1] << "," << costsin[2] << "," << costsin[3] << " ..." << endl), true));
         assert(costsin.size() <= costs.size());
         unsigned int ix, iy;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -284,7 +284,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "add binary cost function to C(" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] add binary cost function to C(" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         assert(((x == xy->x) && (y == xy->y)) || ((x == xy->y) && (y == xy->x)));
         unsigned int ix, iy;
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
@@ -308,7 +308,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         for (unsigned int i = 0; i < sizeX; i++)
             deltaCostsX[i] = MIN_COST;
         for (unsigned int j = 0; j < sizeY; j++)
@@ -328,7 +328,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ")" << endl), true));
         for (unsigned int i = 0; i < sizeX; i++)
             deltaCostsX[i] = MIN_COST;
         for (unsigned int j = 0; j < sizeY; j++)
@@ -795,7 +795,7 @@ void BinaryConstraint::findSupport(T getCost, EnumeratedVariable* x, EnumeratedV
     assert(connected());
     wcsp->revise(this);
     if (ToulBar2::verbose >= 3)
-        cout << "findSupport C" << x->getName() << "," << y->getName() << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] findSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         unsigned int xindex = x->toIndex(*iterX);
@@ -831,7 +831,7 @@ void BinaryConstraint::findFullSupport(T getCost, EnumeratedVariable* x, Enumera
     assert(connected());
     wcsp->revise(this);
     if (ToulBar2::verbose >= 3)
-        cout << "findFullSupport C" << x->getName() << "," << y->getName() << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] findFullSupport C" << x->getName() << "," << y->getName() << endl;
     bool supportBroken = false;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         unsigned int xindex = x->toIndex(*iterX);

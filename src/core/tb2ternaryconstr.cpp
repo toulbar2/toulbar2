@@ -345,7 +345,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
  */
 bool TernaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
     // hard ternary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
@@ -367,7 +367,7 @@ bool TernaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, v
 
 void TernaryConstraint::extend(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
     TreeDecomposition* td = wcsp->getTreeDec();
     if (td)
         td->addDelta(cluster, x, value, -cost);
@@ -688,7 +688,7 @@ void TernaryConstraint::fillElimConstrBinaries()
     resetConflictWeight(); // if needed recompute tightness after having updated costs
 
     if (ToulBar2::verbose > 1)
-        cout << " fillElimConstrBinaries (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  ";
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] fillElimConstrBinaries (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  ";
 }
 
 void TernaryConstraint::setDuplicates()

@@ -168,7 +168,7 @@ void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
             ctr = ctr_;
     }
     if (ToulBar2::verbose >= 2) {
-        cout << "project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project nary to ternary (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ") ";
         if (td)
             cout << "   cluster nary: " << getCluster() << endl;
         else
@@ -196,7 +196,7 @@ void AbstractNaryConstraint::projectNaryBinary(BinaryConstraint* xy)
     EnumeratedVariable* y = (EnumeratedVariable*)xy->getVar(1);
 
     if (ToulBar2::verbose >= 2)
-        cout << "project nary to binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project nary to binary (" << x->wcspIndex << "," << y->wcspIndex << ")" << endl;
 
     BinaryConstraint* ctr = NULL;
     if (td)

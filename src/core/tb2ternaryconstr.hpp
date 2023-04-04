@@ -597,7 +597,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ")" << endl), true));
         for (unsigned int i = 0; i < sizeX; i++)
             deltaCostsX[i] = MIN_COST;
         for (unsigned int j = 0; j < sizeY; j++)
@@ -626,7 +626,7 @@ public:
             throw BadConfiguration();
         }
 #endif
-        assert(ToulBar2::verbose < 4 || ((cout << "clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ")" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ")" << endl), true));
         for (unsigned int i = 0; i < sizeX; i++)
             deltaCostsX[i] = MIN_COST;
         for (unsigned int j = 0; j < sizeY; j++)
@@ -1483,7 +1483,7 @@ inline Value Functor_getFunctionZYX::operator()(EnumeratedVariable* yy, Enumerat
 template <typename T1, typename T2, typename T3>
 void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 getFunctionZ, BinaryConstraint* xy, EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Value valx, Value valy, Cost cost)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
     assert(cost >= MIN_COST);
 // BUG!
 // if (functionalZ) {
@@ -1513,7 +1513,7 @@ void TernaryConstraint::project(T1 getCost, T2 addCost, bool functionalZ, T3 get
 template <typename T1, typename T2, typename T3>
 void TernaryConstraint::extend(T1 getCost, T2 addCost, bool functionalZ, T3 getFunctionZ, BinaryConstraint* xy, EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, Value valx, Value valy, Cost cost)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", ((" << x->getName() << "," << valx << "),(" << y->getName() << "," << valy << ")), " << cost << ")" << endl), true));
     assert(cost >= MIN_COST);
     // BUG!
     // if (functionalZ) {
@@ -1541,7 +1541,7 @@ void TernaryConstraint::findSupport(T1 getCost, bool functionalY, T2 getFunction
     assert(connected());
     wcsp->revise(this);
     if (ToulBar2::verbose >= 3)
-        cout << "findSupport C" << x->getName() << "?"
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] findSupport C" << x->getName() << "?"
              << "," << y->getName() << ((functionalY) ? "!" : "") << "," << z->getName() << ((functionalZ) ? "!" : "") << endl;
     if (ToulBar2::verbose >= 7)
         cout << *x << endl
@@ -1627,7 +1627,7 @@ void TernaryConstraint::findFullSupport(T1 getCost, T2 getCostXZY, T3 getCostYZX
     assert(connected());
     wcsp->revise(this);
     if (ToulBar2::verbose >= 3)
-        cout << "findFullSupport C" << x->getName() << ((functionalX) ? "!" : "") << "," << y->getName() << ((functionalY) ? "!" : "") << "," << z->getName() << ((functionalZ) ? "!" : "") << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] findFullSupport C" << x->getName() << ((functionalX) ? "!" : "") << "," << y->getName() << ((functionalY) ? "!" : "") << "," << z->getName() << ((functionalZ) ? "!" : "") << endl;
     if (ToulBar2::verbose >= 7)
         cout << *x << endl
              << *y << endl

@@ -36,7 +36,7 @@ public:
     {
         if (connected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "deconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] deconnect " << this << endl;
             x->deconnect(linkX, reuse);
         }
     }
@@ -44,7 +44,7 @@ public:
     {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "reconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] reconnect " << this << endl;
             assert(linkX->prev == NULL && linkX->next == NULL);
             x->getConstrs()->push_back(linkX, true);
         }
@@ -141,7 +141,7 @@ public:
     {
         if (connected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "deconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] deconnect " << this << endl;
             x->deconnect(linkX, reuse);
             y->deconnect(linkY, reuse);
         }
@@ -150,7 +150,7 @@ public:
     {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "reconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] reconnect " << this << endl;
             assert(linkX->prev == NULL && linkX->next == NULL);
             x->getConstrs()->push_back(linkX, true);
             assert(linkY->prev == NULL && linkY->next == NULL);
@@ -276,7 +276,7 @@ public:
     {
         if (connected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "deconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] deconnect " << this << endl;
             x->deconnect(linkX, reuse);
             y->deconnect(linkY, reuse);
             z->deconnect(linkZ, reuse);
@@ -286,7 +286,7 @@ public:
     {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "reconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] reconnect " << this << endl;
             assert(linkX->prev == NULL && linkX->next == NULL);
             //			if (linkX->content.constr->isTriangle()) x->getTriangles()->push_back(linkX, true);
             //			else
@@ -560,7 +560,7 @@ public:
     {
         if (connected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "deconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] deconnect " << this << endl;
             for (int i = 0; i < arity_; i++)
                 deconnect(i, reuse);
         }
@@ -570,7 +570,7 @@ public:
     {
         if (deconnected()) {
             if (ToulBar2::verbose >= 3)
-                cout << "reconnect " << this << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] reconnect " << this << endl;
             for (int i = 0; i < arity_; i++) {
                 assert(links[i]->prev == NULL && links[i]->next == NULL);
                 scope[i]->getConstrs()->push_back(links[i], true);

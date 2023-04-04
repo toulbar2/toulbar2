@@ -124,7 +124,7 @@ void Constraint::projectLB(Cost cost)
     if (cost == MIN_COST)
         return;
     if (ToulBar2::verbose >= 2)
-        cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
     if (cost < MIN_COST) {
         wcsp->decreaseLb(cost);
     } else {

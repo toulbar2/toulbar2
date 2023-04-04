@@ -358,7 +358,7 @@ public:
     {
         if (lastConflictConstr) {
             if (ToulBar2::verbose >= 2)
-                cout << "Last conflict on " << *lastConflictConstr << endl;
+                cout << "[" << Store::getDepth() << ",W" << getIndex() << "] Last conflict on " << *lastConflictConstr << endl;
             lastConflictConstr->incConflictWeight(lastConflictConstr);
             lastConflictConstr = NULL;
         }

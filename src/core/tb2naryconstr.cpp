@@ -1266,7 +1266,7 @@ void NaryConstraint::preproject3(TernaryConstraint* ctr)
     }
     if (fproj.size() > 0 || default_cost > MIN_COST) {
         if (ToulBar2::verbose >= 3) {
-            cout << "preproject nary " << this << " to ternary (" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] preproject nary " << this << " to ternary (" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
         }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, xyz);
     }
@@ -1309,7 +1309,7 @@ void NaryConstraint::preprojectall2()
             }
             if (fproj.size() > 0 || default_cost > MIN_COST) {
                 if (ToulBar2::verbose >= 3) {
-                    cout << "preproject nary " << this << " to binary (" << x->getName() << "," << y->getName() << ")" << endl;
+                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] preproject nary " << this << " to binary (" << x->getName() << "," << y->getName() << ")" << endl;
                 }
                 wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
             }

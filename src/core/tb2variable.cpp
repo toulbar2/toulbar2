@@ -215,7 +215,7 @@ void Variable::changeNCBucket(int newBucket)
 {
     if (NCBucket != newBucket) {
         if (ToulBar2::verbose >= 3)
-            cout << "changeNCbucket " << getName() << ": " << NCBucket << " -> " << newBucket << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] changeNCbucket " << getName() << ": " << NCBucket << " -> " << newBucket << endl;
         wcsp->changeNCBucket(NCBucket, newBucket, &linkNCBucket);
         NCBucket = newBucket;
     }
@@ -240,7 +240,7 @@ void Variable::projectLB(Cost cost)
     if (cost == MIN_COST)
         return;
     if (ToulBar2::verbose >= 2)
-        cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
     if (cost < MIN_COST) {
         wcsp->decreaseLb(cost);
     } else {
