@@ -434,3 +434,32 @@ Global cost functions using a cost function network-based propagator (decompose 
 
 Warning: the decomposition of :code:`wsum` and :code:`wvarsum` may use an exponential size (sum of domain sizes). list_size1 and list_size2 must be equal in :code:`ssame`.
 
+
+Global cost functions using a dedicated propagator:
+
+  - :code:`"cfnconstraint"` with parameters :code:`cfn: cost-function-network lb: cost ub: cost duplicatehard: value strongduality: value` to express a hard global constraint on the cost of an input weighted constraint satisfaction problem such that its valid solutions must have a cost value in [lb,ub[.  
+
+    - :code:`"duplicateHard"` (0|1): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+
+    - :code:`"strongDuality"` (0|1): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
+            
+    - example : ::
+
+        name: {scope: [v1 v2 v3]
+               type : cfnconstraint
+               params: {
+                  cfn: 
+                    {
+                    problem: {name: "mycfn", mustbe: "<5.0"}
+                    variables: {v1:2, v2:2, v3:2}
+                    functions: { 
+                       {scope: [v1], costs: [0.0, -3.0]},
+                       {scope: [v2], costs: [-1.0, 0.0]},
+                       {scope: [v3], costs: [0.0, 2.0]},
+                    }
+                  lb : -1.
+                  ub : 0.
+                  duplicatehard: 0
+                  strongduality: 0
+                  }
+               }

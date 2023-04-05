@@ -147,6 +147,10 @@ Solver::~Solver()
         delete wcsp;
     }
 
+    for (auto elt : WCSP::CollectionOfWCSP) {
+        delete elt.second;
+    }
+
     delete ((StoreInt*)searchSize);
 }
 

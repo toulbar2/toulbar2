@@ -259,17 +259,16 @@ public:
                 problem->enforceUb();
                 assert(problem->isactivatePropagate());
                 problem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates ub
-//                if (problem->getLb() < lb) { // checks if the solution violates lb
-//                    unsat = true;
-//                }
-            }
-            if (negproblem) {
+                if (problem->getLb() < lb) { // checks if the solution violates lb
+                    unsat = true;
+                }
+            } else if (negproblem) {
                 negproblem->enforceUb();
                 assert(negproblem->isactivatePropagate());
                 negproblem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates lb
-//                if (negproblem->getLb() <= -ub + negCost) { // checks if the solution violates ub
-//                    unsat = true;
-//                }
+                if (negproblem->getLb() <= -ub + negCost) { // checks if the solution violates ub
+                    unsat = true;
+                }
             }
         } catch (const Contradiction&) {
             if (problem) problem->whenContradiction();

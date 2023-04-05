@@ -79,6 +79,7 @@ class WCSP FINAL : public WeightedCSP {
     friend class VACExtension;
 
 public:
+    static map<int, WCSP *> CollectionOfWCSP;
     /// \brief variable elimination information used in backward phase to get a solution during search
     /// \warning restricted to at most two neighbor variables
     typedef struct {

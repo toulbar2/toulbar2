@@ -35,6 +35,7 @@
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
 #include "tb2globalwcsp.hpp"
+#include "mcriteria/multicfn.hpp"
 
 using std::fixed;
 using std::greater;
@@ -68,6 +69,8 @@ StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE
 StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
 
 int WCSP::wcspCounter = 0;
+
+map<int, WCSP *> WCSP::CollectionOfWCSP;
 
 vector<Cost> initpow10Cache()
 {
@@ -2346,6 +2349,26 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
     } else if (gcname == "knapsack") {
         postKnapsackConstraint(scopeIndex, arity, file, false, false, false);
+    } else if (gcname == "cfnconstraint") {
+        int wcspind;
+        file >> wcspind;
+        Cost lb;
+        file >> lb;
+        Cost ub;
+        file >> ub;
+        bool duplicate;
+        file >> duplicate;
+        bool duality;
+        file >> duality;
+        assert(CollectionOfWCSP.find(wcspind) != CollectionOfWCSP.end());
+        WCSP *problem = CollectionOfWCSP[wcspind];
+        MultiCFN multicfn;
+        multicfn.push_back(problem, -1.);
+        WCSP* negproblem = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+        multicfn.makeWeightedCSP(negproblem);
+        CollectionOfWCSP[negproblem->getIndex()] = negproblem; // memorize opposite of input cost function network
+        vector<int> scope(scopeIndex, scopeIndex + arity);
+        postWeightedCSPConstraint(scope, problem, negproblem, lb + problem->getNegativeLb(), ub + problem->getNegativeLb(), duplicate, duality);
     } else { // monolithic global cost functions
         postGlobalConstraint(scopeIndex, arity, gcname, file, constrcounter, mult);
     }

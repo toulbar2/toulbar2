@@ -1494,6 +1494,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
         { "knapsackp", ":capacity:N:weightedvalues:[[vN]+]S" },
+        { "cfnconstraint", ":cfn:W:lb:c:ub:c:duplicatehard:N:strongduality:N" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1716,10 +1717,17 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         else if (GCFTemplate[i] == 'C' || GCFTemplate[i] == 'c') {
 
             std::tie(lineNumber, token) = this->getNextToken();
-            Cost cost = wcsp->decimalToCost(token, lineNumber);
-            if (GCFTemplate[i] == 'c' && cost < 0) {
-                cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
-                throw WrongFileFormat();
+            Cost cost = MIN_COST;
+            if (funcType == "cfnconstraint") {
+                int wcspind = stoi(streamContentVec.back().second);
+                assert(WCSP::CollectionOfWCSP.find(wcspind) == WCSP::CollectionOfWCSP.end());
+                cost = WCSP::CollectionOfWCSP[wcspind]->decimalToCost(token, lineNumber);
+            } else {
+                cost = wcsp->decimalToCost(token, lineNumber);
+                if (GCFTemplate[i] == 'c' && cost < 0) {
+                    cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
+                    throw WrongFileFormat();
+                }
             }
             streamContentVec.push_back(std::make_pair(GCFTemplate[i], std::to_string(cost)));
         }
@@ -1765,6 +1773,18 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                 }
             }
             streamContentVec.push_back(std::make_pair('N', token));
+        }
+        // ---------- Read cost function network and add its index number to stream
+        else if (GCFTemplate[i] == 'W') {
+
+            WCSP* wcsp_ = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+            CFNStreamReader fileReader(iStream, wcsp_); // read recursively a cost function network
+            lineCount += fileReader.lineCount;
+            std::tie(lineNumber, token) = this->getNextToken(); // skip last }
+
+            assert(WCSP::CollectionOfWCSP.find(wcsp_->getIndex()) == WCSP::CollectionOfWCSP.end());
+            WCSP::CollectionOfWCSP[wcsp_->getIndex()] = wcsp_; // memorize WCSP object
+            streamContentVec.push_back(std::make_pair('W', to_string(wcsp_->getIndex())));
         }
         // ---------- Read JSON tag
         else if (GCFTemplate[i] == ':') {
