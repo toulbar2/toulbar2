@@ -548,7 +548,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
             EnumeratedVariable* tb2_enumvar = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[var_ind].name)));
 
             if(!tb2_enumvar->isValueNames()) {
-                cerr << "error when exporting a multicfn: the target wcsp has a variable with the same name no associated value names!" << endl;
+                cerr << "error when exporting a multicfn: the target wcsp has a variable with the same name but no associated value names!" << endl;
                 throw WrongFileFormat();
             }
 

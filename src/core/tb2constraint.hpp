@@ -201,7 +201,7 @@ public:
 
     virtual bool universal();
     virtual bool ishard(); ///< \brief returns true if all valid tuples have costs either zero or greater than the current upper bound
-    virtual bool isfinite(); ///< \brief returns true if all valid tuples have costs strictly lower than the current upper bound
+    virtual bool isfinite(); ///< \brief returns true if all valid tuples have costs strictly lower than the current upper bound minus the current lower bound
 
     virtual Cost getMinCost();
     virtual pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b) { return std::make_pair(std::make_pair(MAX_COST, MAX_COST), std::make_pair(MAX_COST, MAX_COST)); }

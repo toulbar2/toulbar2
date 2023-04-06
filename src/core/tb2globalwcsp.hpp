@@ -92,16 +92,24 @@ public:
             WeightedCSPConstraints[problem->getIndex()] = this;
             problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
             if (!duplicateHard && !problem->isfinite()) isfinite = false;
-            problem->updateUb(ub);
-            problem->enforceUb();
+            if (isfinite && problem->finiteUb() <= ub) {
+                problem = NULL; // no need to check ub anymore
+            } else {
+                problem->updateUb(ub);
+                problem->enforceUb();
+            }
         }
         if (negproblem) {
             negCost += negproblem->getNegativeLb();
             WeightedCSPConstraints[negproblem->getIndex()] = this;
             negproblem->setSolver(wcsp->getSolver());
             if (!duplicateHard && !negproblem->isfinite()) isfinite = false;
-            negproblem->updateUb(-lb + negCost + UNIT_COST);
-            negproblem->enforceUb();
+            if (isfinite && negproblem->finiteUb() <= -lb + negCost + UNIT_COST) {
+                negproblem = NULL; // no need to check lb anymore
+            } else {
+                negproblem->updateUb(-lb + negCost + UNIT_COST);
+                negproblem->enforceUb();
+            }
 //            negproblem->preprocessing();
         }
 //        if (problem) {
@@ -167,6 +175,8 @@ public:
     bool universal() override
     {
         if (isfinite && problem && negproblem && problem->getLb() >= lb && negproblem->getLb() > -ub + negCost) {
+            assert(!problem || problem->finiteUb() <= problem->getUb());
+            assert(!negproblem || negproblem->finiteUb() <= negproblem->getUb());
             return true;
         } else {
             return false;
@@ -511,14 +521,66 @@ public:
         if (negproblem) os << *negproblem << endl;
     }
 
-    //TODO:
-//    void dump(ostream& os, bool original = true) override
-//    {
-//    }
+    void dump(ostream& os, bool original = true) override
+    {
+        if (original) {
+            os << arity_;
+            for (int i = 0; i < arity_; i++)
+                os << " " << scope[i]->wcspIndex;
+        } else {
+            os << nonassigned;
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned())
+                    os << " " << scope[i]->getCurrentVarId();
+        }
+        os << " -1 wcsp " << lb << " " << ub << " " << problem->isfinite() << " " << strongDuality << endl;
+        problem->dump(os, original);
+    }
 
-//    void dump_CFN(ostream& os, bool original = true) override
-//    {
-//    }
+    void dump_CFN(ostream& os, bool original = true) override
+    {
+        bool printed = false;
+        os << "\"F_";
+
+        if (original) {
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << "_";
+                os << scope[i]->wcspIndex;
+                printed = true;
+            }
+
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << ",";
+                os << "\"" << scope[i]->getName() << "\"";
+                printed = true;
+            }
+        } else {
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << "_";
+                    os << scope[i]->getCurrentVarId();
+                    printed = true;
+                }
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << ",";
+                    os << "\"" << scope[i]->getName() << "\"";
+                    printed = true;
+                }
+        }
+        os << "],\"type\": \"cfnconstraint\",\"params\":{\n\"cfn\":\n";
+        problem->dump_CFN(os, original);
+        os << ",\n\"lb\":" << problem->Cost2ADCost(lb) << ",\"ub\":" << problem->Cost2ADCost(ub) << ",\"duplicatehard\":" << problem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
+    }
 
     friend void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);
     friend void tb2removevalue(int wcspId, int varIndex, Value value, void* solver);

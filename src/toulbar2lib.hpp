@@ -118,7 +118,7 @@ public:
     /// \brief updates infinite costs in all cost functions accordingly to the problem global lower and upper bounds
     /// \warning to be used in preprocessing only
     virtual void setInfiniteCost() = 0;
-    /// \brief returns true if any complete assignment using current domains is a valid tuple with finite cost (i.e., cost strictly less than the problem upper bound)
+    /// \brief returns true if any complete assignment using current domains is a valid tuple with finite cost (i.e., cost strictly less than the problem upper bound minus the lower bound)
     virtual bool isfinite() const = 0;
 
     virtual bool enumerated(int varIndex) const = 0; ///< \brief true if the variable has an enumerated domain

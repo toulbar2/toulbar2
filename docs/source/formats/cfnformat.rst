@@ -439,9 +439,9 @@ Global cost functions using a dedicated propagator:
 
   - :code:`"cfnconstraint"` with parameters :code:`cfn: cost-function-network lb: cost ub: cost duplicatehard: value strongduality: value` to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in cfn format such that its valid solutions must have a cost value in [lb,ub[.  
 
-    - :code:`"duplicateHard"` (0|1): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+    - :code:`"duplicatehard"` (0|1): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
 
-    - :code:`"strongDuality"` (0|1): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
+    - :code:`"strongduality"` (0|1): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
             
     - example : ::
 
@@ -450,7 +450,7 @@ Global cost functions using a dedicated propagator:
                params: {
                   cfn: 
                     {
-                    problem: {name: "mycfn", mustbe: "<5.0"}
+                    problem: {name: "subcfn", mustbe: "<1000.0"}
                     variables: {v1:2, v2:2, v4:2}
                     functions: { 
                        {scope: [v1], costs: [0.0, -3.0]},

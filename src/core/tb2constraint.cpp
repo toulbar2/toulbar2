@@ -334,7 +334,7 @@ bool Constraint::isfinite()
     Cost cost;
     firstlex();
     while (nextlex(tuple, cost)) {
-        if (CUT(cost, wcsp->getUb()))
+        if (CUT(wcsp->getLb() + cost, wcsp->getUb()))
             return false;
     }
     return true;

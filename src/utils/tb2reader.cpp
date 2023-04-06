@@ -205,7 +205,7 @@ typedef struct {
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
  * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
  * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5\endcode
- * - wcsp constraint (\f$3 <= 2 * x0 * x1 + 3 * x0 * x2 + 4 * x1 * x2 <= 5\f$) on three Boolean 0/1 variables: \code 3 0 1 2 -1 wcsp 3 5 0 0 name 3 2 3 5 2 2 2 2 0 1 0 1 1 1 2 2 0 2 0 1 1 1 3 2 1 2 0 1 1 1 4\endcode
+ * - wcsp constraint (\f$3 <= 2 * x1 * x2 + 3 * x1 * x4 + 4 * x2 * x4 < 5\f$) on three Boolean 0/1 variables: \code 3 1 2 4 -1 wcsp 3 5 0 0 name 3 2 3 1000 2 2 2 2 0 1 0 1 1 1 2 2 0 2 0 1 1 1 3 2 1 2 0 1 1 1 4\endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
@@ -2335,6 +2335,8 @@ Cost WCSP::read_wcsp(const char* fileName)
         read_legacy(fileName);
     }
 
+    // common ending section for all readers
+
     if (ToulBar2::addAMOConstraints) {
         addAMOConstraints();
         ToulBar2::addAMOConstraints_ = false;
@@ -2404,32 +2406,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 // TOULBAR2 WCSP LEGACY PARSER
 void WCSP::read_legacy(const char* fileName)
 {
-    string pbname;
-    unsigned int nbvar, nbval;
-    int nbconstr;
-    int nbvaltrue = 0;
-    Cost top;
-    int i, j, k, t, ic;
-    string varname;
-    int domsize;
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
-    Cost defval;
-    Cost cost;
-    Long ntuples;
-    int arity;
-    string funcname;
-    Value funcparam1;
-    Value funcparam2;
-    vector<TemporaryUnaryConstraint> unaryconstrs;
-    Cost inclowerbound = MIN_COST;
-    int maxarity = 0;
-    vector<Long> sharedSize;
-    vector<vector<Cost>> sharedCosts;
-    vector<vector<Tuple>> sharedTuples;
-    vector<Tuple> emptyTuples;
-
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
@@ -2469,6 +2445,36 @@ void WCSP::read_legacy(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
+    read_legacy(file);
+}
+
+void WCSP::read_legacy(istream& file)
+{
+    string pbname;
+    unsigned int nbvar, nbval;
+    int nbconstr;
+    int nbvaltrue = 0;
+    Cost top;
+    int i, j, k, t, ic;
+    string varname;
+    int domsize;
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    Cost defval;
+    Cost cost;
+    Long ntuples;
+    int arity;
+    string funcname;
+    Value funcparam1;
+    Value funcparam2;
+    vector<TemporaryUnaryConstraint> unaryconstrs;
+    Cost inclowerbound = MIN_COST;
+    int maxarity = 0;
+    vector<Long> sharedSize;
+    vector<vector<Cost>> sharedCosts;
+    vector<vector<Tuple>> sharedTuples;
+    vector<Tuple> emptyTuples;
 
     // ---------- PROBLEM HEADER ----------
     // read problem name and sizes
@@ -2894,9 +2900,11 @@ void WCSP::read_legacy(const char* fileName)
         }
     }
 
-    file >> funcname;
-    if (file) {
-        cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+    if ((getSolver() && ((Solver *)getSolver())->getWCSP() == this)) { // checks end of file only if reading the main model
+        file >> funcname;
+        if (file) {
+            cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+        }
     }
 
     // merge unarycosts if they are on the same variable

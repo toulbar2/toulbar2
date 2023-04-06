@@ -209,7 +209,7 @@ public:
     /// \warning to be used in preprocessing only
     void setInfiniteCost();
 
-    /// \brief returns true if any complete assignment using current domains is a valid tuple with finite cost (i.e., cost strictly less than the problem upper bound)
+    /// \brief returns true if any complete assignment using current domains is a valid tuple with finite cost (i.e., cost strictly less than the problem upper bound minus the lower bound)
     bool isfinite() const;
 
     void decreaseLb(Cost cost)
@@ -601,7 +601,8 @@ public:
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
     void read_opb(const char* fileName); ///< \brief load pseudo-Boolean optimization problem
-    void read_legacy(const char* fileName); ///< \brief common ending section for all readers
+    void read_legacy(const char* fileName); ///< \brief load problem in wcsp format
+    void read_legacy(istream& file);  ///< \brief load problem in wcsp format (internal use)
 
     void read_XML(const char* fileName); ///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format

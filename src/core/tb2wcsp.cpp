@@ -2338,7 +2338,32 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         for (int j = i + 1; j < arity; j++)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
-    if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
+    if (gcname == "wcsp") {
+        Cost lb;
+        file >> lb;
+        Cost ub;
+        file >> ub;
+        bool duplicate;
+        file >> duplicate;
+        bool duality;
+        file >> duality;
+        WCSP* problem = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+        problem->read_legacy(file); // read recursively a cost function network in wcsp format
+        // add dummy value names needed by multicfn
+        for(unsigned int var_ind = 0; var_ind < problem->numberOfVariables(); var_ind ++) {
+            for(unsigned int val_ind = 0; val_ind < problem->getDomainInitSize(var_ind); val_ind ++) {
+                problem->addValueName(var_ind, "v" + to_string(val_ind));
+            }
+        }
+        CollectionOfWCSP[problem->getIndex()] = problem; // memorize WCSP object
+        MultiCFN multicfn;
+        multicfn.push_back(problem, -1.);
+        WCSP* negproblem = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+        multicfn.makeWeightedCSP(negproblem);
+        CollectionOfWCSP[negproblem->getIndex()] = negproblem; // memorize opposite of input cost function network
+        vector<int> scope(scopeIndex, scopeIndex + arity);
+        postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicate, duality);
+    } else if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
         DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
         decomposableGCF->addToCostFunctionNetwork(this);
     } else if (gcname == "clique") {
