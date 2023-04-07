@@ -1721,8 +1721,8 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             std::tie(lineNumber, token) = this->getNextToken();
             Cost cost = MIN_COST;
             if (funcType == "cfnconstraint") {
-                int wcspind = stoi(streamContentVec.back().second);
-                assert(WCSP::CollectionOfWCSP.find(wcspind) == WCSP::CollectionOfWCSP.end());
+                int wcspind = stoi(streamContentVec.front().second);
+                assert(WCSP::CollectionOfWCSP.find(wcspind) != WCSP::CollectionOfWCSP.end());
                 cost = WCSP::CollectionOfWCSP[wcspind]->decimalToCost(token, lineNumber);
             } else {
                 cost = wcsp->decimalToCost(token, lineNumber);
