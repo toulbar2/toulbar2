@@ -30,6 +30,61 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
 public:
     static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
     static map<int, WeightedCSPConstraint *> WeightedCSPConstraints;
+    static bool _protected_;
+    static int preprocessFunctional;
+    static int elimDegree;
+    static int elimDegree_preprocessing;
+    static int elimDegree_;
+    static int elimDegree_preprocessing_;
+    static int DEE;
+    static int DEE_;
+    static bool FullEAC;
+    static bool RASPS;
+    static int useRASPS;
+    static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
+    {
+        assert(!_protected_);
+        if (master) {
+            preprocessFunctional = ToulBar2::preprocessFunctional;
+            elimDegree = ToulBar2::elimDegree;
+            elimDegree_preprocessing = ToulBar2::elimDegree_preprocessing;
+            elimDegree_ = ToulBar2::elimDegree_ ;
+            elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing_;
+            DEE = ToulBar2::DEE;
+            DEE_ = ToulBar2::DEE_;
+            FullEAC = ToulBar2::FullEAC;
+            RASPS = ToulBar2::RASPS;
+            useRASPS = ToulBar2::useRASPS;
+        }
+
+        _protected_ = true;
+        ToulBar2::preprocessFunctional = 0;
+        ToulBar2::elimDegree = -1;
+        ToulBar2::elimDegree_preprocessing = -1;
+        ToulBar2::elimDegree_ = -1;
+        ToulBar2::elimDegree_preprocessing_ = -1;
+        ToulBar2::DEE = 0;
+        ToulBar2::DEE_ = 0;
+        ToulBar2::FullEAC = false; //FIXME: remove this restriction?
+        ToulBar2::RASPS = false;
+        ToulBar2::useRASPS = 0;
+    }
+    static void unprotect() ///< \brief reactivate preprocessing/propagation features
+    {
+        if (_protected_) {
+            _protected_ = false;
+            ToulBar2::preprocessFunctional = preprocessFunctional;
+            ToulBar2::elimDegree = elimDegree;
+            ToulBar2::elimDegree_preprocessing = elimDegree_preprocessing;
+            ToulBar2::elimDegree_ = elimDegree_;
+            ToulBar2::elimDegree_preprocessing_ = elimDegree_preprocessing_;
+            ToulBar2::DEE = DEE;
+            ToulBar2::DEE_ = DEE_;
+            ToulBar2::FullEAC = FullEAC;
+            ToulBar2::RASPS = RASPS;
+            ToulBar2::useRASPS = useRASPS;
+        }
+    }
 
     //TODO: add local NARYPROJECTIONSIZE parameter
     WeightedCSPConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, WCSP *problem_in, WCSP *negproblem_in, Cost lb_in, Cost ub_in, bool duplicateHard = false, bool strongDuality_ = false)
@@ -51,26 +106,6 @@ public:
             cerr << "Wrong bounds in WeightedCSPConstraint: " << lb << " < " << ub << endl;
             throw WrongFileFormat();
         }
-//        if (ToulBar2::preprocessFunctional > 0) {
-//            cout << "Warning! Cannot perform functional elimination with WeightedCSPConstraint." << endl;
-//            ToulBar2::preprocessFunctional = 0;
-//        }
-//        if (ToulBar2::elimDegree >= 0 || ToulBar2::elimDegree_preprocessing >= 0) {
-//            cout << "Warning! Cannot perform variable elimination with WeightedCSPConstraint." << endl;
-//            ToulBar2::elimDegree = -1;
-//            ToulBar2::elimDegree_preprocessing = -1;
-//            ToulBar2::elimDegree_ = -1;
-//            ToulBar2::elimDegree_preprocessing_ = -1;
-//        }
-//        if (ToulBar2::DEE >= 1) {
-//            cout << "Warning! Cannot perform dead-end elimination with WeightedCSPConstraint." << endl;
-//            ToulBar2::DEE = 0;
-//            ToulBar2::DEE_ = 0;
-//        }
-//        if (ToulBar2::FullEAC) {
-//            cout << "Warning! Cannot perform VAC-integrality heuristic with WeightedCSPConstraint." << endl;
-//            ToulBar2::FullEAC = false;
-//        }
         for (int i = 0; i < arity_in; i++) {
             assert(!problem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)problem->getVar(i))->getDomainInitSize());
             assert(!negproblem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)negproblem->getVar(i))->getDomainInitSize());
@@ -109,12 +144,51 @@ public:
             } else {
                 negproblem->updateUb(-lb + negCost + UNIT_COST);
                 negproblem->enforceUb();
+                protect(true);
+                negproblem->preprocessing();
+                unprotect();
             }
-//            negproblem->preprocessing();
         }
-//        if (problem) {
-//            problem->preprocessing();
-//        }
+        if (connected() && problem) {
+            protect(true);
+            problem->preprocessing();
+            unprotect();
+        }
+        if (connected() && problem && problem->numberOfConnectedConstraints() == 0) { // special case where only unary cost functions remain in problem
+            vector<int> thescope;
+            string params = to_string(-ub + problem->getLb());
+            for (int i = 0; i < arity_ ; i++) if (problem->getMaxUnaryCost(i) > MIN_COST) {
+                thescope.push_back(scope[i]->wcspIndex);
+                vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
+                params += " " + to_string(vc.size());
+                for (unsigned int j = 0; j < vc.size(); j++) {
+                    params += " " + to_string(vc[j].first) + " " + to_string(-vc[j].second);
+                }
+            }
+            problem = NULL;
+            if (thescope.size() > 0) {
+                wcsp->postKnapsackConstraint(thescope, params, false, true, false);
+            }
+        }
+        if (connected() && negproblem && negproblem->numberOfConnectedConstraints() == 0) { // special case where only unary cost functions remain in negproblem
+            vector<int> thescope;
+            string params = to_string(lb - negCost - UNIT_COST + negproblem->getLb());
+            for (int i = 0; i < arity_ ; i++) if (negproblem->getMaxUnaryCost(i) > MIN_COST) {
+                thescope.push_back(scope[i]->wcspIndex);
+                vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
+                params += " " + to_string(vc.size());
+                for (unsigned int j = 0; j < vc.size(); j++) {
+                    params += " " + to_string(vc[j].first) + " " + to_string(-vc[j].second);
+                }
+            }
+            negproblem = NULL;
+            if (thescope.size() > 0) {
+                wcsp->postKnapsackConstraint(thescope, params, false, true, false);
+            }
+        }
+        if (!problem && !negproblem) {
+            deconnect();
+        }
     }
 
     virtual ~WeightedCSPConstraint() {}
@@ -192,62 +266,6 @@ public:
             }
         }
         return true;
-    }
-
-    static bool _protected_;
-    static int preprocessFunctional;
-    static int elimDegree;
-    static int elimDegree_preprocessing;
-    static int elimDegree_;
-    static int elimDegree_preprocessing_;
-    static int DEE;
-    static int DEE_;
-    static bool FullEAC;
-    static bool RASPS;
-    static int useRASPS;
-    static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
-    {
-        assert(!_protected_);
-        if (master) {
-            preprocessFunctional = ToulBar2::preprocessFunctional;
-            elimDegree = ToulBar2::elimDegree;
-            elimDegree_preprocessing = ToulBar2::elimDegree_preprocessing;
-            elimDegree_ = ToulBar2::elimDegree_ ;
-            elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing_;
-            DEE = ToulBar2::DEE;
-            DEE_ = ToulBar2::DEE_;
-            FullEAC = ToulBar2::FullEAC;
-            RASPS = ToulBar2::RASPS;
-            useRASPS = ToulBar2::useRASPS;
-        }
-
-        _protected_ = true;
-        ToulBar2::preprocessFunctional = 0;
-        ToulBar2::elimDegree = -1;
-        ToulBar2::elimDegree_preprocessing = -1;
-        ToulBar2::elimDegree_ = -1;
-        ToulBar2::elimDegree_preprocessing_ = -1;
-        ToulBar2::DEE = 0;
-        ToulBar2::DEE_ = 0;
-        ToulBar2::FullEAC = false;
-        ToulBar2::RASPS = false;
-        ToulBar2::useRASPS = 0;
-    }
-    static void unprotect() ///< \brief reactivate preprocessing/propagation features
-    {
-        if (_protected_) {
-            _protected_ = false;
-            ToulBar2::preprocessFunctional = preprocessFunctional;
-            ToulBar2::elimDegree = elimDegree;
-            ToulBar2::elimDegree_preprocessing = elimDegree_preprocessing;
-            ToulBar2::elimDegree_ = elimDegree_;
-            ToulBar2::elimDegree_preprocessing_ = elimDegree_preprocessing_;
-            ToulBar2::DEE = DEE;
-            ToulBar2::DEE_ = DEE_;
-            ToulBar2::FullEAC = FullEAC;
-            ToulBar2::RASPS = RASPS;
-            ToulBar2::useRASPS = useRASPS;
-        }
     }
 
     Cost eval(const Tuple& s) override

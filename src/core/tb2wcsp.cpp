@@ -524,6 +524,8 @@ void tb2init()
     ToulBar2::negCostBLP.clear();
     ToulBar2::initialLbBLP.clear();
     ToulBar2::initialUbBLP.clear();
+
+    WeightedCSPConstraint::_protected_ = false;
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
