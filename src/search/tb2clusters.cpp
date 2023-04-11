@@ -113,7 +113,7 @@ void Separator::assign(int varIndex)
         nonassigned = nonassigned - 1;
         assert(nonassigned >= 0);
         if (nonassigned == 0) {
-            if (ToulBar2::bilevel && cluster->getParent() == wcsp->getTreeDec()->getRoot()) return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
+            if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot())) return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
             queueSep();
         }

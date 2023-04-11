@@ -2672,14 +2672,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 #endif
                 //problem2.isused = false //FIXME???
                 problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem0
-                // propagate (partially) channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
-                for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
-                    Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
-                    assert(ctr->deconnected());
-                    ctr->reconnect();
-                    ctr->assignCluster();
-                    ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds
-                }
                 assert(problem1->getLb() == MIN_COST);
                 assert(problem1->getCurrentDeltaUb() == MIN_COST);
                 assert(problem2->getLb() == MIN_COST);
@@ -2837,6 +2829,30 @@ bool Solver::solve(bool first)
                             td->setCurrentCluster(start);
                             if (start == td->getRoot())
                                 start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decomposition root cluster
+                            if (ToulBar2::bilevel) {
+                                // propagate channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
+                                for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
+                                    Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
+                                    assert(ctr->deconnected());
+                                    static vector<Cost> costs;
+                                    Constraint *incCtr = NULL;
+                                    if (ctr->isBinary()) {
+                                        costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
+                                        incCtr = ((WCSP *)wcsp)->getCtr(wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs));
+                                        ((BinaryConstraint *)incCtr)->addCosts((BinaryConstraint *)ctr);
+                                    } else if (ctr->isTernary()) {
+                                        costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
+                                        incCtr = ((WCSP *)wcsp)->getCtr(wcsp->postIncrementalTernaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, ctr->getVar(2)->wcspIndex, costs));
+                                        ((TernaryConstraint *)incCtr)->addCosts((TernaryConstraint *)ctr);
+                                    } else {
+                                        cerr << "Sorry, bilevel optimization not implemented for this type of channeling cost function:" << *ctr << endl;
+                                        throw WrongFileFormat();
+                                    }
+                                    //incCtr->sumScopeIncluded(ctr);
+                                    incCtr->assignCluster();
+                                    incCtr->propagate();
+                                }
+                            }
                             switch (ToulBar2::btdMode) {
                             case 0:
                             case 1: {
