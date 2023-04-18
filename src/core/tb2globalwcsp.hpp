@@ -128,6 +128,7 @@ public:
             problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
             if (!duplicateHard && !problem->isfinite()) isfinite = false;
             if (isfinite && problem->finiteUb() <= ub) {
+                WeightedCSPConstraints.erase(problem->getIndex());
                 problem = NULL; // no need to check ub anymore
             } else {
                 problem->updateUb(ub);
@@ -139,32 +140,34 @@ public:
             WeightedCSPConstraints[negproblem->getIndex()] = this;
             negproblem->setSolver(wcsp->getSolver());
             if (!duplicateHard && !negproblem->isfinite()) isfinite = false;
-            if (isfinite && negproblem->finiteUb() <= -lb + negCost + UNIT_COST) {
+            if (isfinite && (negproblem->finiteUb() <= (-lb + negCost + UNIT_COST))) {
+                WeightedCSPConstraints.erase(negproblem->getIndex());
                 negproblem = NULL; // no need to check lb anymore
             } else {
                 negproblem->updateUb(-lb + negCost + UNIT_COST);
                 negproblem->enforceUb();
                 protect(true);
-                negproblem->preprocessing();
+                negproblem->propagate(); // preprocessing();
                 unprotect();
             }
         }
         if (connected() && problem) {
             protect(true);
-            problem->preprocessing();
+            problem->propagate(); // preprocessing();
             unprotect();
         }
         if (connected() && problem && problem->numberOfConnectedConstraints() == 0) { // special case where only unary cost functions remain in problem
             vector<int> thescope;
-            string params = to_string(-ub + problem->getLb());
-            for (int i = 0; i < arity_ ; i++) if (problem->getMaxUnaryCost(i) > MIN_COST) {
+            string params = to_string(-ub + problem->getLb() + UNIT_COST);
+            for (int i = 0; i < arity_ ; i++) if (problem->getMaxUnaryCost(i) > MIN_COST) { // propagation of problem must be done before
                 thescope.push_back(scope[i]->wcspIndex);
                 vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
                 params += " " + to_string(vc.size());
                 for (unsigned int j = 0; j < vc.size(); j++) {
-                    params += " " + to_string(vc[j].first) + " " + to_string(-vc[j].second);
+                    params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
                 }
             }
+            WeightedCSPConstraints.erase(problem->getIndex());
             problem = NULL;
             if (thescope.size() > 0) {
                 wcsp->postKnapsackConstraint(thescope, params, false, true, false);
@@ -172,15 +175,16 @@ public:
         }
         if (connected() && negproblem && negproblem->numberOfConnectedConstraints() == 0) { // special case where only unary cost functions remain in negproblem
             vector<int> thescope;
-            string params = to_string(lb - negCost - UNIT_COST + negproblem->getLb());
-            for (int i = 0; i < arity_ ; i++) if (negproblem->getMaxUnaryCost(i) > MIN_COST) {
+            string params = to_string(lb - negCost + negproblem->getLb());
+            for (int i = 0; i < arity_ ; i++) if (negproblem->getMaxUnaryCost(i) > MIN_COST) { // propagation of negproblem must be done before
                 thescope.push_back(scope[i]->wcspIndex);
                 vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
                 params += " " + to_string(vc.size());
                 for (unsigned int j = 0; j < vc.size(); j++) {
-                    params += " " + to_string(vc[j].first) + " " + to_string(-vc[j].second);
+                    params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
                 }
             }
+            WeightedCSPConstraints.erase(negproblem->getIndex());
             negproblem = NULL;
             if (thescope.size() > 0) {
                 wcsp->postKnapsackConstraint(thescope, params, false, true, false);
@@ -541,6 +545,7 @@ public:
 
     void dump(ostream& os, bool original = true) override
     {
+        if (!problem && !negproblem) return;
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
@@ -551,12 +556,18 @@ public:
                 if (scope[i]->unassigned())
                     os << " " << scope[i]->getCurrentVarId();
         }
-        os << " -1 wcsp " << lb << " " << ub << " " << problem->isfinite() << " " << strongDuality << endl;
-        problem->dump(os, original);
+        if (problem) {
+            os << " -1 wcsp " << lb << " " << ub << " " << problem->isfinite() << " " << strongDuality << endl;
+            problem->dump(os, original);
+        } else if (negproblem) {
+            os << " -1 wcsp " << -ub + negCost << " " << -lb + negCost << " " << negproblem->isfinite() << " " << strongDuality << endl;
+            negproblem->dump(os, original);
+        }
     }
 
     void dump_CFN(ostream& os, bool original = true) override
     {
+        if (!problem && !negproblem) return;
         bool printed = false;
         os << "\"F_";
 
@@ -596,8 +607,13 @@ public:
                 }
         }
         os << "],\"type\": \"cfnconstraint\",\"params\":{\n\"cfn\":\n";
-        problem->dump_CFN(os, original);
-        os << ",\n\"lb\":" << problem->Cost2ADCost(lb) << ",\"ub\":" << problem->Cost2ADCost(ub) << ",\"duplicatehard\":" << problem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
+        if (problem) {
+            problem->dump_CFN(os, original);
+            os << ",\n\"lb\":" << problem->Cost2ADCost(lb) << ",\"ub\":" << problem->Cost2ADCost(ub) << ",\"duplicatehard\":" << problem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
+        } else if (negproblem) {
+            negproblem->dump_CFN(os, original);
+            os << ",\n\"lb\":" << negproblem->Cost2ADCost(-ub + negCost) << ",\"ub\":" << negproblem->Cost2ADCost(-lb + negCost) << ",\"duplicatehard\":" << negproblem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
+        }
     }
 
     friend void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);

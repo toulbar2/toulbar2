@@ -258,8 +258,7 @@ class CFN:
             for i, tuple in enumerate(tuples):
                 self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
             self.CFN.wcsp.postNaryConstraintEnd(idx)
-
-
+        
     def AddLinearConstraint(self, coefs, scope, operand = '==', rightcoef = 0):
         """AddLinearConstraint creates a linear constraint with integer coefficients.
         The scope corresponds to the variables involved in the left part of the constraint. 
@@ -267,20 +266,22 @@ class CFN:
         All constant terms must belong to the rigt part.
         
         Args:
-            coefs (list): array of integer coefficients associated to the left-part variables.
+            coefs (list or int): array of integer coefficients associated to the left-part variables (or the same integer coefficient is applied to all variables).
             scope (list): variables involved in the left part of the constraint. A variable can be represented by its name (str) or its index (int).
-            operand (str): can be either '==' or '<=' or '>='.
+            operand (str): can be either '==' or '<=' or '<' or '>=' or '>'.
             rightcoef (int): constant term in the right part.
            
         Example:
             AddLinearConstraint([1,1,-2], [x,y,z], '==', -1) encodes x + y -2z = -1. 
 
         """
+        if (isinstance(coefs, int)):
+            coefs = [coefs for v in scope]
         assert(len(coefs) == len(scope))
         sscope = set(scope)
         if len(scope) != len(sscope):
             raise RuntimeError("Duplicate variable in scope: "+str(scope))
-        if operand != '>=' and operand != '<=' and operand != '==':
+        if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddLinearConstraint: "+str(operand))
         iscope = []
         for i, v in enumerate(scope):
@@ -290,12 +291,27 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
 
-        if operand == '>=' or operand == '==':
-            params = str(rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+        if operand == '>=' or operand == '>' or operand == '==':
+            params = str((rightcoef + 1) if (operand == '>') else rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
-        if operand == '<=' or operand == '==':
-            params = str(-rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+        if operand == '<=' or operand == '<' or operand == '==':
+            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
+
+    def AddSumConstraint(self, scope, operand = '==', rightcoef = 0):
+        """AddSumConstraint creates a linear constraint with unit coefficients.
+        The scope corresponds to the variables involved in the left part of the constraint.
+        
+        Args:
+            scope (list): variables involved in the left part of the constraint. A variable can be represented by its name (str) or its index (int).
+            operand (str): can be either '==' or '<=' or '<' or '>=' or '>'.
+            rightcoef (int): constant term in the right part.
+           
+        Example:
+            AddSumConstraint([x,y,z], '<', 3) encodes x + y + z < 3. 
+
+        """
+        self.AddLinearConstraint(1, scope, operand, rightcoef)
 
     def AddGeneralizedLinearConstraint(self, tuples, operand = '==', rightcoef = 0):
         """AddGeneralizedLinearConstraint creates a linear constraint with integer coefficients associated to domain values. 
@@ -304,7 +320,7 @@ class CFN:
         
         Args:
             tuples (list): array of triplets (variable, domain value, coefficient) in the left part of the constraint.
-            operand (str): can be either '==' or '<=' or '>='.
+            operand (str): can be either '==' or '<=' or '<' or '>=' or '>'.
             rightcoef (int): constant term in the right part.
            
         Example:
@@ -317,7 +333,7 @@ class CFN:
             if v not in sscope:
                 sscope.add(v)
                 scope.append(v)
-        if operand != '>=' and operand != '<=' and operand != '==':
+        if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddGeneralizedLinearConstraint: "+str(operand))
         iscope = []
         for i, v in enumerate(scope):
@@ -327,15 +343,15 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
 
-        if operand == '>=' or operand == '==':
-            params = str(rightcoef)
+        if operand == '>=' or operand == '>' or operand == '==':
+            params = str((rightcoef + 1) if (operand == '>') else rightcoef)
             for v in iscope:
                 vtuples = [[str(val), str(coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
                 params += ' ' + ' '.join(self.flatten(vtuples))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
-        if operand == '<=' or operand == '==':
-            params = str(-rightcoef)
+        if operand == '<=' or operand == '<' or operand == '==':
+            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
             for v in iscope:
                 vtuples = [[str(val), str(-coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
