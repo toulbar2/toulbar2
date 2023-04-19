@@ -113,6 +113,7 @@ public:
             newValues.push_back(scope_in[i]->getInf());
             conflictWeights.push_back(0);
         }
+        assert(ToulBar2::setvalue == NULL || ToulBar2::setvalue == ::tb2setvalue);
         ToulBar2::setvalue = ::tb2setvalue;
         ToulBar2::removevalue = ::tb2removevalue;
         ToulBar2::setmin = ::tb2setmin;
@@ -192,6 +193,13 @@ public:
         }
         if (!problem && !negproblem) {
             deconnect();
+            if (WeightedCSPConstraints.size() == 0) { // we do not need anymore hook functions
+                MasterWeightedCSP = NULL;
+                ToulBar2::setvalue = NULL;
+                ToulBar2::removevalue = NULL;
+                ToulBar2::setmin = NULL;
+                ToulBar2::setmax = NULL;
+            }
         }
     }
 

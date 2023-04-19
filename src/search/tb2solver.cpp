@@ -2505,7 +2505,7 @@ void Solver::beginSolve(Cost ub)
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
 
-    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) {
+    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted csp constraints
         ToulBar2::LcLevel = LC_AC;
     }
 
