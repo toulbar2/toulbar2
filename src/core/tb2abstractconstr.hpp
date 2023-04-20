@@ -510,6 +510,9 @@ public:
     {
         delete[] scope;
         delete[] scope_dac;
+        for (int i = 0; i < arity_; i++) {
+            delete links[i];
+        }
         delete[] links;
     }
 
