@@ -2564,6 +2564,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                         weights[i][j] -= minweight;
                     capacity -= minweight;
                 }
+                delete[] VV;
             } else {
                 for (unsigned int j = 0; j < weights[i].size(); j++)
                     weights[i][j] -= minweight;

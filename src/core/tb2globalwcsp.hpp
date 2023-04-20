@@ -203,7 +203,15 @@ public:
         }
     }
 
-    virtual ~WeightedCSPConstraint() {}
+    virtual ~WeightedCSPConstraint() {
+        for(auto it = WeightedCSPConstraints.begin(); it != WeightedCSPConstraints.end();) {
+            if(it->second == this) {
+                it = WeightedCSPConstraints.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 
     bool extension() const FINAL { return false; } // this is not a cost function represented by an exhaustive table of costs
 
