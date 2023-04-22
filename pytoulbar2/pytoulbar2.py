@@ -646,18 +646,19 @@ class CFN:
         tb2.option.trwsAccuracy = -1
         
     # non-incremental solving method
-    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0):
+    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0, writeSolution = ''):
         """Solve solves the problem (i.e., finds its optimum and proves optimality). It can also enumerate (diverse) solutions depending on the arguments.
 
         Args:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values, 
-                                                               3: variable and value names).  
+                                                               3: variable and value names).
             allSolutions (int): if non-zero, enumerates all the solutions with a cost strictly better than the initial upper bound
                                     until a given limit on the number of solutions is reached.
             diversityBound (int): if non-zero, finds a greedy sequence of diverse solutions where a solution in the list is optimal
                                       such that it also has a Hamming-distance from the previously found solutions greater than a given bound.
                                       The number of diverse solutions is bounded by the argument value of allSolutions.
             timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
+            writeSolution (str): write best solution found in a file using a given file name and using the same format as showSolutions (or write all solutions if allSolutions is non-zero)
             
         Returns:
             The best (or last if enumeration/diversity) solution found as a list of domain values, its associated cost, always strictly lower 
@@ -671,6 +672,10 @@ class CFN:
 
         """
         tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
+        if len(writeSolution) > 0:
+            if showSolutions > 0:
+                tb2.option.writeSolution(str(showSolutions))
+            tb2.option.writeSolution(writeSolution)
         tb2.option.allSolutions = allSolutions   # find all solutions up to a given maximum limit (or 0 if searching for the optimum)
         if diversityBound != 0 and allSolutions > 0:
             tb2.option.divNbSol = allSolutions
@@ -685,6 +690,8 @@ class CFN:
             self.CFN.wcsp.updateDUb(self.UbInit)
         self.CFN.wcsp.sortConstraints()
         solved = self.CFN.solve()
+        if len(writeSolution) > 0:
+            tb2.option.closeSolution()
         if (len(self.CFN.solutions()) > 0):
             if allSolutions > 0:
                 return self.CFN.solutions()[-1][1], self.CFN.solutions()[-1][0], len(self.CFN.solutions()) # returns the last solution found

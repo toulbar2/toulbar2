@@ -399,7 +399,8 @@ public:
     bool isactivatePropagate() { return reentrant == false; } ///< \brief are propagate calls authorized?
     void reactivatePropagate() { reentrant = false; } ///< \brief re-authorizes propagate calls
     void propagate(); ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
-    bool verify(); ///< \brief checks the propagation fix point is reached \warning might change EAC supports
+    bool verify(); ///< \brief checks the propagation fix point is correctly reached \warning might change EAC supports
+    bool propagated(); ///< \brief returns true if the propagation fix point is reached
 
     bool isFullEAC(int varIndex) const { return vars[varIndex]->isFullEAC(); } ///< \brief returns true if variable varIndex is full EAC
     /// \brief returns true if all unassigned variables are full EAC, i.e., a valid solution can be directly extracted from EAC supports with cost equal to current lower bound (plus VAC thresholds if VAC is used)

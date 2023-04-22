@@ -78,7 +78,16 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("externalUB", &ToulBar2::externalUB)
         .def_readwrite_static("showSolutions", &ToulBar2::showSolutions)
         .def_readwrite_static("showHidden", &ToulBar2::showHidden)
-        //        .def_readwrite_static("writeSolution", &ToulBar2::writeSolution)
+        .def("writeSolution", [](const string& fileName) {
+            if (atoi(fileName.data()) != 0) {
+                ToulBar2::writeSolution = atoi(fileName.data());
+            } else {
+                ToulBar2::solutionFile = fopen(fileName.data(), "w");
+            }
+        })
+        .def("closeSolution", []() {
+            fclose(ToulBar2::solutionFile);
+        })
         .def_readwrite_static("allSolutions", &ToulBar2::allSolutions)
         .def_readwrite_static("dumpWCSP", &ToulBar2::dumpWCSP)
         .def_readwrite_static("approximateCountingBTD", &ToulBar2::approximateCountingBTD)

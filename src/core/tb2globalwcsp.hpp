@@ -269,8 +269,6 @@ public:
     bool universal() override
     {
         if (isfinite && problem && negproblem && problem->getLb() >= lb && negproblem->getLb() > -ub + negCost) {
-            assert(!problem || problem->finiteUb() <= problem->getUb());
-            assert(!negproblem || negproblem->finiteUb() <= negproblem->getUb());
             return true;
         } else {
             return false;
@@ -416,7 +414,7 @@ public:
 
     void assign(int varIndex) override
     {
-        if ((problem && !problem->isactivatePropagate()) || (negproblem && !negproblem->isactivatePropagate())) return; // wait until recursive calls of tb2setvalue are done
+        if ((problem && !problem->isactivatePropagate()) || (negproblem && !negproblem->isactivatePropagate())) return; // wait until propagation is done for each subproblem before trying to deconnect or project
         if (connected(varIndex)) {
             deconnect(varIndex);
             nonassigned = nonassigned - 1;
@@ -494,6 +492,12 @@ public:
                         protect();
                         negproblem->propagate();
                         unprotect();
+                        if (connected()) {
+                            assert(negproblem && negproblem->isactivatePropagate());
+                            assert(negproblem->propagated());
+                            assert(!problem || problem->isactivatePropagate());
+                            if (problem && !problem->propagated()) propagate(); // continue recursively if one subproblem is not fully propagated
+                        }
                     }
                 }
             } catch (const Contradiction&) {

@@ -5519,6 +5519,13 @@ void WCSP::eliminate()
 /// Queues are first-in / first-out lists of variables (avoiding multiple insertions).
 /// In case of a contradiction, queues are explicitly emptied by WCSP::whenContradiction
 
+bool WCSP::propagated()
+{
+    return (!objectiveChanged && NC.empty() && IncDec.empty() && (!(ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) || AC.empty())
+            && (ToulBar2::LcLevel < LC_DAC || DAC.empty()) && (ToulBar2::LcLevel != LC_EDAC || CSP(getLb(), getUb()) || EAC1.empty())
+            && Eliminate.empty() && (!ToulBar2::vac || CSP(getLb(), getUb()) || vac->isVAC()));
+}
+
 void WCSP::propagate()
 {
     if (ToulBar2::interrupted)
