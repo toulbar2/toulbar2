@@ -493,15 +493,15 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
         // }
     }
 
-    Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
+    // Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
 
-    bool global_ub_overflow = false;
-    if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
-        if (ToulBar2::verbose >= 0) {
-            cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
-        }
-        global_ub_overflow = true;
-    }
+    // bool global_ub_overflow = false;
+    // if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
+    //     if (ToulBar2::verbose >= 0) {
+    //         cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    //     }
+    //     global_ub_overflow = true;
+    // }
     
     auto top_mincost = computeTopMinCost();
     
@@ -515,7 +515,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     /* top is increased if global_ub > 0 */
     /* top is expressed as a double */
     if(global_lb+global_mincost >= 0) {
-        top += global_lb+global_mincost;
+        top -= global_lb+global_mincost;
     } else {
         top -= global_lb+global_mincost;
     }
@@ -526,11 +526,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     //   top = wcsp->DoubleToADCost(MAX_COST/3)
     // }
 
-    if (dir_consistency && top < global_ub) {
-        if (!global_ub_overflow) {
-            top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
-        }
-    }
 
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
