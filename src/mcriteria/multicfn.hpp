@@ -238,9 +238,10 @@ private: /* private methods */
     void addCostFunction(WCSP* wcsp, Constraint* cstr);
 
     /*!
-     * \brief compute a TOP (infinity) value for the internal representation of the cfns
+     * \brief compute a TOP (infinity) value and a minimum cost for the internal representation of the cfn costs
+     * \return a pair containing the top value (first) and the min cost (second)
      */
-    Double computeTop();
+    std::pair<Double,Double> computeTopMinCost();
 
     /*!
      * \brief check if a variable in a wcsp and a variable in the multicfn with the same name have the same domains, throw an exception otherwise

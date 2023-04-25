@@ -5633,7 +5633,7 @@ void WCSP::propagate()
         (*(it))->end();
     }
     reactivatePropagate();
-    assert((getSolver() && ((Solver *)getSolver())->getWCSP() != this && WeightedCSPConstraint::WeightedCSPConstraints[getIndex()]->deconnected()) || verify());
+    assert((getSolver() && ((Solver *)getSolver())->getWCSP() != this && (WeightedCSPConstraint::WeightedCSPConstraints.find(getIndex()) == WeightedCSPConstraint::WeightedCSPConstraints.end() || WeightedCSPConstraint::WeightedCSPConstraints[getIndex()]->deconnected())) || verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());

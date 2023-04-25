@@ -419,11 +419,13 @@ unsigned int MultiCFN::getDecimalPoint()
     return _tb2_decimalpoint;
 }
 
-//---------------------------------------------------------------------------
-Double MultiCFN::computeTop()
+////---------------------------------------------------------------------------
+pair<Double, Double> MultiCFN::computeTopMinCost()
 {
 
     Double top = 0.;
+
+    Double global_mincost = 0.;
 
     for (unsigned int net_ind = 0; net_ind < networks.size(); net_ind++) {
 
@@ -452,13 +454,15 @@ Double MultiCFN::computeTop()
             }
 
             net_top += max_cost - min_cost;
+            global_mincost += min_cost;
         }
 
         top += net_top;
     }
 
-    return top;
+    return std::make_pair(top, global_mincost);
 }
+
 
 //---------------------------------------------------------------------------
 void MultiCFN::exportToWCSP(WCSP* wcsp)
@@ -469,45 +473,52 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     ToulBar2::decimalPoint = _tb2_decimalpoint;
     ToulBar2::costMultiplier = 1.0; // minimization only
 
-    // precompute the new upper and lowerbound, and negCost
+    // precompute the new lowerbound
     Double global_lb = 0.;
     Double global_ub = 0.;
 
     bool dir_consistency = true;
 
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
-        // cout << "original lb for " << net_ind << ": " << _doriginal_lbs[net_ind] << endl;
+        
         global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
 
-        global_ub += _doriginal_ubs[net_ind] * weights[net_ind];
-
-        // cout << "net " << net_ind << ": ub=" << _doriginal_ubs[net_ind] << endl;
-
-        if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
-            if (ToulBar2::verbose >= 0) {
-                cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
-                cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
-                cerr << "; no upper bound provided" << endl;
-            }
-            dir_consistency = false;
-        }
+        // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
+        //     if (ToulBar2::verbose >= 0) {
+        //         cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
+        //         cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
+        //         cerr << "; no upper bound provided" << endl;
+        //     }
+        //     dir_consistency = false;
+        // }
     }
 
-    // cout << "global ub: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
+    // Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
 
-    Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
+    // bool global_ub_overflow = false;
+    // if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
+    //     if (ToulBar2::verbose >= 0) {
+    //         cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    //     }
+    //     global_ub_overflow = true;
+    // }
+    
+    auto top_mincost = computeTopMinCost();
+    
+    Double top = top_mincost.first;
+    Double global_mincost = top_mincost.second;
 
-    bool global_ub_overflow = false;
-    if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
-        if (ToulBar2::verbose >= 0) {
-            cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
-        }
-        global_ub_overflow = true;
+    /* ub is computed according to the relative costs */
+    global_ub = top;
+
+    /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
+    /* top is increased if global_ub > 0 */
+    /* top is expressed as a double */
+    if(global_lb+global_mincost >= 0) {
+        top -= global_lb+global_mincost;
+    } else {
+        top -= global_lb+global_mincost;
     }
-
-    // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
-    // Double top = wcsp->Cost2ADCost(MAX_COST/3);
-    Double top = computeTop();
 
     // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
@@ -515,11 +526,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     //   top = wcsp->DoubleToADCost(MAX_COST/3)
     // }
 
-    if (dir_consistency && top < global_ub) {
-        if (!global_ub_overflow) {
-            top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
-        }
-    }
 
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
@@ -730,8 +736,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
     global_lb += wcsp->Cost2ADCost(wcsp->getLb());
 
-    // cout << "target global lb, after combination: " << global_lb << endl;
-
     if (global_lb < 0) {
         wcsp->setLb(0);
         wcsp->decreaseLb(-wcsp->DoubletoCost(0));
@@ -743,18 +747,9 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
         //cout << "global_lb > 0" << endl;
     }
 
-    // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
-    // cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
-
-    if (dir_consistency && !global_ub_overflow) {
-        //cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
-        // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
-        wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
-    } else {
-        wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
-    }
-
-    //cout << "Lb of the combined wcsp: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
+    // ub should always be the precomputed ub from the costs 
+    // ub is relative to the internal costs, negcost is not acounted for
+    wcsp->setUb(wcsp->DoubletoCost(global_ub));
 
     wcsp->sortConstraints(); // close the WCSP model
 }
