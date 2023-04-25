@@ -103,7 +103,7 @@ public:
         , original_negproblem(negproblem_in)
         , nonassigned(arity_in)
     {
-        assert(problem || negproblem);
+        assert(problem);
         assert(!problem || arity_ == (int)problem->numberOfVariables());
         assert(!negproblem || arity_ == (int)negproblem->numberOfVariables());
         if (lb >= ub) {
