@@ -6,6 +6,7 @@
 #include "core/tb2constraint.hpp"
 #include "core/tb2variable.hpp"
 #include "core/tb2enumvar.hpp"
+#include "mcriteria/multicfn.hpp"
 
 bool naryRandom::connected()
 {
@@ -312,6 +313,22 @@ void naryRandom::generateBinCtr(int i, int j, long nogoods, Cost costMin, Cost c
     wcsp.postBinaryConstraint(i, j, costs);
 }
 
+void naryRandom::generateVertexCover(int i, int j)
+{
+    int a, b;
+    EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
+    EnumeratedVariable* y = (EnumeratedVariable*)wcsp.getVar(j);
+    assert(x->getDomainInitSize() == 2);
+    assert(y->getDomainInitSize() == 2);
+
+    vector<Cost> costs;
+    for (a = 0; a < 2; a++)
+        for (b = 0; b < 2; b++)
+            costs.push_back(MIN_COST);
+    costs[0] = MAX_COST;
+    wcsp.postBinaryConstraint(i, j, costs);
+}
+
 long long naryRandom::toIndex(vector<int>& index)
 {
     long long result = 1;
@@ -380,9 +397,16 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         maxa--;
     }
 
+    if (globalname == "vertexcover" || globalname == "bivertexcover" || globalname == "kpvertexcover") {
+        maxa = 2;
+    }
+
     for (i = 0; i < n; i++) {
         string varname = "X" + to_string(i);
         wcsp.makeEnumeratedVariable(varname, 0, m - 1);
+        for (int j = 0; j < m; j++) {
+            wcsp.addValueName(i, "v" + to_string(j));
+        }
     }
 
     for (arity = maxa; arity > 1; arity--) {
@@ -409,7 +433,9 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
                         scopes.insert(toIndex(indexs));
                         switch (arity) {
                         case 2:
-                            if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
+                            if (globalname == "vertexcover" || globalname == "bivertexcover" || globalname == "kpvertexcover")
+                                generateVertexCover(indexs[0], indexs[1]);
+                            else if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
                                 generateBinCtr(indexs[0], indexs[1], nogoods);
                             else
                                 generateSubModularBinCtr(indexs[0], indexs[1]);
@@ -434,10 +460,22 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         }
     }
 
+    MultiCFN multicfn;
+
+    if (globalname == "bivertexcover") {
+        multicfn.push_back(&wcsp, 1.);
+    }
+
     for (i = 0; i < n; i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
         for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-            x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, LARGE_COST), true);
+            if (globalname == "vertexcover" || globalname == "bivertexcover" || globalname == "kpvertexcover") {
+                if (a == 1) {
+                    x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
+                }
+            } else {
+                x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, LARGE_COST), true);
+            }
         }
         x->findSupport();
     }
@@ -447,6 +485,27 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
             EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
             x->permuteDomain(10);
         }
+    }
+
+    if (globalname == "kpvertexcover") {
+        vector<int> scope;
+        string parameters = to_string(-p[3] + UNIT_COST);
+        for (i = 0; i < n; i++) {
+            scope.push_back(i);
+            parameters += " " + to_string(-ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]));
+        }
+        wcsp.postKnapsackConstraint(scope, parameters, false, false, false);
+    } else if (globalname == "bivertexcover") {
+        vector<int> scope;
+        WeightedCSP *wcsp2 = WeightedCSP::makeWeightedCSP(p[3]);
+        multicfn.makeWeightedCSP(wcsp2);
+        for (i = 0; i < n; i++) {
+            scope.push_back(i);
+            EnumeratedVariable* x = (EnumeratedVariable*)((WCSP*)wcsp2)->getVar(i);
+            x->project(x->toValue(1), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
+            x->findSupport();
+        }
+        wcsp.postWeightedCSPConstraint(scope, wcsp2, NULL, 0, p[3], true);
     }
 }
 
