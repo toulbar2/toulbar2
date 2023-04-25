@@ -132,9 +132,39 @@ public:
             WeightedCSPConstraints[problem->getIndex()] = this;
             problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
             if (!duplicateHard && !problem->isfinite()) isfinite = false;
+
+            Cost summaxcost = problem->getLb() + UNIT_COST;
+            for (unsigned int i = 0; i < problem->numberOfVariables(); i++) {
+                if (problem->enumerated(i)) {
+                    Cost maxcost = MIN_COST;
+                    EnumeratedVariable* var = (EnumeratedVariable*)problem->getVar(i);
+                    for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+                        if (var->getCost(*iter) > maxcost)
+                            maxcost = var->getCost(*iter);
+                    }
+                    summaxcost += maxcost;
+                } else {
+                    summaxcost += max(problem->getUnaryCost(i, problem->getInf(i)), problem->getUnaryCost(i, problem->getSup(i)));
+                }
+            }
+
             if (isfinite && problem->finiteUb() <= ub) {
                 WeightedCSPConstraints.erase(problem->getIndex());
                 problem = NULL; // no need to check ub anymore
+            } else if (problem->numberOfConstraints() == 0 || (duplicateHard && problem->finiteUb() == summaxcost)) { // special case where there are only unary cost functions or there are only hard constraints already duplicated in the master problem
+                vector<int> thescope;
+                string params = to_string(-ub + problem->getLb() + UNIT_COST);
+                for (int i = 0; i < arity_ ; i++) {
+                    thescope.push_back(scope[i]->wcspIndex);
+                    vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
+                    params += " " + to_string(vc.size());
+                    for (unsigned int j = 0; j < vc.size(); j++) {
+                        params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
+                    }
+                }
+                WeightedCSPConstraints.erase(problem->getIndex());
+                problem = NULL;
+                wcsp->postKnapsackConstraint(thescope, params, false, true, false);
             } else {
                 problem->updateUb(ub);
                 problem->enforceUb();
@@ -145,54 +175,42 @@ public:
             WeightedCSPConstraints[negproblem->getIndex()] = this;
             negproblem->setSolver(wcsp->getSolver());
             if (!duplicateHard && !negproblem->isfinite()) isfinite = false;
+
+            Cost summaxcost = negproblem->getLb() + UNIT_COST;
+            for (unsigned int i = 0; i < negproblem->numberOfVariables(); i++) {
+                if (negproblem->enumerated(i)) {
+                    Cost maxcost = MIN_COST;
+                    EnumeratedVariable* var = (EnumeratedVariable*)negproblem->getVar(i);
+                    for (EnumeratedVariable::iterator iter = var->begin(); iter != var->end(); ++iter) {
+                        if (var->getCost(*iter) > maxcost)
+                            maxcost = var->getCost(*iter);
+                    }
+                    summaxcost += maxcost;
+                } else {
+                    summaxcost += max(negproblem->getUnaryCost(i, negproblem->getInf(i)), negproblem->getUnaryCost(i, negproblem->getSup(i)));
+                }
+            }
+
             if (isfinite && (negproblem->finiteUb() <= (-lb + negCost + UNIT_COST))) {
                 WeightedCSPConstraints.erase(negproblem->getIndex());
                 negproblem = NULL; // no need to check lb anymore
+            } else if (negproblem->numberOfConstraints() == 0 || (duplicateHard && negproblem->finiteUb() == summaxcost)) { // special case where there are only unary cost functions or there are only hard constraints already duplicated in the master problem
+                vector<int> thescope;
+                string params = to_string(lb - negCost + negproblem->getLb());
+                for (int i = 0; i < arity_ ; i++) {
+                    thescope.push_back(scope[i]->wcspIndex);
+                    vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
+                    params += " " + to_string(vc.size());
+                    for (unsigned int j = 0; j < vc.size(); j++) {
+                        params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
+                    }
+                }
+                WeightedCSPConstraints.erase(negproblem->getIndex());
+                negproblem = NULL;
+                wcsp->postKnapsackConstraint(thescope, params, false, true, false);
             } else {
                 negproblem->updateUb(-lb + negCost + UNIT_COST);
                 negproblem->enforceUb();
-                protect(true);
-                negproblem->propagate(); // preprocessing();
-                unprotect();
-            }
-        }
-        if (connected() && problem) {
-            protect(true);
-            problem->propagate(); // preprocessing();
-            unprotect();
-        }
-        if (connected() && problem && problem->numberOfConnectedConstraints() == 0) { // special case where only unary cost functions remain in problem
-            vector<int> thescope;
-            string params = to_string(-ub + problem->getLb() + UNIT_COST);
-            for (int i = 0; i < arity_ ; i++) if (problem->getMaxUnaryCost(i) > MIN_COST) { // propagation of problem must be done before
-                thescope.push_back(scope[i]->wcspIndex);
-                vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
-                params += " " + to_string(vc.size());
-                for (unsigned int j = 0; j < vc.size(); j++) {
-                    params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
-                }
-            }
-            WeightedCSPConstraints.erase(problem->getIndex());
-            problem = NULL;
-            if (thescope.size() > 0) {
-                wcsp->postKnapsackConstraint(thescope, params, false, true, false);
-            }
-        }
-        if (connected() && negproblem && negproblem->numberOfConnectedConstraints() == 0) { // special case where only unary cost functions remain in negproblem
-            vector<int> thescope;
-            string params = to_string(lb - negCost + negproblem->getLb());
-            for (int i = 0; i < arity_ ; i++) if (negproblem->getMaxUnaryCost(i) > MIN_COST) { // propagation of negproblem must be done before
-                thescope.push_back(scope[i]->wcspIndex);
-                vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
-                params += " " + to_string(vc.size());
-                for (unsigned int j = 0; j < vc.size(); j++) {
-                    params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
-                }
-            }
-            WeightedCSPConstraints.erase(negproblem->getIndex());
-            negproblem = NULL;
-            if (thescope.size() > 0) {
-                wcsp->postKnapsackConstraint(thescope, params, false, true, false);
             }
         }
         if (!problem && !negproblem) {
@@ -203,6 +221,18 @@ public:
                 ToulBar2::removevalue = NULL;
                 ToulBar2::setmin = NULL;
                 ToulBar2::setmax = NULL;
+            }
+        } else {
+            assert(connected());
+            if (problem) {
+                protect(true);
+                problem->propagate(); // preprocessing();
+                unprotect();
+            }
+            if (connected() && negproblem) {
+                protect(true);
+                negproblem->propagate(); // preprocessing();
+                unprotect();
             }
         }
     }
@@ -726,7 +756,6 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->problem->enforceUb();
                     gc.second->problem->getVar(varCtrIndex)->assign(value);
                 } catch (const Contradiction&) {
                     gc.second->problem->whenContradiction();
@@ -737,7 +766,6 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->negproblem->enforceUb();
                     gc.second->negproblem->getVar(varCtrIndex)->assign(value);
                 } catch (const Contradiction&) {
                     gc.second->negproblem->whenContradiction();
@@ -791,7 +819,6 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->problem->enforceUb();
                     gc.second->problem->getVar(varCtrIndex)->remove(value);
                 } catch (const Contradiction&) {
                     gc.second->problem->whenContradiction();
@@ -802,7 +829,6 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->negproblem->enforceUb();
                     gc.second->negproblem->getVar(varCtrIndex)->remove(value);
                 } catch (const Contradiction&) {
                     gc.second->negproblem->whenContradiction();
@@ -856,7 +882,6 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->problem->enforceUb();
                     gc.second->problem->getVar(varCtrIndex)->increase(value);
                 } catch (const Contradiction&) {
                     gc.second->problem->whenContradiction();
@@ -867,7 +892,6 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->negproblem->enforceUb();
                     gc.second->negproblem->getVar(varCtrIndex)->increase(value);
                 } catch (const Contradiction&) {
                     gc.second->negproblem->whenContradiction();
@@ -921,7 +945,6 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->problem->enforceUb();
                     gc.second->problem->getVar(varCtrIndex)->decrease(value);
                 } catch (const Contradiction&) {
                     gc.second->problem->whenContradiction();
@@ -932,7 +955,6 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
             if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
                 assert(WeightedCSPConstraint::_protected_);
                 try {
-                    gc.second->negproblem->enforceUb();
                     gc.second->negproblem->getVar(varCtrIndex)->decrease(value);
                 } catch (const Contradiction&) {
                     gc.second->negproblem->whenContradiction();
