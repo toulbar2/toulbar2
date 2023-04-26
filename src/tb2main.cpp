@@ -1080,6 +1080,15 @@ void help_msg(char* toulbar2filename)
     cout << "      nary-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of n-ary cost functions" << endl;
     cout << " or:                                                                               " << endl;
     cout << "      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)" << endl;
+    cout << " or:                                                                               " << endl;
+    cout << "      vertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{seed}  :t1 is the tightness (should be equal to 25)" << endl;
+    cout << "                                                      :p2 is the number of edges" << endl;
+    cout << "                                                      :maxcost each vertex has a weight randomly chosen between 0 and maxcost" << endl;
+    cout << " or:                                                                               " << endl;
+    cout << "      bivertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{ub2}-{seed} :t1 is the tightness (should be equal to 25)" << endl;
+    cout << "                                                             :p2 is the number of edges in the graph" << endl;
+    cout << "                                                             :maxcost each vertex has two weights, both randomly chosen between 0 and maxcost" << endl;
+    cout << "                                                             :ub2 upper bound for the bounding constraint on the second objective" << endl;
     cout << "---------------------------" << endl;
     cout << "			" << endl;
 

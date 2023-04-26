@@ -505,7 +505,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
             x->project(x->toValue(1), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
             x->findSupport();
         }
-        wcsp.postWeightedCSPConstraint(scope, wcsp2, NULL, 0, p[3], true);
+        wcsp.postWeightedCSPConstraint(scope, wcsp2, NULL, 0, p[3], false);
     }
 }
 
