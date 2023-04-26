@@ -72,6 +72,20 @@ int WCSP::wcspCounter = 0;
 
 map<int, WCSP *> WCSP::CollectionOfWCSP;
 
+WCSP* WeightedCSPConstraint::MasterWeightedCSP;
+map<int, WeightedCSPConstraint *> WeightedCSPConstraint::WeightedCSPConstraints;
+bool WeightedCSPConstraint::_protected_;
+int WeightedCSPConstraint::preprocessFunctional;
+int WeightedCSPConstraint::elimDegree;
+int WeightedCSPConstraint::elimDegree_preprocessing;
+int WeightedCSPConstraint::elimDegree_;
+int WeightedCSPConstraint::elimDegree_preprocessing_;
+int WeightedCSPConstraint::DEE;
+int WeightedCSPConstraint::DEE_;
+bool WeightedCSPConstraint::FullEAC;
+bool WeightedCSPConstraint::RASPS;
+int WeightedCSPConstraint::useRASPS;
+
 vector<Cost> initpow10Cache()
 {
     vector<Cost> cache;
@@ -132,6 +146,7 @@ bool ToulBar2::sortDomains;
 int ToulBar2::constrOrdering;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 bool ToulBar2::solutionBasedPhaseSaving;
+double ToulBar2::bisupport;
 int ToulBar2::lds;
 bool ToulBar2::limited;
 Long ToulBar2::restart;
@@ -361,6 +376,7 @@ void tb2init()
     ToulBar2::sortDomains = false;
     ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
     ToulBar2::solutionBasedPhaseSaving = true;
+    ToulBar2::bisupport = 0.;
     ToulBar2::lds = 0;
     ToulBar2::limited = false;
     ToulBar2::restart = -1;
@@ -525,7 +541,18 @@ void tb2init()
     ToulBar2::initialLbBLP.clear();
     ToulBar2::initialUbBLP.clear();
 
+    WeightedCSPConstraint::MasterWeightedCSP = NULL;
     WeightedCSPConstraint::_protected_ = false;
+    WeightedCSPConstraint::preprocessFunctional = 0;
+    WeightedCSPConstraint::elimDegree = -1;
+    WeightedCSPConstraint::elimDegree_preprocessing = -1;
+    WeightedCSPConstraint::elimDegree_ = -1;
+    WeightedCSPConstraint::elimDegree_preprocessing_ = -1;
+    WeightedCSPConstraint::DEE = 0;
+    WeightedCSPConstraint::DEE_ = 0;
+    WeightedCSPConstraint::FullEAC = false;
+    WeightedCSPConstraint::RASPS = false;
+    WeightedCSPConstraint::useRASPS = 0;
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2

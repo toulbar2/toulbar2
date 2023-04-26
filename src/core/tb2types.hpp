@@ -618,6 +618,14 @@ typedef enum {
     CONSTR_ORDER_THEMAX
 } ConstrOrdering;
 
+typedef enum {
+    BISUPPORT_HEUR_LB = 1,
+    BISUPPORT_HEUR_UB = 2,
+    BISUPPORT_HEUR_MINGAP = 3,
+    BISUPPORT_HEUR_MAXGAP = 4,
+    BISUPPORT_HEUR_THEMAX
+} BiSupportHeur;
+
 class Pedigree;
 class Haplotype;
 class BEP;
@@ -745,6 +753,7 @@ public:
     static bool sortDomains; ///< \brief sorts domains in preprocessing based on increasing unary costs (command line option -sortd) \warning Works only for binary WCSPs.
     static map<int, ValueCost*> sortedDomains; ///< \internal do not use
     static bool solutionBasedPhaseSaving; ///< \brief solution-based phase saving value heuristic (command line option -solr)
+    static double bisupport; ///< \brief value heuristic in bi-objective optimization when the second objective is encapsulated by a bounding constraint (command line option -bisupport)
     static int elimDegree; ///< \brief boosting search with variable elimination of small degree (0: no variable elimination, 1: linked to at most one binary cost function, 2: linked to at most two binary cost functions, 3: linked to at most one ternary cost function and two scope-included cost functions) (command line option -e)
     static int elimDegree_preprocessing; ///< \brief  in preprocessing, generic variable elimination of degree less than or equal to a given value (0: no variable elimination) (command line option -p)
     static int elimDegree_; ///< \internal do not use

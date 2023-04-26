@@ -204,6 +204,8 @@ enum {
     OPT_constrOrdering,
     OPT_solutionBasedPhaseSaving,
     NO_OPT_solutionBasedPhaseSaving,
+    OPT_bisupport,
+    NO_OPT_bisupport,
     OPT_weightedDegree,
     NO_OPT_weightedDegree,
     OPT_weightedTightness,
@@ -459,6 +461,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_constrOrdering, (char*)"-sortc", SO_REQ_SEP },
     { OPT_solutionBasedPhaseSaving, (char*)"-solr", SO_NONE },
     { NO_OPT_solutionBasedPhaseSaving, (char*)"-solr:", SO_NONE },
+    { OPT_bisupport, (char*)"-bisupport", SO_OPT },
+    { NO_OPT_bisupport, (char*)"-bisupport:", SO_NONE },
     { OPT_weightedDegree, (char*)"-q", SO_OPT },
     { NO_OPT_weightedDegree, (char*)"-q:", SO_NONE },
     { OPT_weightedTightness, (char*)"-m", SO_OPT },
@@ -873,6 +877,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
     cout << endl;
+    cout << "   -bisupport=[float] : in bi-objective optimization with the second objective encapsulated by a bounding constraint, the value heuristic chooses between both EAC supports of first (main) and second objectives by minimum weighted regret (if parameter is non-negative, it is used as the weight for the second objective) or always chooses the EAC support of the first objective (if parameter is zero) or always chooses the second objective (if parameter is negative, -" + to_string(BISUPPORT_HEUR_LB) + ": for choosing EAC from the lower bound constraint, -" + to_string(BISUPPORT_HEUR_UB) + ": from the upper bound constraint, -" + to_string(BISUPPORT_HEUR_MINGAP) + ": to favor the smallest gap, -" + to_string(BISUPPORT_HEUR_MAXGAP) + ": to favor the largest gap) (default value is " << ToulBar2::bisupport << ")" << endl;
     cout << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
     cout << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
     cout << "   -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)";
@@ -1668,6 +1673,16 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::solutionBasedPhaseSaving = true;
             } else if (args.OptionId() == NO_OPT_solutionBasedPhaseSaving) {
                 ToulBar2::solutionBasedPhaseSaving = false;
+            }
+
+            if (args.OptionId() == OPT_bisupport) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::bisupport = atof(args.OptionArg());
+                } else {
+                    ToulBar2::bisupport = -(BISUPPORT_HEUR_MINGAP);
+                }
+            } else if (args.OptionId() == NO_OPT_bisupport) {
+                ToulBar2::bisupport = 0.;
             }
 
             if (args.OptionId() == OPT_weightedTightness) {
