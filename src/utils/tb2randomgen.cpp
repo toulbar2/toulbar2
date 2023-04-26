@@ -499,13 +499,14 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         vector<int> scope;
         WeightedCSP *wcsp2 = WeightedCSP::makeWeightedCSP(p[3]);
         multicfn.makeWeightedCSP(wcsp2);
+        wcsp2->setUb(p[3]);
         for (i = 0; i < n; i++) {
             scope.push_back(i);
             EnumeratedVariable* x = (EnumeratedVariable*)((WCSP*)wcsp2)->getVar(i);
             x->project(x->toValue(1), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
             x->findSupport();
         }
-        wcsp.postWeightedCSPConstraint(scope, wcsp2, NULL, 0, p[3], false);
+        wcsp.postWeightedCSPConstraint(scope, wcsp2, NULL, 0, p[3], false); // if we replace false by true then it should automatically transform this global into a knapsack, yielding the same model as kpvertexcover
     }
 }
 
