@@ -418,6 +418,10 @@ public:
         for (int i=0; i < arity_; i++) {
             newValues[i] = solution[((EnumeratedVariable *)getVar(i))->wcspIndex];
         }
+        externalevent oldSetValue = ToulBar2::setvalue;
+        externalevent oldRemoveValue = ToulBar2::removevalue;
+        externalevent oldSetMin = ToulBar2::setmin;
+        externalevent oldSetMax = ToulBar2::setmax;
         ToulBar2::setvalue = NULL;
         ToulBar2::removevalue = NULL;
         ToulBar2::setmin = NULL;
@@ -442,10 +446,10 @@ public:
         }
         Store::restore(depth);
         unprotect();
-        ToulBar2::setvalue = ::tb2setvalue;
-        ToulBar2::removevalue = ::tb2removevalue;
-        ToulBar2::setmin = ::tb2setmin;
-        ToulBar2::setmax = ::tb2setmax;
+        ToulBar2::setvalue = oldSetValue;
+        ToulBar2::removevalue = oldRemoveValue;
+        ToulBar2::setmin = oldSetMin;
+        ToulBar2::setmax = oldSetMax;
         return cost;
     }
 
