@@ -22,6 +22,8 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     Cost top; // forbidden cost returned if evaluated as unsatisfied
     WCSP *problem; // encapsulated slave problem
     WCSP *negproblem; // encapsulated slave problem in negative form (should be equivalent to -problem)
+    WCSP *original_problem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
+    WCSP *original_negproblem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<int> varIndexes; // copy of scope using integer identifiers inside slave problem (should be equal to [0, 1, 2, ..., arity-1])
     vector<Value> newValues; // used to convert Tuples into variable assignments
@@ -97,9 +99,11 @@ public:
         , top(MAX_COST)
         , problem(problem_in)
         , negproblem(negproblem_in)
+        , original_problem(problem_in)
+        , original_negproblem(negproblem_in)
         , nonassigned(arity_in)
     {
-        assert(problem || negproblem);
+        assert(problem);
         assert(!problem || arity_ == (int)problem->numberOfVariables());
         assert(!negproblem || arity_ == (int)negproblem->numberOfVariables());
         if (lb >= ub) {
@@ -400,6 +404,34 @@ public:
         } else {
             return MIN_COST;
         }
+    }
+
+    /*!
+     * \brief compute the sum of the cost functions in the constraint from a solution of the wcsp (variables are indexed from the main cfn)
+     * \param solution the values of the variables in the solution returned by the solver
+     * \return the cost of the solution for the cfn in the constraintn expressed as a cost for the problem_in cfn
+    */
+    Cost computeSolutionCost(vector<Value>& solution) {
+        Cost cost = MIN_COST;
+        vector<int> pb_varIndexes(scope_inv.size());
+        vector<Value> pb_values(scope_inv.size());
+        int assign_index = 0;
+        for(auto elt: scope_inv) {
+            pb_varIndexes[assign_index] = elt.second;
+            pb_values[assign_index] = solution[elt.first];
+            assign_index += 1;
+        }
+        Store::store();
+        if(original_problem != NULL) {            
+            original_problem->assignLS(pb_varIndexes, pb_values);
+            cost = original_problem->getLb();
+        } else if(original_negproblem != NULL) {
+            original_negproblem->assignLS(pb_varIndexes, pb_values);
+            cost = negCost-original_negproblem->getLb();
+            // cost = -original_negproblem->getLb()+2*original_negproblem->getNegativeLb(); // express the cost as the optimal double cost from problem in the wcsp_3
+        }
+        Store::restore();
+        return cost;
     }
 
     Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
