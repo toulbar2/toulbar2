@@ -409,28 +409,43 @@ public:
     /*!
      * \brief compute the sum of the cost functions in the constraint from a solution of the wcsp (variables are indexed from the main cfn)
      * \param solution the values of the variables in the solution returned by the solver
-     * \return the cost of the solution for the cfn in the constraintn expressed as a cost for the problem_in cfn
+     * \return the cost of the solution for the cfn in the constraint expressed as a cost for the problem_in cfn
     */
-    Cost computeSolutionCost(vector<Value>& solution) {
+    Cost computeSolutionCost(vector<Value>& solution)
+    {
+        assert(solution.size() == wcsp->numberOfVariables());
         Cost cost = MIN_COST;
-        vector<int> pb_varIndexes(scope_inv.size());
-        vector<Value> pb_values(scope_inv.size());
-        int assign_index = 0;
-        for(auto elt: scope_inv) {
-            pb_varIndexes[assign_index] = elt.second;
-            pb_values[assign_index] = solution[elt.first];
-            assign_index += 1;
+        for (int i=0; i < arity_; i++) {
+            newValues[i] = solution[((EnumeratedVariable *)getVar(i))->wcspIndex];
         }
-        Store::store();
-        if(original_problem != NULL) {            
-            original_problem->assignLS(pb_varIndexes, pb_values);
-            cost = original_problem->getLb();
-        } else if(original_negproblem != NULL) {
-            original_negproblem->assignLS(pb_varIndexes, pb_values);
-            cost = negCost-original_negproblem->getLb();
-            // cost = -original_negproblem->getLb()+2*original_negproblem->getNegativeLb(); // express the cost as the optimal double cost from problem in the wcsp_3
+        ToulBar2::setvalue = NULL;
+        ToulBar2::removevalue = NULL;
+        ToulBar2::setmin = NULL;
+        ToulBar2::setmax = NULL;
+        protect();
+        int depth = Store::getDepth();
+        try {
+            Store::store();
+            if(original_problem != NULL) {
+                assert(original_problem->isactivatePropagate());
+                original_problem->assignLS(varIndexes, newValues);
+                cost = original_problem->getLb();
+            } else if(original_negproblem != NULL) {
+                assert(original_negproblem->isactivatePropagate());
+                original_negproblem->assignLS(varIndexes, newValues);
+                cost = negCost-original_negproblem->getLb();
+            }
+        } catch (const Contradiction&) {
+            if (problem) problem->whenContradiction();
+            if (negproblem) negproblem->whenContradiction();
+            cost = MAX_COST;
         }
-        Store::restore();
+        Store::restore(depth);
+        unprotect();
+        ToulBar2::setvalue = ::tb2setvalue;
+        ToulBar2::removevalue = ::tb2removevalue;
+        ToulBar2::setmin = ::tb2setmin;
+        ToulBar2::setmax = ::tb2setmax;
         return cost;
     }
 
