@@ -420,10 +420,10 @@ unsigned int MultiCFN::getDecimalPoint()
 }
 
 ////---------------------------------------------------------------------------
-pair<Double, Double> MultiCFN::computeTopMinCost()
+pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
 {
 
-    Double top = 0.;
+    Double top = Pow(1., -_tb2_decimalpoint);
 
     Double global_mincost = 0.;
 
@@ -516,7 +516,8 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
     /* top is increased if global_ub > 0 */
     /* top is expressed as a double */
-    top -= global_lb+global_mincost;
+    if (global_lb+global_mincost < 0)
+        top -= global_lb+global_mincost;
 
     // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
@@ -736,7 +737,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
     if (global_lb < 0) {
         wcsp->setLb(0);
-        wcsp->decreaseLb(-wcsp->DoubletoCost(0));
+        wcsp->decreaseLb(-wcsp->DoubletoCost(0)); // reset negCost to zero
         wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb));
         //cout << "global_lb < 0: " << global_lb << endl;
     } else {
