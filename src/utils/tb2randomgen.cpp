@@ -495,20 +495,29 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         wcsp.postKnapsackConstraint(scope, parameters, false, false, false);
     } else if (globalname == "bivertexcover") {
         vector<int> scope;
-        WeightedCSP *wcsp2 = WeightedCSP::makeWeightedCSP(MAX_COST);
-        multicfn.makeWeightedCSP(wcsp2);
-        wcsp2->updateUb(p[3]);
+        WCSP *wcsp2 = (WCSP*)WeightedCSP::makeWeightedCSP(p[3]);
+        for (i = 0; i < n; i++) {
+            string varname = "X" + to_string(i);
+            wcsp2->makeEnumeratedVariable(varname, 0, m - 1);
+            for (int j = 0; j < m; j++) {
+                wcsp2->addValueName(i, "v" + to_string(j));
+            }
+        }
         for (i = 0; i < n; i++) {
             scope.push_back(i);
-            EnumeratedVariable* x = (EnumeratedVariable*)((WCSP*)wcsp2)->getVar(i);
+            EnumeratedVariable* x = (EnumeratedVariable*)wcsp2->getVar(i);
             x->project(x->toValue(1), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
             x->findSupport();
         }
+        multicfn.push_back(wcsp2, 1.);
+        WeightedCSP *wcsp3 = WeightedCSP::makeWeightedCSP(MAX_COST);
+        multicfn.makeWeightedCSP(wcsp3);
+        wcsp3->updateUb(p[3]);
         ofstream file1("bivertexcover1.wcsp");
         wcsp.dump(file1, true);
         ofstream file2("bivertexcover2.wcsp");
-        ((WCSP*)wcsp2)->dump(file2, true);
-        wcsp.postWeightedCSPConstraint(scope, wcsp2, NULL, 0, p[3], false); // if we replace false by true then it should automatically transform this global into a knapsack, yielding the same model as kpvertexcover
+        ((WCSP*)wcsp3)->dump(file2, true);
+        wcsp.postWeightedCSPConstraint(scope, wcsp3, NULL, 0, p[3], false); // if we replace false by true then it should automatically transform this global into a knapsack, yielding the same model as kpvertexcover
     }
 }
 
