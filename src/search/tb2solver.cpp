@@ -24,6 +24,7 @@
 
 extern void setvalue(int wcspId, int varIndex, Value value, void* solver);
 extern void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);
+extern void newsolution(int wcspId, void* solver);
 
 const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
@@ -482,6 +483,16 @@ int Solver::numberOfUnassignedVariables() const
  * Link between solver and wcsp: maintain a backtrackable list of unassigned variable indexes
  *
  */
+
+void newsolution(int wcspId, void* _solver_)
+{
+    assert(_solver_);
+    Solver* solver = (Solver*)_solver_;
+    if (ToulBar2::searchMethod == DFBB && ToulBar2::vnsOptimum > 0 && solver->getWCSP()->getLb() > 0 && solver->getWCSP()->getLb() <= ToulBar2::vnsOptimum) {
+        ToulBar2::limited = true;
+        throw BestSolFound();
+    }
+}
 
 void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
 {

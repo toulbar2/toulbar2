@@ -64,6 +64,8 @@ ostream myCout(cout.rdbuf());
 
 void conflict() {}
 
+extern void newsolution(int wcspId, void* solver);
+
 #ifdef PARETOPAIR_COST
 void initCosts()
 {
@@ -949,7 +951,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -kmin=[integer] : minimum neighborhood size for VNS-like methods (" << ToulBar2::vnsKmin << " by default)" << endl;
     cout << "   -kmax=[integer] : maximum neighborhood size for VNS-like methods (number of problem variables by default)" << endl;
     cout << "   -kinc=[integer] : neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (" << ToulBar2::vnsKinc << " by default)" << endl;
-    cout << "   -best=[decimal] : stop VNS-like methods if a better solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
+    cout << "   -best=[decimal] : stop DFBB or VNS-like methods if a better or equal solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
     cout << endl;
 #endif
     cout << "   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or \"problem.wcsp/.cfn\"  if no parameter is given)" << endl;
@@ -1393,9 +1395,11 @@ int _tmain(int argc, TCHAR* argv[])
             }
 #endif
             if (args.OptionId() == OPT_optimum) {
-                if (args.OptionArg() != NULL)
+                if (args.OptionArg() != NULL) {
                     //                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
                     ToulBar2::vnsOptimumS = args.OptionArg();
+                    ToulBar2::newsolution = newsolution;
+                }
             }
 #endif
 

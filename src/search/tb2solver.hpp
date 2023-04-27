@@ -527,6 +527,7 @@ public:
     vector<pair<Double, vector<Value>>> getSolutions() const { return wcsp->getSolutions(); }
 
     friend void setvalue(int wcspId, int varIndex, Value value, void* solver);
+    friend void newsolution(int wcspId, void* solver);
 
     WeightedCSP* getWCSP() FINAL { return wcsp; }
 };
@@ -555,6 +556,11 @@ public:
             cout << SolverOut::what() << endl;
     }
     virtual const char* what() const throw() { return "... some solver limit was reached!"; }
+};
+
+class BestSolFound : public SolverOut {
+public:
+    const char* what() const throw() FINAL { return "... best known solution found!"; }
 };
 
 class NbBacktracksOut : public SolverOut {
