@@ -61,6 +61,8 @@ namespace py = pybind11;
 #include "mcriteria/multicfn.hpp"
 #include "mcriteria/bicriteria.hpp"
 
+extern void newsolution(int wcspId, void* solver);
+
 PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
@@ -228,8 +230,16 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("vnsNeighborSizeSync", &ToulBar2::vnsNeighborSizeSync)
         .def_readwrite_static("vnsParallelLimit", &ToulBar2::vnsParallelLimit)
         .def_readwrite_static("vnsParallelSync", &ToulBar2::vnsParallelSync)
-        .def_readwrite_static("vnsOptimumS", &ToulBar2::vnsOptimumS)
-        .def_readwrite_static("vnsOptimum", &ToulBar2::vnsOptimum)
+        .def_readonly_static("vnsOptimumS", &ToulBar2::vnsOptimumS)
+        .def("setVnsOptimumS", [](const string& bestsol) {
+            ToulBar2::vnsOptimumS = bestsol;
+            ToulBar2::newsolution = newsolution;
+        })
+        .def_readonly_static("vnsOptimum", &ToulBar2::vnsOptimum)
+        .def("setVnsOptimum", [](const Cost cost) {
+            ToulBar2::vnsOptimum = cost;
+            ToulBar2::newsolution = newsolution;
+        })
         .def_readwrite_static("parallel", &ToulBar2::parallel)
         .def_readwrite_static("hbfs", &ToulBar2::hbfs)
         .def_readwrite_static("hbfsGlobalLimit", &ToulBar2::hbfsGlobalLimit)
