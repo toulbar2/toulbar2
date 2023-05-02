@@ -859,7 +859,8 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   -bt=[integer] : limit on the number of backtracks (" << ToulBar2::backtrackLimit << " by default)" << endl;
     cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
-    cout << "   -sigma=[integer] : sigma² variance for gaussian noise use for bi-objective optimisation method (default value is " << ToulBar2::sigma << ")" << endl;
+    cout << "   -noise : add gaussian noise with (default variance : " << ToulBar2::sigma << ")" << endl;
+    cout << "   -sigma=[real] : sigma² variance update for gaussian noise use for bi-objective optimisation method (default value is " << ToulBar2::sigma << ")" << endl;
     cout << "   --stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp" << endl;
     cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
     cout << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
