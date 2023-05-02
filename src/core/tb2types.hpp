@@ -881,6 +881,8 @@ public:
     static externalfunc timeOut; ///< \internal do not use
     static std::atomic<bool> interrupted; ///< \internal do not use
     static int seed; ///< \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
+    static double sigma; ///< \brief initial random noise variance  (command line option -sigma )
+    static bool noisy; ///< \brief initial random noise variance  (command line option -sigma )
 
     static string incop_cmd; ///< \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
     static string pils_cmd; ///< \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)

@@ -268,6 +268,8 @@ std::atomic<bool> ToulBar2::interrupted;
 bool ToulBar2::learning;
 
 int ToulBar2::seed;
+double ToulBar2::sigma;
+bool ToulBar2::noisy;
 
 string ToulBar2::incop_cmd;
 string ToulBar2::pils_cmd;
@@ -415,7 +417,7 @@ void tb2init()
     ToulBar2::xmlflag = false;
     ToulBar2::xmlcop = false;
     ToulBar2::maxsateval = false;
-    ToulBar2::uaieval = false;
+    ToulBar2::uaieval = true;
 
     ToulBar2::resolution = 7;
     ToulBar2::resolution_Update = false;
@@ -491,6 +493,8 @@ void tb2init()
     ToulBar2::learning = false;
 
     ToulBar2::seed = 1;
+    ToulBar2::sigma =0.1;
+    ToulBar2::noisy=false;
 
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
