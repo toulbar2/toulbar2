@@ -322,7 +322,6 @@ enum {
     // random generator
     OPT_seed,
     OPT_sigma,
-    OPT_noisy,
     OPT_random,
 
 // VNS Methods
@@ -601,8 +600,6 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_random, (char*)"-random", SO_REQ_SEP }, // init upper bound in cli
     { OPT_sigma, (char*)"-sigma", SO_REQ_SEP },
     { OPT_sigma, (char*)"--sigma", SO_REQ_SEP },
-    { OPT_noisy, (char*)"-noisy", SO_NONE},
-    { OPT_noisy, (char*)"--noisy", SO_NONE},
 
 // VNS Methods
 #ifdef BOOST
@@ -859,8 +856,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   -bt=[integer] : limit on the number of backtracks (" << ToulBar2::backtrackLimit << " by default)" << endl;
     cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
-    cout << "   -noise : add gaussian noise with (default variance : " << ToulBar2::sigma << ")" << endl;
-    cout << "   -sigma=[real] : sigma² variance update for gaussian noise use for bi-objective optimisation method (default value is " << ToulBar2::sigma << ")" << endl;
+    cout << "   -sigma=[real] : standard deviation of zero-centered gaussian noise added to energy values in UAI format file (default value is " << ToulBar2::sigma << ")" << endl;
     cout << "   --stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp" << endl;
     cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
     cout << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
@@ -2389,21 +2385,15 @@ int _tmain(int argc, TCHAR* argv[])
                 int seed = atoi(args.OptionArg());
                 ToulBar2::seed = seed;
             }
-            if (args.OptionId() == OPT_noisy) {
-	     
-		ToulBar2::noisy=true;
-		cout << "Toulbar2 noisy prob on with default Sigma: "<< ToulBar2::sigma << endl ;
 
-	   }
             if (args.OptionId() == OPT_sigma) {
                 if (args.OptionArg() != NULL) {
-                double sigma = std::stold(args.OptionArg());
-                ToulBar2::sigma = sigma;
-		cout << "Toulbar2 noisy  Sigma² update =" << sigma << endl;
-		ToulBar2::noisy=true;
-		}
+                    double sigma = std::stold(args.OptionArg());
+                    ToulBar2::sigma = sigma;
+                    if (ToulBar2::debug)
+                        cout << "Toulbar2 sigma update =" << sigma << endl;
+                }
             }
-
 
             if (args.OptionId() == OPT_random) {
 

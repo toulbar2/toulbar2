@@ -3156,10 +3156,15 @@ void WCSP::read_uai2008(const char* fileName)
         TProb maxp = 0.;
         for (k = 0; k < ntuples; k++) {
             file >> p;
+            if (ToulBar2::sigma > 0.0) {
+                Double noise = aleaGaussNoise(ToulBar2::sigma);
+                if (ToulBar2::verbose >=1) cout << "add noise " << noise << " to " << p << endl;
+                p = max(0.0L, p+noise); // can create forbidden tuples
+                if (!markov) p = min(p, 1.0L); // in Bayesian networks probability cannot be greater than 1
+            }
             assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
-            
-		  costsProb.push_back(p);
-		  maxp = max(maxp, p);
+            costsProb.push_back(p);
+            maxp = max(maxp, p);
         }
         if (ToulBar2::uai == 1 && maxp == 0.)
             THROWCONTRADICTION;
@@ -3173,24 +3178,18 @@ void WCSP::read_uai2008(const char* fileName)
             Cost cost;
             // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
             if (markov) {
-          if(ToulBar2::noisy ) {
-            // adding normal noise of sigma variance 
-			double noise=aleaGaussNoise(ToulBar2::sigma);
-			if(ToulBar2::verbose==1) cout <<"Noise;"<< noise << endl;
-            if ( ToulBar2::uai > 1) {
-				// format LG
-				LogProb2Cost((TLogProb)(p - maxp+noise));
-			}else {
-				// uai format
-				double Np= Log(p/ maxp)+noise;
-				cost= LogProb2Cost((TLogProb)(Np));
-			}
-			} else {
-            cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
-                // modification 
-			}
-            } else
-                cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
+                if (ToulBar2::uai > 1) {
+                    cost = LogProb2Cost((TLogProb)(p - maxp));
+                } else {
+                    cost = Prob2Cost(p / maxp);
+                }
+            } else {
+                if (ToulBar2::uai > 1) {
+                    cost = LogProb2Cost((TLogProb)p);
+                } else {
+                    cost = Prob2Cost(p);
+                }
+            }
             costs[ictr].push_back(cost);
             if (cost < minc)
                 minc = cost;
