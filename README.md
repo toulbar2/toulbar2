@@ -25,7 +25,7 @@ graphical models:
 * The Probabilistic Inference Challenge [PIC 2011][pic2011] (second place by ficolofo on 1-hour MAP task)
 * UAI 2014 Inference Competition [UAI 2014][uai2014] (winner on all MAP task categories, see Proteus, Robin, and IncTb entries)
 * XCSP3 2022 Competition [XCSP3 2022][xcsp2022] (second place on Mini COP and Parallel COP tracks)
-* UAI 2022 Inference Competition [UAI 2014][uai2022] (winner on all MPE and MMAP task categories)
+* UAI 2022 Inference Competition [UAI 2022][uai2022] (winner on all MPE and MMAP task categories)
 
 [cpai08]: http://www.cril.univ-artois.fr/CPAI08/
 [uai2008]: http://graphmod.ics.uci.edu/uai08/Evaluation/Report
