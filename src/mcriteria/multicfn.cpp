@@ -516,8 +516,11 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
     /* top is increased if global_ub > 0 */
     /* top is expressed as a double */
-    if (global_lb+global_mincost < 0)
+    if (global_lb+global_mincost < 0) {
         top -= global_lb+global_mincost;
+    } else {
+        global_ub += global_lb+global_mincost;
+    }
 
     // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
