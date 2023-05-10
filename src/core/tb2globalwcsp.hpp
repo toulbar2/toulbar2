@@ -20,10 +20,10 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     Cost ub; // encapsulated slave problem upper bound hard constraint (must be strictly less than this bound)
     Cost negCost; // sum of cost shifts from slave problem and from its negative form
     Cost top; // forbidden cost returned if evaluated as unsatisfied
-    WCSP *problem; // encapsulated slave problem
-    WCSP *negproblem; // encapsulated slave problem in negative form (should be equivalent to -problem)
-    WCSP *original_problem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
-    WCSP *original_negproblem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
+    WCSP* problem; // encapsulated slave problem
+    WCSP* negproblem; // encapsulated slave problem in negative form (should be equivalent to -problem)
+    WCSP* original_problem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
+    WCSP* original_negproblem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
     StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<int> varIndexes; // copy of scope using integer identifiers inside slave problem (should be equal to [0, 1, 2, ..., arity-1])
     vector<Value> newValues; // used to convert Tuples into variable assignments
@@ -31,7 +31,7 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
 
 public:
     static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
-    static map<int, WeightedCSPConstraint *> WeightedCSPConstraints;
+    static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
     static bool _protected_;
     static int preprocessFunctional;
     static int elimDegree;
@@ -50,7 +50,7 @@ public:
             preprocessFunctional = ToulBar2::preprocessFunctional;
             elimDegree = ToulBar2::elimDegree;
             elimDegree_preprocessing = ToulBar2::elimDegree_preprocessing;
-            elimDegree_ = ToulBar2::elimDegree_ ;
+            elimDegree_ = ToulBar2::elimDegree_;
             elimDegree_preprocessing_ = ToulBar2::elimDegree_preprocessing_;
             DEE = ToulBar2::DEE;
             DEE_ = ToulBar2::DEE_;
@@ -89,7 +89,7 @@ public:
     }
 
     //TODO: add local NARYPROJECTIONSIZE parameter
-    WeightedCSPConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, WCSP *problem_in, WCSP *negproblem_in, Cost lb_in, Cost ub_in, bool duplicateHard = false, bool strongDuality_ = false)
+    WeightedCSPConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, WCSP* problem_in, WCSP* negproblem_in, Cost lb_in, Cost ub_in, bool duplicateHard = false, bool strongDuality_ = false)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , isfinite(true)
         , strongDuality(strongDuality_)
@@ -111,8 +111,8 @@ public:
             throw WrongFileFormat();
         }
         for (int i = 0; i < arity_in; i++) {
-            assert(!problem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)problem->getVar(i))->getDomainInitSize());
-            assert(!negproblem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable *)negproblem->getVar(i))->getDomainInitSize());
+            assert(!problem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable*)problem->getVar(i))->getDomainInitSize());
+            assert(!negproblem || scope_in[i]->getDomainInitSize() == ((EnumeratedVariable*)negproblem->getVar(i))->getDomainInitSize());
             varIndexes.push_back(i);
             newValues.push_back(scope_in[i]->getInf());
             conflictWeights.push_back(0);
@@ -131,7 +131,8 @@ public:
             negCost += problem->getNegativeLb();
             WeightedCSPConstraints[problem->getIndex()] = this;
             problem->setSolver(wcsp->getSolver()); // force slave problems to use the same solver as the master
-            if (!duplicateHard && !problem->isfinite()) isfinite = false;
+            if (!duplicateHard && !problem->isfinite())
+                isfinite = false;
 
             Cost summaxcost = problem->getLb() + UNIT_COST;
             for (unsigned int i = 0; i < problem->numberOfVariables(); i++) {
@@ -154,7 +155,7 @@ public:
             } else if (problem->numberOfConstraints() == 0 || (duplicateHard && problem->finiteUb() == summaxcost)) { // special case where there are only unary cost functions or there are only hard constraints already duplicated in the master problem
                 vector<int> thescope;
                 string params = to_string(-ub + problem->getLb() + UNIT_COST);
-                for (int i = 0; i < arity_ ; i++) {
+                for (int i = 0; i < arity_; i++) {
                     thescope.push_back(scope[i]->wcspIndex);
                     vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
                     params += " " + to_string(vc.size());
@@ -174,7 +175,8 @@ public:
             negCost += negproblem->getNegativeLb();
             WeightedCSPConstraints[negproblem->getIndex()] = this;
             negproblem->setSolver(wcsp->getSolver());
-            if (!duplicateHard && !negproblem->isfinite()) isfinite = false;
+            if (!duplicateHard && !negproblem->isfinite())
+                isfinite = false;
 
             Cost summaxcost = negproblem->getLb() + UNIT_COST;
             for (unsigned int i = 0; i < negproblem->numberOfVariables(); i++) {
@@ -197,7 +199,7 @@ public:
             } else if (negproblem->numberOfConstraints() == 0 || (duplicateHard && negproblem->finiteUb() == summaxcost)) { // special case where there are only unary cost functions or there are only hard constraints already duplicated in the master problem
                 vector<int> thescope;
                 string params = to_string(lb - negCost + negproblem->getLb());
-                for (int i = 0; i < arity_ ; i++) {
+                for (int i = 0; i < arity_; i++) {
                     thescope.push_back(scope[i]->wcspIndex);
                     vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
                     params += " " + to_string(vc.size());
@@ -237,9 +239,10 @@ public:
         }
     }
 
-    virtual ~WeightedCSPConstraint() {
-        for(auto it = WeightedCSPConstraints.begin(); it != WeightedCSPConstraints.end();) {
-            if(it->second == this) {
+    virtual ~WeightedCSPConstraint()
+    {
+        for (auto it = WeightedCSPConstraints.begin(); it != WeightedCSPConstraints.end();) {
+            if (it->second == this) {
                 it = WeightedCSPConstraints.erase(it);
             } else {
                 ++it;
@@ -263,7 +266,7 @@ public:
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
-        return conflictWeights[varIndex] + Constraint::getConflictWeight() + ((problem)?problem->getWeightedDegree(varIndex):0) + ((negproblem)?negproblem->getWeightedDegree(varIndex):0);
+        return conflictWeights[varIndex] + Constraint::getConflictWeight() + ((problem) ? problem->getWeightedDegree(varIndex) : 0) + ((negproblem) ? negproblem->getWeightedDegree(varIndex) : 0);
     }
     void incConflictWeight(Constraint* from) override
     {
@@ -302,10 +305,11 @@ public:
 
     Cost getUnaryCost(int wcspIndex, Value value, int sign = 1)
     {
-        if (scope_inv.find(wcspIndex) == scope_inv.end()) return MAX_COST;
+        if (scope_inv.find(wcspIndex) == scope_inv.end())
+            return MAX_COST;
         int varIndex = scope_inv[wcspIndex];
         if (problem && negproblem) {
-            if (sign>=0) {
+            if (sign >= 0) {
                 return problem->getUnaryCost(varIndex, value);
             } else {
                 return negproblem->getUnaryCost(varIndex, value);
@@ -321,10 +325,11 @@ public:
 
     Value getSupport(int wcspIndex, int sign = 0, bool mingap = true) ///< \brief returns EAC support value of variable index wcspIndex in problem if sign>0 or negproblem if sign<0 or heuristically chosen between both if sign==0
     {
-        if (scope_inv.find(wcspIndex) == scope_inv.end()) return WRONG_VAL;
+        if (scope_inv.find(wcspIndex) == scope_inv.end())
+            return WRONG_VAL;
         int varIndex = scope_inv[wcspIndex];
         if (problem && negproblem) {
-            if (sign>0 || (sign==0 && (!mingap != (max(MIN_COST, lb - problem->getLb()) <= max(MIN_COST, -ub + negCost - negproblem->getLb() + UNIT_COST))))) {
+            if (sign > 0 || (sign == 0 && (!mingap != (max(MIN_COST, lb - problem->getLb()) <= max(MIN_COST, -ub + negCost - negproblem->getLb() + UNIT_COST))))) {
                 return problem->getSupport(varIndex);
             } else {
                 return negproblem->getSupport(varIndex);
@@ -361,8 +366,8 @@ public:
     Cost eval(const Tuple& s) override
     {
         assert((int)s.size() == arity_);
-        for (int i=0; i < arity_; i++) {
-            newValues[i] = ((EnumeratedVariable *)getVar(i))->toValue(s[i]);
+        for (int i = 0; i < arity_; i++) {
+            newValues[i] = ((EnumeratedVariable*)getVar(i))->toValue(s[i]);
         }
         ToulBar2::setvalue = NULL;
         ToulBar2::removevalue = NULL;
@@ -389,8 +394,10 @@ public:
                 }
             }
         } catch (const Contradiction&) {
-            if (problem) problem->whenContradiction();
-            if (negproblem) negproblem->whenContradiction();
+            if (problem)
+                problem->whenContradiction();
+            if (negproblem)
+                negproblem->whenContradiction();
             unsat = true;
         }
         Store::restore(depth);
@@ -415,8 +422,8 @@ public:
     {
         assert(solution.size() == wcsp->numberOfVariables());
         Cost cost = MIN_COST;
-        for (int i=0; i < arity_; i++) {
-            newValues[i] = solution[((EnumeratedVariable *)getVar(i))->wcspIndex];
+        for (int i = 0; i < arity_; i++) {
+            newValues[i] = solution[((EnumeratedVariable*)getVar(i))->wcspIndex];
         }
         externalevent oldSetValue = ToulBar2::setvalue;
         externalevent oldRemoveValue = ToulBar2::removevalue;
@@ -430,18 +437,20 @@ public:
         int depth = Store::getDepth();
         try {
             Store::store();
-            if(original_problem != NULL) {
+            if (original_problem != NULL) {
                 assert(original_problem->isactivatePropagate());
                 original_problem->assignLS(varIndexes, newValues);
                 cost = original_problem->getLb();
-            } else if(original_negproblem != NULL) {
+            } else if (original_negproblem != NULL) {
                 assert(original_negproblem->isactivatePropagate());
                 original_negproblem->assignLS(varIndexes, newValues);
-                cost = negCost-original_negproblem->getLb();
+                cost = negCost - original_negproblem->getLb();
             }
         } catch (const Contradiction&) {
-            if (problem) problem->whenContradiction();
-            if (negproblem) negproblem->whenContradiction();
+            if (problem)
+                problem->whenContradiction();
+            if (negproblem)
+                negproblem->whenContradiction();
             cost = MAX_COST;
         }
         Store::restore(depth);
@@ -501,14 +510,14 @@ public:
     {
         double res = 0.; //FIXME: take into account elimBinConstr and elimTernConstr
         if (problem) {
-            for (unsigned int c=0; c < problem->numberOfConstraints(); c++) {
+            for (unsigned int c = 0; c < problem->numberOfConstraints(); c++) {
                 if (problem->getCtr(c)->connected()) {
                     res += problem->getCtr(c)->getTightness();
                 }
             }
             return res / problem->numberOfConnectedConstraints();
         } else if (negproblem) {
-            for (unsigned int c=0; c < negproblem->numberOfConstraints(); c++) {
+            for (unsigned int c = 0; c < negproblem->numberOfConstraints(); c++) {
                 if (negproblem->getCtr(c)->connected()) {
                     res += negproblem->getCtr(c)->getTightness();
                 }
@@ -533,7 +542,8 @@ public:
 
     void assign(int varIndex) override
     {
-        if ((problem && !problem->isactivatePropagate()) || (negproblem && !negproblem->isactivatePropagate())) return; // wait until propagation is done for each subproblem before trying to deconnect or project
+        if ((problem && !problem->isactivatePropagate()) || (negproblem && !negproblem->isactivatePropagate()))
+            return; // wait until propagation is done for each subproblem before trying to deconnect or project
         if (connected(varIndex)) {
             deconnect(varIndex);
             nonassigned = nonassigned - 1;
@@ -552,9 +562,9 @@ public:
             }
         }
     }
-//    void increase(int varIndex) override {}
-//    void decrease(int varIndex) override {}
-//    void remove(int varIndex) override {}
+    //    void increase(int varIndex) override {}
+    //    void decrease(int varIndex) override {}
+    //    void remove(int varIndex) override {}
     bool verify() override
     {
         for (int i = 0; i < arity_; i++) {
@@ -584,11 +594,13 @@ public:
         wcsp->revise(this);
         if (problem) {
             problem->enforceUb();
-            if (!problem->isactivatePropagate()) return; // do not propagate during recursive calls of tb2setvalue/tb2removevalue/tb2setmin/tb2setmax
+            if (!problem->isactivatePropagate())
+                return; // do not propagate during recursive calls of tb2setvalue/tb2removevalue/tb2setmin/tb2setmax
         }
         if (negproblem) {
             negproblem->enforceUb();
-            if (!negproblem->isactivatePropagate()) return; // idem
+            if (!negproblem->isactivatePropagate())
+                return; // idem
         }
         assigns();
         if (connected()) {
@@ -615,13 +627,16 @@ public:
                             assert(negproblem && negproblem->isactivatePropagate());
                             assert(negproblem->propagated());
                             assert(!problem || problem->isactivatePropagate());
-                            if (problem && !problem->propagated()) propagate(); // continue recursively if one subproblem is not fully propagated
+                            if (problem && !problem->propagated())
+                                propagate(); // continue recursively if one subproblem is not fully propagated
                         }
                     }
                 }
             } catch (const Contradiction&) {
-                if (problem) problem->whenContradiction();
-                if (negproblem) negproblem->whenContradiction();
+                if (problem)
+                    problem->whenContradiction();
+                if (negproblem)
+                    negproblem->whenContradiction();
                 unprotect();
                 THROWCONTRADICTION;
             }
@@ -630,7 +645,7 @@ public:
         assert(!negproblem || negproblem->getLb() < -lb + negCost + UNIT_COST);
     }
 
-//    void setDACScopeIndex(); //TODO: reorder variables inside problem and negproblem when setDACOrder is called
+    //    void setDACScopeIndex(); //TODO: reorder variables inside problem and negproblem when setDACOrder is called
 
     bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
     {
@@ -678,13 +693,16 @@ public:
         os << " strongDuality: " << strongDuality;
         os << " arity: " << arity_;
         os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
-        if (problem) os << *problem << endl;
-        if (negproblem) os << *negproblem << endl;
+        if (problem)
+            os << *problem << endl;
+        if (negproblem)
+            os << *negproblem << endl;
     }
 
     void dump(ostream& os, bool original = true) override
     {
-        if (!problem && !negproblem) return;
+        if (!problem && !negproblem)
+            return;
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
@@ -706,7 +724,8 @@ public:
 
     void dump_CFN(ostream& os, bool original = true) override
     {
-        if (!problem && !negproblem) return;
+        if (!problem && !negproblem)
+            return;
         bool printed = false;
         os << "\"F_";
 

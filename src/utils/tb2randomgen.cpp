@@ -495,7 +495,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         wcsp.postKnapsackConstraint(scope, parameters, false, false, false);
     } else if (globalname == "bivertexcover") {
         vector<int> scope;
-        WCSP *wcsp2 = (WCSP*)WeightedCSP::makeWeightedCSP(p[3]);
+        WCSP* wcsp2 = (WCSP*)WeightedCSP::makeWeightedCSP(p[3]);
         for (i = 0; i < n; i++) {
             string varname = "X" + to_string(i);
             wcsp2->makeEnumeratedVariable(varname, 0, m - 1);
@@ -510,7 +510,7 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
             x->findSupport();
         }
         multicfn.push_back(wcsp2, 1.);
-        WeightedCSP *wcsp3 = WeightedCSP::makeWeightedCSP(MAX_COST);
+        WeightedCSP* wcsp3 = WeightedCSP::makeWeightedCSP(MAX_COST);
         multicfn.makeWeightedCSP(wcsp3);
         wcsp3->updateUb(p[3]);
         ofstream file1("bivertexcover1.wcsp");

@@ -555,7 +555,7 @@ public:
     int getMaxDepth() { return max_depth; }
     Cluster* lowestCommonAncestor(Cluster* c1, Cluster* c2); ///< \brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
     bool isSameCluster(Cluster* c1, Cluster* c2); ///< \brief return true if both clusters are the same or they have been merged together by adaptive BTD
-    bool isSameCluster(int c1, int c2) { return c1==c2 || isSameCluster(getCluster(c1), getCluster(c2)); }
+    bool isSameCluster(int c1, int c2) { return c1 == c2 || isSameCluster(getCluster(c1), getCluster(c2)); }
 };
 
 #endif

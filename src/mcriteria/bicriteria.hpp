@@ -104,7 +104,7 @@ public: /* static functions */
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
     static void computeSupportedPoints(MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
-    
+
     /*!
      * \brief compute additional (potentially non dominated) solutions via enumeration in a nondominated triangle
      * \param multicfn the bicriteria cost function network

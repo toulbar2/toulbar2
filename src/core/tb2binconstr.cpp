@@ -32,10 +32,10 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];
-    if (ToulBar2::bilevel>=2) {
+    if (ToulBar2::bilevel >= 2) {
         assert(ToulBar2::bilevel <= 3);
         deconnect(true);
-        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].push_back(wcspIndex);
+        wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].push_back(wcspIndex);
     } else {
         propagate();
     }
@@ -138,7 +138,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
                 if (printed)
                     os << ",\n";
                 os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << ","
-                   << ((original) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))) : ((wcsp->getUb() > getCost(*iterX, *iterY))?wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))):"inf"));
+                   << ((original) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))) : ((wcsp->getUb() > getCost(*iterX, *iterY)) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))) : "inf"));
                 printed = true;
             }
         }

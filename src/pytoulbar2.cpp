@@ -170,7 +170,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
         .def_readwrite_static("divMethod", &ToulBar2::divMethod)
         .def_readwrite_static("divRelax", &ToulBar2::divRelax)
-        .def("getVarOrder", []() -> string  {
+        .def("getVarOrder", []() -> string {
             if (reinterpret_cast<uintptr_t>(ToulBar2::varOrder) < ELIM_MAX) {
                 return to_string(-reinterpret_cast<uintptr_t>(ToulBar2::varOrder));
             } else {
@@ -178,7 +178,7 @@ PYBIND11_MODULE(pytb2, m)
             }
         })
         .def("setVarOrder", [](const string& fileName) {
-            if (fileName[0]=='-') {
+            if (fileName[0] == '-') {
                 ToulBar2::varOrder = reinterpret_cast<char*>(-atoi(fileName.data()));
             } else {
                 ToulBar2::varOrder = new char[fileName.size() + 1];
@@ -302,7 +302,7 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<Bicriteria> bcrit(m, "Bicriteria");
 
-    bcrit.def("computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"),  py::arg("optim_dir"), py::arg("delta") = 1e-3)
+    bcrit.def("computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"), py::arg("optim_dir"), py::arg("delta") = 1e-3)
         .def("computeAdditionalSolutions", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { Bicriteria::computeAdditionalSolutions(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
         .def("computeNonSupported", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int nbLimit) { Bicriteria::computeNonSupported(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
         .def("getSolutions", &Bicriteria::getSolutions)
@@ -426,8 +426,8 @@ PYBIND11_MODULE(pytb2, m)
             return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
         },
             py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
-        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
-                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
+        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
+            return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
         },
             py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)

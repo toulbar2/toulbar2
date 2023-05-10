@@ -98,7 +98,6 @@ public:
 class MultiCFN {
 
 public:
-
     // type representing a solution of a multicfn
     typedef std::map<std::string, std::string> Solution;
 
@@ -241,7 +240,7 @@ private: /* private methods */
      * \brief compute a TOP (infinity) value and a minimum cost for the internal representation of the cfn costs
      * \return a pair containing the top value (first) and the min cost (second)
      */
-    std::pair<Double,Double> computeTopMinCost();
+    std::pair<Double, Double> computeTopMinCost();
 
     /*!
      * \brief check if a variable in a wcsp and a variable in the multicfn with the same name have the same domains, throw an exception otherwise
@@ -277,7 +276,5 @@ private: // private attributes
     std::vector<Double> _obj_values;
     Solution _solution;
 };
-
-
 
 #endif // MULTI_CFN_HPP

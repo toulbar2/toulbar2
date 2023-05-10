@@ -434,12 +434,12 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
         Cost initlb23 = MIN_COST;
         if (ToulBar2::bilevel) {
             if (cf.var->wcspIndex < (int)wcsp->varsBLP[0].size()) { // cost function on leader variable(s) only
-                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                if (ToulBar2::bilevel == 2) { // skip when reading Problem2
                     bilevel2 = true;
                     ToulBar2::bilevel = 5;
                     negcost23 = wcsp->getNegativeLb();
                     initlb23 = wcsp->getLb();
-                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                } else if (ToulBar2::bilevel == 3) { // incorporate directly in Problem1
                     bilevel3 = true;
                     ToulBar2::bilevel = 1;
                     negcost23 = wcsp->getNegativeLb();
@@ -651,29 +651,30 @@ Cost CFNStreamReader::readHeader()
             ToulBar2::decimalPoint = 0;
         } else {
             decimalPart = token.substr(token.find('.') + 1);
-            if( ToulBar2::verbose >= 0 ) {
+            if (ToulBar2::verbose >= 0) {
                 cout << "Initial cost precision of " << decimalPart.size() << " digits";
                 //cout << " (primal bound: " << token << ")";
             }
             if (ToulBar2::resolution_Update) {
                 if (ToulBar2::resolution >= 0) {
                     string str;
-                    str =  decimalPart.substr(0,ToulBar2::resolution);
-                    decimalPart= str;
+                    str = decimalPart.substr(0, ToulBar2::resolution);
+                    decimalPart = str;
                     if (decimalPart.size() == 0) {
                         pos = string::npos;
                     }
-                    if( ToulBar2::verbose >= 0 ) {
+                    if (ToulBar2::verbose >= 0) {
                         cout << " changed to " << decimalPart.size() << " digits";
                         //cout << " (new primal bound: " << integerPart << decimalPart << ")";
                     }
                 } else if (ToulBar2::resolution < 0) {
                     if (ToulBar2::verbose >= 0) {
-                        cout << endl << "Sorry, cannot use a negative value for precision! (see option -precision)";
+                        cout << endl
+                             << "Sorry, cannot use a negative value for precision! (see option -precision)";
                     }
                 }
             }
-            if( ToulBar2::verbose >= 0 ) {
+            if (ToulBar2::verbose >= 0) {
                 cout << "." << endl;
             }
             ToulBar2::decimalPoint = decimalPart.size();
@@ -784,7 +785,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     if (newvar) {
         varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
     } else if (ToulBar2::bilevel) {
-        wcsp->varsBLP[ToulBar2::bilevel-1].insert(varIndex);
+        wcsp->varsBLP[ToulBar2::bilevel - 1].insert(varIndex);
     }
     if (ToulBar2::verbose >= 1)
         cout << " # " << varIndex << endl;
@@ -1110,19 +1111,19 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
         Cost initlb23 = MIN_COST;
         if (ToulBar2::bilevel) {
             bool inleader = true;
-            for (int idx: scope) {
+            for (int idx : scope) {
                 if (idx >= (int)wcsp->varsBLP[0].size()) {
                     inleader = false;
                     break;
                 }
             }
             if (inleader) { // cost function on leader variable(s) only
-                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                if (ToulBar2::bilevel == 2) { // skip when reading Problem2
                     bilevel2 = true;
                     ToulBar2::bilevel = 5;
                     negcost23 = wcsp->getNegativeLb();
                     initlb23 = wcsp->getLb();
-                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                } else if (ToulBar2::bilevel == 3) { // incorporate directly in Problem1
                     bilevel3 = true;
                     ToulBar2::bilevel = 1;
                     negcost23 = wcsp->getNegativeLb();
@@ -2900,7 +2901,7 @@ void WCSP::read_legacy(istream& file)
         }
     }
 
-    if ((getSolver() && ((Solver *)getSolver())->getWCSP() == this)) { // checks end of file only if reading the main model
+    if ((getSolver() && ((Solver*)getSolver())->getWCSP() == this)) { // checks end of file only if reading the main model
         file >> funcname;
         if (file) {
             cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
@@ -3105,7 +3106,7 @@ void WCSP::read_uai2008(const char* fileName)
             file >> i;
             file >> j;
             file >> k;
-            if (ToulBar2::verbose >=    1)
+            if (ToulBar2::verbose >= 1)
                 cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
             scopes.push_back({ i, j, k });
             if ((i == j) || (i == k) || (k == j)) {
@@ -3158,9 +3159,11 @@ void WCSP::read_uai2008(const char* fileName)
             file >> p;
             if (ToulBar2::sigma > 0.0) {
                 Double noise = aleaGaussNoise(ToulBar2::sigma);
-                if (ToulBar2::verbose >=1) cout << "add noise " << noise << " to " << p << endl;
-                p = max(0.0L, p+noise); // can create forbidden tuples
-                if (!markov) p = min(p, 1.0L); // in Bayesian networks probability cannot be greater than 1
+                if (ToulBar2::verbose >= 1)
+                    cout << "add noise " << noise << " to " << p << endl;
+                p = max(0.0L, p + noise); // can create forbidden tuples
+                if (!markov)
+                    p = min(p, 1.0L); // in Bayesian networks probability cannot be greater than 1
             }
             assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
             costsProb.push_back(p);

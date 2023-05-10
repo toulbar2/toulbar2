@@ -1194,32 +1194,32 @@ int _tmain(int argc, TCHAR* argv[])
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 
- string VER; //  release version
- string CMD; //  command line option
- string BIN="toulbar2";
+    string VER; //  release version
+    string CMD; //  command line option
+    string BIN = "toulbar2";
     if (!(ToulBar2::verbose < 0)) {
-	VER="c "+to_string(CurrentBinaryPath);
+        VER = "c " + to_string(CurrentBinaryPath);
 #ifdef MENDELSOFT
-	VER.append("mendelsoft");
-	BIN="mendelsoft";
+        VER.append("mendelsoft");
+        BIN = "mendelsoft";
 #else
-	VER.append("toulbar2");
+        VER.append("toulbar2");
 #endif
-        VER.append("  version : "+ to_string(ToulBar2::version) + ", copyright (c) 2006-2022, toulbar2 team");
+        VER.append("  version : " + to_string(ToulBar2::version) + ", copyright (c) 2006-2022, toulbar2 team");
     }
 
-///////print command line /////
- CMD="cmd: "+ to_string(CurrentBinaryPath)+ BIN;
-	 int counter;
-        for(counter=1;counter<argc;counter++) CMD.append(" "+to_string(argv[counter]));
-  
+    ///////print command line /////
+    CMD = "cmd: " + to_string(CurrentBinaryPath) + BIN;
+    int counter;
+    for (counter = 1; counter < argc; counter++)
+        CMD.append(" " + to_string(argv[counter]));
 
-////////////////
+    ////////////////
     // --------------------------simple opt ----------------------
 
     // declare our options parser, pass in the arguments from main
     // as well as our array of valid options.
-    
+
     CSimpleOpt args(argc, argv, g_rgOptions);
 
     while (args.Next()) {
@@ -2242,7 +2242,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_verbose) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::verbose = atoi(args.OptionArg());
-		 
+
                 } else {
                     ToulBar2::verbose = 0;
                 }
@@ -2533,12 +2533,11 @@ int _tmain(int argc, TCHAR* argv[])
         _tprintf(_T("Error while globbing files\n"));
         return 1;
     }
-// SHOW VERSION and command line option
-		if (ToulBar2::verbose >=0 ) { 
-		cout << VER << endl;
-		cout << CMD << endl;
-	    }
-
+    // SHOW VERSION and command line option
+    if (ToulBar2::verbose >= 0) {
+        cout << VER << endl;
+        cout << CMD << endl;
+    }
 
     // dump all of the details, the script that was passed on the
     // command line and the expanded file names
@@ -3015,7 +3014,6 @@ int _tmain(int argc, TCHAR* argv[])
 
     //TODO: If --show_options then dump ToulBar2 object here
 
-
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
 #ifndef __WIN32__
@@ -3141,12 +3139,12 @@ int _tmain(int argc, TCHAR* argv[])
                     if (ToulBar2::bilevel) {
                         ToulBar2::decimalPointBLP.push_back(ToulBar2::decimalPoint);
                         if (ToulBar2::decimalPointBLP.back() != ToulBar2::decimalPointBLP.front()) {
-                            cerr << "Sorry, bilevel optimization requires the same precision value in all its input files! " << strfile.front() << " and " << f  << " differ!!"<< endl;
+                            cerr << "Sorry, bilevel optimization requires the same precision value in all its input files! " << strfile.front() << " and " << f << " differ!!" << endl;
                             throw WrongFileFormat();
                         }
                         ToulBar2::costMultiplierBLP.push_back(ToulBar2::costMultiplier);
                         if (ToulBar2::bilevel != 3 && ToulBar2::costMultiplierBLP.back() != ToulBar2::costMultiplierBLP.front()) {
-                            cerr << "Sorry, bilevel optimization requires the same objective sense in all its input files! " << strfile.front() << " and " << f  << " differ!!"<< endl;
+                            cerr << "Sorry, bilevel optimization requires the same objective sense in all its input files! " << strfile.front() << " and " << f << " differ!!" << endl;
                             throw WrongFileFormat();
                         }
                         ToulBar2::costMultiplier = UNIT_COST;
@@ -3163,24 +3161,29 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::bilevel) { // deduce a valid covering for tree decomposition
                     if (ToulBar2::verbose >= 1) {
                         cout << "\t\t Leader\t Follower\t NegativeFollower";
-                        cout << endl << "decimalPoint  ";
-                        for (auto value: ToulBar2::decimalPointBLP) {
+                        cout << endl
+                             << "decimalPoint  ";
+                        for (auto value : ToulBar2::decimalPointBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "costMultiplier";
-                        for (auto value: ToulBar2::costMultiplierBLP) {
+                        cout << endl
+                             << "costMultiplier";
+                        for (auto value : ToulBar2::costMultiplierBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "negCost       ";
-                        for (auto value: ToulBar2::negCostBLP) {
+                        cout << endl
+                             << "negCost       ";
+                        for (auto value : ToulBar2::negCostBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "initialLb     ";
-                        for (auto value: ToulBar2::initialLbBLP) {
+                        cout << endl
+                             << "initialLb     ";
+                        for (auto value : ToulBar2::initialLbBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "initialUb     ";
-                        for (auto value: ToulBar2::initialUbBLP) {
+                        cout << endl
+                             << "initialUb     ";
+                        for (auto value : ToulBar2::initialUbBLP) {
                             cout << "\t " << value;
                         }
                         cout << endl;
@@ -3202,47 +3205,49 @@ int _tmain(int argc, TCHAR* argv[])
                         }
                     }
                     string varOrder = "0 -1";
-                    vector<set<int>> &varsBLP = ((WCSP*)solver->getWCSP())->varsBLP;
+                    vector<set<int>>& varsBLP = ((WCSP*)solver->getWCSP())->varsBLP;
                     set<int> intersect;
                     set_intersection(varsBLP[0].begin(), varsBLP[0].end(), varsBLP[1].begin(), varsBLP[1].end(),
-                                     std::inserter(intersect, intersect.begin()));
-                    for (int v: intersect) {
+                        std::inserter(intersect, intersect.begin()));
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n1 0";
-                    for (int v: intersect) {
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     set<int> difference1;
                     set_difference(varsBLP[0].begin(), varsBLP[0].end(), intersect.begin(), intersect.end(),
-                                     std::inserter(difference1, difference1.begin()));
-                    for (int v: difference1) {
+                        std::inserter(difference1, difference1.begin()));
+                    for (int v : difference1) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n2 0";
-                    for (int v: intersect) {
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     set<int> difference2;
                     set_difference(varsBLP[1].begin(), varsBLP[1].end(), intersect.begin(), intersect.end(),
-                                     std::inserter(difference2, difference2.begin()));
-                    for (int v: difference2) {
+                        std::inserter(difference2, difference2.begin()));
+                    for (int v : difference2) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n3 0";
-                    for (int v: intersect) {
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     set<int> difference3;
                     set_difference(varsBLP[2].begin(), varsBLP[2].end(), intersect.begin(), intersect.end(),
-                                     std::inserter(difference3, difference3.begin()));
-                    for (int v: difference3) {
+                        std::inserter(difference3, difference3.begin()));
+                    for (int v : difference3) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n";
-                    ToulBar2::varOrder = new char[varOrder.size()+1];
+                    ToulBar2::varOrder = new char[varOrder.size() + 1];
                     sprintf(ToulBar2::varOrder, "%s", varOrder.c_str());
-                    if (ToulBar2::verbose >= 1) cout << "Build tree decomposition from covering:" << endl << ToulBar2::varOrder << endl;
+                    if (ToulBar2::verbose >= 1)
+                        cout << "Build tree decomposition from covering:" << endl
+                             << ToulBar2::varOrder << endl;
                 }
             }
         }

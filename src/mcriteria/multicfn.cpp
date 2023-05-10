@@ -28,25 +28,26 @@ MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var) {
+void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var)
+{
 
     // assert(multicfn_var.nbValues() == tb2_var->getDomainInitSize());
-    if(multicfn_var.nbValues() != tb2_var->getDomainInitSize()) {
+    if (multicfn_var.nbValues() != tb2_var->getDomainInitSize()) {
         cerr << "error: two variables with same name have different domain size between wcsp and multicfn!" << endl;
         throw WrongFileFormat();
     }
 
     /* check consistencies between domain value names */
     unsigned int cpt_check = 0;
-    for(unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind ++) {
+    for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
         string value_name = tb2_var->getValueName(tb2_val_ind);
-        if(multicfn_var.str_to_index.find(value_name) != multicfn_var.str_to_index.end()) {
-            cpt_check ++;
+        if (multicfn_var.str_to_index.find(value_name) != multicfn_var.str_to_index.end()) {
+            cpt_check++;
         }
     }
 
     // assert(cpt_check == tb2_var->getDomainInitSize());
-    if(cpt_check != tb2_var->getDomainInitSize()) {
+    if (cpt_check != tb2_var->getDomainInitSize()) {
         cerr << "error: two variables with same name have different domain value names between wcsp and multicfn!" << endl;
         throw WrongFileFormat();
     }
@@ -66,9 +67,9 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
     for (unsigned int tb2_var_ind = 0; tb2_var_ind < wcsp->numberOfVariables(); tb2_var_ind++) {
 
         // make sure the variable is enumerated
-        if(!wcsp->getVar(tb2_var_ind)->enumerated()) {
+        if (!wcsp->getVar(tb2_var_ind)->enumerated()) {
             cerr << "error: wcsp variables must be enumerated to be inserted in a multicfn !" << endl;
-            throw WrongFileFormat(); 
+            throw WrongFileFormat();
         }
 
         // assert(wcsp->getVar(tb2_var_ind)->enumerated());
@@ -77,7 +78,7 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
 
         // make sure the variable has value names
         // assert(tb2_var->isValueNames());
-        if(!tb2_var->isValueNames()) {
+        if (!tb2_var->isValueNames()) {
             cerr << "error: the wcsp variables must have value names to be inserted in a multicfn!" << endl;
             throw WrongFileFormat();
         }
@@ -463,7 +464,6 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
     return std::make_pair(top, global_mincost);
 }
 
-
 //---------------------------------------------------------------------------
 void MultiCFN::exportToWCSP(WCSP* wcsp)
 {
@@ -480,7 +480,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     bool dir_consistency = true;
 
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
-        
+
         global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
 
         // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
@@ -502,9 +502,9 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     //     }
     //     global_ub_overflow = true;
     // }
-    
+
     auto top_mincost = computeTopMinCost();
-    
+
     Double top = top_mincost.first;
     Double global_mincost = top_mincost.second;
 
@@ -516,10 +516,10 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
     /* top is increased if global_ub > 0 */
     /* top is expressed as a double */
-    if (global_lb+global_mincost < 0) {
-        top -= global_lb+global_mincost;
+    if (global_lb + global_mincost < 0) {
+        top -= global_lb + global_mincost;
     } else {
-        global_ub += global_lb+global_mincost;
+        global_ub += global_lb + global_mincost;
     }
 
     // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
@@ -527,7 +527,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     // if(global_ub_overflow) {
     //   top = wcsp->DoubleToADCost(MAX_COST/3)
     // }
-
 
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
@@ -548,20 +547,19 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
             Variable* tb2_var = wcsp->getVar(wcsp->getVarIndex(var[var_ind].name));
 
-            if(!tb2_var->enumerated()) {
+            if (!tb2_var->enumerated()) {
                 cerr << "error when exporting a multicfn: the target wcsp has a variable with same name but not enumerated!" << endl;
                 throw WrongFileFormat();
             }
 
             EnumeratedVariable* tb2_enumvar = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[var_ind].name)));
 
-            if(!tb2_enumvar->isValueNames()) {
+            if (!tb2_enumvar->isValueNames()) {
                 cerr << "error when exporting a multicfn: the target wcsp has a variable with the same name but no associated value names!" << endl;
                 throw WrongFileFormat();
             }
 
             checkVariablesConsistency(tb2_enumvar, var[var_ind]);
-
         }
     }
 
@@ -749,7 +747,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
         //cout << "global_lb > 0" << endl;
     }
 
-    // ub should always be the precomputed ub from the costs 
+    // ub should always be the precomputed ub from the costs
     // ub is relative to the internal costs, negcost is not acounted for
     wcsp->setUb(wcsp->DoubletoCost(global_ub));
 

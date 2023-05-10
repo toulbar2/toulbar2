@@ -21,7 +21,7 @@ bool CmpClusterStructBasic::operator()(const Cluster* lhs, const Cluster* rhs) c
 }
 bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
 {
-    if (ToulBar2::bilevel  && lhs->getParent() == lhs->getTreeDec()->getRoot()) {
+    if (ToulBar2::bilevel && lhs->getParent() == lhs->getTreeDec()->getRoot()) {
         // do not sort clusters by size if bilevel at depth 1 (keep id ordering)
         return lhs && rhs && (lhs->getIndex() < rhs->getIndex());
     } else {
@@ -113,7 +113,8 @@ void Separator::assign(int varIndex)
         nonassigned = nonassigned - 1;
         assert(nonassigned >= 0);
         if (nonassigned == 0) {
-            if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot())) return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
+            if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot()))
+                return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
             queueSep();
         }
@@ -234,7 +235,8 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
             if (ToulBar2::verbose >= 1)
                 cout << " Learn nogood " << nogoods[t].first << ", cub= " << nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         } else {
-            if (ToulBar2::bilevel && ToulBar2::verbose >= 0) cout << "Warning! nogood already solved on cluster " << cluster->getId() << " !?!" << endl;
+            if (ToulBar2::bilevel && ToulBar2::verbose >= 0)
+                cout << "Warning! nogood already solved on cluster " << cluster->getId() << " !?!" << endl;
             itng->second.first = MAX(itng->second.first, clb + deltares);
             itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST) ? deltares : MIN_COST)));
             if (ToulBar2::verbose >= 1)
@@ -962,7 +964,8 @@ void Cluster::getSolution(TAssign& sol)
     if (!free) {
         for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
             Cluster* cluster = *iter;
-            if (ToulBar2::bilevel && td->getRoot() == this && cluster == *rbeginEdges()) break; // Do not reconstruct solution for NegProblem2
+            if (ToulBar2::bilevel && td->getRoot() == this && cluster == *rbeginEdges())
+                break; // Do not reconstruct solution for NegProblem2
             cluster->getSolution(sol);
         }
     }
@@ -2020,7 +2023,8 @@ int TreeDecomposition::makeRooted()
 
 void TreeDecomposition::setDuplicates(bool init)
 {
-    if (ToulBar2::approximateCountingBTD) return;
+    if (ToulBar2::approximateCountingBTD)
+        return;
 
     static unsigned int curCtr = 0;
     static int curElimBin = 0;
@@ -2031,7 +2035,7 @@ void TreeDecomposition::setDuplicates(bool init)
         curElimBin = 0;
         curElimTern = 0;
         // clear all ctrs in clusters
-        for (Cluster *c : clusters) {
+        for (Cluster* c : clusters) {
             c->clearCtrs();
         }
     }
@@ -2096,7 +2100,7 @@ void TreeDecomposition::buildFromCovering(string filename)
 
     istringstream sfile(filename.c_str());
     ifstream ffile(filename.c_str(), std::ios::in);
-    istream &file = (ToulBar2::bilevel)? reinterpret_cast<istream&>(sfile) : reinterpret_cast<istream&>(ffile);  // use filename as a string containing an explicit covering when doing bilevel optimization
+    istream& file = (ToulBar2::bilevel) ? reinterpret_cast<istream&>(sfile) : reinterpret_cast<istream&>(ffile); // use filename as a string containing an explicit covering when doing bilevel optimization
     string fstr;
     while (getline(file, fstr)) {
         std::istringstream file(fstr);

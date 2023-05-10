@@ -70,10 +70,10 @@ StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_S
 
 int WCSP::wcspCounter = 0;
 
-map<int, WCSP *> WCSP::CollectionOfWCSP;
+map<int, WCSP*> WCSP::CollectionOfWCSP;
 
 WCSP* WeightedCSPConstraint::MasterWeightedCSP;
-map<int, WeightedCSPConstraint *> WeightedCSPConstraint::WeightedCSPConstraints;
+map<int, WeightedCSPConstraint*> WeightedCSPConstraint::WeightedCSPConstraints;
 bool WeightedCSPConstraint::_protected_;
 int WeightedCSPConstraint::preprocessFunctional;
 int WeightedCSPConstraint::elimDegree;
@@ -888,7 +888,7 @@ int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
         maxdomainsize = isup - iinf + 1;
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     if (ToulBar2::bilevel) {
-        varsBLP[ToulBar2::bilevel-1].insert(x->wcspIndex);
+        varsBLP[ToulBar2::bilevel - 1].insert(x->wcspIndex);
     }
     return x->wcspIndex;
 }
@@ -906,7 +906,7 @@ int WCSP::makeEnumeratedVariable(string n, vector<Value>& dom)
         maxdomainsize = dom.size();
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     if (ToulBar2::bilevel) {
-        varsBLP[ToulBar2::bilevel-1].insert(x->wcspIndex);
+        varsBLP[ToulBar2::bilevel - 1].insert(x->wcspIndex);
     }
     return x->wcspIndex;
 }
@@ -1017,9 +1017,9 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
     Cost initlb3 = MIN_COST;
     if (ToulBar2::bilevel) {
         if (xIndex < (int)varsBLP[0].size() && yIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
-            if (ToulBar2::bilevel==2) { // skip when reading the follower problem
+            if (ToulBar2::bilevel == 2) { // skip when reading the follower problem
                 return res;
-            } else if (ToulBar2::bilevel==3) { // incorporate directly in the restricted leader problem when building the negative follower problem
+            } else if (ToulBar2::bilevel == 3) { // incorporate directly in the restricted leader problem when building the negative follower problem
                 bilevel3 = true;
                 ToulBar2::bilevel = 1;
                 negcost3 = getNegativeLb();
@@ -1097,9 +1097,9 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
     Cost initlb3 = MIN_COST;
     if (ToulBar2::bilevel) {
         if (xIndex < (int)varsBLP[0].size() && yIndex < (int)varsBLP[0].size() && zIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
-            if (ToulBar2::bilevel==2) { // skip when reading the follower problem
+            if (ToulBar2::bilevel == 2) { // skip when reading the follower problem
                 return res;
-            } else if (ToulBar2::bilevel==3) { // incorporate directly in the restricted leader problem when building the negative follower problem
+            } else if (ToulBar2::bilevel == 3) { // incorporate directly in the restricted leader problem when building the negative follower problem
                 bilevel3 = true;
                 ToulBar2::bilevel = 1;
                 negcost3 = getNegativeLb();
@@ -1442,7 +1442,7 @@ void WCSP::postNaryConstraintEnd(int ctrindex)
 // Add a temporary (backtrackable) binary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 {
-    assert((getTreeDec() == NULL && !ToulBar2::bilevel) || (getTreeDec() != NULL &&  ToulBar2::bilevel == 4));
+    assert((getTreeDec() == NULL && !ToulBar2::bilevel) || (getTreeDec() != NULL && ToulBar2::bilevel == 4));
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
 
@@ -1485,7 +1485,7 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
 // Add a temporary (backtrackable) ternary constraint for incremental search (like "on the fly ElimVar")
 int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs)
 {
-    assert((getTreeDec() == NULL && !ToulBar2::bilevel) || (getTreeDec() != NULL &&  ToulBar2::bilevel == 4));
+    assert((getTreeDec() == NULL && !ToulBar2::bilevel) || (getTreeDec() != NULL && ToulBar2::bilevel == 4));
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(xIndex);
     EnumeratedVariable* y = (EnumeratedVariable*)getVar(yIndex);
     EnumeratedVariable* z = (EnumeratedVariable*)getVar(zIndex);
@@ -2381,8 +2381,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         WCSP* problem = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
         problem->read_legacy(file); // read recursively a cost function network in wcsp format
         // add dummy value names needed by multicfn
-        for(unsigned int var_ind = 0; var_ind < problem->numberOfVariables(); var_ind ++) {
-            for(unsigned int val_ind = 0; val_ind < problem->getDomainInitSize(var_ind); val_ind ++) {
+        for (unsigned int var_ind = 0; var_ind < problem->numberOfVariables(); var_ind++) {
+            for (unsigned int val_ind = 0; val_ind < problem->getDomainInitSize(var_ind); val_ind++) {
                 problem->addValueName(var_ind, "v" + to_string(val_ind));
             }
         }
@@ -2417,7 +2417,7 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         bool duality;
         file >> duality;
         assert(CollectionOfWCSP.find(wcspind) != CollectionOfWCSP.end());
-        WCSP *problem = CollectionOfWCSP[wcspind];
+        WCSP* problem = CollectionOfWCSP[wcspind];
         MultiCFN multicfn;
         multicfn.push_back(problem, -1.);
         WCSP* negproblem = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
@@ -2430,16 +2430,16 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
     }
 }
 
-int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality)
+int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality)
 {
     assert(ToulBar2::bilevel <= 1);
     assert(!problem || scope.size() == problem->numberOfVariables());
     assert(!negproblem || scope.size() == negproblem->numberOfVariables());
-    vector<EnumeratedVariable *> scope2;
+    vector<EnumeratedVariable*> scope2;
     for (unsigned int i = 0; i < scope.size(); i++) {
-        scope2.push_back((EnumeratedVariable *) getVar(scope[i]));
+        scope2.push_back((EnumeratedVariable*)getVar(scope[i]));
     }
-    auto ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP *) problem, (WCSP *) negproblem, lb, ub, duplicateHard, strongDuality);
+    auto ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP*)problem, (WCSP*)negproblem, lb, ub, duplicateHard, strongDuality);
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(ctr->wcspIndex);
     else {
@@ -3154,9 +3154,9 @@ void WCSP::postNullaryConstraint(Double cost)
     bool bilevel3 = false;
     Cost negcost3 = MIN_COST;
     Cost initlb3 = MIN_COST;
-    if (ToulBar2::bilevel==2) { // skip when reading Problem2
+    if (ToulBar2::bilevel == 2) { // skip when reading Problem2
         return;
-    } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+    } else if (ToulBar2::bilevel == 3) { // incorporate directly in Problem1
         bilevel3 = true;
         ToulBar2::bilevel = 1;
         negcost3 = getNegativeLb();
@@ -3229,9 +3229,9 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
     Cost initlb3 = MIN_COST;
     if (ToulBar2::bilevel) {
         if (xIndex < (int)varsBLP[0].size()) { // cost function on leader variable(s) only
-            if (ToulBar2::bilevel==2) { // skip when reading the follower problem
+            if (ToulBar2::bilevel == 2) { // skip when reading the follower problem
                 return;
-            } else if (ToulBar2::bilevel==3) { // incorporate directly in the restricted leader problem when building the negative follower problem
+            } else if (ToulBar2::bilevel == 3) { // incorporate directly in the restricted leader problem when building the negative follower problem
                 bilevel3 = true;
                 ToulBar2::bilevel = 1;
                 negcost3 = getNegativeLb();
@@ -4287,7 +4287,8 @@ void WCSP::shrink()
 
 Cost WCSP::finiteUb() const
 {
-    if (ToulBar2::bilevel) return MAX_COST;
+    if (ToulBar2::bilevel)
+        return MAX_COST;
     Cost summaxcost = getLb() + UNIT_COST;
     for (unsigned int i = 0; i < constrs.size(); i++) {
         if (constrs[i]->connected() && !constrs[i]->isSep()) {
@@ -4334,7 +4335,8 @@ Cost WCSP::finiteUb() const
 
 void WCSP::setInfiniteCost()
 {
-    if (ToulBar2::bilevel) return;
+    if (ToulBar2::bilevel)
+        return;
     assert(Store::getDepth() == 0);
     Cost ub = getUb() - getLb();
     assert(ub > 0);
@@ -4560,8 +4562,9 @@ void WCSP::printNCBuckets()
 void WCSP::print(ostream& os)
 {
     //    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
-    if (getIndex() > 0) os << "WCSP: " << getIndex() << " ";
-    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb()?" - ":"") << (getNegativeLb()?to_string(getNegativeLb()):"") << endl;
+    if (getIndex() > 0)
+        os << "WCSP: " << getIndex() << " ";
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb() ? " - " : "") << (getNegativeLb() ? to_string(getNegativeLb()) : "") << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -4839,7 +4842,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             os << "\n";
         } else {
             assert(s->assigned());
-            cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end())?"*":((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
+            cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
         }
     }
     if (!original && nvars != vars.size()) {
@@ -4866,7 +4869,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             os << "\"costs\":[";
             for (int v = 0; v < size; v++) {
                 os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
-                   << ((original) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : ((ub > domcost[v].cost)?DCost2Decimal(Cost2RDCost(domcost[v].cost)):"inf"));
+                   << ((original) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : ((ub > domcost[v].cost) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : "inf"));
                 if (v != (size - 1)) {
                     os << ",";
                 }
@@ -5389,7 +5392,7 @@ void WCSP::propagateTRWS()
 
 void WCSP::fillEAC2()
 {
-    assert((getSolver() && ((Solver *)getSolver())->getWCSP() != this) || EAC2.empty());
+    assert((getSolver() && ((Solver*)getSolver())->getWCSP() != this) || EAC2.empty());
     if (ToulBar2::verbose >= 2)
         cout << "EAC1Queue size: " << EAC1.getSize() << endl;
     while (!EAC1.empty()) {
@@ -5551,8 +5554,8 @@ void WCSP::eliminate()
 bool WCSP::propagated()
 {
     return (!objectiveChanged && NC.empty() && IncDec.empty() && (!(ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) || AC.empty())
-            && (ToulBar2::LcLevel < LC_DAC || DAC.empty()) && (ToulBar2::LcLevel != LC_EDAC || CSP(getLb(), getUb()) || EAC1.empty())
-            && Eliminate.empty() && (!ToulBar2::vac || CSP(getLb(), getUb()) || vac->isVAC()));
+        && (ToulBar2::LcLevel < LC_DAC || DAC.empty()) && (ToulBar2::LcLevel != LC_EDAC || CSP(getLb(), getUb()) || EAC1.empty())
+        && Eliminate.empty() && (!ToulBar2::vac || CSP(getLb(), getUb()) || vac->isVAC()));
 }
 
 void WCSP::propagate()
@@ -5560,7 +5563,8 @@ void WCSP::propagate()
     if (ToulBar2::interrupted)
         throw TimeOut();
     if (!isactivatePropagate()) {
-        if (ToulBar2::verbose >= 3) cout << "skip recursive call to propagate of WCSP " << getIndex() << endl;
+        if (ToulBar2::verbose >= 3)
+            cout << "skip recursive call to propagate of WCSP " << getIndex() << endl;
         return;
     }
     deactivatePropagate();
@@ -5589,7 +5593,7 @@ void WCSP::propagate()
                     int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
-                            && !DAC.empty())
+                               && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
                         eac_iter++;
                         propagateIncDec();
@@ -5662,7 +5666,7 @@ void WCSP::propagate()
         (*(it))->end();
     }
     reactivatePropagate();
-    assert((getSolver() && ((Solver *)getSolver())->getWCSP() != this && (WeightedCSPConstraint::WeightedCSPConstraints.find(getIndex()) == WeightedCSPConstraint::WeightedCSPConstraints.end() || WeightedCSPConstraint::WeightedCSPConstraints[getIndex()]->deconnected())) || verify());
+    assert((getSolver() && ((Solver*)getSolver())->getWCSP() != this && (WeightedCSPConstraint::WeightedCSPConstraints.find(getIndex()) == WeightedCSPConstraint::WeightedCSPConstraints.end() || WeightedCSPConstraint::WeightedCSPConstraints[getIndex()]->deconnected())) || verify());
     assert(!objectiveChanged);
     assert(NC.empty());
     assert(IncDec.empty());

@@ -509,11 +509,11 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
 {
     assert(WeightedCSPConstraint::MasterWeightedCSP);
     assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
-    WCSP *wcsp = NULL;
-    Variable *masterVar = NULL;
+    WCSP* wcsp = NULL;
+    Variable* masterVar = NULL;
     bool activeState = true;
     if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
-        WeightedCSPConstraint *gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
         if (gc->problem && gc->problem->getIndex() == wcspId) {
             wcsp = gc->problem;
         } else {
@@ -537,33 +537,35 @@ void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " = " << value << endl;
-    for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
-        int varCtrIndex = gc.second->getIndex(masterVar);
-        if (varCtrIndex != -1) { // only for slave problems which are concerned by this variable
-            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->problem->getVar(varCtrIndex)->assign(value);
-                } catch (const Contradiction&) {
-                    gc.second->problem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) { // only for slave problems which are concerned by this variable
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->assign(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
-            }
-            if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->negproblem->getVar(varCtrIndex)->assign(value);
-                } catch (const Contradiction&) {
-                    gc.second->negproblem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->assign(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
             }
         }
-    }
     assert(!wcsp->isactivatePropagate());
-    if (activeState) wcsp->reactivatePropagate();
+    if (activeState)
+        wcsp->reactivatePropagate();
     if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
         WeightedCSPConstraint::unprotect();
     }
@@ -573,11 +575,11 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
 {
     assert(WeightedCSPConstraint::MasterWeightedCSP);
     assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
-    WCSP *wcsp = NULL;
-    Variable *masterVar = NULL;
+    WCSP* wcsp = NULL;
+    Variable* masterVar = NULL;
     bool activeState = true;
     if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
-        WeightedCSPConstraint *gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
         if (gc->problem && gc->problem->getIndex() == wcspId) {
             wcsp = gc->problem;
         } else {
@@ -600,33 +602,35 @@ void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " != " << value << endl;
-    for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
-        int varCtrIndex = gc.second->getIndex(masterVar);
-        if (varCtrIndex != -1) {
-            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->problem->getVar(varCtrIndex)->remove(value);
-                } catch (const Contradiction&) {
-                    gc.second->problem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) {
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->remove(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
-            }
-            if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->negproblem->getVar(varCtrIndex)->remove(value);
-                } catch (const Contradiction&) {
-                    gc.second->negproblem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->remove(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
             }
         }
-    }
     assert(!wcsp->isactivatePropagate());
-    if (activeState) wcsp->reactivatePropagate();
+    if (activeState)
+        wcsp->reactivatePropagate();
     if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
         WeightedCSPConstraint::unprotect();
     }
@@ -636,11 +640,11 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
 {
     assert(WeightedCSPConstraint::MasterWeightedCSP);
     assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
-    WCSP *wcsp = NULL;
-    Variable *masterVar = NULL;
+    WCSP* wcsp = NULL;
+    Variable* masterVar = NULL;
     bool activeState = true;
     if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
-        WeightedCSPConstraint *gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
         if (gc->problem && gc->problem->getIndex() == wcspId) {
             wcsp = gc->problem;
         } else {
@@ -663,33 +667,35 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " >= " << value << endl;
-    for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
-        int varCtrIndex = gc.second->getIndex(masterVar);
-        if (varCtrIndex != -1) {
-            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->problem->getVar(varCtrIndex)->increase(value);
-                } catch (const Contradiction&) {
-                    gc.second->problem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) {
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->increase(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
-            }
-            if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->negproblem->getVar(varCtrIndex)->increase(value);
-                } catch (const Contradiction&) {
-                    gc.second->negproblem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->increase(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
             }
         }
-    }
     assert(!wcsp->isactivatePropagate());
-    if (activeState) wcsp->reactivatePropagate();
+    if (activeState)
+        wcsp->reactivatePropagate();
     if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
         WeightedCSPConstraint::unprotect();
     }
@@ -698,12 +704,12 @@ void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
 void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
 {
     assert(WeightedCSPConstraint::MasterWeightedCSP);
-    WCSP *wcsp = NULL;
+    WCSP* wcsp = NULL;
     assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
-    Variable *masterVar = NULL;
+    Variable* masterVar = NULL;
     bool activeState = true;
     if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
-        WeightedCSPConstraint *gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
         if (gc->problem && gc->problem->getIndex() == wcspId) {
             wcsp = gc->problem;
         } else {
@@ -726,33 +732,35 @@ void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
     }
     if (ToulBar2::verbose >= 2)
         cout << "EVENT: x" << varIndex << "_" << wcspId << " <= " << value << endl;
-    for (auto gc: WeightedCSPConstraint::WeightedCSPConstraints) if (gc.second->connected()) {
-        int varCtrIndex = gc.second->getIndex(masterVar);
-        if (varCtrIndex != -1) {
-            if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->problem->getVar(varCtrIndex)->decrease(value);
-                } catch (const Contradiction&) {
-                    gc.second->problem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) {
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->decrease(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
-            }
-            if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
-                assert(WeightedCSPConstraint::_protected_);
-                try {
-                    gc.second->negproblem->getVar(varCtrIndex)->decrease(value);
-                } catch (const Contradiction&) {
-                    gc.second->negproblem->whenContradiction();
-                    WeightedCSPConstraint::unprotect();
-                    throw Contradiction();
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->decrease(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
                 }
             }
         }
-    }
     assert(!wcsp->isactivatePropagate());
-    if (activeState) wcsp->reactivatePropagate();
+    if (activeState)
+        wcsp->reactivatePropagate();
     if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
         WeightedCSPConstraint::unprotect();
     }
@@ -1988,8 +1996,7 @@ void Solver::recursiveSolve(Cost lb)
                     WeightedCSPConstraint* objective2 = WeightedCSPConstraint::WeightedCSPConstraints.begin()->second; //TODO: choose the WeightedCSPConstraints with the highest weighted degree
                     int sign = 1;
                     bool mingap = true;
-                    if (ToulBar2::bisupport < 0. ||
-                        (wcsp->getUnaryCost(varIndex, objective2->getSupport(varIndex, sign, mingap)) < (Double)ToulBar2::bisupport * objective2->getUnaryCost(varIndex, wcsp->getSupport(varIndex), sign))) {
+                    if (ToulBar2::bisupport < 0. || (wcsp->getUnaryCost(varIndex, objective2->getSupport(varIndex, sign, mingap)) < (Double)ToulBar2::bisupport * objective2->getUnaryCost(varIndex, wcsp->getSupport(varIndex), sign))) {
                         if (ToulBar2::bisupport < 0.) {
                             switch ((int)(-ToulBar2::bisupport)) {
                             case BISUPPORT_HEUR_LB:
@@ -2943,7 +2950,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (ToulBar2::btdMode) {
         int nbdelayedblp = 0;
         if (ToulBar2::bilevel) {
-            for (auto s: ((WCSP*)wcsp)->delayedCtrBLP) {
+            for (auto s : ((WCSP*)wcsp)->delayedCtrBLP) {
                 nbdelayedblp += s.size();
             }
         }
@@ -2954,16 +2961,16 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             //ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
             wcsp->buildTreeDecomposition();
             if (ToulBar2::bilevel) {
-                Cluster *problem0 = wcsp->getTreeDec()->getRoot();
+                Cluster* problem0 = wcsp->getTreeDec()->getRoot();
                 auto iter = problem0->beginEdges();
 #ifndef NDEBUG
-                Cluster *problem1 = *iter;
+                Cluster* problem1 = *iter;
 #endif
                 ++iter;
-                Cluster *problem2 = *iter;
+                Cluster* problem2 = *iter;
                 ++iter;
 #ifndef NDEBUG
-                Cluster *negproblem2 = *iter;
+                Cluster* negproblem2 = *iter;
 #endif
                 //problem2.isused = false //FIXME???
                 problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem0
@@ -3126,19 +3133,19 @@ bool Solver::solve(bool first)
                                 start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decomposition root cluster
                             if (ToulBar2::bilevel) {
                                 // propagate channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
-                                for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
-                                    Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
+                                for (int ctrIndex : ((WCSP*)wcsp)->delayedCtrBLP[2]) {
+                                    Constraint* ctr = ((WCSP*)wcsp)->getCtr(ctrIndex);
                                     assert(ctr->deconnected());
                                     static vector<Cost> costs;
-                                    Constraint *incCtr = NULL;
+                                    Constraint* incCtr = NULL;
                                     if (ctr->isBinary()) {
                                         costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
-                                        incCtr = ((WCSP *)wcsp)->getCtr(wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs));
-                                        ((BinaryConstraint *)incCtr)->addCosts((BinaryConstraint *)ctr);
+                                        incCtr = ((WCSP*)wcsp)->getCtr(wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs));
+                                        ((BinaryConstraint*)incCtr)->addCosts((BinaryConstraint*)ctr);
                                     } else if (ctr->isTernary()) {
                                         costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
-                                        incCtr = ((WCSP *)wcsp)->getCtr(wcsp->postIncrementalTernaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, ctr->getVar(2)->wcspIndex, costs));
-                                        ((TernaryConstraint *)incCtr)->addCosts((TernaryConstraint *)ctr);
+                                        incCtr = ((WCSP*)wcsp)->getCtr(wcsp->postIncrementalTernaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, ctr->getVar(2)->wcspIndex, costs));
+                                        ((TernaryConstraint*)incCtr)->addCosts((TernaryConstraint*)ctr);
                                     } else {
                                         cerr << "Sorry, bilevel optimization not implemented for this type of channeling cost function:" << *ctr << endl;
                                         throw WrongFileFormat();
@@ -3174,15 +3181,15 @@ bool Solver::solve(bool first)
                                             wcsp->propagate();
                                             initialDepth = Store::getDepth();
                                             if (ToulBar2::bilevel && ToulBar2::verbose >= 0) {
-                                                Cluster *problem0 = td->getRoot();
+                                                Cluster* problem0 = td->getRoot();
                                                 auto iter = problem0->beginEdges();
-                                                Cluster *problem1 = *iter;
+                                                Cluster* problem1 = *iter;
                                                 ++iter;
 #ifndef NDEBUG
-                                                Cluster *problem2 = *iter;
+                                                Cluster* problem2 = *iter;
 #endif
                                                 ++iter;
-                                                Cluster *negproblem2 = *iter;
+                                                Cluster* negproblem2 = *iter;
                                                 assert(problem2->getLb() == MIN_COST);
                                                 assert(problem2->getCurrentDeltaUb() == MIN_COST);
                                                 //cout << "C0.lb: " << problem0->getLb() << " C1.lb: " << problem1->getLb() << " C2.lb: " << problem2->getLb() << " NegC2.lb: " << negproblem2->getLb() << " NegC2.delta >= " << negproblem2->getCurrentDeltaLb() << " NegC2.delta <= " << negproblem2->getCurrentDeltaUb() << endl;

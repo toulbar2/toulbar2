@@ -79,7 +79,7 @@ class WCSP FINAL : public WeightedCSP {
     friend class VACExtension;
 
 public:
-    static map<int, WCSP *> CollectionOfWCSP;
+    static map<int, WCSP*> CollectionOfWCSP;
     /// \brief variable elimination information used in backward phase to get a solution during search
     /// \warning restricted to at most two neighbor variables
     typedef struct {
@@ -465,7 +465,7 @@ public:
     int makeEnumeratedVariable(string n, Value iinf, Value isup);
     int makeEnumeratedVariable(string n, vector<Value>& dom);
     void addValueName(int xIndex, const string& name);
-    const string& getValueName(int xIndex, Value value) { return vars[xIndex]->getValueName((vars[xIndex]->enumerated())?toIndex(xIndex, value):WRONG_VAL); }
+    const string& getValueName(int xIndex, Value value) { return vars[xIndex]->getValueName((vars[xIndex]->enumerated()) ? toIndex(xIndex, value) : WRONG_VAL); }
     int makeIntervalVariable(string n, Value iinf, Value isup);
 
     // a limited number of cost functions accept floating-point costs directly and are able to disappear when backtrack occurs (used in incremental search)
@@ -543,7 +543,7 @@ public:
     }
     int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict); // warning! scopeIndex may be modified internally.
 
-    int postWeightedCSPConstraint(vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
+    int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
 
     int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true); ///< \deprecated should use WCSP::postGlobalCostFunction instead \warning does not work for arity below 4 (use binary or ternary cost functions instead)
     GlobalConstraint* postGlobalCostFunction(int* scopeIndex, int arity, const string& name, int* constrcounter = NULL);
@@ -603,7 +603,7 @@ public:
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
     void read_opb(const char* fileName); ///< \brief load pseudo-Boolean optimization problem
     void read_legacy(const char* fileName); ///< \brief load problem in wcsp format
-    void read_legacy(istream& file);  ///< \brief load problem in wcsp format (internal use)
+    void read_legacy(istream& file); ///< \brief load problem in wcsp format (internal use)
 
     void read_XML(const char* fileName); ///< \brief load problem in XML format (see http://www.cril.univ-artois.fr/~lecoutre/benchmarks.html)
     void solution_XML(bool opt = false); ///< \brief output solution in Max-CSP 2008 output format

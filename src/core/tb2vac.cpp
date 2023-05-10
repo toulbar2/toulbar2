@@ -446,37 +446,37 @@ bool VACExtension::propagate()
                     }
                 }
 #endif
-//                if (ToulBar2::preprocessTernaryRPC && Store::getDepth() <= 1) {
-//                    double mintight = 1e20;
-//                    Variable *var1 = NULL;
-//                    Variable *var2 = NULL;
-//                    for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-//                        if (wcsp->getCtr(i)->connected() && wcsp->getCtr(i)->isBinary()) {
-//                            wcsp->getCtr(i)->resetTightness();
-//                            double tight = wcsp->getCtr(i)->getTightness();
-//                            if (mintight > tight) {
-//                                mintight = tight;
-//                                var1 = wcsp->getCtr(i)->getVar(0);
-//                                var2 = wcsp->getCtr(i)->getVar(1);
-//                            }
-//                        }
-//                    }
-//                    for (int i = 0; i < wcsp->getElimBinOrder(); i++) {
-//                        if (wcsp->getCtr(-i -1)->connected()) {
-//                            wcsp->getCtr(-i -1)->resetTightness();
-//                            double tight = wcsp->getCtr(-i -1)->getTightness();
-//                            if (mintight > tight) {
-//                                mintight = tight;
-//                                var1 = wcsp->getCtr(-i -1)->getVar(0);
-//                                var2 = wcsp->getCtr(-i -1)->getVar(1);
-//                            }
-//                            mintight = MIN(mintight, tight);
-//                        }
-//                    }
-//                    if (ToulBar2::verbose >= 0 && var1 && var2) {
-//                        cout << "Minimum binary cost function tightness after VAC: " << mintight << " on variables " << var1->getName() << " and " << var2->getName() << endl;
-//                    }
-//                }
+                //                if (ToulBar2::preprocessTernaryRPC && Store::getDepth() <= 1) {
+                //                    double mintight = 1e20;
+                //                    Variable *var1 = NULL;
+                //                    Variable *var2 = NULL;
+                //                    for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
+                //                        if (wcsp->getCtr(i)->connected() && wcsp->getCtr(i)->isBinary()) {
+                //                            wcsp->getCtr(i)->resetTightness();
+                //                            double tight = wcsp->getCtr(i)->getTightness();
+                //                            if (mintight > tight) {
+                //                                mintight = tight;
+                //                                var1 = wcsp->getCtr(i)->getVar(0);
+                //                                var2 = wcsp->getCtr(i)->getVar(1);
+                //                            }
+                //                        }
+                //                    }
+                //                    for (int i = 0; i < wcsp->getElimBinOrder(); i++) {
+                //                        if (wcsp->getCtr(-i -1)->connected()) {
+                //                            wcsp->getCtr(-i -1)->resetTightness();
+                //                            double tight = wcsp->getCtr(-i -1)->getTightness();
+                //                            if (mintight > tight) {
+                //                                mintight = tight;
+                //                                var1 = wcsp->getCtr(-i -1)->getVar(0);
+                //                                var2 = wcsp->getCtr(-i -1)->getVar(1);
+                //                            }
+                //                            mintight = MIN(mintight, tight);
+                //                        }
+                //                    }
+                //                    if (ToulBar2::verbose >= 0 && var1 && var2) {
+                //                        cout << "Minimum binary cost function tightness after VAC: " << mintight << " on variables " << var1->getName() << " and " << var2->getName() << endl;
+                //                    }
+                //                }
             }
 #ifndef INCREMENTALVAC
             Store::restore(storedepth);

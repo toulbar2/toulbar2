@@ -620,7 +620,6 @@ BigInteger Solver::binaryChoicePointSBTD(Cluster* cluster, int varIndex, Value v
  *
  */
 
-
 /// \defgroup bilevel Bilevel optimization
 /// We assume a tree decomposition with four clusters: root cluster 0 is Problem0, left child cluster 1 is Problem1, middle child cluster 2 is Problem2, and right child cluster 3 is NegProblem2 (i.e., -Problem2)
 /// Our goal is to minimize the leader problem (Problem0 + Problem1 - Problem2) such that the follower problem (Problem2) takes its minimum cost w.r.t. the leader decisions (locally minimizing Problem2 after Problem0 is fixed)
@@ -679,7 +678,8 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                 // Solves each cluster son with local lower and upper bounds
                 Cluster* c = *iter;
                 ++iter;
-                if (ToulBar2::bilevel && td->getRoot() == cluster && c == *cluster->rbeginEdges()) continue; // skip the last cluster son representing the negative follower problem
+                if (ToulBar2::bilevel && td->getRoot() == cluster && c == *cluster->rbeginEdges())
+                    continue; // skip the last cluster son representing the negative follower problem
                 Cost lbSon = MIN_COST;
                 Cost ubSon = MAX_COST;
                 bool good = false;
@@ -723,7 +723,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             assert(c->getLbRec() == MIN_COST);
                             Cost lbP1 = cluster->getLb() + (*cluster->beginEdges())->getLb() - ToulBar2::initialLbBLP[2] - deltaNegP2Ub; //FIXME: P1 is completely solved (use cluster son recorded lb instead of propagation lb)
                             Cost lbNegP2 = (*cluster->rbeginEdges())->getLb() + ToulBar2::initialLbBLP[2] + deltaNegP2Lb;
-                            ubSon = - ToulBar2::initialLbBLP[1] - lbNegP2 + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2] + UNIT_COST;
+                            ubSon = -ToulBar2::initialLbBLP[1] - lbNegP2 + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2] + UNIT_COST;
                             assert(ubSon >= UNIT_COST);
                             bestLbP2 = max(MIN_COST, lbP1 - cub + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2]);
                             assert(bestLbP2 < ubSon);
@@ -738,19 +738,19 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                             wcsp->enforceUb();
                             if (ToulBar2::bilevel && td->getRoot() == cluster && c != *cluster->beginEdges()) {
                                 // add channeling constraints between leader (Problem0) and follower (Problem2) problems
-                                for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[1]) {
-                                    Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
+                                for (int ctrIndex : ((WCSP*)wcsp)->delayedCtrBLP[1]) {
+                                    Constraint* ctr = ((WCSP*)wcsp)->getCtr(ctrIndex);
                                     assert(ctr->deconnected());
                                     static vector<Cost> costs;
-                                    Constraint *incCtr = NULL;
+                                    Constraint* incCtr = NULL;
                                     if (ctr->isBinary()) {
                                         costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
-                                        incCtr = ((WCSP *)wcsp)->getCtr(wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs));
-                                        ((BinaryConstraint *)incCtr)->addCosts((BinaryConstraint *)ctr);
+                                        incCtr = ((WCSP*)wcsp)->getCtr(wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs));
+                                        ((BinaryConstraint*)incCtr)->addCosts((BinaryConstraint*)ctr);
                                     } else if (ctr->isTernary()) {
                                         costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
-                                        incCtr = ((WCSP *)wcsp)->getCtr(wcsp->postIncrementalTernaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, ctr->getVar(2)->wcspIndex, costs));
-                                        ((TernaryConstraint *)incCtr)->addCosts((TernaryConstraint *)ctr);
+                                        incCtr = ((WCSP*)wcsp)->getCtr(wcsp->postIncrementalTernaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, ctr->getVar(2)->wcspIndex, costs));
+                                        ((TernaryConstraint*)incCtr)->addCosts((TernaryConstraint*)ctr);
                                     } else {
                                         cerr << "Sorry, bilevel optimization not implemented for this type of channeling cost function:" << *ctr << endl;
                                         throw WrongFileFormat();
@@ -814,7 +814,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                 } else {
                     if (ToulBar2::bilevel && c != *cluster->beginEdges() && c != *cluster->rbeginEdges()) {
                         // the follower problem has been solved already
-                        csol = clb - (*cluster->rbeginEdges())->getLb() - ToulBar2::initialLbBLP[2]  - (*cluster->rbeginEdges())->getCurrentDeltaLb() - lbSon  - ToulBar2::initialLbBLP[1] + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2];
+                        csol = clb - (*cluster->rbeginEdges())->getLb() - ToulBar2::initialLbBLP[2] - (*cluster->rbeginEdges())->getCurrentDeltaLb() - lbSon - ToulBar2::initialLbBLP[1] + ToulBar2::negCostBLP[1] + ToulBar2::negCostBLP[2];
                         clb = csol;
                     }
                 }

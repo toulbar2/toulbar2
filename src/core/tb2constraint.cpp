@@ -102,13 +102,13 @@ Long Constraint::getDomainInitSizeProduct() const
 // trap overflow numbers
 #if __GNUC__ >= 5
         if (__builtin_smulll_overflow(cartesianProduct,
-                (getVar(i)->enumerated())?((EnumeratedVariable *)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize(),
+                (getVar(i)->enumerated()) ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize(),
                 &cartesianProduct))
             return LONGLONG_MAX;
 #else
         if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE)
             return LONGLONG_MAX;
-        cartesianProduct *= (getVar(i)->enumerated())?((EnumeratedVariable *)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize();
+        cartesianProduct *= (getVar(i)->enumerated()) ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize();
 #endif
     }
     return cartesianProduct;
@@ -181,7 +181,7 @@ void Constraint::setCluster(int i)
     if (ToulBar2::verbose >= 1 && cluster != -1 && i != cluster) {
         cout << *this << " change to cluster " << i << endl;
     }
-    TreeDecomposition *td = wcsp->getTreeDec();
+    TreeDecomposition* td = wcsp->getTreeDec();
     if (td && cluster != -1) {
         td->getCluster(cluster)->removeCtr(this);
     }
