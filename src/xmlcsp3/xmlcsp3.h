@@ -1504,10 +1504,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XVariable *> &occurs, bool closed) override {
         vector<int> vars;
         toMyVariables(list,vars);
+        vector<int> vars_copy(vars);
         string params;
         string params2;
         int domsize,nbval;
         for (int k = 0; k < (int)values.size(); ++k) {
+            vars = vars_copy;
             params="0 ";
             vars.push_back(getMyVar(occurs[k]));
             for (int i = 0; i < (int)vars.size()-1; ++i) {
@@ -1535,11 +1537,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params+=" "+to_string(nbval)+params2;
             }
             domsize= problem->getDomainInitSize(vars.back());
-            for (int i = 0; i < domsize; ++i) {
-                for (int idval=0; idval < domsize; idval++) {
-                    int value = problem->toValue(vars.back(), idval);
-                        params += " " + to_string(value) + " " + to_string(-value);
-                }
+            params+=" "+to_string(domsize);
+            for (int idval=0; idval < domsize; idval++) {
+                int value = problem->toValue(vars.back(), idval);
+                params += " " + to_string(value) + " " + to_string(-value);
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
             params="0 ";
@@ -1568,11 +1569,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params+=" "+to_string(nbval)+params2;
             }
             domsize= problem->getDomainInitSize(vars.back());
-            for (int i = 0; i < domsize; ++i) {
-                for (int idval=0; idval < domsize; idval++) {
-                    int value = problem->toValue(vars.back(), idval);
-                    params += " " + to_string(value) + " " + to_string(value);
-                }
+            params+=" "+to_string(domsize);
+            for (int idval=0; idval < domsize; idval++) {
+                int value = problem->toValue(vars.back(), idval);
+                params += " " + to_string(value) + " " + to_string(value);
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
         }
