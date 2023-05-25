@@ -41,7 +41,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void endInstance() override {
-        assert(ToulBar2::xmlcop == true || problem->getUb() == UNIT_COST);
+        if (!ToulBar2::xmlcop) problem->updateUb(UNIT_COST);
         problem->sortConstraints();
         if (assignedVars.size() > 0) {
             problem->assignLS(assignedVars, assignedValues);
@@ -71,12 +71,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     // transforms a vector of XVariable in vector of toulbar2 variable indices and add it to dest (assuming only one occurrence of each variable)
     void toMyVariables(vector<XVariable*> &src, vector<int> &dest) {
         set<int> control;
+        int initsize = (int)dest.size();
         for(unsigned int i = 0;i<src.size();i++) {
             dest.push_back(getMyVar(src[i]));
             control.insert(getMyVar(src[i]));
         }
-        assert(dest.size() == control.size());
-        assert(dest.size() > 0);
+        assert((int)dest.size() - initsize == (int)control.size());
+        assert(dest.size() > initsize);
     }
 
     // transforms a vector of string Variable name in vector of toulbar2 variable indices and add it to dest
@@ -2860,6 +2861,204 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        set<Value> svalues;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (Value currentval : problem->getEnumDomain(vars[i])) {
+                auto it = svalues.find(currentval);
+                if (it == svalues.end()) {
+                    svalues.insert(currentval);
+                }
+            }
+        }
+        for (Value value : svalues) { // for each bin
+            vector<Tree> mytrees; // keep in memory each Tree object
+            for (unsigned int i=0; i<list.size(); i++) {
+                Tree tree("eq(" + list[i]->id + "," + to_string(value) + ")" );
+                mytrees.push_back(tree);
+            }
+            vector<Tree *> trees(list.size(), NULL);
+            for (unsigned int i=0; i<list.size(); i++) {
+                trees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occurring with the following code trees.push_back(&mytrees.back())
+            }
+            assert(list.size() == trees.size());
+            buildConstraintSum(id, trees, sizes, cond);
+        }
+    }
+
+    void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, vector<int> &capacities, bool load) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        set<Value> svalues;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (Value currentval : problem->getEnumDomain(vars[i])) {
+                auto it = svalues.find(currentval);
+                if (it == svalues.end()) {
+                    svalues.insert(currentval);
+                }
+            }
+        }
+        vector<Value> values;
+        for (Value currentval : svalues) {
+            values.push_back(currentval);
+        }
+        for (unsigned int v = 0; v < values.size() ; v++) { // for each bin
+            Value value = values[v];
+            vector<Tree> mytrees; // keep in memory each Tree object
+            for (unsigned int i=0; i<list.size(); i++) {
+                Tree tree("eq(" + list[i]->id + "," + to_string(value) + ")" );
+                mytrees.push_back(tree);
+            }
+            vector<Tree *> trees(list.size(), NULL);
+            for (unsigned int i=0; i<list.size(); i++) {
+                trees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occurring with the following code trees.push_back(&mytrees.back())
+            }
+            assert(list.size() == trees.size());
+            XCondition cond;
+            if (load) {
+                cond.op = OrderType::EQ;
+            } else {
+                cond.op = OrderType::LE;
+            }
+            cond.val = capacities[v];
+            cond.operandType = OperandType::INTEGER;
+            buildConstraintSum(id, trees, sizes, cond);
+        }
+    }
+
+    void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, vector<XVariable*> &capacities, bool load) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        set<Value> svalues;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (Value currentval : problem->getEnumDomain(vars[i])) {
+                auto it = svalues.find(currentval);
+                if (it == svalues.end()) {
+                    svalues.insert(currentval);
+                }
+            }
+        }
+        vector<Value> values;
+        for (Value currentval : svalues) {
+            values.push_back(currentval);
+        }
+        for (unsigned int v = 0; v < values.size() ; v++) { // for each bin
+            Value value = values[v];
+            vector<Tree> mytrees; // keep in memory each Tree object
+            for (unsigned int i=0; i<list.size(); i++) {
+                Tree tree("eq(" + list[i]->id + "," + to_string(value) + ")" );
+                mytrees.push_back(tree);
+            }
+            vector<Tree *> trees(list.size(), NULL);
+            for (unsigned int i=0; i<list.size(); i++) {
+                trees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occurring with the following code trees.push_back(&mytrees.back())
+            }
+            assert(list.size() == trees.size());
+            XCondition cond;
+            if (load) {
+                cond.op = OrderType::EQ;
+            } else {
+                cond.op = OrderType::LE;
+            }
+            cond.var = capacities[v]->id;
+            cond.operandType = OperandType::VARIABLE;
+            buildConstraintSum(id, trees, sizes, cond);
+        }
+    }
+
+    void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, vector<XCondition> &conditions, int startindex) override {
+        assert(startindex == 0);
+        vector<int> vars;
+        toMyVariables(list,vars);
+        set<Value> svalues;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (Value currentval : problem->getEnumDomain(vars[i])) {
+                auto it = svalues.find(currentval);
+                if (it == svalues.end()) {
+                    svalues.insert(currentval);
+                }
+            }
+        }
+        vector<Value> values;
+        for (Value currentval : svalues) {
+            values.push_back(currentval);
+        }
+        for (unsigned int v = 0; v < values.size() ; v++) { // for each bin
+            Value value = values[v];
+            vector<Tree> mytrees; // keep in memory each Tree object
+            for (unsigned int i=0; i<list.size(); i++) {
+                Tree tree("eq(" + list[i]->id + "," + to_string(value) + ")" );
+                mytrees.push_back(tree);
+            }
+            vector<Tree *> trees(list.size(), NULL);
+            for (unsigned int i=0; i<list.size(); i++) {
+                trees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occurring with the following code trees.push_back(&mytrees.back())
+            }
+            assert(list.size() == trees.size());
+            buildConstraintSum(id, trees, sizes, conditions[v]);
+        }
+    }
+
+    void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, XCondition weightsCondition, XCondition &profitCondition) override {
+        buildConstraintSum(id, list, weights, weightsCondition);
+        buildConstraintSum(id, list, profits, profitCondition);
+    }
+
+    void buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values, bool covered) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        vector<Cost> costs(problem->getDomainInitSize(vars[0]), MIN_COST);
+        for (unsigned int v = 1; v < values.size(); v++) {
+            costs[problem->toIndex(vars[0], values[v])] = MAX_COST;
+        }
+        problem->postUnaryConstraint(vars[0], costs);  // forbid all values for the first variables except values[0]
+        for (int v = 0; v < (int)values.size() - 1; v++) {
+            for (unsigned int i = 1; i < vars.size(); i++) {
+                vector<int> scope;
+                string params = "0";
+                for (unsigned int j = 0; j < i; j++) {
+                    scope.push_back(vars[j]);
+                    params += " 1 " + to_string(values[v]) + " 1";
+                }
+                scope.push_back(vars[i]);
+                params += " 1 " + to_string(values[v+1]) + " -1";
+                problem->postKnapsackConstraint(scope, params, false, true, false); // sum( x[j] = values[v] , j < i ) >= (x[i] == values[v+1])
+            }
+        }
+        if (covered) {
+            for (unsigned int v = 0; v < values.size(); v++) {
+                string params = "1 ";
+                for (unsigned int i = 0; i < vars.size(); i++) {
+                    params += " 1 " + to_string(values[v]) + " 1";
+                }
+                problem->postKnapsackConstraint(vars, params, false, true, false); // each value must be selected at least once
+            }
+        }
+    }
+
+    void buildConstraintPrecedence(string id, vector<XVariable *> &list, bool covered) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        set<Value> svalues;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            for (Value currentval : problem->getEnumDomain(vars[i])) {
+                auto it = svalues.find(currentval);
+                if (it == svalues.end()) {
+                    svalues.insert(currentval);
+                }
+            }
+        }
+        vector<Value> values;
+//        values.assign(svalues.begin(), svalues.end());
+        for (Value currentval : svalues) {
+            values.push_back(currentval);
+        }
+
+        buildConstraintPrecedence(id, list, values, covered);
+    }
+
     void buildUnaryCostFunction(Value mult, int var) {
         unsigned int domsize = problem->getDomainInitSize(var);
         vector<Cost> costs;
@@ -2960,10 +3159,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildObjective(Cost sign, ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) {
-        assert(list.size() == coefs.size());
-        vector<int> vars;
-        toMyVariables(list,vars);
+    void buildObjective(Cost sign, ExpressionObjective type, vector<int> &vars, vector<int> &coefs) {
+        assert(vars.size() == coefs.size());
 //        Cost negcost = MIN_COST;
 //        vector<WeightedVarValPair> weightFunction;
         vector<int> objvars;
@@ -3002,10 +3199,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //                throw WrongFileFormat();
 //            }
         case ExpressionObjective::EXPRESSION_O:
-            assert(list.size() == 1);
+            assert(vars.size() == 1);
         case ExpressionObjective::SUM_O:
-            for (unsigned int i=0; i<list.size(); i++) {
-                buildUnaryCostFunction(sign * coefs[i], list[i]);
+            for (unsigned int i=0; i<vars.size(); i++) {
+                buildUnaryCostFunction(sign * coefs[i], vars[i]);
             }
             break;
         case ExpressionObjective::MINIMUM_O:
@@ -3092,6 +3289,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildObjective(Cost sign, ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) {
+        assert(list.size() == coefs.size());
+        vector<int> vars;
+        toMyVariables(list,vars);
+        buildObjective(sign, type, vars, coefs);
+    }
+
     void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) override {
         ToulBar2::xmlcop = true;
         buildObjective(UNIT_COST, type, list, coefs);
@@ -3101,6 +3305,58 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         ToulBar2::xmlcop = true;
         ToulBar2::costMultiplier *= -1.0;
         buildObjective(-UNIT_COST, type, list, coefs);
+    }
+
+//    void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list, vector<XVariable*> &coefs) override {
+//        ToulBar2::xmlcop = true;
+//        vector<int> vars;
+//        toMyVariables(list,vars);
+//        vector<int> varscoefs;
+//        toMyVariables(coefs,varscoefs);
+//        assert(vars.size() == varscoefs.size());
+//        vector<int> mycoefs(list.size(), 1);
+//        vector<int> varsprod;
+//        for (unsigned int i = 0; i < list.size(); i++) {
+//            string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+//            Value prodinf = min(min(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), min(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
+//            Value prodsup = max(max(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), max(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
+//            assert(prodinf <= prodsup);
+//            int varprod = problem->makeEnumeratedVariable(prodname, prodinf, prodsup);
+//            mapping[prodname] = varprod;
+//            buildConstraintMult(vars[i], varscoefs[i], varprod);
+//            varsprod.push_back(varprod);
+//        }
+//        assert(varsprod.size() == list.size());
+//        buildObjective(UNIT_COST, type, varsprod, mycoefs);
+//    }
+    void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list, vector<XVariable*> &coefs) override {
+        assert(list.size() == coefs.size());
+        vector<Tree> mytrees; // keep in memory each Tree object
+        for (unsigned int i=0; i<list.size(); i++) {
+            Tree tree("mul(" + coefs[i]->id + "," + list[i]->id + ")" );
+            mytrees.push_back(tree);
+        }
+        vector<Tree *> trees(list.size(), NULL);
+        for (unsigned int i=0; i<list.size(); i++) {
+            trees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occuring with the following code trees.push_back(&mytrees.back())
+        }
+        assert(list.size() == trees.size());
+        buildObjectiveMinimize(type, trees);
+    }
+
+    void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list, vector<XVariable*> &coefs) override {
+        assert(list.size() == coefs.size());
+        vector<Tree> mytrees;
+        for (unsigned int i=0; i<list.size(); i++) {
+            Tree tree("mul(" + coefs[i]->id + "," + list[i]->id + ")" );
+            mytrees.push_back(tree);
+        }
+        vector<Tree *> trees(list.size(), NULL);
+        for (unsigned int i=0; i<list.size(); i++) {
+            trees[i] = &mytrees[i];
+        }
+        assert(list.size() == trees.size());
+        buildObjectiveMaximize(type, trees);
     }
 
     void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list) override {
@@ -3206,6 +3462,36 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         ToulBar2::xmlcop = true;
         ToulBar2::costMultiplier *= -1.0;
         buildObjective(-UNIT_COST, type, trees, coefs);
+    }
+
+    void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees, vector<XVariable*> &coefs) override {
+        assert(trees.size() == coefs.size());
+        vector<Tree> mytrees; // keep in memory each Tree object
+        for (unsigned int i=0; i<trees.size(); i++) {
+            Tree tree("mul(" + coefs[i]->id + "," + trees[i]->toString() + ")" );
+            mytrees.push_back(tree);
+        }
+        vector<Tree *> ptrtrees(trees.size(), NULL);
+        for (unsigned int i=0; i<trees.size(); i++) {
+            ptrtrees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occuring with the following code trees.push_back(&mytrees.back())
+        }
+        assert(ptrtrees.size() == trees.size());
+        buildObjectiveMinimize(type, ptrtrees);
+    }
+
+    void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<XVariable *> &coefs) override {
+        assert(trees.size() == coefs.size());
+        vector<Tree> mytrees; // keep in memory each Tree object
+        for (unsigned int i=0; i<trees.size(); i++) {
+            Tree tree("mul(" + coefs[i]->id + "," + trees[i]->toString() + ")" );
+            mytrees.push_back(tree);
+        }
+        vector<Tree *> ptrtrees(trees.size(), NULL);
+        for (unsigned int i=0; i<trees.size(); i++) {
+            ptrtrees[i] = &mytrees[i]; // give access to each Tree object using a pointer // weird bug occuring with the following code trees.push_back(&mytrees.back())
+        }
+        assert(ptrtrees.size() == trees.size());
+        buildObjectiveMaximize(type, ptrtrees);
     }
 
     void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees) override {
