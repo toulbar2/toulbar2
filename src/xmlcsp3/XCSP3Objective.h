@@ -38,8 +38,8 @@ namespace XCSP3Core {
     public : 
         ObjectiveGoal goal;
         ExpressionObjective type;
-        vector<XVariable *> list; 
-        vector<int> coeffs;
+        vector<XVariable *> list;
+        vector<XVariable *> coeffs;
         string expression;
     };
 

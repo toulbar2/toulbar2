@@ -2085,6 +2085,21 @@ namespace XCSP3Core {
             (void)id; (void)list; (void)sizes; (void)cond;
             throw runtime_error("binPacking constraint  is not yet supported");
         }
+
+        virtual void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, vector<int> &capacities, bool load) {
+            (void)id; (void)list; (void)sizes; (void)capacities; (void)load;
+            throw runtime_error("binPacking constraint with capacities (int) is not yet supported");
+        }
+
+        virtual void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, vector<XVariable*> &capacities, bool load) {
+            (void)id; (void)list; (void)sizes; (void)capacities; (void)load;
+            throw runtime_error("binPacking constraint with capacities (Var) is not yet supported");
+        }
+
+        virtual void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, vector<XCondition> &conditions, int startindex) {
+            (void)id; (void)list; (void)sizes; (void)conditions; (void)startindex;
+            throw runtime_error("binPacking constraint with array of conditions is not yet supported");
+        }
 //--------------------------------------------------------------------------------------
 // instantiation constraints
 //--------------------------------------------------------------------------------------
@@ -2197,6 +2212,23 @@ namespace XCSP3Core {
         }
 
         /**
+         * The callback function related to precedence  constraint with defined variable size
+         *
+         * Example:
+         * <precedence class="symmetry-breaking">
+         * <list> x[][] </list>
+         * </precedence>
+         *
+         * @param id the id (name) of the constraint
+         * @param list the list of variables (not necessary the scope)
+         */
+        virtual void buildConstraintPrecedence(string id, vector<XVariable *> &list, bool covered) {
+            (void)id; (void)list; (void)covered;
+            throw runtime_error("precedence constraint not yet supported");
+        }
+
+
+        /**
          * The callback function related to precedence   constraint with defined variable size
          *
          * Example:
@@ -2209,8 +2241,8 @@ namespace XCSP3Core {
          * @param list the list of variables (not necessary the scope)
          * @param values the different vaules
          */
-        virtual void buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values) {
-            (void)id; (void)list; (void)values;
+        virtual void buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values, bool covered) {
+            (void)id; (void)list; (void)values; (void)covered;
             throw runtime_error("precedence constraint not yet supported");
         }
 
@@ -2240,25 +2272,11 @@ namespace XCSP3Core {
          * @param limit an integer
          * @param condition
          */
-        virtual void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, int limit, XCondition &xc) {
-            (void)id; (void)list; (void)weights; (void) profits; (void) limit; (void) xc;
-            throw runtime_error("knapsack constraint with integer limit not yet supported");
+        virtual void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits,XCondition weightsCondition, XCondition &profitCondition) {
+            (void)id; (void)list; (void)weights; (void) profits; (void) weightsCondition; (void) profitCondition;
+            throw runtime_error("knapsack constraint not yet supported");
         }
 
-        /**
-         * The callback function related to knapsack  constraint
-         *
-         * @param id the id (name) of the constraint
-         * @param list the list of variables (not necessary the scope)
-         * @param profits
-         * @param weights
-         * @param limit an integer
-         * @param condition
-         */
-        virtual void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, XVariable* limit, XCondition &xc) {
-            (void)id; (void)list; (void)weights; (void) profits; (void) limit; (void) xc;
-            throw runtime_error("knapsack constraint with variable limitnot yet supported");
-        }
 
 //--------------------------------------------------------------------------------------
 // Objectives
@@ -2353,6 +2371,26 @@ namespace XCSP3Core {
             throw runtime_error("minimize objective sum...  not yet supported");
         }
 
+        /**
+         * The callback function related to an objective minimize a sum/product
+         * See http://xcsp.org/specifications/objectives
+         *
+         * Example:
+         * <objectives>
+         *   <minimize type="sum">
+         *     <list> x1 x2 x3 x4 x5 </list>
+         *     <coeffs> x[] </coeffs>
+         *   </minimize>
+         * <objectives>
+         *
+         * @param type SUM, PRODUCT...
+         * @param list the scope
+         * @param coefs the vector of coefficients (variables)
+         */
+        virtual void buildObjectiveMinimize(ExpressionObjective type, vector<XVariable *> &list, vector<XVariable*> &coefs) {
+            (void)type; (void)list; (void)coefs;
+            throw runtime_error("minimize objective sum  with variables coefficients not yet supported");
+        }
 
         /**
          * The callback function related to an objective maximize a sum/product
@@ -2362,7 +2400,7 @@ namespace XCSP3Core {
          * <objectives>
          *   <maximize type="sum">
          *     <list> x1 x2 x3 x4 x5 </list>
-         *     <coeffs> 2 4 1 4 8 </coeffs>
+         *     <coeffs> y[] </coeffs>
          *   </maximize>
          * <objectives>
          *
@@ -2372,9 +2410,30 @@ namespace XCSP3Core {
          */
         virtual void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) {
             (void)type; (void)list; (void)coefs;
-            throw runtime_error("maximize objective   not yet supported");
+            throw runtime_error("maximize objective not yet supported");
         }
 
+
+        /**
+         * The callback function related to an objective maximize a sum/product
+         * See http://xcsp.org/specifications/objectives
+         *
+         * Example:
+         * <objectives>
+         *   <maximize type="sum">
+         *     <list> x1 x2 x3 x4 x5 </list>
+         *     <coeffs> y[] </coeffs>
+         *   </maximize>
+         * <objectives>
+         *
+         * @param type SUM, PRODUCT...
+         * @param list the scope
+         * @param coefs the vector of coefficients (variables)
+         */
+        virtual void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list, vector<XVariable*> &coefs) {
+            (void)type; (void)list; (void)coefs;
+            throw runtime_error("maximize objective  with variables coefficients not yet supported");
+        }
 
         /**
          * The callback function related to an objective minimize a sum/product with coefs = 1
@@ -2438,6 +2497,26 @@ namespace XCSP3Core {
             throw runtime_error("minimize objective sum with expression  not yet supported");
         }
 
+        /**
+         * The callback function related to an objective minimize a sum/product
+         * See http://xcsp.org/specifications/objectives
+         *
+         * Example:
+         * <objectives>
+         *   <minimize type="sum">
+         *     <list> ne(s[2],2) ne(s[3],3) ... </list>
+         *     <coeffs> x[] </coeffs>
+         *   </minimize>
+         * <objectives>
+         *
+         * @param type SUM, PRODUCT...
+         * @param trees the expressions
+         * @param coefs the vector of coefficients (variables)
+         */
+        virtual void buildObjectiveMinimize(ExpressionObjective type, vector<Tree *> &trees, vector<XVariable*> &coefs) {
+            (void)type; (void)trees; (void)coefs;
+            throw runtime_error("minimize objective sum with expression  not yet supported");
+        }
 
         /**
          * The callback function related to an objective maximize a sum/product
@@ -2460,6 +2539,26 @@ namespace XCSP3Core {
             throw runtime_error("maximize objective with expression  not yet supported");
         }
 
+        /**
+         * The callback function related to an objective maximize a sum/product
+         * See http://xcsp.org/specifications/objectives
+         *
+         * Example:
+         * <objectives>
+         *   <maximize type="sum">
+         *     <list> ne(s[2],2) ne(s[3],3) ... </list>
+         *     <coeffs> x[] </coeffs>
+         *   </maximize>
+         * <objectives>
+         *
+         * @param type SUM, PRODUCT...
+         * @param list the scope
+         * @param coefs the vector of coefficients (variables)
+         */
+        virtual void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<XVariable *> &coefs) {
+            (void)type; (void)trees; (void)coefs;
+            throw runtime_error("maximize objective with expression  not yet supported");
+        }
 
         /**
          * The callback function related to an objective minimize a sum/product with coefs = 1
