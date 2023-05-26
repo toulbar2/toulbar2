@@ -1829,32 +1829,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 case OrderType::IN:
                                 case OrderType::EQ:
                                     if (problem->toValue(vars[i], b) != problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::NE:
                                     if (problem->toValue(vars[i], b) == problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::LE:
                                     if (problem->toValue(vars[i], b) > problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::LT:
                                     if (problem->toValue(vars[i], b) >= problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::GE:
                                     if (problem->toValue(vars[i], b) < problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 case OrderType::GT:
                                     if (problem->toValue(vars[i], b) <= problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)i * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
                                     }
                                     break;
                                 default:
@@ -1888,32 +1888,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             case OrderType::IN:
                             case OrderType::EQ:
                                 if ((Value)i != problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
                                 }
                                 break;
                             case OrderType::NE:
                                 if ((Value)i == problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
                                 }
                                 break;
                             case OrderType::LE:
                                 if ((Value)i > problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
                                 }
                                 break;
                             case OrderType::LT:
                                 if ((Value)i >= problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
                                 }
                                 break;
                             case OrderType::GE:
                                 if ((Value)i < problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
                                 }
                                 break;
                             case OrderType::GT:
                                 if ((Value)i <= problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + i] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
                                 }
                                 break;
                             default:

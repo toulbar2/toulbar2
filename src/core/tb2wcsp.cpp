@@ -884,8 +884,8 @@ int WCSP::makeEnumeratedVariable(string n, Value iinf, Value isup)
     } else {
         x = new VACVariable(this, n, iinf, isup);
     }
-    if ((int)maxdomainsize < isup - iinf + 1)
-        maxdomainsize = isup - iinf + 1;
+    if (maxdomainsize < x->getDomainInitSize())
+        maxdomainsize = x->getDomainInitSize();
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     if (ToulBar2::bilevel) {
         varsBLP[ToulBar2::bilevel - 1].insert(x->wcspIndex);
@@ -902,8 +902,8 @@ int WCSP::makeEnumeratedVariable(string n, vector<Value>& dom)
     } else {
         x = new VACVariable(this, n, dom);
     }
-    if (maxdomainsize < dom.size())
-        maxdomainsize = dom.size();
+    if (maxdomainsize < x->getDomainInitSize())
+        maxdomainsize = x->getDomainInitSize();
     listofsuccessors.push_back(vector<int>()); // add new variable in the topological order list;
     if (ToulBar2::bilevel) {
         varsBLP[ToulBar2::bilevel - 1].insert(x->wcspIndex);
