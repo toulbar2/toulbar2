@@ -569,6 +569,39 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintAlldifferent(vars);
     }
 
+    void buildConstraintAlldifferentList(string id, vector<vector<XVariable *>> &lists) override {
+        for (unsigned int i = 0; i < lists.size(); i++) {
+            for (unsigned int j = 0; j < i; j++) {
+                assert(lists[i].size() == lists[j].size());
+                vector<int> vars;
+                vector<Long> coefs;
+                for (unsigned int k = 0; k < lists[i].size(); k++) {
+                    Tree tree("ne(" + lists[i][k]->id + "," + lists[j][k]->id + ")");
+                    vars.push_back(buildConstraintIntensionVar(&tree));
+                    coefs.push_back(1);
+                }
+                XCondition cond;
+                cond.op = OrderType::GE;
+                cond.val = 1;
+                cond.operandType = OperandType::INTEGER;
+                buildConstraintSum(vars, coefs, cond);
+            }
+        }
+    }
+
+    void buildConstraintAlldifferentMatrix(string id, vector<vector<XVariable *>> &matrix) override {
+        for (unsigned int i = 0; i < matrix.size(); i++) {
+            buildConstraintAlldifferent(id, matrix[i]);
+        }
+        for (unsigned int j = 0; j < matrix[0].size(); j++) {
+            vector<XVariable *> vars;
+            for (unsigned int i = 0; i < matrix[0].size(); i++) {
+                vars.push_back(matrix[i][j]);
+            }
+            buildConstraintAlldifferent(id, vars);
+        }
+    }
+
     void buildConstraintAlldifferentExcept(vector<int> &vars, vector<int> &except) {
         // remove multiple occurrences of the same variable
         for (unsigned int i = 0; i < vars.size(); i++) {
@@ -2285,10 +2318,28 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-//    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex) override {
-//    }
-//    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex, XVariable *value) override {
-//    }
+    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex) override {
+        buildConstraintChannel(id, list, startIndex, list, startIndex);
+    }
+
+    void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex, XVariable *value) override {
+        assert(startIndex == 0);
+        vector<int> vars;
+        toMyVariables(list,vars);
+        int varvalue =  getMyVar(value);
+        buildConstraintPrimitive(varvalue, true, 0, list.size()-1);
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            vector<Cost> costs(problem->getDomainInitSize(vars[i]) * problem->getDomainInitSize(varvalue), MIN_COST);
+            for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
+                for (unsigned int b = 0; b < problem->getDomainInitSize(varvalue); b++) {
+                    if ((problem->toValue(vars[i],a) == 0 && problem->toValue(varvalue,b) == (Value)i) || (problem->toValue(vars[i],a) == 1 && problem->toValue(varvalue,b) != (Value)i)) {
+                        costs[a * problem->getDomainInitSize(varvalue) + b] = MAX_COST;
+                    }
+                }
+            }
+            problem->postBinaryConstraint(vars[i], varvalue, costs);
+        }
+    }
 
     void buildConstraintOrdered(string id, vector<XVariable *> &list, OrderType order) override {
         vector<int> lengths(list.size()-1, 0);
