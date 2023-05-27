@@ -11,11 +11,15 @@
 extern int cmpValue(const void* v1, const void* v2);
 
 class Domain : public BTList<Value> {
+    bool contiguous;
     unsigned int initSize;
     Value distanceToZero;
+    Value notFoundValue;
     DLink<Value>* all;
+    map<Value, unsigned int> mapping;
 
     void init(Value inf, Value sup);
+    void init(vector<Value>& dom);
 
     // make it private because we don't want copy nor assignment
     Domain(const Domain& s);
@@ -36,8 +40,10 @@ public:
 
     void shrink(Value inf, Value sup);
     unsigned int getInitSize() const { return initSize; }
-    unsigned int toIndex(Value v) const { return v - distanceToZero; }
-    Value toValue(int idx) const { return idx + distanceToZero; }
+    unsigned int get(Value v, unsigned int notFound) const { auto it = mapping.find(v); return ((it==mapping.end())?notFound:it->second); }
+    Value getinv(unsigned int idx, Value notFound) const { return ((idx < initSize)?all[idx].content:notFound); }
+    unsigned int toIndex(Value v) const { return ((contiguous)?(v - distanceToZero):get(v,initSize)); }
+    Value toValue(int idx) const { return ((contiguous)?(idx + distanceToZero):getinv(idx, notFoundValue)); }
     unsigned int toCurrentIndex(Value v)
     {
         assert(canbe(v));
@@ -78,6 +84,12 @@ public:
     //Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v)
     {
+        if (!contiguous) {
+            auto it = mapping.lower_bound(v);
+            if (it != mapping.end()) {
+                v = it->first;
+            }
+        }
         assert(toIndex(v) >= 0 && toIndex(v) < initSize);
         iterator iter(&all[toIndex(v)]);
         if (cannotbe(v)) {
@@ -89,6 +101,17 @@ public:
     //Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v)
     {
+        if (!contiguous) {
+            auto it = mapping.lower_bound(v);
+            if (it != mapping.end()) {
+                if (it->first != v) {
+                    --it;
+                    assert(it != mapping.end());
+                    assert(it->first < v);
+                    v = it->first;
+                }
+            }
+        }
         assert(toIndex(v) >= 0 && toIndex(v) < initSize);
         iterator iter(&all[toIndex(v)]);
         if (cannotbe(v)) {
