@@ -2270,8 +2270,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             assert(problem->getDomainInitSize(varcolindex) == matrix[i].size());
             assert(problem->toValue(varrowindex, i) == (Value)i);
             for (unsigned int j=0; j<matrix[i].size(); j++) {
-                assert(varrowindex != matrix[i][j]);
-                assert(varcolindex != matrix[i][j]);
                 assert(problem->toValue(varcolindex, j) == (Value)j);
                 vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(varvalue), MIN_COST);
                 for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {

@@ -4947,16 +4947,22 @@ bool WCSP::verify()
     }
     if (ToulBar2::LcLevel >= LC_AC) {
         for (unsigned int i = 0; i < constrs.size(); i++) {
-            if (constrs[i]->connected() && !constrs[i]->verify())
+            if (constrs[i]->connected() && !constrs[i]->verify()) {
+                if (ToulBar2::verbose >= 1) cout << endl << *constrs[i];
                 return false;
+            }
         }
         for (int i = 0; i < elimBinOrder; i++) {
-            if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->verify())
+            if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->verify()) {
+                if (ToulBar2::verbose >= 1) cout << endl << *elimBinConstrs[i];
                 return false;
+            }
         }
         for (int i = 0; i < elimTernOrder; i++) {
-            if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->verify())
+            if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->verify()) {
+                if (ToulBar2::verbose >= 1) cout << endl << *elimTernConstrs[i];
                 return false;
+            }
         }
     }
     return true;
