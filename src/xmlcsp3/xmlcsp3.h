@@ -226,7 +226,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void buildConstraintExtension(string id, XVariable *variable, vector<int> &tuples, bool isSupport, bool hasStar) override {
         lastTuples = vector<vector<int> >();
-        lastTuples.push_back(tuples);
+        for (auto value:tuples) {
+            vector<int> tuple;
+            tuple.push_back(value);
+            lastTuples.push_back(tuple);
+        }
         buildConstraintExtension(id, variable->id, tuples, isSupport, hasStar);
     }
 
@@ -639,8 +643,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             params += " 0";
                         }
                     }
-                    istringstream file(params);
-                    ((WCSP*)problem)->postKnapsackConstraint(vars.data(), vars.size(), file, false, true, false);
+                    problem->postKnapsackConstraint(vars, params, false, true, false);
                 }
             }
         }

@@ -673,6 +673,7 @@ public:
 
     void setInfiniteCost(Cost ub)
     {
+        bool modified = false;
         Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             unsigned int ix = x->toIndex(*iterx);
@@ -682,16 +683,20 @@ public:
                     unsigned int iz = z->toIndex(*iterz);
                     if (costs.empty()) {
                         if (*iterx == functionX[iy * sizeZ + iz]) {
-                            Cost cost = costsYZ[iy * sizeZ + iz];
+                            Cost cost = costsYZ[iy * sizeZ + iz] + x->getCost(*iterx) + y->getCost(*itery) + z->getCost(*iterz);
                             Cost delta = deltaCostsX[ix] + deltaCostsY[iy] + deltaCostsZ[iz];
-                            if (CUT(cost - delta, ub))
+                            if (CUT(cost - delta, ub)) {
                                 costsYZ[iy * sizeZ + iz] = mult_ub + delta;
+                                modified = true;
+                            }
                         }
                     } else {
-                        Cost cost = costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz];
+                        Cost cost = costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] + x->getCost(*iterx) + y->getCost(*itery) + z->getCost(*iterz);
                         Cost delta = deltaCostsX[ix] + deltaCostsY[iy] + deltaCostsZ[iz];
-                        if (CUT(cost - delta, ub))
+                        if (CUT(cost - delta, ub)) {
                             costs[(size_t)ix * sizeY * sizeZ + (size_t)iy * sizeZ + iz] = mult_ub + delta;
+                            modified = true;
+                        }
                     }
                 }
             }
@@ -699,6 +704,9 @@ public:
         if (costs.empty()) {
             if (CUT(top, ub))
                 top = mult_ub;
+        }
+        if (modified) {
+            propagate();
         }
     }
 

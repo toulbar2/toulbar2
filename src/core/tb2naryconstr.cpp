@@ -795,13 +795,13 @@ void NaryConstraint::setInfiniteCost(Cost ub)
     Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
     if (pf) {
         for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
-            Cost c = it->second;
+            Cost c = it->second; //TODO: add corresponding unary costs
             if (CUT(c, ub))
                 it->second = mult_ub;
         }
     } else {
         for (ptrdiff_t idx = 0; idx < costSize; idx++) {
-            Cost c = costs[idx];
+            Cost c = costs[idx]; //TODO: add corresponding unary costs
             if (CUT(c, ub))
                 costs[idx] = mult_ub;
         }

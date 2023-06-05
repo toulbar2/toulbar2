@@ -358,16 +358,22 @@ public:
 
     void setInfiniteCost(Cost ub)
     {
+        bool modified = false;
         Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             unsigned int ix = x->toIndex(*iterx);
             for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
                 unsigned int iy = y->toIndex(*itery);
-                Cost cost = costs[ix * sizeY + iy];
+                Cost cost = costs[ix * sizeY + iy] + x->getCost(*iterx) + y->getCost(*itery);
                 Cost delta = deltaCostsX[ix] + deltaCostsY[iy];
-                if (CUT(cost - delta, ub))
+                if (CUT(cost - delta, ub)) {
                     costs[ix * sizeY + iy] = mult_ub + delta;
+                    modified = true;
             }
+            }
+        }
+        if (modified) {
+            propagate();
         }
     }
 
