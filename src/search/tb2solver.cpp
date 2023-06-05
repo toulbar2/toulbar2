@@ -3999,9 +3999,9 @@ void Solver::epsDumpSubProblems(CPStore& cp, OpenList& open)
         if (nd.getCost() < wcsp->getUb()) {
             string epsSubProblem = "-x=\"";
             for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value);
+                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value + ((cp[idx].op == CP_INCREASE)?-1:0) + ((cp[idx].op == CP_DECREASE)?1:0));
             }
-            epsfile << epsSubProblem << "\"" << endl;
+            epsfile << epsSubProblem << "\"" <<  " -best=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(nd.getCost()) << std::setprecision(DECIMAL_POINT) << endl;
             nbsp++;
         }
     }
