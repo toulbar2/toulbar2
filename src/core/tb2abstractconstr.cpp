@@ -156,7 +156,7 @@ void AbstractNaryConstraint::projectNaryBeforeSearch()
 void AbstractNaryConstraint::projectNaryTernary(TernaryConstraint* xyz)
 {
     TreeDecomposition* td = wcsp->getTreeDec();
-    if (td)
+    if (td && !ToulBar2::approximateCountingBTD)
         xyz->setCluster(cluster);
     EnumeratedVariable* x = (EnumeratedVariable*)xyz->getVar(0);
     EnumeratedVariable* y = (EnumeratedVariable*)xyz->getVar(1);
@@ -210,7 +210,7 @@ void AbstractNaryConstraint::projectNaryBinary(BinaryConstraint* xy)
         ctr->addCosts(xy);
         xy = ctr;
     } else {
-        if (td) {
+        if (td && !ToulBar2::approximateCountingBTD) {
             if (ctr)
                 xy->setDuplicate();
             xy->setCluster(getCluster());

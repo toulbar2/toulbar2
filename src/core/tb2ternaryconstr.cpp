@@ -625,7 +625,8 @@ void TernaryConstraint::fillxy()
     }
     if (!xy_ || (xy_ && td && !td->isSameCluster(getCluster(), xy_->getCluster()))) {
         xy = wcsp->newBinaryConstr(x, y, this);
-        xy->setCluster(getCluster());
+        if (td && !ToulBar2::approximateCountingBTD)
+            xy->setCluster(getCluster());
         if (td && xy_ && !td->isSameCluster(getCluster(), xy_->getCluster()))
             xy->setDuplicate();
         wcsp->elimBinOrderInc();
@@ -647,7 +648,8 @@ void TernaryConstraint::fillxz()
     }
     if (!xz_ || (xz_ && td && !td->isSameCluster(getCluster(), xz_->getCluster()))) {
         xz = wcsp->newBinaryConstr(x, z, this);
-        xz->setCluster(getCluster());
+        if (td && !ToulBar2::approximateCountingBTD)
+            xz->setCluster(getCluster());
         if (td && xz_ && !td->isSameCluster(getCluster(), xz_->getCluster()))
             xz->setDuplicate();
         wcsp->elimBinOrderInc();
@@ -669,7 +671,8 @@ void TernaryConstraint::fillyz()
     }
     if (!yz_ || (yz_ && td && !td->isSameCluster(getCluster(), yz_->getCluster()))) {
         yz = wcsp->newBinaryConstr(y, z, this);
-        yz->setCluster(getCluster());
+        if (td && !ToulBar2::approximateCountingBTD)
+            yz->setCluster(getCluster());
         if (td && yz_ && !td->isSameCluster(getCluster(), yz_->getCluster()))
             yz->setDuplicate();
         wcsp->elimBinOrderInc();

@@ -2955,7 +2955,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             }
         }
         if (wcsp->numberOfUnassignedVariables() == 0 || (wcsp->numberOfConnectedConstraints() == 0 && nbdelayedblp == 0)) {
-            ToulBar2::approximateCountingBTD = 0;
+            ToulBar2::approximateCountingBTD = false;
             ToulBar2::btdMode = 0;
         } else {
             //ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
