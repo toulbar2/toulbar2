@@ -228,12 +228,24 @@ public:
             assert(connected());
             if (problem) {
                 protect(true);
-                problem->propagate(); // preprocessing();
+                try {
+                    problem->propagate(); // preprocessing();
+                } catch (const Contradiction&) {
+                    deconnect();
+                    clearPtrReferences();
+                    throw;
+                }
                 unprotect();
             }
             if (connected() && negproblem) {
                 protect(true);
-                negproblem->propagate(); // preprocessing();
+                try {
+                    negproblem->propagate(); // preprocessing();
+                } catch (const Contradiction&) {
+                    deconnect();
+                    clearPtrReferences();
+                    throw;
+                }
                 unprotect();
             }
         }
@@ -241,13 +253,7 @@ public:
 
     virtual ~WeightedCSPConstraint()
     {
-        for (auto it = WeightedCSPConstraints.begin(); it != WeightedCSPConstraints.end();) {
-            if (it->second == this) {
-                it = WeightedCSPConstraints.erase(it);
-            } else {
-                ++it;
-            }
-        }
+        clearPtrReferences();
     }
 
     bool extension() const FINAL { return false; } // this is not a cost function represented by an exhaustive table of costs
@@ -778,6 +784,20 @@ public:
     friend void tb2removevalue(int wcspId, int varIndex, Value value, void* solver);
     friend void tb2setmin(int wcspId, int varIndex, Value value, void* solver);
     friend void tb2setmax(int wcspId, int varIndex, Value value, void* solver);
+
+public:
+
+    void clearPtrReferences() {
+        for (auto it = WeightedCSPConstraints.begin(); it != WeightedCSPConstraints.end();) {
+            if (it->second == this) {
+                it = WeightedCSPConstraints.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+
 };
 
 #endif /*TB2GLOBALWCSP_HPP_*/
