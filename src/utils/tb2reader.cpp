@@ -362,7 +362,8 @@ private:
     unsigned int lineCount;
     string currentLine;
     boost::char_separator<char> sep;
-    boost::tokenizer<boost::char_separator<char>>* tok;
+    bool tok_init;
+    boost::tokenizer<boost::char_separator<char>> tok;
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
     Cost upperBound;
@@ -371,10 +372,11 @@ private:
 CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     : iStream(stream)
     , wcsp(wcsp)
+    , tok(string())
 {
     this->lineCount = 0;
     this->JSONMode = false;
-    this->tok = nullptr;
+    this->tok_init = false;
     this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
     this->upperBound = readHeader();
     if (ToulBar2::costThresholdS.size())
@@ -509,20 +511,20 @@ bool CFNStreamReader::getNextLine()
 // Reads a token using lazily updated line by line reads
 std::pair<int, string> CFNStreamReader::getNextToken()
 {
-    if (tok != nullptr) {
-        if (tok_iter != tok->end()) {
+    if (tok_init) {
+        if (tok_iter != tok.end()) {
             string token = *tok_iter;
             tok_iter = std::next(tok_iter);
             return make_pair(lineCount, token);
         } else {
-            delete tok;
-            tok = nullptr;
+            tok_init = false;
             return getNextToken();
         }
     } else {
         if (this->getNextLine()) {
-            tok = new boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
-            tok_iter = tok->begin();
+            tok = boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
+            tok_iter = tok.begin();
+            tok_init = true;
             return getNextToken();
         } else {
             return make_pair(-1, "");
