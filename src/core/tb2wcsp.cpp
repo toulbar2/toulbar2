@@ -854,6 +854,8 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
 
 WCSP::~WCSP()
 {
+    if (ToulBar2::vac)
+        delete vac;
     if (vars.size())
         for (unsigned int i = 0; i < vars.size(); i++)
             delete vars[i];
