@@ -1406,8 +1406,11 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
     //    assert(ctr->extension()); // must be an NaryConstraint or WeightedClause
     assert(arity == ctr->arity());
     s.resize(arity);
-    for (int i = 0; i < arity; i++)
+    for (int i = 0; i < arity; i++) {
         s[i] = ((EnumeratedVariable*)ctr->getVar(i))->toIndex(tuple[i]);
+        if (s[i] < 0 || s[i] >= ((EnumeratedVariable*)ctr->getVar(i))->getDomainInitSize())
+            return; // skip this unvalid tuple
+    }
     ctr->setTuple(s, cost);
 }
 
@@ -1417,7 +1420,7 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
 /// \param cost new cost for this tuple
 /// \warning valid only for global cost function in extension
 /// \warning string encoding of tuples is for advanced users only!
-void WCSP::postNaryConstraintTuple(int ctrindex, const Tuple& tuple, Cost cost)
+void WCSP::postNaryConstraintTupleInternal(int ctrindex, const Tuple& tuple, Cost cost)
 {
     if (ToulBar2::vac)
         histogram(cost);

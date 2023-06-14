@@ -1434,7 +1434,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 
         int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);
         for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
-            this->wcsp->postNaryConstraintTuple(naryIndex, it->first, it->second - minCost); // For each tuple
+            this->wcsp->postNaryConstraintTupleInternal(naryIndex, it->first, it->second - minCost); // For each tuple
         }
         this->wcsp->postNaryConstraintEnd(naryIndex);
     }
@@ -1475,7 +1475,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         int j = 0;
         nctr->firstlex();
         while (nctr->nextlex(tup, cost)) {
-            this->wcsp->postNaryConstraintTuple(cfIndex, tup, costs[j]);
+            this->wcsp->postNaryConstraintTupleInternal(cfIndex, tup, costs[j]);
             j++;
         }
         if (ToulBar2::verbose >= 3)
@@ -2580,7 +2580,7 @@ void WCSP::read_legacy(istream& file)
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
                             for (i = 0; i < arity; i++) {
-                                file >> tup[i]; // FIXME: why not translating from Value to tValue?
+                                file >> tup[i]; // FIXME: why not translating from Value to tValue? (there is no difference if reading a wcsp file with all domains starting at zero)
                             }
                             file >> cost;
                             Cost tmpcost = MULT(cost, K);
@@ -2590,9 +2590,9 @@ void WCSP::read_legacy(istream& file)
                                 tuples.push_back(tup);
                                 costs.push_back(tmpcost);
                             }
-                            postNaryConstraintTuple(naryIndex, tup, tmpcost);
+                            postNaryConstraintTupleInternal(naryIndex, tup, tmpcost);
                         } else {
-                            postNaryConstraintTuple(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
+                            postNaryConstraintTupleInternal(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
                         }
                     }
                     if (shared) {
@@ -3274,7 +3274,7 @@ void WCSP::read_uai2008(const char* fileName)
             nctr->firstlex();
             while (nctr->nextlex(s, cost)) {
                 //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
-                postNaryConstraintTuple(nctr->wcspIndex, s, costs[ictr][j]);
+                postNaryConstraintTupleInternal(nctr->wcspIndex, s, costs[ictr][j]);
                 j++;
             }
             assert(j == costs[ictr].size());
@@ -3682,7 +3682,7 @@ void WCSP::read_wcnf(const char* fileName)
             //            } else {
             //#endif
             int index = postNaryConstraintBegin(scopeIndex, MIN_COST, 1);
-            postNaryConstraintTuple(index, tup, MULT(cost, K));
+            postNaryConstraintTupleInternal(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
             //#ifdef CLAUSE2KNAPSACK
             //            }

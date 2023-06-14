@@ -479,17 +479,17 @@ public:
                                 strvalues[i] = DomsToIndex[wcsp->varsDom[scopeIndex[i]]][MAXDOMSIZEZERO + t[pos]];
                             }
                             if (r->type == REL_SUPPORT) {
-                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MIN_COST);
+                                wcsp->postNaryConstraintTupleInternal(ctrIndex, strvalues, MIN_COST);
                             } else if (r->type == REL_CONFLICT) {
 #ifdef MAXCSP
-                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, UNIT_COST);
+                                wcsp->postNaryConstraintTupleInternal(ctrIndex, strvalues, UNIT_COST);
 #else
-                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MAX_COST_XML);
+                                wcsp->postNaryConstraintTupleInternal(ctrIndex, strvalues, MAX_COST_XML);
 #endif
                             } else if (r->type == REL_SOFT) {
-                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, t[arity]);
+                                wcsp->postNaryConstraintTupleInternal(ctrIndex, strvalues, t[arity]);
                             } else {
-                                wcsp->postNaryConstraintTuple(ctrIndex, strvalues, MAX_COST_XML);
+                                wcsp->postNaryConstraintTupleInternal(ctrIndex, strvalues, MAX_COST_XML);
                             }
 
                             ++itl;

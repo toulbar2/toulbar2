@@ -491,7 +491,7 @@ public:
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = false); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
-    void postNaryConstraintTuple(int ctrindex, const Tuple& tuple, Cost cost);
+    void postNaryConstraintTupleInternal(int ctrindex, const Tuple& tuple, Cost cost);
     void postNaryConstraintEnd(int ctrindex);
 
     // -----------------------------------------------------------
