@@ -854,12 +854,14 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
 
 WCSP::~WCSP()
 {
+    if (vac)
+        delete vac;
     if (vars.size())
         for (unsigned int i = 0; i < vars.size(); i++)
             delete vars[i];
     if (constrs.size())
         for (unsigned int i = 0; i < constrs.size() - ((nbNodes == 0 && solutionCost == MAX_COST) ? 1 : 0); i++)
-            delete constrs[i]; // Warning! The last constraint may be badly allocated due to an exception occuring in its constructor (because of propagate) // If there is no constraint then (constrs.size()-1) overflow!
+            delete constrs[i]; // Warning! The last constraint may be badly allocated due to an exception occurring in its constructor (because of propagate) // If there is no constraint then (constrs.size()-1) overflow!
     if (elimBinConstrs.size())
         for (unsigned int i = 0; i < elimBinConstrs.size(); i++)
             delete elimBinConstrs[i];
@@ -2442,7 +2444,14 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, Wei
     for (unsigned int i = 0; i < scope.size(); i++) {
         scope2.push_back((EnumeratedVariable*)getVar(scope[i]));
     }
-    auto ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP*)problem, (WCSP*)negproblem, lb, ub, duplicateHard, strongDuality);
+    unsigned int nCtr = constrs.size();
+    WeightedCSPConstraint* ctr;
+    try {
+        ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP*)problem, (WCSP*)negproblem, lb, ub, duplicateHard, strongDuality);
+    } catch(const Contradiction&) {
+        constrs.erase(constrs.begin()+nCtr); // clean the list of constraints before the constraint is de allocated
+        throw;
+    }
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(ctr->wcspIndex);
     else {
