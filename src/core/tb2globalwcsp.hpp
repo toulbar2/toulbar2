@@ -282,7 +282,7 @@ public:
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {
-                    if (connected(i)) {
+                    if (connected(i)) { // It will favor diversification by branching on new variables
                         conflictWeights[i]++;
                     }
                 }
@@ -379,6 +379,8 @@ public:
         ToulBar2::removevalue = NULL;
         ToulBar2::setmin = NULL;
         ToulBar2::setmax = NULL;
+        int weightedDegree = ToulBar2::weightedDegree;
+        ToulBar2::weightedDegree = 0; //do not update weighted degrees inside slave problems
         protect();
         int depth = Store::getDepth();
         bool unsat = false;
@@ -408,6 +410,7 @@ public:
         }
         Store::restore(depth);
         unprotect();
+        ToulBar2::weightedDegree = weightedDegree;
         ToulBar2::setvalue = ::tb2setvalue;
         ToulBar2::removevalue = ::tb2removevalue;
         ToulBar2::setmin = ::tb2setmin;
@@ -439,6 +442,8 @@ public:
         ToulBar2::removevalue = NULL;
         ToulBar2::setmin = NULL;
         ToulBar2::setmax = NULL;
+        int weightedDegree = ToulBar2::weightedDegree;
+        ToulBar2::weightedDegree = 0; //do not update weighted degrees inside slave problems
         protect();
         int depth = Store::getDepth();
         try {
@@ -461,6 +466,7 @@ public:
         }
         Store::restore(depth);
         unprotect();
+        ToulBar2::weightedDegree = weightedDegree;
         ToulBar2::setvalue = oldSetValue;
         ToulBar2::removevalue = oldRemoveValue;
         ToulBar2::setmin = oldSetMin;
@@ -560,7 +566,7 @@ public:
                 return;
             }
 
-            if (nonassigned <= NARYPROJECTIONSIZE && (!strongDuality || nonassigned == 0)) {
+            if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE) && (!strongDuality || nonassigned == 0)) {
                 deconnect();
                 projectNary();
             } else {
