@@ -2449,7 +2449,14 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, Wei
     try {
         ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP*)problem, (WCSP*)negproblem, lb, ub, duplicateHard, strongDuality);
     } catch(const Contradiction&) {
-        constrs.erase(constrs.begin()+nCtr); // clean the list of constraints before the constraint is de allocated
+        // clean all potential knapsack constraints
+        auto it = constrs.begin()+nCtr+1;
+        while(it != constrs.end()) {
+            assert(!(*it)->isBinary() && !(*it)->isTernary() && !(*it)->isNary() && !(*it)->isGlobal() && !(*it)->extension());
+            (*it)->deconnect();
+            delete *it;
+            it = constrs.erase(it);
+        }
         throw;
     }
     if (isDelayedNaryCtr)
