@@ -543,6 +543,8 @@ void tb2init()
     ToulBar2::initialLbBLP.clear();
     ToulBar2::initialUbBLP.clear();
 
+    WCSP::CollectionOfWCSP.clear();
+
     WeightedCSPConstraint::MasterWeightedCSP = NULL;
     WeightedCSPConstraint::WeightedCSPConstraints.clear();
     WeightedCSPConstraint::_protected_ = false;
