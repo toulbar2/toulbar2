@@ -2982,9 +2982,9 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 assert(negproblem2->getCurrentDeltaUb() == MIN_COST);
             }
         }
-    } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)ToulBar2::weightedDegree))) {
+    } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)abs(ToulBar2::weightedDegree)))) {
         if (ToulBar2::verbose >= 0)
-            cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;
+            cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << abs(ToulBar2::weightedDegree) << ")" << endl;
         ToulBar2::weightedDegree = 0;
     }
 
@@ -3049,7 +3049,7 @@ bool Solver::solve(bool first)
                         ToulBar2::restart = 0;
                         if (ToulBar2::verbose >= 0)
                             cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
-                        if (ToulBar2::debug >= 1 && ToulBar2::weightedDegree > 0) {
+                        if (ToulBar2::debug >= 1 && ToulBar2::weightedDegree) {
                             int size = unassignedVars->getSize();
                             ValueCost sorted[size];
                             int i = 0;

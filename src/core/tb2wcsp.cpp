@@ -544,6 +544,7 @@ void tb2init()
     ToulBar2::initialUbBLP.clear();
 
     WeightedCSPConstraint::MasterWeightedCSP = NULL;
+    WeightedCSPConstraint::WeightedCSPConstraints.clear();
     WeightedCSPConstraint::_protected_ = false;
     WeightedCSPConstraint::preprocessFunctional = 0;
     WeightedCSPConstraint::elimDegree = -1;

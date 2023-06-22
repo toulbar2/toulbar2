@@ -272,7 +272,7 @@ public:
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
-        return conflictWeights[varIndex] + Constraint::getConflictWeight() + ((problem) ? problem->getWeightedDegree(varIndex) : 0) + ((negproblem) ? negproblem->getWeightedDegree(varIndex) : 0);
+        return conflictWeights[varIndex] + Constraint::getConflictWeight() + ((problem && ToulBar2::weightedDegree > 0) ? problem->getWeightedDegree(varIndex) : 0) + ((negproblem && ToulBar2::weightedDegree > 0) ? negproblem->getWeightedDegree(varIndex) : 0);
     }
     void incConflictWeight(Constraint* from) override
     {

@@ -1719,7 +1719,7 @@ int _tmain(int argc, TCHAR* argv[])
             // weitghted Degree (var ordering )
             if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL) {
                 int weighteddegree = atol(args.OptionArg());
-                if (weighteddegree > 0)
+                if (weighteddegree != 0)
                     ToulBar2::weightedDegree = weighteddegree;
             } else if (args.OptionId() == NO_OPT_weightedDegree) {
                 ToulBar2::weightedDegree = 0;
