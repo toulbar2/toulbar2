@@ -1780,7 +1780,8 @@ void Solver::singletonConsistency()
                 int storedepth = Store::getDepth();
                 try {
                     Store::store();
-                    assign(varIndex, sorted[a].value);
+                    wcsp->assign(varIndex, sorted[a].value);
+                    wcsp->propagate();
                 } catch (const Contradiction&) {
                     wcsp->whenContradiction();
                     deadend = true;
@@ -1790,7 +1791,8 @@ void Solver::singletonConsistency()
                 wcsp->updateSingleton();
                 //cout << "(" << varIndex << "," << a <<  ")" << endl;
                 if (deadend) {
-                    remove(varIndex, sorted[a].value);
+                    wcsp->remove(varIndex, sorted[a].value);
+                    wcsp->propagate();
                     if (ToulBar2::verbose >= 0) {
                         cout << ".";
                         flush(cout);

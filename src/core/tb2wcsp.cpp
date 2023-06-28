@@ -4379,6 +4379,7 @@ void WCSP::setInfiniteCost()
             elimTernConstrs[i]->setInfiniteCost(ub);
         }
     }
+    propagate();
 }
 
 bool WCSP::isfinite() const
