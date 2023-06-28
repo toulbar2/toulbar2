@@ -68,6 +68,7 @@ The first line is only useful for Linux distributions that ship "old" versions o
 
 Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
 
+    pip3 install pybind11
     mkdir build
     cd build
     cmake -DPYTB2=ON ..
