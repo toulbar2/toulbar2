@@ -102,6 +102,7 @@ Recommended libraries (default use):
 
 Optional libraries:
 * libjemalloc-dev
+* pybind11-dev
 * libopenmpi-dev
 * libboost-mpi-dev
 * libicuuc
