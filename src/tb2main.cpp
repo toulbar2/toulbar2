@@ -1872,7 +1872,7 @@ int _tmain(int argc, TCHAR* argv[])
                     int size = atol(args.OptionArg());
                     ToulBar2::hve = size;
                 } else
-                    ToulBar2::hve = (1 << (sizeof(tValue) * 8 - 1)) - 1;
+                    ToulBar2::hve = std::numeric_limits<tValue>::max();
                 if (ToulBar2::debug && ToulBar2::hve != 0)
                     cout << "preprocess hidden variable encoding ON" << endl;
             } else if (args.OptionId() == NO_OPT_preprocessHVE) {
@@ -1893,7 +1893,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug && ToulBar2::pwc != 0)
                     cout << "preprocess pairwise consistency ON" << endl;
                 if (ToulBar2::hve == 0) {
-                    ToulBar2::hve = (1 << (sizeof(tValue) * 8 - 1)) - 1;
+                    ToulBar2::hve = std::numeric_limits<tValue>::max();
                     if (ToulBar2::debug && ToulBar2::hve == 0)
                         cout << "preprocess hidden variable encoding ON" << endl;
                 }

@@ -72,7 +72,11 @@ typedef int16_t Value;
 typedef int16_t tValue;
 #else
 typedef int Value;
+#if defined(XMLFLAG) || defined(XMLFLAG3)
+typedef int tValue;
+#else
 typedef int16_t tValue;
+#endif
 #endif
 
 /// Maximum domain value

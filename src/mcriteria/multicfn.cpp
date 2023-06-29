@@ -477,7 +477,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     Double global_lb = 0.;
     Double global_ub = 0.;
 
-    bool dir_consistency = true;
+    // bool dir_consistency = true;
 
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
 

@@ -27,7 +27,7 @@ Domain::Domain(vector<Value>& dom)
     , notFoundValue(initSize + distanceToZero)
 {
     assert(dom.size() >= 1);
-    assert(dom.size() <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
+    assert(dom.size() <= std::numeric_limits<tValue>::max());
     qsort(&dom[0], dom.size(), sizeof(Value), cmpValue);
     if (dom[dom.size() - 1] - dom[0] + 1 <= 2 * (int)dom.size()) {
         init(dom[0], dom[dom.size() - 1]);
@@ -50,7 +50,7 @@ void Domain::init(Value inf, Value sup)
 {
     assert(contiguous);
     assert(sup - inf + 1 >= 1);
-    assert(sup - inf + 1 <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
+    assert(sup - inf + 1 <= std::numeric_limits<tValue>::max());
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     assert(distanceToZero == 0);
 #endif
@@ -67,7 +67,7 @@ void Domain::init(vector<Value>& dom)
     assert(false);
 #endif
     assert(!contiguous);
-    assert(dom.size() <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
+    assert(dom.size() <= std::numeric_limits<tValue>::max());
     all = new DLink<Value>[dom.size() + 1];
     for (unsigned int idx = 0; idx < dom.size(); idx++) {
         all[idx].content = dom[idx];

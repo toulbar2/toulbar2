@@ -71,13 +71,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     // transforms a vector of XVariable in vector of toulbar2 variable indices and add it to dest (assuming only one occurrence of each variable)
     void toMyVariables(vector<XVariable*> &src, vector<int> &dest) {
         set<int> control;
-        int initsize = (int)dest.size();
+        size_t initsize = dest.size();
         for(unsigned int i = 0;i<src.size();i++) {
             dest.push_back(getMyVar(src[i]));
             control.insert(getMyVar(src[i]));
         }
-        assert((int)dest.size() - initsize == (int)control.size());
         assert(dest.size() > initsize);
+        assert(dest.size() - initsize == control.size());
     }
 
     // transforms a vector of string Variable name in vector of toulbar2 variable indices and add it to dest

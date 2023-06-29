@@ -1413,8 +1413,8 @@ void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost c
     s.resize(arity);
     for (int i = 0; i < arity; i++) {
         s[i] = ((EnumeratedVariable*)ctr->getVar(i))->toIndex(tuple[i]);
-        if (s[i] < 0 || s[i] >= ((EnumeratedVariable*)ctr->getVar(i))->getDomainInitSize())
-            return; // skip this unvalid tuple
+        if (s[i] < 0 || (unsigned int)s[i] >= ((EnumeratedVariable*)ctr->getVar(i))->getDomainInitSize())
+            return; // skip this invalid tuple
     }
     ctr->setTuple(s, cost);
 }
