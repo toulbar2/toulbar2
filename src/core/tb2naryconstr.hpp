@@ -250,6 +250,8 @@ public:
 
     void propagate()
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         for (int i = 0; connected() && i < arity_; i++) {
             if (getVar(i)->assigned())
                 assign(i);

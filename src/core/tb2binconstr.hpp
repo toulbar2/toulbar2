@@ -522,6 +522,8 @@ public:
 
     void propagate()
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         if (x->assigned()) {
             assign(0);
             return;

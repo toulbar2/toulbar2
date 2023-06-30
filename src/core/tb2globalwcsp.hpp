@@ -602,6 +602,8 @@ public:
     // propagates from scratch
     void propagate() override
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         //FIXME: synchronize current domains between master and slave problems at initialization?
         wcsp->revise(this);
         if (problem) {

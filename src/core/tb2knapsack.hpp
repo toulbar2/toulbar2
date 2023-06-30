@@ -405,7 +405,7 @@ public:
     void incConflictWeight(Constraint* from) override
     {
         assert(from != NULL);
-        if (!sameweight) {
+        if (!sameweight) { //TODO: else Constraint::incConflictWeight(1)
             if (from == this) {
                 if (deconnected() || nonassigned == arity_) {
                     Constraint::incConflictWeight(1);
@@ -1515,6 +1515,8 @@ public:
     }
     void propagate() override
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         if (ToulBar2::interrupted) {
             throw TimeOut();
         }

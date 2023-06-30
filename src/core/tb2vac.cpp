@@ -541,7 +541,7 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
         } else if (cij->revise(xi, v)) {
             wipeout = xi->removeVAC(v);
             xi->setKiller(v, xj->wcspIndex);
-            queueP->push(pair<int, int>(xi->wcspIndex, v));
+            queueP->push(pair<int, Value>(xi->wcspIndex, v));
             if (wipeout) {
                 inconsistentVariable = xi->wcspIndex;
                 return true;
@@ -660,7 +660,7 @@ void VACExtension::enforcePass2()
         if (xi->isMarked(v, nbIterations)) {
             j = xi->getKiller(v);
             xj = (VACVariable*)wcsp->getVar(j);
-            queueR->push(pair<int, int>(i, v));
+            queueR->push(pair<int, Value>(i, v));
             cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
             assert(cij);
             assert(!cij->isDuplicate());
