@@ -511,6 +511,9 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 // Transforms hard clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
 #define CLIQUE2KNAPSACK
 
+// Transforms nary cost function on Boolean variables with a single nonzero tuple into weighted clause constraint
+const bool NARY2CLAUSE = true;
+
 // Transforms hard clause constraint into knapsack constraint
 //#define CLAUSE2KNAPSACK
 

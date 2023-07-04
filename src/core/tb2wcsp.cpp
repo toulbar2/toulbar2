@@ -1045,11 +1045,11 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
             if (isinf(dcosts[a * y->getDomainInitSize() + b])) {
                 icosts[a * y->getDomainInitSize() + b] = MAX_COST;
             } else {
-                icosts[a * y->getDomainInitSize() + b] = (Cost)(round((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
+                icosts[a * y->getDomainInitSize() + b] = (Cost)(roundl((dcosts[a * y->getDomainInitSize() + b] - minCost) * pow(10, ToulBar2::decimalPoint)));
             }
         }
     }
-    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
+    negCost -= (Cost)(roundl(minCost * pow(10, ToulBar2::decimalPoint)));
     if (incremental) {
         res = postIncrementalBinaryConstraint(xIndex, yIndex, icosts);
     } else {
@@ -1124,11 +1124,11 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++) {
             for (unsigned int c = 0; c < z->getDomainInitSize(); c++) {
                 Double cost = dcosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c];
-                icosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] = (isinf(cost) ? MAX_COST : (Cost)(round((cost - minCost) * pow(10, ToulBar2::decimalPoint))));
+                icosts[(size_t)a * (size_t)y->getDomainInitSize() * (size_t)z->getDomainInitSize() + (size_t)b * (size_t)z->getDomainInitSize() + (size_t)c] = (isinf(cost) ? MAX_COST : (Cost)(roundl((cost - minCost) * pow(10, ToulBar2::decimalPoint))));
             }
         }
     }
-    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
+    negCost -= (Cost)(roundl(minCost * pow(10, ToulBar2::decimalPoint)));
     if (incremental) {
         res = postIncrementalTernaryConstraint(xIndex, yIndex, zIndex, icosts);
     } else {
@@ -3185,7 +3185,7 @@ void WCSP::postNullaryConstraint(Double cost)
         initlb3 = getLb();
     }
 
-    postNullaryConstraint((isinf(cost) ? MAX_COST : (Cost)(round(cost * pow(10, ToulBar2::decimalPoint)))));
+    postNullaryConstraint((isinf(cost) ? MAX_COST : (Cost)(roundl(cost * pow(10, ToulBar2::decimalPoint)))));
 
     if (bilevel3) {
         ToulBar2::bilevel = 3;
@@ -3270,9 +3270,9 @@ void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremen
     vector<Cost> icosts;
     icosts.reserve(dcosts.size());
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-        icosts[a] = (isinf(dcosts[a]) ? MAX_COST : (Cost)(round((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint))));
+        icosts[a] = (isinf(dcosts[a]) ? MAX_COST : (Cost)(roundl((dcosts[a] - minCost) * pow(10, ToulBar2::decimalPoint))));
     }
-    negCost -= (Cost)(round(minCost * pow(10, ToulBar2::decimalPoint)));
+    negCost -= (Cost)(roundl(minCost * pow(10, ToulBar2::decimalPoint)));
     if (incremental) {
         postIncrementalUnaryConstraint(xIndex, icosts);
     } else {

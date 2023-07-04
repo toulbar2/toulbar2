@@ -487,8 +487,8 @@ public:
     int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
-    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = false) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
-    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = false); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
+    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
+    int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
     void postNaryConstraintTupleInternal(int ctrindex, const Tuple& tuple, Cost cost);
@@ -897,7 +897,7 @@ public:
     // warning: ToulBar2::NormFactor has to be initialized
     pair<Cost, int> Decimal2Cost(const string& decimalToken, const unsigned int lineNumber) const;
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
-    Cost DoubletoCost(const Double& c) const { return Round(c * pow10Cache[ToulBar2::decimalPoint]) + negCost; }
+    Cost DoubletoCost(const Double& c) const { return (Cost)roundl(c * pow10Cache[ToulBar2::decimalPoint]) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
     Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / pow10Cache[ToulBar2::decimalPoint] / ToulBar2::costMultiplier); } //Relative costs
     std::string DCost2Decimal(const Double& c)

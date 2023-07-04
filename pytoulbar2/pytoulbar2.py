@@ -183,7 +183,7 @@ class CFN:
             self.CFN.wcsp.postNullaryConstraint(mincost)
             if (mincost == maxcost):
                 return
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0), True)
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0))
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
                 if (isinf(cost)):
@@ -254,7 +254,7 @@ class CFN:
             self.CFN.wcsp.postNullaryConstraint(mincost)
             if (mincost == maxcost):
                 return
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts), False)
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
                 self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
             self.CFN.wcsp.postNaryConstraintEnd(idx)

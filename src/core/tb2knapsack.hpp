@@ -1567,7 +1567,7 @@ public:
 #endif
                     //Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
-                    if (!b && !ToulBar2::dumpWCSP && !ToulBar2::addAMOConstraints_ && ToulBar2::LcLevel == LC_EDAC) {
+                    if (!b && !ToulBar2::addAMOConstraints_ && ToulBar2::LcLevel == LC_EDAC) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {
