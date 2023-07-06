@@ -5587,7 +5587,7 @@ bool WCSP::propagated()
         && Eliminate.empty() && (!ToulBar2::vac || CSP(getLb(), getUb()) || vac->isVAC()));
 }
 
-void WCSP::propagate()
+void WCSP::propagate(bool fromscratch)
 {
     if (ToulBar2::interrupted)
         throw TimeOut();
@@ -5610,6 +5610,25 @@ void WCSP::propagate()
             if (x->unassigned()) {
                 x->setCostProvidingPartition(); // For EAC propagation
             }
+        }
+    }
+
+    if (fromscratch) {
+        for (unsigned int i = 0; i < numberOfConstraints(); i++) {
+            Constraint* ctr = getCtr(i);
+            // Postpone global constraint propagation at the end (call to WCSP::propagate())
+            if (ctr->connected() && !ctr->isGlobal() && !ctr->isSep())
+                ctr->propagate();
+        }
+        for (int i = 0; i < elimBinOrder; i++) {
+            Constraint* ctr = elimBinConstrs[i];
+            if (ctr->connected())
+                ctr->propagate();
+        }
+        for (int i = 0; i < elimTernOrder; i++) {
+            Constraint* ctr = elimTernConstrs[i];
+            if (ctr->connected())
+                ctr->propagate();
         }
     }
 

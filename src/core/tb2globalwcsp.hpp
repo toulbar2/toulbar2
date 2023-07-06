@@ -229,7 +229,7 @@ public:
             if (problem) {
                 protect(true);
                 try {
-                    problem->propagate(); // preprocessing();
+                    problem->propagate(true); // preprocessing();
                 } catch (const Contradiction&) {
                     deconnect();
                     clearPtrReferences();
@@ -240,7 +240,7 @@ public:
             if (connected() && negproblem) {
                 protect(true);
                 try {
-                    negproblem->propagate(); // preprocessing();
+                    negproblem->propagate(true); // preprocessing();
                 } catch (const Contradiction&) {
                     deconnect();
                     clearPtrReferences();

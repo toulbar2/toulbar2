@@ -383,7 +383,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("deactivatePropagate", &WeightedCSP::deactivatePropagate)
         .def("isactivatePropagate", &WeightedCSP::isactivatePropagate)
         .def("reactivatePropagate", &WeightedCSP::reactivatePropagate)
-        .def("propagate", &WeightedCSP::propagate)
+        .def("propagate", &WeightedCSP::propagate, py::arg("fromscratch") = false)
         .def("verify", &WeightedCSP::verify)
         .def("numberOfVariables", &WeightedCSP::numberOfVariables)
         .def("numberOfUnassignedVariables", &WeightedCSP::numberOfUnassignedVariables)
@@ -402,10 +402,9 @@ PYBIND11_MODULE(pytb2, m)
         .def("getValueName", &WeightedCSP::getValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
         .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
-        .def(
-            "postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-                return s.postUnaryConstraint(xIndex, costs, incremental);
-            },
+        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
+            return s.postUnaryConstraint(xIndex, costs, incremental);
+        },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
             return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);

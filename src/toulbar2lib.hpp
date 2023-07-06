@@ -188,7 +188,7 @@ public:
     virtual void deactivatePropagate() = 0; ///< \brief forbids propagate calls
     virtual bool isactivatePropagate() = 0; ///< \brief are propagate calls authorized?
     virtual void reactivatePropagate() = 0; ///< \brief re-authorizes propagate calls
-    virtual void propagate() = 0; ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction)
+    virtual void propagate(bool fromscratch = false) = 0; ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction). If fromscratch is true then propagates every cost function at least once.
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
     virtual void addAMOConstraints() = 0;
 

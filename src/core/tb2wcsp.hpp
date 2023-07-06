@@ -398,7 +398,7 @@ public:
     void deactivatePropagate() { reentrant = true; } ///< \brief forbids propagate calls
     bool isactivatePropagate() { return reentrant == false; } ///< \brief are propagate calls authorized?
     void reactivatePropagate() { reentrant = false; } ///< \brief re-authorizes propagate calls
-    void propagate(); ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes
+    void propagate(bool fromscratch = false); ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes. If fromscratch is true then propagates every cost function at least once.
     bool verify(); ///< \brief checks the propagation fix point is correctly reached \warning might change EAC supports
     bool propagated(); ///< \brief returns true if the propagation fix point is reached
 
