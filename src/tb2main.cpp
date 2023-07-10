@@ -64,6 +64,8 @@ ostream myCout(cout.rdbuf());
 
 void conflict() {}
 
+extern void newsolution(int wcspId, void* solver);
+
 #ifdef PARETOPAIR_COST
 void initCosts()
 {
@@ -204,6 +206,8 @@ enum {
     OPT_constrOrdering,
     OPT_solutionBasedPhaseSaving,
     NO_OPT_solutionBasedPhaseSaving,
+    OPT_bisupport,
+    NO_OPT_bisupport,
     OPT_weightedDegree,
     NO_OPT_weightedDegree,
     OPT_weightedTightness,
@@ -317,6 +321,7 @@ enum {
 
     // random generator
     OPT_seed,
+    OPT_sigma,
     OPT_random,
 
 // VNS Methods
@@ -459,6 +464,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_constrOrdering, (char*)"-sortc", SO_REQ_SEP },
     { OPT_solutionBasedPhaseSaving, (char*)"-solr", SO_NONE },
     { NO_OPT_solutionBasedPhaseSaving, (char*)"-solr:", SO_NONE },
+    { OPT_bisupport, (char*)"-bisupport", SO_OPT },
+    { NO_OPT_bisupport, (char*)"-bisupport:", SO_NONE },
     { OPT_weightedDegree, (char*)"-q", SO_OPT },
     { NO_OPT_weightedDegree, (char*)"-q:", SO_NONE },
     { OPT_weightedTightness, (char*)"-m", SO_OPT },
@@ -591,6 +598,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // random generator
     { OPT_seed, (char*)"-seed", SO_REQ_SEP },
     { OPT_random, (char*)"-random", SO_REQ_SEP }, // init upper bound in cli
+    { OPT_sigma, (char*)"-sigma", SO_REQ_SEP },
+    { OPT_sigma, (char*)"--sigma", SO_REQ_SEP },
 
 // VNS Methods
 #ifdef BOOST
@@ -820,7 +829,7 @@ void help_msg(char* toulbar2filename)
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)" << endl;
-    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or cfn files resp. (default value is " << ToulBar2::resolution << ")" << endl;
     cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
@@ -847,6 +856,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   -bt=[integer] : limit on the number of backtracks (" << ToulBar2::backtrackLimit << " by default)" << endl;
     cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
+    cout << "   -sigma=[real] : standard deviation of zero-centered gaussian noise added to energy values in UAI format file (default value is " << ToulBar2::sigma << ")" << endl;
     cout << "   --stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp" << endl;
     cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
     cout << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
@@ -873,6 +883,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
     cout << endl;
+    cout << "   -bisupport=[float] : in bi-objective optimization with the second objective encapsulated by a bounding constraint, the value heuristic chooses between both EAC supports of first (main) and second objectives by minimum weighted regret (if parameter is non-negative, it is used as the weight for the second objective) or always chooses the EAC support of the first objective (if parameter is zero) or always chooses the second objective (if parameter is negative, -" + to_string(BISUPPORT_HEUR_LB) + ": for choosing EAC from the lower bound constraint, -" + to_string(BISUPPORT_HEUR_UB) + ": from the upper bound constraint, -" + to_string(BISUPPORT_HEUR_MINGAP) + ": to favor the smallest gap, -" + to_string(BISUPPORT_HEUR_MAXGAP) + ": to favor the largest gap) (default value is " << ToulBar2::bisupport << ")" << endl;
     cout << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
     cout << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
     cout << "   -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)";
@@ -944,7 +955,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -kmin=[integer] : minimum neighborhood size for VNS-like methods (" << ToulBar2::vnsKmin << " by default)" << endl;
     cout << "   -kmax=[integer] : maximum neighborhood size for VNS-like methods (number of problem variables by default)" << endl;
     cout << "   -kinc=[integer] : neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (" << ToulBar2::vnsKinc << " by default)" << endl;
-    cout << "   -best=[decimal] : stop VNS-like methods if a better solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
+    cout << "   -best=[decimal] : stop DFBB or VNS-like methods if a better or equal solution is found (default value is " << ToulBar2::vnsOptimum << ")" << endl;
     cout << endl;
 #endif
     cout << "   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or \"problem.wcsp/.cfn\"  if no parameter is given)" << endl;
@@ -1075,6 +1086,15 @@ void help_msg(char* toulbar2filename)
     cout << "      nary-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of n-ary cost functions" << endl;
     cout << " or:                                                                               " << endl;
     cout << "      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)" << endl;
+    cout << " or:                                                                               " << endl;
+    cout << "      vertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{seed}  :t1 is the tightness (should be equal to 25)" << endl;
+    cout << "                                                      :p2 is the number of edges" << endl;
+    cout << "                                                      :maxcost each vertex has a weight randomly chosen between 0 and maxcost" << endl;
+    cout << " or:                                                                               " << endl;
+    cout << "      bivertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{ub2}-{seed} :t1 is the tightness (should be equal to 25)" << endl;
+    cout << "                                                             :p2 is the number of edges in the graph" << endl;
+    cout << "                                                             :maxcost each vertex has two weights, both randomly chosen between 0 and maxcost" << endl;
+    cout << "                                                             :ub2 upper bound for the bounding constraint on the second objective" << endl;
     cout << "---------------------------" << endl;
     cout << "			" << endl;
 
@@ -1174,32 +1194,32 @@ int _tmain(int argc, TCHAR* argv[])
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 
- string VER; //  release version
- string CMD; //  command line option
- string BIN="toulbar2";
+    string VER; //  release version
+    string CMD; //  command line option
+    string BIN = "toulbar2";
     if (!(ToulBar2::verbose < 0)) {
-	VER="c "+to_string(CurrentBinaryPath);
+        VER = "c " + to_string(CurrentBinaryPath);
 #ifdef MENDELSOFT
-	VER.append("mendelsoft");
-	BIN="mendelsoft";
+        VER.append("mendelsoft");
+        BIN = "mendelsoft";
 #else
-	VER.append("toulbar2");
+        VER.append("toulbar2");
 #endif
-        VER.append("  version : "+ to_string(ToulBar2::version) + ", copyright (c) 2006-2022, toulbar2 team");
+        VER.append("  version : " + to_string(ToulBar2::version) + ", copyright (c) 2006-2022, toulbar2 team");
     }
 
-///////print command line /////
- CMD="cmd: "+ to_string(CurrentBinaryPath)+ BIN;
-	 int counter;
-        for(counter=1;counter<argc;counter++) CMD.append(" "+to_string(argv[counter]));
-  
+    ///////print command line /////
+    CMD = "cmd: " + to_string(CurrentBinaryPath) + BIN;
+    int counter;
+    for (counter = 1; counter < argc; counter++)
+        CMD.append(" " + to_string(argv[counter]));
 
-////////////////
+    ////////////////
     // --------------------------simple opt ----------------------
 
     // declare our options parser, pass in the arguments from main
     // as well as our array of valid options.
-    
+
     CSimpleOpt args(argc, argv, g_rgOptions);
 
     while (args.Next()) {
@@ -1379,9 +1399,11 @@ int _tmain(int argc, TCHAR* argv[])
             }
 #endif
             if (args.OptionId() == OPT_optimum) {
-                if (args.OptionArg() != NULL)
+                if (args.OptionArg() != NULL) {
                     //                    ToulBar2::vnsOptimum = atoll(args.OptionArg());
                     ToulBar2::vnsOptimumS = args.OptionArg();
+                    ToulBar2::newsolution = newsolution;
+                }
             }
 #endif
 
@@ -1608,6 +1630,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfsGlobalLimit = 0;
                 ToulBar2::DEE = 0;
                 ToulBar2::elimDegree = -1;
+                ToulBar2::elimDegree_preprocessing = -1;
                 ToulBar2::preprocessFunctional = 0;
             } else if (args.OptionId() == NO_OPT_bilevel) {
                 ToulBar2::bilevel = 0;
@@ -1669,6 +1692,16 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::solutionBasedPhaseSaving = false;
             }
 
+            if (args.OptionId() == OPT_bisupport) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::bisupport = atof(args.OptionArg());
+                } else {
+                    ToulBar2::bisupport = -(BISUPPORT_HEUR_MINGAP);
+                }
+            } else if (args.OptionId() == NO_OPT_bisupport) {
+                ToulBar2::bisupport = 0.;
+            }
+
             if (args.OptionId() == OPT_weightedTightness) {
                 if (args.OptionArg() != NULL) {
                     int weightedtight = atol(args.OptionArg());
@@ -1686,7 +1719,7 @@ int _tmain(int argc, TCHAR* argv[])
             // weitghted Degree (var ordering )
             if (args.OptionId() == OPT_weightedDegree and args.OptionArg() != NULL) {
                 int weighteddegree = atol(args.OptionArg());
-                if (weighteddegree > 0)
+                if (weighteddegree != 0)
                     ToulBar2::weightedDegree = weighteddegree;
             } else if (args.OptionId() == NO_OPT_weightedDegree) {
                 ToulBar2::weightedDegree = 0;
@@ -1839,7 +1872,7 @@ int _tmain(int argc, TCHAR* argv[])
                     int size = atol(args.OptionArg());
                     ToulBar2::hve = size;
                 } else
-                    ToulBar2::hve = (1 << (sizeof(tValue) * 8 - 1)) - 1;
+                    ToulBar2::hve = std::numeric_limits<tValue>::max();
                 if (ToulBar2::debug && ToulBar2::hve != 0)
                     cout << "preprocess hidden variable encoding ON" << endl;
             } else if (args.OptionId() == NO_OPT_preprocessHVE) {
@@ -1860,7 +1893,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug && ToulBar2::pwc != 0)
                     cout << "preprocess pairwise consistency ON" << endl;
                 if (ToulBar2::hve == 0) {
-                    ToulBar2::hve = (1 << (sizeof(tValue) * 8 - 1)) - 1;
+                    ToulBar2::hve = std::numeric_limits<tValue>::max();
                     if (ToulBar2::debug && ToulBar2::hve == 0)
                         cout << "preprocess hidden variable encoding ON" << endl;
                 }
@@ -2162,6 +2195,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == MENDEL_OPT_resolution) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::resolution = atoi(args.OptionArg());
+                    ToulBar2::resolution_Update = true;
                     if (ToulBar2::debug)
                         cout << "New assignment for precision = " << ToulBar2::resolution << endl;
                 }
@@ -2208,7 +2242,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_verbose) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::verbose = atoi(args.OptionArg());
-		 
+
                 } else {
                     ToulBar2::verbose = 0;
                 }
@@ -2352,6 +2386,15 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::seed = seed;
             }
 
+            if (args.OptionId() == OPT_sigma) {
+                if (args.OptionArg() != NULL) {
+                    double sigma = std::stold(args.OptionArg());
+                    ToulBar2::sigma = sigma;
+                    if (ToulBar2::debug)
+                        cout << "Toulbar2 sigma update =" << sigma << endl;
+                }
+            }
+
             if (args.OptionId() == OPT_random) {
 
                 random_desc = args.OptionArg();
@@ -2490,12 +2533,11 @@ int _tmain(int argc, TCHAR* argv[])
         _tprintf(_T("Error while globbing files\n"));
         return 1;
     }
-// SHOW VERSION and command line option
-		if (ToulBar2::verbose >=0 ) { 
-		cout << VER << endl;
-		cout << CMD << endl;
-	    }
-
+    // SHOW VERSION and command line option
+    if (ToulBar2::verbose >= 0) {
+        cout << VER << endl;
+        cout << CMD << endl;
+    }
 
     // dump all of the details, the script that was passed on the
     // command line and the expanded file names
@@ -2972,7 +3014,6 @@ int _tmain(int argc, TCHAR* argv[])
 
     //TODO: If --show_options then dump ToulBar2 object here
 
-
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
 #ifndef __WIN32__
@@ -3098,12 +3139,12 @@ int _tmain(int argc, TCHAR* argv[])
                     if (ToulBar2::bilevel) {
                         ToulBar2::decimalPointBLP.push_back(ToulBar2::decimalPoint);
                         if (ToulBar2::decimalPointBLP.back() != ToulBar2::decimalPointBLP.front()) {
-                            cerr << "Sorry, bilevel optimization requires the same precision value in all its input files! " << strfile.front() << " and " << f  << " differ!!"<< endl;
+                            cerr << "Sorry, bilevel optimization requires the same precision value in all its input files! " << strfile.front() << " and " << f << " differ!!" << endl;
                             throw WrongFileFormat();
                         }
                         ToulBar2::costMultiplierBLP.push_back(ToulBar2::costMultiplier);
                         if (ToulBar2::bilevel != 3 && ToulBar2::costMultiplierBLP.back() != ToulBar2::costMultiplierBLP.front()) {
-                            cerr << "Sorry, bilevel optimization requires the same objective sense in all its input files! " << strfile.front() << " and " << f  << " differ!!"<< endl;
+                            cerr << "Sorry, bilevel optimization requires the same objective sense in all its input files! " << strfile.front() << " and " << f << " differ!!" << endl;
                             throw WrongFileFormat();
                         }
                         ToulBar2::costMultiplier = UNIT_COST;
@@ -3120,24 +3161,29 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::bilevel) { // deduce a valid covering for tree decomposition
                     if (ToulBar2::verbose >= 1) {
                         cout << "\t\t Leader\t Follower\t NegativeFollower";
-                        cout << endl << "decimalPoint  ";
-                        for (auto value: ToulBar2::decimalPointBLP) {
+                        cout << endl
+                             << "decimalPoint  ";
+                        for (auto value : ToulBar2::decimalPointBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "costMultiplier";
-                        for (auto value: ToulBar2::costMultiplierBLP) {
+                        cout << endl
+                             << "costMultiplier";
+                        for (auto value : ToulBar2::costMultiplierBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "negCost       ";
-                        for (auto value: ToulBar2::negCostBLP) {
+                        cout << endl
+                             << "negCost       ";
+                        for (auto value : ToulBar2::negCostBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "initialLb     ";
-                        for (auto value: ToulBar2::initialLbBLP) {
+                        cout << endl
+                             << "initialLb     ";
+                        for (auto value : ToulBar2::initialLbBLP) {
                             cout << "\t " << value;
                         }
-                        cout << endl << "initialUb     ";
-                        for (auto value: ToulBar2::initialUbBLP) {
+                        cout << endl
+                             << "initialUb     ";
+                        for (auto value : ToulBar2::initialUbBLP) {
                             cout << "\t " << value;
                         }
                         cout << endl;
@@ -3159,47 +3205,49 @@ int _tmain(int argc, TCHAR* argv[])
                         }
                     }
                     string varOrder = "0 -1";
-                    vector<set<int>> &varsBLP = ((WCSP*)solver->getWCSP())->varsBLP;
+                    vector<set<int>>& varsBLP = ((WCSP*)solver->getWCSP())->varsBLP;
                     set<int> intersect;
                     set_intersection(varsBLP[0].begin(), varsBLP[0].end(), varsBLP[1].begin(), varsBLP[1].end(),
-                                     std::inserter(intersect, intersect.begin()));
-                    for (int v: intersect) {
+                        std::inserter(intersect, intersect.begin()));
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n1 0";
-                    for (int v: intersect) {
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     set<int> difference1;
                     set_difference(varsBLP[0].begin(), varsBLP[0].end(), intersect.begin(), intersect.end(),
-                                     std::inserter(difference1, difference1.begin()));
-                    for (int v: difference1) {
+                        std::inserter(difference1, difference1.begin()));
+                    for (int v : difference1) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n2 0";
-                    for (int v: intersect) {
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     set<int> difference2;
                     set_difference(varsBLP[1].begin(), varsBLP[1].end(), intersect.begin(), intersect.end(),
-                                     std::inserter(difference2, difference2.begin()));
-                    for (int v: difference2) {
+                        std::inserter(difference2, difference2.begin()));
+                    for (int v : difference2) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n3 0";
-                    for (int v: intersect) {
+                    for (int v : intersect) {
                         varOrder += " " + to_string(v);
                     }
                     set<int> difference3;
                     set_difference(varsBLP[2].begin(), varsBLP[2].end(), intersect.begin(), intersect.end(),
-                                     std::inserter(difference3, difference3.begin()));
-                    for (int v: difference3) {
+                        std::inserter(difference3, difference3.begin()));
+                    for (int v : difference3) {
                         varOrder += " " + to_string(v);
                     }
                     varOrder += "\n";
-                    ToulBar2::varOrder = new char[varOrder.size()+1];
+                    ToulBar2::varOrder = new char[varOrder.size() + 1];
                     sprintf(ToulBar2::varOrder, "%s", varOrder.c_str());
-                    if (ToulBar2::verbose >= 1) cout << "Build tree decomposition from covering:" << endl << ToulBar2::varOrder << endl;
+                    if (ToulBar2::verbose >= 1)
+                        cout << "Build tree decomposition from covering:" << endl
+                             << ToulBar2::varOrder << endl;
                 }
             }
         }

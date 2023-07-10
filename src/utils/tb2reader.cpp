@@ -147,6 +147,7 @@ typedef struct {
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
  *     - knapsack \e capacity (\e weight)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator)
  *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
+ *     - wcsp \e lb \e ub \e duplicatehard \e strongduality \e wcsp to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in wcsp format such that its valid solutions must have a cost value in [lb,ub[.
  *
  * - Global cost functions using a flow-based propagator:
  *     - salldiff var|dec|decbi \e cost to express a soft alldifferent constraint with either variable-based (\e var keyword) or decomposition-based (\e dec and \e decbi keywords) cost semantic with a given \e cost per violation (\e decbi decomposes into a binary cost function complete network)
@@ -204,6 +205,7 @@ typedef struct {
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
  * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
  * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5\endcode
+ * - wcsp constraint (\f$3 <= 2 * x1 * x2 + 3 * x1 * x4 + 4 * x2 * x4 < 5\f$) on three Boolean 0/1 variables: \code 3 1 2 4 -1 wcsp 3 5 0 0 name 3 2 3 1000 2 2 2 2 0 1 0 1 1 1 2 2 0 2 0 1 1 1 3 2 1 2 0 1 1 1 4\endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
  * - soft_same({x0,x1,x2,x3},{x4,x5,x6,x7}): \code 8 0 1 2 3 4 5 6 7 -1 ssame 1 4 4 0 1 2 3 4 5 6 7 \endcode
@@ -360,7 +362,8 @@ private:
     unsigned int lineCount;
     string currentLine;
     boost::char_separator<char> sep;
-    boost::tokenizer<boost::char_separator<char>>* tok;
+    bool tok_init;
+    boost::tokenizer<boost::char_separator<char>> tok;
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
     Cost upperBound;
@@ -369,10 +372,11 @@ private:
 CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
     : iStream(stream)
     , wcsp(wcsp)
+    , tok(string())
 {
     this->lineCount = 0;
     this->JSONMode = false;
-    this->tok = nullptr;
+    this->tok_init = false;
     this->sep = boost::char_separator<char>(" \n\f\r\t\":,", "{}[]");
     this->upperBound = readHeader();
     if (ToulBar2::costThresholdS.size())
@@ -432,12 +436,12 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
         Cost initlb23 = MIN_COST;
         if (ToulBar2::bilevel) {
             if (cf.var->wcspIndex < (int)wcsp->varsBLP[0].size()) { // cost function on leader variable(s) only
-                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                if (ToulBar2::bilevel == 2) { // skip when reading Problem2
                     bilevel2 = true;
                     ToulBar2::bilevel = 5;
                     negcost23 = wcsp->getNegativeLb();
                     initlb23 = wcsp->getLb();
-                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                } else if (ToulBar2::bilevel == 3) { // incorporate directly in Problem1
                     bilevel3 = true;
                     ToulBar2::bilevel = 1;
                     negcost23 = wcsp->getNegativeLb();
@@ -507,20 +511,20 @@ bool CFNStreamReader::getNextLine()
 // Reads a token using lazily updated line by line reads
 std::pair<int, string> CFNStreamReader::getNextToken()
 {
-    if (tok != nullptr) {
-        if (tok_iter != tok->end()) {
+    if (tok_init) {
+        if (tok_iter != tok.end()) {
             string token = *tok_iter;
             tok_iter = std::next(tok_iter);
             return make_pair(lineCount, token);
         } else {
-            delete tok;
-            tok = nullptr;
+            tok_init = false;
             return getNextToken();
         }
     } else {
         if (this->getNextLine()) {
-            tok = new boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
-            tok_iter = tok->begin();
+            tok = boost::tokenizer<boost::char_separator<char>>(currentLine, sep);
+            tok_iter = tok.begin();
+            tok_init = true;
             return getNextToken();
         } else {
             return make_pair(-1, "");
@@ -644,10 +648,37 @@ Cost CFNStreamReader::readHeader()
         string integerPart = token.substr(1, token.find('.'));
         string decimalPart;
 
+        // precision option management :
         if (pos == string::npos) {
             ToulBar2::decimalPoint = 0;
         } else {
             decimalPart = token.substr(token.find('.') + 1);
+            if (ToulBar2::verbose >= 0) {
+                cout << "Initial cost precision of " << decimalPart.size() << " digits";
+                //cout << " (primal bound: " << token << ")";
+            }
+            if (ToulBar2::resolution_Update) {
+                if (ToulBar2::resolution >= 0) {
+                    string str;
+                    str = decimalPart.substr(0, ToulBar2::resolution);
+                    decimalPart = str;
+                    if (decimalPart.size() == 0) {
+                        pos = string::npos;
+                    }
+                    if (ToulBar2::verbose >= 0) {
+                        cout << " changed to " << decimalPart.size() << " digits";
+                        //cout << " (new primal bound: " << integerPart << decimalPart << ")";
+                    }
+                } else if (ToulBar2::resolution < 0) {
+                    if (ToulBar2::verbose >= 0) {
+                        cout << endl
+                             << "Sorry, cannot use a negative value for precision! (see option -precision)";
+                    }
+                }
+            }
+            if (ToulBar2::verbose >= 0) {
+                cout << "." << endl;
+            }
             ToulBar2::decimalPoint = decimalPart.size();
         }
 
@@ -756,7 +787,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     if (newvar) {
         varIndex = ((domainSize >= 0) ? this->wcsp->makeEnumeratedVariable(varName, 0, domainSize - 1) : this->wcsp->makeIntervalVariable(varName, 0, -domainSize - 1));
     } else if (ToulBar2::bilevel) {
-        wcsp->varsBLP[ToulBar2::bilevel-1].insert(varIndex);
+        wcsp->varsBLP[ToulBar2::bilevel - 1].insert(varIndex);
     }
     if (ToulBar2::verbose >= 1)
         cout << " # " << varIndex << endl;
@@ -865,8 +896,8 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
                 if (costVector[tableIdx] != defaultCost) {
                     cerr << "Error: tuple on scope [ ";
                     for (int i : scope)
-                        cout << i << " ";
-                    cout << "] with cost " << cost << " redefined at line " << lineNumber << endl;
+                        cerr << i << " ";
+                    cerr << "] with cost " << cost << " redefined at line " << lineNumber << endl;
                     throw WrongFileFormat();
                 } else {
                     costVector[tableIdx] = cost;
@@ -897,7 +928,7 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
     // all is true: we expect a full costs list
     else {
         unsigned int tableIdx = 0;
-        while (tableIdx < costVecSize) {
+        while (tableIdx < costVecSize && !isCBrace(token)) {
             Cost cost = wcsp->decimalToCost(token, lineNumber);
 
             minCost = min(cost, minCost);
@@ -909,6 +940,11 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
         }
         if (tableIdx != costVecSize) {
             cerr << "Error: incorrect number of costs in cost table ending at line " << lineNumber << endl;
+            throw WrongFileFormat();
+        }
+        if (!isCBrace(token)) {
+            cerr << "Error: too many costs in cost table ending at line " << lineNumber << endl;
+            throw WrongFileFormat();
         }
     }
 
@@ -1077,19 +1113,19 @@ pair<unsigned, unsigned> CFNStreamReader::readCostFunctions()
         Cost initlb23 = MIN_COST;
         if (ToulBar2::bilevel) {
             bool inleader = true;
-            for (int idx: scope) {
+            for (int idx : scope) {
                 if (idx >= (int)wcsp->varsBLP[0].size()) {
                     inleader = false;
                     break;
                 }
             }
             if (inleader) { // cost function on leader variable(s) only
-                if (ToulBar2::bilevel==2) { // skip when reading Problem2
+                if (ToulBar2::bilevel == 2) { // skip when reading Problem2
                     bilevel2 = true;
                     ToulBar2::bilevel = 5;
                     negcost23 = wcsp->getNegativeLb();
                     initlb23 = wcsp->getLb();
-                } else if (ToulBar2::bilevel==3) { // incorporate directly in Problem1
+                } else if (ToulBar2::bilevel == 3) { // incorporate directly in Problem1
                     bilevel3 = true;
                     ToulBar2::bilevel = 1;
                     negcost23 = wcsp->getNegativeLb();
@@ -1400,7 +1436,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 
         int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);
         for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
-            this->wcsp->postNaryConstraintTuple(naryIndex, it->first, it->second - minCost); // For each tuple
+            this->wcsp->postNaryConstraintTupleInternal(naryIndex, it->first, it->second - minCost); // For each tuple
         }
         this->wcsp->postNaryConstraintEnd(naryIndex);
     }
@@ -1441,7 +1477,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         int j = 0;
         nctr->firstlex();
         while (nctr->nextlex(tup, cost)) {
-            this->wcsp->postNaryConstraintTuple(cfIndex, tup, costs[j]);
+            this->wcsp->postNaryConstraintTupleInternal(cfIndex, tup, costs[j]);
             j++;
         }
         if (ToulBar2::verbose >= 3)
@@ -1463,6 +1499,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
         { "knapsackp", ":capacity:N:weightedvalues:[[vN]+]S" },
+        { "cfnconstraint", ":cfn:W:lb:c:ub:c:duplicatehard:N:strongduality:N" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
         { "ssame", "SPECIAL" }, // Special case processing
@@ -1685,10 +1722,17 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         else if (GCFTemplate[i] == 'C' || GCFTemplate[i] == 'c') {
 
             std::tie(lineNumber, token) = this->getNextToken();
-            Cost cost = wcsp->decimalToCost(token, lineNumber);
-            if (GCFTemplate[i] == 'c' && cost < 0) {
-                cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
-                throw WrongFileFormat();
+            Cost cost = MIN_COST;
+            if (funcType == "cfnconstraint") {
+                int wcspind = stoi(streamContentVec.front().second);
+                assert(WCSP::CollectionOfWCSP.find(wcspind) != WCSP::CollectionOfWCSP.end());
+                cost = WCSP::CollectionOfWCSP[wcspind]->decimalToCost(token, lineNumber);
+            } else {
+                cost = wcsp->decimalToCost(token, lineNumber);
+                if (GCFTemplate[i] == 'c' && cost < 0) {
+                    cerr << "Error: the global cost function " << funcType << " cannot accept negative costs at line " << lineNumber << endl;
+                    throw WrongFileFormat();
+                }
             }
             streamContentVec.push_back(std::make_pair(GCFTemplate[i], std::to_string(cost)));
         }
@@ -1734,6 +1778,18 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                 }
             }
             streamContentVec.push_back(std::make_pair('N', token));
+        }
+        // ---------- Read cost function network and add its index number to stream
+        else if (GCFTemplate[i] == 'W') {
+
+            WCSP* wcsp_ = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
+            CFNStreamReader fileReader(iStream, wcsp_); // read recursively a cost function network
+            lineCount += fileReader.lineCount;
+            std::tie(lineNumber, token) = this->getNextToken(); // skip last }
+
+            assert(WCSP::CollectionOfWCSP.find(wcsp_->getIndex()) == WCSP::CollectionOfWCSP.end());
+            WCSP::CollectionOfWCSP[wcsp_->getIndex()] = wcsp_; // memorize WCSP object
+            streamContentVec.push_back(std::make_pair('W', to_string(wcsp_->getIndex())));
         }
         // ---------- Read JSON tag
         else if (GCFTemplate[i] == ':') {
@@ -2171,7 +2227,6 @@ Cost WCSP::read_wcsp(const char* fileName)
         istream& stream = (ToulBar2::stdin_format.length() > 0) ? cin : Rfile;
         if (ToulBar2::stdin_format.compare("cfn") == 0) {
             CFNStreamReader fileReader(stream, this);
-            return getUb();
 
         } else {
             Rfile.open(fileName);
@@ -2283,6 +2338,8 @@ Cost WCSP::read_wcsp(const char* fileName)
         read_legacy(fileName);
     }
 
+    // common ending section for all readers
+
     if (ToulBar2::addAMOConstraints) {
         addAMOConstraints();
         ToulBar2::addAMOConstraints_ = false;
@@ -2352,32 +2409,6 @@ Cost WCSP::read_wcsp(const char* fileName)
 // TOULBAR2 WCSP LEGACY PARSER
 void WCSP::read_legacy(const char* fileName)
 {
-    string pbname;
-    unsigned int nbvar, nbval;
-    int nbconstr;
-    int nbvaltrue = 0;
-    Cost top;
-    int i, j, k, t, ic;
-    string varname;
-    int domsize;
-    unsigned int a;
-    unsigned int b;
-    unsigned int c;
-    Cost defval;
-    Cost cost;
-    Long ntuples;
-    int arity;
-    string funcname;
-    Value funcparam1;
-    Value funcparam2;
-    vector<TemporaryUnaryConstraint> unaryconstrs;
-    Cost inclowerbound = MIN_COST;
-    int maxarity = 0;
-    vector<Long> sharedSize;
-    vector<vector<Cost>> sharedCosts;
-    vector<vector<Tuple>> sharedTuples;
-    vector<Tuple> emptyTuples;
-
     ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
 #ifdef BOOST
     boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
@@ -2417,6 +2448,36 @@ void WCSP::read_legacy(const char* fileName)
     }
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
+    read_legacy(file);
+}
+
+void WCSP::read_legacy(istream& file)
+{
+    string pbname;
+    unsigned int nbvar, nbval;
+    int nbconstr;
+    int nbvaltrue = 0;
+    Cost top;
+    int i, j, k, t, ic;
+    string varname;
+    int domsize;
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+    Cost defval;
+    Cost cost;
+    Long ntuples;
+    int arity;
+    string funcname;
+    Value funcparam1;
+    Value funcparam2;
+    vector<TemporaryUnaryConstraint> unaryconstrs;
+    Cost inclowerbound = MIN_COST;
+    int maxarity = 0;
+    vector<Long> sharedSize;
+    vector<vector<Cost>> sharedCosts;
+    vector<vector<Tuple>> sharedTuples;
+    vector<Tuple> emptyTuples;
 
     // ---------- PROBLEM HEADER ----------
     // read problem name and sizes
@@ -2521,7 +2582,7 @@ void WCSP::read_legacy(const char* fileName)
                     for (t = 0; t < ntuples; t++) {
                         if (!reused) {
                             for (i = 0; i < arity; i++) {
-                                file >> tup[i]; // FIXME: why not translating from Value to tValue?
+                                file >> tup[i]; // FIXME: why not translating from Value to tValue? (there is no difference if reading a wcsp file with all domains starting at zero)
                             }
                             file >> cost;
                             Cost tmpcost = MULT(cost, K);
@@ -2531,9 +2592,9 @@ void WCSP::read_legacy(const char* fileName)
                                 tuples.push_back(tup);
                                 costs.push_back(tmpcost);
                             }
-                            postNaryConstraintTuple(naryIndex, tup, tmpcost);
+                            postNaryConstraintTupleInternal(naryIndex, tup, tmpcost);
                         } else {
-                            postNaryConstraintTuple(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
+                            postNaryConstraintTupleInternal(naryIndex, sharedTuples[reusedconstr][t], sharedCosts[reusedconstr][t]);
                         }
                     }
                     if (shared) {
@@ -2842,9 +2903,11 @@ void WCSP::read_legacy(const char* fileName)
         }
     }
 
-    file >> funcname;
-    if (file) {
-        cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+    if ((getSolver() && ((Solver*)getSolver())->getWCSP() == this)) { // checks end of file only if reading the main model
+        file >> funcname;
+        if (file) {
+            cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+        }
     }
 
     // merge unarycosts if they are on the same variable
@@ -2918,7 +2981,11 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 void WCSP::read_uai2008(const char* fileName)
 {
     // Compute the factor that enables to capture the difference in log for probability (1-10^resolution):
-    ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
+    if (ToulBar2::resolution == 0) {
+        ToulBar2::NormFactor = 1.;
+    } else {
+        ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TLogProb)ToulBar2::resolution)));
+    }
     if (ToulBar2::NormFactor > (Pow((TProb)2., (TProb)INTEGERBITS) - 1) / (TLogProb)ToulBar2::resolution) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs." << endl;
         throw BadConfiguration();
@@ -2999,7 +3066,7 @@ void WCSP::read_uai2008(const char* fileName)
         string varname;
         varname = "x" + to_string(i);
         file >> domsize;
-        if (ToulBar2::verbose >= 3)
+        if (ToulBar2::verbose >= 1)
             cout << "read variable " << i << " of size " << domsize << endl;
         if (domsize > nbval)
             nbval = domsize;
@@ -3025,33 +3092,33 @@ void WCSP::read_uai2008(const char* fileName)
 
         if (arity > 3) {
             vector<int> scopeIndex(arity, INT_MAX);
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read nary cost function on ";
 
             for (i = 0; i < arity; i++) {
                 file >> j;
                 scopeIndex[i] = j;
-                if (ToulBar2::verbose >= 3)
+                if (ToulBar2::verbose >= 1)
                     cout << j << " ";
             }
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << endl;
             scopes.push_back(scopeIndex);
         } else if (arity == 3) {
             file >> i;
             file >> j;
             file >> k;
+            if (ToulBar2::verbose >= 1)
+                cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
+            scopes.push_back({ i, j, k });
             if ((i == j) || (i == k) || (k == j)) {
                 cerr << "Error: ternary cost function!" << endl;
                 throw WrongFileFormat();
             }
-            if (ToulBar2::verbose >= 3)
-                cout << "read ternary cost function " << ic << " on " << i << "," << j << "," << k << endl;
-            scopes.push_back({ i, j, k });
         } else if (arity == 2) {
             file >> i;
             file >> j;
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read binary cost function " << ic << " on " << i << "," << j << endl;
             if (i == j) {
                 cerr << "Error: binary cost function with only one variable in its scope!" << endl;
@@ -3060,7 +3127,7 @@ void WCSP::read_uai2008(const char* fileName)
             scopes.push_back({ i, j });
         } else if (arity == 1) {
             file >> i;
-            if (ToulBar2::verbose >= 3)
+            if (ToulBar2::verbose >= 1)
                 cout << "read unary cost function " << ic << " on " << i << endl;
             TemporaryUnaryConstraint unaryconstr;
             unaryconstr.var = (EnumeratedVariable*)vars[i];
@@ -3092,6 +3159,14 @@ void WCSP::read_uai2008(const char* fileName)
         TProb maxp = 0.;
         for (k = 0; k < ntuples; k++) {
             file >> p;
+            if (ToulBar2::sigma > 0.0) {
+                Double noise = aleaGaussNoise(ToulBar2::sigma);
+                if (ToulBar2::verbose >= 1)
+                    cout << "add noise " << noise << " to " << p << endl;
+                p = max(0.0L, p + noise); // can create forbidden tuples
+                if (!markov)
+                    p = min(p, 1.0L); // in Bayesian networks probability cannot be greater than 1
+            }
             assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
             costsProb.push_back(p);
             maxp = max(maxp, p);
@@ -3107,10 +3182,19 @@ void WCSP::read_uai2008(const char* fileName)
             p = costsProb[k];
             Cost cost;
             // ToulBar2::uai is 1 for .uai and 2 for .LG (log domain)
-            if (markov)
-                cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)(p - maxp)) : Prob2Cost(p / maxp));
-            else
-                cost = ((ToulBar2::uai > 1) ? LogProb2Cost((TLogProb)p) : Prob2Cost(p));
+            if (markov) {
+                if (ToulBar2::uai > 1) {
+                    cost = LogProb2Cost((TLogProb)(p - maxp));
+                } else {
+                    cost = Prob2Cost(p / maxp);
+                }
+            } else {
+                if (ToulBar2::uai > 1) {
+                    cost = LogProb2Cost((TLogProb)p);
+                } else {
+                    cost = Prob2Cost(p);
+                }
+            }
             costs[ictr].push_back(cost);
             if (cost < minc)
                 minc = cost;
@@ -3192,7 +3276,7 @@ void WCSP::read_uai2008(const char* fileName)
             nctr->firstlex();
             while (nctr->nextlex(s, cost)) {
                 //					  if (costs[j]>MIN_COST) nctr->setTuple(s, costs[j]);
-                postNaryConstraintTuple(nctr->wcspIndex, s, costs[ictr][j]);
+                postNaryConstraintTupleInternal(nctr->wcspIndex, s, costs[ictr][j]);
                 j++;
             }
             assert(j == costs[ictr].size());
@@ -3600,7 +3684,7 @@ void WCSP::read_wcnf(const char* fileName)
             //            } else {
             //#endif
             int index = postNaryConstraintBegin(scopeIndex, MIN_COST, 1);
-            postNaryConstraintTuple(index, tup, MULT(cost, K));
+            postNaryConstraintTupleInternal(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
             //#ifdef CLAUSE2KNAPSACK
             //            }

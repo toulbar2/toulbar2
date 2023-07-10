@@ -297,6 +297,8 @@ public:
     // propagates the minimum between the remaining clause weight and unary costs of all literals to the problem lower bound
     void propagate() override
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         Cost mincost = (connected() && scope[support]->unassigned()) ? scope[support]->getCost(getClause(support)) : MAX_COST;
         for (int i = 0; connected() && i < arity_; i++) {
             EnumeratedVariable* x = scope[i];

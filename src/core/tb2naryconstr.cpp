@@ -795,13 +795,13 @@ void NaryConstraint::setInfiniteCost(Cost ub)
     Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
     if (pf) {
         for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
-            Cost c = it->second;
+            Cost c = it->second; //TODO: add corresponding unary costs
             if (CUT(c, ub))
                 it->second = mult_ub;
         }
     } else {
         for (ptrdiff_t idx = 0; idx < costSize; idx++) {
-            Cost c = costs[idx];
+            Cost c = costs[idx]; //TODO: add corresponding unary costs
             if (CUT(c, ub))
                 costs[idx] = mult_ub;
         }
@@ -1266,7 +1266,7 @@ void NaryConstraint::preproject3(TernaryConstraint* ctr)
     }
     if (fproj.size() > 0 || default_cost > MIN_COST) {
         if (ToulBar2::verbose >= 3) {
-            cout << "preproject nary " << this << " to ternary (" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] preproject nary " << this << " to ternary (" << x->getName() << "," << y->getName() << "," << z->getName() << ")" << endl;
         }
         wcsp->postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, xyz);
     }
@@ -1309,7 +1309,7 @@ void NaryConstraint::preprojectall2()
             }
             if (fproj.size() > 0 || default_cost > MIN_COST) {
                 if (ToulBar2::verbose >= 3) {
-                    cout << "preproject nary " << this << " to binary (" << x->getName() << "," << y->getName() << ")" << endl;
+                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] preproject nary " << this << " to binary (" << x->getName() << "," << y->getName() << ")" << endl;
                 }
                 wcsp->postBinaryConstraint(x->wcspIndex, y->wcspIndex, xy);
             }
@@ -1583,7 +1583,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
-        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+        os << "],\"defaultcost\":" << ((wcsp->getUb() > default_cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) : "inf") << ",\n\"costs\":[";
 
         Tuple t;
         Cost cost;
@@ -1599,7 +1599,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     printed = true;
                 }
             }
-            os << "," << ((original) ? wcsp->Cost2RDCost(cost) : wcsp->Cost2RDCost(min(wcsp->getUb(), cost)));
+            os << "," << ((wcsp->getUb() > cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost)) : "inf");
         }
     }
     os << "]},\n";

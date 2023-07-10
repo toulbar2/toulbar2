@@ -446,37 +446,37 @@ bool VACExtension::propagate()
                     }
                 }
 #endif
-//                if (ToulBar2::preprocessTernaryRPC && Store::getDepth() <= 1) {
-//                    double mintight = 1e20;
-//                    Variable *var1 = NULL;
-//                    Variable *var2 = NULL;
-//                    for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-//                        if (wcsp->getCtr(i)->connected() && wcsp->getCtr(i)->isBinary()) {
-//                            wcsp->getCtr(i)->resetTightness();
-//                            double tight = wcsp->getCtr(i)->getTightness();
-//                            if (mintight > tight) {
-//                                mintight = tight;
-//                                var1 = wcsp->getCtr(i)->getVar(0);
-//                                var2 = wcsp->getCtr(i)->getVar(1);
-//                            }
-//                        }
-//                    }
-//                    for (int i = 0; i < wcsp->getElimBinOrder(); i++) {
-//                        if (wcsp->getCtr(-i -1)->connected()) {
-//                            wcsp->getCtr(-i -1)->resetTightness();
-//                            double tight = wcsp->getCtr(-i -1)->getTightness();
-//                            if (mintight > tight) {
-//                                mintight = tight;
-//                                var1 = wcsp->getCtr(-i -1)->getVar(0);
-//                                var2 = wcsp->getCtr(-i -1)->getVar(1);
-//                            }
-//                            mintight = MIN(mintight, tight);
-//                        }
-//                    }
-//                    if (ToulBar2::verbose >= 0 && var1 && var2) {
-//                        cout << "Minimum binary cost function tightness after VAC: " << mintight << " on variables " << var1->getName() << " and " << var2->getName() << endl;
-//                    }
-//                }
+                //                if (ToulBar2::preprocessTernaryRPC && Store::getDepth() <= 1) {
+                //                    double mintight = 1e20;
+                //                    Variable *var1 = NULL;
+                //                    Variable *var2 = NULL;
+                //                    for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
+                //                        if (wcsp->getCtr(i)->connected() && wcsp->getCtr(i)->isBinary()) {
+                //                            wcsp->getCtr(i)->resetTightness();
+                //                            double tight = wcsp->getCtr(i)->getTightness();
+                //                            if (mintight > tight) {
+                //                                mintight = tight;
+                //                                var1 = wcsp->getCtr(i)->getVar(0);
+                //                                var2 = wcsp->getCtr(i)->getVar(1);
+                //                            }
+                //                        }
+                //                    }
+                //                    for (int i = 0; i < wcsp->getElimBinOrder(); i++) {
+                //                        if (wcsp->getCtr(-i -1)->connected()) {
+                //                            wcsp->getCtr(-i -1)->resetTightness();
+                //                            double tight = wcsp->getCtr(-i -1)->getTightness();
+                //                            if (mintight > tight) {
+                //                                mintight = tight;
+                //                                var1 = wcsp->getCtr(-i -1)->getVar(0);
+                //                                var2 = wcsp->getCtr(-i -1)->getVar(1);
+                //                            }
+                //                            mintight = MIN(mintight, tight);
+                //                        }
+                //                    }
+                //                    if (ToulBar2::verbose >= 0 && var1 && var2) {
+                //                        cout << "Minimum binary cost function tightness after VAC: " << mintight << " on variables " << var1->getName() << " and " << var2->getName() << endl;
+                //                    }
+                //                }
             }
 #ifndef INCREMENTALVAC
             Store::restore(storedepth);
@@ -541,7 +541,7 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
         } else if (cij->revise(xi, v)) {
             wipeout = xi->removeVAC(v);
             xi->setKiller(v, xj->wcspIndex);
-            queueP->push(pair<int, int>(xi->wcspIndex, v));
+            queueP->push(pair<int, Value>(xi->wcspIndex, v));
             if (wipeout) {
                 inconsistentVariable = xi->wcspIndex;
                 return true;
@@ -575,7 +575,7 @@ void VACExtension::enforcePass1()
         for (ConstraintList::iterator itc = xj->getConstrs()->begin();
              itc != xj->getConstrs()->end(); ++itc) {
             Constraint* c = (*itc).constr;
-            if (c->isBinary()) {
+            if (c->isBinary() && !c->isDuplicate()) {
                 cij = (VACBinaryConstraint*)c;
                 if (enforcePass1(xj, cij))
                     return;
@@ -599,7 +599,7 @@ bool VACExtension::checkPass1() const
         for (ConstraintList::iterator iter = xi->getConstrs()->begin();
              iter != xj->getConstrs()->end(); ++iter) {
             Constraint* c = (*iter).constr;
-            if (c->isBinary()) {
+            if (c->isBinary() && !c->isDuplicate()) {
                 cij = (VACBinaryConstraint*)c;
                 xj = (VACVariable*)cij->getVarDiffFrom(xi);
                 for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
@@ -660,9 +660,10 @@ void VACExtension::enforcePass2()
         if (xi->isMarked(v, nbIterations)) {
             j = xi->getKiller(v);
             xj = (VACVariable*)wcsp->getVar(j);
-            queueR->push(pair<int, int>(i, v));
-            cij = (VACBinaryConstraint*)xi->getConstr(xj);
+            queueR->push(pair<int, Value>(i, v));
+            cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
             assert(cij);
+            assert(!cij->isDuplicate());
             //if (ToulBar2::verbose > 6) cout << "x" << xi->wcspIndex << "," << v << "   killer: " << xj->wcspIndex << endl;
 
             for (EnumeratedVariable::iterator itj = xj->begin();
@@ -792,8 +793,9 @@ bool VACExtension::enforcePass3()
         xj = (VACVariable*)wcsp->getVar(j);
         i = xj->getKiller(w);
         xi = (VACVariable*)wcsp->getVar(i);
-        cij = (VACBinaryConstraint*)xi->getConstr(xj);
+        cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
         assert(cij);
+        assert(!cij->isDuplicate());
 
         int xjk = xj->getK(w, nbIterations);
         if (maxk < xjk)

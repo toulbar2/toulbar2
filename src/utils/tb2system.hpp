@@ -277,6 +277,17 @@ inline Long luby(Long r)
         return luby(r - (1L << j) + 1);
 }
 
+// my aleaGauss generator
+#define M_PIl 3.141592653589793238462643383279502884L /* pi */
+inline double aleaGaussNoise(double s)
+{
+    double U1 = mydrand();
+    double U2 = mydrand();
+    //double U2 = myrandom_uddistribution(0.0, 1.0);
+    double P = s * sqrt(-2 * log(U1)) * cos(2 * M_PIl * U2);
+    return P;
+}
+
 // function mkdir
 #include <sys/stat.h>
 

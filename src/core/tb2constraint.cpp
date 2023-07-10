@@ -102,13 +102,13 @@ Long Constraint::getDomainInitSizeProduct() const
 // trap overflow numbers
 #if __GNUC__ >= 5
         if (__builtin_smulll_overflow(cartesianProduct,
-                (getVar(i)->enumerated())?((EnumeratedVariable *)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize(),
+                (getVar(i)->enumerated()) ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize(),
                 &cartesianProduct))
             return LONGLONG_MAX;
 #else
         if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE)
             return LONGLONG_MAX;
-        cartesianProduct *= (getVar(i)->enumerated())?((EnumeratedVariable *)getVar(i))->getDomainInitSize():getVar(i)->getDomainSize();
+        cartesianProduct *= (getVar(i)->enumerated()) ? ((EnumeratedVariable*)getVar(i))->getDomainInitSize() : getVar(i)->getDomainSize();
 #endif
     }
     return cartesianProduct;
@@ -124,7 +124,7 @@ void Constraint::projectLB(Cost cost)
     if (cost == MIN_COST)
         return;
     if (ToulBar2::verbose >= 2)
-        cout << "lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] lower bound increased " << wcsp->getLb() << " -> " << wcsp->getLb() + cost << endl;
     if (cost < MIN_COST) {
         wcsp->decreaseLb(cost);
     } else {
@@ -175,9 +175,26 @@ void Constraint::sumScopeIncluded(Constraint* ctr)
     }
 }
 
+void Constraint::setCluster(int i)
+{
+    assert(cluster == -1 || Store::getDepth() == 0);
+    if (ToulBar2::verbose >= 1 && cluster != -1 && i != cluster) {
+        cout << *this << " change to cluster " << i << endl;
+    }
+    TreeDecomposition* td = wcsp->getTreeDec();
+    if (td && cluster != -1) {
+        td->getCluster(cluster)->removeCtr(this);
+    }
+    cluster = i;
+    if (td) {
+        td->getCluster(cluster)->addCtr(this);
+    }
+}
+
 void Constraint::assignCluster()
 {
     TreeDecomposition* td = wcsp->getTreeDec();
+    assert(!td || !isDuplicate());
     if (!td)
         return;
     Cluster* lowest = td->getRoot();
@@ -307,6 +324,22 @@ bool Constraint::ishard()
     return true;
 }
 
+/// \warning always returns false for cost functions in intention
+bool Constraint::isfinite()
+{
+    static Tuple tuple;
+    if (!extension())
+        return false;
+
+    Cost cost;
+    firstlex();
+    while (nextlex(tuple, cost)) {
+        if (CUT(wcsp->getLb() + cost, wcsp->getUb()))
+            return false;
+    }
+    return true;
+}
+
 bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
 {
     assert(scopeIncluded(ctr1));
@@ -385,7 +418,7 @@ Constraint* Constraint::copy()
     first();
     while (next(t, c)) {
         if (c != defcost)
-            wcsp->postNaryConstraintTuple(ctrIndex, t, c);
+            wcsp->postNaryConstraintTupleInternal(ctrIndex, t, c);
     }
     wcsp->getCtr(ctrIndex)->deconnect(true);
     return wcsp->getCtr(ctrIndex);

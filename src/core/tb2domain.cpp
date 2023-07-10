@@ -11,34 +11,46 @@
 
 Domain::Domain(Value inf, Value sup)
     : BTList<Value>(&Store::storeDomain)
+    , contiguous(true)
     , initSize(sup - inf + 1)
     , distanceToZero(inf)
+    , notFoundValue(sup  + 1)
 {
     init(inf, sup);
 }
 
 Domain::Domain(vector<Value>& dom)
     : BTList<Value>(&Store::storeDomain)
+    , contiguous(true)
     , initSize(*max_element(dom.begin(), dom.end()) - *min_element(dom.begin(), dom.end()) + 1)
     , distanceToZero(*min_element(dom.begin(), dom.end()))
+    , notFoundValue(initSize + distanceToZero)
 {
     assert(dom.size() >= 1);
-    assert(dom.size() <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
+    assert(dom.size() <= std::numeric_limits<tValue>::max());
     qsort(&dom[0], dom.size(), sizeof(Value), cmpValue);
-    init(dom[0], dom[dom.size() - 1]);
-    int i = 0;
-    for (iterator iter = begin(); iter != end(); ++iter) {
-        if (*iter < dom[i])
-            BTList<Value>::erase(&all[toIndex(*iter)], false);
-        else
-            i++;
+    if (dom[dom.size() - 1] - dom[0] + 1 <= 2 * (int)dom.size()) {
+        init(dom[0], dom[dom.size() - 1]);
+        int i = 0;
+        for (iterator iter = begin(); iter != end(); ++iter) {
+            if (*iter < dom[i])
+                BTList<Value>::erase(&all[toIndex(*iter)], false);
+            else
+                i++;
+        }
+    } else {
+        contiguous = false;
+        initSize = dom.size();
+        init(dom);
+        BTList<Value>::erase(&all[dom.size()], false);
     }
 }
 
 void Domain::init(Value inf, Value sup)
 {
+    assert(contiguous);
     assert(sup - inf + 1 >= 1);
-    assert(sup - inf + 1 <= ((2 << (sizeof(tValue) * 8 - 1)) - 1));
+    assert(sup - inf + 1 <= std::numeric_limits<tValue>::max());
 #if defined(WCSPFORMATONLY) && !defined(NUMBERJACK)
     assert(distanceToZero == 0);
 #endif
@@ -49,8 +61,26 @@ void Domain::init(Value inf, Value sup)
     }
 }
 
+void Domain::init(vector<Value>& dom)
+{
+#if defined(WCSPFORMATONLY)
+    assert(false);
+#endif
+    assert(!contiguous);
+    assert(dom.size() <= std::numeric_limits<tValue>::max());
+    all = new DLink<Value>[dom.size() + 1];
+    for (unsigned int idx = 0; idx < dom.size(); idx++) {
+        all[idx].content = dom[idx];
+        push_back(&all[idx], false);
+        mapping[dom[idx]] = idx;
+    }
+    all[dom.size()].content = notFoundValue;
+    push_back(&all[dom.size()], false);
+}
+
 void Domain::shrink(Value inf, Value sup)
 {
+    assert(contiguous);
     assert(sup - inf + 1 >= 1);
     assert(sup - inf + 1 <= (Value)initSize);
 #if defined(WCSPFORMATONLY)

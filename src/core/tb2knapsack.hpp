@@ -405,7 +405,7 @@ public:
     void incConflictWeight(Constraint* from) override
     {
         assert(from != NULL);
-        if (!sameweight) {
+        if (!sameweight) { //TODO: else Constraint::incConflictWeight(1)
             if (from == this) {
                 if (deconnected() || nonassigned == arity_) {
                     Constraint::incConflictWeight(1);
@@ -1515,6 +1515,8 @@ public:
     }
     void propagate() override
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         if (ToulBar2::interrupted) {
             throw TimeOut();
         }
@@ -1565,7 +1567,7 @@ public:
 #endif
                     //Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
-                    if (!b && !ToulBar2::dumpWCSP && !ToulBar2::addAMOConstraints_ && ToulBar2::LcLevel == LC_EDAC) {
+                    if (!b && !ToulBar2::addAMOConstraints_ && ToulBar2::LcLevel == LC_EDAC) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {

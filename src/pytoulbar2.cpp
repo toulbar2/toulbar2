@@ -44,7 +44,7 @@
 // python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
 // python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
 // python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1, False); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+// python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -60,6 +60,8 @@ namespace py = pybind11;
 #include "core/tb2wcsp.hpp"
 #include "mcriteria/multicfn.hpp"
 #include "mcriteria/bicriteria.hpp"
+
+extern void newsolution(int wcspId, void* solver);
 
 PYBIND11_MODULE(pytb2, m)
 {
@@ -78,7 +80,16 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("externalUB", &ToulBar2::externalUB)
         .def_readwrite_static("showSolutions", &ToulBar2::showSolutions)
         .def_readwrite_static("showHidden", &ToulBar2::showHidden)
-        //        .def_readwrite_static("writeSolution", &ToulBar2::writeSolution)
+        .def("writeSolution", [](const string& fileName) {
+            if (atoi(fileName.data()) != 0) {
+                ToulBar2::writeSolution = atoi(fileName.data());
+            } else {
+                ToulBar2::solutionFile = fopen(fileName.data(), "w");
+            }
+        })
+        .def("closeSolution", []() {
+            fclose(ToulBar2::solutionFile);
+        })
         .def_readwrite_static("allSolutions", &ToulBar2::allSolutions)
         .def_readwrite_static("dumpWCSP", &ToulBar2::dumpWCSP)
         .def_readwrite_static("approximateCountingBTD", &ToulBar2::approximateCountingBTD)
@@ -87,6 +98,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("dichotomicBranchingSize", &ToulBar2::dichotomicBranchingSize)
         .def_readwrite_static("sortDomains", &ToulBar2::sortDomains)
         .def_readwrite_static("solutionBasedPhaseSaving", &ToulBar2::solutionBasedPhaseSaving)
+        .def_readwrite_static("bisupport", &ToulBar2::bisupport)
         .def_readwrite_static("elimDegree", &ToulBar2::elimDegree)
         .def_readwrite_static("elimDegree_preprocessing", &ToulBar2::elimDegree_preprocessing)
         .def_readwrite_static("elimSpaceMaxMB", &ToulBar2::elimSpaceMaxMB)
@@ -118,6 +130,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("bayesian", &ToulBar2::bayesian)
         .def_readwrite_static("uai", &ToulBar2::uai)
         .def_readwrite_static("resolution", &ToulBar2::resolution)
+        .def_readwrite_static("resolution_Update", &ToulBar2::resolution_Update)
         .def_readwrite_static("errorg", &ToulBar2::errorg)
         .def_readwrite_static("NormFactor", &ToulBar2::NormFactor)
         .def_readwrite_static("vac", &ToulBar2::vac)
@@ -157,7 +170,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
         .def_readwrite_static("divMethod", &ToulBar2::divMethod)
         .def_readwrite_static("divRelax", &ToulBar2::divRelax)
-        .def("getVarOrder", []() -> string  {
+        .def("getVarOrder", []() -> string {
             if (reinterpret_cast<uintptr_t>(ToulBar2::varOrder) < ELIM_MAX) {
                 return to_string(-reinterpret_cast<uintptr_t>(ToulBar2::varOrder));
             } else {
@@ -165,7 +178,7 @@ PYBIND11_MODULE(pytb2, m)
             }
         })
         .def("setVarOrder", [](const string& fileName) {
-            if (fileName[0]=='-') {
+            if (fileName[0] == '-') {
                 ToulBar2::varOrder = reinterpret_cast<char*>(-atoi(fileName.data()));
             } else {
                 ToulBar2::varOrder = new char[fileName.size() + 1];
@@ -217,8 +230,16 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("vnsNeighborSizeSync", &ToulBar2::vnsNeighborSizeSync)
         .def_readwrite_static("vnsParallelLimit", &ToulBar2::vnsParallelLimit)
         .def_readwrite_static("vnsParallelSync", &ToulBar2::vnsParallelSync)
-        .def_readwrite_static("vnsOptimumS", &ToulBar2::vnsOptimumS)
-        .def_readwrite_static("vnsOptimum", &ToulBar2::vnsOptimum)
+        .def_readonly_static("vnsOptimumS", &ToulBar2::vnsOptimumS)
+        .def("setVnsOptimumS", [](const string& bestsol) {
+            ToulBar2::vnsOptimumS = bestsol;
+            ToulBar2::newsolution = newsolution;
+        })
+        .def_readonly_static("vnsOptimum", &ToulBar2::vnsOptimum)
+        .def("setVnsOptimum", [](const Cost cost) {
+            ToulBar2::vnsOptimum = cost;
+            ToulBar2::newsolution = newsolution;
+        })
         .def_readwrite_static("parallel", &ToulBar2::parallel)
         .def_readwrite_static("hbfs", &ToulBar2::hbfs)
         .def_readwrite_static("hbfsGlobalLimit", &ToulBar2::hbfsGlobalLimit)
@@ -281,7 +302,7 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<Bicriteria> bcrit(m, "Bicriteria");
 
-    bcrit.def("computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"),  py::arg("optim_dir"), py::arg("delta") = 1e-3)
+    bcrit.def("computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"), py::arg("optim_dir"), py::arg("delta") = 1e-3)
         .def("computeAdditionalSolutions", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { Bicriteria::computeAdditionalSolutions(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
         .def("computeNonSupported", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int nbLimit) { Bicriteria::computeNonSupported(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
         .def("getSolutions", &Bicriteria::getSolutions)
@@ -314,6 +335,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getNegativeLb", &WeightedCSP::getNegativeLb)
         .def("finiteUb", &WeightedCSP::finiteUb)
         .def("setInfiniteCost", &WeightedCSP::setInfiniteCost)
+        .def("isfinite", &WeightedCSP::isfinite)
         .def("enumerated", &WeightedCSP::enumerated)
         .def("getName", (string(WeightedCSP::*)(int) const) & WeightedCSP::getName)
         .def("getVarIndex", &WeightedCSP::getVarIndex)
@@ -358,7 +380,10 @@ PYBIND11_MODULE(pytb2, m)
         .def("getBergeDecElimOrder", &WeightedCSP::getBergeDecElimOrder)
         .def("setDACOrder", &WeightedCSP::setDACOrder)
         .def("whenContradiction", &WeightedCSP::whenContradiction)
-        .def("propagate", &WeightedCSP::propagate)
+        .def("deactivatePropagate", &WeightedCSP::deactivatePropagate)
+        .def("isactivatePropagate", &WeightedCSP::isactivatePropagate)
+        .def("reactivatePropagate", &WeightedCSP::reactivatePropagate)
+        .def("propagate", &WeightedCSP::propagate, py::arg("fromscratch") = false)
         .def("verify", &WeightedCSP::verify)
         .def("numberOfVariables", &WeightedCSP::numberOfVariables)
         .def("numberOfUnassignedVariables", &WeightedCSP::numberOfUnassignedVariables)
@@ -377,10 +402,9 @@ PYBIND11_MODULE(pytb2, m)
         .def("getValueName", &WeightedCSP::getValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
         .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
-        .def(
-            "postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-                return s.postUnaryConstraint(xIndex, costs, incremental);
-            },
+        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
+            return s.postUnaryConstraint(xIndex, costs, incremental);
+        },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
             return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
@@ -390,7 +414,10 @@ PYBIND11_MODULE(pytb2, m)
             return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
         },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postNaryConstraintBegin", (int (WeightedCSP::*)(vector<int> & scope, Cost defval, Long nbtuples, bool forcenary)) & WeightedCSP::postNaryConstraintBegin)
+        .def("postNaryConstraintBegin", [](WeightedCSP& s, vector<int> & scope, Cost defval, Long nbtuples, bool forcenary) {
+            return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
+        },
+            py::arg("scope"), py::arg("defval"), py::arg("nbtuples"), py::arg("forcenary") = !NARY2CLAUSE)
         .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
         .def("postSupxyc", &WeightedCSP::postSupxyc)
@@ -401,10 +428,10 @@ PYBIND11_MODULE(pytb2, m)
             return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
         },
             py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
-        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP *problem, WeightedCSP *negproblem, Cost lb, Cost ub) {
-                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub);
+        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
+            return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
         },
-            py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST)
+            py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
         .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)

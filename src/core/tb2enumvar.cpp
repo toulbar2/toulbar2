@@ -203,7 +203,7 @@ void EnumeratedVariable::projectSupCost(Cost cost)
 
 void EnumeratedVariable::extend(Value value, Cost cost)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "extend " << getName() << " (" << value << ") -= " << cost << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend " << getName() << " (" << value << ") -= " << cost << endl), true));
     assert(cost >= MIN_COST);
     assert(CUT(costs[toIndex(value)], cost));
     costs[toIndex(value)] -= cost;
@@ -272,7 +272,7 @@ void EnumeratedVariable::propagateNC()
 {
     wcsp->revise(NULL);
     if (ToulBar2::verbose >= 3)
-        cout << "propagateNC for " << getName() << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] propagateNC for " << getName() << endl;
     Value maxcostvalue = getSup() + 1;
     Cost maxcost = MIN_COST;
     bool supportBroken = false;
@@ -421,7 +421,7 @@ bool EnumeratedVariable::isEAC(Value a)
             if (!(*iter).constr->isEAC((*iter).scopeIndex, a)) {
 #ifndef NDEBUG
                 if (ToulBar2::verbose >= 4) {
-                    cout << getName() << "(" << a << ") is not EAC due to constraint " << *(*iter).constr << endl;
+                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] " << getName() << "(" << a << ") is not EAC due to constraint " << *(*iter).constr << endl;
                     if ((*iter).constr->isTernary()) {
                         TernaryConstraint* c = (TernaryConstraint*)(*iter).constr;
                         if (c->xy->connected())
@@ -441,13 +441,13 @@ bool EnumeratedVariable::isEAC(Value a)
         setSupport(a);
 #ifndef NDEBUG
         if (ToulBar2::verbose >= 4)
-            cout << getName() << "(" << a << ") is EAC!" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] " << getName() << "(" << a << ") is EAC!" << endl;
 #endif
         return true;
     }
 #ifndef NDEBUG
     if (ToulBar2::verbose >= 4)
-        cout << getName() << "(" << a << ") is not EAC due to unary cost " << getCost(a) << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] " << getName() << "(" << a << ") is not EAC due to unary cost " << getCost(a) << endl;
 #endif
     return false;
 }
@@ -590,28 +590,28 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
     assert(totaldiffcosta <= costb || totaldiffcostb <= costa);
     if (totalmaxcosta == MIN_COST) {
         if (ToulBar2::verbose >= 2)
-            cout << "DEE " << *this << " (" << a << "," << totalmaxcosta << ") -> (*,*)" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] DEE " << *this << " (" << a << "," << totalmaxcosta << ") -> (*,*)" << endl;
         wcsp->incNbDEE(getDomainSize() - 1);
         assign(a);
         return;
     }
     if (totalmaxcostb == MIN_COST) {
         if (ToulBar2::verbose >= 2)
-            cout << "DEE " << *this << " (" << b << "," << totalmaxcostb << ") -> (*,*)" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] DEE " << *this << " (" << b << "," << totalmaxcostb << ") -> (*,*)" << endl;
         wcsp->incNbDEE(getDomainSize() - 1);
         assign(b);
         return;
     }
     if (totaldiffcosta <= costb) {
         if (ToulBar2::verbose >= 2)
-            cout << "DEE " << *this << " (" << a << "," << totaldiffcosta << ") -> (" << b << "," << costb << ")" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] DEE " << *this << " (" << a << "," << totaldiffcosta << ") -> (" << b << "," << costb << ")" << endl;
         wcsp->incNbDEE();
         remove(b);
         if (assigned())
             return;
     } else {
         if (ToulBar2::verbose >= 2)
-            cout << "DEE " << *this << " (" << b << "," << totaldiffcostb << ") -> (" << a << "," << costa << ")" << endl;
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] DEE " << *this << " (" << b << "," << totaldiffcostb << ") -> (" << a << "," << costa << ")" << endl;
         wcsp->incNbDEE();
         remove(a);
         if (assigned())
@@ -629,7 +629,7 @@ void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
         assert(unassigned());
         if (getCost(*iter) >= totalmaxcost) {
             if (ToulBar2::verbose >= 2)
-                cout << "DEE " << *this << " (" << ((totalmaxcosta < totalmaxcostb) ? a : b) << "," << totalmaxcost << ") -> (" << *iter << "," << getCost(*iter) << ")" << endl;
+                cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] DEE " << *this << " (" << ((totalmaxcosta < totalmaxcostb) ? a : b) << "," << totalmaxcost << ") -> (" << *iter << "," << getCost(*iter) << ")" << endl;
             wcsp->incNbDEE();
             remove(*iter);
         }
@@ -693,7 +693,7 @@ bool EnumeratedVariable::verifyDEE()
 void EnumeratedVariable::increaseFast(Value newInf)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] increase " << getName() << " " << inf << " -> " << newInf << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) >= newInf);
     if (newInf > inf) {
         if (newInf > sup) {
@@ -722,7 +722,7 @@ void EnumeratedVariable::increaseFast(Value newInf)
 void EnumeratedVariable::increase(Value newInf, bool isDecision)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "increase " << getName() << " " << inf << " -> " << newInf << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] increase " << getName() << " " << inf << " -> " << newInf << endl;
 #ifndef NDEBUG
     if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) < newInf)
         wcsp->setIsPartOfOptimalSolution(false);
@@ -757,7 +757,7 @@ void EnumeratedVariable::increase(Value newInf, bool isDecision)
 void EnumeratedVariable::decreaseFast(Value newSup)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] decrease " << getName() << " " << sup << " -> " << newSup << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) <= newSup);
     if (newSup < sup) {
         if (newSup < inf) {
@@ -786,7 +786,7 @@ void EnumeratedVariable::decreaseFast(Value newSup)
 void EnumeratedVariable::decrease(Value newSup, bool isDecision)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "decrease " << getName() << " " << sup << " -> " << newSup << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] decrease " << getName() << " " << sup << " -> " << newSup << endl;
 #ifndef NDEBUG
     if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) > newSup)
         wcsp->setIsPartOfOptimalSolution(false);
@@ -821,7 +821,7 @@ void EnumeratedVariable::decrease(Value newSup, bool isDecision)
 void EnumeratedVariable::removeFast(Value value)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "remove " << *this << " <> " << value << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] remove " << *this << " <> " << value << endl;
     assert(!wcsp->getIsPartOfOptimalSolution() || ((wcsp->getTreeDec()) ? wcsp->getTreeDec()->getRoot()->getUb() : wcsp->getUb()) <= ToulBar2::verifiedOptimum || wcsp->getBestValue(wcspIndex) != value);
     if (value == inf)
         increaseFast(value + 1);
@@ -842,7 +842,7 @@ void EnumeratedVariable::removeFast(Value value)
 void EnumeratedVariable::remove(Value value, bool isDecision)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "remove " << *this << " <> " << value << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] remove " << *this << " <> " << value << endl;
 #ifndef NDEBUG
     if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) == value)
         wcsp->setIsPartOfOptimalSolution(false);
@@ -881,7 +881,7 @@ void EnumeratedVariable::assignWhenEliminated(Value newValue)
 void EnumeratedVariable::assign(Value newValue, bool isDecision)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "assign " << *this << " -> " << newValue << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] assign " << *this << " -> " << newValue << endl;
 #ifndef NDEBUG
     if (isDecision && wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue)
         wcsp->setIsPartOfOptimalSolution(false);
@@ -917,7 +917,7 @@ void EnumeratedVariable::assign(Value newValue, bool isDecision)
 void EnumeratedVariable::assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force)
 {
     if (ToulBar2::verbose >= 2)
-        cout << "assignLS " << *this << " -> " << newValue << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] assignLS " << *this << " -> " << newValue << endl;
 #ifndef NDEBUG
     if (wcsp->getIsPartOfOptimalSolution() && wcsp->getBestValue(wcspIndex) != newValue)
         wcsp->setIsPartOfOptimalSolution(false);
@@ -1385,7 +1385,7 @@ void EnumeratedVariable::eliminate()
     }
     assert(getDegree() == 0);
     if (ToulBar2::verbose >= 2)
-        cout << "Eliminate End of var " << getName() << endl;
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] Eliminate End of var " << getName() << endl;
     assert(getCost(support) == MIN_COST); // it is ensured by previous calls to findSupport
     assign(support); // warning! dummy assigned value
 }

@@ -10,6 +10,10 @@
 
 #include "toulbar2lib.hpp"
 
+#ifdef ILOGCPLEX
+#include <ilcplex/ilocplex.h>
+#endif
+
 class MultiCFN; // forward delaration
 
 // namespace preventing collisions with tb2 Var and Cost functions classes
@@ -98,7 +102,6 @@ public:
 class MultiCFN {
 
 public:
-
     // type representing a solution of a multicfn
     typedef std::map<std::string, std::string> Solution;
 
@@ -182,6 +185,14 @@ public:
      */
     void makeWeightedCSP(WeightedCSP* wcsp);
 
+    #ifdef ILOGCPLEX
+    /*!
+     * \brief export the multicfn to a cplex model data structure
+     * \param model the cplex model data structure
+     */
+    void makeIloModel(IloEnv& env, IloModel& model);
+    #endif
+
     /*!
      * \brief convert a tuple to a cost index, rightmost value indexed first
      * \param variables the list of variables from the tuple
@@ -238,9 +249,10 @@ private: /* private methods */
     void addCostFunction(WCSP* wcsp, Constraint* cstr);
 
     /*!
-     * \brief compute a TOP (infinity) value for the internal representation of the cfns
+     * \brief compute a TOP (infinity) value and a minimum cost for the internal representation of the cfn costs
+     * \return a pair containing the top value (first) and the min cost (second)
      */
-    Double computeTop();
+    std::pair<Double, Double> computeTopMinCost();
 
     /*!
      * \brief check if a variable in a wcsp and a variable in the multicfn with the same name have the same domains, throw an exception otherwise
@@ -276,7 +288,5 @@ private: // private attributes
     std::vector<Double> _obj_values;
     Solution _solution;
 };
-
-
 
 #endif // MULTI_CFN_HPP

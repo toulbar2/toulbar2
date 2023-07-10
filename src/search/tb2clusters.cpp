@@ -21,7 +21,7 @@ bool CmpClusterStructBasic::operator()(const Cluster* lhs, const Cluster* rhs) c
 }
 bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
 {
-    if (ToulBar2::bilevel  && lhs->getParent() == lhs->getTreeDec()->getRoot()) {
+    if (ToulBar2::bilevel && lhs->getParent() == lhs->getTreeDec()->getRoot()) {
         // do not sort clusters by size if bilevel at depth 1 (keep id ordering)
         return lhs && rhs && (lhs->getIndex() < rhs->getIndex());
     } else {
@@ -113,7 +113,8 @@ void Separator::assign(int varIndex)
         nonassigned = nonassigned - 1;
         assert(nonassigned >= 0);
         if (nonassigned == 0) {
-            if (ToulBar2::bilevel && cluster->getParent() == wcsp->getTreeDec()->getRoot()) return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
+            if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot()))
+                return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
             queueSep();
         }
@@ -185,7 +186,7 @@ void Separator::propagate()
 
 void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
 {
-    assert(clb <= cub);
+    assert(ToulBar2::bilevel || clb <= cub);
     int i = 0;
     WCSP* wcsp = cluster->getWCSP();
     Cost deltares = MIN_COST;
@@ -234,7 +235,8 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
             if (ToulBar2::verbose >= 1)
                 cout << " Learn nogood " << nogoods[t].first << ", cub= " << nogoods[t].second << ", delta= " << deltares << " on cluster " << cluster->getId() << endl;
         } else {
-            if (ToulBar2::bilevel && ToulBar2::verbose >= 0) cout << "Warning! nogood already solved on cluster " << cluster->getId() << " !?!" << endl;
+            if (ToulBar2::bilevel && ToulBar2::verbose >= 0)
+                cout << "Warning! nogood already solved on cluster " << cluster->getId() << " !?!" << endl;
             itng->second.first = MAX(itng->second.first, clb + deltares);
             itng->second.second = MIN(itng->second.second, MAX(MIN_COST, cub + ((cub < MAX_COST) ? deltares : MIN_COST)));
             if (ToulBar2::verbose >= 1)
@@ -706,6 +708,8 @@ void Cluster::addVars(TVars& morevars)
 }
 
 void Cluster::addCtr(Constraint* c) { ctrs.insert(c); }
+void Cluster::removeCtr(Constraint* c) { ctrs.erase(c); }
+void Cluster::clearCtrs() { ctrs.clear(); }
 
 void Cluster::addEdge(Cluster* c) { edges.insert(c); }
 
@@ -960,7 +964,8 @@ void Cluster::getSolution(TAssign& sol)
     if (!free) {
         for (TClusters::iterator iter = beginEdges(); iter != endEdges(); ++iter) {
             Cluster* cluster = *iter;
-            if (ToulBar2::bilevel && td->getRoot() == this && cluster == *rbeginEdges()) break; // Do not reconstruct solution for NegProblem2
+            if (ToulBar2::bilevel && td->getRoot() == this && cluster == *rbeginEdges())
+                break; // Do not reconstruct solution for NegProblem2
             cluster->getSolution(sol);
         }
     }
@@ -2016,45 +2021,63 @@ int TreeDecomposition::makeRooted()
     return h;
 }
 
-void TreeDecomposition::setDuplicates()
+void TreeDecomposition::setDuplicates(bool init)
 {
-    if (!ToulBar2::approximateCountingBTD) {
-        // assign constraints to clusters and check for duplicate ternary constraints
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-            Constraint* ctr = wcsp->getCtr(i);
+    if (ToulBar2::approximateCountingBTD)
+        return;
+
+    static unsigned int curCtr = 0;
+    static int curElimBin = 0;
+    static int curElimTern = 0;
+
+    if (init) {
+        curCtr = 0;
+        curElimBin = 0;
+        curElimTern = 0;
+        // clear all ctrs in clusters
+        for (Cluster* c : clusters) {
+            c->clearCtrs();
+        }
+    }
+
+    // assign constraints to clusters and check for duplicate ternary constraints
+    for (; curCtr < wcsp->numberOfConstraints(); curCtr++) {
+        Constraint* ctr = wcsp->getCtr(curCtr);
+        ctr->assignCluster();
+    }
+    for (; curElimBin < wcsp->elimBinOrder; curElimBin++)
+        if (wcsp->elimBinConstrs[curElimBin]->connected()) {
+            Constraint* ctr = wcsp->elimBinConstrs[curElimBin];
             ctr->assignCluster();
         }
-        for (int i = 0; i < wcsp->elimBinOrder; i++)
-            if (wcsp->elimBinConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimBinConstrs[i];
-                ctr->assignCluster();
-            }
-        for (int i = 0; i < wcsp->elimTernOrder; i++)
-            if (wcsp->elimTernConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimTernConstrs[i];
-                ctr->assignCluster();
-            }
+    for (; curElimTern < wcsp->elimTernOrder; curElimTern++)
+        if (wcsp->elimTernConstrs[curElimTern]->connected()) {
+            Constraint* ctr = wcsp->elimTernConstrs[curElimTern];
+            ctr->assignCluster();
+        }
 
-        // check if ternary constraint cluster assignments are valid and do corrections if needed
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
-            Constraint* ctr = wcsp->getCtr(i);
-            if (ctr->connected() && !ctr->isSep()) {
-                if (ctr->isTernary()) {
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->setDuplicates();
-                }
+    // check if ternary constraint cluster assignments are valid and do corrections if needed
+    for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++) {
+        Constraint* ctr = wcsp->getCtr(i);
+        if (ctr->connected() && !ctr->isSep()) {
+            if (ctr->isTernary()) {
+                TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+                tctr->setDuplicates();
             }
         }
-        for (int i = 0; i < wcsp->elimTernOrder; i++)
-            if (wcsp->elimTernConstrs[i]->connected()) {
-                Constraint* ctr = wcsp->elimTernConstrs[i];
-                if (ctr->connected() && !ctr->isSep()) {
-                    assert(ctr->isTernary());
-                    TernaryConstraint* tctr = (TernaryConstraint*)ctr;
-                    tctr->setDuplicates();
-                }
-            }
     }
+    for (int i = 0; i < wcsp->elimTernOrder; i++)
+        if (wcsp->elimTernConstrs[i]->connected()) {
+            Constraint* ctr = wcsp->elimTernConstrs[i];
+            if (ctr->connected() && !ctr->isSep()) {
+                assert(ctr->isTernary());
+                TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+                tctr->setDuplicates();
+            }
+        }
+    // setDuplicates may add binary cost functions
+    curElimBin = wcsp->elimBinOrder;
+    assert(curElimTern == wcsp->elimTernOrder);
 }
 
 void TreeDecomposition::buildFromCovering(string filename)
@@ -2077,7 +2100,7 @@ void TreeDecomposition::buildFromCovering(string filename)
 
     istringstream sfile(filename.c_str());
     ifstream ffile(filename.c_str(), std::ios::in);
-    istream &file = (ToulBar2::bilevel)? reinterpret_cast<istream&>(sfile) : reinterpret_cast<istream&>(ffile);  // use filename as a string containing an explicit covering when doing bilevel optimization
+    istream& file = (ToulBar2::bilevel) ? reinterpret_cast<istream&>(sfile) : reinterpret_cast<istream&>(ffile); // use filename as a string containing an explicit covering when doing bilevel optimization
     string fstr;
     while (getline(file, fstr)) {
         std::istringstream file(fstr);
@@ -2150,7 +2173,7 @@ void TreeDecomposition::buildFromCovering(string filename)
 
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
-    setDuplicates();
+    setDuplicates(true);
     if (ToulBar2::verbose >= 0)
         cout << "Number of clusters         : " << clusters.size() << endl;
     if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 1)
@@ -2357,7 +2380,7 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
         return;
     if (ToulBar2::verbose >= 0)
         cout << "Tree decomposition height : " << h << endl;
-    setDuplicates();
+    setDuplicates(true);
     if (ToulBar2::verbose >= 0)
         cout << "Number of clusters        : " << clusters.size() << endl;
     if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 1)

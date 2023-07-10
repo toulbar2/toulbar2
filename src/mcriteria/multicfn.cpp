@@ -28,25 +28,26 @@ MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var) {
+void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var)
+{
 
     // assert(multicfn_var.nbValues() == tb2_var->getDomainInitSize());
-    if(multicfn_var.nbValues() != tb2_var->getDomainInitSize()) {
+    if (multicfn_var.nbValues() != tb2_var->getDomainInitSize()) {
         cerr << "error: two variables with same name have different domain size between wcsp and multicfn!" << endl;
         throw WrongFileFormat();
     }
 
     /* check consistencies between domain value names */
     unsigned int cpt_check = 0;
-    for(unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind ++) {
+    for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
         string value_name = tb2_var->getValueName(tb2_val_ind);
-        if(multicfn_var.str_to_index.find(value_name) != multicfn_var.str_to_index.end()) {
-            cpt_check ++;
+        if (multicfn_var.str_to_index.find(value_name) != multicfn_var.str_to_index.end()) {
+            cpt_check++;
         }
     }
 
     // assert(cpt_check == tb2_var->getDomainInitSize());
-    if(cpt_check != tb2_var->getDomainInitSize()) {
+    if (cpt_check != tb2_var->getDomainInitSize()) {
         cerr << "error: two variables with same name have different domain value names between wcsp and multicfn!" << endl;
         throw WrongFileFormat();
     }
@@ -66,9 +67,9 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
     for (unsigned int tb2_var_ind = 0; tb2_var_ind < wcsp->numberOfVariables(); tb2_var_ind++) {
 
         // make sure the variable is enumerated
-        if(!wcsp->getVar(tb2_var_ind)->enumerated()) {
+        if (!wcsp->getVar(tb2_var_ind)->enumerated()) {
             cerr << "error: wcsp variables must be enumerated to be inserted in a multicfn !" << endl;
-            throw WrongFileFormat(); 
+            throw WrongFileFormat();
         }
 
         // assert(wcsp->getVar(tb2_var_ind)->enumerated());
@@ -77,7 +78,7 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
 
         // make sure the variable has value names
         // assert(tb2_var->isValueNames());
-        if(!tb2_var->isValueNames()) {
+        if (!tb2_var->isValueNames()) {
             cerr << "error: the wcsp variables must have value names to be inserted in a multicfn!" << endl;
             throw WrongFileFormat();
         }
@@ -178,7 +179,6 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
         cost_function.back().scope.push_back(var_ind);
 
         // set the cost table
-        cost_function.back().default_cost = 0.0;
         cost_function.back().costs.resize(own_var->nbValues(), 0.0);
         cost_function.back().tuples.resize(tb2_var->getDomainInitSize());
 
@@ -254,8 +254,6 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         EnumeratedVariable* tb2_var1 = dynamic_cast<EnumeratedVariable*>(bc->getVar(0));
         EnumeratedVariable* tb2_var2 = dynamic_cast<EnumeratedVariable*>(bc->getVar(1));
 
-        cost_func.default_cost = MIN_COST; // to modify
-
         cost_func.costs.resize(tb2_var1->getDomainInitSize() * tb2_var2->getDomainInitSize());
         cost_func.tuples.resize(cost_func.costs.size());
 
@@ -300,8 +298,6 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         mcriteria::Var* var1 = &var[var_index[tb2_var1->getName()]];
         mcriteria::Var* var2 = &var[var_index[tb2_var2->getName()]];
         mcriteria::Var* var3 = &var[var_index[tb2_var3->getName()]];
-
-        cost_func.default_cost = 0.;
 
         cost_func.costs.resize(tb2_var1->getDomainInitSize() * tb2_var2->getDomainInitSize() * tb2_var3->getDomainInitSize());
         cost_func.tuples.resize(cost_func.costs.size());
@@ -374,7 +370,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 
             vector<unsigned int> own_tuple;
             for (unsigned int var_ind = 0; var_ind < t.size(); var_ind++) {
-                string value_name = tb2_vars[var_ind]->getValueName(tb2_vars[var_ind]->toIndex(t[var_ind]));
+                string value_name = tb2_vars[var_ind]->getValueName(t[var_ind]);
                 own_tuple.push_back(own_vars[var_ind]->str_to_index[value_name]);
             }
 
@@ -419,11 +415,13 @@ unsigned int MultiCFN::getDecimalPoint()
     return _tb2_decimalpoint;
 }
 
-//---------------------------------------------------------------------------
-Double MultiCFN::computeTop()
+////---------------------------------------------------------------------------
+pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
 {
 
-    Double top = 0.;
+    Double top = Pow(1., -_tb2_decimalpoint);
+
+    Double global_mincost = 0.;
 
     for (unsigned int net_ind = 0; net_ind < networks.size(); net_ind++) {
 
@@ -435,7 +433,11 @@ Double MultiCFN::computeTop()
 
             Double min_cost = 0., max_cost = 0.;
             bool uninit_min = true, uninit_max = true;
-
+            size_t prodDom = 1;
+            for (auto& ivar: cost_function[func_ind].scope) {
+                prodDom *= var[ivar].nbValues();
+            }
+            size_t nbtuples = cost_function[func_ind].costs.size();
             for (unsigned int cost_ind = 0; cost_ind < cost_function[func_ind].costs.size(); cost_ind++) {
                 Double cost = cost_function[func_ind].costs[cost_ind];
                 if (cost != numeric_limits<Double>::infinity()) {
@@ -450,14 +452,24 @@ Double MultiCFN::computeTop()
                     }
                 }
             }
-
+            if (cost_function[func_ind].arity() >= 4 && nbtuples < prodDom) {
+                Double defcost = cost_function[func_ind].default_cost;
+                if (!isinf(defcost))
+                    defcost *= weight;
+                if (defcost > max_cost) {
+                    max_cost = defcost;
+                } else if (defcost < min_cost) {
+                    min_cost = defcost;
+                }
+            }
             net_top += max_cost - min_cost;
+            global_mincost += min_cost;
         }
 
         top += net_top;
     }
 
-    return top;
+    return std::make_pair(top, global_mincost);
 }
 
 //---------------------------------------------------------------------------
@@ -469,57 +481,60 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     ToulBar2::decimalPoint = _tb2_decimalpoint;
     ToulBar2::costMultiplier = 1.0; // minimization only
 
-    // precompute the new upper and lowerbound, and negCost
+    // precompute the new lowerbound
     Double global_lb = 0.;
     Double global_ub = 0.;
 
-    bool dir_consistency = true;
+    // bool dir_consistency = true;
 
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
-        // cout << "original lb for " << net_ind << ": " << _doriginal_lbs[net_ind] << endl;
+
         global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
 
-        global_ub += _doriginal_ubs[net_ind] * weights[net_ind];
-
-        // cout << "net " << net_ind << ": ub=" << _doriginal_ubs[net_ind] << endl;
-
-        if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
-            if (ToulBar2::verbose >= 0) {
-                cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
-                cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
-                cerr << "; no upper bound provided" << endl;
-            }
-            dir_consistency = false;
-        }
+        // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
+        //     if (ToulBar2::verbose >= 0) {
+        //         cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
+        //         cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
+        //         cerr << "; no upper bound provided" << endl;
+        //     }
+        //     dir_consistency = false;
+        // }
     }
 
-    // cout << "global ub: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
+    // Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
 
-    Cost global_ub_cost = wcsp->DoubletoCost(global_ub);
+    // bool global_ub_overflow = false;
+    // if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
+    //     if (ToulBar2::verbose >= 0) {
+    //         cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    //     }
+    //     global_ub_overflow = true;
+    // }
 
-    bool global_ub_overflow = false;
-    if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
-        if (ToulBar2::verbose >= 0) {
-            cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
-        }
-        global_ub_overflow = true;
+    auto top_mincost = computeTopMinCost();
+
+    Double top = top_mincost.first;
+    Double global_mincost = top_mincost.second;
+
+    /* ub is computed according to the relative costs */
+    global_ub = top;
+
+    top *= 3; /* make sure the infinite cost will be higher than ub */
+
+    /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
+    /* top is increased if global_ub > 0 */
+    /* top is expressed as a double */
+    if (global_lb + global_mincost < 0) {
+        top -= global_lb + global_mincost;
+    } else {
+        global_ub += global_lb + global_mincost;
     }
-
-    // alternative to the top value: use max_cost as a double: divide by 2 or 3 to avoid overflow
-    // Double top = wcsp->Cost2ADCost(MAX_COST/3);
-    Double top = computeTop();
 
     // cout << "top: " << top << ", " << wcsp->DoubletoCost(top) << endl;
 
     // if(global_ub_overflow) {
     //   top = wcsp->DoubleToADCost(MAX_COST/3)
     // }
-
-    if (dir_consistency && top < global_ub) {
-        if (!global_ub_overflow) {
-            top = global_ub; /* make sure top values are greater than the upper bound to be cut out */
-        }
-    }
 
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
@@ -540,20 +555,19 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
             Variable* tb2_var = wcsp->getVar(wcsp->getVarIndex(var[var_ind].name));
 
-            if(!tb2_var->enumerated()) {
+            if (!tb2_var->enumerated()) {
                 cerr << "error when exporting a multicfn: the target wcsp has a variable with same name but not enumerated!" << endl;
                 throw WrongFileFormat();
             }
 
             EnumeratedVariable* tb2_enumvar = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[var_ind].name)));
 
-            if(!tb2_enumvar->isValueNames()) {
-                cerr << "error when exporting a multicfn: the target wcsp has a variable with the same name no associated value names!" << endl;
+            if (!tb2_enumvar->isValueNames()) {
+                cerr << "error when exporting a multicfn: the target wcsp has a variable with the same name but no associated value names!" << endl;
                 throw WrongFileFormat();
             }
 
             checkVariablesConsistency(tb2_enumvar, var[var_ind]);
-
         }
     }
 
@@ -673,68 +687,83 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
             wcsp->getCtr(cst_ind)->setName(cost_function[func_ind].name);
 
         } else {
-
-            vector<int> scope;
-            for (auto& var_ind : cost_function[func_ind].scope) {
-                scope.push_back(wcsp->getVarIndex(var[var_ind].name));
-            }
-
-            // variables are stored here for simplicity
-            vector<mcriteria::Var*> own_vars;
-            for (auto& var_ind : cost_function[func_ind].scope) {
-                own_vars.push_back(&var[var_ind]);
-            }
-            vector<EnumeratedVariable*> tb2_vars;
-            for (auto& var_ind : cost_function[func_ind].scope) {
-                tb2_vars.push_back(dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[var_ind].name))));
-            }
-
-            unsigned int cst_ind;
-
-            if (cost_function[func_ind].default_cost != numeric_limits<Double>::infinity()) {
-                cst_ind = wcsp->postNaryConstraintBegin(scope, wcsp->DoubletoCost(cost_function[func_ind].default_cost), cost_function[func_ind].costs.size());
-            } else {
-                cst_ind = wcsp->postNaryConstraintBegin(scope, top, cost_function[func_ind].costs.size());
-            }
-
-            // constraint name
-            wcsp->getCtr(cst_ind)->setName(cost_function[func_ind].name);
-
-            for (unsigned int ind_tuple = 0; ind_tuple < cost_function[func_ind].tuples.size(); ind_tuple++) {
-
-                vector<Value> tuple;
-
-                unsigned int var_ind = 0;
-                for (auto& v : cost_function[func_ind].tuples[ind_tuple]) {
-                    tuple.push_back(tb2_vars[var_ind]->toValue(tb2_vars[var_ind]->toIndex(own_vars[var_ind]->domain_str[v])));
-                    var_ind++;
-                }
-
-                Double cost = cost_function[func_ind].costs[ind_tuple];
-
-                if (cost == numeric_limits<Double>::infinity()) {
-                    wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(top));
+            Double mincost = cost_function[func_ind].default_cost;
+            if (!isinf(mincost))
+                mincost *= weight;
+            Double maxcost = cost_function[func_ind].default_cost;
+            if (!isinf(maxcost))
+                maxcost *= weight;
+            for (unsigned int ind_tuple = 0; ind_tuple < cost_function[func_ind].costs.size(); ind_tuple++) {
+                if (isinf(cost_function[func_ind].costs[ind_tuple])) {
+                    maxcost = numeric_limits<Double>::infinity();
                 } else {
-                    // do not forget to convert from double to cost for n-ary cost functions
-                    if (fabs(weight - 1.) > MultiCFN::epsilon) {
-                        wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(cost_function[func_ind].costs[ind_tuple] * weight));
-                    } else {
-                        wcsp->postNaryConstraintTuple(cst_ind, tuple, wcsp->DoubletoCost(cost_function[func_ind].costs[ind_tuple]));
+                    if (cost_function[func_ind].costs[ind_tuple] * weight < mincost) {
+                        mincost = cost_function[func_ind].costs[ind_tuple] * weight;
+                    } else if (cost_function[func_ind].costs[ind_tuple] * weight > maxcost) {
+                        maxcost = cost_function[func_ind].costs[ind_tuple] * weight;
                     }
                 }
             }
+            wcsp->postNullaryConstraint(mincost);
+            if (mincost < maxcost) {
+                vector<int> scope;
+                for (auto& var_ind : cost_function[func_ind].scope) {
+                    scope.push_back(wcsp->getVarIndex(var[var_ind].name));
+                }
 
-            wcsp->postNaryConstraintEnd(cst_ind);
+                // variables are stored here for simplicity
+                vector<mcriteria::Var*> own_vars;
+                for (auto& var_ind : cost_function[func_ind].scope) {
+                    own_vars.push_back(&var[var_ind]);
+                }
+                vector<EnumeratedVariable*> tb2_vars;
+                for (auto& var_ind : cost_function[func_ind].scope) {
+                    tb2_vars.push_back(dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[var_ind].name))));
+                }
+
+                unsigned int cst_ind;
+                if (cost_function[func_ind].default_cost != numeric_limits<Double>::infinity()) {
+                    cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)roundl((cost_function[func_ind].default_cost * weight - mincost) * pow(10, _tb2_decimalpoint)), cost_function[func_ind].costs.size());
+                } else {
+                    cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)roundl(top * pow(10, _tb2_decimalpoint)), cost_function[func_ind].costs.size());
+                }
+
+                // constraint name
+                wcsp->getCtr(cst_ind)->setName(cost_function[func_ind].name);
+
+                for (unsigned int ind_tuple = 0; ind_tuple < cost_function[func_ind].tuples.size(); ind_tuple++) {
+                    vector<Value> tuple;
+
+                    unsigned int var_ind = 0;
+                    for (auto& v : cost_function[func_ind].tuples[ind_tuple]) {
+                        tuple.push_back(tb2_vars[var_ind]->toValue(tb2_vars[var_ind]->toIndex(own_vars[var_ind]->domain_str[v])));
+                        var_ind++;
+                    }
+
+                    Double cost = cost_function[func_ind].costs[ind_tuple];
+
+                    if (cost == numeric_limits<Double>::infinity()) {
+                        wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)roundl(top * pow(10, _tb2_decimalpoint)));
+                    } else {
+                        // do not forget to convert from double to cost for n-ary cost functions
+                        if (fabs(weight - 1.) > MultiCFN::epsilon) {
+                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)roundl((cost_function[func_ind].costs[ind_tuple] * weight - mincost) * pow(10, _tb2_decimalpoint)));
+                        } else {
+                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)roundl((cost_function[func_ind].costs[ind_tuple]- mincost) * pow(10, _tb2_decimalpoint)));
+                        }
+                    }
+                }
+
+                wcsp->postNaryConstraintEnd(cst_ind);
+            }
         }
     }
 
     global_lb += wcsp->Cost2ADCost(wcsp->getLb());
 
-    // cout << "target global lb, after combination: " << global_lb << endl;
-
     if (global_lb < 0) {
         wcsp->setLb(0);
-        wcsp->decreaseLb(-wcsp->DoubletoCost(0));
+        wcsp->decreaseLb(-wcsp->DoubletoCost(0)); // reset negCost to zero
         wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb));
         //cout << "global_lb < 0: " << global_lb << endl;
     } else {
@@ -743,18 +772,9 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
         //cout << "global_lb > 0" << endl;
     }
 
-    // cout << "new global lower bound: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
-    // cout << "Top computed: " << top << ", " << wcsp->DoubletoCost(top) << endl;
-
-    if (dir_consistency && !global_ub_overflow) {
-        //cout << "Setting UB value: " << global_ub << ", " << wcsp->DoubletoCost(global_ub) << endl;
-        // wcsp->setUb(wcsp->DoubletoCost(top)); // account for negCost ?
-        wcsp->setUb(wcsp->DoubletoCost(global_ub)); // account for negCost ?
-    } else {
-        wcsp->setUb(MAX_COST); // could be improved if all UBs are positives
-    }
-
-    //cout << "Lb of the combined wcsp: " << wcsp->Cost2ADCost(wcsp->getLb()) << endl;
+    // ub should always be the precomputed ub from the costs
+    // ub is relative to the internal costs, negcost is not acounted for
+    wcsp->setUb(wcsp->DoubletoCost(global_ub));
 
     wcsp->sortConstraints(); // close the WCSP model
 }
@@ -1014,6 +1034,7 @@ void mcriteria::Var::print(ostream& os)
 
 //---------------------------------------------------------------------------
 mcriteria::CostFunction::CostFunction(MultiCFN* multicfn)
+  : default_cost(0.)
 {
     this->multicfn = multicfn;
 }

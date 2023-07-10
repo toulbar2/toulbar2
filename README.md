@@ -24,12 +24,16 @@ graphical models:
 * 2010 UAI APPROXIMATE INFERENCE CHALLENGE [UAI 2010][uai2010] (winner on 1200-second MPE task)
 * The Probabilistic Inference Challenge [PIC 2011][pic2011] (second place by ficolofo on 1-hour MAP task)
 * UAI 2014 Inference Competition [UAI 2014][uai2014] (winner on all MAP task categories, see Proteus, Robin, and IncTb entries)
+* XCSP3 2022 Competition [XCSP3 2022][xcsp2022] (second place on Mini COP and Parallel COP tracks)
+* UAI 2022 Inference Competition [UAI 2022][uai2022] (winner on all MPE and MMAP task categories)
 
 [cpai08]: http://www.cril.univ-artois.fr/CPAI08/
 [uai2008]: http://graphmod.ics.uci.edu/uai08/Evaluation/Report
 [uai2010]: http://www.cs.huji.ac.il/project/UAI10/summary.php
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
+[xcsp2022]: https://xcsp.org/competitions
+[uai2022]: https://uaicompetition.github.io/uci-2022/results/final-leader-board
 
 toulbar2 is now also able to collaborate with ML code that can learn
 an additive graphical model (with constraints) from data (see the
@@ -64,6 +68,7 @@ The first line is only useful for Linux distributions that ship "old" versions o
 
 Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
 
+    pip3 install pybind11
     mkdir build
     cd build
     cmake -DPYTB2=ON ..
@@ -98,6 +103,7 @@ Recommended libraries (default use):
 
 Optional libraries:
 * libjemalloc-dev
+* pybind11-dev
 * libopenmpi-dev
 * libboost-mpi-dev
 * libicuuc
@@ -121,7 +127,7 @@ Commands for statically compiling toulbar2 on Linux in directory toulbar2/src wi
     cd src
     echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
     g++ -o toulbar2 -std=c++17 -O3 -DNDEBUG -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
-     -I. -I./pils/src tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+     -I. -I./pils/src tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -lbz2 -llzma
 
 Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
@@ -130,7 +136,7 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
     cd src
     echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
-     -I. -I./pils/src tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+     -I. -I./pils/src tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lgmp -lz -lbz2 -llzma
 
 Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
@@ -141,7 +147,7 @@ Replace WCSPFORMATONLY by XMLFLAG3 and add libxcsp3parser.a from xcsp.org in you
     cd src
     echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
     mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
-     -I/usr/include/libxml2 -I. -I./pils/src -I./xmlcsp3 tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+     -I/usr/include/libxml2 -I. -I./pils/src -I./xmlcsp3 tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lxml2 -licuuc -licui18n -licudata libxcsp3parser.a -lgmp -lz -lbz2 -llzma -lm -lpthread -ldl
 
 Copyright (C) 2006-2022, toulbar2 team.

@@ -198,6 +198,8 @@ namespace XCSP3Core {
         vector<XVariable *> values; // used to store a list of variables
         vector<XVariable *> occurs;   // used in cardinality
         vector<XVariable *> weights;   // used in flow
+        vector<XVariable *> limits;   // used in binPacking
+        vector<XVariable *> loads;   // used in binPacking
 
         vector<int> integers;  // used to store a list of coefficients
 
@@ -213,10 +215,14 @@ namespace XCSP3Core {
         string classes;
 
         bool zeroIgnored;          // for nooverlap
+        string conditions;         //  for conditions in binPacking
         string condition;          // used to store a condition in prefix form
+        string condition2;         // Fow knapsack only
+        bool secondContition;
         bool star;                 // true if the extension contain star in tuples
         int startIndex, startIndex2;            // used in some list tag
         int startRowIndex, startColIndex;
+        bool covered;
         XVariable *index;          // used with tag index
         XVariable *index2;         // Only for element matrix
         RankType rank;             // used with rank tag
@@ -743,28 +749,58 @@ namespace XCSP3Core {
 
             // UTF8String txt, bool last
             virtual void text(const UTF8String txt, bool) {
-                this->parser->condition += txt.to(this->parser->condition);
+                if(this->parser->secondContition)
+                    this->parser->condition2 += txt.to(this->parser->condition2);
+                else
+                    this->parser->condition += txt.to(this->parser->condition);
             }
 
 
             virtual void endTag() {
-                this->parser->condition = trim(this->parser->condition);
+                string cond;
+                if(this->parser->secondContition) {
+                    this->parser->condition2 = trim(this->parser->condition2);
+                    cond = this->parser->condition2;
+                }
+                else {
+                    this->parser->condition = trim(this->parser->condition);
+                    cond = this->parser->condition;
+                }
 
                 std::regex const rglt(R"(\(.*(le|lt|ge|gt|in|eq|ne),%([0-9]+)\).*)");
                 std::smatch match;
-                std::regex_match(this->parser->condition, match, rglt);
+                std::regex_match(cond, match, rglt);
+
+                this->parser->secondContition = true;
 
                 if(match.size() != 3)
                     return;
                 int tmp =  std::stoi(match[2].str());
                 if(XParameterVariable::max < tmp)
                     XParameterVariable::max = tmp;
-                }
+            }
+
         };
 
+        class ConditionsTagAction : public TagAction {
+        public:
+            ConditionsTagAction(XMLParser *parser, string name) : TagAction(parser, name) { }
 
-        /***************************************************************************
-         * Actions performed on CONDITION tag
+            void beginTag(const AttributeList &attributes) override{
+                if(!attributes["startIndex"].isNull()) {
+                    std::string tmp;
+                    attributes["startIndex"].to(tmp);
+                    this->parser->startIndex = std::stoi(tmp);
+                }
+
+            }
+            void text(const UTF8String txt, bool) override {
+                this->parser->conditions += txt.to(this->parser->conditions);
+            }
+        };
+
+            /***************************************************************************
+         * Actions performed on List of integer tag
          ****************************************************************************/
 
         class ListOfIntegerTagAction : public TagAction {

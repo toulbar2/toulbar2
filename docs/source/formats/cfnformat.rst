@@ -434,3 +434,35 @@ Global cost functions using a cost function network-based propagator (decompose 
 
 Warning: the decomposition of :code:`wsum` and :code:`wvarsum` may use an exponential size (sum of domain sizes). list_size1 and list_size2 must be equal in :code:`ssame`.
 
+
+Global cost functions using a dedicated propagator:
+
+  - :code:`"cfnconstraint"` with parameters :code:`cfn: cost-function-network lb: cost ub: cost duplicatehard: value strongduality: value` to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in cfn format such that its valid solutions must have a cost value in [lb,ub[.  
+
+    - :code:`"duplicatehard"` (0|1): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+
+    - :code:`"strongduality"` (0|1): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
+            
+    - example : ::
+
+        name: {scope: [v1 v2 v4]
+               type : cfnconstraint
+               params: {
+                  cfn: 
+                    {
+                    problem: {name: "subcfn", mustbe: "<1000.0"}
+                    variables: {v1:2, v2:2, v4:2}
+                    functions: { 
+                       {scope: [v1], costs: [0.0, -3.0]},
+                       {scope: [v2], costs: [-1.0, 0.0]},
+                       {scope: [v4], costs: [0.0, 2.0]}}
+                    }
+                  lb : -1.0
+                  ub : 0.0
+                  duplicatehard: 0
+                  strongduality: 0
+                  }
+               }
+               
+    Warning: the same floatting-point precision and optimization sense (minimization or maximization) should be used by the encapsulated cost function network and the main model.
+    Warning: the list of variables of the encapsulated cost function network should be exactly the same as the scope (and with the same order).

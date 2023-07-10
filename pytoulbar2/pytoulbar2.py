@@ -287,7 +287,7 @@ class CFN:
             self.CFN.wcsp.postNullaryConstraint(mincost)
             if (mincost == maxcost):
                 return
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0), True)
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0))
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
                 if (isinf(cost)):
@@ -358,12 +358,11 @@ class CFN:
             self.CFN.wcsp.postNullaryConstraint(mincost)
             if (mincost == maxcost):
                 return
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts), False)
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
                 self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
             self.CFN.wcsp.postNaryConstraintEnd(idx)
-
-
+        
     def AddLinearConstraint(self, coefs, scope, operand = '==', rightcoef = 0):
         """AddLinearConstraint creates a linear constraint with integer coefficients.
         The scope corresponds to the variables involved in the left part of the constraint. 
@@ -371,20 +370,22 @@ class CFN:
         All constant terms must belong to the rigt part.
         
         Args:
-            coefs (list): array of integer coefficients associated to the left-part variables.
+            coefs (list or int): array of integer coefficients associated to the left-part variables (or the same integer coefficient is applied to all variables).
             scope (list): variables involved in the left part of the constraint. A variable can be represented by its name (str) or its index (int).
-            operand (str): can be either '==' or '<=' or '>='.
+            operand (str): can be either '==' or '<=' or '<' or '>=' or '>'.
             rightcoef (int): constant term in the right part.
            
         Example:
             AddLinearConstraint([1,1,-2], [x,y,z], '==', -1) encodes x + y -2z = -1. 
 
         """
+        if (isinstance(coefs, int)):
+            coefs = [coefs for v in scope]
         assert(len(coefs) == len(scope))
         sscope = set(scope)
         if len(scope) != len(sscope):
             raise RuntimeError("Duplicate variable in scope: "+str(scope))
-        if operand != '>=' and operand != '<=' and operand != '==':
+        if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddLinearConstraint: "+str(operand))
         iscope = []
         for i, v in enumerate(scope):
@@ -394,12 +395,27 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
 
-        if operand == '>=' or operand == '==':
-            params = str(rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+        if operand == '>=' or operand == '>' or operand == '==':
+            params = str((rightcoef + 1) if (operand == '>') else rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
-        if operand == '<=' or operand == '==':
-            params = str(-rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+        if operand == '<=' or operand == '<' or operand == '==':
+            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
+
+    def AddSumConstraint(self, scope, operand = '==', rightcoef = 0):
+        """AddSumConstraint creates a linear constraint with unit coefficients.
+        The scope corresponds to the variables involved in the left part of the constraint.
+        
+        Args:
+            scope (list): variables involved in the left part of the constraint. A variable can be represented by its name (str) or its index (int).
+            operand (str): can be either '==' or '<=' or '<' or '>=' or '>'.
+            rightcoef (int): constant term in the right part.
+           
+        Example:
+            AddSumConstraint([x,y,z], '<', 3) encodes x + y + z < 3. 
+
+        """
+        self.AddLinearConstraint(1, scope, operand, rightcoef)
 
     def AddGeneralizedLinearConstraint(self, tuples, operand = '==', rightcoef = 0):
         """AddGeneralizedLinearConstraint creates a linear constraint with integer coefficients associated to domain values. 
@@ -408,7 +424,7 @@ class CFN:
         
         Args:
             tuples (list): array of triplets (variable, domain value, coefficient) in the left part of the constraint.
-            operand (str): can be either '==' or '<=' or '>='.
+            operand (str): can be either '==' or '<=' or '<' or '>=' or '>'.
             rightcoef (int): constant term in the right part.
            
         Example:
@@ -421,7 +437,7 @@ class CFN:
             if v not in sscope:
                 sscope.add(v)
                 scope.append(v)
-        if operand != '>=' and operand != '<=' and operand != '==':
+        if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddGeneralizedLinearConstraint: "+str(operand))
         iscope = []
         for i, v in enumerate(scope):
@@ -431,15 +447,15 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
 
-        if operand == '>=' or operand == '==':
-            params = str(rightcoef)
+        if operand == '>=' or operand == '>' or operand == '==':
+            params = str((rightcoef + 1) if (operand == '>') else rightcoef)
             for v in iscope:
                 vtuples = [[str(val), str(coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
                 params += ' ' + ' '.join(self.flatten(vtuples))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
-        if operand == '<=' or operand == '==':
-            params = str(-rightcoef)
+        if operand == '<=' or operand == '<' or operand == '==':
+            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
             for v in iscope:
                 vtuples = [[str(val), str(-coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
@@ -509,13 +525,15 @@ class CFN:
         params = str(list(parameters))[1:-1].replace(',','').replace('\'','')
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
 
-    def AddWeightedCSPConstraint(self, problem, lb, ub):
+    def AddWeightedCSPConstraint(self, problem, lb, ub, duplicateHard = False, strongDuality = False):
         """AddWeightedCSPConstraint creates a hard global constraint on the cost of an input weighted constraint satisfaction problem such that its valid solutions must have a cost value in [lb,ub[. 
         
         Args:
             problem (CFN): input problem.
             lb (decimal cost): any valid solution in the input problem must have a cost greater than or equal to lb.
             ub (decimal cost): any valid solution in the input problem must have a cost strictly less than ub.
+            duplicateHard (bool): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+            strongDuality (bool): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
             
         Note:
             If a variable in the input problem does not exist in the current problem (with the same name), it is automatically added.
@@ -538,8 +556,10 @@ class CFN:
         negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose)
         negproblem.InitFromMultiCFN(multicfn)
         negproblem.UpdateUB(1. - problem.GetLB())
+        # keep alive both problem and negproblem
+        self.InternalCFNs.append(problem)
         self.InternalCFNs.append(negproblem)
-        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcsp.DoubletoCost(lb), problem.CFN.wcsp.DoubletoCost(ub))
+        self.CFN.wcsp.postWeightedCSPConstraint(iscope, problem.CFN.wcsp, negproblem.CFN.wcsp, problem.CFN.wcsp.DoubletoCost(lb), problem.CFN.wcsp.DoubletoCost(ub), duplicateHard, strongDuality)
         
     def Read(self, filename):
         """Read reads the problem from a file.
@@ -730,18 +750,19 @@ class CFN:
         tb2.option.trwsAccuracy = -1
         
     # non-incremental solving method
-    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0):
+    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0, writeSolution = ''):
         """Solve solves the problem (i.e., finds its optimum and proves optimality). It can also enumerate (diverse) solutions depending on the arguments.
 
         Args:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values, 
-                                                               3: variable and value names).  
+                                                               3: variable and value names).
             allSolutions (int): if non-zero, enumerates all the solutions with a cost strictly better than the initial upper bound
                                     until a given limit on the number of solutions is reached.
             diversityBound (int): if non-zero, finds a greedy sequence of diverse solutions where a solution in the list is optimal
                                       such that it also has a Hamming-distance from the previously found solutions greater than a given bound.
                                       The number of diverse solutions is bounded by the argument value of allSolutions.
             timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
+            writeSolution (str): write best solution found in a file using a given file name and using the same format as showSolutions (or write all solutions if allSolutions is non-zero)
             
         Returns:
             The best (or last if enumeration/diversity) solution found as a list of domain values, its associated cost, always strictly lower 
@@ -755,6 +776,10 @@ class CFN:
 
         """
         tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
+        if len(writeSolution) > 0:
+            if showSolutions > 0:
+                tb2.option.writeSolution(str(showSolutions))
+            tb2.option.writeSolution(writeSolution)
         tb2.option.allSolutions = allSolutions   # find all solutions up to a given maximum limit (or 0 if searching for the optimum)
         if diversityBound != 0 and allSolutions > 0:
             tb2.option.divNbSol = allSolutions
@@ -769,6 +794,8 @@ class CFN:
             self.CFN.wcsp.updateDUb(self.UbInit)
         self.CFN.wcsp.sortConstraints()
         solved = self.CFN.solve()
+        if len(writeSolution) > 0:
+            tb2.option.closeSolution()
         if (len(self.CFN.solutions()) > 0):
             if allSolutions > 0:
                 return self.CFN.solutions()[-1][1], self.CFN.solutions()[-1][0], len(self.CFN.solutions()) # returns the last solution found

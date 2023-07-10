@@ -7,6 +7,8 @@ Publications
 Conference talks
 ================
 
+- talk on toulbar2 at `ROADEF 2023 <http://miat.inrae.fr/degivry/Givry23d.pdf>`_, Rennes, France, February 21, 2023.
+
 - ANITI webinar on toulbar2 for industrial applications :
   `slides <https://miat.inrae.fr/degivry/GivryANITI2021.pdf>`_ in English |
   `talk <https://youtu.be/lH04asuheo8>`_ in French
@@ -144,11 +146,25 @@ What are the algorithms inside toulbar2 ?
   `Parallel Hybrid Best-First Search <https://miat.inrae.fr/degivry/Beldjilali22a.pdf>`_,
   A Beldjilali, P Montalbano, D Allouche, G Katsirelos, and S de Givry,
   In Proc. of CP-22, volume 235, pages 7:1-7:10, Haifa, Israel, 2022.
+  
+- **Virtual Pairwise Consistency (pwc, hve)**
 
+  `Virtual Pairwise Consistency in Cost Function Networks <https://miat.inrae.fr/degivry/Montalbano23a.pdf>`_,
+  P Montalbano, D Allouche, S de Givry, G Katsirelos, and Tomas Werner
+  In Proc. of CP-AI-OR'2023, Nice, France, 2023.
+   
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------
 
 - **Computational Protein Design**
+
+  Colom, Mireia Solà, et al.
+  Deep Evolutionary Forecasting identifies highly-mutated SARS-CoV-2 variants via functional sequence-landscape enumeration.
+  Research Square, 2022.
+  
+  XENet: Using a new graph convolution to accelerate the timeline for protein design on quantum computers
+  Jack B. Maguire, Daniele Grattarola, Vikram Khipple Mulligan, Eugene Klyshko, Hans Melo.
+  Plos Comp. Biology, 2021.
 
   Designing Peptides on a Quantum Computer,
   Vikram Khipple Mulligan, Hans Melo, Haley Irene Merritt, Stewart Slocum, Brian D. Weitzner, Andrew M. Watkins, P. Douglas Renfrew, Craig Pelissier, Paramjit S. Arora, and Richard Bonneau,
@@ -268,6 +284,10 @@ Other publications mentioning toulbar2
 
 - **Inference, Sampling, and Diagnostic**
 
+  Dubray, A., Derval, G., Nijssen, S., Schaus, P.
+  Optimal Decoding of Hidden Markov Models with Consistency Constraints. 
+  In Proc. of Discovery Science (DS), LNCS 13601, 2022.
+  
   Mohamed-Hamza Ibrahim, Christopher Pal and Gilles Pesant,
   Leveraging cluster backbones for improving MAP inference in statistical relational models,
   In Ann. Math. Artif. Intell. 88, No. 8, 907-949, 2020.

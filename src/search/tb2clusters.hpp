@@ -242,6 +242,8 @@ public:
     TCtrs& getCtrs() { return ctrs; }
     void addCtrs(TCtrs& ctrsin);
     void addCtr(Constraint* c);
+    void removeCtr(Constraint* c);
+    void clearCtrs();
     void sum(TCtrs& c1, TCtrs& c2, TCtrs& ctout);
 
     bool isActive() const
@@ -514,7 +516,7 @@ public:
     Cluster* getRoot() { return roots.front(); }
     Cluster* getRootRDS() { return rootRDS; }
     void setRootRDS(Cluster* rdsroot) { rootRDS = rdsroot; }
-    void setDuplicates(); // deal with two or more ternary constraints having the same included binary constraint belonging to different clusters
+    void setDuplicates(bool init = false); // deal with two or more ternary constraints having the same included binary constraint belonging to different clusters
 
     int height(Cluster* r);
     int height(Cluster* r, Cluster* father);
@@ -553,7 +555,7 @@ public:
     int getMaxDepth() { return max_depth; }
     Cluster* lowestCommonAncestor(Cluster* c1, Cluster* c2); ///< \brief compute the lowest common ancestor cluster of two clusters in a rooted tree decomposition
     bool isSameCluster(Cluster* c1, Cluster* c2); ///< \brief return true if both clusters are the same or they have been merged together by adaptive BTD
-    bool isSameCluster(int c1, int c2) { return c1==c2 || isSameCluster(getCluster(c1), getCluster(c2)); }
+    bool isSameCluster(int c1, int c2) { return c1 == c2 || isSameCluster(getCluster(c1), getCluster(c2)); }
 };
 
 #endif

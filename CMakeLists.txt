@@ -97,7 +97,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on
 #SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
-  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio1210")
+  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio2211")
   SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DILOGCPLEX -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
   SET(CPLEXLIB "-L${CPLEX_LOCATION}/cplex/lib/x86-64_linux/static_pic -L${CPLEX_LOCATION}/concert/lib/x86-64_linux/static_pic") 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPLEXFLAGS}")
@@ -362,7 +362,9 @@ IF(LIBTB2)
     ENDIF(MPI_LINK_FLAGS)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
-    TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+    IF(PYTB2)
+      TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+    ENDIF(PYTB2)
   ENDIF(MPI)
   
   INSTALL(TARGETS tb2
@@ -371,9 +373,9 @@ IF(LIBTB2)
     ARCHIVE DESTINATION lib
     )
 ELSE(LIBTB2)
-  IF(NOT XCSP3)
+  IF(NOT(XCSP3 AND XML))
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWCSPFORMATONLY" )
-  ENDIF(NOT XCSP3)
+  ENDIF(NOT(XCSP3 AND XML))
 ENDIF(LIBTB2)
 
 ##########################################

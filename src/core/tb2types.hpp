@@ -72,7 +72,11 @@ typedef int16_t Value;
 typedef int16_t tValue;
 #else
 typedef int Value;
+#if defined(XMLFLAG) || defined(XMLFLAG3)
+typedef int tValue;
+#else
 typedef int16_t tValue;
+#endif
 #endif
 
 /// Maximum domain value
@@ -507,6 +511,9 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 // Transforms hard clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
 #define CLIQUE2KNAPSACK
 
+// Transforms nary cost function on Boolean variables with a single nonzero tuple into weighted clause constraint
+const bool NARY2CLAUSE = true;
+
 // Transforms hard clause constraint into knapsack constraint
 //#define CLAUSE2KNAPSACK
 
@@ -617,6 +624,14 @@ typedef enum {
     CONSTR_ORDER_LAG = 7,
     CONSTR_ORDER_THEMAX
 } ConstrOrdering;
+
+typedef enum {
+    BISUPPORT_HEUR_LB = 1,
+    BISUPPORT_HEUR_UB = 2,
+    BISUPPORT_HEUR_MINGAP = 3,
+    BISUPPORT_HEUR_MAXGAP = 4,
+    BISUPPORT_HEUR_THEMAX
+} BiSupportHeur;
 
 class Pedigree;
 class Haplotype;
@@ -745,6 +760,7 @@ public:
     static bool sortDomains; ///< \brief sorts domains in preprocessing based on increasing unary costs (command line option -sortd) \warning Works only for binary WCSPs.
     static map<int, ValueCost*> sortedDomains; ///< \internal do not use
     static bool solutionBasedPhaseSaving; ///< \brief solution-based phase saving value heuristic (command line option -solr)
+    static double bisupport; ///< \brief value heuristic in bi-objective optimization when the second objective is encapsulated by a bounding constraint (command line option -bisupport)
     static int elimDegree; ///< \brief boosting search with variable elimination of small degree (0: no variable elimination, 1: linked to at most one binary cost function, 2: linked to at most two binary cost functions, 3: linked to at most one ternary cost function and two scope-included cost functions) (command line option -e)
     static int elimDegree_preprocessing; ///< \brief  in preprocessing, generic variable elimination of degree less than or equal to a given value (0: no variable elimination) (command line option -p)
     static int elimDegree_; ///< \internal do not use
@@ -788,6 +804,7 @@ public:
     static bool bayesian; ///< \internal do not use
     static int uai; ///< \internal do not use
     static int resolution; ///< \brief defines the number of digits that should be representable in UAI/OPB/QPBO formats (command line option -precision)
+    static bool resolution_Update; ///< \internal flag true when default cfn precision is modified
     static TProb errorg; ///< \internal do not use
     static TLogProb NormFactor; ///< \internal do not use
     static int foundersprob_class; ///< \internal do not use
@@ -871,6 +888,7 @@ public:
     static externalfunc timeOut; ///< \internal do not use
     static std::atomic<bool> interrupted; ///< \internal do not use
     static int seed; ///< \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
+    static double sigma; ///< \brief initial random noise standard deviation to be added to energy values when reading UAI format files (command line option -sigma)
 
     static string incop_cmd; ///< \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
     static string pils_cmd; ///< \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)

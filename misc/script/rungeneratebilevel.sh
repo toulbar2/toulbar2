@@ -62,6 +62,8 @@ done
 
 rm -f problem1.cfn
 rm -f problem2.cfn
+rm -f problem1.all
+rm -f problem2.all
 rm -f toulbar2_opt
 rm -f problem1_opt
 rm -f problem2_opt

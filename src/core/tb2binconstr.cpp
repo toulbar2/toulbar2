@@ -32,10 +32,10 @@ BinaryConstraint::BinaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, Enumerate
     for (unsigned int a = 0; a < x->getDomainInitSize(); a++)
         for (unsigned int b = 0; b < y->getDomainInitSize(); b++)
             costs[a * sizeY + b] = tab[a * sizeY + b];
-    if (ToulBar2::bilevel>=2) {
+    if (ToulBar2::bilevel >= 2) {
         assert(ToulBar2::bilevel <= 3);
         deconnect(true);
-        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].push_back(wcspIndex);
+        wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].push_back(wcspIndex);
     } else {
         propagate();
     }
@@ -138,7 +138,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
                 if (printed)
                     os << ",\n";
                 os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << ","
-                   << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY))));
+                   << ((original) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))) : ((wcsp->getUb() > getCost(*iterX, *iterY)) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY))) : "inf"));
                 printed = true;
             }
         }
@@ -152,7 +152,7 @@ void BinaryConstraint::dump_CFN(ostream& os, bool original)
  */
 bool BinaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
     // hard binary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
@@ -174,7 +174,7 @@ bool BinaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, ve
 
 void BinaryConstraint::extend(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
     TreeDecomposition* td = wcsp->getTreeDec();
     if (td)

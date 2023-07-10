@@ -1,0 +1,24 @@
+{
+    "problem": { "name": "cfnconstraint_example", "mustbe": "<5.0"},
+    "variables": { "v1": ["a", "b"], "v2": ["c", "d"], "v3": ["e", "f"] },
+    "functions": {
+    "c0": {"scope": [], "costs": [-6.0]},
+    "c1": {"scope": ["v1"], "costs": [1.0, 0.5]},
+    "c2": {"scope": ["v2"], "costs": [1.0, 0.5]},
+    "c3": {"scope": ["v3"], "costs": [-1.0, -0.5]},
+    "c12": {"scope": ["v1", "v2"], "costs": [-1.0, 0.5, -2.0, 5.5]},
+    "c23": {"scope": ["v2", "v3"], "type": "cfnconstraint", "params": {
+      "cfn": 
+           {
+            "problem": { "name": "cfnconstraint", "mustbe": "<1000.0"},
+             "variables": { "v2": ["c", "d"], "v3": ["e", "f"] },
+             "functions": {
+                "c2": {"scope": ["v2"], "costs": [0.0, -3.0]},
+                "c3": {"scope": ["v3"], "costs": [1.0, 0.0]},
+                "c12": {"scope": ["v2", "v3"], "costs": [1.0, 0.0, 2.0, 5.0]}}
+            },
+      "lb": -1.0,
+      "ub": 2.0,
+      "duplicatehard": 0,
+      "strongduality": 0}}}
+}

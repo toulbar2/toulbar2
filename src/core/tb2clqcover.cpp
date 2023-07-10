@@ -94,6 +94,8 @@ std::ostream& CliqueConstraint::printstate(std::ostream& os)
 
 void CliqueConstraint::propagate()
 {
+    if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+        return;
     if (bc.empty()) {
         assert(Store::getDepth() == 0);
         initialize_binary();

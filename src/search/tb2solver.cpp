@@ -8,6 +8,7 @@
 #include "tb2solver.hpp"
 #include "core/tb2vac.hpp"
 #include "core/tb2domain.hpp"
+#include "core/tb2globalwcsp.hpp"
 #include "applis/tb2pedigree.hpp"
 #include "applis/tb2haplotype.hpp"
 #include "applis/tb2bep.hpp"
@@ -23,6 +24,7 @@
 
 extern void setvalue(int wcspId, int varIndex, Value value, void* solver);
 extern void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);
+extern void newsolution(int wcspId, void* solver);
 
 const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
@@ -146,6 +148,11 @@ Solver::~Solver()
     if (self_wcsp) {
         delete wcsp;
     }
+
+    for (auto elt : WCSP::CollectionOfWCSP) {
+        delete elt.second;
+    }
+    WCSP::CollectionOfWCSP.clear();
 
     delete ((StoreInt*)searchSize);
 }
@@ -478,6 +485,16 @@ int Solver::numberOfUnassignedVariables() const
  *
  */
 
+void newsolution(int wcspId, void* _solver_)
+{
+    assert(_solver_);
+    Solver* solver = (Solver*)_solver_;
+    if (ToulBar2::searchMethod == DFBB && ToulBar2::vnsOptimum > 0 && solver->getWCSP()->getLb() > 0 && solver->getWCSP()->getLb() <= ToulBar2::vnsOptimum) {
+        ToulBar2::limited = true;
+        throw BestSolFound();
+    }
+}
+
 void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
 {
     //    assert(wcspId == 0); // WARNING! assert not compatible with sequential execution of solve() method
@@ -486,6 +503,267 @@ void setvalue(int wcspId, int varIndex, Value value, void* _solver_)
     unsigned int i = solver->getWCSP()->getDACOrder(varIndex);
     if (i < solver->allVars.size() && !solver->allVars[i]->removed) {
         solver->unassignedVars->erase(solver->allVars[i], true);
+    }
+}
+
+void tb2setvalue(int wcspId, int varIndex, Value value, void* solver)
+{
+    assert(WeightedCSPConstraint::MasterWeightedCSP);
+    assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
+    WCSP* wcsp = NULL;
+    Variable* masterVar = NULL;
+    bool activeState = true;
+    if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        if (gc->problem && gc->problem->getIndex() == wcspId) {
+            wcsp = gc->problem;
+        } else {
+            assert(gc->negproblem && gc->negproblem->getIndex() == wcspId);
+            wcsp = gc->negproblem;
+        }
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        masterVar = WeightedCSPConstraint::WeightedCSPConstraints[wcspId]->getVar(varIndex);
+        WeightedCSPConstraint::unprotect();
+        masterVar->assign(value);
+        WeightedCSPConstraint::protect(false);
+    } else {
+        // we came from the master
+        wcsp = WeightedCSPConstraint::MasterWeightedCSP;
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        masterVar = WeightedCSPConstraint::MasterWeightedCSP->getVar(varIndex);
+        setvalue(WeightedCSPConstraint::MasterWeightedCSP->getIndex(), masterVar->wcspIndex, value, WeightedCSPConstraint::MasterWeightedCSP->getSolver());
+        WeightedCSPConstraint::protect(true);
+    }
+    if (ToulBar2::verbose >= 2)
+        cout << "EVENT: x" << varIndex << "_" << wcspId << " = " << value << endl;
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) { // only for slave problems which are concerned by this variable
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->assign(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->assign(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+            }
+        }
+    assert(!wcsp->isactivatePropagate());
+    if (activeState)
+        wcsp->reactivatePropagate();
+    if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
+        WeightedCSPConstraint::unprotect();
+    }
+}
+
+void tb2removevalue(int wcspId, int varIndex, Value value, void* solver)
+{
+    assert(WeightedCSPConstraint::MasterWeightedCSP);
+    assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
+    WCSP* wcsp = NULL;
+    Variable* masterVar = NULL;
+    bool activeState = true;
+    if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        if (gc->problem && gc->problem->getIndex() == wcspId) {
+            wcsp = gc->problem;
+        } else {
+            assert(gc->negproblem && gc->negproblem->getIndex() == wcspId);
+            wcsp = gc->negproblem;
+        }
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        WeightedCSPConstraint::unprotect();
+        masterVar = WeightedCSPConstraint::WeightedCSPConstraints[wcspId]->getVar(varIndex);
+        masterVar->remove(value);
+        WeightedCSPConstraint::protect(false);
+    } else {
+        // we came from the master
+        wcsp = WeightedCSPConstraint::MasterWeightedCSP;
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        masterVar = WeightedCSPConstraint::MasterWeightedCSP->getVar(varIndex);
+        WeightedCSPConstraint::protect(true);
+    }
+    if (ToulBar2::verbose >= 2)
+        cout << "EVENT: x" << varIndex << "_" << wcspId << " != " << value << endl;
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) {
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->remove(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->remove(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+            }
+        }
+    assert(!wcsp->isactivatePropagate());
+    if (activeState)
+        wcsp->reactivatePropagate();
+    if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
+        WeightedCSPConstraint::unprotect();
+    }
+}
+
+void tb2setmin(int wcspId, int varIndex, Value value, void* solver)
+{
+    assert(WeightedCSPConstraint::MasterWeightedCSP);
+    assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
+    WCSP* wcsp = NULL;
+    Variable* masterVar = NULL;
+    bool activeState = true;
+    if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        if (gc->problem && gc->problem->getIndex() == wcspId) {
+            wcsp = gc->problem;
+        } else {
+            assert(gc->negproblem && gc->negproblem->getIndex() == wcspId);
+            wcsp = gc->negproblem;
+        }
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        WeightedCSPConstraint::unprotect();
+        masterVar = WeightedCSPConstraint::WeightedCSPConstraints[wcspId]->getVar(varIndex);
+        masterVar->increase(value);
+        WeightedCSPConstraint::protect(false);
+    } else {
+        // we came from the master
+        wcsp = WeightedCSPConstraint::MasterWeightedCSP;
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        masterVar = WeightedCSPConstraint::MasterWeightedCSP->getVar(varIndex);
+        WeightedCSPConstraint::protect(true);
+    }
+    if (ToulBar2::verbose >= 2)
+        cout << "EVENT: x" << varIndex << "_" << wcspId << " >= " << value << endl;
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) {
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->increase(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->increase(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+            }
+        }
+    assert(!wcsp->isactivatePropagate());
+    if (activeState)
+        wcsp->reactivatePropagate();
+    if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
+        WeightedCSPConstraint::unprotect();
+    }
+}
+
+void tb2setmax(int wcspId, int varIndex, Value value, void* solver)
+{
+    assert(WeightedCSPConstraint::MasterWeightedCSP);
+    WCSP* wcsp = NULL;
+    assert(wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex() || WeightedCSPConstraint::WeightedCSPConstraints.find(wcspId) != WeightedCSPConstraint::WeightedCSPConstraints.end());
+    Variable* masterVar = NULL;
+    bool activeState = true;
+    if (wcspId != WeightedCSPConstraint::MasterWeightedCSP->getIndex()) { // we came from a slave, wake up the master
+        WeightedCSPConstraint* gc = WeightedCSPConstraint::WeightedCSPConstraints[wcspId];
+        if (gc->problem && gc->problem->getIndex() == wcspId) {
+            wcsp = gc->problem;
+        } else {
+            assert(gc->negproblem && gc->negproblem->getIndex() == wcspId);
+            wcsp = gc->negproblem;
+        }
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        WeightedCSPConstraint::unprotect();
+        masterVar = WeightedCSPConstraint::WeightedCSPConstraints[wcspId]->getVar(varIndex);
+        masterVar->decrease(value);
+        WeightedCSPConstraint::protect(false);
+    } else {
+        // we came from the master
+        wcsp = WeightedCSPConstraint::MasterWeightedCSP;
+        activeState = wcsp->isactivatePropagate();
+        wcsp->deactivatePropagate();
+        masterVar = WeightedCSPConstraint::MasterWeightedCSP->getVar(varIndex);
+        WeightedCSPConstraint::protect(true);
+    }
+    if (ToulBar2::verbose >= 2)
+        cout << "EVENT: x" << varIndex << "_" << wcspId << " <= " << value << endl;
+    for (auto gc : WeightedCSPConstraint::WeightedCSPConstraints)
+        if (gc.second->connected()) {
+            int varCtrIndex = gc.second->getIndex(masterVar);
+            if (varCtrIndex != -1) {
+                if (gc.second->problem && wcspId != gc.second->problem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->problem->getVar(varCtrIndex)->decrease(value);
+                    } catch (const Contradiction&) {
+                        gc.second->problem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+                if (gc.second->connected() && gc.second->negproblem && wcspId != gc.second->negproblem->getIndex()) { // do not reenter inside the same problem as the one we came
+                    assert(WeightedCSPConstraint::_protected_);
+                    try {
+                        gc.second->negproblem->getVar(varCtrIndex)->decrease(value);
+                    } catch (const Contradiction&) {
+                        gc.second->negproblem->whenContradiction();
+                        WeightedCSPConstraint::unprotect();
+                        throw Contradiction();
+                    }
+                }
+            }
+        }
+    assert(!wcsp->isactivatePropagate());
+    if (activeState)
+        wcsp->reactivatePropagate();
+    if (wcspId == WeightedCSPConstraint::MasterWeightedCSP->getIndex()) {
+        WeightedCSPConstraint::unprotect();
     }
 }
 
@@ -1502,7 +1780,8 @@ void Solver::singletonConsistency()
                 int storedepth = Store::getDepth();
                 try {
                     Store::store();
-                    assign(varIndex, sorted[a].value);
+                    wcsp->assign(varIndex, sorted[a].value);
+                    wcsp->propagate();
                 } catch (const Contradiction&) {
                     wcsp->whenContradiction();
                     deadend = true;
@@ -1512,7 +1791,8 @@ void Solver::singletonConsistency()
                 wcsp->updateSingleton();
                 //cout << "(" << varIndex << "," << a <<  ")" << endl;
                 if (deadend) {
-                    remove(varIndex, sorted[a].value);
+                    wcsp->remove(varIndex, sorted[a].value);
+                    wcsp->propagate();
                     if (ToulBar2::verbose >= 0) {
                         cout << ".";
                         flush(cout);
@@ -1692,7 +1972,7 @@ void Solver::newSolution()
 
 void Solver::recursiveSolve(Cost lb)
 {
-    assert(numberOfUnassignedVariables() == (int)getWCSP()->numberOfUnassignedVariables());
+    assert(ToulBar2::nbDecisionVars > 0 || numberOfUnassignedVariables() == (int)getWCSP()->numberOfUnassignedVariables());
     int varIndex = -1;
     if (ToulBar2::bep)
         varIndex = getMostUrgent();
@@ -1713,8 +1993,37 @@ void Solver::recursiveSolve(Cost lb)
         else if (wcsp->enumerated(varIndex)) {
             if (ToulBar2::binaryBranching) {
                 assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
-                // Reuse last solution found if available
+                // Reuse last solution found if available and if not valid look at a (bi-objective) bounding constraint support if any
                 Value bestval = ((ToulBar2::verifyOpt) ? (wcsp->getSup(varIndex) + 1) : wcsp->getBestValue(varIndex));
+                if (wcsp->cannotbe(varIndex, bestval) && ToulBar2::bisupport != 0. && WeightedCSPConstraint::WeightedCSPConstraints.size() > 0) {
+                    WeightedCSPConstraint* objective2 = WeightedCSPConstraint::WeightedCSPConstraints.begin()->second; //TODO: choose the WeightedCSPConstraints with the highest weighted degree
+                    int sign = 1;
+                    bool mingap = true;
+                    if (ToulBar2::bisupport < 0. || (wcsp->getUnaryCost(varIndex, objective2->getSupport(varIndex, sign, mingap)) < (Double)ToulBar2::bisupport * objective2->getUnaryCost(varIndex, wcsp->getSupport(varIndex), sign))) {
+                        if (ToulBar2::bisupport < 0.) {
+                            switch ((int)(-ToulBar2::bisupport)) {
+                            case BISUPPORT_HEUR_LB:
+                                sign = 1;
+                                break;
+                            case BISUPPORT_HEUR_UB:
+                                sign = -1;
+                                break;
+                            case BISUPPORT_HEUR_MINGAP:
+                                sign = 0;
+                                mingap = true;
+                                break;
+                            case BISUPPORT_HEUR_MAXGAP:
+                                sign = 0;
+                                mingap = false;
+                                break;
+                            default:
+                                cerr << "Unknown bisupport heuristic! " << ToulBar2::bisupport << endl;
+                                throw BadConfiguration();
+                            }
+                        }
+                        bestval = objective2->getSupport(varIndex, sign, mingap);
+                    }
+                }
                 binaryChoicePoint(varIndex, (wcsp->canbe(varIndex, bestval)) ? bestval : wcsp->getSupport(varIndex), lb);
             } else
                 narySortedChoicePoint(varIndex, lb);
@@ -1951,7 +2260,7 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
             clb = cub;
         }
     }
-    assert(clb <= cub);
+    assert(ToulBar2::bilevel || clb <= cub);
     return make_pair(clb, cub);
 }
 
@@ -2501,7 +2810,7 @@ void Solver::beginSolve(Cost ub)
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
 
-    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) {
+    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted csp constraints
         ToulBar2::LcLevel = LC_AC;
     }
 
@@ -2644,34 +2953,30 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (ToulBar2::btdMode) {
         int nbdelayedblp = 0;
         if (ToulBar2::bilevel) {
-            for (auto s: ((WCSP*)wcsp)->delayedCtrBLP) {
+            for (auto s : ((WCSP*)wcsp)->delayedCtrBLP) {
                 nbdelayedblp += s.size();
             }
         }
         if (wcsp->numberOfUnassignedVariables() == 0 || (wcsp->numberOfConnectedConstraints() == 0 && nbdelayedblp == 0)) {
-            ToulBar2::approximateCountingBTD = 0;
+            ToulBar2::approximateCountingBTD = false;
             ToulBar2::btdMode = 0;
         } else {
-            ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
+            //ToulBar2::vac = 0; // VAC is not compatible with restricted tree decomposition propagation
             wcsp->buildTreeDecomposition();
             if (ToulBar2::bilevel) {
-                Cluster *problem0 = wcsp->getTreeDec()->getRoot();
+                Cluster* problem0 = wcsp->getTreeDec()->getRoot();
                 auto iter = problem0->beginEdges();
-                Cluster *problem1 = *iter;
+#ifndef NDEBUG
+                Cluster* problem1 = *iter;
+#endif
                 ++iter;
-                Cluster *problem2 = *iter;
+                Cluster* problem2 = *iter;
                 ++iter;
-                Cluster *negproblem2 = *iter;
+#ifndef NDEBUG
+                Cluster* negproblem2 = *iter;
+#endif
                 //problem2.isused = false //FIXME???
                 problem2->deactivate(); // avoid future propagation (NC*) in left child Problem2 when branching on Problem0
-                // propagate (partially) channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
-                for (int ctrIndex: ((WCSP *)wcsp)->delayedCtrBLP[2]) {
-                    Constraint *ctr = ((WCSP *)wcsp)->getCtr(ctrIndex);
-                    assert(ctr->deconnected());
-                    ctr->reconnect();
-                    ctr->assignCluster();
-                    ctr->propagate(); // warning! cannot propagate (AC, DAC,...) with cost moves between clusters, must wait in solve() after setting WCSP current bounds
-                }
                 assert(problem1->getLb() == MIN_COST);
                 assert(problem1->getCurrentDeltaUb() == MIN_COST);
                 assert(problem2->getLb() == MIN_COST);
@@ -2680,9 +2985,9 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 assert(negproblem2->getCurrentDeltaUb() == MIN_COST);
             }
         }
-    } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)ToulBar2::weightedDegree))) {
+    } else if (ToulBar2::weightedDegree && (((Long)wcsp->numberOfConnectedConstraints()) >= ((Long)abs(ToulBar2::weightedDegree)))) {
         if (ToulBar2::verbose >= 0)
-            cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << ToulBar2::weightedDegree << ")" << endl;
+            cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << abs(ToulBar2::weightedDegree) << ")" << endl;
         ToulBar2::weightedDegree = 0;
     }
 
@@ -2747,7 +3052,7 @@ bool Solver::solve(bool first)
                         ToulBar2::restart = 0;
                         if (ToulBar2::verbose >= 0)
                             cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
-                        if (ToulBar2::debug >= 1 && ToulBar2::weightedDegree > 0) {
+                        if (ToulBar2::debug >= 1 && ToulBar2::weightedDegree) {
                             int size = unassignedVars->getSize();
                             ValueCost sorted[size];
                             int i = 0;
@@ -2829,6 +3134,30 @@ bool Solver::solve(bool first)
                             td->setCurrentCluster(start);
                             if (start == td->getRoot())
                                 start->setLb(wcsp->getLb()); // initial lower bound found by propagation is associated to tree decomposition root cluster
+                            if (ToulBar2::bilevel) {
+                                // propagate channeling constraints between leader (Problem0) and negative follower (NegProblem2) problems only
+                                for (int ctrIndex : ((WCSP*)wcsp)->delayedCtrBLP[2]) {
+                                    Constraint* ctr = ((WCSP*)wcsp)->getCtr(ctrIndex);
+                                    assert(ctr->deconnected());
+                                    static vector<Cost> costs;
+                                    Constraint* incCtr = NULL;
+                                    if (ctr->isBinary()) {
+                                        costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
+                                        incCtr = ((WCSP*)wcsp)->getCtr(wcsp->postIncrementalBinaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, costs));
+                                        ((BinaryConstraint*)incCtr)->addCosts((BinaryConstraint*)ctr);
+                                    } else if (ctr->isTernary()) {
+                                        costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
+                                        incCtr = ((WCSP*)wcsp)->getCtr(wcsp->postIncrementalTernaryConstraint(ctr->getVar(0)->wcspIndex, ctr->getVar(1)->wcspIndex, ctr->getVar(2)->wcspIndex, costs));
+                                        ((TernaryConstraint*)incCtr)->addCosts((TernaryConstraint*)ctr);
+                                    } else {
+                                        cerr << "Sorry, bilevel optimization not implemented for this type of channeling cost function:" << *ctr << endl;
+                                        throw WrongFileFormat();
+                                    }
+                                    //incCtr->sumScopeIncluded(ctr);
+                                    incCtr->assignCluster();
+                                    incCtr->propagate();
+                                }
+                            }
                             switch (ToulBar2::btdMode) {
                             case 0:
                             case 1: {
@@ -2855,13 +3184,15 @@ bool Solver::solve(bool first)
                                             wcsp->propagate();
                                             initialDepth = Store::getDepth();
                                             if (ToulBar2::bilevel && ToulBar2::verbose >= 0) {
-                                                Cluster *problem0 = td->getRoot();
+                                                Cluster* problem0 = td->getRoot();
                                                 auto iter = problem0->beginEdges();
-                                                Cluster *problem1 = *iter;
+                                                Cluster* problem1 = *iter;
                                                 ++iter;
-                                                Cluster *problem2 = *iter;
+#ifndef NDEBUG
+                                                Cluster* problem2 = *iter;
+#endif
                                                 ++iter;
-                                                Cluster *negproblem2 = *iter;
+                                                Cluster* negproblem2 = *iter;
                                                 assert(problem2->getLb() == MIN_COST);
                                                 assert(problem2->getCurrentDeltaUb() == MIN_COST);
                                                 //cout << "C0.lb: " << problem0->getLb() << " C1.lb: " << problem1->getLb() << " C2.lb: " << problem2->getLb() << " NegC2.lb: " << negproblem2->getLb() << " NegC2.delta >= " << negproblem2->getCurrentDeltaLb() << " NegC2.delta <= " << negproblem2->getCurrentDeltaUb() << endl;
@@ -2906,8 +3237,6 @@ bool Solver::solve(bool first)
                                 throw BadConfiguration();
                             }
                             }
-                            if (ToulBar2::debug)
-                                start->printStatsRec();
                             if (ToulBar2::verbose >= 0 && nbHybrid >= 1)
                                 cout << "HBFS open list restarts: " << (100. * (nbHybrid - nbHybridNew - nbHybridContinue) / nbHybrid) << " % and reuse: " << (100. * nbHybridContinue / nbHybrid) << " % of " << nbHybrid << endl;
                         } else {
@@ -3127,6 +3456,10 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     static string solType[4] = { "Optimum: ", "Primal bound: ", "Guaranteed primal bound: ", "Primal bound: " };
 
     int isLimited = (!isComplete) | ((ToulBar2::deltaUb != MIN_COST) << 1);
+
+    if (ToulBar2::debug && wcsp->getTreeDec()) {
+        wcsp->getTreeDec()->getRoot()->printStatsRec();
+    }
 
     if (ToulBar2::isZ) {
         if (ToulBar2::verbose >= 1)
@@ -3515,9 +3848,12 @@ void Solver::restore(CPStore& cp, OpenNode nd)
     ptrdiff_t maxsize = nd.last - nd.first;
     if (maxsize == 0) {
         wcsp->enforceUb();
+        assert(wcsp->isactivatePropagate());
         wcsp->propagate();
         return;
     }
+
+    wcsp->deactivatePropagate();
     nbRecomputationNodes += maxsize;
     ChoicePoint* permute[maxsize];
     int assignLS[maxsize];
@@ -3597,6 +3933,7 @@ void Solver::restore(CPStore& cp, OpenNode nd)
         }
         }
     }
+    wcsp->reactivatePropagate();
     wcsp->propagate();
     //if (wcsp->getLb() != nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST))) cout << "***** node cost: " << nd.getCost(((wcsp->getTreeDec())?wcsp->getTreeDec()->getCurrentCluster()->getCurrentDeltaUb():MIN_COST)) << " but lb: " << wcsp->getLb() << endl;
 }
@@ -3665,9 +4002,9 @@ void Solver::epsDumpSubProblems(CPStore& cp, OpenList& open)
         if (nd.getCost() < wcsp->getUb()) {
             string epsSubProblem = "-x=\"";
             for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value);
+                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value + ((cp[idx].op == CP_INCREASE)?-1:0) + ((cp[idx].op == CP_DECREASE)?1:0));
             }
-            epsfile << epsSubProblem << "\"" << endl;
+            epsfile << epsSubProblem << "\"" <<  " -best=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(nd.getCost()) << std::setprecision(DECIMAL_POINT) << endl;
             nbsp++;
         }
     }

@@ -146,7 +146,7 @@ public:
     void setTuple(const Tuple& tin, Cost c) FINAL
     {
         if (ToulBar2::verbose >= 8) {
-            cout << "setcost(C";
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] setcost(C";
             for (int i = 0; i < arity_; i++) {
                 cout << wcsp->getName(scope[i]->wcspIndex);
                 if (i < arity_ - 1)
@@ -168,7 +168,7 @@ public:
     void addtoTuple(const Tuple& tin, Cost c) FINAL
     {
         if (ToulBar2::verbose >= 8) {
-            cout << "addcost(C";
+            cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] addcost(C";
             for (int i = 0; i < arity_; i++) {
                 cout << wcsp->getName(scope[i]->wcspIndex);
                 if (i < arity_ - 1)
@@ -199,7 +199,7 @@ public:
             cerr << "Cannot modify costs in nary cost functions during search!" << endl;
             throw BadConfiguration();
         }
-        assert(ToulBar2::verbose < 4 || ((cout << "clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << "," << getVar(3)->getName() << ",...)" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] clearcosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << "," << getVar(3)->getName() << ",...)" << endl), true));
         default_cost = MIN_COST;
         if (pf) {
             pf->clear();
@@ -216,7 +216,7 @@ public:
             cerr << "Cannot modify finite costs in nary cost functions during search!" << endl;
             throw BadConfiguration();
         }
-        assert(ToulBar2::verbose < 4 || ((cout << "clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << "," << getVar(3)->getName() << ",...)" << endl), true));
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] clearfinitecosts(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << "," << getVar(3)->getName() << ",...)" << endl), true));
         if (!CUT(default_cost, wcsp->getUb())) {
             default_cost = MIN_COST;
         }
@@ -250,6 +250,8 @@ public:
 
     void propagate()
     {
+        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+            return;
         for (int i = 0; connected() && i < arity_; i++) {
             if (getVar(i)->assigned())
                 assign(i);

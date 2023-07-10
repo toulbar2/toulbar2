@@ -74,7 +74,7 @@ public:
     }
 
     double tight;
-    void resetTightness() { tight = -1; }
+    virtual void resetTightness() { tight = -1; }
     double getTightness()
     {
         if (tight < 0)
@@ -200,7 +200,8 @@ public:
     virtual Cost getCost(); /// \warning all variables must be properly assigned and the returned cost might be different than the original cost due to propagation
 
     virtual bool universal();
-    virtual bool ishard();
+    virtual bool ishard(); ///< \brief returns true if all valid tuples have costs either zero or greater than the current upper bound
+    virtual bool isfinite(); ///< \brief returns true if all valid tuples have costs strictly lower than the current upper bound minus the current lower bound
 
     virtual Cost getMinCost();
     virtual pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b) { return std::make_pair(std::make_pair(MAX_COST, MAX_COST), std::make_pair(MAX_COST, MAX_COST)); }
@@ -292,11 +293,7 @@ public:
     //   added for tree decomposition
     int cluster; ///< \brief warning! this value should not change during search (except for initialization in binary/ternary elimination pool)
     int getCluster() { return cluster; }
-    void setCluster(int i)
-    {
-        assert(cluster == -1 || Store::getDepth() == 0);
-        cluster = i;
-    }
+    void setCluster(int i);
     void assignCluster();
 
     bool isSep_; ///< \brief true if the constraint is used to record nogoods associated to a Separator

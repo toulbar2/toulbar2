@@ -182,20 +182,20 @@ TernaryConstraint::TernaryConstraint(WCSP* wcsp,
     }
 #endif
 
-    if (ToulBar2::bilevel>=2) {
+    if (ToulBar2::bilevel >= 2) {
         assert(ToulBar2::bilevel <= 3);
         deconnect(true);
         assert(xy->deconnected());
         assert(xz->deconnected());
         assert(yz->deconnected());
-        assert(wcsp->delayedCtrBLP[ToulBar2::bilevel-1].size() >= 3); // fresh new binary cost functions must have been automatically created and added
-        assert(yz->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel-1].back());
-        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].pop_back();
-        assert(xz->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel-1].back());
-        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].pop_back();
-        assert(xy->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel-1].back());
-        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].pop_back();
-        wcsp->delayedCtrBLP[ToulBar2::bilevel-1].push_back(wcspIndex);
+        assert(wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].size() >= 3); // fresh new binary cost functions must have been automatically created and added
+        assert(yz->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].back());
+        wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].pop_back();
+        assert(xz->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].back());
+        wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].pop_back();
+        assert(xy->wcspIndex == wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].back());
+        wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].pop_back();
+        wcsp->delayedCtrBLP[ToulBar2::bilevel - 1].push_back(wcspIndex);
     } else {
         propagate();
     }
@@ -330,7 +330,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
                     if (printed)
                         os << ",\n";
                     os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << "," << ((original) ? z->toIndex(*iterZ) : k) << ","
-                       << ((original) ? wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ)) : wcsp->Cost2RDCost(min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))));
+                       << ((original) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ))) : ((wcsp->getUb() > getCost(*iterX, *iterY, *iterZ)) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(getCost(*iterX, *iterY, *iterZ))) : "inf"));
                     printed = true;
                 }
             }
@@ -345,7 +345,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
  */
 bool TernaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
 
     // hard ternary constraint costs are not changed
     if (!CUT(cost + wcsp->getLb(), wcsp->getUb())) {
@@ -367,7 +367,7 @@ bool TernaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, v
 
 void TernaryConstraint::extend(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
-    assert(ToulBar2::verbose < 4 || ((cout << "extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend(C" << getVar(0)->getName() << "," << getVar(1)->getName() << "," << getVar(2)->getName() << ", (" << x->getName() << "," << value << "), " << cost << ")" << endl), true));
     TreeDecomposition* td = wcsp->getTreeDec();
     if (td)
         td->addDelta(cluster, x, value, -cost);
@@ -625,7 +625,8 @@ void TernaryConstraint::fillxy()
     }
     if (!xy_ || (xy_ && td && !td->isSameCluster(getCluster(), xy_->getCluster()))) {
         xy = wcsp->newBinaryConstr(x, y, this);
-        xy->setCluster(getCluster());
+        if (td && !ToulBar2::approximateCountingBTD)
+            xy->setCluster(getCluster());
         if (td && xy_ && !td->isSameCluster(getCluster(), xy_->getCluster()))
             xy->setDuplicate();
         wcsp->elimBinOrderInc();
@@ -647,7 +648,8 @@ void TernaryConstraint::fillxz()
     }
     if (!xz_ || (xz_ && td && !td->isSameCluster(getCluster(), xz_->getCluster()))) {
         xz = wcsp->newBinaryConstr(x, z, this);
-        xz->setCluster(getCluster());
+        if (td && !ToulBar2::approximateCountingBTD)
+            xz->setCluster(getCluster());
         if (td && xz_ && !td->isSameCluster(getCluster(), xz_->getCluster()))
             xz->setDuplicate();
         wcsp->elimBinOrderInc();
@@ -669,7 +671,8 @@ void TernaryConstraint::fillyz()
     }
     if (!yz_ || (yz_ && td && !td->isSameCluster(getCluster(), yz_->getCluster()))) {
         yz = wcsp->newBinaryConstr(y, z, this);
-        yz->setCluster(getCluster());
+        if (td && !ToulBar2::approximateCountingBTD)
+            yz->setCluster(getCluster());
         if (td && yz_ && !td->isSameCluster(getCluster(), yz_->getCluster()))
             yz->setDuplicate();
         wcsp->elimBinOrderInc();
@@ -688,7 +691,7 @@ void TernaryConstraint::fillElimConstrBinaries()
     resetConflictWeight(); // if needed recompute tightness after having updated costs
 
     if (ToulBar2::verbose > 1)
-        cout << " fillElimConstrBinaries (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  ";
+        cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] fillElimConstrBinaries (" << x->wcspIndex << "," << y->wcspIndex << "," << z->wcspIndex << ")  ";
 }
 
 void TernaryConstraint::setDuplicates()
@@ -703,7 +706,7 @@ void TernaryConstraint::setDuplicates()
         } else {
             wcsp->initElimConstr();
             xy = wcsp->newBinaryConstr(x, y);
-            xy->setCluster(cluster);
+            xy->setCluster(getCluster());
             xy->setDuplicate();
             wcsp->elimBinOrderInc();
             setDuplicate();
