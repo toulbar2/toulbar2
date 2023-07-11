@@ -7,6 +7,7 @@
 #define MULTI_CFN_HPP
 
 #include <string>
+#include <memory>
 
 #include "toulbar2lib.hpp"
 
@@ -102,8 +103,14 @@ public:
 class MultiCFN {
 
 public:
+
     // type representing a solution of a multicfn
     typedef std::map<std::string, std::string> Solution;
+
+    // ILP encoding type: direct or tuple
+    #ifdef ILOGCPLEX
+    enum ILP_encoding { ILP_Direct, ILP_Tuple };
+    #endif
 
 public:
     static constexpr Double epsilon = 1e-6;
@@ -186,11 +193,15 @@ public:
     void makeWeightedCSP(WeightedCSP* wcsp);
 
     #ifdef ILOGCPLEX
+
     /*!
      * \brief export the multicfn to a cplex model data structure
      * \param model the cplex model data structure
+     * \param objectives list of networks to combine in the optimized criterion
+     * \param constraints list of global constraints in the model: network index with two bounds, one bound may be infinity
      */
-    void makeIloModel(IloEnv& env, IloModel& model);
+    void makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, std::vector<size_t>& objectives, std::vector<std::pair<size_t, std::pair<Double, Double>>>& constraints);
+
     #endif
 
     /*!
@@ -260,6 +271,18 @@ private: /* private methods */
      * \param multicfn_var the variable in the multicfn 
      */
     void checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var);
+
+    #ifdef ILOGCPLEX
+
+    /*!
+     * \brief fill ilog expression with terms representing the objective function of a network
+     * \param expr the ilog expression to fill
+     * \param domain_vars the ilog variables representing variable domains
+     * \param tuple_vars the ilog variables representing cost function tuples
+     */
+    void addCriterion(IloExpr& expr, size_t index, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+
+    #endif
 
 public: // public attributes
     // variables
