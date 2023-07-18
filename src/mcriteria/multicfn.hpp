@@ -201,7 +201,15 @@ public:
      * \param constraints list of global constraints in the model: network index with two bounds, one bound may be infinity
      * \param domain_vars the list of cplex variables corresponding the multicfn variables
      */
-    void makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, std::vector<size_t>& objectives, std::vector<std::pair<size_t, std::pair<Double, Double>>>& constraints, std::vector<IloNumVarArray>& domain_vars);
+    void makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, std::vector<size_t>& objectives, std::vector<std::pair<size_t, std::pair<Double, Double>>>& constraints, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+
+    /*!
+     * \brief extract the cplex solution
+     * \param cplex the cplex solver object
+     * \param domain_vars the cplex variables
+     * \param solution the MultiCFN solution
+     */
+    void getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& domain_vars, MultiCFN::Solution& solution);
 
     #endif
 
@@ -295,6 +303,7 @@ public: // public attributes
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
 private: // private attributes
+
     std::vector<double> weights; // list of weights for all the loaded networks
     std::vector<std::string> network_names; // names of the networks
     std::vector<std::vector<unsigned int>> networks; // list of the cost function networks (function indexes for each network)
