@@ -12,19 +12,19 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>&
 
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
     auto& func = cost_function[func_ind];
-    
+
     for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
       if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
         continue;
       }
 
       IloNum cost = func.costs[tuple_ind]*weights[network_index[func_ind]];
-      if(func.scope.size()>= 2) { 
+      if(func.scope.size() >= 2) { 
         expr += (*tuple_vars[func_ind].get())[tuple_ind]*cost;
       } else { // special case for unary cost function
 
-        size_t var_ind = func.scope[tuple_ind];
-        size_t val_ind = func.tuples[tuple_ind][var_ind];
+        size_t var_ind = func.scope[0];
+        size_t val_ind = func.tuples[tuple_ind][0];
         mcriteria::Var& variable = var[var_ind];
 
         if(variable.nbValues() > 2 || val_ind == 1) {
@@ -42,7 +42,7 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>&
 }
 
 //--------------------------------------------------------------------------------------------
-void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, vector<size_t>& objectives, vector<pair<size_t, pair<Double, Double>>>& constraints) {
+void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, vector<size_t>& objectives, vector<pair<size_t, pair<Double, Double>>>& constraints, vector<IloNumVarArray>& domain_vars) {
 
 
   // variables definition
@@ -50,7 +50,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   // for binary variables, one boolean var = 1 iif the variable has value 1 (implies no bool var representing 0 value)
 
   // domain variables for each variable
-  vector<IloNumVarArray> domain_vars;
+  // vector<IloNumVarArray> domain_vars;
 
    for(size_t index = 0; index < var.size(); index ++) {
     mcriteria::Var& variable = var[index];
@@ -103,6 +103,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     // tuples imply their corresponding values are used
     for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
       auto& func = cost_function[func_ind];
+
+      if(func.scope.size() < 2) {
+        continue;
+      }
+
       for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
         auto& tuple = func.tuples[tuple_ind];
 

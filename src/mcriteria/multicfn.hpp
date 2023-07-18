@@ -199,8 +199,9 @@ public:
      * \param model the cplex model data structure
      * \param objectives list of networks to combine in the optimized criterion
      * \param constraints list of global constraints in the model: network index with two bounds, one bound may be infinity
+     * \param domain_vars the list of cplex variables corresponding the multicfn variables
      */
-    void makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, std::vector<size_t>& objectives, std::vector<std::pair<size_t, std::pair<Double, Double>>>& constraints);
+    void makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, std::vector<size_t>& objectives, std::vector<std::pair<size_t, std::pair<Double, Double>>>& constraints, std::vector<IloNumVarArray>& domain_vars);
 
     #endif
 
