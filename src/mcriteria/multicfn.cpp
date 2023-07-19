@@ -197,6 +197,10 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
                 cost_function.back().costs[val_ind] = wcsp->Cost2RDCost(tb2_cost);
             }
         }
+
+        // compute total number of tuples
+        cost_function.back().n_total_tuples = cost_function.back().compute_n_tuples();
+        cost_function.back().all_tuples = (cost_function.back().n_total_tuples == cost_function.back().tuples.size());
     }
 
     // general values

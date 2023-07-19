@@ -50,6 +50,12 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>&
       }
 
     }
+
+    // additional tuple for default cost
+    if(!func.all_tuples && func.arity() >= 3 && func.default_cost != std::numeric_limits<Double>::infinity()) {
+      expr += (*tuple_vars[func_ind].get())[func.tuples.size()]*IloNum(func.default_cost*weights[network_index[func_ind]]);
+    }
+
   }
 
   // constant term
@@ -75,6 +81,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     } else {
       domain_vars.push_back(IloNumVarArray(env, 1, 0, 1, ILOINT));
     }
+    domain_vars.back().setNames(string("dom_" + variable.name).c_str());
   }
 
   // tuple variables for each pair of cost functions
@@ -88,7 +95,14 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       continue;
     }
 
-    tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size(), 0, 1, ILOINT);
+    // one artificial tuple variable is added if not all tuples are defined in the cost function (default_cost)
+    if(func.all_tuples || func.default_cost == std::numeric_limits<Double>::infinity()) {
+      tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size(), 0, 1, ILOINT);
+    } else {
+      tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size()+1, 0, 1, ILOINT);
+    }
+    tuple_vars[func_ind]->setNames(string("tuples_"+to_string(func_ind)).c_str());
+    
 
   }
   
@@ -98,7 +112,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   // only one variable per domain
   for (size_t var_ind = 0; var_ind < domain_vars.size(); ++var_ind) {
 
-    if(var[var_ind].nbValues() == 2) {
+    if(var[var_ind].nbValues() <= 2) {
       continue;
     }
 
@@ -107,6 +121,22 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       expr += domain_vars[var_ind][val_ind];
     }
     model.add(expr == 1);
+    expr.end();
+  }
+
+
+  // tuple corresponding to default cost must be used if no other tuple is 
+  for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+    auto func = cost_function[func_ind];
+    if(func.all_tuples || func.arity() < 2 || func.default_cost == std::numeric_limits<Double>::infinity()) {
+      continue;
+    }
+    IloExpr expr(env);
+    for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+      expr += (*tuple_vars[func_ind].get())[tuple_ind];
+    }
+    expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
+    model.add(expr >= 1.);
     expr.end();
   }
 
@@ -174,16 +204,27 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
           IloExpr expr(env);
 
+          size_t n_tuples_value = 0;
+          size_t n_tuples_cost = 0;
           for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
-
-            if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
-              continue;
-            }
-
             if(func.tuples[tuple_ind][scope_ind] == val_ind) {
-              expr += (*tuple_vars[func_ind].get())[tuple_ind];
+              n_tuples_value ++;
+              if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
+                expr += (*tuple_vars[func_ind].get())[tuple_ind];
+                n_tuples_cost ++;
+              }
             }
           }
+
+          if(n_tuples_cost == 0) {
+            expr.end();
+            continue;
+          }
+
+          // additional tuple for default cost if not all tuples for this value are specified
+          // if(func.default_cost != std::numeric_limits<Double>::infinity() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
+          //   expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
+          // }
 
           if(variable.nbValues() > 2) {
             model.add(expr == domain_vars[var_ind][val_ind]);
@@ -228,15 +269,15 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
         size_t val_ind = func.tuples[tuple_ind].front();
 
         IloExpr expr(env);
-        if(variable.nbValues() <= 2) {
+        if(variable.nbValues() >= 2) {
           expr += domain_vars[var_ind][val_ind];
-          model.add(expr == IloNum(val_ind));
+          model.add(expr == IloNum(0));
         } else {
           expr += domain_vars[var_ind][0];
           if(val_ind == 0) {
-            model.add(expr == 1);
+            model.add(expr == IloNum(1));
           } else {
-            model.add(expr == 0);
+            model.add(expr == IloNum(0));
           }
         }
         expr.end();
