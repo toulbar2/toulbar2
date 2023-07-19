@@ -37,10 +37,14 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>&
         size_t val_ind = func.tuples[tuple_ind][0];
         mcriteria::Var& variable = var[var_ind];
 
-        if(variable.nbValues() > 2 || val_ind == 1) {
+        if(variable.nbValues() > 2) {
           expr += domain_vars[var_ind][val_ind]*cost;
         } else {
-          expr += (1-domain_vars[var_ind][val_ind])*cost;
+          if(val_ind == 1) {
+            expr += domain_vars[var_ind][0]*cost;
+          } else {
+            expr += (1-domain_vars[var_ind][0])*cost;
+          }
         }
 
       }
@@ -72,8 +76,6 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       domain_vars.push_back(IloNumVarArray(env, 1, 0, 1, ILOINT));
     }
   }
-
-
 
   // tuple variables for each pair of cost functions
   // vector<shared_ptr<IloNumVarArray>> tuple_vars(cost_function.size(), nullptr);
@@ -131,10 +133,14 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
           mcriteria::Var& variable = var[var_ind];
           auto val_ind = tuple[scope_ind];
 
-          if(variable.nbValues() > 2 || val_ind == 1) {
+          if(variable.nbValues() > 2) {
             expr += (IloNum(1)-domain_vars[var_ind][val_ind]);
           } else { // special case for binary variables
-            expr += domain_vars[var_ind][val_ind];
+            if(val_ind == 1) {
+              expr += (IloNum(1)-domain_vars[var_ind][0]);
+            } else {
+              expr += domain_vars[var_ind][val_ind];
+            }
           }
 
         }
@@ -152,6 +158,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   } else if(encoding == ILP_Tuple) {
 
     for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+      
       auto& func = cost_function[func_ind];
 
       // nothing to do for unary cost functions (only domain variables)
@@ -163,25 +170,29 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
         size_t var_ind = func.scope[scope_ind];
         mcriteria::Var& variable = var[var_ind];
 
-        for (size_t val_ind = 0; val_ind < domain_vars.size(); ++var_ind) {
-          
+        for (size_t val_ind = 0; val_ind < variable.nbValues(); ++val_ind) {
+
           IloExpr expr(env);
-          for(size_t tuple_ind = 0; tuple_ind < func.costs.size(); tuple_ind ++) {
+
+          for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
 
             if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
               continue;
             }
 
             if(func.tuples[tuple_ind][scope_ind] == val_ind) {
-              expr += (*tuple_vars[func_ind].get())[var_ind];
+              expr += (*tuple_vars[func_ind].get())[tuple_ind];
             }
-
           }
 
-          if(variable.nbValues() > 2 || val_ind == 1) {
+          if(variable.nbValues() > 2) {
             model.add(expr == domain_vars[var_ind][val_ind]);
           } else { // special case for binary variables
-            model.add(expr == (1-domain_vars[var_ind][val_ind]));
+            if(val_ind == 1) {
+              model.add(expr == domain_vars[var_ind][0]);
+            } else {
+              model.add(expr == (1-domain_vars[var_ind][0]));
+            }
           }
           
           expr.end();
@@ -205,7 +216,6 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     // * unary cost functions
     if(func.scope.size() == 1) {
 
-
       for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
 
         // filter out infinite costs
@@ -222,8 +232,12 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
           expr += domain_vars[var_ind][val_ind];
           model.add(expr == IloNum(val_ind));
         } else {
-          expr += domain_vars[var_ind][val_ind];
-          model.add(expr == 0);
+          expr += domain_vars[var_ind][0];
+          if(val_ind == 0) {
+            model.add(expr == 1);
+          } else {
+            model.add(expr == 0);
+          }
         }
         expr.end();
 
@@ -247,10 +261,14 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
         size_t val_ind = tuple[scope_ind];
         mcriteria::Var& variable = var[var_ind];
 
-        if(variable.nbValues() > 2 || val_ind == 1) {
+        if(variable.nbValues() > 2) {
           expr += (1-domain_vars[var_ind][val_ind]);
-        } else {
-          expr += domain_vars[var_ind][val_ind];
+        } else { // binary variable
+          if(val_ind == 1) {
+            expr += (1-domain_vars[var_ind][0]);
+          } else {
+            expr += domain_vars[var_ind][0];
+          }
         }
       
       }
