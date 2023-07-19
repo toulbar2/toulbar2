@@ -82,6 +82,11 @@ public:
      */
     unsigned int arity();
 
+    /*! 
+     * \brief compute the total number of tuples
+     */
+    size_t compute_n_tuples();
+
 public:
     MultiCFN* multicfn;
 
@@ -92,6 +97,8 @@ public:
     Double default_cost;
     std::vector<Double> costs;
     std::vector<std::vector<unsigned int>> tuples; // value indexes of the variables
+    size_t n_total_tuples; // total number of tuples (length of the domain cartesian product)
+    bool all_tuples; // true if all tuples are stored, false otherwise (default_cost)
 };
 
 } // namespace mcriteria

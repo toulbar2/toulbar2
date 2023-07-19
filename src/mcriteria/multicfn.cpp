@@ -377,6 +377,10 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             cost_func.tuples.push_back(own_tuple);
         }
     }
+
+    // compute total number of tuples
+    cost_func.n_total_tuples = cost_func.compute_n_tuples();
+    cost_func.all_tuples = (cost_func.n_total_tuples == cost_func.tuples.size());
 }
 
 //---------------------------------------------------------------------------
@@ -990,7 +994,9 @@ void MultiCFN::print(ostream& os)
         cost_function[func_ind].print(os);
         os << ", arity = " << cost_function[func_ind].scope.size();
         os << ", n costs: " << cost_function[func_ind].costs.size();
-        os << ", network id: " << network_index[func_ind] << endl;
+        os << ", network id: " << network_index[func_ind];
+        os << ", all tuples ? " << cost_function[func_ind].all_tuples;
+        os << ", defaultCost = " << cost_function[func_ind].default_cost << endl;
         os << "costs: " << endl;
         int ind = 0;
         for (auto& tuple : cost_function[func_ind].tuples) {
@@ -1095,4 +1101,16 @@ Double mcriteria::CostFunction::getCost(vector<unsigned int>& tuple)
 unsigned int mcriteria::CostFunction::arity()
 {
     return scope.size();
+}
+
+//---------------------------------------------------------------------------
+size_t mcriteria::CostFunction::compute_n_tuples() {
+
+    size_t nb = 1;
+    for(size_t var_ind: scope) {
+        nb *= multicfn->var[var_ind].nbValues();
+    }
+
+    return nb;
+
 }
