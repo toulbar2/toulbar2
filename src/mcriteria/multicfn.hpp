@@ -218,6 +218,9 @@ public:
      */
     void getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& domain_vars, MultiCFN::Solution& solution);
 
+    // debug
+    Double computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+
     #endif
 
     /*!
@@ -248,6 +251,8 @@ public:
      * \return the costs of the solution
      */
     std::vector<Double> computeSolutionValues(Solution& solution);
+
+    void outputNetSolutionCosts(size_t index, Solution& solution);
 
     /*!
      * \brief convert a solution returned by ToulBar2 to a dictionary with variable names and values as labels
@@ -311,7 +316,7 @@ public: // public attributes
     std::vector<mcriteria::CostFunction> cost_function; // list of the cost functions
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
-private: // private attributes
+public: // private attributes
 
     std::vector<double> weights; // list of weights for all the loaded networks
     std::vector<std::string> network_names; // names of the networks

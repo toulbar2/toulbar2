@@ -918,6 +918,33 @@ void MultiCFN::extractSolution()
 }
 
 //---------------------------------------------------------------------------
+void MultiCFN::outputNetSolutionCosts(size_t index, MultiCFN::Solution& solution) {
+
+    Double cost = _doriginal_lbs[index];
+
+    for (auto func_ind : networks[index]) {
+
+        auto& func = cost_function[func_ind];
+
+        vector<unsigned int> tuple;
+
+        for (auto& var_ind : func.scope) {
+            string var_name = var[var_ind].name;
+            tuple.push_back(var[var_ind].str_to_index[solution[var_name]]);
+        }
+
+        cost += func.getCost(tuple);
+
+        if(fabs(func.getCost(tuple)) > 0.1) {
+            cout << "func " << func_ind << " (" << func.name << ") = " << func.getCost(tuple) << endl;  
+
+        }
+
+    }
+
+}
+
+//---------------------------------------------------------------------------
 std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution)
 {
 
