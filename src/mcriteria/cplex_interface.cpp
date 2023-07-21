@@ -6,7 +6,7 @@ using namespace std;
 #ifdef ILOGCPLEX
 
 //--------------------------------------------------------------------------------------------
-void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>& domain_vars, vector<shared_ptr<IloNumVarArray>>& tuple_vars) {
+void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, vector<IloNumVarArray>& domain_vars, vector<shared_ptr<IloNumVarArray>>& tuple_vars) {
 
   // objective function
   for(size_t func_ind: networks[index]) {
@@ -19,11 +19,14 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>&
       if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
         continue;
       }
-      if(func.costs[tuple_ind] <= MultiCFN::epsilon) {
+      if(weighted && fabs(func.costs[tuple_ind]) <= MultiCFN::epsilon) {
         continue;
       }
 
-      IloNum cost = func.costs[tuple_ind]*weights[network_index[func_ind]];
+      IloNum cost = func.costs[tuple_ind];
+      if(weighted) {
+        cost *= weights[index];
+      }
 
       // cout << "cost: " << cost << endl;
 
@@ -53,14 +56,21 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, vector<IloNumVarArray>&
 
     // additional tuple for default cost
     if(!func.all_tuples && func.arity() >= 3 && func.default_cost != std::numeric_limits<Double>::infinity()) {
-      expr += (*tuple_vars[func_ind].get())[func.tuples.size()]*IloNum(func.default_cost*weights[network_index[func_ind]]);
+      IloNum cost = func.default_cost;
+      if(weighted) {
+        cost *= weights[index];
+      }
+      expr += (*tuple_vars[func_ind].get())[func.tuples.size()]*cost;
     }
 
   }
 
   // constant term
-  expr += IloNum(_doriginal_lbs[index]*weights[index]);
-
+  if(weighted) {
+    expr += IloNum(_doriginal_lbs[index]*weights[index]);
+  } else {
+    expr += IloNum(_doriginal_lbs[index]);
+  }
 }
 
 //--------------------------------------------------------------------------------------------
@@ -331,7 +341,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     auto bounds = cstr.second;
 
     IloExpr cstr_expr(env);
-    addCriterion(cstr_expr, network_index, domain_vars, tuple_vars);
+    addCriterion(cstr_expr, network_index, false, domain_vars, tuple_vars);
 
     assert(bounds.first != std::numeric_limits<Double>::infinity() || bounds.second != std::numeric_limits<Double>::infinity());
 
@@ -355,7 +365,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     // do not add nulled cfn
     assert(abs(weights[pb_index]) > epsilon);
     
-    addCriterion(obj, pb_index, domain_vars, tuple_vars);
+    addCriterion(obj, pb_index, true, domain_vars, tuple_vars);
   }
   
   model.add(IloMinimize(env, obj));
@@ -371,7 +381,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
 
   for(size_t var_ind = 0; var_ind < var.size(); var_ind ++) {
     
-    cout << "var " << var_ind << ": ";
+    // cout << "var " << var_ind << ": ";
 
     mcriteria::Var& variable = var[var_ind];
     size_t val_ind = 0;
@@ -379,13 +389,13 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
     // look for the binary variable corresponding to the value selected
     if(variable.nbValues() > 2) {
       for(size_t ind = 0; ind < static_cast<size_t>(domain_vars[var_ind].getSize()); ind ++) {
-        cout << cplex.getValue(domain_vars[var_ind][ind]) << ", "; 
+        // cout << cplex.getValue(domain_vars[var_ind][ind]) << ", "; 
         if(cplex.getValue(domain_vars[var_ind][ind]) >= 1 - tolerance) {
           val_ind = ind;
         }
       }
     } else {
-      cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
+      // cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
       if(cplex.getValue(domain_vars[var_ind][0]) >= 1 - tolerance) {
         val_ind = 1;
       } else {
@@ -395,7 +405,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
 
     solution.insert(make_pair(variable.name, variable.domain_str[val_ind]));
 
-    cout << endl;
+    // cout << endl;
 
   }
 
