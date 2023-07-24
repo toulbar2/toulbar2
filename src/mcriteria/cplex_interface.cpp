@@ -20,7 +20,7 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
 
     for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
       
-      // consider only finite positive costs
+      // consider only finite non null costs
       if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
         continue;
       }
@@ -37,11 +37,16 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
 
       if(func.scope.size() >= 2) {
 
-        if(cplex.getValue((*tuple_vars[func_ind].get())[tuple_ind]) >= 0.5) {
-        res += cost;
-        func_cost += cost;
+        // if(cplex.getValue((*tuple_vars[func_ind].get())[tuple_ind]) >= 0.5) {
+        //   res += cost;
+        //   func_cost += cost;
+        //   tuples_selected.push_back(tuple_ind);
+        // }
+
+        res += cost*cplex.getValue((*tuple_vars[func_ind].get())[tuple_ind]);
+        func_cost += cost*cplex.getValue((*tuple_vars[func_ind].get())[tuple_ind]);
         tuples_selected.push_back(tuple_ind);
-        }
+
       } else { // special case for unary cost function
 
         size_t var_ind = func.scope[0];
@@ -49,22 +54,28 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
         mcriteria::Var& variable = var[var_ind];
 
         if(variable.nbValues() > 2) {
-          if(cplex.getValue(domain_vars[var_ind][val_ind]) >= 0.5) {
-            res += cost;
-            func_cost += cost;
-            tuples_selected.push_back(tuple_ind);
+          // if(cplex.getValue(domain_vars[var_ind][val_ind]) >= 0.5) {
+          //   res += cost;
+          //   func_cost += cost;
+          //   tuples_selected.push_back(tuple_ind);
+          // }
+          res += cost*cplex.getValue(domain_vars[var_ind][val_ind]);
+          func_cost += cost*cplex.getValue(domain_vars[var_ind][val_ind]);
+          tuples_selected.push_back(tuple_ind);
 
-          }
         } else {
           if(val_ind == 1) {
-            if(cplex.getValue(domain_vars[var_ind][0]) >= 0.5) {
-              res += cost;
-              func_cost += cost;
-              tuples_selected.push_back(1);
-            }
+            // if(cplex.getValue(domain_vars[var_ind][0]) >= 0.5) {
+            //   res += cost;
+            //   func_cost += cost;
+            //   tuples_selected.push_back(1);
+            // }
+            res += cost*cplex.getValue(domain_vars[var_ind][0]);
+            func_cost += cost*cplex.getValue(domain_vars[var_ind][0]);
+            tuples_selected.push_back(1);
           } else {
-            res += cost;
-            func_cost += cost;
+            res += cost*(1.-cplex.getValue(domain_vars[var_ind][0]));
+            func_cost += cost*(1.-cplex.getValue(domain_vars[var_ind][0]));
             tuples_selected.push_back(0);
           }
         }
@@ -89,19 +100,6 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
       cout << "cost function " << func_ind  << "(" << func.name << "):  " << func_cost << endl;
     }
 
-    if(func_ind == 166) {
-      cout << "tuples selected: " << tuples_selected << endl;
-      cout << "associated costs: ";
-      for(auto& tuple_ind : tuples_selected) {
-        if(tuple_ind < func.costs.size()) {
-          cout << func.costs[tuple_ind] << ", ";
-        } else {
-          cout << func.default_cost << ", ";
-        }
-      }
-      cout << endl;
-    }
-
   }
 
   // constant term
@@ -115,26 +113,52 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
 }
 
 //--------------------------------------------------------------------------------------------
-void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, vector<IloNumVarArray>& domain_vars, vector<shared_ptr<IloNumVarArray>>& tuple_vars) {
+void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool negShift, vector<IloNumVarArray>& domain_vars, vector<shared_ptr<IloNumVarArray>>& tuple_vars) {
+
+  Double shift = 0.;
 
   // objective function
   for(size_t func_ind: networks[index]) {
 
     auto& func = cost_function[func_ind];
 
+    // compute a minimum cost for this cost function
+    Double min_cost;
+    if(weighted && negShift) {
+      for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+        if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
+          if(tuple_ind == 0 || min_cost > func.costs[tuple_ind]*weights[index]) {
+            min_cost = func.costs[tuple_ind]*weights[index];
+          }
+        }
+      }
+      if(func.default_cost != std::numeric_limits<Double>::infinity()) {
+        if(min_cost > func.default_cost*weights[index]) {
+          min_cost = func.default_cost*weights[index];
+        }
+      }
+      if(min_cost < 0.) {
+        shift += min_cost;
+      }
+    }
+
+    // add costs for the cost function "func"
     for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
       
       // consider only finite positive costs
       if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
         continue;
       }
-      if(weighted && fabs(func.costs[tuple_ind]) <= MultiCFN::epsilon) {
-        continue;
-      }
+      // if(weighted && fabs(func.costs[tuple_ind]) <= MultiCFN::epsilon) {
+      //   continue;
+      // }
 
       IloNum cost = func.costs[tuple_ind];
       if(weighted) {
         cost *= weights[index];
+      }
+      if(weighted && negShift && min_cost < 0.) {
+        cost -= min_cost;
       }
 
       // cout << "cost: " << cost << endl;
@@ -169,6 +193,9 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, vector<I
       if(weighted) {
         cost *= weights[index];
       }
+      if(weighted && negShift && min_cost < 0.) {
+        cost -= min_cost;
+      }
       expr += (*tuple_vars[func_ind].get())[func.tuples.size()]*cost;
     }
 
@@ -179,6 +206,11 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, vector<I
     expr += IloNum(_doriginal_lbs[index]*weights[index]);
   } else {
     expr += IloNum(_doriginal_lbs[index]);
+  }
+
+  // shift ensuring only positive tuple costs
+  if(weighted && negShift) {
+    expr += IloNum(shift);
   }
 }
 
@@ -216,9 +248,9 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
     // one artificial tuple variable is added if not all tuples are defined in the cost function (default_cost)
     if(func.all_tuples || func.default_cost == std::numeric_limits<Double>::infinity()) {
-      tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size(), 0, 1, ILOINT);
+      tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size(), 0., 1., ILOFLOAT);
     } else {
-      tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size()+1, 0, 1, ILOINT);
+      tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size()+1, 0., 1., ILOFLOAT);
     }
     tuple_vars[func_ind]->setNames(string("tuples_"+to_string(func_ind)).c_str());
     
@@ -243,17 +275,22 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     expr.end();
   }
 
-   // only one tuple is selected
-  //  for(unsigned int func_ind = 0; func_ind < tuple_vars.size(); func_ind ++) {
-  //   if(tuple_vars[func_ind] != nullptr) {
-  //     IloExpr expr(env);
-  //     for(unsigned int tuple_ind = 0; tuple_ind < tuple_vars[func_ind].get()->getSize(); tuple_ind ++) {
-  //       expr += (*tuple_vars[func_ind].get())[tuple_ind];
-  //     }
-  //     model.add(expr == 1);
-  //     expr.end();
-  //   }
-  //  }
+  // only one tuple is selected, necessary when default cost is used or for direct encoding when there is a constraint
+  for(unsigned int func_ind = 0; func_ind < tuple_vars.size(); func_ind ++) {
+    if(tuple_vars[func_ind] != nullptr) {
+
+      if(!constraints.empty() && ((size_t)tuple_vars[func_ind].get()->getSize() > cost_function[func_ind].tuples.size() || encoding == ILP_Direct)) {
+
+        IloExpr expr(env);
+        for(unsigned int tuple_ind = 0; tuple_ind < tuple_vars[func_ind].get()->getSize(); tuple_ind ++) {
+          expr += (*tuple_vars[func_ind].get())[tuple_ind];
+        }
+        model.add(expr == 1);
+        expr.end();
+        
+      }
+    }
+  }
 
 
   // tuple corresponding to default cost must be used if no other tuple is 
@@ -457,12 +494,12 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     size_t network_index = cstr.first;
 
     // weights on constraints ?
-    assert(abs(weights[network_index]) > epsilon);
+    // assert(abs(weights[network_index]) > epsilon);
 
     auto bounds = cstr.second;
 
     IloExpr cstr_expr(env);
-    addCriterion(cstr_expr, network_index, false, domain_vars, tuple_vars);
+    addCriterion(cstr_expr, network_index, false, false, domain_vars, tuple_vars);
 
     assert(bounds.first != std::numeric_limits<Double>::infinity() || bounds.second != std::numeric_limits<Double>::infinity());
 
@@ -486,7 +523,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     // do not add nulled cfn
     assert(abs(weights[pb_index]) > epsilon);
     
-    addCriterion(obj, pb_index, true, domain_vars, tuple_vars);
+    if(constraints.empty() == 0) {
+      addCriterion(obj, pb_index, true, true, domain_vars, tuple_vars);
+    } else {
+      addCriterion(obj, pb_index, true, false, domain_vars, tuple_vars);
+    }
   }
   
   model.add(IloMinimize(env, obj));
@@ -507,22 +548,22 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
     mcriteria::Var& variable = var[var_ind];
     size_t val_ind = 0;
 
-    cout << "var " << var_ind << "(" << variable.name <<  "): ";
+    // cout << "var " << var_ind << "(" << variable.name <<  "): ";
 
     // look for the binary variable corresponding to the value selected
     if(variable.nbValues() > 2) {
       int cpt = 0;
       for(size_t ind = 0; ind < static_cast<size_t>(domain_vars[var_ind].getSize()); ind ++) {
-        cout << cplex.getValue(domain_vars[var_ind][ind]) << ", "; 
-        if(cplex.getValue(domain_vars[var_ind][ind]) >= 1 - tolerance) {
+        // cout << cplex.getValue(domain_vars[var_ind][ind]) << ", "; 
+        if(fabs(cplex.getValue(domain_vars[var_ind][ind])-1.) <= 1e-4) {
           val_ind = ind;
           cpt ++;
         }
       }
       assert(cpt == 1);
     } else {
-      cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
-      if(cplex.getValue(domain_vars[var_ind][0]) >= 1 - tolerance) {
+      // cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
+      if(fabs(cplex.getValue(domain_vars[var_ind][0])-1.) <= 1e-4) {
         val_ind = 1;
       } else {
         val_ind = 0;
@@ -531,7 +572,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
 
     solution.insert(make_pair(variable.name, variable.domain_str[val_ind]));
 
-    cout << endl;
+    // cout << endl;
 
   }
 

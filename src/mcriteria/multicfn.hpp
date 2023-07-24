@@ -300,10 +300,11 @@ private: /* private methods */
      * \param expr the ilog expression to fill
      * \param index the index of the network to add in the expression
      * \param weighted true if the expression should be multiplied by the network weight, false otherwise
+     * \parma negShift all the costs of every cost function to obtain only positive costs, and add the corresponding constant
      * \param domain_vars the ilog variables representing variable domains
      * \param tuple_vars the ilog variables representing cost function tuples
      */
-    void addCriterion(IloExpr& expr, size_t index, bool weighted, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+    void addCriterion(IloExpr& expr, size_t index, bool weighted, bool negShift, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
 
     #endif
 

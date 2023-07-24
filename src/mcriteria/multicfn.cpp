@@ -937,7 +937,6 @@ void MultiCFN::outputNetSolutionCosts(size_t index, MultiCFN::Solution& solution
 
         if(fabs(func.getCost(tuple)) > 0.1) {
             cout << "func " << func_ind << " (" << func.name << ") = " << func.getCost(tuple) << endl;  
-
         }
 
     }
