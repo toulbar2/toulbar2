@@ -183,6 +183,11 @@ public:
     unsigned int getDecimalPoint();
 
     /*!
+     * \brief get the wcsp's unit cost precision as double
+     */
+    Double getUnitCost();
+
+    /*!
      * \brief print the cfn
      * \brief os the stream to print to
      */
@@ -317,7 +322,7 @@ public: // public attributes
     std::vector<mcriteria::CostFunction> cost_function; // list of the cost functions
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
-public: // private attributes
+private: // private attributes
 
     std::vector<double> weights; // list of weights for all the loaded networks
     std::vector<std::string> network_names; // names of the networks
@@ -329,6 +334,7 @@ public: // private attributes
     std::vector<Double> _original_costMultipliers; // list of cost multipliers of all the original wcsp
 
     unsigned int _tb2_decimalpoint; // precision of the wcsp
+    Double _tb2_unit_cost; // toulbar2 cost precision as Double
 
     /* solution */
     WCSP* _wcsp; // pointer to the wcsp containing the combination of the input wcsps

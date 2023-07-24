@@ -210,6 +210,7 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
     _original_costMultipliers.push_back(ToulBar2::costMultiplier);
 
     _tb2_decimalpoint = ToulBar2::decimalPoint;
+    _tb2_unit_cost = wcsp->Cost2RDCost(UNIT_COST);
 }
 
 //---------------------------------------------------------------------------
@@ -421,6 +422,11 @@ std::string MultiCFN::getNetworkName(unsigned int index)
 unsigned int MultiCFN::getDecimalPoint()
 {
     return _tb2_decimalpoint;
+}
+
+//---------------------------------------------------------------------------
+Double MultiCFN::getUnitCost() {
+    return _tb2_unit_cost;
 }
 
 ////---------------------------------------------------------------------------
