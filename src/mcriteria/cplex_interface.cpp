@@ -63,7 +63,7 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
           func_cost += cost*cplex.getValue(domain_vars[var_ind][val_ind]);
           tuples_selected.push_back(tuple_ind);
 
-        } else {
+        } else if(variable.nbValues() == 1) {
           if(val_ind == 1) {
             // if(cplex.getValue(domain_vars[var_ind][0]) >= 0.5) {
             //   res += cost;
@@ -78,6 +78,10 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
             func_cost += cost*(1.-cplex.getValue(domain_vars[var_ind][0]));
             tuples_selected.push_back(0);
           }
+        } else {
+          res += cost;
+          func_cost += cost;
+          tuples_selected.push_back(0);
         }
 
       }
@@ -297,19 +301,46 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
 
   // tuple corresponding to default cost must be used if no other tuple is 
-  // for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
-  //   auto func = cost_function[func_ind];
-  //   if(func.all_tuples || func.arity() < 2 || func.default_cost == std::numeric_limits<Double>::infinity()) {
-  //     continue;
-  //   }
-  //   IloExpr expr(env);
-  //   for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
-  //     expr += (*tuple_vars[func_ind].get())[tuple_ind];
-  //   }
-  //   expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
-  //   model.add(expr >= 1.);
-  //   expr.end();
-  // }
+  for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+    auto func = cost_function[func_ind];
+    if(func.all_tuples || func.arity() < 2 || func.default_cost == std::numeric_limits<Double>::infinity()) {
+      continue;
+    }
+    IloExpr expr(env);
+    for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+      expr += (*tuple_vars[func_ind].get())[tuple_ind];
+    }
+    expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
+    model.add(expr >= 1.);
+    expr.end();
+  }
+
+  // when the var assignment corresponds to an existing tuple, this tuple must be used (necessary if there exist a default_cost tuple)
+  // equivalent to the direct encoding
+  for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+    auto func = cost_function[func_ind];
+    if(func.all_tuples || func.arity() < 2 || func.default_cost == std::numeric_limits<Double>::infinity()) {
+      continue;
+    }
+    for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+      IloExpr expr(env);
+      for(size_t scope_ind = 0; scope_ind < func.scope.size(); scope_ind ++) {
+        size_t var_ind = func.scope[scope_ind];
+        mcriteria::Var& variable = var[var_ind];
+        if(variable.nbValues() > 2) {
+          expr += (1.-domain_vars[var_ind][func.tuples[tuple_ind][scope_ind]]);
+        } else if(variable.nbValues() == 2) {
+          if(func.tuples[tuple_ind][scope_ind] == 0) {
+            expr += domain_vars[var_ind][0];
+          } else {
+            expr += (1.-domain_vars[var_ind][0]);
+          }
+        }
+      }
+      model.add(expr >= (1.-(*tuple_vars[func_ind].get())[tuple_ind]));
+      expr.end();
+    }
+  }
 
   // direct encoding
 
@@ -568,20 +599,20 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
 
   IloNum const tolerance = cplex.getParam(IloCplex::Param::MIP::Tolerances::Integrality);
 
-  // cout << std::setprecision(15);
+  cout << std::setprecision(15);
 
   for(size_t var_ind = 0; var_ind < var.size(); var_ind ++) {
     
     mcriteria::Var& variable = var[var_ind];
     size_t val_ind = 0;
 
-    // cout << "var " << var_ind << "(" << variable.name <<  "): ";
+    cout << "var " << var_ind << "(" << variable.name <<  "): ";
 
     // look for the binary variable corresponding to the value selected
     if(variable.nbValues() > 2) {
       int cpt = 0;
       for(size_t ind = 0; ind < static_cast<size_t>(domain_vars[var_ind].getSize()); ind ++) {
-        // cout << cplex.getValue(domain_vars[var_ind][ind]) << ", ";
+        cout << cplex.getValue(domain_vars[var_ind][ind]) << ", ";
         if(cplex.isExtracted(domain_vars[var_ind][ind])) {
           if(fabs(cplex.getValue(domain_vars[var_ind][ind])-1.) <= 1e-4) {
             val_ind = ind;
@@ -591,7 +622,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
       }
       assert(cpt == 1);
     } else if(variable.nbValues() == 2) {
-      // cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
+      cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
       if(cplex.isExtracted(domain_vars[var_ind][0])) {
         if(fabs(cplex.getValue(domain_vars[var_ind][0])-1.) <= 1e-4) {
           val_ind = 1;
@@ -601,7 +632,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
 
     solution.insert(make_pair(variable.name, variable.domain_str[val_ind]));
 
-    // cout << endl;
+    cout << endl;
 
   }
 

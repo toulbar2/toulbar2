@@ -99,6 +99,7 @@ public:
     std::vector<std::vector<unsigned int>> tuples; // value indexes of the variables
     size_t n_total_tuples; // total number of tuples (length of the domain cartesian product)
     bool all_tuples; // true if all tuples are stored, false otherwise (default_cost)
+    bool hard; // true if all costs are either null or =infinity, the cost function is then used only as a constraint
 };
 
 } // namespace mcriteria
