@@ -1032,14 +1032,22 @@ void MultiCFN::print(ostream& os)
         os << ", n costs: " << cost_function[func_ind].costs.size();
         os << ", network id: " << network_index[func_ind];
         os << ", all tuples ? " << cost_function[func_ind].all_tuples;
-        os << ", defaultCost = " << cost_function[func_ind].default_cost << endl;
+        if(cost_function[func_ind].default_cost != std::numeric_limits<Double>::infinity()) {
+            os << ", defaultCost = " << cost_function[func_ind].default_cost*weights[network_index[func_ind]] << endl;
+        } else {
+            os << ", defaultCost = " << cost_function[func_ind].default_cost << endl;
+        }
         os << "costs: " << endl;
         int ind = 0;
         for (auto& tuple : cost_function[func_ind].tuples) {
             for (auto& val : tuple) {
                 os << val << ", ";
             }
-            os << weights[network_index[func_ind]] * cost_function[func_ind].costs[ind] << endl;
+            if(cost_function[func_ind].costs[ind] != std::numeric_limits<Double>::infinity()) {
+                os << weights[network_index[func_ind]] * cost_function[func_ind].costs[ind] << endl;
+            } else {
+                os << cost_function[func_ind].costs[ind] << endl;
+            }
             ind++;
         }
     }

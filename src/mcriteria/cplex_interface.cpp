@@ -175,14 +175,15 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool neg
 
         if(variable.nbValues() > 2) {
           expr += domain_vars[var_ind][val_ind]*cost;
-        } else {
+        } else if(variable.nbValues() == 2) {
           if(val_ind == 1) {
             expr += domain_vars[var_ind][0]*cost;
           } else {
             expr += (1-domain_vars[var_ind][0])*cost;
           }
+        } else {
+          expr += cost;
         }
-
       }
 
     }
@@ -217,7 +218,6 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool neg
 //--------------------------------------------------------------------------------------------
 void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, vector<size_t>& objectives, vector<pair<size_t, pair<Double, Double>>>& constraints, vector<IloNumVarArray>& domain_vars, vector<shared_ptr<IloNumVarArray>>& tuple_vars) {
 
-
   // variables definition
 
   // for binary variables, one boolean var = 1 iif the variable has value 1 (implies no bool var representing 0 value)
@@ -229,8 +229,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     mcriteria::Var& variable = var[index];
     if(variable.nbValues() > 2) {
       domain_vars.push_back(IloNumVarArray(env, variable.nbValues(), 0, 1, ILOINT));
-    } else {
+    } else if(variable.nbValues() == 2) {
       domain_vars.push_back(IloNumVarArray(env, 1, 0, 1, ILOINT));
+    } else {
+      domain_vars.push_back(IloNumVarArray(env, 0, 0, 1, ILOINT));
+      continue; // do not create a cplex variable if the domain contains 1 value
     }
     domain_vars.back().setNames(string("dom_" + variable.name).c_str());
   }
@@ -294,19 +297,19 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
 
   // tuple corresponding to default cost must be used if no other tuple is 
-  for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
-    auto func = cost_function[func_ind];
-    if(func.all_tuples || func.arity() < 2 || func.default_cost == std::numeric_limits<Double>::infinity()) {
-      continue;
-    }
-    IloExpr expr(env);
-    for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
-      expr += (*tuple_vars[func_ind].get())[tuple_ind];
-    }
-    expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
-    model.add(expr >= 1.);
-    expr.end();
-  }
+  // for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+  //   auto func = cost_function[func_ind];
+  //   if(func.all_tuples || func.arity() < 2 || func.default_cost == std::numeric_limits<Double>::infinity()) {
+  //     continue;
+  //   }
+  //   IloExpr expr(env);
+  //   for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+  //     expr += (*tuple_vars[func_ind].get())[tuple_ind];
+  //   }
+  //   expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
+  //   model.add(expr >= 1.);
+  //   expr.end();
+  // }
 
   // direct encoding
 
@@ -333,7 +336,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
           if(variable.nbValues() > 2) {
             expr += (IloNum(1)-domain_vars[var_ind][val_ind]);
-          } else { // special case for binary variables
+          } else if(variable.nbValues() == 2) { // special case for binary variables
             if(val_ind == 1) {
               expr += (IloNum(1)-domain_vars[var_ind][0]);
             } else {
@@ -365,8 +368,13 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       }
 
       for (size_t scope_ind = 0; scope_ind < func.scope.size(); scope_ind ++) {
+
         size_t var_ind = func.scope[scope_ind];
         mcriteria::Var& variable = var[var_ind];
+
+        if(variable.nbValues() < 2) {
+          continue;
+        }
 
         for (size_t val_ind = 0; val_ind < variable.nbValues(); ++val_ind) {
 
@@ -390,18 +398,37 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
           }
 
           // additional tuple for default cost if not all tuples for this value are specified
-          // if(func.default_cost != std::numeric_limits<Double>::infinity() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
-          //   expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
-          // }
+          if(func.default_cost != std::numeric_limits<Double>::infinity() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
+            expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
+          }
 
           if(variable.nbValues() > 2) {
-            model.add(expr == domain_vars[var_ind][val_ind]);
-          } else { // special case for binary variables
-            if(val_ind == 1) {
-              model.add(expr == domain_vars[var_ind][0]);
+
+            if(func.default_cost != std::numeric_limits<Double>::infinity() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
+              model.add(expr >= domain_vars[var_ind][val_ind]);
             } else {
-              model.add(expr == (1-domain_vars[var_ind][0]));
+              model.add(expr == domain_vars[var_ind][val_ind]);
             }
+            
+
+          } else if(variable.nbValues() == 2) { // special case for binary variables
+
+            if(val_ind == 1) {
+
+              if(func.default_cost != std::numeric_limits<Double>::infinity() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
+                model.add(expr >= domain_vars[var_ind][0]);
+              } else {
+                model.add(expr == domain_vars[var_ind][0]);
+              }
+              
+            } else {
+              if(func.default_cost != std::numeric_limits<Double>::infinity() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
+                model.add(expr >= (1-domain_vars[var_ind][0]));
+              } else {
+                model.add(expr == (1-domain_vars[var_ind][0]));
+              }
+            }
+
           }
           
           expr.end();
@@ -437,10 +464,10 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
         size_t val_ind = func.tuples[tuple_ind].front();
 
         IloExpr expr(env);
-        if(variable.nbValues() >= 2) {
+        if(variable.nbValues() > 2) {
           expr += domain_vars[var_ind][val_ind];
           model.add(expr == IloNum(0));
-        } else {
+        } else if(variable.nbValues() == 2) {
           expr += domain_vars[var_ind][0];
           if(val_ind == 0) {
             model.add(expr == IloNum(1));
@@ -472,7 +499,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
         if(variable.nbValues() > 2) {
           expr += (1-domain_vars[var_ind][val_ind]);
-        } else { // binary variable
+        } else if (variable.nbValues() == 2) { // binary variable
           if(val_ind == 1) {
             expr += (1-domain_vars[var_ind][0]);
           } else {
@@ -554,19 +581,21 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
     if(variable.nbValues() > 2) {
       int cpt = 0;
       for(size_t ind = 0; ind < static_cast<size_t>(domain_vars[var_ind].getSize()); ind ++) {
-        // cout << cplex.getValue(domain_vars[var_ind][ind]) << ", "; 
-        if(fabs(cplex.getValue(domain_vars[var_ind][ind])-1.) <= 1e-4) {
-          val_ind = ind;
-          cpt ++;
+        // cout << cplex.getValue(domain_vars[var_ind][ind]) << ", ";
+        if(cplex.isExtracted(domain_vars[var_ind][ind])) {
+          if(fabs(cplex.getValue(domain_vars[var_ind][ind])-1.) <= 1e-4) {
+            val_ind = ind;
+            cpt ++;
+          }
         }
       }
       assert(cpt == 1);
-    } else {
+    } else if(variable.nbValues() == 2) {
       // cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
-      if(fabs(cplex.getValue(domain_vars[var_ind][0])-1.) <= 1e-4) {
-        val_ind = 1;
-      } else {
-        val_ind = 0;
+      if(cplex.isExtracted(domain_vars[var_ind][0])) {
+        if(fabs(cplex.getValue(domain_vars[var_ind][0])-1.) <= 1e-4) {
+          val_ind = 1;
+        }
       }
     }
 
