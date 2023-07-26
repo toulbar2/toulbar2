@@ -87,6 +87,11 @@ public:
      */
     size_t compute_n_tuples();
 
+    /*! 
+     * \brief check in the costs if the cost function is a hard constraint
+     */
+    bool detectIfHard();
+
 public:
     MultiCFN* multicfn;
 

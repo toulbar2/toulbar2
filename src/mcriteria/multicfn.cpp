@@ -201,6 +201,11 @@ void MultiCFN::push_back(WCSP* wcsp, double weight)
         // compute total number of tuples
         cost_function.back().n_total_tuples = cost_function.back().compute_n_tuples();
         cost_function.back().all_tuples = (cost_function.back().n_total_tuples == cost_function.back().tuples.size());
+
+        // detect if the cost function is a hard constraint
+        cost_function.back().hard = cost_function.back().detectIfHard();
+        
+
     }
 
     // general values
@@ -386,6 +391,9 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
     // compute total number of tuples
     cost_func.n_total_tuples = cost_func.compute_n_tuples();
     cost_func.all_tuples = (cost_func.n_total_tuples == cost_func.tuples.size());
+
+    // detect if the cost function is a hard constraint
+    cost_func.hard = cost_func.detectIfHard();
 }
 
 //---------------------------------------------------------------------------
@@ -1084,7 +1092,7 @@ void mcriteria::Var::print(ostream& os)
 
 //---------------------------------------------------------------------------
 mcriteria::CostFunction::CostFunction(MultiCFN* multicfn)
-  : default_cost(0.)
+  : default_cost(0.), hard(false)
 {
     this->multicfn = multicfn;
 }
@@ -1156,5 +1164,25 @@ size_t mcriteria::CostFunction::compute_n_tuples() {
     }
 
     return nb;
+
+}
+
+//---------------------------------------------------------------------------
+bool mcriteria::CostFunction::detectIfHard() {
+
+    bool isHard = true;
+    for(auto& cost: costs) {
+        if(cost != numeric_limits<Double>::infinity() && fabs(cost) > MultiCFN::epsilon) {
+            isHard = false;
+            break;
+        }
+    }
+    if(isHard) {
+        if(default_cost != numeric_limits<Double>::infinity() && fabs(default_cost) > MultiCFN::epsilon) {
+            isHard = false;
+        }
+    }
+
+    return isHard;
 
 }
