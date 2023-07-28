@@ -235,6 +235,13 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool neg
 //--------------------------------------------------------------------------------------------
 void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, vector<size_t>& objectives, vector<pair<size_t, pair<Double, Double>>>& constraints, vector<IloNumVarArray>& domain_vars, vector<shared_ptr<IloNumVarArray>>& tuple_vars) {
 
+  // for(size_t func_ind: networks[index]) {
+  //   auto& func = cost_function[func_ind];
+  //   if(func.arity() >= 4  && !func.all_tuples && !func.hard) {
+  //     cout << "found difficult cost function! : " << func.name << " -> "  << func_ind << endl;
+  //   }
+  // }
+
   // variables definition
 
   // for binary variables, one boolean var = 1 iif the variable has value 1 (implies no bool var representing 0 value)
@@ -591,7 +598,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     } else if(bounds.second == std::numeric_limits<Double>::infinity()) {
       model.add(IloNum(bounds.first) <= cstr_expr);
     } else {
-      model.add(IloNum(bounds.first) <= cstr_expr <= IloNum(bounds.second));
+      if(fabs(bounds.second-bounds.first) < getUnitCost()-MultiCFN::epsilon) {
+        model.add(cstr_expr == IloNum(bounds.second));
+      } else {
+        model.add(IloNum(bounds.first) <= cstr_expr <= IloNum(bounds.second));
+      }
     }
 
     cstr_expr.end();
