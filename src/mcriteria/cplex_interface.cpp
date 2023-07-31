@@ -274,7 +274,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     }
 
     // one artificial tuple variable is added if not all tuples are defined in the cost function (default_cost)
-    if(func.all_tuples || func.default_cost == std::numeric_limits<Double>::infinity() || isNull(func.default_cost)) {
+    if(func.all_tuples || func.default_cost == std::numeric_limits<Double>::infinity()) {
       tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size(), 0., 1., ILOFLOAT);
     } else {
       tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size()+1, 0., 1., ILOFLOAT);
