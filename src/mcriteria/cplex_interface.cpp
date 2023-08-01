@@ -140,7 +140,7 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool neg
     }
 
     // compute a minimum cost for this cost function
-    Double min_cost;
+    Double min_cost = std::numeric_limits<Double>::infinity();
     if(weighted && negShift) {
       for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
         if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
