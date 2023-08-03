@@ -878,7 +878,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::sortDomains)
         cout << " (default option)";
     cout << endl;
-    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
+    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
     cout << "   -solr : solution-based phase saving";
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
