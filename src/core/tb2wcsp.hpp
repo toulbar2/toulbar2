@@ -338,7 +338,7 @@ public:
         }
     }
 
-    Cost getUnaryCost(int varIndex, Value v) const { return vars[varIndex]->getCost(v); } ///< \brief unary cost associated to a domain value
+    Cost getUnaryCost(int varIndex, Value v) const { return (vars[varIndex]->canbe(v))?vars[varIndex]->getCost(v):MAX_COST; } ///< \brief unary cost associated to a domain value
     Cost getMaxUnaryCost(int varIndex) const { return vars[varIndex]->getMaxCost(); } ///< \brief maximum unary cost in the domain
     Value getMaxUnaryCostValue(int varIndex) const { return vars[varIndex]->getMaxCostValue(); } ///< \brief a value having the maximum unary cost in the domain
     Value getSupport(int varIndex) const { return vars[varIndex]->getSupport(); } ///< \brief unary (NC/EAC) support value
