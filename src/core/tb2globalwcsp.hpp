@@ -458,10 +458,10 @@ public:
                 cost = negCost - original_negproblem->getLb();
             }
         } catch (const Contradiction&) {
-            if (problem)
-                problem->whenContradiction();
-            if (negproblem)
-                negproblem->whenContradiction();
+            if (original_problem)
+                original_problem->whenContradiction();
+            if (original_negproblem)
+                original_negproblem->whenContradiction();
             cost = MAX_COST;
         }
         Store::restore(depth);
