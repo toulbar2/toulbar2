@@ -334,6 +334,10 @@ public:
     static bool cmpConstraintTightnessDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
     static bool cmpConstraintLAG(Constraint* c1, Constraint* c2);
     static bool cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintArity(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintArity(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintArityDAC(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
 
     // sort a list of constraints
     static int cmpConstraint(Constraint* c1, Constraint* c2);

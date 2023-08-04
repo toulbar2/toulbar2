@@ -386,26 +386,26 @@ public:
         bool unsat = false;
         try {
             Store::store();
-            if (problem) {
-                problem->enforceUb();
-                assert(problem->isactivatePropagate());
-                problem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates ub
-                if (problem->getLb() < lb) { // checks if the solution violates lb
+            if (problem && original_problem) {
+                original_problem->enforceUb();
+                assert(original_problem->isactivatePropagate());
+                original_problem->assignLS(varIndexes, newValues); // may-be throw a Contradiction if it violates ub
+                if (original_problem->getLb() < lb || original_problem->getLb() >= ub) { // checks if the solution violates lb or ub
                     unsat = true;
                 }
-            } else if (negproblem) {
-                negproblem->enforceUb();
-                assert(negproblem->isactivatePropagate());
-                negproblem->assignLS(varIndexes, newValues); // throw a Contradiction if it violates lb
-                if (negproblem->getLb() <= -ub + negCost) { // checks if the solution violates ub
+            } else if (negproblem && original_negproblem) {
+                original_negproblem->enforceUb();
+                assert(original_negproblem->isactivatePropagate());
+                original_negproblem->assignLS(varIndexes, newValues); // may-be throw a Contradiction if it violates lb
+                if (original_negproblem->getLb() <= -ub + negCost || original_negproblem->getLb() > -lb + negCost) { // checks if the solution violates ub or lb
                     unsat = true;
                 }
             }
         } catch (const Contradiction&) {
-            if (problem)
-                problem->whenContradiction();
-            if (negproblem)
-                negproblem->whenContradiction();
+            if (original_problem)
+                original_problem->whenContradiction();
+            if (original_negproblem)
+                original_negproblem->whenContradiction();
             unsat = true;
         }
         Store::restore(depth);
@@ -448,20 +448,20 @@ public:
         int depth = Store::getDepth();
         try {
             Store::store();
-            if (original_problem != NULL) {
+            if (original_problem) {
                 assert(original_problem->isactivatePropagate());
                 original_problem->assignLS(varIndexes, newValues);
                 cost = original_problem->getLb();
-            } else if (original_negproblem != NULL) {
+            } else if (original_negproblem) {
                 assert(original_negproblem->isactivatePropagate());
                 original_negproblem->assignLS(varIndexes, newValues);
                 cost = negCost - original_negproblem->getLb();
             }
         } catch (const Contradiction&) {
-            if (problem)
-                problem->whenContradiction();
-            if (negproblem)
-                negproblem->whenContradiction();
+            if (original_problem)
+                original_problem->whenContradiction();
+            if (original_negproblem)
+                original_negproblem->whenContradiction();
             cost = MAX_COST;
         }
         Store::restore(depth);

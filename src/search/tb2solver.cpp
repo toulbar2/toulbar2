@@ -794,6 +794,8 @@ int Solver::greedy(intFunctionCall_t varHeurFunc)
             cout << "Fast greedy assignment for " << unassignedVars->getSize() << " variables!" << endl;
         Cost currentUb = wcsp->getUb();
         Cost newUb = currentUb;
+        int weightedDegree = ToulBar2::weightedDegree;
+        ToulBar2::weightedDegree = 0; //do not update weighted degrees inside greedy method
         int depth = Store::getDepth();
         try {
             Store::store();
@@ -812,6 +814,7 @@ int Solver::greedy(intFunctionCall_t varHeurFunc)
             wcsp->whenContradiction();
         }
         Store::restore(depth);
+        ToulBar2::weightedDegree = weightedDegree;
         if (newUb < currentUb) { /* a better solution has been found */
             wcsp->enforceUb(); /* it will generate a contradiction if lb >= ub */
             wcsp->propagate(); /* it will generate a contradiction if lb >= ub */
@@ -2899,7 +2902,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         }
     }
 
-    // special data structure to be initialized for variable ordering heuristics
+    // special data structure to be initialized for variable ordering heuristics including weighted degrees and tightness
     initVarHeuristic();
 
     int lds = ToulBar2::lds;
@@ -2927,6 +2930,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (ToulBar2::singletonConsistency) {
         singletonConsistency();
         wcsp->propagate();
+        wcsp->resetTightnessAndWeightedDegree();
     }
 
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
