@@ -448,7 +448,8 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
     for (unsigned int net_ind = 0; net_ind < networks.size(); net_ind++) {
 
         Double weight = weights[net_ind];
-
+        assert(isfinite(weight));
+        
         Double net_top = 0.;
 
         for (auto& func_ind : networks[net_ind]) {
@@ -484,6 +485,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
                     min_cost = defcost;
                 }
             }
+            assert(max_cost - min_cost >= 0.);
             net_top += max_cost - min_cost;
             global_mincost += min_cost;
         }
@@ -491,6 +493,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
         top += net_top;
     }
 
+    assert(top >= 0.);
     return std::make_pair(top, global_mincost);
 }
 
