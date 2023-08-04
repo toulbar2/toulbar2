@@ -887,6 +887,8 @@ void MultiCFN::extractSolution()
         auto tb2_var = dynamic_cast<EnumeratedVariable*>(_wcsp->getVar(tb2_var_ind));
 
         string name = tb2_var->getName();
+        if (name.rfind(HIDDEN_VAR_TAG, 0) == 0)
+            continue; // avoid intermediate variables created during preprocessing
         string value_name = tb2_var->getValueName(tb2_var->toIndex(sol[tb2_var_ind]));
 
         auto& comb_var = var[var_index[name]];
