@@ -2996,7 +2996,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     }
 
     if (ToulBar2::dumpWCSP) {
-        dump_wcsp(ToulBar2::problemsaved_filename.c_str(), false, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)));
+        dump_wcsp(ToulBar2::problemsaved_filename.c_str(), ToulBar2::dumpOriginalAfterPreprocessing, static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)));
         cout << "Problem saved after preprocessing, then program stopped." << endl;
         throw TimeOut();
     }

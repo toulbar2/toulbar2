@@ -960,7 +960,7 @@ void help_msg(char* toulbar2filename)
 #endif
     cout << "   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or \"problem.wcsp/.cfn\"  if no parameter is given)" << endl;
     cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem (wcsp format only)" << endl;
-    cout << "   -z=[integer] : 1 or 3: saves original instance in 1-wcsp or 3-cfn format (1 by default), 2 or 4: saves after preprocessing in 2-wcsp or 4-cfn format (this option can be combined with the previous one)" << endl;
+    cout << "   -z=[integer] : 1 or 3: saves original instance in 1-wcsp or 3-cfn format (1 by default), 2 or 4: saves after preprocessing in 2-wcsp or 4-cfn format, -2 or -4: saves after preprocessing using initial domains (this option can be combined with the previous one giving a filename)" << endl;
     cout << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
 #ifndef NDEBUG
     cout << "   -opt filename.sol : checks a given optimal solution (given as input filename with \".sol\" extension) is never pruned by propagation (works only if compiled with debug)" << endl;
@@ -2253,8 +2253,12 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_dumpWCSP) {
                 if (args.OptionArg() != NULL) {
-                    if (strlen(args.OptionArg()) == 1 && args.OptionArg()[0] >= '1' && args.OptionArg()[0] <= '4') {
+                    if ((strlen(args.OptionArg()) == 1 && args.OptionArg()[0] >= '1' && args.OptionArg()[0] <= '4') || (strlen(args.OptionArg()) == 2 && args.OptionArg()[0] == '-' && args.OptionArg()[1] >= '1' && args.OptionArg()[1] <= '4')) {
                         ToulBar2::dumpWCSP = atoi(args.OptionArg());
+                        if (ToulBar2::dumpWCSP < 0) {
+                            ToulBar2::dumpOriginalAfterPreprocessing = true;
+                            ToulBar2::dumpWCSP = -ToulBar2::dumpWCSP;
+                        }
                         if (ToulBar2::problemsaved_filename.rfind(".cfn") != string::npos && static_cast<ProblemFormat>((ToulBar2::dumpWCSP >> 1) + (ToulBar2::dumpWCSP & 1)) != CFN_FORMAT) {
                             cerr << "Error: filename extension .cfn not compatible with option -z=" << ToulBar2::dumpWCSP << endl;
                             throw WrongFileFormat();

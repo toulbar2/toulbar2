@@ -755,6 +755,7 @@ public:
     static long solutionFileRewindPos; ///< \internal do not use
     static Long allSolutions; ///< \brief finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops (or counts the number of zero-cost satisfiable solutions in conjunction with BTD) (command line option -a)
     static int dumpWCSP; ///< \brief saves the problem in wcsp (0: do not save, 1: original or 2: after preprocessing) or cfn (3: original or 4: after preprocessing) format (command line option -z)
+    static bool dumpOriginalAfterPreprocessing; ///< \brief saves the problem with initial domains after preprocessing (used in conjunction with dumpWCSP)
     static bool approximateCountingBTD; ///< \brief approximate zero-cost satisfiable solution counting using BTD (command line options -D and -a and -B=1)
     static bool binaryBranching; ///< \brief tree search using binary branching instead of n-ary branching for enumerated domains (command line option -b)
     static int dichotomicBranching; ///< \brief tree search using dichotomic branching if current domain size is strictly greater than ToulBar2::dichotomicBranchingSize (0: no dichotomic branching, 1: splitting in the middle of domain range, 2: splitting in the middle of sorted unary costs) (command line option -d)

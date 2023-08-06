@@ -122,6 +122,7 @@ FILE* ToulBar2::solutionFile;
 long ToulBar2::solutionFileRewindPos;
 Long ToulBar2::allSolutions;
 int ToulBar2::dumpWCSP;
+bool ToulBar2::dumpOriginalAfterPreprocessing;
 bool ToulBar2::approximateCountingBTD;
 int ToulBar2::elimDegree;
 int ToulBar2::elimDegree_preprocessing;
@@ -350,6 +351,7 @@ void tb2init()
     ToulBar2::solutionFileRewindPos = 0L;
     ToulBar2::allSolutions = 0;
     ToulBar2::dumpWCSP = 0;
+    ToulBar2::dumpOriginalAfterPreprocessing = false;
     ToulBar2::approximateCountingBTD = false;
 #ifdef NO_STORE_BINARY_COSTS
     ToulBar2::elimDegree = 1;
