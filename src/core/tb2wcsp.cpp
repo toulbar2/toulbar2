@@ -4951,7 +4951,8 @@ bool WCSP::verify()
             if (ToulBar2::verbose >= 4)
                 cout << endl
                      << *this;
-            cout << "warning! support of variable " << vars[i]->getName() << " not EAC!" << endl;
+            if (ToulBar2::verbose >= 1)
+                cout << "warning! support of variable " << vars[i]->getName() << " not EAC!" << endl;
             if (!ToulBar2::vacValueHeuristic)
                 return false;
         }

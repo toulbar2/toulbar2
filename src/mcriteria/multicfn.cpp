@@ -462,6 +462,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
                     min_cost = defcost;
                 }
             }
+            assert(max_cost - min_cost >= 0.);
             net_top += max_cost - min_cost;
             global_mincost += min_cost;
         }
@@ -469,6 +470,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
         top += net_top;
     }
 
+    assert(top >= 0.);
     return std::make_pair(top, global_mincost);
 }
 
@@ -489,6 +491,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
 
+        assert(isfinite(_doriginal_lbs[net_ind]));
         global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
 
         // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
@@ -897,7 +900,10 @@ void MultiCFN::extractSolution()
             cost += func.getCost(tuple);
         }
 
-        check_sum += cost * weights[net_ind];
+        if (!isinf(cost)) {
+            cost *= weights[net_ind];
+        }
+        check_sum += cost;
 
         _obj_values.push_back(cost);
     }
@@ -997,7 +1003,11 @@ void MultiCFN::print(ostream& os)
             for (auto& val : tuple) {
                 os << val << ", ";
             }
-            os << weights[network_index[func_ind]] * cost_function[func_ind].costs[ind] << endl;
+            if (!isinf(cost_function[func_ind].costs[ind])) {
+                os << weights[network_index[func_ind]] * cost_function[func_ind].costs[ind] << endl;
+            } else {
+                os << cost_function[func_ind].costs[ind] << endl;
+            }
             ind++;
         }
     }
