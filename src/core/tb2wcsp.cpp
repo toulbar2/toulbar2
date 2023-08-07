@@ -4833,7 +4833,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
     for (unsigned int i = 0; i < vars.size(); i++) {
         assert(enumerated(i));
         EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
-        if (original) {
+        if (original && (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0)) {
             os << "\"" << s->getName() << "\":";
             os << "[";
             printed = false;
@@ -4885,7 +4885,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
             elimTernConstrs[i]->dump_CFN(os, original);
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
+        if (vars[i]->enumerated() && ((original  && (vars[i]->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0)) || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
