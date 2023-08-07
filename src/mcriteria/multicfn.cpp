@@ -926,9 +926,10 @@ void MultiCFN::extractSolution()
         }
 
         if (!isinf(cost)) {
-            cost *= weights[net_ind];
+            check_sum += cost * weights[net_ind];
+        } else {
+            check_sum = cost;
         }
-        check_sum += cost;
 
         _obj_values.push_back(cost);
     }
