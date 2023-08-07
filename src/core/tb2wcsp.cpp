@@ -4822,8 +4822,9 @@ void WCSP::dump_CFN(ostream& os, bool original)
     unsigned int ivar = 0;
     os << "\"variables\":{\n";
     set<int> elimvars;
-    if (!original && nvars != vars.size()) {
-        cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
+    if (nvars != vars.size()) {
+        if (!original)
+            cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
         int elimo = getElimOrder();
         for (int i = elimo - 1; i >= 0; i--) {
             elimInfo ei = elimInfos[i];
@@ -4885,7 +4886,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
             elimTernConstrs[i]->dump_CFN(os, original);
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (vars[i]->enumerated() && ((original  && (vars[i]->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0)) || vars[i]->unassigned())) {
+        if (vars[i]->enumerated() && ((original && (vars[i]->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0) && elimvars.find(vars[i]->wcspIndex) == elimvars.end()) || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
@@ -4900,6 +4901,21 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 }
             }
             os << "]},\n";
+        }
+    }
+    if (original) { // save the reason of eliminated variables instead of their dummy assignment
+        int elimo = getElimOrder();
+        for (int i = elimo - 1; i >= 0; i--) {
+            elimInfo ei = elimInfos[i];
+            elimvars.insert(ei.x->wcspIndex);
+            if (ei.xy)
+                ei.xy->dump_CFN(os, original);
+            if (ei.xz)
+                ei.xz->dump_CFN(os, original);
+            if (ei.xyz)
+                ei.xyz->dump_CFN(os, original);
+            if (ei.ctr)
+                ei.ctr->dump_CFN(os, original);
         }
     }
     os << "\"F\":{\"scope\":[],\"costs\":[" << getDDualBound() << "]}\n}\n}" << endl;
