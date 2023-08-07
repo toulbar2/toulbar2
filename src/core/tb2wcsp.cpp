@@ -4866,7 +4866,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << ",";
             ivar++;
             os << "\n";
-        } else {
+        } else if (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0) {
             assert(s->assigned());
             cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
         }
@@ -4908,14 +4908,38 @@ void WCSP::dump_CFN(ostream& os, bool original)
         for (int i = elimo - 1; i >= 0; i--) {
             elimInfo ei = elimInfos[i];
             elimvars.insert(ei.x->wcspIndex);
-            if (ei.xy)
+            bool failed = false;
+            if (ei.xy) {
+                if (ei.xy->ishard()) {
                 ei.xy->dump_CFN(os, original);
-            if (ei.xz)
+                } else {
+                    failed = true;
+                }
+            }
+            if (ei.xz) {
+                if (ei.xz->ishard()) {
                 ei.xz->dump_CFN(os, original);
-            if (ei.xyz)
+                } else {
+                    failed = true;
+                }
+            }
+            if (ei.xyz) {
+                if (ei.xyz->ishard()) {
                 ei.xyz->dump_CFN(os, original);
-            if (ei.ctr)
+                } else {
+                    failed = true;
+                }
+            }
+            if (ei.ctr) {
+                if (ei.ctr->ishard()) {
                 ei.ctr->dump_CFN(os, original);
+                } else {
+                    failed = true;
+                }
+            }
+            if (failed) {
+                cout << "Warning, cannot preserve problem equivalence when saving the problem due to variable elimination of " << ei.x->getName() << endl;
+            }
         }
     }
     os << "\"F\":{\"scope\":[],\"costs\":[" << getDDualBound() << "]}\n}\n}" << endl;
