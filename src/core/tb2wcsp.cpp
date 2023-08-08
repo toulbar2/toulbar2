@@ -4818,23 +4818,27 @@ void WCSP::dump_CFN(ostream& os, bool original)
     os << getDPrimalBound() << "\"},\n";
 
     // Domain variables
+    set<int> elimvars;
+    int elimo = getElimOrder();
+    for (int i = elimo - 1; i >= 0; i--) {
+        elimInfo ei = elimInfos[i];
+        elimvars.insert(ei.x->wcspIndex);
+        if (original) { // restore (initial) domain of eliminated variables instead of their dummy assignment
+            ei.x->restoreInitialDomainWhenEliminated();
+        }
+    }
     unsigned int nvars = numberOfUnassignedVariables();
     unsigned int ivar = 0;
     os << "\"variables\":{\n";
-    set<int> elimvars;
-    if (nvars != vars.size()) {
-        if (!original)
-            cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
-        int elimo = getElimOrder();
-        for (int i = elimo - 1; i >= 0; i--) {
-            elimInfo ei = elimInfos[i];
-            elimvars.insert(ei.x->wcspIndex);
-        }
+    if (!original && nvars != vars.size()) {
+        cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
         assert(enumerated(i));
         EnumeratedVariable* s = static_cast<EnumeratedVariable*>(vars[i]);
-        if (original && (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0)) {
+        if (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0)
+            continue;
+        if (original) {
             os << "\"" << s->getName() << "\":";
             os << "[";
             printed = false;
@@ -4866,7 +4870,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << ",";
             ivar++;
             os << "\n";
-        } else if (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0) {
+        } else {
             assert(s->assigned());
             cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
         }
@@ -4874,7 +4878,6 @@ void WCSP::dump_CFN(ostream& os, bool original)
     if (!original && nvars != vars.size()) {
         cout << endl;
     }
-
     os << "},\n\"functions\": {\n";
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected() && !constrs[i]->isSep())
@@ -4886,28 +4889,37 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->isSep())
             elimTernConstrs[i]->dump_CFN(os, original);
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (vars[i]->enumerated() && ((original && (vars[i]->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0) && elimvars.find(vars[i]->wcspIndex) == elimvars.end()) || vars[i]->unassigned())) {
+        if (vars[i]->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0)
+            continue;
+        if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
             os << vars[i]->getName() << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
             os << "\"costs\":[";
+            Cost failed = MIN_COST;
             for (int v = 0; v < size; v++) {
                 os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
                    << ((original) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : ((ub > domcost[v].cost) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : "inf"));
                 if (v != (size - 1)) {
                     os << ",";
                 }
+                if (elimvars.find(vars[i]->wcspIndex) != elimvars.end() && domcost[v].cost < ub && domcost[v].cost > MIN_COST) {
+                    failed = domcost[v].cost;
+                }
             }
             os << "]},\n";
+            if (failed) {
+                cout << "Warning, cannot preserve problem equivalence when saving the problem due to variable elimination of " << vars[i]->getName() << " (with finite unary cost " << failed << ")" << endl;
+            }
         }
     }
     if (original) { // save the reason of eliminated variables instead of their dummy assignment
         int elimo = getElimOrder();
         for (int i = elimo - 1; i >= 0; i--) {
             elimInfo ei = elimInfos[i];
-            elimvars.insert(ei.x->wcspIndex);
+            assert(ei.x->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0);
             bool failed = false;
             if (ei.xy) {
                 if (ei.xy->ishard()) {

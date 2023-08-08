@@ -878,6 +878,13 @@ void EnumeratedVariable::assignWhenEliminated(Value newValue)
     maxCost = MIN_COST;
 }
 
+void EnumeratedVariable::restoreInitialDomainWhenEliminated()
+{
+    assert(assigned());
+    inf = *(domain.begin());
+    sup = *(domain.rbegin());
+}
+
 void EnumeratedVariable::assign(Value newValue, bool isDecision)
 {
     if (ToulBar2::verbose >= 2)
@@ -1740,6 +1747,9 @@ void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functi
     elimVar(xy);
     assert(getDegree() == 0);
     assert(getCost(support) == MIN_COST);
+    for (iterator iter = begin(); iter != end(); ++iter) { // clear all unary costs because they are already projected on variable x
+        costs[toIndex(*iter)] = deltaCost;
+    }
     assign(support); // warning! dummy assigned value
 }
 

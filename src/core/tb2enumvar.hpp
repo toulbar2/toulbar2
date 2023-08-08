@@ -96,6 +96,7 @@ public:
     void remove(Value value, bool isDecision = false) FINAL;
     void assign(Value newValue, bool isDecision = false) FINAL;
     void assignWhenEliminated(Value newValue);
+    void restoreInitialDomainWhenEliminated();
     void assignLS(Value newValue, ConstraintSet& delayedCtrs, bool force = false) FINAL;
 
     void project(Value value, Cost cost, bool delayed = false); ///< \param delayed if true, it does not check for forbidden cost/value and let node consistency do the job later
