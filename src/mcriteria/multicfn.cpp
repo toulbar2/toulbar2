@@ -477,12 +477,13 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
             }
             if (cost_function[func_ind].arity() >= 4 && nbtuples < prodDom) {
                 Double defcost = cost_function[func_ind].default_cost;
-                if (!isinf(defcost))
+                if (defcost != numeric_limits<Double>::infinity()) {
                     defcost *= weight;
-                if (defcost > max_cost) {
-                    max_cost = defcost;
-                } else if (defcost < min_cost) {
-                    min_cost = defcost;
+                    if (defcost > max_cost) {
+                        max_cost = defcost;
+                    } else if (defcost < min_cost) {
+                        min_cost = defcost;
+                    }
                 }
             }
             assert(max_cost - min_cost >= 0.);
@@ -494,6 +495,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
     }
 
     assert(top >= 0.);
+    assert(top != numeric_limits<Double>::infinity());
     return std::make_pair(top, global_mincost);
 }
 
@@ -614,7 +616,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                 unsigned int own_val_ind = own_var->str_to_index[tb2_var->getValueName(tb2_val_ind)];
 
                 if (cost_function[func_ind].costs[own_val_ind] == numeric_limits<Double>::infinity()) {
-                    // choose an top value wisely...
                     costs[tb2_val_ind] = top;
                 } else {
 
