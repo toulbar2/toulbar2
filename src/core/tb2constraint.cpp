@@ -318,7 +318,7 @@ bool Constraint::ishard()
     Cost cost;
     firstlex();
     while (nextlex(tuple, cost)) {
-        if (cost > MIN_COST && !CUT(cost, wcsp->getUb()))
+        if (cost > MIN_COST && !CUT(cost, wcsp->getUb() - wcsp->getLb()))
             return false;
     }
     return true;
