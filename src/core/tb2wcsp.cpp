@@ -4922,30 +4922,26 @@ void WCSP::dump_CFN(ostream& os, bool original)
             assert(ei.x->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) != 0);
             bool failed = false;
             if (ei.xy) {
-                if (ei.xy->ishard()) {
                 ei.xy->dump_CFN(os, original);
-                } else {
+                if (!ei.xy->ishard()) {
                     failed = true;
                 }
             }
             if (ei.xz) {
-                if (ei.xz->ishard()) {
                 ei.xz->dump_CFN(os, original);
-                } else {
+                if (!ei.xz->ishard()) {
                     failed = true;
                 }
             }
             if (ei.xyz) {
-                if (ei.xyz->ishard()) {
                 ei.xyz->dump_CFN(os, original);
-                } else {
+                if (!ei.xyz->ishard()) {
                     failed = true;
                 }
             }
             if (ei.ctr) {
-                if (ei.ctr->ishard()) {
                 ei.ctr->dump_CFN(os, original);
-                } else {
+                if (!ei.ctr->ishard()) {
                     failed = true;
                 }
             }
