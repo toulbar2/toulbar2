@@ -897,7 +897,7 @@ public:
     // warning: ToulBar2::NormFactor has to be initialized
     pair<Cost, int> Decimal2Cost(const string& decimalToken, const unsigned int lineNumber) const;
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
-    Cost DoubletoCost(const Double& c) const { return (Cost)roundl(c * pow10Cache[ToulBar2::decimalPoint]) + negCost; }
+    Cost DoubletoCost(const Double& c) const { return (Cost)min((Double)(MAX_COST - negCost), roundl(c * pow10Cache[ToulBar2::decimalPoint])) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
     Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / pow10Cache[ToulBar2::decimalPoint] / ToulBar2::costMultiplier); } //Relative costs
     std::string DCost2Decimal(const Double& c)

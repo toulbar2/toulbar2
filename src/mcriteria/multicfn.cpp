@@ -726,9 +726,9 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
                 unsigned int cst_ind;
                 if (cost_function[func_ind].default_cost != numeric_limits<Double>::infinity()) {
-                    cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)roundl((cost_function[func_ind].default_cost * weight - mincost) * pow(10, _tb2_decimalpoint)), cost_function[func_ind].costs.size());
+                    cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)min((Double)MAX_COST, roundl((cost_function[func_ind].default_cost * weight - mincost) * pow(10, _tb2_decimalpoint))), cost_function[func_ind].costs.size());
                 } else {
-                    cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)roundl(top * pow(10, _tb2_decimalpoint)), cost_function[func_ind].costs.size());
+                    cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))), cost_function[func_ind].costs.size());
                 }
 
                 // constraint name
@@ -746,13 +746,13 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     Double cost = cost_function[func_ind].costs[ind_tuple];
 
                     if (cost == numeric_limits<Double>::infinity()) {
-                        wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)roundl(top * pow(10, _tb2_decimalpoint)));
+                        wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))));
                     } else {
                         // do not forget to convert from double to cost for n-ary cost functions
                         if (fabs(weight - 1.) > MultiCFN::epsilon) {
-                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)roundl((cost_function[func_ind].costs[ind_tuple] * weight - mincost) * pow(10, _tb2_decimalpoint)));
+                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
                         } else {
-                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)roundl((cost_function[func_ind].costs[ind_tuple]- mincost) * pow(10, _tb2_decimalpoint)));
+                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost- mincost) * pow(10, _tb2_decimalpoint))));
                         }
                     }
                 }
