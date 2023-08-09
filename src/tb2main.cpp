@@ -1192,7 +1192,7 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
 
-    assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
+    assert(cerr << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 
     string VER; //  release version
     string CMD; //  command line option

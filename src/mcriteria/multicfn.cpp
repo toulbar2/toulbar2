@@ -239,7 +239,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
     // read the cost table
     if (cstr->arity() == 1) {
 
-        cerr << "Warning! Cost function with arity 1 in current WCSP will be ignored by MultiCFN!" << endl;
+        cerr << "Error: cost function with arity 1 in current WCSP will be ignored by MultiCFN!" << endl;
         throw WrongFileFormat();
 
         /* presumably empty -> unary costs are sent to the variables by tb2 */
@@ -498,7 +498,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
         // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
         //     if (ToulBar2::verbose >= 0) {
-        //         cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
+        //         cerr << "Warning! Using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
         //         cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
         //         cerr << "; no upper bound provided" << endl;
         //     }
@@ -511,7 +511,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     // bool global_ub_overflow = false;
     // if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
     //     if (ToulBar2::verbose >= 0) {
-    //         cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    //         cerr << "Warning! Cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
     //     }
     //     global_ub_overflow = true;
     // }

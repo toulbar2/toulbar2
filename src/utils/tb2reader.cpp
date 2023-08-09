@@ -2532,7 +2532,7 @@ void WCSP::read_legacy(istream& file)
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
         bool shared = (arity < 0);
@@ -2906,7 +2906,7 @@ void WCSP::read_legacy(istream& file)
     if ((getSolver() && ((Solver*)getSolver())->getWCSP() == this)) { // checks end of file only if reading the main model
         file >> funcname;
         if (file) {
-            cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+            cerr << "Warning! EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
         }
     }
 
@@ -3080,13 +3080,13 @@ void WCSP::read_uai2008(const char* fileName)
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
             break;
         }
         maxarity = max(maxarity, arity);
 
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
 
@@ -3148,7 +3148,7 @@ void WCSP::read_uai2008(const char* fileName)
     while (it != scopes.end()) {
         file >> ntuples;
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
             break;
         }
         ntuplesarray[ictr] = ntuples;
@@ -3221,7 +3221,7 @@ void WCSP::read_uai2008(const char* fileName)
 
     file >> varname;
     if (file) {
-        cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
+        cerr << "Warning! EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
     }
 
     updateUb(upperbound);
@@ -3731,7 +3731,7 @@ void WCSP::read_wcnf(const char* fileName)
 
     file >> dummy;
     if (file) {
-        cerr << "Warning: EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
+        cerr << "Warning! EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
     }
 
     // apply basic initial propagation AFTER complete network loading
@@ -3816,23 +3816,23 @@ void WCSP::read_qpbo(const char* fileName)
         file >> posx[e];
 
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
             break;
         }
         if (posx[e] > n) {
-            cerr << "Warning: variable index too large!" << endl;
+            cerr << "Warning! Variable index too large!" << endl;
             break;
         }
         file >> posy[e];
         if (posy[e] > n) {
-            cerr << "Warning: variable index too large!" << endl;
+            cerr << "Warning! Variable index too large!" << endl;
             break;
         }
         file >> cost[e];
     }
     file >> dummy;
     if (file) {
-        cerr << "Warning: EOF not reached after reading all the cost sparse matrix (wrong number of nonzero costs too small?)" << endl;
+        cerr << "Warning! EOF not reached after reading all the cost sparse matrix (wrong number of nonzero costs too small?)" << endl;
     }
     m = e;
 

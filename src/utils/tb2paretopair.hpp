@@ -26,7 +26,7 @@ struct ParetoPair {
         : p(p_)
         , q(p_)
     {
-        cerr << "warning! implicit conversion from int to ParetoPair" << endl;
+        cerr << "Error: implicit conversion from int to ParetoPair" << endl;
         throw InternalError();
     }
 

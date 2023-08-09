@@ -226,7 +226,7 @@ public:
         preds[name] = p;
         currentP = p;
         intension = true;
-        cerr << "Warning!!! Predicate " << name << " not implemented, just skip it..." << endl;
+        cerr << "Warning! Predicate " << name << " not implemented, just skip it..." << endl;
     }
 
     virtual void addFormalParameter(int pos, const string& name,

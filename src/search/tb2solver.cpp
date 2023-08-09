@@ -2725,7 +2725,7 @@ void Solver::beginSolve(Cost ub)
         throw BadConfiguration();
     }
     if ((ToulBar2::hve <= 0 || ToulBar2::pwc < 0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
-        cerr << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
+        cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
 

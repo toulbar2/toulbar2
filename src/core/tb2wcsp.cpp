@@ -4610,7 +4610,7 @@ void WCSP::print(ostream& os)
 void printClique(ostream& os, int arity, Constraint* ctr)
 {
     if (arity > MAX_ARITY / 10) {
-        cerr << "warning! cost function arity is too large for primal graph representation." << endl;
+        cerr << "Warning! Cost function arity is too large for primal graph representation." << endl;
         return;
     }
     for (int i = 0; i < arity - 1; i++) {
@@ -4808,7 +4808,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
 
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->getInf() < 0 || !vars[i]->enumerated()) {
-            cerr << "Cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
+            cerr << "Error: cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
             throw InternalError();
         }
     }
@@ -4831,7 +4831,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
     unsigned int ivar = 0;
     os << "\"variables\":{\n";
     if (!original && nvars != vars.size()) {
-        cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
+        cout << "Warning! The following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
         assert(enumerated(i));
@@ -4911,7 +4911,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             }
             os << "]},\n";
             if (failed) {
-                cout << "Warning, cannot preserve problem equivalence when saving the problem due to variable elimination of " << vars[i]->getName() << " (with finite unary cost " << failed << ")" << endl;
+                cerr << "Warning! Cannot preserve problem equivalence when saving the problem due to variable elimination of " << vars[i]->getName() << " (with finite unary cost " << failed << ")" << endl;
             }
         }
     }
@@ -4946,7 +4946,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 }
             }
             if (failed) {
-                cout << "Warning, cannot preserve problem equivalence when saving the problem due to variable elimination of " << ei.x->getName() << endl;
+                cerr << "Warning! Cannot preserve problem equivalence when saving the problem due to variable elimination of " << ei.x->getName() << endl;
             }
         }
     }
