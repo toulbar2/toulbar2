@@ -2413,6 +2413,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         postKnapsackConstraint(scopeIndex, arity, file, false, true, true);
     } else if (gcname == "knapsackp") {
         postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+    } else if (gcname == "knapsackv") {
+        postKnapsackConstraint(scopeIndex, arity, file, false, 2, false);
     } else if (gcname == "knapsack") {
         postKnapsackConstraint(scopeIndex, arity, file, false, false, false);
     } else if (gcname == "cfnconstraint") {
@@ -2517,7 +2519,7 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 #endif
 }
 
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict)
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict)
 {
     assert(ToulBar2::bilevel <= 1);
     // Eliminate variable with weight 0
@@ -2557,7 +2559,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
     int CurrentVarIdx;
-    for (int i = 0; i < arity; ++i) {
+    for (int i = 0; i < ((kp>1)?1:arity); ++i) {
         CurrentVarIdx = VarIdx[i];
         if (!kp) {
             file >> readw;
@@ -2574,6 +2576,9 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         } else {
             file >> readnbval;
             for (int j = 0; j < readnbval; ++j) {
+                if (kp>1) {
+                    file >> CurrentVarIdx;
+                }
                 file >> readv1;
                 if (scopeVars[CurrentVarIdx]->canbe(readv1)) {
                     if (!isclique) {
@@ -4625,7 +4630,7 @@ void printClique(ostream& os, int arity, Constraint* ctr)
     }
 }
 
-// Warning! make the assumption that all initial domains start at zero!!!
+// Warning! make the assumption that all initial domains start from zero!!! If not then it assumes positive values and it will extend the domain starting from zero. It means we always print values and not indexes in cost functions.
 void WCSP::dump(ostream& os, bool original)
 {
     Value maxdomsize = 0;
@@ -4800,6 +4805,7 @@ void WCSP::dump(ostream& os, bool original)
     }
 }
 
+// Warning, in cost functions, we print value names or indices (but not values as in wcsp format)!!!
 void WCSP::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;

@@ -2072,7 +2072,7 @@ public:
                     os << endl;
                 }
             } else {
-                os << " " << 0 << " " << getDomainSizeProduct() << endl;
+                os << " " << wcsp->getUb() << " " << getDomainSizeProduct() << endl;
                 Tuple t;
                 Cost c;
                 firstlex();
@@ -2135,7 +2135,7 @@ public:
                     os << endl;
                 }
             } else {
-                os << " " << 0 << " " << getDomainSizeProduct() << endl;
+                os << " " << wcsp->getUb() << " " << getDomainSizeProduct() << endl;
                 Tuple t;
                 Cost c;
                 firstlex();
@@ -2150,7 +2150,6 @@ public:
         }
     }
 
-    //TODO: case with knapsackc
     void dump_CFN(ostream& os, bool original = true) override
     {
         bool printed = false;
@@ -2166,7 +2165,10 @@ public:
                 }
             }
         }
-
+        if (!AMO.empty()) { //TODO: cfn reader for knapsackc
+            cerr << "Error: cannot save file in cfn format with knapsack constraints including at-most-one constraints (knapsackc)!" << endl;
+            throw WrongFileFormat();
+        }
         if (original) {
             printed = false;
             for (int i = 0; i < arity_; i++) {
@@ -2184,25 +2186,34 @@ public:
                 os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
-            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << Original_capacity << ",\n\t\"weightedvalues\":[";
 
             if (iszerodeltas) {
+                Long wnot = 0;
+                for (int i = 0; i < arity_; i++) {
+                    if (!NotVarVal[i].empty())
+                        wnot += weights[i].back();
+                }
+                os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
-                    if (printed)
-                        os << ",";
-                    os << "[";
-                    bool printedbis = false;
-                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                        if (printedbis)
-                            os << ",";
-                        os << "[" << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
-                        printedbis = true;
+                    if (NotVarVal[i].empty()) {
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            if (printed)
+                                os << ",";
+                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
+                            printed = true;
+                        }
+                    } else {
+                        for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                            if (printed)
+                                os << ",";
+                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                            printed = true;
+                        }
                     }
-                    printed = true;
-                    os << "]";
                 }
             } else {
+                os << "],\n\"defaultcost\":" << wcsp->Cost2RDCost(wcsp->getUb()) << ",\n\"costs\":[";
                 Tuple t;
                 Cost c;
                 printed = false;
@@ -2235,29 +2246,40 @@ public:
                     os << "\"" << scope[i]->getName() << "\"";
                     printed = true;
                 }
-            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weightedvalues\":[";
 
             if (iszerodeltas) {
+                Long wnot = 0;
+                for (int i = 0; i < arity_; i++) {
+                    if (!NotVarVal[i].empty())
+                        wnot += weights[i].back();
+                }
+                os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
                     if (scope[i]->unassigned()) {
-                        if (printed)
-                            os << ",";
-                        os << "[";
-                        bool printedbis = false;
-                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                            if (printedbis)
-                                os << ",";
-                            if (scope[i]->canbe(VarVal[i][j]) && weights[i][j] > 0) {
-                                os << "[" << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
-                                printedbis = true;
+                        if (NotVarVal[i].empty()) {
+                            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                                if (scope[i]->canbe(VarVal[i][j])) {
+                                    if (printed)
+                                        os << ",";
+                                    os << "[" << scope[i]->getName() << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
+                                    printed = true;
+                                }
+                            }
+                        } else {
+                            for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                                if (scope[i]->canbe(VarVal[i][j])) {
+                                    if (printed)
+                                        os << ",";
+                                    os << "[" << scope[i]->getName() << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                                    printed = true;
+                                }
                             }
                         }
-                        printed = true;
-                        os << "]";
                     }
                 }
             } else {
+                os << "],\n\"defaultcost\":" << wcsp->Cost2RDCost(wcsp->getUb()) << ",\n\"costs\":[";
                 Tuple t;
                 Cost c;
                 printed = false;

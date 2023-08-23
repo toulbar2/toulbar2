@@ -536,12 +536,12 @@ public:
 
     void addAMOConstraints();
 
-    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false)
+    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false)
     {
         istringstream file(arguments);
         return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict);
     }
-    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict); // warning! scopeIndex may be modified internally.
+    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict); // warning! scopeIndex may be modified internally.
 
     int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
 
