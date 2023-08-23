@@ -3385,9 +3385,14 @@ bool Solver::solve(bool first)
                                                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                                                     }
                                                 }
+                                                int vac = ToulBar2::vac;
+                                                if (ToulBar2::vac) {
+                                                    ToulBar2::vac = Store::getDepth() + 1; // enforces VAC at each new diverse solution found if VAC required
+                                                }
                                                 vector<int> revdac = wcsp->getBergeDecElimOrder();
                                                 wcsp->enforceUb();
                                                 wcsp->setDACOrder(revdac);
+                                                ToulBar2::vac = vac;
                                                 initGap(wcsp->getLb(), wcsp->getUb());
                                                 hybridSolve(); // do not give prevDivSolutionCost as initial lower bound because it will generate too many open nodes with the same lower bound
                                             } catch (const DivSolutionOut&) {
