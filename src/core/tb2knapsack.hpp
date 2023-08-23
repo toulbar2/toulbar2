@@ -2212,22 +2212,26 @@ public:
                         }
                     }
                 }
+                os << "]}},\n";
             } else {
-                os << "],\n\"defaultcost\":" << wcsp->Cost2RDCost(wcsp->getUb()) << ",\n\"costs\":[";
+                os << "],\n\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(wcsp->getUb())) << ",\n\"costs\":[";
                 Tuple t;
                 Cost c;
                 printed = false;
                 firstlex();
                 while (nextlex(t, c)) {
-                    os << endl;
-                    for (int i = 0; i < arity_; i++) {
-                        if (printed)
-                            os << ",";
-                        os << t[i];
-                        printed = true;
+                    if (c < wcsp->getUb()) {
+                        os << endl;
+                        for (int i = 0; i < arity_; i++) {
+                            if (printed)
+                                os << ",";
+                            os << t[i];
+                            printed = true;
+                        }
+                        os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
                     }
-                    os << "," << wcsp->Cost2RDCost(c);
                 }
+                os << "]},\n";
             }
         } else {
             for (int i = 0; i < arity_; i++)
@@ -2278,27 +2282,30 @@ public:
                         }
                     }
                 }
+                os << "]}},\n";
             } else {
-                os << "],\n\"defaultcost\":" << wcsp->Cost2RDCost(wcsp->getUb()) << ",\n\"costs\":[";
+                os << "],\n\"defaultcost\":inf,\n\"costs\":[";
                 Tuple t;
                 Cost c;
                 printed = false;
                 firstlex();
                 while (nextlex(t, c)) {
-                    os << endl;
-                    for (int i = 0; i < arity_; i++) {
-                        if (scope[i]->unassigned()) {
-                            if (printed)
-                                os << ",";
-                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
-                            printed = true;
+                    if (c < wcsp->getUb()) {
+                        os << endl;
+                        for (int i = 0; i < arity_; i++) {
+                            if (scope[i]->unassigned()) {
+                                if (printed)
+                                    os << ",";
+                                os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
+                                printed = true;
+                            }
                         }
+                        os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
                     }
-                    os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), c));
                 }
+                os << "]},\n";
             }
         }
-        os << "]}},\n";
     }
 };
 #endif /*TB2KNAPSACK_HPP_*/

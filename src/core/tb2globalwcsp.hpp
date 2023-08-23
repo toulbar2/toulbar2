@@ -781,10 +781,10 @@ public:
         os << "],\"type\": \"cfnconstraint\",\"params\":{\n\"cfn\":\n";
         if (problem) {
             problem->dump_CFN(os, original);
-            os << ",\n\"lb\":" << problem->Cost2ADCost(lb) << ",\"ub\":" << problem->Cost2ADCost(ub) << ",\"duplicatehard\":" << problem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
+            os << ",\n\"lb\":" << wcsp->DCost2Decimal(problem->Cost2ADCost(lb)) << ",\"ub\":" << wcsp->DCost2Decimal(problem->Cost2ADCost(ub)) << ",\"duplicatehard\":" << problem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
         } else if (negproblem) {
             negproblem->dump_CFN(os, original);
-            os << ",\n\"lb\":" << negproblem->Cost2ADCost(-ub + negCost) << ",\"ub\":" << negproblem->Cost2ADCost(-lb + negCost) << ",\"duplicatehard\":" << negproblem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
+            os << ",\n\"lb\":" << wcsp->DCost2Decimal(negproblem->Cost2ADCost(-ub + negCost)) << ",\"ub\":" << wcsp->DCost2Decimal(negproblem->Cost2ADCost(-lb + negCost)) << ",\"duplicatehard\":" << negproblem->isfinite() << ",\"strongduality\":" << strongDuality << "}},\n";
         }
     }
 
