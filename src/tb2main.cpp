@@ -1087,6 +1087,9 @@ void help_msg(char* toulbar2filename)
     cout << " or:                                                                               " << endl;
     cout << "      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)" << endl;
     cout << " or:                                                                               " << endl;
+    cout << "      wcolor-{n}-{d}-0-{p2}-{seed} random weighted graph coloring problem" << endl;
+    cout << "                                                      :p2 is the number of edges" << endl;
+    cout << " or:                                                                               " << endl;
     cout << "      vertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{seed}  :t1 is the tightness (should be equal to 25)" << endl;
     cout << "                                                      :p2 is the number of edges" << endl;
     cout << "                                                      :maxcost each vertex has a weight randomly chosen between 0 and maxcost" << endl;

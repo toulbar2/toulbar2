@@ -1976,7 +1976,7 @@ public:
                 os << ",";
         }
         os << ") "
-           << " <= " << capacity << " <= " << MaxWeight << " / " << lb << " - " << assigneddeltas << " (";
+           << " >= " << capacity << " <= " << MaxWeight << " \\ " << lb << " - " << assigneddeltas << " (";
         for (int i = 0; i < arity_; i++) {
             if (AMO.empty()) {
                 for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
