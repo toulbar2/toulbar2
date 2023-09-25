@@ -14,7 +14,7 @@
 /*   Long() : p(0) {} */
 /*   Long(const Long &l) : p(l.p) {} */
 /*   Long(const long long v) : p(v) {} */
-/*   double to_double() const {return (double) p;} */
+/*   Double to_double() const {return (Double) p;} */
 
 /*   Long &operator=(const Long &r) { */
 /* 	p = r.p; */

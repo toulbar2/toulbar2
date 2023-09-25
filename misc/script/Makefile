@@ -1,4 +1,4 @@
-SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
+SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
 
 # Comment the following line if BOOST Graph library uninstalled
 BOOST = -DBOOST
@@ -53,10 +53,10 @@ CFLAGS = -std=c++17 -g -Wall -I. -I./pils/src $(ILOGFLAGS) $(BOOST) $(XMLI) -DLO
 # -Wconversion # catch type conversion from larger to smaller type (e.g., Cost to int)
 
 OFLAGS = -O3 -DNDEBUG
-# -O3 -DNDEBUG
 
-PFLAGS =
+PFLAGS = 
 # -pg -g3
+# -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3
 
 BUILD = $(CC) -shared
 
@@ -83,6 +83,6 @@ iloglue: iloglue.cpp libtb2.so
 	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lboost_graph -lboost_iostreams -lgmp -lz -lbz2 -llzma
 
 clean:
-	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o pils/src/exe/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
+	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o pils/src/exe/*.o mcriteria/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
 
 all: toulbar2

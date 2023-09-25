@@ -696,7 +696,7 @@ public:
         //        }
         assert(capacity > 0);
         assert(MaxWeight > 0);
-        return ((double)capacity / (double)MaxWeight); // * ucost ???
+        return (double)((Double)capacity / (Double)MaxWeight); // * ucost ???
     }
 
     //TODO: needed for dominance test by DEE

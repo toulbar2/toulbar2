@@ -124,14 +124,14 @@ public:
      * \param wcsp the wcsp to add
      * \param weight the weight of the wcsp in the objective function (sum of the cost functions)
      */
-    void push_back(WCSP* wcsp, double weight = 1.0);
+    void push_back(WCSP* wcsp, Double weight = 1.0);
 
     /*!
      * \brief set the weight of the cost functions of one of the network
      * \param wcsp_index the index of the network to modify
      * \param weight the new weight
      */
-    void setWeight(unsigned int wcsp_index, double weight);
+    void setWeight(unsigned int wcsp_index, Double weight);
 
     /*!
      * \brief get the wieght of a network
@@ -259,13 +259,13 @@ public: // public attributes
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
 private: // private attributes
-    std::vector<double> weights; // list of weights for all the loaded networks
+    std::vector<Double> weights; // list of weights for all the loaded networks
     std::vector<std::string> network_names; // names of the networks
     std::vector<std::vector<unsigned int>> networks; // list of the cost function networks (function indexes for each network)
     std::vector<unsigned int> network_index; // index of the network for each cost function
 
-    std::vector<double> _doriginal_ubs; // list of original upper bounds (as Double) for each network
-    std::vector<double> _doriginal_lbs; // list of original lower bounds (as Double) for each network
+    std::vector<Double> _doriginal_ubs; // list of original upper bounds (as Double) for each network
+    std::vector<Double> _doriginal_lbs; // list of original lower bounds (as Double) for each network
     std::vector<Double> _original_costMultipliers; // list of cost multipliers of all the original wcsp
 
     unsigned int _tb2_decimalpoint; // precision of the wcsp

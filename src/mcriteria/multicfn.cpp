@@ -54,7 +54,7 @@ void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria:
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::push_back(WCSP* wcsp, double weight)
+void MultiCFN::push_back(WCSP* wcsp, Double weight)
 {
 
     // create a new network
@@ -380,7 +380,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::setWeight(unsigned int network_index, double weight)
+void MultiCFN::setWeight(unsigned int network_index, Double weight)
 {
     weights[network_index] = weight;
 }
@@ -528,7 +528,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
     /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
     /* top is increased if global_ub > 0 */
-    /* top is expressed as a double */
+    /* top is expressed as a Double */
     if (global_lb + global_mincost < 0) {
         top -= global_lb + global_mincost;
     } else {
@@ -579,7 +579,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     // create the cost functions
     for (unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind++) {
 
-        double weight = weights[network_index[func_ind]];
+        Double weight = weights[network_index[func_ind]];
 
         if (cost_function[func_ind].scope.size() == 1) { // unary cost functions
 
@@ -749,7 +749,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     if (cost == numeric_limits<Double>::infinity()) {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))));
                     } else {
-                        // do not forget to convert from double to cost for n-ary cost functions
+                        // do not forget to convert from Double to cost for n-ary cost functions
                         if (fabs(weight - 1.) > MultiCFN::epsilon) {
                             wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
                         } else {

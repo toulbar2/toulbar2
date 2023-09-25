@@ -30,7 +30,7 @@ struct ParetoPair {
         throw InternalError();
     }
 
-    double to_double() const
+    Double to_double() const
     {
         cerr << "to_double not implemented on Paretopair";
         throw InternalError();
@@ -167,7 +167,7 @@ const ParetoPair PARETOPAIR_3 = ParetoPair(3, 3);
 const ParetoPair PARETOPAIR_100 = ParetoPair(100, 100);
 const ParetoPair PARETOPAIR_MAX = ParetoPair((INT_MAX / 2) / 3 / 3, (INT_MAX / 2) / 3 / 3);
 
-inline double to_double(const ParetoPair r)
+inline Double to_double(const ParetoPair r)
 {
     cerr << "to_double not implemented on Paretopair";
     throw InternalError();
@@ -223,15 +223,15 @@ inline ParetoPair MAX(ParetoPair a, ParetoPair b)
     else
         throw InternalError();
 }
-inline ParetoPair MULT(ParetoPair a, double b)
+inline ParetoPair MULT(ParetoPair a, Double b)
 {
     assert(b < INT_MAX);
     if (a >= PARETOPAIR_MAX)
         return PARETOPAIR_MAX;
     else if (b <= UNIT_COST)
-        return ParetoPair(a.p * b, a.q * b);
-    else if (a.p < PARETOPAIR_MAX.p / b && a.q < PARETOPAIR_MAX.q / b)
-        return ParetoPair(a.p * b, a.q * b);
+        return ParetoPair((int)((Double)a.p * b), (int)((Double)a.q * b));
+    else if (a.p < (int)((Double)PARETOPAIR_MAX.p / b) && a.q < (int)((Double)PARETOPAIR_MAX.q / b))
+        return ParetoPair(((int)((Double)a.p * b), (int)((Double)a.q * b));
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         throw InternalError();

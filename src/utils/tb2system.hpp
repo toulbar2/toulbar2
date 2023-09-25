@@ -152,9 +152,9 @@ inline __float128 Log1p(__float128 x) { return log1pq(x); }
 #endif
 
 #if defined(INT_COST) || defined(SHORT_COST)
-inline double to_double(const int cost)
+inline Double to_double(const int cost)
 {
-    return (double)cost;
+    return (Double)cost;
 }
 inline int ceil(const int e) { return e; }
 inline int floor(const int e) { return e; }
@@ -209,9 +209,9 @@ inline int cost2log2gub(int x) { return cost2log2(x); }
 #endif
 
 #ifdef LONGLONG_COST
-inline double to_double(const Long cost)
+inline Double to_double(const Long cost)
 {
-    return (double)cost;
+    return (Double)cost;
 }
 inline Long ceil(const Long e) { return e; }
 inline Long floor(const Long e) { return e; }

@@ -110,7 +110,7 @@ bool ToulBar2::RASPSreset;
 int ToulBar2::RASPSnbStrictACVariables;
 Cost ToulBar2::RASPSlastitThreshold;
 bool ToulBar2::RASPSsaveitThresholds;
-vector<pair<Cost, double>> ToulBar2::RASPSitThresholds;
+vector<pair<Cost, Double>> ToulBar2::RASPSitThresholds;
 int ToulBar2::RASPSangle;
 Long ToulBar2::RASPSnbBacktracks;
 int ToulBar2::debug;
@@ -147,7 +147,7 @@ bool ToulBar2::sortDomains;
 int ToulBar2::constrOrdering;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 bool ToulBar2::solutionBasedPhaseSaving;
-double ToulBar2::bisupport;
+Double ToulBar2::bisupport;
 int ToulBar2::lds;
 bool ToulBar2::limited;
 Long ToulBar2::restart;
@@ -210,12 +210,12 @@ Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 string ToulBar2::costThresholdS;
 string ToulBar2::costThresholdPreS;
-double ToulBar2::trwsAccuracy;
+Double ToulBar2::trwsAccuracy;
 bool ToulBar2::trwsOrder;
 unsigned int ToulBar2::trwsNIter;
 unsigned int ToulBar2::trwsNIterNoChange;
 unsigned int ToulBar2::trwsNIterComputeUb;
-double ToulBar2::costMultiplier;
+Double ToulBar2::costMultiplier;
 unsigned int ToulBar2::decimalPoint;
 string ToulBar2::deltaUbS;
 Cost ToulBar2::deltaUb;
@@ -231,7 +231,7 @@ unsigned int ToulBar2::divRelax;
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
-double ToulBar2::qpboQuadraticCoefMultiplier;
+Double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
 
 bool ToulBar2::addAMOConstraints;
@@ -269,7 +269,7 @@ std::atomic<bool> ToulBar2::interrupted;
 bool ToulBar2::learning;
 
 int ToulBar2::seed;
-double ToulBar2::sigma;
+Double ToulBar2::sigma;
 
 string ToulBar2::incop_cmd;
 string ToulBar2::pils_cmd;
@@ -315,7 +315,7 @@ Cost ToulBar2::verifiedOptimum;
 
 int ToulBar2::bilevel;
 vector<unsigned int> ToulBar2::decimalPointBLP;
-vector<double> ToulBar2::costMultiplierBLP;
+vector<Double> ToulBar2::costMultiplierBLP;
 vector<Cost> ToulBar2::negCostBLP;
 vector<Cost> ToulBar2::initialLbBLP;
 vector<Cost> ToulBar2::initialUbBLP;
@@ -1035,8 +1035,8 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
         }
     }
 
-    long double minCost = std::numeric_limits<long double>::infinity();
-    for (long double cost : dcosts) {
+    Double minCost = std::numeric_limits<Double>::infinity();
+    for (Double cost : dcosts) {
         minCost = min(minCost, cost);
     }
 
@@ -1115,8 +1115,8 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
         }
     }
 
-    long double minCost = std::numeric_limits<long double>::infinity();
-    for (long double cost : dcosts) {
+    Double minCost = std::numeric_limits<Double>::infinity();
+    for (Double cost : dcosts) {
         minCost = min(minCost, cost);
     }
 
@@ -4553,8 +4553,8 @@ void WCSP::printNCBuckets()
 
             assert((*iter)->canbe((*iter)->getMaxCostValue()));
             assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost() || !LUBTEST((*iter)->getMaxCost(), (*iter)->getCost((*iter)->getMaxCostValue())));
-            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)powl(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
-            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < (Long)powl(2., bucket + 1));
+            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= powl(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
+            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < powl(2., bucket + 1));
         }
         cout << endl;
     }

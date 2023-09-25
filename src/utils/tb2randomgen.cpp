@@ -346,7 +346,7 @@ long long naryRandom::toIndex(vector<int>& index)
 {
     long long result = 1;
     for (int i = 0; i < (int)index.size(); i++)
-        result += (long long)powl((double)n, i) * index[i];
+        result += (long long)powl((Double)n, (Double)i) * index[i];
     return result;
 }
 

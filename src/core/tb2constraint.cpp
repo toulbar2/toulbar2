@@ -527,8 +527,8 @@ bool Constraint::cmpConstraintLAG(Constraint* c1, Constraint* c2)
     if (!k && k1)
         return true;
     if (k && k1) {
-        double v1 = k->getLag();
-        double v2 = k1->getLag();
+        Double v1 = k->getLag();
+        Double v2 = k1->getLag();
         if (v1 == v2)
             return k->computeTightness() < k1->computeTightness();
         return (v1 < v2);
@@ -545,8 +545,8 @@ bool Constraint::cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLin
     if (!k && k1)
         return true;
     if (k && k1) {
-        double v1 = k->getLag();
-        double v2 = k1->getLag();
+        Double v1 = k->getLag();
+        Double v2 = k1->getLag();
         if (v1 == v2)
             return k->computeTightness() < k1->computeTightness();
         return (v1 < v2);

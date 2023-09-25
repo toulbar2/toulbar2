@@ -288,7 +288,7 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<MultiCFN>(m, "MultiCFN")
         .def(py::init())
-        .def("push_back", [](MultiCFN& multicfn, WeightedCSP* wcsp, double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
+        .def("push_back", [](MultiCFN& multicfn, WeightedCSP* wcsp, Double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
         .def("setWeight", &MultiCFN::setWeight)
         .def("nbNetworks", &MultiCFN::nbNetworks)
         .def("nbVariables", &MultiCFN::nbVariables)

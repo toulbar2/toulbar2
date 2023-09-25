@@ -937,7 +937,7 @@ void VACExtension::queueSeekSupport(DLink<VariableWithTimeStamp>* link)
 void VACExtension::printStat(bool ini)
 {
     if (ToulBar2::verbose >= 1) {
-        long double mean = to_double(sumlb) / (long double)nlb;
+        Double mean = to_double(sumlb) / (Double)nlb;
         cout << "VAC mean lb/incr: " << std::setprecision(DECIMAL_POINT) << mean << "     total increments: " << nlb
              << "     cyclesize: " << (double)sumvars / (double)nlb << "     k: " << (double)sumk / (double)nlb << " (mean), " << theMaxK << " (max)" << endl;
     }

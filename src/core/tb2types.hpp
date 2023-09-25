@@ -184,15 +184,15 @@ inline Cost MIN(Cost a, Cost b)
     return min(a, b);
 }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
-inline Cost MULT(Cost a, double b)
+inline Cost MULT(Cost a, Double b)
 {
     assert(b < MAX_COST);
     if (a >= MAX_COST)
         return MAX_COST;
     else if (b <= UNIT_COST)
-        return a * b;
-    else if (a < MAX_COST / b)
-        return a * b;
+        return (Cost)((Double)a * b);
+    else if (a < (Double)MAX_COST / b)
+        return (Cost)((Double)a * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         throw InternalError();
@@ -276,15 +276,15 @@ inline Cost MIN(Cost a, Cost b)
     return min(a, b);
 }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
-inline Cost MULT(Cost a, double b)
+inline Cost MULT(Cost a, Double b)
 {
     assert(b < MAX_COST);
     if (a >= MAX_COST)
         return MAX_COST;
     else if (b <= UNIT_COST)
-        return a * b;
-    else if (a < MAX_COST / b)
-        return a * b;
+        return (Cost)((Double)a * b);
+    else if (a < (Double)MAX_COST / b)
+        return (Cost)((Double)a * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         throw InternalError();
@@ -383,15 +383,15 @@ inline Cost MIN(Cost a, Cost b)
     return min(a, b);
 }
 inline Cost MAX(Cost a, Cost b) { return max(a, b); }
-inline Cost MULT(Cost a, double b)
+inline Cost MULT(Cost a, Double b)
 {
     assert(b < MAX_COST);
     if (a >= MAX_COST)
         return MAX_COST;
     else if (b <= UNIT_COST)
-        return (Cost)((double)a * b);
-    else if (a < (double)MAX_COST / b)
-        return (Cost)((double)a * b);
+        return (Cost)((Double)a * b);
+    else if (a < (Double)MAX_COST / b)
+        return (Cost)((Double)a * b);
     else {
         cerr << "Error: cost multiplication overflow!" << endl;
         throw InternalError();
@@ -744,7 +744,7 @@ public:
     static int RASPSnbStrictACVariables; ///< \internal do not use
     static Cost RASPSlastitThreshold; ///< \internal do not use
     static bool RASPSsaveitThresholds; ///< \internal do not use
-    static vector<pair<Cost, double>> RASPSitThresholds; ///< \internal do not use
+    static vector<pair<Cost, Double>> RASPSitThresholds; ///< \internal do not use
 
     static int debug; ///< \brief debug mode(0: no debug, 1: current search depth and statics on nogoods for BTD, 2: idem plus some information on heuristics, 3: idem plus save problem at each node if verbose >= 1) (command line option -Z)
     static string externalUB; ///< \brief initial upper bound in CFN format
@@ -763,7 +763,7 @@ public:
     static bool sortDomains; ///< \brief sorts domains in preprocessing based on increasing unary costs (command line option -sortd) \warning Works only for binary WCSPs.
     static map<int, ValueCost*> sortedDomains; ///< \internal do not use
     static bool solutionBasedPhaseSaving; ///< \brief solution-based phase saving value heuristic (command line option -solr)
-    static double bisupport; ///< \brief value heuristic in bi-objective optimization when the second objective is encapsulated by a bounding constraint (command line option -bisupport)
+    static Double bisupport; ///< \brief value heuristic in bi-objective optimization when the second objective is encapsulated by a bounding constraint (command line option -bisupport)
     static int elimDegree; ///< \brief boosting search with variable elimination of small degree (0: no variable elimination, 1: linked to at most one binary cost function, 2: linked to at most two binary cost functions, 3: linked to at most one ternary cost function and two scope-included cost functions) (command line option -e)
     static int elimDegree_preprocessing; ///< \brief  in preprocessing, generic variable elimination of degree less than or equal to a given value (0: no variable elimination) (command line option -p)
     static int elimDegree_; ///< \internal do not use
@@ -821,12 +821,12 @@ public:
     static string costThresholdPreS; ///< \brief in preprocessing, threshold cost value for VAC in CFN format (command line option -P)
     static Cost costThreshold; ///< \brief threshold cost value for VAC (command line option -T)
     static Cost costThresholdPre; ///< \brief in preprocessing, threshold cost value for VAC (command line option -P)
-    static double trwsAccuracy; ///< \brief in preprocessing , enforces TRW-S until a given accuracy is reached (command line option -trws)
+    static Double trwsAccuracy; ///< \brief in preprocessing , enforces TRW-S until a given accuracy is reached (command line option -trws)
     static bool trwsOrder; ///< \brief replaces DAC order by Kolmogorov's TRW-S order (command line option --trws-order)
     static unsigned int trwsNIter; ///< \brief enforces at most n iterations of TRW-S (command line option --trws-n-iters)
     static unsigned int trwsNIterNoChange; ///< \brief stops TRW-S when n iterations did not change the lower bound (command line option --trws-n-iters-no-change)
     static unsigned int trwsNIterComputeUb; ///< \brief computes an upper bound every n steps in TRW-S (command line option --trws-n-iters-compute-ub)
-    static double costMultiplier; ///< \brief multiplies all costs internally by this number when loading a problem in WCSP format (command line option -C)
+    static Double costMultiplier; ///< \brief multiplies all costs internally by this number when loading a problem in WCSP format (command line option -C)
     static unsigned int decimalPoint; ///< \internal do not use
     static string deltaUbS; ///< \brief stops search if the absolute optimality gap reduces below a given value in CFN format (command line option -agap)
     static Cost deltaUb; ///< \internal do not use
@@ -839,7 +839,7 @@ public:
     static int maxEACIter; ///< \brief maximum number of iterations in EDAC before switching to FDAC
     static bool wcnf; ///< \internal do not use
     static bool qpbo; ///< \internal do not use
-    static double qpboQuadraticCoefMultiplier; ///< \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
+    static Double qpboQuadraticCoefMultiplier; ///< \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
     static bool opb; ///< \internal do not use
 
     static bool addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
@@ -891,7 +891,7 @@ public:
     static externalfunc timeOut; ///< \internal do not use
     static std::atomic<bool> interrupted; ///< \internal do not use
     static int seed; ///< \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
-    static double sigma; ///< \brief initial random noise standard deviation to be added to energy values when reading UAI format files (command line option -sigma)
+    static Double sigma; ///< \brief initial random noise standard deviation to be added to energy values when reading UAI format files (command line option -sigma)
 
     static string incop_cmd; ///< \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
     static string pils_cmd; ///< \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)
@@ -938,7 +938,7 @@ public:
 
     static int bilevel; ///< \brief bilevel optimization using modified BTD with (at least) four clusters (P0 -> P1, P0 -> P2, P0 -> NegP2) corresponding to the restricted leader problem (P0 and P1), the follower problem (P2), and the negative follower problem (NegP2) (command line option -bilevel)
     static vector<unsigned int> decimalPointBLP;
-    static vector<double> costMultiplierBLP;
+    static vector<Double> costMultiplierBLP;
     static vector<Cost> negCostBLP;
     static vector<Cost> initialLbBLP;
     static vector<Cost> initialUbBLP;
@@ -947,7 +947,7 @@ public:
 #if defined(INT_COST) || defined(SHORT_COST)
 inline Cost rounding(Cost lb)
 {
-    return (((lb % max(UNIT_COST, (Cost)floor(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floor(ToulBar2::costMultiplier)) : lb);
+    return (((lb % max(UNIT_COST, (Cost)floorl(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floorl(ToulBar2::costMultiplier)) : lb);
 }
 inline bool CUT(Cost lb, Cost ub) { return rounding(lb) >= ub; }
 inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
@@ -956,7 +956,7 @@ inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
 #ifdef LONGLONG_COST
 inline Cost rounding(Cost lb)
 {
-    return (((lb % max(UNIT_COST, (Cost)floor(std::abs(ToulBar2::costMultiplier)))) != MIN_COST) ? (lb + (Cost)floor(std::abs(ToulBar2::costMultiplier))) : lb);
+    return (((lb % max(UNIT_COST, (Cost)floorl(std::abs(ToulBar2::costMultiplier)))) != MIN_COST) ? (lb + (Cost)floorl(std::abs(ToulBar2::costMultiplier))) : lb);
 }
 inline bool CUT(Cost lb, Cost ub)
 {

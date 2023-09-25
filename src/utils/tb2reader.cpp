@@ -2207,7 +2207,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
         if (ToulBar2::externalUB.size()) {
             Cost top = string2Cost(ToulBar2::externalUB.c_str());
-            double K = ToulBar2::costMultiplier;
+            Double K = ToulBar2::costMultiplier;
             if (top < MAX_COST / K)
                 top = top * K;
             else
@@ -2493,7 +2493,7 @@ void WCSP::read_legacy(istream& file)
     if (ToulBar2::verbose >= 1)
         cout << "Read problem: " << pbname << endl;
 
-    double K = ToulBar2::costMultiplier;
+    Double K = ToulBar2::costMultiplier;
     if (top < MAX_COST / K)
         top = top * K;
     else
@@ -2962,7 +2962,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 {
     if (ToulBar2::externalUB.size()) {
         Cost top = string2Cost(ToulBar2::externalUB.c_str());
-        double K = ToulBar2::costMultiplier;
+        Double K = ToulBar2::costMultiplier;
         if (top < MAX_COST / K)
             top = top * K;
         else
@@ -3573,7 +3573,7 @@ void WCSP::read_wcnf(const char* fileName)
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
 
-    double K = ToulBar2::costMultiplier;
+    Double K = ToulBar2::costMultiplier;
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
 
@@ -3666,6 +3666,9 @@ void WCSP::read_wcnf(const char* fileName)
                         tautology = true;
                         if (ToulBar2::verbose >= 3)
                             cout << j << " is a tautology! skipped.";
+                    } else {
+                        tup.pop_back();
+                        scopeIndex.resize(arity);
                     }
                     continue;
                 }
@@ -3815,7 +3818,7 @@ void WCSP::read_qpbo(const char* fileName)
 
     vector<int> posx(m, 0);
     vector<int> posy(m, 0);
-    vector<double> cost(m, 0.);
+    vector<Double> cost(m, 0.);
     for (e = 0; e < m; e++) {
         file >> posx[e];
 
