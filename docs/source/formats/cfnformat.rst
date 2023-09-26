@@ -485,7 +485,7 @@ Global cost functions using a dedicated propagator:
                     }
                 }
 
-  - :code:`"knapsackv"` with parameters :code:`capacity: capacity weightedvalues: [([variable value coefficient])*]` to express a hard global reverse knapsack constraint (i.e., a generalized linear constraint on domain variables with >= operator) where capacity and coefficients are positive or negative integers. Use negative numbers to express a generalized linear constraint with <= operator. See below a simple example encoding :code:`(v1=1)+(v2=1)+(v3=1)+(v4=1) >= 1`.
+  - :code:`"knapsackv"` with parameters :code:`capacity: capacity weightedvalues: [([variable value coefficient])*]` to express a hard global reverse knapsack constraint (i.e., a generalized linear constraint on domain variables with >= operator) where capacity and coefficients are positive or negative integers. Use negative numbers to express a generalized linear constraint with <= operator. Variables can be names or indices in the whole problem. They must also belong to the scope. See below a simple example encoding :code:`(v1=1)+(v2=1)+(v3=1)+(v4=1) >= 1`.
 
     - example: ::
 
