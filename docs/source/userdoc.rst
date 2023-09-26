@@ -372,17 +372,17 @@ Preprocessing
 --trws-n-iters-compute-ub=[integer]
         compute a basic upper bound every N steps during TRW-S (default value is 100)
 
-- hve=[integer]
+-hve=[integer]
         hidden variable encoding with a given limit to the maximum domain size of hidden variables (default value is 0)
         A negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound.
         See also option -n to limit the maximum arity of dualized n-ary cost functions.
 
-- pwc=[integer]
+-pwc=[integer]
         pairwise consistency by hidden variable encoding plus intersection constraints, each one bounded by a given maximum space limit (in MB) (default value is 0)
         A negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound.
         See also options -minqual, -hve to limit the domain size of hidden variables, and -n to limit the maximum arity of dualized n-ary cost functions.
 
-- minqual
+-minqual
         finds a minimal intersection constraint graph to achieve pairwise consistency (combine with option -pwc) (default option)
 
 
@@ -644,7 +644,7 @@ Branching, variable and value ordering
 -vacint
         VAC-integrality/Full-EAC variable ordering heuristic (can be combined with option -A)
 
-- bisupport=[float]
+-bisupport=[float]
         in bi-objective optimization with the second objective encapsulated by a bounding constraint (see WeightedCSPConstraint), the value heuristic chooses between both EAC supports of first (main) and second objectives by minimum weighted regret (if parameter is non-negative, it is used as the weight for the second objective) or always chooses the EAC support of the first objective (if parameter is zero) or always chooses the second objective (if parameter is negative, -1: for choosing EAC from the lower bound constraint, -2: from the upper bound constraint, -3: to favor the smallest gap, -4: to favor the largest gap) (default value is 0)
 
 Diverse solutions
