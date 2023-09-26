@@ -27,7 +27,7 @@ Freedom:
 
 Constraints:
 
-  - strings should not start with a character in :code:`0123456789-.+` and cannot contain :code:`/#[]{}(),` or a space character (tabs…).
+  - strings should not start with a character in :code:`0123456789-.+` and cannot contain :code:`/#[]{}:,` or a space character (tabs…).
   - numbers can only be integers or decimals. No scientific notation.
   - the order of fields inside an object is compulsory and cannot be changed.
 
