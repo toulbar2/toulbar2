@@ -2543,12 +2543,14 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     }
     vector<int> tobedel;
     vector<int> VarIdx;
+    map<int,int> InvVarIdx;
     vector<int> RealScopeIdx; // Remove redundant var from scopeIndex
     for (int i = 0; i < arity; ++i) {
         auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
         if (it == scopeVars.end()) {
             scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
             VarIdx.push_back(scopeVars.size() - 1);
+            InvVarIdx[scopeIndex[i]] = scopeVars.size() - 1;
             RealScopeIdx.push_back(scopeIndex[i]);
         } else {
             ar -= 1;
@@ -2578,6 +2580,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             for (int j = 0; j < readnbval; ++j) {
                 if (kp>1) {
                     file >> CurrentVarIdx;
+                    assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
+                    CurrentVarIdx = InvVarIdx[CurrentVarIdx];
                 }
                 file >> readv1;
                 if (scopeVars[CurrentVarIdx]->canbe(readv1)) {

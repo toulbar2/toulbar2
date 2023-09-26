@@ -894,11 +894,11 @@ void help_msg(char* toulbar2filename)
     cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
     cout << "   -pwc=[integer] : pairwise consistency by hidden variable encoding plus intersection constraints, each one bounded by a given maximum space limit (in MB)";
     if (ToulBar2::pwc)
-        cout << " (" << ToulBar2::pwc << " MB)";
+        cout << " (default value is " << ToulBar2::pwc << " MB)";
     cout << endl;
     cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
     cout << "       (see also options -minqual, -hve to limit the domain size of hidden variables, and -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
-    cout << "   -minqual : finds a minimal intersection constraint graph to achieve pairwise consistency (combineb with option -pwc)";
+    cout << "   -minqual : finds a minimal intersection constraint graph to achieve pairwise consistency (combine with option -pwc)";
     if (ToulBar2::pwcMinimalDualGraph)
         cout << " (default option)";
     cout << endl;
