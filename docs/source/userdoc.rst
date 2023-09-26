@@ -302,6 +302,9 @@ General control
 
 -logz   computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)
 
+-sigma=[float]
+        add a (truncated) random zero-centered gaussian noise for graphical models only (problem file extension .uai)
+
 -timer=[integer]
         gives a CPU time limit in seconds. toulbar2 will stop after the specified CPU time has been consumed. The time limit is a CPU user time limit, not wall clock time limit.
 
@@ -368,6 +371,19 @@ Preprocessing
 
 --trws-n-iters-compute-ub=[integer]
         compute a basic upper bound every N steps during TRW-S (default value is 100)
+
+- hve=[integer]
+        hidden variable encoding with a given limit to the maximum domain size of hidden variables (default value is 0)
+        A negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound.
+        See also option -n to limit the maximum arity of dualized n-ary cost functions.
+
+- pwc=[integer]
+        pairwise consistency by hidden variable encoding plus intersection constraints, each one bounded by a given maximum space limit (in MB) (default value is 0)
+        A negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound.
+        See also options -minqual, -hve to limit the domain size of hidden variables, and -n to limit the maximum arity of dualized n-ary cost functions.
+
+- minqual
+        finds a minimal intersection constraint graph to achieve pairwise consistency (combine with option -pwc) (default option)
 
 
 Initial upper bounding
@@ -541,7 +557,7 @@ Variable neighborhood search algorithms
         neighborhood size increment strategy for VNS-like methods using: (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (4 by default)
 
 -best=[integer]
-        stop VNS-like methods if a better solution is found (default value is 0)
+        stop DFBB and VNS-like methods if a better solution is found (default value is 0)
 
 Node processing \& bounding options
 -----------------------------------
@@ -597,7 +613,7 @@ Branching, variable and value ordering
 -q=[integer]
         use weighted degree variable ordering heuristic [boussemart2004]_
         if the number of cost
-        functions is less than the given value (default value is 1000000).
+        functions is less than the given value (default value is 1000000). A negative number will disconnect weighted degrees in embedded WeightedCSP constraints.
 
 -var=[integer]
         searches by branching only on the first [given value]
@@ -621,12 +637,15 @@ Branching, variable and value ordering
 -sortd  sorts domains in preprocessing based on increasing unary costs
         (works only for binary WCSPs).
 
--sortc  sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2 - default option), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6) or the opposite order if using a negative value.
+-sortc  sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2 - default option), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), or the opposite order if using a negative value.
 
 -solr   solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
 
 -vacint
         VAC-integrality/Full-EAC variable ordering heuristic (can be combined with option -A)
+
+- bisupport=[float]
+        in bi-objective optimization with the second objective encapsulated by a bounding constraint (see WeightedCSPConstraint), the value heuristic chooses between both EAC supports of first (main) and second objectives by minimum weighted regret (if parameter is non-negative, it is used as the weight for the second objective) or always chooses the EAC support of the first objective (if parameter is zero) or always chooses the second objective (if parameter is negative, -1: for choosing EAC from the lower bound constraint, -2: from the upper bound constraint, -3: to favor the smallest gap, -4: to favor the largest gap) (default value is 0)
 
 Diverse solutions
 -----------------
@@ -688,8 +707,9 @@ File output
 -z=[integer]
         1 or 3: saves original instance in 1-wcsp or 3-cfn format
         (1 by default), 2 or 4: saves
-        after preprocessing in 2-wcsp or 4-cfn format (this option can be
-        used in combination with -z=filename). If the problem is saved after preprocessing, some variables may be lost (due to variable elimination, see -e or -p or -f).
+        after preprocessing in 2-wcsp or 4-cfn format, -2 or -4: saves
+        after preprocessing but keeps initial domains (this option can be
+        used in combination with -z=filename). If the problem is saved after preprocessing (except for -2 or -4), some variables may be lost (due to variable elimination, see -e or -p or -f).
 
 -x=[(,i[:math:`=\#<>`]a)*]
         performs an elementary operation (':math:`=`':assign, ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with value a on variable of index i (multiple
@@ -704,8 +724,8 @@ Probability representation and numerical control
 -precision=[integer]
         probability/real precision is a conversion
         factor (a power of ten) for representing fixed point numbers
-        (default value is 7). It is used by UAI/QPBO/OPB/Pedigree formats.
-        It has no effect in CFN format (the number of significant digits is given in the problem description). 
+        (default value is 7). It is used by CFN/UAI/QPBO/OPB/Pedigree formats.
+        Note that in CFN format the number of significant digits is given in the problem description by default. This option allows to overwrite this default value. 
 
 -epsilon=[float]
         approximation factor for computing the partition
@@ -747,7 +767,24 @@ Random problem generation
           nary-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}
 
              - pn is the number of n-ary cost functions
-      
+
+          wcolor-{n}-{d}-0-{p2}-{seed} random weighted graph coloring problem
+
+             - p2 is the number of edges in the graph
+
+          vertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{seed} random vertex cover problem
+
+             - t1 is the tightness (should be equal to 25)
+             - p2 is the number of edges in the graph
+             - maxcost each vertex has a weight randomly chosen between 0 and maxcost
+
+          bivertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{ub2}-{seed} random bi-objective vertex cover problem
+
+             - t1 is the tightness (should be equal to 25)
+             - p2 is the number of edges in the graph
+             - maxcost each vertex has two weights, both randomly chosen between 0 and maxcost
+             - ub2 upper bound for the bounding constraint on the second objective (see epsilon-constraint method)
+
           salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  
 
              - pn is the number of salldiff global cost functions (p2 and
