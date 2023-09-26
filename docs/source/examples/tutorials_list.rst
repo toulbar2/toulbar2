@@ -14,6 +14,7 @@
 - :ref:`tuto_bmp`
 - :ref:`tuto_alp`
 - :ref:`tuto_wlp`
+- :ref:`tuto_rcpsp`
 - :ref:`tuto_grp`
 - :ref:`tuto_spp`
 - :ref:`tuto_sspp`

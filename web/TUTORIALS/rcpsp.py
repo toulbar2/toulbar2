@@ -50,8 +50,5 @@ for k, capacity in enumerate(capacities):
 # minimize makespan, i.e., the completion time of the last job
 Problem.AddFunction([N-1], range(horizon))
 
-#Problem.Option.verbose = 0
-#Problem.Option.showSolutions = 1
-
 # returns (optimal solution, optimum value, number of solutions found)
 print(Problem.Solve())
