@@ -48,7 +48,7 @@ for k, capacity in enumerate(capacities):
 			Problem.AddGeneralizedLinearConstraint(List, operand='<=', rightcoef=capacity)
 
 # minimize makespan, i.e., the completion time of the last job
-Problem.AddFunction([N-1], [a for a in range(horizon)])
+Problem.AddFunction([N-1], range(horizon))
 
 #Problem.Option.verbose = 0
 #Problem.Option.showSolutions = 1
