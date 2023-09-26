@@ -27,7 +27,7 @@ Freedom:
 
 Constraints:
 
-  - strings should not start with a character in :code:`0123456789-.+` and cannot contain :code:`/#[]{}` or a space character (tabs…).
+  - strings should not start with a character in :code:`0123456789-.+` and cannot contain :code:`/#[]{}(),` or a space character (tabs…).
   - numbers can only be integers or decimals. No scientific notation.
   - the order of fields inside an object is compulsory and cannot be changed.
 
@@ -396,6 +396,42 @@ Global cost functions using a cost function network-based propagator (decompose 
                   }
               }
 
+  - :code:`"wdiverse"` with parameters :code:`distance: integer values: [(value)*]` to express a hard diversity constraint using a dual encoding such that there is a given minimum Hamming distance to a given variable assignment (values).
+
+    - example: ::
+
+        name: { scope: [v1 v2 v3 v4]
+                type : wdiverse
+                params: {
+                   distance: 2
+                   values: [0 1 0 1]
+                   }
+              }
+
+  - :code:`"whdiverse"` with parameters :code:`distance: integer values: [(value)*]` to express a hard diversity constraint using a hidden encoding such that there is a given minimum Hamming distance to a given variable assignment (values).
+
+    - example: ::
+
+        name: { scope: [v1 v2 v3 v4]
+                type : whdiverse
+                params: {
+                   distance: 2
+                   values: [0 1 0 1]
+                   }
+              }
+
+  - :code:`"wtdiverse"` with parameters :code:`distance: integer values: [(value)*]` to express a hard diversity constraint using a ternary encoding such that there is a given minimum Hamming distance to a given variable assignment (values).
+
+    - example: ::
+
+        name: { scope: [v1 v2 v3 v4]
+                type : wtdiverse
+                params: {
+                   distance: 2
+                   values: [0 1 0 1]
+                   }
+              }
+
   - :code:`"wsum"` parameters :code:`metric: hard|lin|quad cost: cost comparator: comparator to: righthandside` to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-hand-side value.
 
     - example: ::
@@ -445,11 +481,11 @@ Global cost functions using a dedicated propagator:
                  type : knapsack
                  params: {
                     capacity: 1
-                    weights: [1, 1, 1, 1]
+                    weights: [1 1 1 1]
                     }
                 }
 
-  - :code:`"knapsackv"` with parameters :code:`capacity: capacity weightedvalues: [([variable value coefficient])*]` to express a hard global reverse knapsack constraint (i.e., a linear constraint on domain variables with >= operator) where capacity and coefficients are positive or negative integers. Use negative numbers to express a linear constraint with <= operator. See below a simple example encoding :code:`v1+v2+v3+v4 >= 1`.
+  - :code:`"knapsackv"` with parameters :code:`capacity: capacity weightedvalues: [([variable value coefficient])*]` to express a hard global reverse knapsack constraint (i.e., a generalized linear constraint on domain variables with >= operator) where capacity and coefficients are positive or negative integers. Use negative numbers to express a generalized linear constraint with <= operator. See below a simple example encoding :code:`(v1=1)+(v2=1)+(v3=1)+(v4=1) >= 1`.
 
     - example: ::
 
@@ -457,7 +493,7 @@ Global cost functions using a dedicated propagator:
                  type : knapsackv
                  params: {
                     capacity: 1
-                    weightedvalues: [[v1 1 1], [v2 1 1], [v3 1 1], [v4 1 1]]
+                    weightedvalues: [[v1 1 1] [v2 1 1] [v3 1 1] [v4 1 1]]
                     }
                 }
 
