@@ -9,7 +9,7 @@ Block modeling problem
 Brief description
 =================
 
-This is a clustering problem, occuring in social network analysis.
+This is a clustering problem, occurring in social network analysis.
 
 The problem is to divide a given directed graph G into k clusters such that the interactions between clusters can be summarized by a k*k 0/1 matrix M: if M[i,j]=1 then all the nodes in cluster i should be connected to all the nodes in cluster j in G, else if M[i,j]=0 then there should be no edge in G between the nodes from the two clusters.
 
@@ -38,7 +38,7 @@ On the contrary, if we decide to cluster the next graph G' in the same way as ab
 .. image:: ../../../web/IMAGES/graph3.png
    :height: 200px
 
-The goal is to find a k-clustering of a given graph and the associated matrix M that minimize the number of erroneous edges.
+The goal is to find a k-clustering of a given graph and the associated matrix M that minimizes the number of erroneous edges.
 
 `A Mattenet, I Davidson, S Nijssen, P Schaus. Generic Constraint-Based Block Modeling Using Constraint Programming. CP 2019, pp656-673, Stamford, CT, USA <https://www.jair.org/index.php/jair/article/download/12280/26656>`_.
 
@@ -48,7 +48,7 @@ CFN model
 We create N variables, one for every node of the graph, with domain size k representing the clustering.
 We add k*k Boolean variables for representing M.
 
-For all triplets of two nodes u, v, and one matrix cell M[i,j], we have a ternary cost function which returns a cost of 1 if node u is assigned to cluster i, v to j, and M[i,j]=1 but (u,v) is not in G, or M[i,j]=0 and (u,v) is in G. In order to break symmetries, we constrain the first k-1 node variables to be assigned to a cluster number less than or equal to their index
+For all triplets of two nodes u, v, and one matrix cell M[i,j], we have a ternary cost function that returns a cost of 1 if node u is assigned to cluster i, v to j, and M[i,j]=1 but (u,v) is not in G, or M[i,j]=0 and (u,v) is in G. In order to break symmetries, we constrain the first k-1 node variables to be assigned to a cluster number less than or equal to their index
 
 Data
 ====

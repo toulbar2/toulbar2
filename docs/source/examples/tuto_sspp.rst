@@ -16,7 +16,7 @@ CFN model
 
 We reuse the :ref:`tuto_spp` model except that binary constraints are replaced by cost functions returning the overlapping size or zero if no overlaps.
 
-To calculate an initial upper bound we simply compute the worst case scenario where N squares of size N*N are all stacks together. The cost of this is N**4, so we will take N**4+1 as the initial upperbound.
+To calculate an initial upper bound we simply compute the worst case scenario where N squares of size N*N are all stacked together. The cost of this is N**4, so we will take N**4+1 as the initial upper bound.
 
 Python model
 ============
