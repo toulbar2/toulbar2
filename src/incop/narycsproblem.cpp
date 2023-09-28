@@ -10,6 +10,11 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 
+#include "core/tb2naryconstr.hpp"
+#include "core/tb2knapsack.hpp"
+#include "core/tb2wcsp.hpp"
+#include "search/tb2solver.hpp"
+
 #include "incop.h"
 #include "incoputil.h"
 #include "csproblem.h"
@@ -20,16 +25,14 @@ extern ofstream* ofile; // le fichier de sortie
 
 extern Stat_GWW* Statistiques;
 
-#include "search/tb2solver.hpp"
-#include "core/tb2wcsp.hpp"
-
 INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     : CSProblem(nbvar, nbconst)
 {
     ;
 }
 
-INCOP::NaryConstraint::NaryConstraint(int arit) { arity = arit; }
+INCOP::NaryConstraint::NaryConstraint(int arit) { arity = arit; knapsack = NULL; }
+INCOP::NaryConstraint::NaryConstraint(int arit, Constraint* kp) { arity = arit; knapsack = (KnapsackConstraint *) kp; }
 
 INCOP::NaryVariable::NaryVariable() { ; }
 
@@ -77,10 +80,17 @@ Long INCOP::NaryCSProblem::config_evaluation(Configuration* configuration)
 
 Long INCOP::NaryConstraint::constraint_value(Configuration* configuration)
 {
-    int index = 0;
-    for (int i = 0; i < arity; i++)
-        index += configuration->config[constrainedvariables[i]] * multiplyers[i];
-    return tuplevalues[index];
+    if (!knapsack) {
+        int index = 0;
+        for (int i = 0; i < arity; i++)
+            index += configuration->config[constrainedvariables[i]] * multiplyers[i];
+        return tuplevalues[index];
+    } else {
+        for (int i = 0; i < arity; i++) {
+            tuple[i] = index2index[i][configuration->config[constrainedvariables[i]]];
+        }
+        return knapsack->eval(tuple);
+    }
 }
 
 void INCOP::NaryCSProblem::incr_update_conflicts(IncrCSPConfiguration* configuration, Move* move)
@@ -258,6 +268,30 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
                 ct->tuplevalues.push_back(min(gap, cost));
             }
             nbconst_++;
+        } else if (wcsp->getCtr(i)->connected() && wcsp->getCtr(i)->isKnapsack()) {
+            int arity = 0;
+            for (int j = 0; j < wcsp->getCtr(i)->arity(); j++)
+                if (wcsp->getCtr(i)->getVar(j)->unassigned())
+                    arity++;
+            INCOP::NaryConstraint* ct = new INCOP::NaryConstraint(arity, wcsp->getCtr(i));
+            vct->push_back(ct);
+            int numvar = 0;
+            for (int j = 0; j < wcsp->getCtr(i)->arity(); j++) {
+                EnumeratedVariable *myvar = (EnumeratedVariable *) wcsp->getCtr(i)->getVar(j);
+                if (myvar->unassigned()) {
+                    numvar = myvar->getCurrentVarId();
+                    ct->constrainedvariables.push_back(numvar);
+                    (*vv)[numvar]->constraints.push_back(ct);
+                    ct->index2index.push_back(vector<tValue>());
+                    for (auto iter = myvar->begin(); iter != myvar->end(); ++iter) {
+                        ct->index2index.back().push_back(myvar->toIndex(*iter));
+                    }
+                }
+            }
+            assert(ct->constrainedvariables.size() == (unsigned int)arity);
+            assert(ct->index2index.size() == (unsigned int)arity);
+            ct->tuple.resize(arity, 0);
+            nbconst_++;
         }
     }
     for (int i = 0; i < wcsp->getElimBinOrder(); i++) {
@@ -406,6 +440,9 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
 {
     Long result = MAX_COST;
     Cost initialUpperBound = wcsp->getUb();
+    if (wcsp->isKnapsack()) {
+        wcsp->setUb(MAX_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
+    }
 
     string filename = "/dev/stdin";
     string outputfile = "/dev/stdout";
@@ -529,13 +566,19 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
                 throw TimeOut();
             }
             executer_essai(problem, algo, population, taille, graine1, nessai, &initconfig);
-            if (wcsp->getLb() + problem->best_config->valuation < upperbound) {
+            if (wcsp->getLb() + problem->best_config->valuation < min(upperbound, initialUpperBound)) {
+                Cost previousUb = MIN_COST;
                 int depth = Store::getDepth();
                 try {
                     Store::store();
                     vector<Value> solution(problem->best_config->nbvar);
                     for (int i = 0; i < problem->best_config->nbvar; i++) {
                         solution[i] = tabdomaines[i][problem->best_config->config[i]];
+                    }
+                    if (wcsp->getUb() > initialUpperBound) {
+                        previousUb = wcsp->getUb();
+                        wcsp->setUb(initialUpperBound);
+                        wcsp->enforceUb();
                     }
                     wcsp->assignLS(tabvars, solution);
                     newSolution();
@@ -549,6 +592,9 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
                     wcsp->whenContradiction();
                 }
                 Store::restore(depth);
+                if (previousUb > MIN_COST) {
+                    wcsp->setUb(previousUb);
+                }
             }
         }
         // ecriture statistiques
@@ -562,6 +608,9 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     if (wcsp->getUb() < initialUpperBound) {
         wcsp->enforceUb();
         wcsp->propagate();
+    } else {
+        assert(wcsp->getUb() == initialUpperBound || wcsp->isKnapsack());
+        wcsp->setUb(initialUpperBound);
     }
 
     return result;

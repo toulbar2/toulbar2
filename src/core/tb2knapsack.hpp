@@ -385,6 +385,7 @@ public:
     virtual ~KnapsackConstraint() {}
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+    bool isKnapsack() const FINAL { return true; }
 
     void reconnect() override
     {
@@ -840,7 +841,10 @@ public:
         new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weigths, CorrAMO, VirtualVar, nonassigned, deltaCosts, lb, assigneddeltas, Original_capacity);
     }
 
-    //void setInfiniteCost(Cost ub)
+    void setInfiniteCost(Cost ub) override
+    {
+        Original_ub = min(ub, Original_ub);
+    }
 
     void assign(int varIndex) override
     {

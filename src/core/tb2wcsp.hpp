@@ -591,6 +591,7 @@ public:
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
     void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
 
+    bool isKnapsack(); ///< \brief true if there are knapsack constraints defined in the problem
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
 #ifdef ILOGCPLEX
     bool isPLPS();

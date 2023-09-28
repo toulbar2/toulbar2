@@ -2519,6 +2519,14 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 #endif
 }
 
+bool WCSP::isKnapsack()
+{
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && constrs[i]->isKnapsack())
+            return true;
+    return false;
+}
+
 int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict)
 {
     assert(ToulBar2::bilevel <= 1);

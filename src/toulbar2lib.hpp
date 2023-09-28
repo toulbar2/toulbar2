@@ -423,6 +423,7 @@ public:
     virtual vector<int> getBergeDecElimOrder() = 0; ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
     virtual void setDACOrder(vector<int>& elimVarOrder) = 0; ///< \brief change DAC order and propagate from scratch
 
+    virtual bool isKnapsack() = 0; ///< \brief true if there are knapsack constraints defined in the problem
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 #ifdef ILOGCPLEX
     virtual bool isPLPS() = 0; ///< \brief true if there are Polytime Linear Projection-Safe global cost functions (slinear)
