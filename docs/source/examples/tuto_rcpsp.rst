@@ -11,7 +11,7 @@ Brief description (from `CSPLib Problem 61 <https://www.csplib.org/Problems/prob
 
 A number of activities are to be scheduled within a discrete time horizon. Each activity has a duration (integer) and cannot be interrupted.
 
-There are a set of precedence relations between pairs of activities which state that the second activity must start after the first has finished.
+There is a set of precedence relations between pairs of activities which state that the second activity must start after the first has finished.
 
 There are a set of renewable resources. Each resource has a maximum capacity (integer) and at any given time slot no more than this amount can be in use. Each activity has a demand (integer possibly zero) on each resource.
 
@@ -26,7 +26,7 @@ Hard binary constraints represent that an activity must be finished before anoth
 
 For each time slot and each resource, we add a generalized linear constraint on all the activities having a non-zero demand such that the interval defined by its starting time and duration includes the given time slot.
  
-A soft unary cost function represent the makespan on the last activity (which is assumed to have a zero duration).
+A soft unary cost function represents the makespan on the last activity (which is assumed to have a zero duration).
 
 Data
 ====
