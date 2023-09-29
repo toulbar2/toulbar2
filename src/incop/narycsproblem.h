@@ -53,8 +53,8 @@ public:
     void compute_indexmultiplyers(vector<Value>* tabdomaines);
     int compute_indexmultiplyer(int i, vector<Value>* tabdomaines);
     int nbtuples(vector<Value>* tabdomaines);
-    /* special case: knapsack constraint */
-    KnapsackConstraint* knapsack;
+    /* special case: constraint in intension (knapsack,..) */
+    Constraint* constr;
     vector<tValue> tuple;
     vector<vector<tValue>> index2index; // convert for each variable in the scope an index of INCOP into an index of toulbar2's variable
 };

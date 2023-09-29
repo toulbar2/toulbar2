@@ -11,7 +11,6 @@ using namespace std;
 #include <fstream>
 
 #include "core/tb2naryconstr.hpp"
-#include "core/tb2knapsack.hpp"
 #include "core/tb2wcsp.hpp"
 #include "search/tb2solver.hpp"
 
@@ -31,8 +30,8 @@ INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     ;
 }
 
-INCOP::NaryConstraint::NaryConstraint(int arit) { arity = arit; knapsack = NULL; }
-INCOP::NaryConstraint::NaryConstraint(int arit, Constraint* kp) { arity = arit; knapsack = (KnapsackConstraint *) kp; }
+INCOP::NaryConstraint::NaryConstraint(int arit) { arity = arit; constr = NULL; }
+INCOP::NaryConstraint::NaryConstraint(int arit, Constraint* ctr) { arity = arit; constr = ctr; }
 
 INCOP::NaryVariable::NaryVariable() { ; }
 
@@ -80,7 +79,7 @@ Long INCOP::NaryCSProblem::config_evaluation(Configuration* configuration)
 
 Long INCOP::NaryConstraint::constraint_value(Configuration* configuration)
 {
-    if (!knapsack) {
+    if (!constr) {
         int index = 0;
         for (int i = 0; i < arity; i++)
             index += configuration->config[constrainedvariables[i]] * multiplyers[i];
@@ -89,7 +88,8 @@ Long INCOP::NaryConstraint::constraint_value(Configuration* configuration)
         for (int i = 0; i < arity; i++) {
             tuple[i] = index2index[i][configuration->config[constrainedvariables[i]]];
         }
-        return knapsack->eval(tuple);
+        assert(constr->isNary() || !constr->extension());
+        return ((AbstractNaryConstraint *)constr)->eval(tuple);
     }
 }
 
@@ -268,7 +268,7 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
                 ct->tuplevalues.push_back(min(gap, cost));
             }
             nbconst_++;
-        } else if (wcsp->getCtr(i)->connected() && wcsp->getCtr(i)->isKnapsack()) {
+        } else if (wcsp->getCtr(i)->connected() && !wcsp->getCtr(i)->isSep() && (wcsp->getCtr(i)->isNary() || !wcsp->getCtr(i)->extension())) {
             int arity = 0;
             for (int j = 0; j < wcsp->getCtr(i)->arity(); j++)
                 if (wcsp->getCtr(i)->getVar(j)->unassigned())
@@ -440,7 +440,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
 {
     Long result = MAX_COST;
     Cost initialUpperBound = wcsp->getUb();
-    if (wcsp->isKnapsack()) {
+    if (wcsp->isKnapsack() || wcsp->isGlobal()) {
         wcsp->setUb(MAX_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST);
     }
 
@@ -609,7 +609,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
         wcsp->enforceUb();
         wcsp->propagate();
     } else {
-        assert(wcsp->getUb() == initialUpperBound || wcsp->isKnapsack());
+        assert(wcsp->getUb() == initialUpperBound || wcsp->isKnapsack() || wcsp->isGlobal());
         wcsp->setUb(initialUpperBound);
     }
 

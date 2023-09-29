@@ -583,7 +583,7 @@ public:
 
     virtual Cost eval(const Tuple& t)
     {
-        cout << "dummy eval on: " << *this << endl;
+        if (ToulBar2::verbose >= 0) cout << "dummy eval on: " << *this << endl;
         return MIN_COST;
     }
     //    virtual void insertTuple( Tuple t, Cost c, EnumeratedVariable** scope_in ) { }
