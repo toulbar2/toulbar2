@@ -16,13 +16,13 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 MultiCFN::MultiCFN()
-    : add_noise(false), gen(rd()), noise_min(0.), noise_max(0.1), _sol_extraction(false)
+    : add_noise(false), noise_min(0.), noise_max(0.1), gen(rd()), _sol_extraction(false)
 {
 }
 
 //---------------------------------------------------------------------------
 MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
-    : add_noise(false), gen(rd()), noise_min(0.), noise_max(0.1), _sol_extraction(false)
+    : add_noise(false), noise_min(0.), noise_max(0.1), gen(rd()), _sol_extraction(false)
 {
     for (unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind++) {
         push_back(wcsps[wcsp_ind], weights[wcsp_ind]);
