@@ -1527,7 +1527,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             os << "\"" << scope[i]->getName() << "\"";
             printed = true;
         }
-        os << "],\"defaultcost\":" << wcsp->Cost2RDCost(default_cost) << ",\n\"costs\":[";
+        os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) << ",\n\"costs\":[";
         if (pf) {
             TUPLES::iterator it = pf->begin();
             printed = false;
@@ -1542,7 +1542,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     os << t[i];
                     printed = true;
                 }
-                os << "," << wcsp->Cost2RDCost(c);
+                os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
             }
         } else {
             int a = arity_;
@@ -1556,7 +1556,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                     os << t[i];
                     printed = true;
                 }
-                os << "," << wcsp->Cost2RDCost(costs[idx]);
+                os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(costs[idx]));
                 int i = a - 1;
                 while (i >= 0 && t[i] == scope[i]->getDomainInitSize() - 1) {
                     t[i] = 0;

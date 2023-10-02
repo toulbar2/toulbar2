@@ -281,8 +281,8 @@ public:
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
     virtual int postCliqueConstraint(vector<int> scope, const string& arguments) = 0;
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
-    virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false) = 0;
-    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, bool kp = false, bool conflict = false) = 0; /// \deprecated
+    virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false) = 0;
+    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, int kp = 0, bool conflict = false) = 0; /// \deprecated
     virtual int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false) = 0; ///< \brief create a hard constraint such that the input cost function network (problem) must have its optimum cost in [lb,ub[ interval. \warning The input scope must contain all variables in problem in the same order. \warning if duplicateHard is true it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model). \warning if strongDuality is true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum on the remaining variables is between lb and ub.
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
     virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; ///< \brief generic function to post any global cost function
@@ -423,6 +423,7 @@ public:
     virtual vector<int> getBergeDecElimOrder() = 0; ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
     virtual void setDACOrder(vector<int>& elimVarOrder) = 0; ///< \brief change DAC order and propagate from scratch
 
+    virtual bool isKnapsack() = 0; ///< \brief true if there are knapsack constraints defined in the problem
     virtual bool isGlobal() = 0; ///< \brief true if there are soft global constraints defined in the problem
 #ifdef ILOGCPLEX
     virtual bool isPLPS() = 0; ///< \brief true if there are Polytime Linear Projection-Safe global cost functions (slinear)

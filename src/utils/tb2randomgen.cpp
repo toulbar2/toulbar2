@@ -313,6 +313,21 @@ void naryRandom::generateBinCtr(int i, int j, long nogoods, Cost costMin, Cost c
     wcsp.postBinaryConstraint(i, j, costs);
 }
 
+void naryRandom::generateNotEqual(int i, int j, Cost costMin, Cost costMax)
+{
+    EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
+    EnumeratedVariable* y = (EnumeratedVariable*)wcsp.getVar(j);
+    unsigned int mx = x->getDomainInitSize();
+    unsigned int my = y->getDomainInitSize();
+
+    vector<Cost> costs;
+    for (unsigned int a = 0; a < mx; a++)
+        for (unsigned int b = 0; b < my; b++)
+            costs.push_back((a != b) ? MIN_COST : ToulBar2::costMultiplier * randomCost(costMin, costMax));
+
+    wcsp.postBinaryConstraint(i, j, costs);
+}
+
 void naryRandom::generateVertexCover(int i, int j)
 {
     int a, b;
@@ -331,7 +346,7 @@ long long naryRandom::toIndex(vector<int>& index)
 {
     long long result = 1;
     for (int i = 0; i < (int)index.size(); i++)
-        result += (long long)powl((double)n, i) * index[i];
+        result += (long long)powl((Double)n, (Double)i) * index[i];
     return result;
 }
 
@@ -433,6 +448,8 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
                         case 2:
                             if (globalname == "vertexcover" || globalname == "bivertexcover" || globalname == "kpvertexcover")
                                 generateVertexCover(indexs[0], indexs[1]);
+                            else if (globalname == "wcolor")
+                                generateNotEqual(indexs[0], indexs[1]);
                             else if (!forceSubModular || numCtrs[arity] > numCtrs[maxa + 1])
                                 generateBinCtr(indexs[0], indexs[1], nogoods);
                             else
@@ -464,19 +481,20 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         multicfn.push_back(&wcsp, 1.);
     }
 
-    for (i = 0; i < n; i++) {
-        EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
-        for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
-            if (globalname == "vertexcover" || globalname == "bivertexcover" || globalname == "kpvertexcover") {
-                if (a == 1) {
-                    x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
+    if (globalname != "wcolor")
+        for (i = 0; i < n; i++) {
+            EnumeratedVariable* x = (EnumeratedVariable*)wcsp.getVar(i);
+            for (unsigned int a = 0; a < x->getDomainInitSize(); a++) {
+                if (globalname == "vertexcover" || globalname == "bivertexcover" || globalname == "kpvertexcover") {
+                    if (a == 1) {
+                        x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]), true);
+                    }
+                } else {
+                    x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, LARGE_COST), true);
                 }
-            } else {
-                x->project(x->toValue(a), ToulBar2::costMultiplier * randomCost(MIN_COST, LARGE_COST), true);
             }
+            x->findSupport();
         }
-        x->findSupport();
-    }
 
     if (forceSubModular) {
         for (i = 0; i < n; i++) {

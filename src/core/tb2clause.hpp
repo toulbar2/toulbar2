@@ -499,7 +499,7 @@ public:
                 os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
-            os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
+            os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(MIN_COST)) << ",\n\"costs\":[";
 
             if (maxdelta == MIN_COST) {
                 printed = false;
@@ -509,7 +509,7 @@ public:
                     os << tuple[i];
                     printed = true;
                 }
-                os << "," << wcsp->Cost2RDCost(cost);
+                os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost));
             } else {
                 Tuple t;
                 Cost c;
@@ -523,7 +523,7 @@ public:
                         os << t[i];
                         printed = true;
                     }
-                    os << "," << wcsp->Cost2RDCost(c);
+                    os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
                 }
             }
         } else {
@@ -543,7 +543,7 @@ public:
                     os << "\"" << scope[i]->getName() << "\"";
                     printed = true;
                 }
-            os << "],\"defaultcost\":" << wcsp->Cost2RDCost(MIN_COST) << ",\n\"costs\":[";
+            os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(MIN_COST)) << ",\n\"costs\":[";
 
             if (maxdelta == MIN_COST) {
                 printed = false;
@@ -555,7 +555,7 @@ public:
                         printed = true;
                     }
                 }
-                os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), cost));
+                os << "," << ((wcsp->getUb() > cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost)) : "inf");
             } else {
                 Tuple t;
                 Cost c;
@@ -571,7 +571,7 @@ public:
                             printed = true;
                         }
                     }
-                    os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), c));
+                    os << "," << ((wcsp->getUb() > c) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(c)) : "inf");
                 }
             }
         }

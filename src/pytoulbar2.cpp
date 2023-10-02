@@ -288,7 +288,7 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<MultiCFN>(m, "MultiCFN")
         .def(py::init())
-        .def("push_back", [](MultiCFN& multicfn, WeightedCSP* wcsp, double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
+        .def("push_back", [](MultiCFN& multicfn, WeightedCSP* wcsp, Double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
         .def("setWeight", &MultiCFN::setWeight)
         .def("nbNetworks", &MultiCFN::nbNetworks)
         .def("nbVariables", &MultiCFN::nbVariables)
@@ -425,7 +425,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
         .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
-        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, bool kp, bool conflict) {
+        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {
             return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
         },
             py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
@@ -449,6 +449,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("postWDivConstraint", &WeightedCSP::postWDivConstraint)
         .def("initDivVariables", &WeightedCSP::initDivVariables)
         .def("postGlobalFunction", (void (WeightedCSP::*)(vector<int> scope, const string& gcname, const string& arguments)) & WeightedCSP::postGlobalFunction)
+        .def("isKnapsack", &WeightedCSP::isKnapsack)
         .def("isGlobal", &WeightedCSP::isGlobal)
         .def("getSolution", (const vector<Value> (WeightedCSP::*)()) & WeightedCSP::getSolution)
         .def("initSolutionCost", &WeightedCSP::initSolutionCost)

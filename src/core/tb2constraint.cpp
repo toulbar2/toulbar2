@@ -527,8 +527,8 @@ bool Constraint::cmpConstraintLAG(Constraint* c1, Constraint* c2)
     if (!k && k1)
         return true;
     if (k && k1) {
-        double v1 = k->getLag();
-        double v2 = k1->getLag();
+        Double v1 = k->getLag();
+        Double v2 = k1->getLag();
         if (v1 == v2)
             return k->computeTightness() < k1->computeTightness();
         return (v1 < v2);
@@ -545,13 +545,53 @@ bool Constraint::cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLin
     if (!k && k1)
         return true;
     if (k && k1) {
-        double v1 = k->getLag();
-        double v2 = k1->getLag();
+        Double v1 = k->getLag();
+        Double v2 = k1->getLag();
         if (v1 == v2)
             return k->computeTightness() < k1->computeTightness();
         return (v1 < v2);
     } else
         return cmpConstraintDAC(c1, c2);
+}
+
+bool Constraint::cmpConstraintArity(Constraint* c1, Constraint* c2)
+{
+    int v1 = c1->arity();
+    int v2 = c2->arity();
+    return (v1 < v2);
+}
+
+bool Constraint::cmpConstraintArity(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    int v1 = c1->content.constr->arity();
+    int v2 = c2->content.constr->arity();
+    return (v1 < v2);
+}
+
+bool Constraint::cmpConstraintArityDAC(Constraint* c1, Constraint* c2)
+{
+    int v1 = c1->arity();
+    int v2 = c2->arity();
+    if (v1 != v2)
+        return (v1 < v2);
+    else {
+        int v1 = c1->getDACVar(0)->getDACOrder();
+        int v2 = c2->getDACVar(0)->getDACOrder();
+        return (v1 > v2);
+    }
+}
+
+bool Constraint::cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    int v1 = c1->content.constr->arity();
+    int v2 = c2->content.constr->arity();
+    if (v1 != v2)
+        return (v1 < v2);
+    else {
+        int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+        int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+        return (v1 > v2);
+    }
 }
 
 bool Constraint::cmpConstraintArity(Constraint* c1, Constraint* c2)

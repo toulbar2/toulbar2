@@ -110,7 +110,7 @@ bool ToulBar2::RASPSreset;
 int ToulBar2::RASPSnbStrictACVariables;
 Cost ToulBar2::RASPSlastitThreshold;
 bool ToulBar2::RASPSsaveitThresholds;
-vector<pair<Cost, double>> ToulBar2::RASPSitThresholds;
+vector<pair<Cost, Double>> ToulBar2::RASPSitThresholds;
 int ToulBar2::RASPSangle;
 Long ToulBar2::RASPSnbBacktracks;
 int ToulBar2::debug;
@@ -147,7 +147,7 @@ bool ToulBar2::sortDomains;
 int ToulBar2::constrOrdering;
 map<int, ValueCost*> ToulBar2::sortedDomains;
 bool ToulBar2::solutionBasedPhaseSaving;
-double ToulBar2::bisupport;
+Double ToulBar2::bisupport;
 int ToulBar2::lds;
 bool ToulBar2::limited;
 Long ToulBar2::restart;
@@ -210,12 +210,12 @@ Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 string ToulBar2::costThresholdS;
 string ToulBar2::costThresholdPreS;
-double ToulBar2::trwsAccuracy;
+Double ToulBar2::trwsAccuracy;
 bool ToulBar2::trwsOrder;
 unsigned int ToulBar2::trwsNIter;
 unsigned int ToulBar2::trwsNIterNoChange;
 unsigned int ToulBar2::trwsNIterComputeUb;
-double ToulBar2::costMultiplier;
+Double ToulBar2::costMultiplier;
 unsigned int ToulBar2::decimalPoint;
 string ToulBar2::deltaUbS;
 Cost ToulBar2::deltaUb;
@@ -231,7 +231,7 @@ unsigned int ToulBar2::divRelax;
 BEP* ToulBar2::bep;
 bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
-double ToulBar2::qpboQuadraticCoefMultiplier;
+Double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
 
 bool ToulBar2::addAMOConstraints;
@@ -269,7 +269,7 @@ std::atomic<bool> ToulBar2::interrupted;
 bool ToulBar2::learning;
 
 int ToulBar2::seed;
-double ToulBar2::sigma;
+Double ToulBar2::sigma;
 
 string ToulBar2::incop_cmd;
 string ToulBar2::pils_cmd;
@@ -315,7 +315,7 @@ Cost ToulBar2::verifiedOptimum;
 
 int ToulBar2::bilevel;
 vector<unsigned int> ToulBar2::decimalPointBLP;
-vector<double> ToulBar2::costMultiplierBLP;
+vector<Double> ToulBar2::costMultiplierBLP;
 vector<Cost> ToulBar2::negCostBLP;
 vector<Cost> ToulBar2::initialLbBLP;
 vector<Cost> ToulBar2::initialUbBLP;
@@ -1035,8 +1035,8 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Double>& dcosts, b
         }
     }
 
-    long double minCost = std::numeric_limits<long double>::infinity();
-    for (long double cost : dcosts) {
+    Double minCost = std::numeric_limits<Double>::infinity();
+    for (Double cost : dcosts) {
         minCost = min(minCost, cost);
     }
 
@@ -1115,8 +1115,8 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Doubl
         }
     }
 
-    long double minCost = std::numeric_limits<long double>::infinity();
-    for (long double cost : dcosts) {
+    Double minCost = std::numeric_limits<Double>::infinity();
+    for (Double cost : dcosts) {
         minCost = min(minCost, cost);
     }
 
@@ -2413,6 +2413,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         postKnapsackConstraint(scopeIndex, arity, file, false, true, true);
     } else if (gcname == "knapsackp") {
         postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+    } else if (gcname == "knapsackv") {
+        postKnapsackConstraint(scopeIndex, arity, file, false, 2, false);
     } else if (gcname == "knapsack") {
         postKnapsackConstraint(scopeIndex, arity, file, false, false, false);
     } else if (gcname == "cfnconstraint") {
@@ -2517,7 +2519,15 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
 #endif
 }
 
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict)
+bool WCSP::isKnapsack()
+{
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && constrs[i]->isKnapsack())
+            return true;
+    return false;
+}
+
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict)
 {
     assert(ToulBar2::bilevel <= 1);
     // Eliminate variable with weight 0
@@ -2541,12 +2551,14 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     }
     vector<int> tobedel;
     vector<int> VarIdx;
+    map<int,int> InvVarIdx;
     vector<int> RealScopeIdx; // Remove redundant var from scopeIndex
     for (int i = 0; i < arity; ++i) {
         auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
         if (it == scopeVars.end()) {
             scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
             VarIdx.push_back(scopeVars.size() - 1);
+            InvVarIdx[scopeIndex[i]] = scopeVars.size() - 1;
             RealScopeIdx.push_back(scopeIndex[i]);
         } else {
             ar -= 1;
@@ -2557,7 +2569,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
     int CurrentVarIdx;
-    for (int i = 0; i < arity; ++i) {
+    for (int i = 0; i < ((kp>1)?1:arity); ++i) {
         CurrentVarIdx = VarIdx[i];
         if (!kp) {
             file >> readw;
@@ -2574,6 +2586,11 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         } else {
             file >> readnbval;
             for (int j = 0; j < readnbval; ++j) {
+                if (kp>1) {
+                    file >> CurrentVarIdx;
+                    assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
+                    CurrentVarIdx = InvVarIdx[CurrentVarIdx];
+                }
                 file >> readv1;
                 if (scopeVars[CurrentVarIdx]->canbe(readv1)) {
                     if (!isclique) {
@@ -4548,8 +4565,8 @@ void WCSP::printNCBuckets()
 
             assert((*iter)->canbe((*iter)->getMaxCostValue()));
             assert((*iter)->getCost((*iter)->getMaxCostValue()) == (*iter)->getMaxCost() || !LUBTEST((*iter)->getMaxCost(), (*iter)->getCost((*iter)->getMaxCostValue())));
-            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= (Long)powl(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
-            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < (Long)powl(2., bucket + 1));
+            assert((bucket && !PARTIALORDER) ? (to_double((*iter)->getMaxCost()) >= powl(2., bucket)) : ((*iter)->getMaxCost() > MIN_COST));
+            assert(PARTIALORDER || to_double((*iter)->getMaxCost()) < powl(2., bucket + 1));
         }
         cout << endl;
     }
@@ -4610,7 +4627,7 @@ void WCSP::print(ostream& os)
 void printClique(ostream& os, int arity, Constraint* ctr)
 {
     if (arity > MAX_ARITY / 10) {
-        cerr << "warning! cost function arity is too large for primal graph representation." << endl;
+        cerr << "Warning! Cost function arity is too large for primal graph representation." << endl;
         return;
     }
     for (int i = 0; i < arity - 1; i++) {
@@ -4625,7 +4642,7 @@ void printClique(ostream& os, int arity, Constraint* ctr)
     }
 }
 
-// Warning! make the assumption that all initial domains start at zero!!!
+// Warning! make the assumption that all initial domains start from zero!!! If not then it assumes positive values and it will extend the domain starting from zero. It means we always print values and not indexes in cost functions.
 void WCSP::dump(ostream& os, bool original)
 {
     Value maxdomsize = 0;
@@ -4800,6 +4817,7 @@ void WCSP::dump(ostream& os, bool original)
     }
 }
 
+// Warning, in cost functions, we print value names or indices (but not values as in wcsp format)!!!
 void WCSP::dump_CFN(ostream& os, bool original)
 {
     bool printed = false;
@@ -4808,7 +4826,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
 
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (vars[i]->getInf() < 0 || !vars[i]->enumerated()) {
-            cerr << "Cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
+            cerr << "Error: cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
             throw InternalError();
         }
     }
@@ -4831,7 +4849,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
     unsigned int ivar = 0;
     os << "\"variables\":{\n";
     if (!original && nvars != vars.size()) {
-        cout << "Warning, the following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
+        cout << "Warning! The following variables have been assigned or eliminated (\"*\") and are not part of the output CFN:" << endl;
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
         assert(enumerated(i));
@@ -4911,7 +4929,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             }
             os << "]},\n";
             if (failed) {
-                cout << "Warning, cannot preserve problem equivalence when saving the problem due to variable elimination of " << vars[i]->getName() << " (with finite unary cost " << failed << ")" << endl;
+                cerr << "Warning! Cannot preserve problem equivalence when saving the problem due to variable elimination of " << vars[i]->getName() << " (with finite unary cost " << failed << ")" << endl;
             }
         }
     }
@@ -4946,7 +4964,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 }
             }
             if (failed) {
-                cout << "Warning, cannot preserve problem equivalence when saving the problem due to variable elimination of " << ei.x->getName() << endl;
+                cerr << "Warning! Cannot preserve problem equivalence when saving the problem due to variable elimination of " << ei.x->getName() << endl;
             }
         }
     }

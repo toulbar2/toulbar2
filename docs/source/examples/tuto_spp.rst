@@ -9,11 +9,11 @@ Square packing problem
 Brief description
 =================
 
-We have N squares of respectives size 1×1, 2×2,..., NxN. We have to fit them without overlaps into a square of size SxS.
+We have N squares of respective size 1×1, 2×2,..., NxN. We have to fit them without overlaps into a square of size SxS.
 
 Results up to N=56 are given `here <https://oeis.org/A005842>`_.
 
-Optimal solution for 15 squares packed into a 36x36 square (Fig. taken from Takehide Soh)
+An optimal solution for 15 squares packed into a 36x36 square (Fig. taken from Takehide Soh)
 
 .. image:: ../../../web/IMAGES/square.png
    :height: 250px

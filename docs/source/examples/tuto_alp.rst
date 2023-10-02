@@ -15,7 +15,7 @@ Given a set of planes with given target landing time, the objective is to minimi
 There are costs associated with landing either earlier or later than the target landing time for each plane.
 
 Each plane has to land within its predetermined time window.
-For each pair of planes, there is an additionnal contraints to enforce that separation between those planes in bigger than a given number.
+For each pair of planes, there is an additional constraint to enforce that the separation time between those planes is larger than a given number.
 
 `J.E. Beasley, M. Krishnamoorthy, Y.M. Sharaiha and D. Abramson. Scheduling aircraft landings - the static case. Transportation Science, vol.34, 2000 <https://doi.org/10.1287/trsc.34.2.180.12302>`_.
 

@@ -536,12 +536,12 @@ public:
 
     void addAMOConstraints();
 
-    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, bool kp = false, bool conflict = false)
+    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false)
     {
         istringstream file(arguments);
         return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict);
     }
-    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, bool kp, bool conflict); // warning! scopeIndex may be modified internally.
+    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict); // warning! scopeIndex may be modified internally.
 
     int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
 
@@ -591,6 +591,7 @@ public:
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
     void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
 
+    bool isKnapsack(); ///< \brief true if there are knapsack constraints defined in the problem
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
 #ifdef ILOGCPLEX
     bool isPLPS();

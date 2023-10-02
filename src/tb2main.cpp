@@ -894,11 +894,11 @@ void help_msg(char* toulbar2filename)
     cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
     cout << "   -pwc=[integer] : pairwise consistency by hidden variable encoding plus intersection constraints, each one bounded by a given maximum space limit (in MB)";
     if (ToulBar2::pwc)
-        cout << " (" << ToulBar2::pwc << " MB)";
+        cout << " (default value is " << ToulBar2::pwc << " MB)";
     cout << endl;
     cout << "       a negative size limit means restoring the original encoding after preprocessing while keeping the improved dual bound." << endl;
     cout << "       (see also options -minqual, -hve to limit the domain size of hidden variables, and -n to limit the maximum arity of dualized n-ary cost functions)." << endl;
-    cout << "   -minqual : finds a minimal intersection constraint graph to achieve pairwise consistency (combineb with option -pwc)";
+    cout << "   -minqual : finds a minimal intersection constraint graph to achieve pairwise consistency (combine with option -pwc)";
     if (ToulBar2::pwcMinimalDualGraph)
         cout << " (default option)";
     cout << endl;
@@ -1087,6 +1087,9 @@ void help_msg(char* toulbar2filename)
     cout << " or:                                                                               " << endl;
     cout << "      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)" << endl;
     cout << " or:                                                                               " << endl;
+    cout << "      wcolor-{n}-{d}-0-{p2}-{seed} random weighted graph coloring problem" << endl;
+    cout << "                                                      :p2 is the number of edges" << endl;
+    cout << " or:                                                                               " << endl;
     cout << "      vertexcover-{n}-{d}-{t1}-{p2}-{maxcost}-{seed}  :t1 is the tightness (should be equal to 25)" << endl;
     cout << "                                                      :p2 is the number of edges" << endl;
     cout << "                                                      :maxcost each vertex has a weight randomly chosen between 0 and maxcost" << endl;
@@ -1192,7 +1195,7 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
 
-    assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
+    assert(cerr << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 
     string VER; //  release version
     string CMD; //  command line option

@@ -11,7 +11,7 @@ Brief description
 
 The problem is to detect marker genotyping incompatibilities (Mendelian errors) in complex pedigrees. 
 The input is a pedigree data with partial observed genotyping data at a single locus, we assume the pedigree to be exact, but not the genotyping data.
-The problem is to assign genotypes (unordered pairs of alleles) to all individuals such that they are compatible with the Mendelian law of heredity (one allele is the same as their father's and one as their mother's). The goal is to maximize the number of matching allelle between the genotyping data and the solution. Each difference from the genotyping data has a cost of 1.
+The problem is to assign genotypes (unordered pairs of alleles) to all individuals such that they are compatible with the Mendelian law of heredity (one allele is the same as their father's and one as their mother's). The goal is to maximize the number of matching alleles between the genotyping data and the solution. Each difference from the genotyping data has a cost of 1.
 
 `Sanchez, M., de Givry, S. and Schiex, T. Constraints (2008) 13:130 <https://miat.inrae.fr/degivry/Sanchez07a.pdf>`_.
 

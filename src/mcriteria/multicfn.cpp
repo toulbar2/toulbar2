@@ -54,7 +54,7 @@ void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria:
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::push_back(WCSP* wcsp, double weight)
+void MultiCFN::push_back(WCSP* wcsp, Double weight)
 {
 
     // create a new network
@@ -249,7 +249,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
     // read the cost table
     if (cstr->arity() == 1) {
 
-        cerr << "Warning! Cost function with arity 1 in current WCSP will be ignored by MultiCFN!" << endl;
+        cerr << "Error: cost function with arity 1 in current WCSP will be ignored by MultiCFN!" << endl;
         throw WrongFileFormat();
 
         /* presumably empty -> unary costs are sent to the variables by tb2 */
@@ -397,7 +397,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::setWeight(unsigned int network_index, double weight)
+void MultiCFN::setWeight(unsigned int network_index, Double weight)
 {
     weights[network_index] = weight;
 }
@@ -521,7 +521,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
         // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
         //     if (ToulBar2::verbose >= 0) {
-        //         cerr << "Warning: using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
+        //         cerr << "Warning! Using a " << (weights[net_ind] > 0 ? "positive" : "negative") << " weight with a ";
         //         cerr << (_original_costMultipliers[net_ind] > 0 ? "positive" : "negative") << " cost multiplier";
         //         cerr << "; no upper bound provided" << endl;
         //     }
@@ -534,7 +534,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     // bool global_ub_overflow = false;
     // if ((global_ub >= 0 && global_ub_cost < 0) || (global_ub <= 0 && global_ub_cost > 0)) {
     //     if (ToulBar2::verbose >= 0) {
-    //         cerr << "Warning: cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
+    //         cerr << "Warning! Cost overflow on the global upper bound, using MAX_COST as upper bound" << endl;
     //     }
     //     global_ub_overflow = true;
     // }
@@ -551,7 +551,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
     /* top is modified to account for neg_cost and lb (i.e. c0 > 0) */
     /* top is increased if global_ub > 0 */
-    /* top is expressed as a double */
+    /* top is expressed as a Double */
     if (global_lb + global_mincost < 0) {
         top -= global_lb + global_mincost;
     } else {
@@ -602,7 +602,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     // create the cost functions
     for (unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind++) {
 
-        double weight = weights[network_index[func_ind]];
+        Double weight = weights[network_index[func_ind]];
 
         if (cost_function[func_ind].scope.size() == 1) { // unary cost functions
 
@@ -772,7 +772,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     if (cost == numeric_limits<Double>::infinity()) {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))));
                     } else {
-                        // do not forget to convert from double to cost for n-ary cost functions
+                        // do not forget to convert from Double to cost for n-ary cost functions
                         if (fabs(weight - 1.) > MultiCFN::epsilon) {
                             wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
                         } else {

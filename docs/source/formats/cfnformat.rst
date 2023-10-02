@@ -4,7 +4,7 @@
 CFN format (.cfn suffix)
 ========================
 
-With this JSON compatible format, it is possible:
+With this JSON-compatible format, it is possible:
 
   - to give a name to variables and functions.
   - to associate a local label to every value that is accessible inside toulbar2 (among others for heuristics design purposes).
@@ -20,16 +20,16 @@ Freedom:
 
   - the double quotes around strings are not compulsory: both :code:`"problem"` and :code:`problem` are strings.
   - double quotes can also be added around numbers: both :code:`1.20` and :code:`"1.20"` will be interpreted as decimal numbers.
-  - the commas that separates the fields inside an array or object are not compulsory. Any separator will do (comma, white space). So :code:`[1, 2]` or :code:`[1,2]` or :code:`[1 2]` are all describing the same array.
+  - the commas that separate the fields inside an array or object are not compulsory. Any separator will do (comma, white space). So :code:`[1, 2]` or :code:`[1,2]` or :code:`[1 2]` are all describing the same array.
   - the delimiters for objects and arrays (:code:`{}` and :code:`[]`) can be used arbitrarily for both types of items.
   - the colon (:code:`:`) that separates the name of a field in an object from the contents of the field is not compulsory.
   - It is possible to comment a line with a :code:`#` the first position of a line.
 
 Constraints:
 
-  - strings should not start with a character in :code:`0123456789-.+` and cannot contain :code:`/#[]{}` or a space character (tabs…).
+  - strings should not start with a character in :code:`0123456789-.+` and cannot contain :code:`/#[]{}:,` or a space character (tabs…).
   - numbers can only be integers or decimals. No scientific notation.
-  - the orders of fields inside an object is compulsory and cannot be changed.
+  - the order of fields inside an object is compulsory and cannot be changed.
 
 A CFN is an object with 3 data: a definition of the main problem properties (tag :code:`problem`), of variables and their domains (tag :code:`variables`) and of cost functions (tag :code:`functions`), in this order: ::
 
@@ -49,7 +49,7 @@ An object with two fields:
 
   The number of significant digits in the decimal number gives the precision that will be used for all cost computations inside toulbar2.
 
-  An an example, :code:`"mustbe": "<10.00"` means that the CFN describes a function where all costs larger than or equal to 10.00 are considered as infinite. All costs will also be handled with 2 digits of precision after the decimal point.
+  As an example, :code:`"mustbe": "<10.00"` means that the CFN describes a function where all costs larger than or equal to 10.00 are considered as infinite. All costs will also be handled with 2 digits of precision after the decimal point.
 
 The two fields must appear in this order: ::
 
@@ -59,7 +59,7 @@ or ::
 
   {test.problem <12.100}
 
-in a more concise non JSON-compatible form.
+in a more concise non-JSON-compatible form.
 
 **Variables and domains:**
 
@@ -85,7 +85,7 @@ An object with as many fields as functions. Every function is an object with dif
 
 **Table cost functions:**
 
-Sparse functions format:* useful for functions that are dominantly constant. A numerical :code:`defaultcost` must be given after the scope. The :code:`costs` table must be an array of tuple.costs: a sequence of value names or indices followed by a numeric cost. The :code:`defaultcost` is used to define the cost of any missing tuple. ::
+Sparse functions format:* useful for functions that are dominantly constant. A numerical :code:`defaultcost` must be given after the scope. The :code:`costs` table must be an array of tuple costs: a sequence of value names or indices followed by a numeric cost or :code:`inf` to represent a forbidden tuple. The :code:`defaultcost` is used to define the cost of any missing tuple. ::
 
   {"scope": ["fdv1", "fdv2"],
    "defaultcost": 0.234,
@@ -135,7 +135,7 @@ These functions have all arity 2 and it is assumed here that these variables are
     to express soft binary disjunctive cost function with semantics :math:`( (x \geq y + csty) \lor ( y \geq x + cstx)) ? 0 : w)`
   - :code:`"sdisj"`: takes a :code:`parameters` array :math:`[ cstx, csty, xmax, ymax wx wy]` to express a special disjunctive cost function with three implicit constraints :math:`x \leq xmax`, :math:`y \leq ymax` and :math:`( x < xmax \land y < ymax) \Rightarrow ( x \geq y + csty \lor  y \geq x + cstx)` and an additional cost function :math:`( (x = xmax) ? wx : 0) + ( (y = y max? wy : 0)`.
 
-example : arithmetic function with :code:`>=` operator : ::
+Example : arithmetic function with :code:`>=` operator : ::
 
   "arith0": {"scope": ["v5", "v6"],
              "type": ">=",
@@ -396,6 +396,42 @@ Global cost functions using a cost function network-based propagator (decompose 
                   }
               }
 
+  - :code:`"wdiverse"` with parameters :code:`distance: integer values: [(value)*]` to express a hard diversity constraint using a dual encoding such that there is a given minimum Hamming distance to a given variable assignment (values).
+
+    - example: ::
+
+        name: { scope: [v1 v2 v3 v4]
+                type : wdiverse
+                params: {
+                   distance: 2
+                   values: [0 1 0 1]
+                   }
+              }
+
+  - :code:`"whdiverse"` with parameters :code:`distance: integer values: [(value)*]` to express a hard diversity constraint using a hidden encoding such that there is a given minimum Hamming distance to a given variable assignment (values).
+
+    - example: ::
+
+        name: { scope: [v1 v2 v3 v4]
+                type : whdiverse
+                params: {
+                   distance: 2
+                   values: [0 1 0 1]
+                   }
+              }
+
+  - :code:`"wtdiverse"` with parameters :code:`distance: integer values: [(value)*]` to express a hard diversity constraint using a ternary encoding such that there is a given minimum Hamming distance to a given variable assignment (values).
+
+    - example: ::
+
+        name: { scope: [v1 v2 v3 v4]
+                type : wtdiverse
+                params: {
+                   distance: 2
+                   values: [0 1 0 1]
+                   }
+              }
+
   - :code:`"wsum"` parameters :code:`metric: hard|lin|quad cost: cost comparator: comparator to: righthandside` to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-hand-side value.
 
     - example: ::
@@ -436,6 +472,48 @@ Warning: the decomposition of :code:`wsum` and :code:`wvarsum` may use an expone
 
 
 Global cost functions using a dedicated propagator:
+
+  - :code:`"knapsack"` with parameters :code:`capacity: capacity weights: [(coefficient)*]` to express a hard global reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) where capacity and coefficients (one for each variable in the scope) are positive or negative integers. Use negative numbers to express a linear constraint with <= operator. See below a simple example encoding :code:`v1+v2+v3+v4 >= 1`.
+
+    - example: ::
+
+        myknapsack: {scope: [v1 v2 v3 v4]
+                 type : knapsack
+                 params: {
+                    capacity: 1
+                    weights: [1 1 1 1]
+                    }
+                }
+
+  - :code:`"knapsackv"` with parameters :code:`capacity: capacity weightedvalues: [([variable value coefficient])*]` to express a hard global reverse knapsack constraint (i.e., a generalized linear constraint on domain variables with >= operator) where capacity and coefficients are positive or negative integers. Use negative numbers to express a generalized linear constraint with <= operator. Variables can be names or indices in the whole problem. They must also belong to the scope. See below a simple example encoding :code:`(v1=1)+(v2=1)+(v3=1)+(v4=1) >= 1`.
+
+    - example: ::
+
+        myknapsackv: {scope: [v1 v2 v3 v4]
+                 type : knapsackv
+                 params: {
+                    capacity: 1
+                    weightedvalues: [[v1 1 1] [v2 1 1] [v3 1 1] [v4 1 1]]
+                    }
+                }
+
+  - :code:`"clique"` with parameters :code:`rhs: 1 values: [([(value)*])*]` to express a hard global clique constraint to restrict the number of variables taking their value into a given set of values (one set per variable) to at most 1 occurrence for all the variables. A clique of binary constraints must also be added to forbid any two variables from using both the restricted values.  
+
+    - example: ::
+
+        f01: { scope: [v0 v1] defaultcost: 0 costs: [1 1 inf]}
+        f02: { scope: [v0 v2] defaultcost: 0 costs: [1 1 inf]}
+        f03: { scope: [v0 v3] defaultcost: 0 costs: [1 1 inf]}
+        f12: { scope: [v1 v2] defaultcost: 0 costs: [1 1 inf]}
+        f13: { scope: [v1 v3] defaultcost: 0 costs: [1 1 inf]}
+        f23: { scope: [v2 v3] defaultcost: 0 costs: [1 1 inf]}
+        myclique: {scope: [v0 v1 v2 v3]
+                 type : clique
+                 params: {
+                    rhs: 1
+                    values: [[1], [1], [1], [1]]
+                    }
+                }
 
   - :code:`"cfnconstraint"` with parameters :code:`cfn: cost-function-network lb: cost ub: cost duplicatehard: value strongduality: value` to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in cfn format such that its valid solutions must have a cost value in [lb,ub[.  
 

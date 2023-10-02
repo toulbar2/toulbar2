@@ -385,6 +385,7 @@ public:
     virtual ~KnapsackConstraint() {}
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+    bool isKnapsack() const FINAL { return true; }
 
     void reconnect() override
     {
@@ -696,7 +697,7 @@ public:
         //        }
         assert(capacity > 0);
         assert(MaxWeight > 0);
-        return ((double)capacity / (double)MaxWeight); // * ucost ???
+        return (double)((Double)capacity / (Double)MaxWeight); // * ucost ???
     }
 
     //TODO: needed for dominance test by DEE
@@ -840,7 +841,10 @@ public:
         new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weigths, CorrAMO, VirtualVar, nonassigned, deltaCosts, lb, assigneddeltas, Original_capacity);
     }
 
-    //void setInfiniteCost(Cost ub)
+    void setInfiniteCost(Cost ub) override
+    {
+        Original_ub = min(ub, Original_ub);
+    }
 
     void assign(int varIndex) override
     {
@@ -1976,7 +1980,7 @@ public:
                 os << ",";
         }
         os << ") "
-           << " <= " << capacity << " <= " << MaxWeight << " / " << lb << " - " << assigneddeltas << " (";
+           << " >= " << capacity << " <= " << MaxWeight << " \\ " << lb << " - " << assigneddeltas << " (";
         for (int i = 0; i < arity_; i++) {
             if (AMO.empty()) {
                 for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
@@ -2072,7 +2076,7 @@ public:
                     os << endl;
                 }
             } else {
-                os << " " << 0 << " " << getDomainSizeProduct() << endl;
+                os << " " << wcsp->getUb() << " " << getDomainSizeProduct() << endl;
                 Tuple t;
                 Cost c;
                 firstlex();
@@ -2135,7 +2139,7 @@ public:
                     os << endl;
                 }
             } else {
-                os << " " << 0 << " " << getDomainSizeProduct() << endl;
+                os << " " << wcsp->getUb() << " " << getDomainSizeProduct() << endl;
                 Tuple t;
                 Cost c;
                 firstlex();
@@ -2150,7 +2154,6 @@ public:
         }
     }
 
-    //TODO: case with knapsackc
     void dump_CFN(ostream& os, bool original = true) override
     {
         bool printed = false;
@@ -2166,7 +2169,10 @@ public:
                 }
             }
         }
-
+        if (!AMO.empty()) { //TODO: cfn reader for knapsackc
+            cerr << "Error: cannot save file in cfn format with knapsack constraints including at-most-one constraints (knapsackc)!" << endl;
+            throw WrongFileFormat();
+        }
         if (original) {
             printed = false;
             for (int i = 0; i < arity_; i++) {
@@ -2184,39 +2190,52 @@ public:
                 os << "\"" << scope[i]->getName() << "\"";
                 printed = true;
             }
-            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << Original_capacity << ",\n\t\"weightedvalues\":[";
 
             if (iszerodeltas) {
+                Long wnot = 0;
+                for (int i = 0; i < arity_; i++) {
+                    if (!NotVarVal[i].empty())
+                        wnot += weights[i].back();
+                }
+                os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
-                    if (printed)
-                        os << ",";
-                    os << "[";
-                    bool printedbis = false;
-                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                        if (printedbis)
-                            os << ",";
-                        os << "[" << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
-                        printedbis = true;
+                    if (NotVarVal[i].empty()) {
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            if (printed)
+                                os << ",";
+                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
+                            printed = true;
+                        }
+                    } else {
+                        for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                            if (printed)
+                                os << ",";
+                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                            printed = true;
+                        }
                     }
-                    printed = true;
-                    os << "]";
                 }
+                os << "]}},\n";
             } else {
+                os << "],\n\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(wcsp->getUb())) << ",\n\"costs\":[";
                 Tuple t;
                 Cost c;
                 printed = false;
                 firstlex();
                 while (nextlex(t, c)) {
-                    os << endl;
-                    for (int i = 0; i < arity_; i++) {
-                        if (printed)
-                            os << ",";
-                        os << t[i];
-                        printed = true;
+                    if (c < wcsp->getUb()) {
+                        os << endl;
+                        for (int i = 0; i < arity_; i++) {
+                            if (printed)
+                                os << ",";
+                            os << t[i];
+                            printed = true;
+                        }
+                        os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
                     }
-                    os << "," << wcsp->Cost2RDCost(c);
                 }
+                os << "]},\n";
             }
         } else {
             for (int i = 0; i < arity_; i++)
@@ -2235,48 +2254,62 @@ public:
                     os << "\"" << scope[i]->getName() << "\"";
                     printed = true;
                 }
-            os << "],\n\"type\":\"knapsackp\",\n\"params\":{\"capacity\":" << capacity << ",\n\t\"weightedvalues\":[";
 
             if (iszerodeltas) {
+                Long wnot = 0;
+                for (int i = 0; i < arity_; i++) {
+                    if (!NotVarVal[i].empty())
+                        wnot += weights[i].back();
+                }
+                os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
                 printed = false;
                 for (int i = 0; i < arity_; i++) {
                     if (scope[i]->unassigned()) {
-                        if (printed)
-                            os << ",";
-                        os << "[";
-                        bool printedbis = false;
-                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                            if (printedbis)
-                                os << ",";
-                            if (scope[i]->canbe(VarVal[i][j]) && weights[i][j] > 0) {
-                                os << "[" << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
-                                printedbis = true;
+                        if (NotVarVal[i].empty()) {
+                            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                                if (scope[i]->canbe(VarVal[i][j])) {
+                                    if (printed)
+                                        os << ",";
+                                    os << "[" << scope[i]->getName() << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
+                                    printed = true;
+                                }
+                            }
+                        } else {
+                            for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                                if (scope[i]->canbe(VarVal[i][j])) {
+                                    if (printed)
+                                        os << ",";
+                                    os << "[" << scope[i]->getName() << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                                    printed = true;
+                                }
                             }
                         }
-                        printed = true;
-                        os << "]";
                     }
                 }
+                os << "]}},\n";
             } else {
+                os << "],\n\"defaultcost\":inf,\n\"costs\":[";
                 Tuple t;
                 Cost c;
                 printed = false;
                 firstlex();
                 while (nextlex(t, c)) {
-                    os << endl;
-                    for (int i = 0; i < arity_; i++) {
-                        if (scope[i]->unassigned()) {
-                            if (printed)
-                                os << ",";
-                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
-                            printed = true;
+                    if (c < wcsp->getUb()) {
+                        os << endl;
+                        for (int i = 0; i < arity_; i++) {
+                            if (scope[i]->unassigned()) {
+                                if (printed)
+                                    os << ",";
+                                os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
+                                printed = true;
+                            }
                         }
+                        os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
                     }
-                    os << "," << wcsp->Cost2RDCost(min(wcsp->getUb(), c));
                 }
+                os << "]},\n";
             }
         }
-        os << "]}},\n";
     }
 };
 #endif /*TB2KNAPSACK_HPP_*/

@@ -146,7 +146,9 @@ typedef struct {
  * - Global cost functions using a dedicated propagator:
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
  *     - knapsack \e capacity (\e weight)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator)
+ *     - knapsackc \e capacity (\e weight)* \e nb_AMO (\e nb_variables (\e variable \e value)*)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) combined with a list of non-overlapping at-most-one constraints
  *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
+ *     - knapsackv \e capacity \e nb_triplets (\e variable \e value \e weight)* to express a reverse knapsack constraint with a list of triplets variable, value, and its corresponding weight
  *     - wcsp \e lb \e ub \e duplicatehard \e strongduality \e wcsp to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in wcsp format such that its valid solutions must have a cost value in [lb,ub[.
  *
  * - Global cost functions using a flow-based propagator:
@@ -204,7 +206,9 @@ typedef struct {
  * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
  * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
+ * - knapsackc constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$, \f$x1 + x2 <= 1\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsackc 10 2 3 4 5 1 2 1 1 2 1\endcode
  * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5\endcode
+ * - knapsackv constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackv 10 5 0 0 2 1 1 3 2 2 4 3 0 5 3 1 5\endcode
  * - wcsp constraint (\f$3 <= 2 * x1 * x2 + 3 * x1 * x4 + 4 * x2 * x4 < 5\f$) on three Boolean 0/1 variables: \code 3 1 2 4 -1 wcsp 3 5 0 0 name 3 2 3 1000 2 2 2 2 0 1 0 1 1 1 2 2 0 2 0 1 1 1 3 2 1 2 0 1 1 1 4\endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
@@ -1498,7 +1502,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     map<string, string> GCFTemplates = {
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
-        { "knapsackp", ":capacity:N:weightedvalues:[[vN]+]S" },
+        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+" },
         { "cfnconstraint", ":cfn:W:lb:c:ub:c:duplicatehard:N:strongduality:N" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
@@ -2203,7 +2207,7 @@ Cost WCSP::read_wcsp(const char* fileName)
 
         if (ToulBar2::externalUB.size()) {
             Cost top = string2Cost(ToulBar2::externalUB.c_str());
-            double K = ToulBar2::costMultiplier;
+            Double K = ToulBar2::costMultiplier;
             if (top < MAX_COST / K)
                 top = top * K;
             else
@@ -2489,7 +2493,7 @@ void WCSP::read_legacy(istream& file)
     if (ToulBar2::verbose >= 1)
         cout << "Read problem: " << pbname << endl;
 
-    double K = ToulBar2::costMultiplier;
+    Double K = ToulBar2::costMultiplier;
     if (top < MAX_COST / K)
         top = top * K;
     else
@@ -2532,7 +2536,7 @@ void WCSP::read_legacy(istream& file)
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
         bool shared = (arity < 0);
@@ -2906,7 +2910,7 @@ void WCSP::read_legacy(istream& file)
     if ((getSolver() && ((Solver*)getSolver())->getWCSP() == this)) { // checks end of file only if reading the main model
         file >> funcname;
         if (file) {
-            cerr << "Warning: EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
+            cerr << "Warning! EOF not reached after reading all the cost functions (initial number of cost functions too small?)" << endl;
         }
     }
 
@@ -2958,7 +2962,7 @@ void WCSP::read_random(int n, int m, vector<int>& p, int seed, bool forceSubModu
 {
     if (ToulBar2::externalUB.size()) {
         Cost top = string2Cost(ToulBar2::externalUB.c_str());
-        double K = ToulBar2::costMultiplier;
+        Double K = ToulBar2::costMultiplier;
         if (top < MAX_COST / K)
             top = top * K;
         else
@@ -3080,13 +3084,13 @@ void WCSP::read_uai2008(const char* fileName)
     for (ic = 0; ic < nbconstr; ic++) {
         file >> arity;
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the scopes (initial number of factors too large?)" << endl;
             break;
         }
         maxarity = max(maxarity, arity);
 
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the cost functions (initial number of cost functions too large?)" << endl;
             break;
         }
 
@@ -3148,7 +3152,7 @@ void WCSP::read_uai2008(const char* fileName)
     while (it != scopes.end()) {
         file >> ntuples;
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the factor tables (initial number of factors too large?)" << endl;
             break;
         }
         ntuplesarray[ictr] = ntuples;
@@ -3221,7 +3225,7 @@ void WCSP::read_uai2008(const char* fileName)
 
     file >> varname;
     if (file) {
-        cerr << "Warning: EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
+        cerr << "Warning! EOF not reached after reading all the factor tables (initial number of factors too small?)" << endl;
     }
 
     updateUb(upperbound);
@@ -3569,7 +3573,7 @@ void WCSP::read_wcnf(const char* fileName)
     istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
 #endif
 
-    double K = ToulBar2::costMultiplier;
+    Double K = ToulBar2::costMultiplier;
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
 
@@ -3662,6 +3666,9 @@ void WCSP::read_wcnf(const char* fileName)
                         tautology = true;
                         if (ToulBar2::verbose >= 3)
                             cout << j << " is a tautology! skipped.";
+                    } else {
+                        tup.pop_back();
+                        scopeIndex.resize(arity);
                     }
                     continue;
                 }
@@ -3731,7 +3738,7 @@ void WCSP::read_wcnf(const char* fileName)
 
     file >> dummy;
     if (file) {
-        cerr << "Warning: EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
+        cerr << "Warning! EOF not reached after reading all the clauses (initial number of clauses too small?)" << endl;
     }
 
     // apply basic initial propagation AFTER complete network loading
@@ -3811,28 +3818,28 @@ void WCSP::read_qpbo(const char* fileName)
 
     vector<int> posx(m, 0);
     vector<int> posy(m, 0);
-    vector<double> cost(m, 0.);
+    vector<Double> cost(m, 0.);
     for (e = 0; e < m; e++) {
         file >> posx[e];
 
         if (!file) {
-            cerr << "Warning: EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
+            cerr << "Warning! EOF reached before reading all the cost sparse matrix (number of nonzero costs too large?)" << endl;
             break;
         }
         if (posx[e] > n) {
-            cerr << "Warning: variable index too large!" << endl;
+            cerr << "Warning! Variable index too large!" << endl;
             break;
         }
         file >> posy[e];
         if (posy[e] > n) {
-            cerr << "Warning: variable index too large!" << endl;
+            cerr << "Warning! Variable index too large!" << endl;
             break;
         }
         file >> cost[e];
     }
     file >> dummy;
     if (file) {
-        cerr << "Warning: EOF not reached after reading all the cost sparse matrix (wrong number of nonzero costs too small?)" << endl;
+        cerr << "Warning! EOF not reached after reading all the cost sparse matrix (wrong number of nonzero costs too small?)" << endl;
     }
     m = e;
 
