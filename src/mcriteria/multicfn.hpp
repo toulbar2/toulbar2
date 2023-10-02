@@ -356,6 +356,8 @@ private: // private attributes
     // parameter that add noise to the costs during exportation if activated
     bool add_noise;
     Double noise_min, noise_max;
+    std::random_device rd;
+    std::mt19937 gen;
 
     /* solution */
     WCSP* _wcsp; // pointer to the wcsp containing the combination of the input wcsps

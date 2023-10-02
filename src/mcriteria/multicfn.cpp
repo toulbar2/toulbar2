@@ -16,13 +16,13 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 MultiCFN::MultiCFN()
-    : add_noise(false), noise_min(0.), noise_max(0.1), _sol_extraction(false)
+    : add_noise(false), gen(rd()), noise_min(0.), noise_max(0.1), _sol_extraction(false)
 {
 }
 
 //---------------------------------------------------------------------------
 MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
-    : add_noise(false), noise_min(0.), noise_max(0.1), _sol_extraction(false)
+    : add_noise(false), gen(rd()), noise_min(0.), noise_max(0.1), _sol_extraction(false)
 {
     for (unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind++) {
         push_back(wcsps[wcsp_ind], weights[wcsp_ind]);
@@ -515,8 +515,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     Double global_ub = 0.;
 
     // optional noise
-    std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
     std::uniform_real_distribution<> dis(noise_min, noise_max);
 
     // bool dir_consistency = true;
