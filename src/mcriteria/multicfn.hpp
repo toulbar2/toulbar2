@@ -272,6 +272,17 @@ public:
      */
     Solution convertToSolution(std::vector<Value>& solution);
 
+    /*!
+     * \brief activate the noise parameter to add uniform random noise to each cost in every cost function
+     * \param activation true activates the noise
+    */
+    void setNoiseActivation(bool activation);
+
+    /*!
+     * \brief set the min and max value for uniform noise perturbation of the costs
+     */
+    void setNoiseLevel(Double min_level, Double max_level);
+
 private: /* private methods */
     /*!
      * \brief send the cfn to toulbar2
@@ -329,6 +340,7 @@ public: // public attributes
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
 private: // private attributes
+
     std::vector<Double> weights; // list of weights for all the loaded networks
     std::vector<std::string> network_names; // names of the networks
     std::vector<std::vector<unsigned int>> networks; // list of the cost function networks (function indexes for each network)
@@ -340,6 +352,10 @@ private: // private attributes
 
     unsigned int _tb2_decimalpoint; // precision of the wcsp
     Double _tb2_unit_cost; // toulbar2 cost precision as Double
+
+    // parameter that add noise to the costs during exportation if activated
+    bool add_noise;
+    Double noise_min, noise_max;
 
     /* solution */
     WCSP* _wcsp; // pointer to the wcsp containing the combination of the input wcsps

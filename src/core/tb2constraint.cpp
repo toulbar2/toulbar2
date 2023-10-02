@@ -594,45 +594,6 @@ bool Constraint::cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<Constrai
     }
 }
 
-bool Constraint::cmpConstraintArity(Constraint* c1, Constraint* c2)
-{
-    int v1 = c1->arity();
-    int v2 = c2->arity();
-    return (v1 < v2);
-}
-
-bool Constraint::cmpConstraintArity(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
-{
-    int v1 = c1->content.constr->arity();
-    int v2 = c2->content.constr->arity();
-    return (v1 < v2);
-}
-
-bool Constraint::cmpConstraintArityDAC(Constraint* c1, Constraint* c2)
-{
-    int v1 = c1->arity();
-    int v2 = c2->arity();
-    if (v1 != v2)
-        return (v1 < v2);
-    else {
-        int v1 = c1->getDACVar(0)->getDACOrder();
-        int v2 = c2->getDACVar(0)->getDACOrder();
-        return (v1 > v2);
-    }
-}
-
-bool Constraint::cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
-{
-    int v1 = c1->content.constr->arity();
-    int v2 = c2->content.constr->arity();
-    if (v1 != v2)
-        return (v1 < v2);
-    else {
-        int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
-        int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
-        return (v1 > v2);
-    }
-}
 // sort a list of constraints
 int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
 {

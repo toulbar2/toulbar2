@@ -299,7 +299,9 @@ PYBIND11_MODULE(pytb2, m)
         .def("getSolution", &MultiCFN::getSolution)
         .def("getSolutionValues", &MultiCFN::getSolutionValues)
         .def("computeSolutionValues", &MultiCFN::computeSolutionValues)
-        .def("convertToSolution", &MultiCFN::convertToSolution);
+        .def("convertToSolution", &MultiCFN::convertToSolution)
+        .def("setNoiseActivation", &MultiCFN::setNoiseActivation)
+        .def("setNoiseLevel", &MultiCFN::setNoiseLevel);
 
     py::class_<Bicriteria> bcrit(m, "Bicriteria");
 

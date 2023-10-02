@@ -10,17 +10,19 @@
 
 #include "core/tb2types.hpp"
 
+#include <random>
+
 using namespace std;
 
 //---------------------------------------------------------------------------
 MultiCFN::MultiCFN()
-    : _sol_extraction(false)
+    : add_noise(false), noise_min(0.), noise_max(0.1), _sol_extraction(false)
 {
 }
 
 //---------------------------------------------------------------------------
 MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
-    : _sol_extraction(false)
+    : add_noise(false), noise_min(0.), noise_max(0.1), _sol_extraction(false)
 {
     for (unsigned int wcsp_ind = 0; wcsp_ind < wcsps.size(); wcsp_ind++) {
         push_back(wcsps[wcsp_ind], weights[wcsp_ind]);
@@ -512,6 +514,11 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     Double global_lb = 0.;
     Double global_ub = 0.;
 
+    // optional noise
+    std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> dis(noise_min, noise_max);
+
     // bool dir_consistency = true;
 
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
@@ -619,10 +626,14 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     costs[tb2_val_ind] = top;
                 } else {
 
+                    costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind];
+
+                    if(add_noise) {    
+                        costs[tb2_val_ind] += (Double)dis(gen);
+                    }
+
                     if (fabs(weight - 1.0) > MultiCFN::epsilon) {
-                        costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind] * weight;
-                    } else {
-                        costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind];
+                        costs[tb2_val_ind] *= weight;
                     }
                 }
             }
@@ -651,6 +662,11 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     tuple[1] = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
 
                     Double cost = cost_function[func_ind].costs[tupleToIndex({ var1, var2 }, tuple)];
+
+                    // optional noise
+                    if(add_noise) {    
+                        cost += (Double)dis(gen);
+                    }
 
                     // Double cost = cost_function[func_ind].getCost(tuple);
 
@@ -695,6 +711,10 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                         tuple[2] = var3->str_to_index[tb2_var3->getValueName(tb2_val3_ind)];
 
                         Double cost = cost_function[func_ind].costs[tupleToIndex({ var1, var2, var3 }, tuple)];
+
+                        if(add_noise) {    
+                            cost += (Double)dis(gen);
+                        }
 
                         if (cost == numeric_limits<Double>::infinity()) {
                             costs.push_back(top);
@@ -768,6 +788,10 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     }
 
                     Double cost = cost_function[func_ind].costs[ind_tuple];
+
+                    if(add_noise) {    
+                        cost += (Double)dis(gen);
+                    }
 
                     if (cost == numeric_limits<Double>::infinity()) {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))));
@@ -1075,6 +1099,17 @@ void MultiCFN::print(ostream& os)
 }
 
 //---------------------------------------------------------------------------
+void MultiCFN::setNoiseActivation(bool activation) {
+    add_noise = activation;
+}
+
+//---------------------------------------------------------------------------
+void MultiCFN::setNoiseLevel(Double min_level, Double max_level) {
+    noise_min = min_level;
+    noise_max = max_level;
+}
+
+//---------------------------------------------------------------------------
 mcriteria::Var::Var(MultiCFN* multicfn)
 {
     this->multicfn = multicfn;
@@ -1197,3 +1232,4 @@ bool mcriteria::CostFunction::detectIfHard() {
     return isHard;
 
 }
+
