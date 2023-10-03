@@ -626,13 +626,13 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
                     costs[tb2_val_ind] = cost_function[func_ind].costs[own_val_ind];
 
-                    if(add_noise) {    
-                        costs[tb2_val_ind] += (Double)dis(gen);
-                    }
-
                     if (fabs(weight - 1.0) > MultiCFN::epsilon) {
                         costs[tb2_val_ind] *= weight;
+                        if(add_noise) {    
+                            costs[tb2_val_ind] += (Double)dis(gen);
+                        }
                     }
+                    
                 }
             }
 
@@ -661,21 +661,22 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
                     Double cost = cost_function[func_ind].costs[tupleToIndex({ var1, var2 }, tuple)];
 
-                    // optional noise
-                    if(add_noise) {    
-                        cost += (Double)dis(gen);
-                    }
 
                     // Double cost = cost_function[func_ind].getCost(tuple);
 
                     if (cost == numeric_limits<Double>::infinity()) {
                         costs.push_back(top);
                     } else {
+
                         if (fabs(weight - 1.0) > MultiCFN::epsilon) {
-                            costs.push_back(cost * weight);
-                        } else {
-                            costs.push_back(cost);
+                            cost *= weight;
                         }
+
+                        if(add_noise) {    // optional noise 
+                            cost += (Double)dis(gen);
+                        }
+
+                        costs.push_back(cost);
                     }
                 }
             }
@@ -710,18 +711,18 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
                         Double cost = cost_function[func_ind].costs[tupleToIndex({ var1, var2, var3 }, tuple)];
 
-                        if(add_noise) {    
-                            cost += (Double)dis(gen);
-                        }
-
                         if (cost == numeric_limits<Double>::infinity()) {
                             costs.push_back(top);
                         } else {
+
                             if (fabs(weight - 1.0) > MultiCFN::epsilon) {
-                                costs.push_back(cost * weight);
-                            } else {
-                                costs.push_back(cost);
+                                cost *= weight;
                             }
+                            if(add_noise) {    
+                                cost += (Double)dis(gen);
+                            }
+
+                            costs.push_back(cost);
                         }
                     }
                 }
@@ -787,16 +788,16 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
                     Double cost = cost_function[func_ind].costs[ind_tuple];
 
-                    if(add_noise) {    
-                        cost += (Double)dis(gen);
-                    }
-
                     if (cost == numeric_limits<Double>::infinity()) {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))));
                     } else {
                         // do not forget to convert from Double to cost for n-ary cost functions
                         if (fabs(weight - 1.) > MultiCFN::epsilon) {
-                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
+                            if(add_noise) {
+                                wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(((cost * weight+(Double)dis(gen)) - mincost) * pow(10, _tb2_decimalpoint))));
+                            } else {
+                                wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
+                            }
                         } else {
                             wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost- mincost) * pow(10, _tb2_decimalpoint))));
                         }
