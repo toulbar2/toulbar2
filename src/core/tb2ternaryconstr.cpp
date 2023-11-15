@@ -286,24 +286,35 @@ void TernaryConstraint::print(ostream& os)
 void TernaryConstraint::dump(ostream& os, bool original)
 {
     unsigned int tuples = 0;
+    unsigned int tuplesNotTop = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
-                if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
+                Cost cost = getCost(*iterX, *iterY, *iterZ);
+                if (cost > MIN_COST) {
                     tuples++;
+                }
+                if (cost != top) {
+                    tuplesNotTop++;
                 }
             }
         }
     }
-    os << "3 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << " " << MIN_COST << " " << tuples << endl;
+    Cost defaultCost = MIN_COST;
+    if (tuplesNotTop < tuples) {
+        defaultCost = top;
+        tuples = tuplesNotTop;
+    }
+    os << "3 " << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << " " << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << " " << ((original) ? (z->wcspIndex) : z->getCurrentVarId()) << " " << defaultCost << " " << tuples << endl;
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
-                if (getCost(*iterX, *iterY, *iterZ) > MIN_COST) {
-                    os << ((original) ? *iterX : i) << " " << ((original) ? *iterY : j) << " " << ((original) ? *iterZ : k) << " " << ((original) ? getCost(*iterX, *iterY, *iterZ) : min(wcsp->getUb(), getCost(*iterX, *iterY, *iterZ))) << endl;
+                Cost cost = getCost(*iterX, *iterY, *iterZ);
+                if (cost != defaultCost) {
+                    os << ((original) ? *iterX : i) << " " << ((original) ? *iterY : j) << " " << ((original) ? *iterZ : k) << " " << ((original) ? cost : min(wcsp->getUb(), cost)) << endl;
                 }
             }
         }
@@ -312,6 +323,26 @@ void TernaryConstraint::dump(ostream& os, bool original)
 
 void TernaryConstraint::dump_CFN(ostream& os, bool original)
 {
+    unsigned int tuples = 0;
+    unsigned int tuplesNotTop = 0;
+    for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
+        for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
+            for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
+                Cost cost = getCost(*iterX, *iterY, *iterZ);
+                if (cost > MIN_COST) {
+                    tuples++;
+                }
+                if (cost != top) {
+                    tuplesNotTop++;
+                }
+            }
+        }
+    }
+    Cost defaultCost = MIN_COST;
+    if (tuplesNotTop < tuples) {
+        defaultCost = top;
+        tuples = tuplesNotTop;
+    }
     bool printed = false;
     os << "\"F_" << ((original) ? (x->wcspIndex) : x->getCurrentVarId()) << "_"
        << ((original) ? (y->wcspIndex) : y->getCurrentVarId()) << "_"
@@ -319,14 +350,14 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
     os << x->getName() << "\",\""
        << y->getName() << "\",\""
        << z->getName() << "\"],";
-    os << "\"defaultcost\":" << MIN_COST << ",\n\"costs\":[\n";
+    os << "\"defaultcost\":" << defaultCost << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
-                if (getCost(*iterX, *iterY, *iterZ) != MIN_COST) {
+                if (getCost(*iterX, *iterY, *iterZ) != defaultCost) {
                     if (printed)
                         os << ",\n";
                     os << ((original) ? x->toIndex(*iterX) : i) << "," << ((original) ? y->toIndex(*iterY) : j) << "," << ((original) ? z->toIndex(*iterZ) : k) << ","
