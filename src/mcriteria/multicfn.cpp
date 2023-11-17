@@ -628,9 +628,10 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
                     if (fabs(weight - 1.0) > MultiCFN::epsilon) {
                         costs[tb2_val_ind] *= weight;
-                        if(add_noise) {    
-                            costs[tb2_val_ind] += (Double)dis(gen);
-                        }
+                    }
+
+                    if(add_noise) {    
+                        costs[tb2_val_ind] += (Double)dis(gen);
                     }
                     
                 }
@@ -791,6 +792,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                     if (cost == numeric_limits<Double>::infinity()) {
                         wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))));
                     } else {
+
                         // do not forget to convert from Double to cost for n-ary cost functions
                         if (fabs(weight - 1.) > MultiCFN::epsilon) {
                             if(add_noise) {
@@ -798,9 +800,15 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                             } else {
                                 wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
                             }
-                        } else {
-                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost- mincost) * pow(10, _tb2_decimalpoint))));
+                        } else { // weight == 1.
+                            if(add_noise) {
+                                wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost+(Double)dis(gen) - mincost) * pow(10, _tb2_decimalpoint))));
+                            } else {
+                                wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost- mincost) * pow(10, _tb2_decimalpoint))));
+                            }
                         }
+
+
                     }
                 }
 
