@@ -317,6 +317,13 @@ General control
 Preprocessing
 -------------
 
+-x=[(,i[:math:`=\#<>`]a)*]
+        performs an elementary operation (':math:`=`':assign, ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with value a on variable of index i (multiple
+        operations are separated by a comma and no space) (without any
+        argument, it assumes a complete assignment -- used as initial upper bound and
+        as value heuristic -- is read from default file "sol", or, without the option -x, given as input
+        filename with ".sol" extension)
+
 -nopre  deactivates all preprocessing options (equivalent to -e:
         -p: -t: -f: -dec: -n: -mst: -dee: -trws:)
 
@@ -711,13 +718,6 @@ File output
         after preprocessing but keeps initial domains (this option can be
         used in combination with -z=filename). If the problem is saved after preprocessing (except for -2 or -4), some variables may be lost (due to variable elimination, see -e or -p or -f).
 
--x=[(,i[:math:`=\#<>`]a)*]
-        performs an elementary operation (':math:`=`':assign, ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with value a on variable of index i (multiple
-        operations are separated by a comma and no space) (without any
-        argument, a complete assignment -- used as initial upper bound and
-        as value heuristic -- read from default file "sol" or given as input
-        filename with ".sol" extension)
-
 Probability representation and numerical control
 ------------------------------------------------
 
@@ -839,7 +839,7 @@ Notice that by default toulbar2 distinguishes file formats based on their extens
 It is possible to read a file from a unix pipe using option :code:`-stdin=[format]`; *e.g.*, :code:`cat example.wcsp | toulbar2 --stdin=wcsp`
 
 It is also possible to read and combine multiple problem files (warning, they must be all in the same format, either wcsp, cfn, or xml). 
-Variables with the same name are merged (domains must be identical), otherwise the merge is based on variable indexes (wcsp format).
+Variables with the same name are merged (domains must be identical), otherwise the merge is based on variable indexes (wcsp format). Warning, it uses the minimum of all initial upper bounds read from the problem files as the initial upper bound of the merged problem.
 
 Formats details
 ---------------

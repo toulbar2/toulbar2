@@ -267,10 +267,16 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
             
-        if (len(iscope) == 0):
-            assert(isinstance(costs, (int, float)))
+        if (len(iscope) == 0 and isinstance(costs, (int, float))):
             self.CFN.wcsp.postNullaryConstraint(costs)
-        elif (len(iscope) == 1):
+            return
+        mincost = min(costs)
+        maxcost = max(costs)
+        if (mincost == maxcost):
+            self.CFN.wcsp.postNullaryConstraint(mincost)
+            return
+        assert(len(iscope) >= 1)
+        if (len(iscope) == 1):
             assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) == len(costs))
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
         elif (len(iscope) == 2):
@@ -282,11 +288,7 @@ class CFN:
         else:
             if incremental:
                 raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
-            mincost = min(costs)
-            maxcost = max(costs)
             self.CFN.wcsp.postNullaryConstraint(mincost)
-            if (mincost == maxcost):
-                return
             idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0))
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
@@ -335,7 +337,14 @@ class CFN:
         if (len(iscope) == 0):
             assert(len(tuples) == 0)
             self.CFN.wcsp.postNullaryConstraint(defcost)
-        elif (len(iscope) == 1):
+            return
+        mincost = min(defcost, min(tcosts))
+        maxcost = max(defcost, max(tcosts))
+        if (mincost == maxcost):
+            self.CFN.wcsp.postNullaryConstraint(mincost)
+            return
+        assert(len(iscope) >= 1)
+        if (len(iscope) == 1):
             costs = [defcost] * self.CFN.wcsp.getDomainInitSize(iscope[0])
             for i, tuple in enumerate(tuples):
                 costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0])] = tcosts[i]
@@ -353,11 +362,8 @@ class CFN:
         else:
             if incremental:
                 raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
-            mincost = min(defcost, min(tcosts))
-            maxcost = max(defcost, max(tcosts))
+            
             self.CFN.wcsp.postNullaryConstraint(mincost)
-            if (mincost == maxcost):
-                return
             idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
                 self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
