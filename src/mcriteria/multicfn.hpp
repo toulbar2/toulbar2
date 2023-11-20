@@ -60,10 +60,66 @@ public:
 class CostFunction {
 
 public:
+
+    enum Type { Tuple, Linear };
+
+public:
+
     /*!
      * \brief constructor
      */
-    CostFunction(MultiCFN* multicfn);
+    CostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief print the cost function data
+     * \brief os the stream to print to
+     */
+    void print(std::ostream& os);
+
+    /*!
+     * \brief return the arity of the cost function
+     */
+    virtual unsigned int arity();
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param tuple the tuple
+     */
+    virtual Double getCost(std::vector<unsigned int>& tuple) = 0;
+
+    /*!
+     * \brief get the max and min cost of the cost function
+     * \param min_cost the minimum cost of the function returned by the method
+     * \param min_cost the maximum cost of the function returned by the method
+     */
+    virtual void getMinMaxCost(double& min_cost, double& max_cost) = 0;
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType() = 0;
+
+public:
+
+    MultiCFN* multicfn;
+    std::string name;
+    unsigned int net_index; /* index of the network this cost function belongs to */
+    std::vector<unsigned int> scope; /* internal variable indexes */
+
+};
+
+/*!
+ * \class TupleCostFunction
+ * \brief store cost function data: name, scope, costs
+ */
+class TupleCostFunction: public CostFunction {
+
+public:
+
+    /*!
+     * \brief constructor
+     */
+    TupleCostFunction(MultiCFN* multicfn, unsigned int net_index);
 
     /*!
      * \brief print the cost function data
@@ -75,12 +131,14 @@ public:
      * \brief return the cost of a given tuple
      * \param tuple the tuple
      */
-    Double getCost(std::vector<unsigned int>& tuple);
+    virtual Double getCost(std::vector<unsigned int>& tuple);
 
     /*!
-     * \brief return the arity of the cost function
+     * \brief get the max and min cost of the cost function
+     * \param min_cost the minimum cost of the function returned by the method
+     * \param min_cost the maximum cost of the function returned by the method
      */
-    unsigned int arity();
+    virtual void getMinMaxCost(double& min_cost, double& max_cost);
 
     /*! 
      * \brief compute the total number of tuples
@@ -92,11 +150,14 @@ public:
      */
     bool detectIfHard();
 
-public:
-    MultiCFN* multicfn;
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType() {
+        return CostFunction::Type::Tuple;
+    }
 
-    std::string name;
-    std::vector<unsigned int> scope; /* internal variable indexes */
+public:    
 
     // cost table
     Double default_cost;
@@ -105,6 +166,51 @@ public:
     size_t n_total_tuples; // total number of tuples (length of the domain cartesian product)
     bool all_tuples; // true if all tuples are stored, false otherwise (default_cost)
     bool hard; // true if all costs are either null or =infinity, the cost function is then used only as a constraint
+};
+
+
+
+/*!
+ * \class LinearCostFunction
+ * \brief store a linear cost function data: name, scope, coefficients
+ */
+class LinearCostFunction: public CostFunction {
+
+public:
+
+    /*!
+     * \brief constructor
+     */
+    LinearCostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief print the cost function data
+     * \brief os the stream to print to
+     */
+    void print(std::ostream& os);
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param tuple the tuple
+     */
+    virtual Double getCost(std::vector<unsigned int>& tuple);
+
+    /*!
+     * \brief get the max and min cost of the cost function
+     * \param min_cost the minimum cost of the function returned by the method
+     * \param min_cost the maximum cost of the function returned by the method
+     */
+    virtual void getMinMaxCost(double& min_cost, double& max_cost);
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType() {
+        return CostFunction::Type::Linear;
+    }
+
+public:    
+
 };
 
 } // namespace mcriteria
@@ -303,6 +409,13 @@ private: /* private methods */
     void addCostFunction(WCSP* wcsp, Constraint* cstr);
 
     /*!
+     * \brief add a cost function to the network
+     * \param wcsp the tb2 wcsp
+     * \param cstr the original tb2 cost function
+     */
+    void addTupleCostFunction(WCSP* wcsp, Constraint* cstr);
+
+    /*!
      * \brief compute a TOP (infinity) value and a minimum cost for the internal representation of the cfn costs
      * \return a pair containing the top value (first) and the min cost (second)
      */
@@ -336,7 +449,7 @@ public: // public attributes
     std::map<std::string, int> var_index; // index of variables
 
     // cost functions
-    std::vector<mcriteria::CostFunction> cost_function; // list of the cost functions
+    std::vector<mcriteria::CostFunction*> cost_function; // list of the cost functions
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
 private: // private attributes
