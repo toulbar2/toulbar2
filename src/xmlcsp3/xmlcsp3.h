@@ -109,7 +109,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildConstraintExtension(vector<int> vars, vector<vector<int> > &tuples, bool isSupport, bool hasStar) {
+    // bug correction: vector<vector<int> > &tuples generates a wrong solution on BeerJugs-table-01_c23.xml in MiniCOP23
+    void buildConstraintExtension(vector<int> vars, vector<vector<int> > tuples, bool isSupport, bool hasStar) {
         if(hasStar) {
             vector<vector<int> > newtuples;
             for(auto& tuple:tuples) {
@@ -130,7 +131,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                newtuples.push_back(tuple);
                            }
                     }
-                    tuples = newtuples;
+                    tuples = newtuples; // warning it will change the input tuples
                     vars.erase(vars.begin()+j);
                     j--;
                 }
