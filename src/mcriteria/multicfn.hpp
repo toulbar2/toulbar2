@@ -209,7 +209,10 @@ public:
         return CostFunction::Type::Linear;
     }
 
-public:    
+public:
+
+    Double capacity;
+    std::vector<std::vector<std::pair<unsigned int, Double>>> weights;
 
 };
 
@@ -390,6 +393,7 @@ public:
     void setNoiseLevel(Double min_level, Double max_level);
 
 private: /* private methods */
+
     /*!
      * \brief send the cfn to toulbar2
      * \param wcsp tb2 wcsp
@@ -397,7 +401,17 @@ private: /* private methods */
     void exportToWCSP(WCSP* wcsp);
 
     /*!
-     * \brief axtrect the solution and the objective values from the created wcsp
+     * \brief export a tuple cost function to the wcsp
+     */
+    void exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double top, std::uniform_real_distribution<>& dis);
+
+    /*!
+     * \brief export a linear cost function to the wcsp
+     */
+    void exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind);
+
+    /*!
+     * \brief  extract the solution and the objective values from the created wcsp
      */
     void extractSolution();
 

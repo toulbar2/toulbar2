@@ -2311,6 +2311,31 @@ public:
             }
         }
     }
+
+    //-----------------------------------------------------------------
+    void getWeights(std::vector<std::vector<std::pair<unsigned int, Double>>>& pweights) {
+
+        for (int i = 0; i < arity_; i++) {
+            pweights.push_back(std::vector<std::pair<unsigned int, Double>>());
+
+            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                
+                auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
+
+                pweights.back().push_back(new_pair);
+
+            }
+        }
+        
+
+
+    }
+
+    //-----------------------------------------------------------------
+    Double getCapacity() {
+        return Original_capacity;
+    }
+
 };
 #endif /*TB2KNAPSACK_HPP_*/
 

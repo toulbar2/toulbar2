@@ -9,7 +9,7 @@ DESCRIPTION
 """
 from math import isinf
 try :
-    import pytoulbar2.pytb2 as tb2
+    import pytb2 as tb2
 except :
     pass
 
