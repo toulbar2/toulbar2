@@ -1197,7 +1197,7 @@ void MultiCFN::print(ostream& os)
                     os << var[varInd].domain_str[w.first] << ")";
                 }
             }
-            os << " <= " << lcost_func->capacity << endl;
+            os << " >= " << lcost_func->capacity << endl;
             
         }
     }

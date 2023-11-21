@@ -2318,22 +2318,31 @@ public:
         for (int i = 0; i < arity_; i++) {
             pweights.push_back(std::vector<std::pair<unsigned int, Double>>());
 
-            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                
-                auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
-
-                pweights.back().push_back(new_pair);
-
+            if (NotVarVal[i].empty()) {
+                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
+                    pweights.back().push_back(new_pair);
+                }
+            } else {
+                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j] - weights[i].back());
+                    pweights.back().push_back(new_pair);
+                }
             }
         }
-        
-
 
     }
 
     //-----------------------------------------------------------------
     Double getCapacity() {
-        return Original_capacity;
+
+        Long wnot = 0;
+        for (int i = 0; i < arity_; i++) {
+            if (!NotVarVal[i].empty())
+                wnot += weights[i].back();
+        }
+
+        return Original_capacity-wnot;
     }
 
 };
