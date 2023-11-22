@@ -287,7 +287,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
   // constraints definition
 
-  // only one variable per domain
+  // only one value per domain is selected in the cplex variables
   for (size_t var_ind = 0; var_ind < domain_vars.size(); ++var_ind) {
 
     if(var[var_ind].nbValues() <= 2) {
@@ -302,12 +302,14 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     expr.end();
   }
 
-  // only one tuple is selected, necessary when default cost is used or for direct encoding when there is a constraint
+  // only one tuple is selected, necessary when default cost is used (in tuple encoding) or for direct encoding when there is a constraint
   for(unsigned int func_ind = 0; func_ind < tuple_vars.size(); func_ind ++) {
     
+    // skip if all costs are infinity
     if(cost_function[func_ind].hard) {
       continue;
     }
+    // skip if tuple encoding selected but there are no tuple variables (unary cost func.) or all the table is defined (no default cost) 
     if(encoding == ILP_Tuple && (tuple_vars[func_ind].get() == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == cost_function[func_ind].tuples.size())) {
       continue;
     }
@@ -320,13 +322,13 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       }
       model.add(expr == 1);
       expr.end();
-        
+      
     }
   
   }
 
 
-  // tuple corresponding to default cost must be used if no other tuple is 
+  // tuple corresponding to default cost must be used if no other tuple is, i.e. sum of the tuples (inc. default_cost tuple) equals 1 (or >= 1)
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
 
     auto func = cost_function[func_ind];
@@ -344,7 +346,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     expr.end();
   }
 
-  // when the var assignment corresponds to an existing tuple, this tuple must be used (necessary if there exist a default_cost tuple)
+  // when the var assignment corresponds to an existing tuple, this tuple must be used (necessary if there exists a default_cost tuple)
   // equivalent to the direct encoding
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
     
@@ -419,7 +421,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       }
     }
 
-  } else if(encoding == ILP_Tuple) {
+  } else if(encoding == ILP_Tuple) { // sum of the tuples corresponding to one variable value are equal to the cplex var representing this value (or >= in case of default encoding)
 
     for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
       
@@ -465,15 +467,16 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
             expr += (*tuple_vars[func_ind].get())[func.tuples.size()];
           }
 
-          if(variable.nbValues() > 2) {
+          // finalisation of this tuple encoding constraint: right side is the domain variable
 
-            if((size_t)tuple_vars[func_ind].get()->getSize() > func.tuples.size() && n_tuples_value*variable.nbValues() < func.n_total_tuples) {
+          if(variable.nbValues() > 2) { // case with variables having more than  values
+
+            if((size_t)tuple_vars[func_ind].get()->getSize() > func.tuples.size() && n_tuples_value*variable.nbValues() < func.n_total_tuples) { // case when there is a default_cost tuple associated to this value
               model.add(expr >= domain_vars[var_ind][val_ind]);
             } else {
               model.add(expr == domain_vars[var_ind][val_ind]);
             }
             
-
           } else if(variable.nbValues() == 2) { // special case for binary variables
 
             if(val_ind == 1) {
