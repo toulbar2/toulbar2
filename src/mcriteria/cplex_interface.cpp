@@ -242,7 +242,9 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   //   }
   // }
 
+  /////////////////////////////////////
   // variables definition
+  /////////////////////////////////////
 
   // for binary variables, one boolean var = 1 iif the variable has value 1 (implies no bool var representing 0 value)
 
@@ -284,10 +286,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
   }
   
-
+  /////////////////////////////////////
   // constraints definition
+  /////////////////////////////////////
 
-  // only one value per domain is selected in the cplex variables
+  // only one value per domain is selected in the cplex domain variables
   for (size_t var_ind = 0; var_ind < domain_vars.size(); ++var_ind) {
 
     if(var[var_ind].nbValues() <= 2) {
@@ -550,7 +553,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     // * cost functions with arity >= 2
     for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
 
-      // select only tuples with infinite costs
+      // consider only tuples with infinite costs
       if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
         continue;
       }
