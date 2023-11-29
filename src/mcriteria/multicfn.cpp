@@ -235,8 +235,6 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 
         auto cstr_kp = dynamic_cast<KnapsackConstraint*>(cstr);
 
-        cout << "knapsack constraint" << endl;
-
         // sum of values >= capacity
 
         mcriteria::LinearCostFunction* cost_func_ptr = new mcriteria::LinearCostFunction(this, networks.size() - 1);
@@ -249,10 +247,8 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         cost_func_ptr->name = cstr->getName();
 
         // read the scope
-        cout << "knapsack constraint scope: " << endl;
         cost_func_ptr->scope.resize(cstr->arity());
         for (unsigned int i = 0; i < static_cast<unsigned int>(cstr->arity()); i++) {
-            cout << cstr->getVar(i)->getName() << endl;
             cost_func_ptr->scope[i] = var_index[cstr->getVar(i)->getName()];
         }
 
@@ -340,7 +336,7 @@ void MultiCFN::addTupleCostFunction(WCSP* wcsp, Constraint* cstr)
         for (unsigned int tb2_val1_ind = 0; tb2_val1_ind < tb2_var1->getDomainInitSize(); tb2_val1_ind++) {
             for (unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind++) {
 
-                /* todo: check existance of the corresponding variable */
+                /* todo: check existence of the corresponding variable */
 
                 vector<mcriteria::Var*> variables = { &var[cost_func.scope[0]], &var[cost_func.scope[1]] };
 
@@ -643,11 +639,9 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
         }
     }
 
-    // create the cost functions
+    // export the cost functions
     for (unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind++) {
-
         switch(cost_function[func_ind]->getType()) {
-
             case mcriteria::CostFunction::Tuple:
                 exportTupleCostFunction(wcsp, func_ind, top, dis);
                 break;
@@ -657,7 +651,6 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
             default:
                 break;
         }
-        
     }
 
     global_lb += wcsp->Cost2ADCost(wcsp->getLb());
@@ -683,8 +676,44 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 //---------------------------------------------------------------------------
 void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind) {
 
+    cout << "exportation of a linear cost function" << endl;
 
+    mcriteria::LinearCostFunction* lcost_func = dynamic_cast<mcriteria::LinearCostFunction*>(cost_function[func_ind]);
 
+    // build the output wcsp's scope
+    vector<int> scope;
+    for (auto& var_ind : lcost_func->scope) {
+        scope.push_back(wcsp->getVarIndex(var[var_ind].name));
+    }
+
+    // output the arguments
+    string args;
+    args += to_string(lcost_func->capacity);
+    for(size_t scope_ind = 0; scope_ind < scope.size(); scope_ind ++) {
+        
+        mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[0]];
+        EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind]->scope[0]].name)));
+
+        // compute the number of value to indicate for the variable
+        auto iter = find_if(lcost_func->weights[scope_ind].begin(), lcost_func->weights[scope_ind].end(), [](auto elt) { return elt.first == 0; });
+        if(iter == lcost_func->weights[scope_ind].end()) {
+            args += " " + to_string(lcost_func->weights[scope_ind].size());
+        } else {
+            args += " " + to_string(lcost_func->weights[scope_ind].size()-1);
+        }
+        for(unsigned int val_ind = 0; val_ind < lcost_func->weights[scope_ind].size(); val_ind ++) {
+            if(lcost_func->weights[scope_ind][val_ind].first != 0) {
+                Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[lcost_func->weights[scope_ind][val_ind].first]));
+                args += " " + to_string(val) + " " + to_string(int(lcost_func->weights[scope_ind][val_ind].second));
+            }
+        }
+    }
+    cout << "linear constraint arguments: " << args << endl;
+
+    istringstream file(args);
+    unsigned int cst_ind = wcsp->postKnapsackConstraint(scope.data(), scope.size(), file, false, true, false);
+
+    wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);
 }
 
 //---------------------------------------------------------------------------
