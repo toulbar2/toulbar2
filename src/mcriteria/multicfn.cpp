@@ -688,7 +688,7 @@ void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind) {
 
     // output the arguments
     string args;
-    args += to_string(lcost_func->capacity);
+    args += to_string(int(lcost_func->capacity));
     for(size_t scope_ind = 0; scope_ind < scope.size(); scope_ind ++) {
         
         mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[0]];
