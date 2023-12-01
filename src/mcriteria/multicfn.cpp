@@ -56,6 +56,27 @@ void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria:
     }
 }
 
+
+//---------------------------------------------------------------------------
+bool MultiCFN::checkLinCostFuncConsistency(unsigned int func_ind, MultiCFN::Solution& sol) {
+
+    mcriteria::LinearCostFunction* lcost_func = dynamic_cast<mcriteria::LinearCostFunction*>(cost_function[func_ind]);
+
+    Double cost = 0.;
+
+    for(unsigned int scope_ind = 0; scope_ind < lcost_func->weights.size(); scope_ind ++) {
+
+        mcriteria::Var& mcfn_var = var[lcost_func->scope[scope_ind]];
+        for(auto val_weights: lcost_func->weights[scope_ind]) {
+            if(sol[mcfn_var.name] == mcfn_var.domain_str[val_weights.first]) {
+                cost += val_weights.second;
+            }
+        }
+    }
+
+    return cost >= lcost_func->capacity;
+}
+
 //---------------------------------------------------------------------------
 void MultiCFN::push_back(WCSP* wcsp, Double weight)
 {
@@ -521,7 +542,8 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
         for (auto& func_ind : networks[net_ind]) {
             if(cost_function[func_ind]->getType() == mcriteria::CostFunction::Tuple) {
                 double min_cost, max_cost;
-                cost_function[func_ind]->getMinMaxCost(min_cost, max_cost);
+                auto tcost_func = dynamic_cast<mcriteria::TupleCostFunction*>(cost_function[func_ind]);
+                tcost_func->getMinMaxCost(min_cost, max_cost);
                 assert(max_cost - min_cost >= 0.);
                 net_top += max_cost - min_cost;
                 global_mincost += min_cost;
@@ -676,7 +698,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 //---------------------------------------------------------------------------
 void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind) {
 
-    cout << "exportation of a linear cost function" << endl;
+    // cout << "exportation of a linear cost function" << endl;
 
     mcriteria::LinearCostFunction* lcost_func = dynamic_cast<mcriteria::LinearCostFunction*>(cost_function[func_ind]);
 
@@ -708,7 +730,8 @@ void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind) {
             }
         }
     }
-    cout << "linear constraint arguments: " << args << endl;
+
+    // cout << "linear constraint arguments: " << args << endl;
 
     istringstream file(args);
     unsigned int cst_ind = wcsp->postKnapsackConstraint(scope.data(), scope.size(), file, false, true, false);
@@ -1055,7 +1078,6 @@ void MultiCFN::extractSolution()
                 cost += func->getCost(tuple);
             
             }
-
             
         }
 
@@ -1067,6 +1089,16 @@ void MultiCFN::extractSolution()
 
         _obj_values.push_back(cost);
     }
+
+    /* make sure the linear constraints are verified */
+    #ifndef NDEBUG
+    for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
+        if(cost_function[func_ind]->getType() == mcriteria::CostFunction::Linear) {
+            assert(checkLinCostFuncConsistency(func_ind, _solution));
+        }
+    }
+    #endif
+    
 
     // cout << "check sum: " << check_sum << endl;
 
@@ -1117,14 +1149,16 @@ std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution
 
             auto& func = cost_function[func_ind];
 
-            vector<unsigned int> tuple;
-
-            for (auto& var_ind : func->scope) {
-                string var_name = var[var_ind].name;
-                tuple.push_back(var[var_ind].str_to_index[solution[var_name]]);
+            if(func->getType() == mcriteria::CostFunction::Tuple) {
+                vector<unsigned int> tuple;
+                for (auto& var_ind : func->scope) {
+                    string var_name = var[var_ind].name;
+                    tuple.push_back(var[var_ind].str_to_index[solution[var_name]]);
+                }
+                cost += func->getCost(tuple);
+            } else if(func->getType() == mcriteria::CostFunction::Linear) {
+                assert(checkLinCostFuncConsistency(func_ind, solution));
             }
-
-            cost += func->getCost(tuple);
 
             cpt++;
         }
@@ -1458,7 +1492,3 @@ Double mcriteria::LinearCostFunction::getCost(std::vector<unsigned int>& tuple) 
     return cost;
 }
 
-//---------------------------------------------------------------------------
-void mcriteria::LinearCostFunction::getMinMaxCost(double& min_cost, double& max_cost) {
-
-}

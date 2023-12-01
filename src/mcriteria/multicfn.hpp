@@ -88,13 +88,6 @@ public:
     virtual Double getCost(std::vector<unsigned int>& tuple) = 0;
 
     /*!
-     * \brief get the max and min cost of the cost function
-     * \param min_cost the minimum cost of the function returned by the method
-     * \param min_cost the maximum cost of the function returned by the method
-     */
-    virtual void getMinMaxCost(double& min_cost, double& max_cost) = 0;
-
-    /*!
      * \brief return the type of the cost function
      */
     virtual Type getType() = 0;
@@ -138,7 +131,7 @@ public:
      * \param min_cost the minimum cost of the function returned by the method
      * \param min_cost the maximum cost of the function returned by the method
      */
-    virtual void getMinMaxCost(double& min_cost, double& max_cost);
+    void getMinMaxCost(double& min_cost, double& max_cost);
 
     /*! 
      * \brief compute the total number of tuples
@@ -194,13 +187,6 @@ public:
      * \param tuple the tuple
      */
     virtual Double getCost(std::vector<unsigned int>& tuple);
-
-    /*!
-     * \brief get the max and min cost of the cost function
-     * \param min_cost the minimum cost of the function returned by the method
-     * \param min_cost the maximum cost of the function returned by the method
-     */
-    virtual void getMinMaxCost(double& min_cost, double& max_cost);
 
     /*!
      * \brief return the type of the cost function
@@ -441,6 +427,13 @@ private: /* private methods */
      * \param multicfn_var the variable in the multicfn 
      */
     void checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var);
+
+    /*!
+     * \brief check if a linear constraint is verifed for a solution
+     * \param sol the solution to check
+     * \return true if the solution verifies the constraint
+     */
+    bool checkLinCostFuncConsistency(unsigned int func_ind, Solution& sol);
 
     #ifdef ILOGCPLEX
 

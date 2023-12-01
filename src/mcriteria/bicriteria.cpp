@@ -94,6 +94,7 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
     // /!\ this initialization restores the state of the solver but also disrupt the user options (such as verbosity level)
     tb2init();
     ToulBar2::verbose = -1;
+    // ToulBar2::verbose = 2;
 
     // WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
@@ -627,7 +628,7 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
     bool result1, result2;
     Weights weights1, weights2;
 
-    // cout << "optimizing 1 separately: " << endl;
+    cout << "optimizing 1 separately: " << endl;
     if (optim_dir.second == Optim_Max) {
         weights1 = make_pair(lambda1, -delta);
     } else {
@@ -636,9 +637,9 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
 
     result1 = solveScalarization(multicfn, weights1, &sol1, &point1);
 
-    // cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
+    cout << "Optimal point for 1: " << point1.first << ";" << point1.second << endl;
 
-    // cout << "optimizing 2 separately: " << endl;
+    cout << "optimizing 2 separately: " << endl;
     if (optim_dir.first == Optim_Max) {
         weights2 = make_pair(-delta, lambda2);
     } else {
@@ -646,8 +647,8 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
     }
     result2 = solveScalarization(multicfn, weights2, &sol2, &point2);
 
-    // cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
-    // cout << endl << endl;
+    cout << "Optimal point for 2: " << point2.first << ";" << point2.second << endl;
+    cout << endl << endl;
 
     stack<pair<Point, Point>> pending;
 
