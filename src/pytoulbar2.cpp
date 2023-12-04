@@ -164,7 +164,9 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
         .def_readwrite_static("opb", &ToulBar2::opb)
+#ifdef BOOST
         .def_readwrite_static("addAMOConstraints", &ToulBar2::addAMOConstraints)
+#endif
         .def_readwrite_static("knapsackDP", &ToulBar2::knapsackDP)
         .def_readwrite_static("divNbSol", &ToulBar2::divNbSol)
         .def_readwrite_static("divBound", &ToulBar2::divBound)

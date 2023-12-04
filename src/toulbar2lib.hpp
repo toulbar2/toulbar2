@@ -190,7 +190,6 @@ public:
     virtual void reactivatePropagate() = 0; ///< \brief re-authorizes propagate calls
     virtual void propagate(bool fromscratch = false) = 0; ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction). If fromscratch is true then propagates every cost function at least once.
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
-    virtual void addAMOConstraints() = 0;
 
     virtual unsigned int numberOfVariables() const = 0; ///< \brief number of created variables
     virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \brief current number of unassigned variables

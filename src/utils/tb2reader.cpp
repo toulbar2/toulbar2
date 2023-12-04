@@ -2344,10 +2344,12 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     // common ending section for all readers
 
+#ifdef BOOST
     if (ToulBar2::addAMOConstraints) {
         addAMOConstraints();
         ToulBar2::addAMOConstraints_ = false;
     }
+#endif
 
     // Diverse variables structure and variables allocation and initialization
     if (ToulBar2::divNbSol > 1) {

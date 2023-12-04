@@ -1838,10 +1838,13 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_singletonConsistency)
                 ToulBar2::singletonConsistency = true;
 
+#ifdef BOOST
             if (args.OptionId() == OPT_GenAMOforPB) {
                 ToulBar2::addAMOConstraints = true;
                 ToulBar2::addAMOConstraints_ = true;
             }
+#endif
+
             if (args.OptionId() == OPT_DynPB) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::knapsackDP = atoi(args.OptionArg());

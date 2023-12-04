@@ -534,7 +534,9 @@ public:
     }
     int postCliqueConstraint(int* scopeIndex, int arity, istream& file); // warning! scopeIndex may be modified internally.
 
+#ifdef BOOST
     void addAMOConstraints();
+#endif
 
     int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false)
     {
