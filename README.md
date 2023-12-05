@@ -112,7 +112,7 @@ Optional libraries:
 * libxml2-dev
 * libxcsp3parser
 
-On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries.
+On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries. For Mac with ARM64, add option -DBoost=OFF to cmake.
 
 Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\*/toulbar2):
 
