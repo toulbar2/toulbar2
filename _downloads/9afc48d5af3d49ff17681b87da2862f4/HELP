@@ -1,0 +1,159 @@
+c /toulbar2/build/bin/Linux/toulbar2  version : 1.1.1-139-gacc22b68-master (1625740071), copyright (c) 2006-2020, toulbar2 team
+*************************
+* ToulBar2 Help Message *
+*************************
+
+Command line is:
+toulbar2 problem_filename [options]
+
+Available problem formats (specified by the filename extension) are:
+   *.cfn : Cost Function Network format (see toulbar2 web site)
+   *.wcsp : Weighted CSP format (see toulbar2 web site)
+   *.wcnf : Weighted Partial Max-SAT format (see Max-SAT Evaluation)
+   *.cnf : (Max-)SAT format
+   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)
+   *.opb : pseudo-Boolean optimization format
+   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)
+   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities
+   *.xml : CSP and weighted CSP in XML format XCSP 2.1 (constraints in extension only)
+   *.pre : pedigree format (see doc/MendelSoft.txt for Mendelian error correction)
+   *.pre *.map : pedigree and genetic map formats (see doc/HaplotypeHalfSib.txt for haplotype reconstruction in half-sib families)
+   *.bep  : satellite scheduling format (CHOCO benchmark)
+
+   *.order  : variable elimination order
+   *.cov  : tree decomposition given by a list of clusters in topological order of a rooted forest,
+      each line contains a cluster number, then a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes
+   *.dec  : a list of overlapping clusters without the running intersection property used by VNS-like methods,
+      each line contains a list of variable indexes
+   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)
+
+Note: cfn, cnf, LG, qpbo, opb, uai, wcnf, wcsp formats can be read in gzip'd or xz compressed format, e.g., toulbar2 problem.cfn.xz
+Warning! File formats are recognized by filename extensions. To change the default file format extension, use option --old_ext=".new" Examples: --cfn_ext='.json' --wcspgz_ext='.wgz' --sol_ext='.sol2'  
+
+Available options are (use symbol ":" after an option to remove a default option):
+   -help : shows this help message
+   -ub=[decimal] : initial problem upperbound (default value is 512409557603043100)
+   -agap=[decimal] : stop search if the absolute optimality gap reduces below the given value (provides guaranteed approximation) (default value is 0)
+   -rgap=[double] : stop search if the relative optimality gap reduces below the given value (provides guaranteed approximation) (default value is 0)
+   -v=[integer] : verbosity level
+   -s=[integer] : shows each solution found. 1 prints value numbers, 2 prints value names, 3 prints also variable names (default 1)
+   -w=[filename] : writes last/all solutions in filename (or "sol" if no parameter is given)
+   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)
+   -precision=[integer] defines the number of digits that should be representable on probabilities in uai/pre files (default value is 7)
+   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is 2)
+   -timer=[integer] : CPU time limit in seconds
+   -bt=[integer] : limit on the number of backtracks (9223372036854775807 by default)
+   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is 1)
+   --stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp
+   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is 0)
+   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains (default option)
+   -svo : searches using a static variable ordering heuristic (same order as DAC)
+   -c : searches using binary branching with last conflict backjumping variable ordering heuristic (default option)
+   -q=[integer] : weighted degree variable ordering heuristic if the number of cost functions is less than the given value (default value is 1000000)
+   -m=[integer] : variable ordering heuristic based on mean (m=1) or median (m=2) costs (in conjunction with weighted degree heuristic -q) (default value is 0)
+   -d=[integer] : searches using dichotomic branching (d=1 splitting in the middle of domain range, d=2 splitting in the middle of sorted unary costs) instead of binary branching when current domain size is strictly greater than 10 (default value is 1)
+   -sortd : sorts domains based on increasing unary costs (warning! works only for binary WCSPs)
+   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6) or the opposite order if using a negative value (default value is 2)
+   -solr : solution-based phase saving (default option)
+   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is 3)
+   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is -1)
+   -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)
+   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is 1)
+   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions (default option)
+   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10)
+   -mst : maximum spanning tree DAC ordering
+   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws:)
+   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)
+   -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is 4)
+   -dee=[integer] : restricted dead-end elimination (value pruning by dominance rule from EAC value (dee>=1 and dee<=3)) and soft neighborhood substitutability (in preprocessing (dee=2 or dee=4) or during search (dee=3)) (default value is 1)
+   -l=[integer] : limited discrepancy search, use a negative value to stop the search after the given absolute number of discrepancies has been explored (discrepancy bound = 4 by default)
+   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes/VNS restarts = 10000 by default)
+   -i=["string"] : initial upperbound found by INCOP local search solver.
+       string parameter is optional, using "0 1 3 idwa 100000 cv v 0 200 1 0 0" by default with the following meaning:
+       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode
+   -vns : unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O)
+   -vnsini=[integer] : initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default)
+   -ldsmin=[integer] : minimum discrepancy for VNS-like methods (1 by default)
+   -ldsmax=[integer] : maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default)
+   -ldsinc=[integer] : discrepancy increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (2 by default)
+   -kmin=[integer] : minimum neighborhood size for VNS-like methods (4 by default)
+   -kmax=[integer] : maximum neighborhood size for VNS-like methods (number of problem variables by default)
+   -kinc=[integer] : neighborhood size increment strategy for VNS-like methods using (1) Add1, (2) Mult2, (3) Luby operator (4) Add1/Jump (4 by default)
+   -best=[integer] : stop VNS-like methods if a better solution is found (default value is 0)
+
+   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or "problem.wcsp/.cfn"  if no parameter is given)
+                   writes also the  graphviz dot file  and the degree distribution of the input problem (wcsp format only)
+   -z=[integer] : 1 or 3: saves original instance in 1-wcsp or 3-cfn format (1 by default), 2 or 4: saves after preprocessing in 2-wcsp or 4-cfn format (this option can be combined with the previous one)
+   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)
+   -x=[(,i[=#<>]a)*] : performs an elementary operation ('=':assign, '#':remove, '<':decrease, '>':increase) with value a on variable of index i (multiple operations are separated by a comma and no space) (without any argument, a complete assignment -- used as initial upper bound and as value heuristic -- read from default file "sol" taken as a certificate or given as input filename with ".sol" extension)
+
+   -M=[integer] : preprocessing only: Min Sum Diffusion algorithm (default number of iterations is 0)
+   -A=[integer] : enforces VAC at each search node with a search depth less than the absolute value of a given value, if negative value then VAC is not performed inside depth-first search of hybrid best-first search (default value is 0)
+   -T=[decimal] : threshold cost value for VAC (default value is 1)
+   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is 1)
+   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is 1)
+   -S : preprocessing only: performs singleton consistency (only in conjunction with option "-A")
+   -V : VAC-based value ordering heuristic (default option)
+   -vacint : VAC-integrality/Full-EAC variable ordering heuristic
+   -vacthr : automatic threshold cost value selection for VAC during search
+   -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks) (default value is 0)
+   -raspslds=[integer] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is 0)
+   -raspsdeg=[integer] : automatic threshold cost value selection for probing heuristic (default value is 10°)
+   -raspsini : reset weighted degree variable ordering heuristic after doing upper bound probing
+   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is -1)
+   --trws-order : replaces DAC order by Kolmogorov's TRW-S order
+   --trws-n-iters=[integer] : enforce at most N iterations of TRW-S (default value is 1000)
+   --trws-n-iters-no-change=[integer] : stop TRW-S when N iterations did not change the lower bound up the given precision (default value is 5, -1=never)
+   --trws-n-iters-compute-ub=[integer] : compute UB every N steps in TRW-S (default value is 100)
+
+   -B=[integer] : (0) DFBB, (1) BTD, (2) RDS-BTD, (3) RDS-BTD with path decomposition instead of tree decomposition (default value is 0)
+   -O=[filename] : reads a variable elimination order or directly a valid tree decomposition (given by a list of clusters in topological order of a rooted forest, each line contains a cluster number, 
+      followed by a cluster parent number with -1 for the root(s) cluster(s), followed by a list of variable indexes) from a file used for BTD-like and variable elimination methods, and also DAC ordering
+   -O=[negative integer] : build a tree decomposition (if BTD-like and/or variable elimination methods are used) and also a compatible DAC ordering using
+                           (-1) maximum cardinality search ordering, (-2) minimum degree ordering, (-3) minimum fill-in ordering,
+                           (-4) maximum spanning tree ordering (see -mst), (-5) reverse Cuthill-Mckee ordering, (-6) approximate minimum degree ordering,
+                           (-7) default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)
+                           (-8) lexicographic ordering of variable names.
+   -j=[integer] : splits large clusters into a chain of smaller embedded clusters with a number of proper variables less than this number
+                (use options "-B=3 -j=1 -svo -k=1" for pure RDS, use value 0 for no splitting) (default value is 0)
+   -r=[integer] : limit on maximum cluster separator size (merge cluster with its father otherwise, use a negative value for no limit) (default value is -1)
+   -X=[integer] : limit on minimum number of proper variables in a cluster (merge cluster with its father otherwise, use a zero for no limit) (default value is 0)
+   -E=[float] : merges leaf clusters with their fathers if small local treewidth (in conjunction with option "-e" and positive threshold value) or ratio of number of separator variables by number of cluster variables above a given threshold (in conjunction with option "-vns") (default value is 0)
+   -R=[integer] : choice for a specific root cluster number
+   -I=[integer] : choice for solving only a particular rooted cluster subtree (with RDS-BTD only)
+
+   -a=[integer] : finds at most a given number of solutions with a cost strictly lower than the initial upper bound and stops, or if no integer is given, finds all solutions (or counts the number of zero-cost satisfiable solutions in conjunction with BTD)
+   -div=[integer] : minimum Hamming distance between diverse solutions (use in conjunction with -a=integer with a limit of 1000 solutions) (default value is 0)
+   -divm=[integer] : diversity encoding method: 0:Dual 1:Hidden 2:Ternary 3:Knapsack (default value is 0)
+   -mdd=[integer] : maximum relaxed MDD width for diverse solution global constraint (default value is 0)
+   -mddh=[integer] : MDD relaxation heuristic: 0: random, 1: high div, 2: small div, 3: high unary costs (default value is 0)
+   -D : approximate satisfiable solution count with BTD
+   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)
+   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is inf)
+
+   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is 10000)
+   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is -1)
+---------------------------
+Alternatively one can call the random problem generator with the following options: 
+
+   -random=[bench profile]  : bench profile must be specified as follow :
+                         n and d are respectively the number of variable and the maximum domain size  of the random problem.
+			
+       bin-{n}-{d}-{t1}-{p2}-{seed}       :t1 is the tightness in percentage %of random binary cost functions
+                                          :p2 is the num of binary cost functions to include
+                                          :the seed parameter is optional (and will overwrite -seed)
+   or:                                                                               
+       binsub-{n}-{d}-{t1}-{p2}-{p3}-{seed} binary random & submodular cost functions
+                                          t1 is the tightness in percentage % of random cost functions
+                                          p2 is the num of binary cost functions to include
+                                          p3 is the percentage % of submodular cost functions among p2 cost functions
+                                           (plus 10 permutations of two randomly-chosen values for each domain)
+ or:                                                                               
+      tern-{n}-{d}-{t1}-{p2}-{p3}-{seed}  p3 is the num of ternary cost functions
+ or:                                                                               
+      nary-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of n-ary cost functions
+ or:                                                                               
+      salldiff-{n}-{d}-{t1}-{p2}-{p3}...-{pn}-{seed}  pn is the num of salldiff global cost functions (p2 and p3 still being used for the number of random binary and ternary cost functions)
+---------------------------
+			
+
