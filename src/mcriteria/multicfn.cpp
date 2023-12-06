@@ -80,7 +80,6 @@ bool MultiCFN::checkLinCostFuncConsistency(unsigned int func_ind, MultiCFN::Solu
 //---------------------------------------------------------------------------
 void MultiCFN::push_back(WCSP* wcsp, Double weight)
 {
-
     // create a new network
     weights.push_back(weight);
     networks.push_back(vector<unsigned int>());
@@ -254,6 +253,8 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 
     } else if(cstr->isKnapsack()) {
 
+        cout << "adding new linear constraint" << endl;
+
         auto cstr_kp = dynamic_cast<KnapsackConstraint*>(cstr);
 
         // sum of values >= capacity
@@ -292,6 +293,9 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             }
 
         }
+
+        cout << "after adding new linear constraint" << endl;
+
 
     } else {
 
