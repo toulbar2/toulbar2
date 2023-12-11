@@ -198,7 +198,7 @@ public:
 public:
 
     Double capacity;
-    std::vector<std::vector<std::pair<unsigned int, Double>>> weights;
+    std::vector<std::vector<std::pair<unsigned int, Double>>> weights; // for each variable of the scope, a liste of values and their weight
 
 };
 
