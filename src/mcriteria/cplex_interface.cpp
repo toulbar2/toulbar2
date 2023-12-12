@@ -17,7 +17,14 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
 
   // objective function
   for(size_t func_ind: networks[index]) {
-    auto& func = cost_function[func_ind];
+    
+    auto& func_base = cost_function[func_ind];
+
+    if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+      continue;
+    }
+
+    mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(cost_function[func_ind]);
 
     if(func.hard) {
       continue;
@@ -133,7 +140,13 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool neg
   // objective function
   for(size_t func_ind: networks[index]) {
 
-    auto& func = cost_function[func_ind];
+    auto& func_base = cost_function[func_ind];
+
+    if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+      continue;
+    }
+
+    mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
 
     if(func.hard) {
       continue;
@@ -269,8 +282,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
     
-    auto func = cost_function[func_ind];
-
+    auto func_base = cost_function[func_ind];
+    if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+      continue;
+    }
+    mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
     if(func.scope.size() < 2 || func.hard) {
       continue;
     }
@@ -308,16 +324,22 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   // only one tuple is selected, necessary when default cost is used (in tuple encoding) or for direct encoding when there is a constraint
   for(unsigned int func_ind = 0; func_ind < tuple_vars.size(); func_ind ++) {
     
+    auto func_base = cost_function[func_ind];
+    if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+      continue;
+    }
+    mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
+
     // skip if all costs are infinity
-    if(cost_function[func_ind].hard) {
+    if(func.hard) {
       continue;
     }
     // skip if tuple encoding selected but there are no tuple variables (unary cost func.) or all the table is defined (no default cost) 
-    if(encoding == ILP_Tuple && (tuple_vars[func_ind].get() == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == cost_function[func_ind].tuples.size())) {
+    if(encoding == ILP_Tuple && (tuple_vars[func_ind].get() == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == func.tuples.size())) {
       continue;
     }
 
-    if(!constraints.empty() && ((size_t)tuple_vars[func_ind].get()->getSize() > cost_function[func_ind].tuples.size() || encoding == ILP_Direct)) {
+    if(!constraints.empty() && ((size_t)tuple_vars[func_ind].get()->getSize() > func.tuples.size() || encoding == ILP_Direct)) {
 
       IloExpr expr(env);
       for(unsigned int tuple_ind = 0; tuple_ind < tuple_vars[func_ind].get()->getSize(); tuple_ind ++) {
@@ -334,11 +356,15 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   // tuple corresponding to default cost must be used if no other tuple is, i.e. sum of the tuples (inc. default_cost tuple) equals 1 (or >= 1)
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
 
-    auto func = cost_function[func_ind];
-
-    if(tuple_vars[func_ind] == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == cost_function[func_ind].tuples.size()) {
+    auto func_base = cost_function[func_ind];
+    if(func_base->getType() != mcriteria::CostFunction::Tuple) {
       continue;
     }
+    mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
+
+    if(tuple_vars[func_ind] == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == func.tuples.size()) {
+      continue;
+    }    
 
     IloExpr expr(env);
     for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
@@ -352,10 +378,14 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
   // when the var assignment corresponds to an existing tuple, this tuple must be used (necessary if there exists a default_cost tuple)
   // equivalent to the direct encoding
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
-    
-    auto func = cost_function[func_ind];
 
-    if(tuple_vars[func_ind] == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == cost_function[func_ind].tuples.size()) {
+    auto func_base = cost_function[func_ind];
+    if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+      continue;
+    }
+    mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
+
+    if(tuple_vars[func_ind] == nullptr || (size_t)tuple_vars[func_ind].get()->getSize() == func.tuples.size()) {
       continue;
     }
     
@@ -385,7 +415,12 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
     // tuples imply their corresponding values are used
     for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
-      auto& func = cost_function[func_ind];
+
+      auto func_base = cost_function[func_ind];
+      if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+        continue;
+      }
+      mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
 
       if(func.scope.size() < 2 || func.hard) {
         continue;
@@ -428,7 +463,11 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
     for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
       
-      auto& func = cost_function[func_ind];
+      auto func_base = cost_function[func_ind];
+      if(func_base->getType() != mcriteria::CostFunction::Tuple) {
+        continue;
+      }
+      mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
 
       // nothing to do for unary cost functions (only domain variables)
       if(tuple_vars[func_ind] == nullptr) {
@@ -513,77 +552,114 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     return;
   }
   
+
+  ////////////////////////////////////////////////////////////////////////
   // hard constraints
   for(size_t func_ind = 0; func_ind < cost_function.size(); func_ind ++) {
 
-    auto& func = cost_function[func_ind];
+    // tuple cost function
+    auto func_base = cost_function[func_ind];
+    if(func_base->getType() == mcriteria::CostFunction::Tuple) { // tuple cost function
 
-    // * unary cost functions
-    if(func.scope.size() == 1) {
+      mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
 
-      for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+      // * unary cost functions
+      if(func.scope.size() == 1) {
 
-        // filter out infinite costs
-        if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
-          continue;
-        }
+        for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
 
-        size_t var_ind = func.scope.front();
-        mcriteria::Var& variable = var[var_ind];
-        size_t val_ind = func.tuples[tuple_ind].front();
-
-        IloExpr expr(env);
-        if(variable.nbValues() > 2) {
-          expr += domain_vars[var_ind][val_ind];
-          model.add(expr == IloNum(0));
-        } else if(variable.nbValues() == 2) {
-          expr += domain_vars[var_ind][0];
-          if(val_ind == 0) {
-            model.add(expr == IloNum(1));
-          } else {
-            model.add(expr == IloNum(0));
+          // filter out infinite costs
+          if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
+            continue;
           }
+
+          size_t var_ind = func.scope.front();
+          mcriteria::Var& variable = var[var_ind];
+          size_t val_ind = func.tuples[tuple_ind].front();
+
+          IloExpr expr(env);
+          if(variable.nbValues() > 2) {
+            expr += domain_vars[var_ind][val_ind];
+            model.add(expr == IloNum(0));
+          } else if(variable.nbValues() == 2) {
+            expr += domain_vars[var_ind][0];
+            if(val_ind == 0) {
+              model.add(expr == IloNum(1));
+            } else {
+              model.add(expr == IloNum(0));
+            }
+          }
+          expr.end();
+
         }
-        expr.end();
+      } else { // tuple cost func with arity >= 2
 
+        for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+
+          // consider only tuples with infinite costs
+          if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
+            continue;
+          }
+
+          IloExpr expr(env);
+          auto& tuple = func.tuples[tuple_ind];
+          for(size_t scope_ind = 0; scope_ind < tuple.size(); ++ scope_ind) {
+
+            size_t var_ind = func.scope[scope_ind];
+            size_t val_ind = tuple[scope_ind];
+            mcriteria::Var& variable = var[var_ind];
+
+            if(variable.nbValues() > 2) {
+              expr += (1-domain_vars[var_ind][val_ind]);
+            } else if (variable.nbValues() == 2) { // binary variable
+              if(val_ind == 1) {
+                expr += (1-domain_vars[var_ind][0]);
+              } else {
+                expr += domain_vars[var_ind][0];
+              }
+            }
+          
+          }
+          model.add(expr >= 1);
+          expr.end();
+
+        }
       }
-      continue;
-    }
 
-    // * cost functions with arity >= 2
-    for(size_t tuple_ind = 0; tuple_ind < func.tuples.size(); tuple_ind ++) {
+    } else { // linear cost function
 
-      // consider only tuples with infinite costs
-      if(func.costs[tuple_ind] != std::numeric_limits<Double>::infinity()) {
-        continue;
-      }
+      mcriteria::LinearCostFunction& func = *dynamic_cast<mcriteria::LinearCostFunction*>(func_base);
 
       IloExpr expr(env);
-      auto& tuple = func.tuples[tuple_ind];
-      for(size_t scope_ind = 0; scope_ind < tuple.size(); ++ scope_ind) {
 
-        size_t var_ind = func.scope[scope_ind];
-        size_t val_ind = tuple[scope_ind];
+      for(unsigned int scope_ind: func.scope) {
+
+        unsigned int var_ind = func.scope[scope_ind];
         mcriteria::Var& variable = var[var_ind];
 
-        if(variable.nbValues() > 2) {
-          expr += (1-domain_vars[var_ind][val_ind]);
-        } else if (variable.nbValues() == 2) { // binary variable
-          if(val_ind == 1) {
-            expr += (1-domain_vars[var_ind][0]);
+        for(auto& elt: func.weights[scope_ind]) {
+          if(variable.nbValues() > 2) {
+            expr += domain_vars[var_ind][elt.first]*IloNum(elt.second);
           } else {
-            expr += domain_vars[var_ind][0];
+            if(elt.first == 1) {
+              expr += domain_vars[var_ind][0]*IloNum(elt.second);
+            } else {
+                expr += (1.-domain_vars[var_ind][0])*IloNum(elt.second);
+            }
           }
         }
-      
+
       }
-      model.add(expr >= 1);
+
+      model.add(expr >= IloNum(func.capacity));
       expr.end();
 
-
     }
+
   }
-  
+    
+
+  ////////////////////////////////////////////////////////////////////////
   // global cfn constraints
   for(auto cstr: constraints) {
 
@@ -612,10 +688,10 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     }
 
     cstr_expr.end();
-
-
   }
+  
 
+  ////////////////////////////////////////////////////////////////////////
   // objective function
   IloExpr obj(env);
   for(size_t pb_index: objectives) {
