@@ -97,7 +97,9 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on
 #SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
 
 IF(CPLEX)
-  SET(CPLEX_LOCATION "/opt/ibm/ILOG/CPLEX_Studio2211")
+  execute_process(COMMAND ls /opt/ibm/ILOG OUTPUT_VARIABLE CPLEX_FOLDER OUTPUT_STRIP_TRAILING_WHITESPACE)
+  SET(CPLEX_LOCATION "/opt/ibm/ILOG/${CPLEX_FOLDER}/")
+  MESSAGE("CPLEX location: ${CPLEX_LOCATION}")
   SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DILOGCPLEX -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
   SET(CPLEXLIB "-L${CPLEX_LOCATION}/cplex/lib/x86-64_linux/static_pic -L${CPLEX_LOCATION}/concert/lib/x86-64_linux/static_pic") 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPLEXFLAGS}")
