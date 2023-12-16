@@ -23,6 +23,11 @@ ELSE (${Boost_rev} VERSION_GREATER "1.65.0")
 	  )
 ENDIF (${Boost_rev} VERSION_GREATER "1.65.0")
 
+find_program(COMPUTE bc)
+if(NOT COMPUTE)
+    message(FATAL_ERROR "bc executable not found. Install 'bc' package.")
+endif()
+
 ################
 # test unitaire
 ################
@@ -78,12 +83,6 @@ FOREACH (UTEST ${validation_file})
 	set(ENUM)
         ENDIF()
 
-	IF (EXISTS ${ENUM_file})
-          FILE(READ ${ENUM_file} TENUM)
-	  STRING(REPLACE "\n" ""  ENUM ${TENUM})
-	ELSE()
-	  set(ENUM)
-        ENDIF()
 	
 	IF (EXISTS ${TPATH}/${FOPT})
 	  include (${TPATH}/${FOPT})
