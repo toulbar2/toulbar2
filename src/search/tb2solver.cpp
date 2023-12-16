@@ -4156,7 +4156,7 @@ Mdd Solver::computeMDD(Solver::SolutionTrie* solTrie, Cost cost)
                         auto nodep = node->sons[sol];
                         if (nodep != NULL) {
                             auto nodep_it = find(nodesAtLayer[layer].begin(), nodesAtLayer[layer].end(), nodep);
-                            unsigned nodep_index = distance(nodesAtLayer[layer].begin(), nodep_it);
+                            unsigned nodep_index = std::distance(nodesAtLayer[layer].begin(), nodep_it);
                             assert(nodep_index < nodesAtLayer[layer].size());
 
                             if (nextCount[node_index] == -1) {
