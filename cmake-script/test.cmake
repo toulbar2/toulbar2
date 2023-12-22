@@ -107,9 +107,6 @@ FOREACH (UTEST ${validation_file})
     MESSAGE(STATUS "Error regexp: ${error_regexp}")
   endif($verbose)
 
-  MESSAGE(STATUS ${test_regexp})
-
-
   set(ARGS "${UTEST} ${UBP} ${command_line_option}")
   separate_arguments(ARGS)
   add_test(NAME validation_${TNAME} COMMAND ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${ARGS})
