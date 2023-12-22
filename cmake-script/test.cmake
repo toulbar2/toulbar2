@@ -32,21 +32,13 @@ endif()
 # test unitaire
 ################
 SET(FOPT "test-opt.cmake") #cmake name where local value for timeout,regexp and command line option are declared
-SET (Boost_rev "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
-MESSAGE(STATUS "Boost " ${Boost_rev} " detected")
-IF (${Boost_rev} VERSION_GREATER "1.65.0")
-	SET (BenchMatchString ".(wcsp.gz|wcsp.xz|cfn.gz|cfn.xz|wcsp|cfn)$")
-	MESSAGE(STATUS "xz compressed file testing activated.")
-ELSE (${Boost_rev} VERSION_GREATER "1.65.0")
-        SET (BenchMatchString ".(wcsp.gz|cfn.gz|wcsp|cfn)$")
-ENDIF (${Boost_rev} VERSION_GREATER "1.65.0")
-
 
 FOREACH (UTEST ${validation_file})
   #reset ub end enum from the previous iteration
   UNSET(UB)
   UNSET(ENUM)
   SET(UBP "")
+  UNSET(error_regexp)
   
   STRING(REGEX REPLACE ${BenchMatchString} ".ub" UBF ${UTEST})
   STRING(REGEX REPLACE ${BenchMatchString} ".lb" LBF ${UTEST})
@@ -68,6 +60,19 @@ FOREACH (UTEST ${validation_file})
     EXECUTE_PROCESS(COMMAND echo "(${LB})-1" COMMAND ${COMPUTE} OUTPUT_VARIABLE LBP)
     STRING(REPLACE "\n" "" LBP ${LBP})    
     SET (UBP "-ub=${LBP}")
+  ENDIF()
+
+  IF (EXISTS ${ENUMF})
+    FILE(READ ${ENUMF} TENUM)
+    STRING(REPLACE "\n" ""  ENUM ${TENUM})
+    EXECUTE_PROCESS(COMMAND echo "1+(${ENUM})" COMMAND ${COMPUTE} OUTPUT_VARIABLE ENUMP)
+    STRING(REPLACE "\n" ""  ENUMP ${ENUMP})
+    EXECUTE_PROCESS(COMMAND echo "2+(${ENUM})" COMMAND ${COMPUTE} OUTPUT_VARIABLE ENUMPP)
+    STRING(REPLACE "\n" ""  ENUMPP ${ENUMPP})
+
+    if($verbose)
+      MESSAGE(STATUS "Expected solution count: ${ENUM} ${ENUMP} ${ENUMPP}")
+    endif($verbose)
   ENDIF()
     
   IF (EXISTS ${TPATH}/${FOPT})
@@ -92,24 +97,25 @@ FOREACH (UTEST ${validation_file})
   STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TMP ${UTEST})
   STRING(REGEX REPLACE ${BenchMatchString} ""  TNAME ${TMP})
 
-  IF (EXISTS ${ENUMF})
-    FILE(READ ${ENUMF} TENUM)
-    STRING(REPLACE "\n" ""  ENUM ${TENUM})
-    if($verbose)
-      MESSAGE(STATUS "Expected solution count: ${ENUM}")
-    endif($verbose)
-  ENDIF()
-
   if($verbose)
-    MESSAGE(STATUS "UBF: ${UBF}")
-    MESSAGE(STATUS "UB: ${UB}")
-    MESSAGE(STATUS "UB+1: ${UBP}")
     MESSAGE(STATUS "TNAME: ${TNAME}")
+    MESSAGE(STATUS "UBF:          ${UBF}")
+    MESSAGE(STATUS "UB:           ${UB}")
+    MESSAGE(STATUS "UB+1:         ${UBP}")
+    MESSAGE(STATUS "ENUM:         ${ENUM}")
+    MESSAGE(STATUS "Test regexp:  ${test_regexp}")
+    MESSAGE(STATUS "Error regexp: ${error_regexp}")
   endif($verbose)
+
+  MESSAGE(STATUS ${test_regexp})
+
 
   set(ARGS "${UTEST} ${UBP} ${command_line_option}")
   separate_arguments(ARGS)
   add_test(NAME validation_${TNAME} COMMAND ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE} ${ARGS})
+  IF (DEFINED error_regexp)
+    set_tests_properties (validation_${TNAME} PROPERTIES FAIL_REGULAR_EXPRESSION "${error_regexp}")
+  ENDIF()
   set_tests_properties (validation_${TNAME} PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}" TIMEOUT "${test_timeout}")
   
 ENDFOREACH(UTEST)
