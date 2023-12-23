@@ -23,7 +23,7 @@ private:
     // grammar, assuming in CNF
 
     /*struct Rule {
-        int from;        
+        int from;
         Cost weight;
         int to[2];
     };

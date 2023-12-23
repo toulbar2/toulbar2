@@ -127,7 +127,7 @@ void SameConstraint::buildGraph(Graph& g)
 /*void SameConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
 	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin(); 
+	for (vector<List_Node >::iterator k = graph[varindex+1].begin();
 			k != graph[varindex+1].end(); k++) {
 		for (map<Value, int>::iterator i = mapval.begin();i !=
 				mapval.end();i++) {
@@ -136,7 +136,7 @@ void SameConstraint::buildGraph(Graph& g)
 	}
 	for (map<Value, int>::iterator i = mapval.begin();i !=
 			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin(); 
+		for (vector<List_Node >::iterator k = graph[i->second].begin();
 				k != graph[i->second].end(); k++) {
 			if (k->adj == varindex+1) {
 				domain.push_back(i->first);

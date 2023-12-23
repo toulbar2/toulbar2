@@ -3,22 +3,22 @@
     @version 3.6
 
     @brief A cross-platform file globbing library providing the ability to
-    expand wildcards in command-line arguments to a list of all matching 
-    files. It is designed explicitly to be portable to any platform and has 
-    been tested on Windows and Linux. See CSimpleGlobTempl for the class 
+    expand wildcards in command-line arguments to a list of all matching
+    files. It is designed explicitly to be portable to any platform and has
+    been tested on Windows and Linux. See CSimpleGlobTempl for the class
     definition.
 
     @section features FEATURES
-    -   MIT Licence allows free use in all software (including GPL and 
+    -   MIT Licence allows free use in all software (including GPL and
         commercial)
     -   multi-platform (Windows 95/98/ME/NT/2K/XP, Linux, Unix)
     -   supports most of the standard linux glob() options
-    -   recognition of a forward paths as equivalent to a backward slash 
+    -   recognition of a forward paths as equivalent to a backward slash
         on Windows. e.g. "c:/path/foo*" is equivalent to "c:\path\foo*".
     -   implemented with only a single C++ header file
     -   char, wchar_t and Windows TCHAR in the same program
     -   complete working examples included
-    -   compiles cleanly at warning level 4 (Windows/VC.NET 2003), 
+    -   compiles cleanly at warning level 4 (Windows/VC.NET 2003),
         warning level 3 (Windows/VC6) and -Wall (Linux/gcc)
 
     @section usage USAGE
@@ -70,12 +70,12 @@
     The above copyright notice and this permission notice shall be included
     in all copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </pre>
 */
@@ -83,7 +83,7 @@
 #ifndef INCLUDED_SimpleGlob
 #define INCLUDED_SimpleGlob
 
-/*! @brief The operation of SimpleGlob is fine-tuned via the use of a 
+/*! @brief The operation of SimpleGlob is fine-tuned via the use of a
     combination of the following flags.
 
     The flags may be passed at initialization of the class and used for every
@@ -99,15 +99,15 @@
 
     @param SG_GLOB_NOSORT
         By default, files are returned in sorted into string order. With this
-        flag, no sorting is done. This is not compatible with 
+        flag, no sorting is done. This is not compatible with
         SG_GLOB_FULLSORT.
 
     @param SG_GLOB_FULLSORT
         By default, files are sorted in groups belonging to each filespec that
-        was added. For example if the filespec "b*" was added before the 
-        filespec "a*" then the argv array will contain all b* files sorted in 
-        order, followed by all a* files sorted in order. If this flag is 
-        specified, the entire array will be sorted ignoring the filespec 
+        was added. For example if the filespec "b*" was added before the
+        filespec "a*" then the argv array will contain all b* files sorted in
+        order, followed by all a* files sorted in order. If this flag is
+        specified, the entire array will be sorted ignoring the filespec
         groups.
 
     @param SG_GLOB_NOCHECK
@@ -117,7 +117,7 @@
         Tilde expansion is carried out (on Unix platforms)
 
     @param SG_GLOB_ONLYDIR
-        Return only directories which match (not compatible with 
+        Return only directories which match (not compatible with
         SG_GLOB_ONLYFILE)
 
     @param SG_GLOB_ONLYFILE

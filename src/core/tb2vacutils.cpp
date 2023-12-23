@@ -392,7 +392,7 @@ void VACTernaryConstraint::setK (VACVariable* var, Value v, int c, Long timeStam
   	kX_timeStamp[var->toIndex(v)] = timeStamp;
   } else if(var == getVar(1)) {
     kY[var->toIndex(v)] = c;
-   	kY_timeStamp[var->toIndex(v)] = timeStamp; 					   
+   	kY_timeStamp[var->toIndex(v)] = timeStamp;
   }	 else {
 	kZ[var->toIndex(v)] = c;
 	kZ_timeStamp[var->toIndex(v)] = timeStamp;
@@ -434,11 +434,11 @@ bool VACTernaryConstraint::revise (VACVariable* var, Value v) {
   }
 
   for (EnumeratedVariable::iterator it = xj->lower_bound(sup); it != xj->end(); ++it) {
-	  Value w = *it;	
+	  Value w = *it;
 	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
 	  else {
 	      cost = getVACCost(xi,xj,v, w);
-	      if (cost == MIN_COST) {		
+	      if (cost == MIN_COST) {
 	      	setSupport(xi,v,w);
 	        return false;
 	      } else if (cost < minCost) {
@@ -448,11 +448,11 @@ bool VACTernaryConstraint::revise (VACVariable* var, Value v) {
 	  }
   }
   for (EnumeratedVariable::iterator it = xj->begin(); it != xj->lower_bound(sup); ++it) {
-	  Value w = *it;	
+	  Value w = *it;
 	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
 	  else {
 	      cost = getVACCost(xi,xj,v, w);
-	      if (cost == MIN_COST) {		
+	      if (cost == MIN_COST) {
 	      	setSupport(xi,v,w);
 	        return false;
 	      } else if (cost < minCost) {

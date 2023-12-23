@@ -15,7 +15,7 @@
 using namespace CSPXMLParser;
 
 /*
- * A simple demo to illustrate how to use the XML CSP parser 
+ * A simple demo to illustrate how to use the XML CSP parser
  */
 
 #define MAXDOMS 100000
@@ -82,7 +82,7 @@ private:
     int currentIndexArity;
 
     vector<int> nDoms;
-    vector<vector<int> > DomsToIndex;
+    vector<vector<int>> DomsToIndex;
 
     int maxDomSize;
 

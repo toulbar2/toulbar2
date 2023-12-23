@@ -1,18 +1,18 @@
 /*=============================================================================
  * parser for CSP instances represented in XML format
- * 
+ *
  * Copyright (c) 2008 Olivier ROUSSEL (olivier.roussel <at> cril.univ-artois.fr)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -68,21 +68,21 @@ namespace CSPXMLParser {
 using namespace std;
 
 /**
-   * @brief contains a parser for the CSP XML format.
-   *
-   * This class proposes a parser in SAX mode (to use less memory than
-   * in DOM mode)
-   *
-   * @param Callback the type of the class that will be used to transmit
-   * information from the parser to the solver
-   *
-   * @param XMLLibraryString a class that encapsulates the strings
-   * used by the XML library
-   *
-   * @param XMLLibraryAttributeList a class that encapsulates the list
-   * of attributes of a tag
-   *
-   */
+ * @brief contains a parser for the CSP XML format.
+ *
+ * This class proposes a parser in SAX mode (to use less memory than
+ * in DOM mode)
+ *
+ * @param Callback the type of the class that will be used to transmit
+ * information from the parser to the solver
+ *
+ * @param XMLLibraryString a class that encapsulates the strings
+ * used by the XML library
+ *
+ * @param XMLLibraryAttributeList a class that encapsulates the list
+ * of attributes of a tag
+ *
+ */
 template <class Callback,
     class ASTFactory,
     class CostRepresentation,

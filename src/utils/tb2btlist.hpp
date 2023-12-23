@@ -1,17 +1,17 @@
 /** \file tb2btlist.hpp
  *  \brief Backtrackable double-linked list.
- * 
- * Convention: 
- * 
+ *
+ * Convention:
+ *
  * elements can be inserted at the end of the list only
  * these insertions can be undone in the reverse order of their insertion
- * 
+ *
  * an exception to the previous rule is when inserting an element permanently during search (using freeze mode),
  * this element will be inserted at the beginning of the list.
  *
  * elements can be removed in any order
  * these removals can be undone in the reverse order of their removal.
- * 
+ *
  */
 
 #ifndef TB2BTLIST_HPP_

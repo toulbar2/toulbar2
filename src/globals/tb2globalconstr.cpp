@@ -394,7 +394,7 @@ void GlobalConstraint::propagateNIC()
 			deltas.push_back(delta);
 		}
 	}
-	changeAfterExtend(support, deltas);		
+	changeAfterExtend(support, deltas);
 
 	map<Value, Cost> delta;
 	EnumeratedVariable *x = (EnumeratedVariable*)getVar(index);

@@ -2626,7 +2626,7 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::xz = true;
             }
 
-            // uai  file
+            // uai file
             if (check_file_ext(problem, file_extension_map["uai_ext"]) || ToulBar2::stdin_format.compare("uai") == 0) {
                 strfile.push_back(problem);
                 strext.insert(".uai");
@@ -3402,11 +3402,11 @@ int _tmain(int argc, TCHAR* argv[])
 
     // for the competition it was necessary to write a file with the optimal sol
     /*char line[1024];
-	  string strfile(argv[1]);
-	  int pos = strfile.find_last_of(".");
-	  string strfilewcsp = strfile.substr(0,pos) + ".ub";
-	  sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
-	  system(line); */
+      string strfile(argv[1]);
+      int pos = strfile.find_last_of(".");
+      string strfilewcsp = strfile.substr(0,pos) + ".ub";
+      sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
+      system(line); */
 
     //delete solver; // it takes CPU time for nothing!!
     return 0;
