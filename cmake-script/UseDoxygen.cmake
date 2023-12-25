@@ -17,6 +17,11 @@ configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 add_custom_target(doc ALL
   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp)
 
+add_custom_target(sphinx-doc ALL COMMAND make docs
+                   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs
+)
+
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
   DEPENDS ${doxyfile}
