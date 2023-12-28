@@ -10,14 +10,18 @@ ENDIF (DOXYGEN_FOUND)
 
 set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+set(sphinx_conf_in ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py.in)
+set(sphinx_conf ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py)
+
 # output directory for code source documentation  
 
 configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+configure_file(${sphinx_conf_in} ${sphinx_conf} @ONLY)
 
 add_custom_target(doc ALL
   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp)
 
-add_custom_target(sphinx-doc ALL COMMAND make docs
+add_custom_target(sphinx-doc ALL COMMAND make BUILDDIR=${CMAKE_CURRENT_BINARY_DIR}/sphinx docs
                    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs
 )
