@@ -1,6 +1,6 @@
 /** \file tb2btqueue.hpp
  *  \brief Backtrackable propagation queue.
- * 
+ *
  */
 
 #ifndef TB2BTQUEUE_HPP_

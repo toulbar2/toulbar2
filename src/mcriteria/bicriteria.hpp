@@ -19,18 +19,18 @@ private:
 
 public: /* types and enum */
     /*!
-    * \brief type representing a point in the objective space
-    */
+     * \brief type representing a point in the objective space
+     */
     typedef pair<Double, Double> Point;
 
     /*!
-    * \brief type representing a pair of weights for the scalarization
-    */
+     * \brief type representing a pair of weights for the scalarization
+     */
     typedef pair<Double, Double> Weights;
 
     /*!
-    * \brief represenation of the optimization direction: maximization or minimization
-    */
+     * \brief represenation of the optimization direction: maximization or minimization
+     */
     enum OptimDir { Optim_Max,
         Optim_Min };
 

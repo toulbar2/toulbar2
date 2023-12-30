@@ -67,7 +67,7 @@ public:
         ToulBar2::elimDegree_preprocessing_ = -1;
         ToulBar2::DEE = 0;
         ToulBar2::DEE_ = 0;
-        ToulBar2::FullEAC = false; //FIXME: remove this restriction?
+        ToulBar2::FullEAC = false; // FIXME: remove this restriction?
         ToulBar2::RASPS = false;
         ToulBar2::useRASPS = 0;
     }
@@ -88,7 +88,7 @@ public:
         }
     }
 
-    //TODO: add local NARYPROJECTIONSIZE parameter
+    // TODO: add local NARYPROJECTIONSIZE parameter
     WeightedCSPConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, WCSP* problem_in, WCSP* negproblem_in, Cost lb_in, Cost ub_in, bool duplicateHard = false, bool strongDuality_ = false)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , isfinite(true)
@@ -126,7 +126,7 @@ public:
         if (MasterWeightedCSP != NULL && MasterWeightedCSP != wcsp) {
             WeightedCSPConstraints.clear();
         }
-        MasterWeightedCSP = wcsp; //FIXME: the slave problem should not contain a WeightedCSPConstraint inside!
+        MasterWeightedCSP = wcsp; // FIXME: the slave problem should not contain a WeightedCSPConstraint inside!
         if (problem) {
             negCost += problem->getNegativeLb();
             WeightedCSPConstraints[problem->getIndex()] = this;
@@ -380,7 +380,7 @@ public:
         ToulBar2::setmin = NULL;
         ToulBar2::setmax = NULL;
         int weightedDegree = ToulBar2::weightedDegree;
-        ToulBar2::weightedDegree = 0; //do not update weighted degrees inside slave problems
+        ToulBar2::weightedDegree = 0; // do not update weighted degrees inside slave problems
         protect();
         int depth = Store::getDepth();
         bool unsat = false;
@@ -426,7 +426,7 @@ public:
      * \brief compute the sum of the cost functions in the constraint from a solution of the wcsp (variables are indexed from the main cfn)
      * \param solution the values of the variables in the solution returned by the solver
      * \return the cost of the solution for the cfn in the constraint expressed as a cost for the problem_in cfn
-    */
+     */
     Cost computeSolutionCost(vector<Value>& solution)
     {
         assert(solution.size() == wcsp->numberOfVariables());
@@ -443,7 +443,7 @@ public:
         ToulBar2::setmin = NULL;
         ToulBar2::setmax = NULL;
         int weightedDegree = ToulBar2::weightedDegree;
-        ToulBar2::weightedDegree = 0; //do not update weighted degrees inside slave problems
+        ToulBar2::weightedDegree = 0; // do not update weighted degrees inside slave problems
         protect();
         int depth = Store::getDepth();
         try {
@@ -520,7 +520,7 @@ public:
 
     double computeTightness() override
     {
-        double res = 0.; //FIXME: take into account elimBinConstr and elimTernConstr
+        double res = 0.; // FIXME: take into account elimBinConstr and elimTernConstr
         if (problem) {
             for (unsigned int c = 0; c < problem->numberOfConstraints(); c++) {
                 if (problem->getCtr(c)->connected()) {
@@ -604,7 +604,7 @@ public:
     {
         if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
             return;
-        //FIXME: synchronize current domains between master and slave problems at initialization?
+        // FIXME: synchronize current domains between master and slave problems at initialization?
         wcsp->revise(this);
         if (problem) {
             problem->enforceUb();
@@ -625,7 +625,7 @@ public:
                     unprotect();
                     if (strongDuality && connected() && canbeDeconnected()) {
                         if (problem->getLb() < lb) {
-                            assert(!wcsp->vac || wcsp->vac->getThreshold() == UNIT_COST); //FIXME: we should check also variable.myThreshold and constraint.myThreshold are all zero
+                            assert(!wcsp->vac || wcsp->vac->getThreshold() == UNIT_COST); // FIXME: we should check also variable.myThreshold and constraint.myThreshold are all zero
                             THROWCONTRADICTION;
                         } else {
                             deconnect();
@@ -794,8 +794,8 @@ public:
     friend void tb2setmax(int wcspId, int varIndex, Value value, void* solver);
 
 public:
-
-    void clearPtrReferences() {
+    void clearPtrReferences()
+    {
         for (auto it = WeightedCSPConstraints.begin(); it != WeightedCSPConstraints.end();) {
             if (it->second == this) {
                 it = WeightedCSPConstraints.erase(it);
@@ -804,8 +804,6 @@ public:
             }
         }
     }
-
-
 };
 
 #endif /*TB2GLOBALWCSP_HPP_*/

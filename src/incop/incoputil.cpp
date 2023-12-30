@@ -22,7 +22,7 @@ using namespace std;
 #include <unistd.h>
 
 #include <stdlib.h>
-//#include <signal.h>
+// #include <signal.h>
 
 ofstream* ofile = NULL; // le fichier de sortie
 
@@ -31,7 +31,7 @@ Stat_GWW* Statistiques; //  l'objet pour les statistiques en variable globale
 
 int TRACEMODE = 0; // variable globale : niveau de trace
 
-//struct sigaction Action;  // trombe_ajout : pour les signaux
+// struct sigaction Action;  // trombe_ajout : pour les signaux
 
 /* ------------------------------------ STATISTIQUES ---------------------------------------*/
 
@@ -107,32 +107,32 @@ void Stat_GWW::execution_report(int nessai, Long lower_bound)
     *ofile << " temps total execution " << total_execution_time << endl;
 }
 
-//void sigaction()
-//  {Action.sa_handler=handler_stat;           // trombe_ajout : d�tournement du signal SIGUSR1
-//  sigaction(SIGUSR1, &Action, NULL);        // trombe_ajout : d�tournement du signal SIGUSR1
-//  }
+// void sigaction()
+//   {Action.sa_handler=handler_stat;           // trombe_ajout : d�tournement du signal SIGUSR1
+//   sigaction(SIGUSR1, &Action, NULL);        // trombe_ajout : d�tournement du signal SIGUSR1
+//   }
 
 // ajout_trombe : rajout de la fonction suivante pour les signaux !!!
 
-//void handler_stat (int sig) {
+// void handler_stat (int sig) {
 //
-//  *ofile  << "==========================================================================" << endl;
-//  *ofile  << "Signal " << sig << " recu !!" << endl;
+//   *ofile  << "==========================================================================" << endl;
+//   *ofile  << "Signal " << sig << " recu !!" << endl;
 //
-// // ecriture_stat_probleme();   // stats sur les derniers essais du probl�me courant
+//  // ecriture_stat_probleme();   // stats sur les derniers essais du probl�me courant
 //
-//  if (Statistiques->current_pb > 1) {
-//    ecriture_statistiques_global (); // stats sur tous les probl�mes
-//  }
+//   if (Statistiques->current_pb > 1) {
+//     ecriture_statistiques_global (); // stats sur tous les probl�mes
+//   }
 //
-//  cout << "Fin resolution (interrompue) en : " << Statistiques->total_execution_time
-//       << " secondes" << endl;
+//   cout << "Fin resolution (interrompue) en : " << Statistiques->total_execution_time
+//        << " secondes" << endl;
 //
-//  sleep(1);
+//   sleep(1);
 //
-//  kill (getpid(), 9);   // suicide
+//   kill (getpid(), 9);   // suicide
 //
-//}
+// }
 
 /*----------------------------------- LECTURE DES ARGUMENTS ----------------------------------*/
 
@@ -828,7 +828,7 @@ void executer_essai(OpProblem* problem, IncompleteAlgorithm* algo, Configuration
     // population initiale
 
     instanciation_aleatoire(problem, population, taille);
-    //SdG: initial solution provided by NC/EAC supports given to INCOP
+    // SdG: initial solution provided by NC/EAC supports given to INCOP
     if (initconfig && nessai == 0) {
         assert(initconfig->size() == (unsigned int)population[0]->nbvar);
         for (int i = 0; i < population[0]->nbvar; i++)

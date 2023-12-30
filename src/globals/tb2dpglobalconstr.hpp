@@ -43,12 +43,12 @@ protected:
     virtual void propagateAC();
     virtual void propagateDAC();
 
-    //EAC
+    // EAC
     virtual bool isEAC(int var, Value val);
     virtual void findFullSupportEAC(int var);
 };
 
-#endif //TB2GLOBALCONSTR3_HPP_
+#endif // TB2GLOBALCONSTR3_HPP_
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

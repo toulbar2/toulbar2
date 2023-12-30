@@ -403,7 +403,7 @@ void Tuning::onerun(OpProblem* problem, LSAlgorithm* algo, Configuration** popul
         }
     }
     Statistiques->current_try++;
-    //ecriture_stat_probleme();
+    // ecriture_stat_probleme();
     if (firsttry())
         //    referencetime = Statistiques->execution_time_try[0];
         referencetime = Statistiques->average_execution_time;
@@ -479,8 +479,7 @@ void autosolving1(LSAlgorithm* algo, Configuration** population, OpProblem* prob
 }
 
 // réglage de 2 parametres  : parameter1 et parameter2 (en sortie) + lancement algo avec ce reglage
-void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int&
-                                                                                                                   parameter1,
+void autotuning2(LSAlgorithm* algo, Configuration** population, OpProblem* problem, int graine1, int nbessais, int& parameter1,
     int& parameter2, int tuningwalkrate, int tuningmaxtries, int tuningmaxtries2)
 {
     int bmin = 1;

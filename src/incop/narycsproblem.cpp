@@ -30,8 +30,16 @@ INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     ;
 }
 
-INCOP::NaryConstraint::NaryConstraint(int arit) { arity = arit; constr = NULL; }
-INCOP::NaryConstraint::NaryConstraint(int arit, Constraint* ctr) { arity = arit; constr = ctr; }
+INCOP::NaryConstraint::NaryConstraint(int arit)
+{
+    arity = arit;
+    constr = NULL;
+}
+INCOP::NaryConstraint::NaryConstraint(int arit, Constraint* ctr)
+{
+    arity = arit;
+    constr = ctr;
+}
 
 INCOP::NaryVariable::NaryVariable() { ; }
 
@@ -89,7 +97,7 @@ Long INCOP::NaryConstraint::constraint_value(Configuration* configuration)
             tuple[i] = index2index[i][configuration->config[constrainedvariables[i]]];
         }
         assert(constr->isNary() || !constr->extension());
-        return ((AbstractNaryConstraint *)constr)->eval(tuple);
+        return ((AbstractNaryConstraint*)constr)->eval(tuple);
     }
 }
 
@@ -277,7 +285,7 @@ int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable
             vct->push_back(ct);
             int numvar = 0;
             for (int j = 0; j < wcsp->getCtr(i)->arity(); j++) {
-                EnumeratedVariable *myvar = (EnumeratedVariable *) wcsp->getCtr(i)->getVar(j);
+                EnumeratedVariable* myvar = (EnumeratedVariable*)wcsp->getCtr(i)->getVar(j);
                 if (myvar->unassigned()) {
                     numvar = myvar->getCurrentVarId();
                     ct->constrainedvariables.push_back(numvar);

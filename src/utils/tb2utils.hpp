@@ -47,8 +47,8 @@ namespace mpi = boost::mpi;
 #include <numeric>
 #include <chrono>
 using std::ostream;
-using std::vector;
 using std::pair;
+using std::vector;
 
 #ifdef OPENMPI
 #include <boost/serialization/vector.hpp>
@@ -63,8 +63,8 @@ namespace serialization = boost::serialization;
 #define DEBONLY(x) x
 #endif
 
-//#include <numbers>   // C++-20 std::numbers::pi
-//const double PI = boost::math::constants::pi<double>();
+// #include <numbers>   // C++-20 std::numbers::pi
+// const double PI = boost::math::constants::pi<double>();
 const double PI = 3.1415926535897932384626433832795;
 
 template <typename T1, typename T2, typename T3>
@@ -119,43 +119,43 @@ std::ostream& operator<<(std::ostream& os, vector<T> const& v)
 // }
 
 // Warning! Already defined in STL
-//template<class T>
-//T min(T x, T y) {
+// template<class T>
+// T min(T x, T y) {
 //    if (x < y) return x;
 //    else return y;
 //}
 //
-//template<class T>
-//T max(T x, T y) {
+// template<class T>
+// T max(T x, T y) {
 //    if (x > y) return x;
 //    else return y;
 //}
 
-//template <class T>
-//T min(T* array, int size)
+// template <class T>
+// T min(T* array, int size)
 //{
-//    assert(size >= 1);
-//    T res = array[0];
-//    for (int i = 1; i < size; i++) {
-//        if (array[i] < res) {
-//            res = array[i];
-//        }
-//    }
-//    return res;
-//}
+//     assert(size >= 1);
+//     T res = array[0];
+//     for (int i = 1; i < size; i++) {
+//         if (array[i] < res) {
+//             res = array[i];
+//         }
+//     }
+//     return res;
+// }
 
-//template <class T>
-//T max(T* array, int size)
+// template <class T>
+// T max(T* array, int size)
 //{
-//    assert(size >= 1);
-//    T res = array[0];
-//    for (int i = 1; i < size; i++) {
-//        if (array[i] > res) {
-//            res = array[i];
-//        }
-//    }
-//    return res;
-//}
+//     assert(size >= 1);
+//     T res = array[0];
+//     for (int i = 1; i < size; i++) {
+//         if (array[i] > res) {
+//             res = array[i];
+//         }
+//     }
+//     return res;
+// }
 
 template <class T>
 inline std::string to_string(const T& t)

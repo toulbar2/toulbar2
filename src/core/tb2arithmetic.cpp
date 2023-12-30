@@ -7,7 +7,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 Unary::Unary(WCSP* wcsp, IntervalVariable* xx, Value* d, int dsize, Cost c)
@@ -129,7 +129,7 @@ void SpecialDisjunction::dump(ostream& os, bool original)
 
 /*
  * Propagation methods
- * 
+ *
  */
 
 void Unary::propagate()

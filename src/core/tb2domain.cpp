@@ -6,7 +6,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 Domain::Domain(Value inf, Value sup)
@@ -14,7 +14,7 @@ Domain::Domain(Value inf, Value sup)
     , contiguous(true)
     , initSize(sup - inf + 1)
     , distanceToZero(inf)
-    , notFoundValue(sup  + 1)
+    , notFoundValue(sup + 1)
 {
     init(inf, sup);
 }

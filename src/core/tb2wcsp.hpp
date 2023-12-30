@@ -338,7 +338,7 @@ public:
         }
     }
 
-    Cost getUnaryCost(int varIndex, Value v) const { return (vars[varIndex]->canbe(v))?vars[varIndex]->getCost(v):MAX_COST; } ///< \brief unary cost associated to a domain value
+    Cost getUnaryCost(int varIndex, Value v) const { return (vars[varIndex]->canbe(v)) ? vars[varIndex]->getCost(v) : MAX_COST; } ///< \brief unary cost associated to a domain value
     Cost getMaxUnaryCost(int varIndex) const { return vars[varIndex]->getMaxCost(); } ///< \brief maximum unary cost in the domain
     Value getMaxUnaryCostValue(int varIndex) const { return vars[varIndex]->getMaxCostValue(); } ///< \brief a value having the maximum unary cost in the domain
     Value getSupport(int varIndex) const { return vars[varIndex]->getSupport(); } ///< \brief unary (NC/EAC) support value
@@ -902,7 +902,7 @@ public:
     Cost decimalToCost(const string& decimalToken, const unsigned int lineNumber) const;
     Cost DoubletoCost(const Double& c) const { return (Cost)min((Double)(MAX_COST - negCost), roundl(c * pow10Cache[ToulBar2::decimalPoint])) + negCost; }
     Double Cost2ADCost(const Cost& c) const { return Cost2RDCost(c - negCost); } // Absolute costs
-    Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / pow10Cache[ToulBar2::decimalPoint] / ToulBar2::costMultiplier); } //Relative costs
+    Double Cost2RDCost(const Cost& c) const { return ((Double)(c) / pow10Cache[ToulBar2::decimalPoint] / ToulBar2::costMultiplier); } // Relative costs
     std::string DCost2Decimal(const Double& c)
     {
         std::stringstream ss;

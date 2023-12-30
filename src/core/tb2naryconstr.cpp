@@ -78,7 +78,7 @@ void NaryConstraint::assign(int varIndex)
 }
 
 // NOT USED
-//void NaryConstraint::projectFromZero(int index)
+// void NaryConstraint::projectFromZero(int index)
 //{
 //    int i;
 //    int nsup = 0;
@@ -116,7 +116,7 @@ void NaryConstraint::assign(int varIndex)
 //}
 
 // NOT USED
-//void NaryConstraint::starrule(const Tuple& t, Cost minc)
+// void NaryConstraint::starrule(const Tuple& t, Cost minc)
 //{
 //    int i;
 //    for(i=0;i<arity_;i++) {
@@ -363,7 +363,7 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
 
     scope_in[a - 1] = vz; //.push_back( beta );
     ordre[a - 2] = a - 1;
-    //if(it_values[ordre[a-2]] != vz->end()) ++it_values[ordre[a-2]];
+    // if(it_values[ordre[a-2]] != vz->end()) ++it_values[ordre[a-2]];
     if (ToulBar2::verbose >= 1)
         cout << vz->getName() << " ] ? "; // << endl;
 
@@ -372,7 +372,7 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
         while (sev && it_values[ordre[0]] != scope_in[ordre[0]]->end()) {
             if (it_values[ordre[a - 2]] == itvzfirst /*vz->begin()*/)
                 ++it_values[ordre[a - 2]];
-            //if(it_values[ordre[a-2]] != vz->end()){
+            // if(it_values[ordre[a-2]] != vz->end()){
             for (int j = 0; j < a; j++) {
                 t[j] = scope_in[j]->toIndex(*it_values[j]); // PROBLEME CAR it_values[ordre[a-2]] = vz->end()
                 t1[j] = scope_in[j]->toIndex(*it_values[j]);
@@ -417,7 +417,7 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
                 ++it_values[ordre[i]];
                 finished = it_values[ordre[i]] != var->end();
                 if (!finished) {
-                    //it_values[ordre[i]] = var->begin();
+                    // it_values[ordre[i]] = var->begin();
                     if (i > 0) {
                         it_values[ordre[i]] = var->begin();
                         if (i == a - 1)
@@ -581,7 +581,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
             t[j] = scope_in[j]->toIndex(*it_values[j]);
             tZ[j - 1] = scope_in[j]->toIndex(*it_values[j]);
         }
-        //t[0] = scope_in[0]->toIndex(*it_values[0]);
+        // t[0] = scope_in[0]->toIndex(*it_values[0]);
         EnumeratedVariable::iterator it = scope_in[0]->begin();
         do {
             t[0] = scope_in[0]->toIndex(*it);
@@ -589,7 +589,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
             cX = naryx->evalsubstr(t, naryx);
             diffcost = squareminus(cost, cX, wcsp->getUb());
             ++it;
-            //cout << t[0] << endl;
+            // cout << t[0] << endl;
         } while (it != scope_in[0]->end() && cost >= wcsp->getUb() && cX >= wcsp->getUb());
 
         cost = eval(t, scope_in);
@@ -682,7 +682,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 }
 
 // THIS CODE IS NEVER USED!!!
-//void NaryConstraint::permute( EnumeratedVariable** scope_in )
+// void NaryConstraint::permute( EnumeratedVariable** scope_in )
 //{
 //    TUPLES* pf_old = pf;
 //    pf = new TUPLES;
@@ -715,7 +715,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
 // for adding a tuple in f
 // scope_in contains the order of the values in Tuple tin
-//void NaryConstraint::setTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in )
+// void NaryConstraint::setTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in )
 //{
 //    assert(scope_in);
 //    Tuple t(tin);
@@ -727,17 +727,17 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 //    else costs[getCostsIndex(t)] = c;
 //}
 
-//void NaryConstraint::addtoTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in )
+// void NaryConstraint::addtoTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in )
 //{
-//    assert(scope_in);
-//    Tuple t(tin);
-//    for(int i = 0; i < arity_; i++) {
-//        int pos = getIndex(scope_in[i]);
-//        t[pos] = tin[i];
-//    }
-//    if (pf) (*pf)[t] += c;
-//    else costs[getCostsIndex(t)] += c;
-//}
+//     assert(scope_in);
+//     Tuple t(tin);
+//     for(int i = 0; i < arity_; i++) {
+//         int pos = getIndex(scope_in[i]);
+//         t[pos] = tin[i];
+//     }
+//     if (pf) (*pf)[t] += c;
+//     else costs[getCostsIndex(t)] += c;
+// }
 
 void NaryConstraint::addtoTuples(EnumeratedVariable* x, Value v, Cost costi)
 {
@@ -795,13 +795,13 @@ void NaryConstraint::setInfiniteCost(Cost ub)
     Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
     if (pf) {
         for (TUPLES::iterator it = pf->begin(); it != pf->end(); ++it) {
-            Cost c = it->second; //TODO: add corresponding unary costs
+            Cost c = it->second; // TODO: add corresponding unary costs
             if (CUT(c, ub))
                 it->second = mult_ub;
         }
     } else {
         for (ptrdiff_t idx = 0; idx < costSize; idx++) {
-            Cost c = costs[idx]; //TODO: add corresponding unary costs
+            Cost c = costs[idx]; // TODO: add corresponding unary costs
             if (CUT(c, ub))
                 costs[idx] = mult_ub;
         }
@@ -868,8 +868,8 @@ void NaryConstraint::insertSum(const Tuple& t1, Cost c1, Constraint* ctr1, const
 }
 
 // THIS CODE IS NEVER USED!!!
-//TODO: make it compatible with table representation rather than Map
-//void NaryConstraint::sum( NaryConstraint* nary )
+// TODO: make it compatible with table representation rather than Map
+// void NaryConstraint::sum( NaryConstraint* nary )
 //{
 //    deconnect(true);
 //
@@ -1105,7 +1105,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
         DLink<ConstraintLink>* linkx = links[xindex];
         links[xindex] = links[arity_ - 1];
         links[arity_ - 1] = linkx;
-        //swap of scope array
+        // swap of scope array
         scope[xindex] = scope[arity_ - 1];
         scope[arity_ - 1] = x;
         // update of links indexs
@@ -1114,7 +1114,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
         scope_inv[scope[xindex]->wcspIndex] = xindex;
     }
 
-    //shift left scope_dac array starting at position of variable x in scope_dac
+    // shift left scope_dac array starting at position of variable x in scope_dac
     int dacindex = 0;
     while (dacindex < arity_ - 1 && scope_dac[dacindex] != x) {
         dacindex++;
@@ -1393,10 +1393,10 @@ void NaryConstraint::print(ostream& os)
     //	assert(nonassigned == unassigned_); // not valid when used with assignLS
 
     /*TSCOPE::iterator it = scope_inv.begin();
-	while(it != scope_inv.end()) {
-		os << "(" << it->first << ",idx: " << it->second << ") ";
-		++it;
-	}*/
+        while(it != scope_inv.end()) {
+                os << "(" << it->first << ",idx: " << it->second << ") ";
+                ++it;
+        }*/
     os << endl;
 
     if (ToulBar2::verbose >= 4) {

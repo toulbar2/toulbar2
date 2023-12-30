@@ -28,7 +28,7 @@ struct edge_component_t {
     enum { num = 555 };
     typedef edge_property_tag kind;
 } edge_component;
-}
+} // namespace boost
 
 typedef adjacency_list<setS, vecS, undirectedS> Graph;
 typedef adjacency_list<setS, vecS, directedS> DirectedGraph;
@@ -828,7 +828,7 @@ void WCSP::addAMOConstraints()
                 scope.clear();
                 scope2.clear();
                 clq.clear();
-                //scope=k->GetOrder();
+                // scope=k->GetOrder();
                 for (int j = 0; j < constrs[i]->arity(); j++) {
                     if (constrs[i]->getVar(j)->unassigned()) {
                         scope2.push_back(constrs[i]->getVar(j)->wcspIndex);

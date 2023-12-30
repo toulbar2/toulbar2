@@ -391,10 +391,10 @@ bool VACExtension::propagate()
                                 wcsp->assignLS(variables, values, true); // option true: make sure already assigned variables are removed from Solver::unassignedVars
                             wcsp->propagate();
                             if (ToulBar2::useRASPS <= 1) {
-                                //cout << "call to recursiveSolve from VAC" << endl;
+                                // cout << "call to recursiveSolve from VAC" << endl;
                                 solver->recursiveSolve(wcsp->getLb()); // if a new solution is found, UB will be updated automatically
                             } else {
-                                //cout << "call to recursiveSolveLDS from VAC" << endl;
+                                // cout << "call to recursiveSolveLDS from VAC" << endl;
                                 solver->recursiveSolveLDS(ToulBar2::useRASPS - 1);
                             }
                         } catch (const Contradiction&) {
@@ -634,7 +634,7 @@ void VACExtension::enforcePass2()
     Cost tmplambda;
     Value v;
 
-    //if (ToulBar2::verbose > 0)  cout << "VAC Enforce Pass 2" << endl;
+    // if (ToulBar2::verbose > 0)  cout << "VAC Enforce Pass 2" << endl;
 
     assert(i0 >= 0);
     xi0 = (VACVariable*)wcsp->getVar(i0);
@@ -664,7 +664,7 @@ void VACExtension::enforcePass2()
             cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
             assert(cij);
             assert(!cij->isDuplicate());
-            //if (ToulBar2::verbose > 6) cout << "x" << xi->wcspIndex << "," << v << "   killer: " << xj->wcspIndex << endl;
+            // if (ToulBar2::verbose > 6) cout << "x" << xi->wcspIndex << "," << v << "   killer: " << xj->wcspIndex << endl;
 
             for (EnumeratedVariable::iterator itj = xj->begin();
                  itj != xj->end(); ++itj) {
@@ -679,7 +679,7 @@ void VACExtension::enforcePass2()
                             wcsp->getUb())) {
                         if ((costij / tmpK) < minlambda) {
                             minlambda = costij / tmpK;
-                            if (minlambda < UNIT_COST) { //A cost function bottleneck here !
+                            if (minlambda < UNIT_COST) { // A cost function bottleneck here !
                                 bneckCost = costij;
                                 bneckCF = cij;
                                 bneckVar = -1;
@@ -728,9 +728,9 @@ void VACExtension::enforcePass2()
             }
         }
     }
-    //if (maxK == 0) {
-    //  maxK = wcsp->getUb() - wcsp->getLb();
-    //}
+    // if (maxK == 0) {
+    //   maxK = wcsp->getUb() - wcsp->getLb();
+    // }
     if (ToulBar2::verbose > 1)
         cout << "minLambda: " << minlambda << "\t\t (dualb = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << ", primalb = " << wcsp->getDPrimalBound() << ")" << std::setprecision(DECIMAL_POINT) << endl;
 }
@@ -739,13 +739,13 @@ bool VACExtension::enforcePass3()
 {
     bool util = (minlambda >= UNIT_COST);
     /*if(util) {
-	   Cost ub = wcsp->getUb();
-	   Cost lb = wcsp->getLb();
-	   util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
-	   } */
+           Cost ub = wcsp->getUb();
+           Cost lb = wcsp->getLb();
+           util = ( (ub - lb)/(10000*ToulBar2::costMultiplier) ) < minlambda;
+           } */
     Cost lambda = minlambda;
 
-    //if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
+    // if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
     int i, j;
     VACVariable *xi, *xj;
     VACBinaryConstraint* cij;
@@ -951,15 +951,15 @@ void VACExtension::printStat(bool ini)
         cout << "Number of VAC iterations: " << nbIterations << endl;
         cout << "Number of times is VAC: " << ToulBar2::nbTimesIsVAC << " Number of times isvac and itThreshold > 1: " << ToulBar2::nbTimesIsVACitThresholdMoreThanOne << endl;
     }
-    //sort(heap.begin(), heap.end(), cmp_function);
+    // sort(heap.begin(), heap.end(), cmp_function);
     /*cout << "Vars: ";
-	   vector<tVACStat*>::iterator it = heap.begin();
-	   while(it != heap.end()) {
-	   tVACStat* v = *it;
-	   if(v->sumlb != MIN_COST) cout << "(" << v->var << "," << v->sumlb << ") ";
-	   ++it;
-	   }
-	   cout << endl; */
+           vector<tVACStat*>::iterator it = heap.begin();
+           while(it != heap.end()) {
+           tVACStat* v = *it;
+           if(v->sumlb != MIN_COST) cout << "(" << v->var << "," << v->sumlb << ") ";
+           ++it;
+           }
+           cout << endl; */
 
     sumk = 0;
     theMaxK = 0;
@@ -1019,7 +1019,7 @@ void VACExtension::minsumDiffusion()
                     }
                 }
             ntimes++;
-            //cout << "it " << ntimes << "   changed: " << nchanged << endl;
+            // cout << "it " << ntimes << "   changed: " << nchanged << endl;
         }
         if (ToulBar2::verbose >= 0)
             cout << "   done iterations: " << ntimes << endl;

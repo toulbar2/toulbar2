@@ -52,12 +52,12 @@ void GlobalConstraint::init()
     for (int i = 0; i < arity_; i++)
         fullySupportedSet[i].clear();
     /*if ((currentDepth == -1) || (currentDepth >= Store::getDepth())) {
-		initStructure();
-	} else {
-		vector<int> rmv;
-		checkRemoved(rmv);
-	}
-	currentDepth = Store::getDepth();*/
+                initStructure();
+        } else {
+                vector<int> rmv;
+                checkRemoved(rmv);
+        }
+        currentDepth = Store::getDepth();*/
     initStructure();
     propagate();
 }
@@ -171,7 +171,7 @@ void GlobalConstraint::extend(int index, Value value, Cost cost)
 // function used for propagation
 void GlobalConstraint::remove(int index)
 {
-    //vector<int> rmv;
+    // vector<int> rmv;
     currentVar = -1;
     needPropagateDAC = true;
     needPropagateAC = true;
@@ -179,7 +179,7 @@ void GlobalConstraint::remove(int index)
 
 void GlobalConstraint::projectFromZero(int index)
 {
-    //vector<int> rmv;
+    // vector<int> rmv;
     currentVar = -1;
     needPropagateDAC = true;
 }
@@ -236,7 +236,7 @@ void GlobalConstraint::propagate()
 
 void GlobalConstraint::propagateEAC()
 {
-    //not done here but wait for variable's propagateEAC
+    // not done here but wait for variable's propagateEAC
 
     //	vector<int> provide;
     //	provide.resize(arity_);
@@ -274,7 +274,7 @@ void GlobalConstraint::propagateDAC()
     vector<map<Value, Cost>> deltas;
     vector<int> vars;
     vector<int> rmv;
-    //checkRemoved(rmv);
+    // checkRemoved(rmv);
     for (int ii = 0; ii < arity_; ii++) {
         EnumeratedVariable* x = scope_dac[ii];
         int i = scope_inv[x->wcspIndex];
@@ -282,7 +282,7 @@ void GlobalConstraint::propagateDAC()
             map<Value, Cost> delta;
             for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
                 delta[*it] = x->getCost(*it);
-                //deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
+                // deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
                 preUnaryCosts[i][x->toIndex(*it)] = x->getCost(*it);
             }
             vars.push_back(i);
@@ -295,11 +295,11 @@ void GlobalConstraint::propagateDAC()
         EnumeratedVariable* x = scope_dac[ii];
         int varindex = scope_inv[x->wcspIndex];
         if (x->unassigned()) {
-            //delta.clear();
+            // delta.clear();
             map<Value, Cost> delta;
             findProjection(varindex, delta);
             for (map<Value, Cost>::iterator i = delta.begin(); i != delta.end(); i++) {
-                //deltaCost[varindex][x->toIndex(i->first)] += preUnaryCosts[varindex][x->toIndex(i->first)];
+                // deltaCost[varindex][x->toIndex(i->first)] += preUnaryCosts[varindex][x->toIndex(i->first)];
                 Cost costDelta = i->second - preUnaryCosts[varindex][x->toIndex(i->first)];
                 if (costDelta > 0) {
                     if (CUT(costDelta + wcsp->getLb(), wcsp->getUb())) {
@@ -318,13 +318,13 @@ void GlobalConstraint::propagateDAC()
             checkRemoved(rmv);
         }
     }
-    //vector<int> rmv; //
+    // vector<int> rmv; //
     /*for (int i=0;i<arity_;i++) {
-		if (getVar(i)->unassigned()) {
-			checkRemoved(rmv);
-			findFullSupport(i);
-		}
-	}*/
+                if (getVar(i)->unassigned()) {
+                        checkRemoved(rmv);
+                        findFullSupport(i);
+                }
+        }*/
 }
 
 void GlobalConstraint::propagateAC()
@@ -368,7 +368,7 @@ void GlobalConstraint::propagateNIC()
 
     if (deconnected())
         return;
-    //wcsp->revise(this);
+    // wcsp->revise(this);
     vector<int> rmv;
     checkRemoved(rmv);
     Cost mincost = getMinCost();
@@ -381,28 +381,28 @@ void GlobalConstraint::propagateNIC()
 
 /*void GlobalConstraint::getCostsWithUnary(int index, map<Value, Cost> &costs) {
 
-	vector<int> rmv, support;
-	checkRemoved(rmv);
-	vector<map<Value, Cost> > deltas;
-	for (set<int>::iterator i = fullySupportedSet[index].begin();i !=
-			fullySupportedSet[index].end();i++) {
-		EnumeratedVariable *x = (EnumeratedVariable*)getVar(*i);
-		if (x->unassigned() && (*i != index)) {
-			support.push_back(*i);
-			map<Value, Cost> delta;
-			for (EnumeratedVariable::iterator v = x->begin();v != x->end();++v) delta[*v] = x->getCost(*v);
-			deltas.push_back(delta);
-		}
-	}
-	changeAfterExtend(support, deltas);
+        vector<int> rmv, support;
+        checkRemoved(rmv);
+        vector<map<Value, Cost> > deltas;
+        for (set<int>::iterator i = fullySupportedSet[index].begin();i !=
+                        fullySupportedSet[index].end();i++) {
+                EnumeratedVariable *x = (EnumeratedVariable*)getVar(*i);
+                if (x->unassigned() && (*i != index)) {
+                        support.push_back(*i);
+                        map<Value, Cost> delta;
+                        for (EnumeratedVariable::iterator v = x->begin();v != x->end();++v) delta[*v] = x->getCost(*v);
+                        deltas.push_back(delta);
+                }
+        }
+        changeAfterExtend(support, deltas);
 
-	map<Value, Cost> delta;
-	EnumeratedVariable *x = (EnumeratedVariable*)getVar(index);
-	findProjection(index, delta);
-	for (map<Value, Cost>::iterator p = delta.begin(); p != delta.end();p++) {
-		costs[p->first] += p->second;
-	}
-	undoExtend();
+        map<Value, Cost> delta;
+        EnumeratedVariable *x = (EnumeratedVariable*)getVar(index);
+        findProjection(index, delta);
+        for (map<Value, Cost>::iterator p = delta.begin(); p != delta.end();p++) {
+                costs[p->first] += p->second;
+        }
+        undoExtend();
 
 }*/
 
@@ -433,14 +433,14 @@ bool GlobalConstraint::isEAC(int index, Value a)
         changeAfterExtend(support, deltas);
         EACCost.clear();
         findProjection(index, EACCost);
-        //undoExtend();
+        // undoExtend();
         changeAfterProject(support, deltas);
     }
     if (EACCost[a] < 0) {
         cout << "EAC error\n";
         EACCost[a] = 0;
     }
-    //if (EACCost[a] > 0) needPropagateEAC = true;
+    // if (EACCost[a] > 0) needPropagateEAC = true;
     return (EACCost[a] == 0);
 }
 
@@ -456,20 +456,20 @@ void GlobalConstraint::fillEAC2(int varindex)
     }
 }
 
-//TODO: applies DAC order when enumerating variables (fullySupportedSet does not preserve DAC order)
+// TODO: applies DAC order when enumerating variables (fullySupportedSet does not preserve DAC order)
 void GlobalConstraint::findFullSupportEAC(int index)
 {
     if (ToulBar2::verbose >= 3)
         cout << "findFullSupportEAC for variable " << index << endl;
     currentVar = -1;
-    //if (needPropagateEAC)
+    // if (needPropagateEAC)
     {
-        //needPropagateEAC = false;
+        // needPropagateEAC = false;
 
         vector<map<Value, Cost>> deltas;
         vector<int> vars;
         vector<int> rmv;
-        //vars.push_back(index);
+        // vars.push_back(index);
         vars.push_back(index);
         for (set<int>::iterator i = fullySupportedSet[index].begin(); i != fullySupportedSet[index].end(); i++) {
             EnumeratedVariable* x = scope[*i];
@@ -483,10 +483,10 @@ void GlobalConstraint::findFullSupportEAC(int index)
             map<Value, Cost> delta;
             for (EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it) {
                 delta[*it] = x->getCost(*it);
-                //deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
+                // deltaCost[i][x->toIndex(*it)] -= x->getCost(*it);
                 preUnaryCosts[*i][x->toIndex(*it)] = x->getCost(*it);
             }
-            //vars.push_back(*i);
+            // vars.push_back(*i);
             deltas.push_back(delta);
         }
         changeAfterExtend(vars, deltas);
@@ -495,11 +495,11 @@ void GlobalConstraint::findFullSupportEAC(int index)
             int varindex = *it;
             EnumeratedVariable* x = scope[varindex];
             if (x->unassigned()) {
-                //delta.clear();
+                // delta.clear();
                 map<Value, Cost> delta;
                 findProjection(varindex, delta);
                 for (map<Value, Cost>::iterator i = delta.begin(); i != delta.end(); i++) {
-                    //deltaCost[varindex][x->toIndex(i->first)] += preUnaryCosts[varindex][x->toIndex(i->first)];
+                    // deltaCost[varindex][x->toIndex(i->first)] += preUnaryCosts[varindex][x->toIndex(i->first)];
                     Cost costDelta = i->second - preUnaryCosts[varindex][x->toIndex(i->first)];
                     if (costDelta > 0) {
                         if (CUT(costDelta + wcsp->getLb(), wcsp->getUb())) {
@@ -522,12 +522,12 @@ void GlobalConstraint::findFullSupportEAC(int index)
 }
 
 // THIS CODE IS NEVER USED!!!
-//TODO: applies DAC order when enumerating variables
+// TODO: applies DAC order when enumerating variables
 void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool isEAC)
 {
     if (ToulBar2::verbose >= 3)
         cout << "findFullSupport for variable " << varindex << endl;
-    //wcsp->revise(this);
+    // wcsp->revise(this);
     EnumeratedVariable* var = (EnumeratedVariable*)getVar(varindex);
     vector<map<Value, Cost>> deltas(support.size());
     int count = 0;
@@ -555,7 +555,7 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool 
     }
 
     if (allzero) {
-        //undoExtend();
+        // undoExtend();
         changeAfterProject(support, deltas);
         return;
     } else {
@@ -577,9 +577,9 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool 
             for (map<Value, Cost>::iterator j = delta.begin(); j != delta.end(); j++) {
                 E[index][j->first] = min(x->getCost(j->first) - j->second, x->getCost(j->first));
                 /*if (j->second < 0) {
-				  j->second = 0;
-				  }*/
-                //if (E[index][j->first] > 0) extendedCost[*i][j->first] += j->second;
+                                  j->second = 0;
+                                  }*/
+                // if (E[index][j->first] > 0) extendedCost[*i][j->first] += j->second;
             }
             changeAfterProject(*i, delta);
         }
@@ -627,7 +627,7 @@ void GlobalConstraint::findFullSupport(int varindex, vector<int>& support, bool 
 
 void GlobalConstraint::findSupport(int varindex)
 {
-    //wcsp->revise(this);
+    // wcsp->revise(this);
     if (ToulBar2::verbose >= 3)
         cout << "findSupport for variable " << varindex << endl;
     map<Value, Cost> delta;

@@ -1,6 +1,6 @@
 /** \file iloglue.cpp
  *  \brief Link with Ilog Solver, adding a global soft constraint representing a weighted CSP and propagated by ToulBar2.
- * 
+ *
  */
 
 // these includes are needed if compiled on new g++ versions (>4.0?)

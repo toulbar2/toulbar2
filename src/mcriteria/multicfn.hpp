@@ -245,7 +245,7 @@ private: /* private methods */
     /*!
      * \brief check if a variable in a wcsp and a variable in the multicfn with the same name have the same domains, throw an exception otherwise
      * \param tb2_var the variable in the wcsp
-     * \param multicfn_var the variable in the multicfn 
+     * \param multicfn_var the variable in the multicfn
      */
     void checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var);
 

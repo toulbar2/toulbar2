@@ -20,43 +20,43 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
-//#define INT_COST
-//#define LONGLONG_COST
-//#define PARETOPAIR_COST
+// #define INT_COST
+// #define LONGLONG_COST
+// #define PARETOPAIR_COST
 
-//#define DOUBLE_PROB
-//#define LONGDOUBLE_PROB
+// #define DOUBLE_PROB
+// #define LONGDOUBLE_PROB
 
 #include "utils/tb2utils.hpp"
-//Must be included after tb2utils.hpp
+// Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
 #ifdef QUAD_PROB
 #include <quadmath.h> // only with gcc/g++
 #endif
 
-using std::min;
-using std::max;
-using std::cout;
 using std::cerr;
 using std::cin;
+using std::cout;
 using std::endl;
-using std::istream;
 using std::ifstream;
-using std::stringstream;
+using std::istream;
 using std::istringstream;
-using std::ostringstream;
-using std::ofstream;
-using std::numeric_limits;
-using std::string;
-using std::map;
-using std::set;
+using std::list;
 using std::make_pair;
 using std::make_tuple;
-using std::tuple;
-using std::tie;
-using std::list;
-using std::stack;
+using std::map;
+using std::max;
+using std::min;
+using std::numeric_limits;
+using std::ofstream;
+using std::ostringstream;
 using std::queue;
+using std::set;
+using std::stack;
+using std::string;
+using std::stringstream;
+using std::tie;
+using std::tuple;
 
 /// Special character value at the beginning of a variable's name to identify implicit variables (i.e., variables which are not decision variables)
 const string IMPLICIT_VAR_TAG = "#";
@@ -101,7 +101,7 @@ const ptrdiff_t CHOICE_POINT_LIMIT = SIZE_MAX; // warning! converted to -1
 const ptrdiff_t OPEN_NODE_LIMIT = SIZE_MAX; // warning! converted to -1
 
 #if (defined(SHORT_COST) || defined(SHORT_VALUE))
-//C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
+// C++ integer promotion occurs on any arithmetic operation (i.e. int16_t ope int_16_t results to int type conversion)
 inline int16_t min(int16_t x, int y)
 {
     if (x < y)
@@ -506,7 +506,7 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
  */
 
 // Clique constraint propagates by including unary and binary cost functions inside its scope (in practice, it can be very time-consuming)
-//#define PROPAGATE_CLIQUE_WITH_BINARIES
+// #define PROPAGATE_CLIQUE_WITH_BINARIES
 
 // Transforms hard clique constraint into knapsack constraint (warning! clique of binary constraints are no more useful)
 #define CLIQUE2KNAPSACK
@@ -515,19 +515,19 @@ const int DECIMAL_POINT = 3; // default number of digits after decimal point for
 const bool NARY2CLAUSE = true;
 
 // Transforms hard clause constraint into knapsack constraint
-//#define CLAUSE2KNAPSACK
+// #define CLAUSE2KNAPSACK
 
 // Transforms knapsack constraint with unit coefficients into hard clause constraint
-//#define UNITKNAPSACK2CLAUSE
+// #define UNITKNAPSACK2CLAUSE
 
 // Transforms hard decomposable among constraint into knapsack constraint
-//#define WAMONG2KNAPSACK
+// #define WAMONG2KNAPSACK
 
 // VAC propagation becomes more incremental in pass 1 keeping removed values from previous cost threshold iterations
 #define INCREMENTALVAC
 
 // VAC propagation has optimal O(ed^2) time complexity in pass 1 (but it requires to reset support values at every cost threshold iteration)
-//#define AC2001
+// #define AC2001
 
 /*
  * Abstract data type that help post a global cost function
@@ -1064,8 +1064,8 @@ public:
 typedef Set<Constraint> ConstraintSet;
 typedef Set<Variable> VariableSet;
 
-//For incremental diverse solution search - relaxed constraint
-typedef vector<vector<vector<vector<Cost>>>> Mdd; //mdd[layer][source][target][value] = label weight if source---val--->target exists, getUb otherwise
+// For incremental diverse solution search - relaxed constraint
+typedef vector<vector<vector<vector<Cost>>>> Mdd; // mdd[layer][source][target][value] = label weight if source---val--->target exists, getUb otherwise
 
 #endif /*TB2TYPES_HPP_*/
 

@@ -447,7 +447,7 @@ Cost CliqueConstraint::get_zero_cost(int idx) // TODO remember last support and 
         });
 }
 
-Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx) //TODO: avoid iterate if last support still valid and zero cost
+Cost CliqueConstraint::get_binary_zero_cost(int idx, int jdx) // TODO: avoid iterate if last support still valid and zero cost
 {
     EnumeratedVariable* x = scope[idx];
     EnumeratedVariable* y = scope[jdx];
@@ -568,7 +568,7 @@ BinaryConstraint* CliqueConstraint::project_binary_cost(int idx, int jdx, Cost c
             Value jval = y->toValue(jvalindex);
             if (!y->canbe(jval))
                 continue;
-            cons->addcost(x, y, ival, jval, c); //TODO: update deltas for tree decomposition-based methods
+            cons->addcost(x, y, ival, jval, c); // TODO: update deltas for tree decomposition-based methods
         }
     }
     return cons;

@@ -23,17 +23,17 @@ void SameConstraint::buildIndex()
         mapval[*i] = arity_ + (int)(i - D.begin()) + 1;
     }
     nDistinctDomainValues = D.size();
-    //graph.setSize(arity_+D.size()+2);
+    // graph.setSize(arity_+D.size()+2);
 }
 
 pair<int, int> SameConstraint::mapto(int varindex, Value val)
 {
     if (binary_search(group[0].begin(), group[0].end(), varindex)) {
         return make_pair(varindex + 1, mapval[val]);
-        //return make_pair(0,0);
+        // return make_pair(0,0);
     } else if (binary_search(group[1].begin(), group[1].end(), varindex)) {
         return make_pair(mapval[val], varindex + 1);
-        //return make_pair(0,0);
+        // return make_pair(0,0);
     } else {
         cerr << "no group belong ?" << endl;
         throw InternalError();
@@ -46,8 +46,8 @@ void SameConstraint::read(istream& file, bool mult)
     if (mult)
         def *= ToulBar2::costMultiplier;
     int size[2];
-    //cout << "def. value = " << def << endl;
-    //cout << "consistency level = " << ToulBar2::consistencyLevel << endl;
+    // cout << "def. value = " << def << endl;
+    // cout << "consistency level = " << ToulBar2::consistencyLevel << endl;
     file >> size[0];
     file >> size[1];
     for (int g = 0; g < 2; g++) {
@@ -81,15 +81,15 @@ Cost SameConstraint::evalOriginal(const Tuple& s)
     }
     tuple_cost += sum / 2;
     /*for (int i=0;i<s.length();i++) {
-		if (tuple_cost < wcsp->getUb()) {
-			tuple_cost -= deltaCost[i][s[i]];
-		}
-	}
-	tuple_cost -= projectedCost;
-	if (tuple_cost < 0) {
-		cout << "Error ! " << s << " has -ve cost of " << tuple_cost << endl;
-		throw InternalError();
-	}*/
+                if (tuple_cost < wcsp->getUb()) {
+                        tuple_cost -= deltaCost[i][s[i]];
+                }
+        }
+        tuple_cost -= projectedCost;
+        if (tuple_cost < 0) {
+                cout << "Error ! " << s << " has -ve cost of " << tuple_cost << endl;
+                throw InternalError();
+        }*/
     return tuple_cost;
 }
 
@@ -100,7 +100,7 @@ size_t SameConstraint::GetGraphAllocatedSize()
 
 void SameConstraint::buildGraph(Graph& g)
 {
-    //g.clearEdge();
+    // g.clearEdge();
     for (vector<int>::iterator i = group[0].begin(); i != group[0].end(); i++) {
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(*i);
         for (EnumeratedVariable::iterator v = x->begin(); v != x->end(); ++v) {
@@ -126,23 +126,23 @@ void SameConstraint::buildGraph(Graph& g)
 
 /*void SameConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
-	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin();
-			k != graph[varindex+1].end(); k++) {
-		for (map<Value, int>::iterator i = mapval.begin();i !=
-				mapval.end();i++) {
-			if (i->second == k->adj) domain.push_back(i->first);
-		}
-	}
-	for (map<Value, int>::iterator i = mapval.begin();i !=
-			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin();
-				k != graph[i->second].end(); k++) {
-			if (k->adj == varindex+1) {
-				domain.push_back(i->first);
-			}
-		}
-	}
+        domain.clear();
+        for (vector<List_Node >::iterator k = graph[varindex+1].begin();
+                        k != graph[varindex+1].end(); k++) {
+                for (map<Value, int>::iterator i = mapval.begin();i !=
+                                mapval.end();i++) {
+                        if (i->second == k->adj) domain.push_back(i->first);
+                }
+        }
+        for (map<Value, int>::iterator i = mapval.begin();i !=
+                        mapval.end();i++) {
+                for (vector<List_Node >::iterator k = graph[i->second].begin();
+                                k != graph[i->second].end(); k++) {
+                        if (k->adj == varindex+1) {
+                                domain.push_back(i->first);
+                        }
+                }
+        }
 
 }*/
 
@@ -167,21 +167,21 @@ void SameConstraint::dump(ostream& os, bool original)
     os << endl;
 }
 
-//void SameConstraint::print(ostream& os)
+// void SameConstraint::print(ostream& os)
 //{
-//    os << "ssame(";
-//    for(int i = 0; i < arity_;i++) {
-//        os << scope[i]->wcspIndex;
-//        if(i < arity_-1) os << ",";
-//    }
-//    os << ")[" << def << "," << group[0].size() << "," << group[1].size();
-//    for (int g=0; g<2; g++) {
-//        for (unsigned int i = 0; i < group[g].size(); i++) {
-//            os << "," << getVar(group[g][i])->wcspIndex;
-//        }
-//    }
-//    os << "]";
-//}
+//     os << "ssame(";
+//     for(int i = 0; i < arity_;i++) {
+//         os << scope[i]->wcspIndex;
+//         if(i < arity_-1) os << ",";
+//     }
+//     os << ")[" << def << "," << group[0].size() << "," << group[1].size();
+//     for (int g=0; g<2; g++) {
+//         for (unsigned int i = 0; i < group[g].size(); i++) {
+//             os << "," << getVar(group[g][i])->wcspIndex;
+//         }
+//     }
+//     os << "]";
+// }
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

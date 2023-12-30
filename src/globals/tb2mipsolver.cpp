@@ -175,7 +175,7 @@ int IlogMIP::solve()
     cplex->solve();
     called += clock() - t0;
     if (cplex->getStatus() == IloAlgorithm::Infeasible) {
-        throw Contradiction(); //cannot call THROWCONTRADICTION because no conflict function for weighted degree heuristic
+        throw Contradiction(); // cannot call THROWCONTRADICTION because no conflict function for weighted degree heuristic
     }
     if (cplex->getStatus() != IloAlgorithm::Optimal) {
         cerr << "Solution status = " << cplex->getStatus() << std::endl;

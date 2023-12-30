@@ -46,7 +46,7 @@ void AmongConstraint::read(istream& file, bool mult)
 
 void AmongConstraint::dump(ostream& os, bool original)
 {
-    assert(original); //TODO: case original is false
+    assert(original); // TODO: case original is false
     if (original) {
         os << arity_;
         for (int i = 0; i < arity_; i++)

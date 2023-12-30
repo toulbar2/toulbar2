@@ -1,6 +1,6 @@
 /** \file tb2pedigree.hpp
  *  \brief Pedigree data structure
- * 
+ *
  */
 
 #ifndef TB2PEDIGREE_HPP_

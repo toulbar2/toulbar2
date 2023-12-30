@@ -1,6 +1,6 @@
 /** \file tb2bep.hpp
  *  \brief BEP benchmark: selecting and scheduling earth observations for agile satellite
- * 
+ *
  */
 
 #ifndef TB2BEP_HPP_

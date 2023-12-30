@@ -131,7 +131,7 @@ void GrammarConstraint::initMemoization()
 
     top = max(wcsp->getUb(), MAX_COST);
 
-    //Create tables
+    // Create tables
     resizeTable(f);
     resizeTable(up);
     resizeTable(curf);
@@ -280,12 +280,12 @@ void GrammarConstraint::recomputeTable(Cost*** table, Cost*** upTable)
         for (int len = n; len >= 2; len--) {
             for (int i = 0; i < n - len + 1; i++) {
                 int j = i + len - 1;
-                //for (vector<Rule>::iterator r = nonTerm2nonTerm.begin(); r != nonTerm2nonTerm.end(); r++) {
+                // for (vector<Rule>::iterator r = nonTerm2nonTerm.begin(); r != nonTerm2nonTerm.end(); r++) {
                 for (WCNFCFG::NonTermProdIterator r = cfg.beginNonTermProd(); r != cfg.endNonTermProd(); ++r) {
                     if (marked[i][j][r->from]) {
                         for (int k = i; k < j; k++) {
                             Cost tmp = table[i][k][r->to[0]] + table[k + 1][j][r->to[1]] + r->weight;
-                            //if (tmp <= upTable[i][j][r->from])
+                            // if (tmp <= upTable[i][j][r->from])
                             {
                                 marked[i][k][r->to[0]] = true;
                                 tmp = upTable[i][j][r->from] - table[k + 1][j][r->to[1]] - r->weight;

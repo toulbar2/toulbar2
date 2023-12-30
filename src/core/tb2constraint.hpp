@@ -163,7 +163,7 @@ public:
     {
         Cost c;
         if (c1 >= top && c2 >= top)
-            c = top; //c = 0;
+            c = top; // c = 0;
         else if (c1 >= top)
             c = MEDIUM_COST * top;
         else if (c2 >= top)

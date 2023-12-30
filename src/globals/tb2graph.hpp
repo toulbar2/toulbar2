@@ -1,6 +1,6 @@
 /** \file tb2graph.hpp
  *  \brief Multiple-edged Graph using the adjacent list structure for modelling the flow model
- * 
+ *
  */
 
 #ifndef TB2GRAPH
@@ -10,8 +10,8 @@
 #include "utils/tb2store.hpp"
 #include "utils/tb2btlist.hpp"
 
-//#define adj first
-//#define weight second
+// #define adj first
+// #define weight second
 #define INF (MAX_COST >> 5)
 #define Free(pt)     \
     if (pt) {        \
@@ -41,7 +41,7 @@ public:
     {
         for (vector<DLink<int>*>::iterator it = blockStore.begin();
              it != blockStore.end(); it++) {
-            delete[] * it;
+            delete[] *it;
         }
         blockStore.clear();
     }
@@ -121,9 +121,9 @@ private:
     struct List_Node {
         // entities need to backtrack
         StoreCost weight; // the weight
-        StoreCost cap; //the capacity, if cap = 0, the edge is set to "deleted"
+        StoreCost cap; // the capacity, if cap = 0, the edge is set to "deleted"
         // entities need not backtrack
-        int adj; //the node connecting to
+        int adj; // the node connecting to
         int tag; // the label of the edge
         int rEdgeIndex; // the pointer to the opposite edge
         List_Node(int depth, int a = -1, Cost w = 0, Cost c = 0, int t = NO_TAG, int rIndex = -1)
@@ -165,7 +165,7 @@ private:
     vector<Vertex*> vertexList;
 
     // potentials
-    //vector<StoreCost> potential;
+    // vector<StoreCost> potential;
 
     // pre-allocated temporary structure
     vector<int> p;
@@ -292,11 +292,11 @@ public:
     // shortest path algorithm (using Dijkstra with reweighting)
     // Not used due to error in computing potentials after argumentation
     /*void shortest_path_with_potential(int source);
-		void shortest_path_with_potential(int source, vector<Cost> &pathCost) {
-			shortest_path_with_potential(source);
-			pathCost.resize(size());
-			for (int i=0;i<size();i++) pathCost[i] = d[i];	
-		}*/
+                void shortest_path_with_potential(int source, vector<Cost> &pathCost) {
+                        shortest_path_with_potential(source);
+                        pathCost.resize(size());
+                        for (int i=0;i<size();i++) pathCost[i] = d[i];
+                }*/
 
     // just for checking
     void print()
@@ -374,7 +374,7 @@ public:
         vector<List_Node*>& edgeInfo;
 
     public:
-        //edge_iterator() {}
+        // edge_iterator() {}
         edge_iterator(BTListWrapper<int>::iterator _start,
             vector<List_Node*>& _edgeInfo)
             : next_edge(_start)

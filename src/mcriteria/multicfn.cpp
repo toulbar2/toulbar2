@@ -434,7 +434,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
             Double min_cost = 0., max_cost = 0.;
             bool uninit_min = true, uninit_max = true;
             size_t prodDom = 1;
-            for (auto& ivar: cost_function[func_ind].scope) {
+            for (auto& ivar : cost_function[func_ind].scope) {
                 prodDom *= var[ivar].nbValues();
             }
             size_t nbtuples = cost_function[func_ind].costs.size();
@@ -753,7 +753,7 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
                         if (fabs(weight - 1.) > MultiCFN::epsilon) {
                             wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost * weight - mincost) * pow(10, _tb2_decimalpoint))));
                         } else {
-                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost- mincost) * pow(10, _tb2_decimalpoint))));
+                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost - mincost) * pow(10, _tb2_decimalpoint))));
                         }
                     }
                 }
@@ -769,11 +769,11 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
         wcsp->setLb(0);
         wcsp->decreaseLb(-wcsp->DoubletoCost(0)); // reset negCost to zero
         wcsp->decreaseLb(-wcsp->DoubletoCost(global_lb));
-        //cout << "global_lb < 0: " << global_lb << endl;
+        // cout << "global_lb < 0: " << global_lb << endl;
     } else {
         wcsp->decreaseLb(-wcsp->DoubletoCost(0));
         wcsp->setLb(wcsp->DoubletoCost(global_lb));
-        //cout << "global_lb > 0" << endl;
+        // cout << "global_lb > 0" << endl;
     }
 
     // ub should always be the precomputed ub from the costs
@@ -1046,7 +1046,7 @@ void mcriteria::Var::print(ostream& os)
 
 //---------------------------------------------------------------------------
 mcriteria::CostFunction::CostFunction(MultiCFN* multicfn)
-  : default_cost(0.)
+    : default_cost(0.)
 {
     this->multicfn = multicfn;
 }

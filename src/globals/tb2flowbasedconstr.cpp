@@ -57,12 +57,12 @@ void FlowBasedGlobalConstraint::initStructure()
 void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vector<int>& rmv)
 {
 
-    //if (ToulBar2::GCLevel == LC_NC) return;
+    // if (ToulBar2::GCLevel == LC_NC) return;
 
     pair<Cost, bool> result;
     vector<int> cDomain, cDomain2;
     bool deleted = false;
-    //for (int i=0;i<arity_;i++) {
+    // for (int i=0;i<arity_;i++) {
     for (vector<int>::iterator it = rmv.begin(); it != rmv.end(); it++) {
         int i = *it;
         cDomain.clear();
@@ -88,9 +88,9 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vect
             deleted = true;
         }
         if (!cDomain.empty()) {
-            //bool flag = false;
+            // bool flag = false;
             cDomain2.clear();
-            //rmv.push_back(i);
+            // rmv.push_back(i);
             for (vector<int>::iterator v = cDomain.begin(); v != cDomain.end(); v++) {
                 pair<int, int> edge = mapto(i, *v);
                 if (!graph.removeEdge(edge.first, edge.second)) {
@@ -107,7 +107,7 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vect
                 }
                 result = graph.augment(edge.first, edge.second, true);
                 if (result.second) {
-                    //flag = true;
+                    // flag = true;
                     cost += weight[0] + result.first;
                     result.second = graph.removeEdge(edge.first, edge.second);
                 }
@@ -134,7 +134,7 @@ void FlowBasedGlobalConstraint::checkRemoved(Graph& graph, StoreCost& cost, vect
 void FlowBasedGlobalConstraint::findProjection(Graph& graph, StoreCost& cost, int varindex, map<Value, Cost>& delta)
 {
 
-    //if (ToulBar2::GCLevel == LC_NC) return;
+    // if (ToulBar2::GCLevel == LC_NC) return;
 
     pair<Cost, bool> result;
     delta.clear();
@@ -142,20 +142,20 @@ void FlowBasedGlobalConstraint::findProjection(Graph& graph, StoreCost& cost, in
     for (EnumeratedVariable::iterator j = x->begin(); j != x->end(); ++j) {
         pair<int, int> edge = mapto(varindex, *j);
         Cost tmp = cost;
-        //vector<Cost> weight = graph.getWeight(edge.first, edge.second);
-        //if (!weight.empty()) {
+        // vector<Cost> weight = graph.getWeight(edge.first, edge.second);
+        // if (!weight.empty()) {
         if (graph.edgeExist(edge.first, edge.second)) {
             if (zeroEdges[edge.first][edge.second]) {
-                //cout << "good\n";
+                // cout << "good\n";
                 tmp = cost;
             } else {
                 vector<pair<int, int>> edges;
                 result = graph.augment(edge.second, edge.first, false, edges);
                 /*if (!result.second) {
-				  printf("error! no shortest path\n");
-				  throw InternalError();
-				  }*/
-                //tmp = cost+result.first+weight[0];
+                                  printf("error! no shortest path\n");
+                                  throw InternalError();
+                                  }*/
+                // tmp = cost+result.first+weight[0];
                 tmp = cost + result.first + graph.getMinWeight(edge.first, edge.second);
                 zeroEdges[edge.first][edge.second] = true;
                 for (vector<pair<int, int>>::iterator i = edges.begin(); i != edges.end(); i++) {

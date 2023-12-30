@@ -26,30 +26,30 @@
 </pre>
  */
 
-//How to manually extract class properties to bind in Python:
-// awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
-// awk '/^class /{ok=1;class=$2} go&&/static/{gsub(";.*","",$0); print "        .def_readwrite_static(\"" $NF "\", &" class "::" $NF ")"} ok&&/public/{go=1}' core/tb2types.hpp
+// How to manually extract class properties to bind in Python:
+//  awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
+//  awk '/^class /{ok=1;class=$2} go&&/static/{gsub(";.*","",$0); print "        .def_readwrite_static(\"" $NF "\", &" class "::" $NF ")"} ok&&/public/{go=1}' core/tb2types.hpp
 
-//How to compile Python3 pytb2 module library on Linux:
-// apt install pybind11-dev (or else pip3 install pybind11)
-// git clone https://github.com/toulbar2/toulbar2.git
-// cd toulbar2; mkdir build; cd build
-// #compile toulbar2 to produce the python C++ library
-// cmake -DPYTB2=ON ..
-// make
-// the module will be in lib/Linux
+// How to compile Python3 pytb2 module library on Linux:
+//  apt install pybind11-dev (or else pip3 install pybind11)
+//  git clone https://github.com/toulbar2/toulbar2.git
+//  cd toulbar2; mkdir build; cd build
+//  #compile toulbar2 to produce the python C++ library
+//  cmake -DPYTB2=ON ..
+//  make
+//  the module will be in lib/Linux
 
-//Examples using pytb2 module from Python3:
-// NB: pytb2.cpython* must be in your Python3 path or export PYTHONPATH=.
-// python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
-// python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
-// python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+// Examples using pytb2 module from Python3:
+//  NB: pytb2.cpython* must be in your Python3 path or export PYTHONPATH=.
+//  python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/example.wcsp'); tb2.option.showSolutions = 1; res = m.solve(); print(res); print(m.solutions())"
+//  python3 -c "import sys; sys.path.append('.'); import pytb2 as tb2; tb2.init(); m = tb2.Solver(); m.read('../validation/default/1aho.cfn.gz'); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution())"
+//  python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
+//  python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-//PYBIND11_MAKE_OPAQUE(std::vector<int>);
+// PYBIND11_MAKE_OPAQUE(std::vector<int>);
 
 namespace py = pybind11;
 
@@ -290,7 +290,8 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<MultiCFN>(m, "MultiCFN")
         .def(py::init())
-        .def("push_back", [](MultiCFN& multicfn, WeightedCSP* wcsp, Double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
+        .def(
+            "push_back", [](MultiCFN& multicfn, WeightedCSP* wcsp, Double weight) { multicfn.push_back(dynamic_cast<WCSP*>(wcsp), weight); }, py::arg("wcsp"), py::arg("weight") = 1.)
         .def("setWeight", &MultiCFN::setWeight)
         .def("nbNetworks", &MultiCFN::nbNetworks)
         .def("nbVariables", &MultiCFN::nbVariables)
@@ -305,9 +306,12 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<Bicriteria> bcrit(m, "Bicriteria");
 
-    bcrit.def("computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"), py::arg("optim_dir"), py::arg("delta") = 1e-3)
-        .def("computeAdditionalSolutions", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { Bicriteria::computeAdditionalSolutions(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
-        .def("computeNonSupported", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int nbLimit) { Bicriteria::computeNonSupported(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
+    bcrit.def(
+             "computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"), py::arg("optim_dir"), py::arg("delta") = 1e-3)
+        .def(
+            "computeAdditionalSolutions", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { Bicriteria::computeAdditionalSolutions(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
+        .def(
+            "computeNonSupported", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int nbLimit) { Bicriteria::computeNonSupported(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
         .def("getSolutions", &Bicriteria::getSolutions)
         .def("getPoints", &Bicriteria::getPoints)
         .def("getWeights", &Bicriteria::getWeights);
@@ -362,7 +366,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("decrease", &WeightedCSP::decrease)
         .def("assign", &WeightedCSP::assign)
         .def("remove", &WeightedCSP::remove)
-        .def("assignLS", (void (WeightedCSP::*)(vector<int> & varIndexes, vector<Value> & newValues, bool force)) & WeightedCSP::assignLS)
+        .def("assignLS", (void(WeightedCSP::*)(vector<int> & varIndexes, vector<Value> & newValues, bool force)) & WeightedCSP::assignLS)
         .def("deconnect", &WeightedCSP::deconnect)
         .def("getUnaryCost", &WeightedCSP::getUnaryCost)
         .def("getMaxUnaryCost", &WeightedCSP::getMaxUnaryCost)
@@ -400,45 +404,51 @@ PYBIND11_MODULE(pytb2, m)
         .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
         .def("cartProd", &WeightedCSP::cartProd)
         .def("getNbDEE", &WeightedCSP::getNbDEE)
-        .def("makeEnumeratedVariable", (int (WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
+        .def("makeEnumeratedVariable", (int(WeightedCSP::*)(string n, Value iinf, Value isup)) & WeightedCSP::makeEnumeratedVariable)
         .def("addValueName", &WeightedCSP::addValueName)
         .def("getValueName", &WeightedCSP::getValueName)
         .def("makeIntervalVariable", &WeightedCSP::makeIntervalVariable)
-        .def("postNullaryConstraint", (void (WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
-        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-            return s.postUnaryConstraint(xIndex, costs, incremental);
-        },
+        .def("postNullaryConstraint", (void(WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
+        .def(
+            "postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
+                return s.postUnaryConstraint(xIndex, costs, incremental);
+            },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
-            return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
-        },
+        .def(
+            "postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
+                return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
+            },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
-            return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
-        },
+        .def(
+            "postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
+                return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
+            },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postNaryConstraintBegin", [](WeightedCSP& s, vector<int> & scope, Cost defval, Long nbtuples, bool forcenary) {
-            return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
-        },
+        .def(
+            "postNaryConstraintBegin", [](WeightedCSP& s, vector<int>& scope, Cost defval, Long nbtuples, bool forcenary) {
+                return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
+            },
             py::arg("scope"), py::arg("defval"), py::arg("nbtuples"), py::arg("forcenary") = !NARY2CLAUSE)
-        .def("postNaryConstraintTuple", (void (WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
+        .def("postNaryConstraintTuple", (void(WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
         .def("postSupxyc", &WeightedCSP::postSupxyc)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
-        .def("postCliqueConstraint", (int (WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
-        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {
-            return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
-        },
+        .def("postCliqueConstraint", (int(WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
+        .def(
+            "postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {
+                return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
+            },
             py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
-        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
-            return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
-        },
+        .def(
+            "postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
+                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
+            },
             py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
-        .def("postWAmong", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
-        .def("postWVarAmong", (void (WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
-        .def("postWRegular", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
-        .def("postWAllDiff", (int (WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost)) & WeightedCSP::postWAllDiff)
+        .def("postWAmong", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
+        .def("postWVarAmong", (void(WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
+        .def("postWRegular", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
+        .def("postWAllDiff", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost)) & WeightedCSP::postWAllDiff)
         //        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values)) &WeightedCSP::postWGcc)
         //        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
         //        .def("postWSameGcc", &WeightedCSP::postWSameGcc)
@@ -450,7 +460,7 @@ PYBIND11_MODULE(pytb2, m)
         //        .def("postWOverlap", &WeightedCSP::postWOverlap)
         .def("postWDivConstraint", &WeightedCSP::postWDivConstraint)
         .def("initDivVariables", &WeightedCSP::initDivVariables)
-        .def("postGlobalFunction", (void (WeightedCSP::*)(vector<int> scope, const string& gcname, const string& arguments)) & WeightedCSP::postGlobalFunction)
+        .def("postGlobalFunction", (void(WeightedCSP::*)(vector<int> scope, const string& gcname, const string& arguments)) & WeightedCSP::postGlobalFunction)
         .def("isKnapsack", &WeightedCSP::isKnapsack)
         .def("isGlobal", &WeightedCSP::isGlobal)
         .def("getSolution", (const vector<Value> (WeightedCSP::*)()) & WeightedCSP::getSolution)
@@ -459,7 +469,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("getSolutionCost", &WeightedCSP::getSolutionCost)
         .def("getSolutions", &WeightedCSP::getSolutions)
         //        .def("setSolution", &WeightedCSP::setSolution)
-        .def("printSolution", (void (WeightedCSP::*)(ostream&)) & WeightedCSP::printSolution)
+        .def("printSolution", (void(WeightedCSP::*)(ostream&)) & WeightedCSP::printSolution)
         .def("print", [](WeightedCSP& wcsp) { wcsp.print(cout); })
         .def("dump", &WeightedCSP::dump)
         .def("dump_CFN", &WeightedCSP::dump_CFN)
@@ -564,7 +574,8 @@ PYBIND11_MODULE(pytb2, m)
                 timer(timeout);
         })
 #endif
-        .def("solve", [](WeightedCSPSolver& s, bool first) {
+        .def(
+            "solve", [](WeightedCSPSolver& s, bool first) {
             bool res = false;
             try {
                 res = s.solve(first);
@@ -594,7 +605,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("generate", &WeightedCSPSolver::read_random)
         //        .def("narycsp", &WeightedCSPSolver::narycsp)
         //        .def("solve_symmax2sat", &WeightedCSPSolver::solve_symmax2sat)
-        .def("dump_wcsp", (void (WeightedCSPSolver::*)(const char*, bool, int)) & WeightedCSPSolver::dump_wcsp)
+        .def("dump_wcsp", (void(WeightedCSPSolver::*)(const char*, bool, int)) & WeightedCSPSolver::dump_wcsp)
         .def("read_solution", &WeightedCSPSolver::read_solution)
         .def("parse_solution", &WeightedCSPSolver::parse_solution);
 }

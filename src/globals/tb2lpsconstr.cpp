@@ -210,7 +210,7 @@ void LPSConstraint::read(istream& file, bool mult)
                 nrows += 1;
                 nslacks += 2;
                 file >> d >> nvalues;
-                sumlow.push_back(d); //abused the sumlow array
+                sumlow.push_back(d); // abused the sumlow array
                 sumhigh.push_back(0);
                 group[i] = (int*)malloc(sizeof(int) * count2);
                 for (int j = 0; j < count2; j++) {
@@ -224,7 +224,7 @@ void LPSConstraint::read(istream& file, bool mult)
                 nrows += count2;
                 nslacks += count2;
                 file >> d;
-                sumlow.push_back(d); //abused the sumlow array
+                sumlow.push_back(d); // abused the sumlow array
                 sumhigh.push_back(0);
                 group[i] = (int*)malloc(sizeof(int) * d * 2);
                 for (int j = 0; j < d; j++) {
@@ -300,9 +300,9 @@ Cost LPSConstraint::evalOriginal(const Tuple& s)
             }
         } else if (strcmp(windowType[i].c_str(), "segcc") == 0) {
             int appear = 0;
-            int tmpSum = s[windowVars[i][sumlow[i]]]; //abused the sumlow array
+            int tmpSum = s[windowVars[i][sumlow[i]]]; // abused the sumlow array
             for (int j = 0; j < windowSize[i]; j++) {
-                //cout << s[j];
+                // cout << s[j];
                 if (group[i][s[windowVars[i][j]]]) {
                     appear++;
                 }

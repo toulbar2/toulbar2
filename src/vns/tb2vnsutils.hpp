@@ -83,18 +83,18 @@ struct StructCluster {
                 cout << "- \033[0m";
         }
         cout << "} ";
-        //cout << "sep{";
-        //for (int i = 0 ; i < sizeSeparator ; i++) {
-        //if (i) cout << ",";
-        //cout << variablesSeparator[i];
-        //}
-        //cout << "}";
-        //cout << "sep{";
-        //for (int i = 0 ; i < sizeProper ; i++) {
-        //if (i) cout << ",";
-        //cout << variablesProper[i];
-        //}
-        //cout << "}";
+        // cout << "sep{";
+        // for (int i = 0 ; i < sizeSeparator ; i++) {
+        // if (i) cout << ",";
+        // cout << variablesSeparator[i];
+        // }
+        // cout << "}";
+        // cout << "sep{";
+        // for (int i = 0 ; i < sizeProper ; i++) {
+        // if (i) cout << ",";
+        // cout << variablesProper[i];
+        // }
+        // cout << "}";
         cout << endl;
     }
     void display2()

@@ -47,7 +47,7 @@ bool CooperativeParallelDGVNS::solve(bool first)
         master();
         if (bestUb < MAX_COST)
             wcsp->setSolution(bestUb, &bestSolution);
-        endSolve(bestUb < MAX_COST, bestUb, false); //TODO: return complete=true if known by the master
+        endSolve(bestUb < MAX_COST, bestUb, false); // TODO: return complete=true if known by the master
     } else {
         ToulBar2::showSolutions = false;
         slave();
@@ -92,7 +92,7 @@ void CooperativeParallelDGVNS::master()
                 adjcluster++;
                 kmax = h->getClustersSize(cluster, adjcluster);
             }
-            //cout << kmax << " " << adjcluster << endl ;
+            // cout << kmax << " " << adjcluster << endl ;
             /* Convert initial solution with cluster and kinit parameters in buffer, for each slave process */
             SolutionMessage solmsg(cluster, adjcluster, ToulBar2::vnsKmin, ToulBar2::vnsKmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
 
@@ -124,7 +124,7 @@ void CooperativeParallelDGVNS::master()
         // getting the cluster back
         file.push_back(scluster);
         scluster = getCluster();
-        //Updating
+        // Updating
         if (sbestUb <= bestUb
             && !(BestTimeS == sBestTimeS && BestTimeMS == sBestTimeMS)) {
             bestUb = sbestUb;
@@ -183,7 +183,7 @@ void CooperativeParallelDGVNS::master()
     vector<mpi::request> reqs;
     for (int rank = 0; rank < world.size(); ++rank)
         if (rank != MASTER) {
-            //printf("Send finish empty msg to finish with %d\n",rank);
+            // printf("Send finish empty msg to finish with %d\n",rank);
             reqs.push_back(world.isend(rank, DIETAG, SolutionMessage()));
         }
     mpi::wait_all(reqs.begin(), reqs.end());
@@ -192,7 +192,7 @@ void CooperativeParallelDGVNS::master()
 void CooperativeParallelDGVNS::slave()
 {
     // Structure de voisinage basée sur la notion des clusters
-    //ParallelRandomClusterChoice* h = NeighborhoodStructure::NeighborhoodStructureFactory(VariableHeuristic(hname), static_cast<WCSP*>(wcsp), this);
+    // ParallelRandomClusterChoice* h = NeighborhoodStructure::NeighborhoodStructureFactory(VariableHeuristic(hname), static_cast<WCSP*>(wcsp), this);
     ParallelRandomClusterChoice* h = new ParallelRandomClusterChoice();
     h->init(wcsp, this);
 
@@ -215,7 +215,7 @@ void CooperativeParallelDGVNS::slave()
 
         /* send the result back */
         mpi::request req = world.isend(0, 0, solmsg);
-        //cout << env0.myrank <<" slave end" << endl ;
+        // cout << env0.myrank <<" slave end" << endl ;
         while (!req.test().is_initialized() && !MPI_interrupted())
             ;
     }
@@ -241,14 +241,14 @@ void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, P
     if (ToulBar2::verbose >= 5)
         cout << "VNS :: Initial Solution" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
 
-    //vns/lds+cp
+    // vns/lds+cp
     int k = kinit;
-    //cout << "taille maximal du cluster "<< currentcluster<< " "<< numberclu<< " "<< kmax << endl ;
-    //cout << env0.myrank <<" slave 1" << endl ;
-    //cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< wcsp->numberOfVariables() << "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
+    // cout << "taille maximal du cluster "<< currentcluster<< " "<< numberclu<< " "<< kmax << endl ;
+    // cout << env0.myrank <<" slave 1" << endl ;
+    // cout << k <<"<="<< kmax <<"&&"<< k <<"<="<< wcsp->numberOfVariables() << "&&"<< ToulBar2::vns_optimum <<"<"  << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) <<"&&"<< (cpuTime()-lbtime)<<endl ;
     for (; k <= kmax && k <= unassignedVars->getSize() && ToulBar2::vnsOptimum < bestUb;) {
-        //neighborhood and partial instantiation
-        //cout <<"neighborhood"<< " "<<currentcluster<< " "<< numberclu << " " << k << endl ;
+        // neighborhood and partial instantiation
+        // cout <<"neighborhood"<< " "<<currentcluster<< " "<< numberclu << " " << k << endl ;
         set<int> neighborhood = h->SlaveGetNeighborhood(currentcluster, numberclu, k);
 
         if (ToulBar2::verbose >= 1) {
@@ -268,13 +268,13 @@ void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, P
                 values.push_back(lastSolution[v]);
             }
         }
-        //repair
+        // repair
         if (ToulBar2::lds)
             repair_recursiveSolve(ToulBar2::lds, variables, values, bestUb);
         else
             repair_recursiveSolve(variables, values, bestUb);
-        //updating
-        //cout <<"updating "<< k<< endl ;
+        // updating
+        // cout <<"updating "<< k<< endl ;
         if (lastUb >= bestUb) {
             k++;
         } else {
@@ -287,8 +287,8 @@ void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, P
             }
         }
     }
-    //cout << env0.myrank <<" slave 2" << endl ;
-    // return the best solution found
+    // cout << env0.myrank <<" slave 2" << endl ;
+    //  return the best solution found
     solmsg = SolutionMessage(currentcluster, numberclu, k, kmax, BestTimeS, BestTimeMS, bestUb, bestSolution);
 }
 

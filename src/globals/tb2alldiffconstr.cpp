@@ -26,7 +26,7 @@ void AllDiffConstraint::buildIndex()
     for (vector<Value>::iterator i = D.begin(); i != D.end(); i++) {
         mapval[*i] = arity_ + (int)(i - D.begin()) + 1;
     }
-    //graph.setSize(arity_+D.size()+2);
+    // graph.setSize(arity_+D.size()+2);
 }
 
 void AllDiffConstraint::read(istream& file, bool mult)
@@ -42,18 +42,18 @@ void AllDiffConstraint::read(istream& file, bool mult)
     file >> def;
     if (mult)
         def *= ToulBar2::costMultiplier;
-    //cout << "str = " << str << endl;
+    // cout << "str = " << str << endl;
     /*if (str == "var") {
-		mode = VAR;
-	} else if (str == "dec") {
-		mode = DEC;
-	} else if (str == "decbi") {
-		mode = DECBI;
-		decompose();
-	} else {
-		cout << "unknown mode?\n";
-		throw WrongFileFormat();
-	}*/
+                mode = VAR;
+        } else if (str == "dec") {
+                mode = DEC;
+        } else if (str == "decbi") {
+                mode = DECBI;
+                decompose();
+        } else {
+                cout << "unknown mode?\n";
+                throw WrongFileFormat();
+        }*/
     setSemantics(str);
 }
 
@@ -110,7 +110,7 @@ void AllDiffConstraint::buildGraph(Graph& g)
                     }
                 }
                 g.addEdge(index, g.size() - 1, count);
-                //g.print();
+                // g.print();
             }
         }
     }
@@ -118,25 +118,25 @@ void AllDiffConstraint::buildGraph(Graph& g)
 
 /*void AllDiffConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
-	domain.clear();
-	for (vector<List_Node >::iterator k = graph[varindex+1].begin(); 
-			k != graph[varindex+1].end(); k++) {
-		if (k->adj > 0) {
-			for (map<Value, Cost>::iterator i = mapval.begin();i !=
-					mapval.end();i++) {
-				if (i->second == k->adj) domain.push_back(i->first);
-			}
-		}
-	}
-	for (map<Value, Cost>::iterator i = mapval.begin();i !=
-			mapval.end();i++) {
-		for (vector<List_Node >::iterator k = graph[i->second].begin(); 
-				k != graph[i->second].end(); k++) {
-			if (k->adj == varindex+1) {
-				domain.push_back(i->first);
-			}
-		}
-	}
+        domain.clear();
+        for (vector<List_Node >::iterator k = graph[varindex+1].begin();
+                        k != graph[varindex+1].end(); k++) {
+                if (k->adj > 0) {
+                        for (map<Value, Cost>::iterator i = mapval.begin();i !=
+                                        mapval.end();i++) {
+                                if (i->second == k->adj) domain.push_back(i->first);
+                        }
+                }
+        }
+        for (map<Value, Cost>::iterator i = mapval.begin();i !=
+                        mapval.end();i++) {
+                for (vector<List_Node >::iterator k = graph[i->second].begin();
+                                k != graph[i->second].end(); k++) {
+                        if (k->adj == varindex+1) {
+                                domain.push_back(i->first);
+                        }
+                }
+        }
 
 }*/
 
@@ -196,18 +196,18 @@ void AllDiffConstraint::dump(ostream& os, bool original)
     os << " -1 salldiff " << ((mode == VAR) ? "var" : "dec") << " " << def << endl;
 }
 
-//void AllDiffConstraint::print(ostream& os) {
-//    os << "salldiff(";
-//    for(int i = 0; i < arity_;i++) {
-//        os << scope[i]->wcspIndex;
-//        if(i < arity_-1) os << ",";
-//    }
-//    os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "]";
-//    if (ToulBar2::verbose >= 4) {
-//        os << endl;
-//        GlobalConstraint::print(os);
-//    }
-//}
+// void AllDiffConstraint::print(ostream& os) {
+//     os << "salldiff(";
+//     for(int i = 0; i < arity_;i++) {
+//         os << scope[i]->wcspIndex;
+//         if(i < arity_-1) os << ",";
+//     }
+//     os << ")[" << ((mode==VAR)?"var":"dec") << "," << def << "]";
+//     if (ToulBar2::verbose >= 4) {
+//         os << endl;
+//         GlobalConstraint::print(os);
+//     }
+// }
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

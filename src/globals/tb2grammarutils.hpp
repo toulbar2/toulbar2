@@ -77,7 +77,7 @@ public:
 
     void setNumTerminals(int num)
     {
-        //nTerminals = num;
+        // nTerminals = num;
     }
 
     inline int getStartSymbol() { return startSymbol; }

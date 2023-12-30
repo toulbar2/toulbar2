@@ -15,7 +15,7 @@ class Cluster;
 
 typedef set<int> TVars;
 typedef ConstraintSet TCtrs;
-//typedef map<int,Value>     TAssign;
+// typedef map<int,Value>     TAssign;
 
 // sort variables by their DAC order
 struct CmpVarStruct {
@@ -32,7 +32,7 @@ typedef set<Cluster*, CmpClusterStructBasic> TClusters;
 
 // data structure for connected components
 typedef set<TClusters> component;
-//cluster visited or not
+// cluster visited or not
 typedef map<Cluster*, bool> cluster_visited;
 // sort cluster sons by mean separator size first and by number of variables in their subtree next
 struct CmpClusterStruct {
@@ -127,7 +127,7 @@ public:
     void increase(int index) {}
     void decrease(int index) {}
     void remove(int index) {}
-    //ConstraintSet subConstraint(){TCtrs s; return s;}
+    // ConstraintSet subConstraint(){TCtrs s; return s;}
     void print(ostream& os);
 };
 
@@ -158,7 +158,7 @@ private:
     StoreInt active; // unactive if a nogood including this cluster has been used by propagation
 
     StoreBigInteger countElimVars;
-    int num_part; //for approximation: number of the corresponding partition
+    int num_part; // for approximation: number of the corresponding partition
 
     StoreInt freedom_on; // current freedom status for the cluster
     StoreInt isCurrentlyInTD; // true if the cluster is part of the current tree decomposition
@@ -472,10 +472,10 @@ public:
     bool isInCurrentClusterSubTree(int idc);
     bool isActiveAndInCurrentClusterSubTree(int idc);
 
-    //main function to build a cluster tree/path decomposition:
-    // - builds a bucket for each variable following a given variable elimination order or directly from a tree decomposition file
-    // - builds a tree/path decomposition from the buckets
-    // - associate constraints to clusters, with special treatment for ternary constraints (duplicate flag)
+    // main function to build a cluster tree/path decomposition:
+    //  - builds a bucket for each variable following a given variable elimination order or directly from a tree decomposition file
+    //  - builds a tree/path decomposition from the buckets
+    //  - associate constraints to clusters, with special treatment for ternary constraints (duplicate flag)
     void buildFromCovering(string filename);
     void buildFromOrder();
     void buildFromOrderNext(vector<int>& order);
@@ -484,7 +484,7 @@ public:
     bool treeFusion(); // one fusion step
     void pathFusions(vector<int>& order); // builds a path decomposition of clusters from a given order
 
-    void buildFromOrderForApprox(); //builds a decomposition for approximation solution counting
+    void buildFromOrderForApprox(); // builds a decomposition for approximation solution counting
     void maxchord(int sizepart, vector<int>& order, ConstraintSet& totalusedctrs, TVars& inusedvars, TVars& currentusedvars, vector<Variable*>& currentRevElimOrder, ConstraintSet& currentusedctrs);
     void insert(int sizepart, vector<Variable*> currentRevElimOrder, ConstraintSet currentusedctrs);
 
@@ -502,10 +502,10 @@ public:
 
     int makeRooted(); // defines a rooted cluster tree decomposition from an undirected one
 
-    //reachable clusters from a cluster
+    // reachable clusters from a cluster
     void DFSUtil(Cluster* c, cluster_visited& c_visited);
 
-    //all cluster connected components of the tree decomposition
+    // all cluster connected components of the tree decomposition
     int connectedComponents();
 
     void makeRootedRec(Cluster* c, Cluster* father, TClusters& unvisited);
@@ -548,7 +548,7 @@ public:
     void printStats(Cluster* c = NULL);
     void dump(Cluster* c = NULL);
 
-    //manage freedom
+    // manage freedom
     void updateInTD(Cluster* c); ///< \brief deconnect cluster subtree and its separators according to the current tree decomposition
 
     void computeDepths(Cluster* c, int parent_depth); ///< \brief recursively set depth of all clusters in a given cluster subtree

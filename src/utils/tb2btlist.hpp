@@ -309,7 +309,7 @@ typedef BTList<Separator*> SeparatorList;
 
 /*
  * For internal use only! Interaction between tb2store and tb2btlist
- * 
+ *
  */
 
 template <class T, class V>

@@ -1,6 +1,6 @@
 /*
  * **************** Read BEP files **************************
- * 
+ *
  */
 
 #include "toulbar2lib.hpp"

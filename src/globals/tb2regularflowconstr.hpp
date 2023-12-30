@@ -77,7 +77,7 @@ private:
 
         void dump(ostream& os, bool original)
         {
-            assert(original); //TODO: case original is false
+            assert(original); // TODO: case original is false
             os << nstate << endl;
             os << init.size();
             for (vector<int>::iterator i = init.begin(); i != init.end(); i++)
@@ -168,7 +168,7 @@ public:
 
     string getName();
 
-    //Cost eval(const Tuple& s);
+    // Cost eval(const Tuple& s);
     void read(istream& file, bool mult = true);
     WeightedAutomaton* getWeightedAutomaton() { return &dfa; }
     void organizeConfig();

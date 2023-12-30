@@ -693,7 +693,7 @@ void GWWAlgorithm::randomwalk(OpProblem* problem, Configuration* configuration)
     Long thresh1 = walkalgorithm->threshold;
     if (lastmovedescent)
         thresholdupdate(); // baisse lors du dernier mouvement (on suppose la meme baisse que la
-    //dernière effectuée)
+    // dernière effectuée)
     val = walkalgorithm->configurationmove(problem, configuration);
     if (val)
         Statistiques->nb_moves[Statistiques->current_try]++;

@@ -659,7 +659,7 @@ Cost CFNStreamReader::readHeader()
             decimalPart = token.substr(token.find('.') + 1);
             if (ToulBar2::verbose >= 0) {
                 cout << "Initial cost precision of " << decimalPart.size() << " digits";
-                //cout << " (primal bound: " << token << ")";
+                // cout << " (primal bound: " << token << ")";
             }
             if (ToulBar2::resolution_Update) {
                 if (ToulBar2::resolution >= 0) {
@@ -671,7 +671,7 @@ Cost CFNStreamReader::readHeader()
                     }
                     if (ToulBar2::verbose >= 0) {
                         cout << " changed to " << decimalPart.size() << " digits";
-                        //cout << " (new primal bound: " << integerPart << decimalPart << ")";
+                        // cout << " (new primal bound: " << integerPart << decimalPart << ")";
                     }
                 } else if (ToulBar2::resolution < 0) {
                     if (ToulBar2::verbose >= 0) {
@@ -3687,17 +3687,17 @@ void WCSP::read_wcnf(const char* fileName)
         maxarity = max(maxarity, arity);
 
         if (arity > 3) {
-            //#ifdef CLAUSE2KNAPSACK
-            //            if (CUT(MULT(cost, K), getUb())) {
-            //                postKnapsackConstraint(scopeIndex,arity,file,false,false,false,tup);
-            //            } else {
-            //#endif
+            // #ifdef CLAUSE2KNAPSACK
+            //             if (CUT(MULT(cost, K), getUb())) {
+            //                 postKnapsackConstraint(scopeIndex,arity,file,false,false,false,tup);
+            //             } else {
+            // #endif
             int index = postNaryConstraintBegin(scopeIndex, MIN_COST, 1);
             postNaryConstraintTupleInternal(index, tup, MULT(cost, K));
             postNaryConstraintEnd(index);
-            //#ifdef CLAUSE2KNAPSACK
-            //            }
-            //#endif
+            // #ifdef CLAUSE2KNAPSACK
+            //             }
+            // #endif
         } else if (arity == 3) {
             vector<Cost> costs;
             for (int a = 0; a < 2; a++) {

@@ -1,6 +1,6 @@
 /** \file tb2system.hpp
  *  \brief System dependent functions.
- * 
+ *
  */
 
 #ifndef TB2SYSTEM_HPP_
@@ -140,8 +140,8 @@ inline std::istream& operator>>(std::istream& is, __float128& f)
     return is;
 }
 
-//inline __float128 abs( __float128 x ){return fabsq( x );}
-//inline __float128 sqrt( __float128 x ){return sqrtq( x );}
+// inline __float128 abs( __float128 x ){return fabsq( x );}
+// inline __float128 sqrt( __float128 x ){return sqrtq( x );}
 inline __float128 Pow(__float128 x, __float128 y) { return powq(x, y); }
 inline __float128 Exp(__float128 x) { return expq(x); }
 inline __float128 Exp10(__float128 x) { return powq(10, x); } // Assumes 10 is representable.
@@ -161,23 +161,23 @@ inline int floor(const int e) { return e; }
 inline int randomCost(int min, int max) { return min + (myrand() % (max - min + 1)); }
 inline int string2Cost(const char* ptr) { return atoi(ptr); }
 
-//cost= 0 log2= -1
-//cost= 1 log2= 0
-//cost= 2 log2= 1
-//cost= 3 log2= 1
-//cost= 4 log2= 2
-//cost= 5 log2= 2
-//cost= 6 log2= 2
-//cost= 7 log2= 2
-//cost= 8 log2= 3
-//cost= 9 log2= 3
-//cost= 10 log2= 3
-//cost= 11 log2= 3
-//cost= 12 log2= 3
-//cost= 13 log2= 3
-//cost= 14 log2= 3
-//cost= 15 log2= 3
-//cost= 16 log2= 4
+// cost= 0 log2= -1
+// cost= 1 log2= 0
+// cost= 2 log2= 1
+// cost= 3 log2= 1
+// cost= 4 log2= 2
+// cost= 5 log2= 2
+// cost= 6 log2= 2
+// cost= 7 log2= 2
+// cost= 8 log2= 3
+// cost= 9 log2= 3
+// cost= 10 log2= 3
+// cost= 11 log2= 3
+// cost= 12 log2= 3
+// cost= 13 log2= 3
+// cost= 14 log2= 3
+// cost= 15 log2= 3
+// cost= 16 log2= 4
 
 // This only works for a 32bits machine
 // and compiler g++ version < 4.0
@@ -251,23 +251,23 @@ inline int cost2log2glb(Long x) { return cost2log2(x); }
 inline int cost2log2gub(Long x) { return cost2log2(x); }
 #endif
 
-//luby(0)= N/A
-//luby(1)= 1
-//luby(2)= 1
-//luby(3)= 2
-//luby(4)= 1
-//luby(5)= 1
-//luby(6)= 2
-//luby(7)= 4
-//luby(8)= 1
-//luby(9)= 1
-//luby(10)= 2
-//luby(11)= 1
-//luby(12)= 1
-//luby(13)= 2
-//luby(14)= 4
-//luby(15)= 8
-//luby(16)= 1
+// luby(0)= N/A
+// luby(1)= 1
+// luby(2)= 1
+// luby(3)= 2
+// luby(4)= 1
+// luby(5)= 1
+// luby(6)= 2
+// luby(7)= 4
+// luby(8)= 1
+// luby(9)= 1
+// luby(10)= 2
+// luby(11)= 1
+// luby(12)= 1
+// luby(13)= 2
+// luby(14)= 4
+// luby(15)= 8
+// luby(16)= 1
 inline Long luby(Long r)
 {
     int j = cost2log2(r + 1);
@@ -283,7 +283,7 @@ inline double aleaGaussNoise(double s)
 {
     double U1 = mydrand();
     double U2 = mydrand();
-    //double U2 = myrandom_uddistribution(0.0, 1.0);
+    // double U2 = myrandom_uddistribution(0.0, 1.0);
     double P = s * sqrt(-2 * log(U1)) * cos(2 * M_PIl * U2);
     return P;
 }

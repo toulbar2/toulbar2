@@ -1,6 +1,6 @@
 /** \file tb2globalconstr.hpp
  *  \brief Global Constraint using enumerated variables with parameters read from file
- * 
+ *
  */
 
 #ifndef TB2GLOBALCONSTR_HPP_
@@ -108,7 +108,7 @@ public:
     // used for enforcing "EDGAC", still have some bugs
     virtual bool isEAC(int index, Value a);
     virtual void fillEAC2(int index);
-    //virtual void getCostsWithUnary(int index, map<Value, Cost> &costs);
+    // virtual void getCostsWithUnary(int index, map<Value, Cost> &costs);
     virtual void propagateEAC();
     virtual void findFullSupportEAC(int index);
     virtual void linkCostProvidingPartition(int index, Variable* support)
@@ -144,8 +144,8 @@ public:
         }
     }
 
-    //Trick! instead of doing remove(index) now, let AC queue do the job.
-    //So several incdec events on the same constraint can be merged into one AC event
+    // Trick! instead of doing remove(index) now, let AC queue do the job.
+    // So several incdec events on the same constraint can be merged into one AC event
     virtual void increase(int index) { ((EnumeratedVariable*)getVar(index))->queueAC(); }
     virtual void decrease(int index) { ((EnumeratedVariable*)getVar(index))->queueAC(); }
 
@@ -158,10 +158,10 @@ public:
     virtual bool universal() { return false; }
 
     /*virtual void valueRemoved(int index, Value value) {
-	  if (ToulBar2::consistencyLevel == FINE_IC) {
-	  propagateStrongNIC();
-	  } 
-	  }*/
+          if (ToulBar2::consistencyLevel == FINE_IC) {
+          propagateStrongNIC();
+          }
+          }*/
     // Still consider whether we should reduce to binary, as done in nary
     // constraints
     virtual void assign(int varIndex);

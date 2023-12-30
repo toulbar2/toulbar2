@@ -15,32 +15,32 @@ WFA::WFA(istream& file, bool mult)
     file >> _nbStates;
     nbStates = _nbStates;
 
-    //cout << this << endl;
-    //cout << "nbStates   =" << this->getNbStates() << endl;
+    // cout << this << endl;
+    // cout << "nbStates   =" << this->getNbStates() << endl;
     file >> nbStatesInit;
-    //cout << "nb initSt  = " << nbStatesInit << endl;
+    // cout << "nb initSt  = " << nbStatesInit << endl;
     for (unsigned int state = 0; state < nbStatesInit; state++) {
         unsigned int init;
         Cost weight;
         file >> init >> weight;
         if (mult)
             weight *= ToulBar2::costMultiplier;
-        //cout << "reading INIT = " << init << " " << weight << endl;
+        // cout << "reading INIT = " << init << " " << weight << endl;
         pair<int, Cost> initSt = make_pair(init, weight);
-        //cout << initSt.first << " " << initSt.second << endl;
+        // cout << initSt.first << " " << initSt.second << endl;
         initialStates.push_back(initSt);
     }
     file >> nbStatesAccept;
-    //cout << "nb acceptSt = " << nbStatesAccept << endl;
+    // cout << "nb acceptSt = " << nbStatesAccept << endl;
     for (unsigned int state = 0; state < nbStatesAccept; state++) {
         unsigned int accept;
         Cost weight;
         file >> accept >> weight;
         if (mult)
             weight *= ToulBar2::costMultiplier;
-        //cout << "reading ACCEPT = " << accept << " " << weight << endl;
+        // cout << "reading ACCEPT = " << accept << " " << weight << endl;
         pair<int, Cost> acceptSt = make_pair(accept, weight);
-        //cout << acceptSt.first << " " << acceptSt.second << endl;
+        // cout << acceptSt.first << " " << acceptSt.second << endl;
         acceptingStates.push_back(acceptSt);
     }
     file >> nbTransitions;
@@ -50,7 +50,7 @@ WFA::WFA(istream& file, bool mult)
         file >> start >> symbol >> end >> weight;
         if (mult)
             weight *= ToulBar2::costMultiplier;
-        //cout << "TRANS " << start << "x" <<  symbol << "-->" << end << " w= " << weight << endl;
+        // cout << "TRANS " << start << "x" <<  symbol << "-->" << end << " w= " << weight << endl;
         transitions.push_back(new WTransition(start, end, symbol, weight));
     }
 }

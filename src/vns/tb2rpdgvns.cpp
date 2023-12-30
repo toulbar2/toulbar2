@@ -370,7 +370,7 @@ bool ReplicatedParallelDGVNS::VnsLdsCP(SolMsg& solmsg, ParallelRandomClusterChoi
          it != bestSolution.end(); ++it)
         lastSolution[(*it).first] = (*it).second;
     lastUb = bestUb;
-    //vns/lds+cp
+    // vns/lds+cp
     set<int> neighborhood = h->SlaveGetNeighborhood(cluster, k); // based shuffle
     vector<int> variables;
     variables.reserve(unassignedVars->getSize());
@@ -390,7 +390,7 @@ bool ReplicatedParallelDGVNS::VnsLdsCP(SolMsg& solmsg, ParallelRandomClusterChoi
         cout << endl;
     }
 
-    //repair
+    // repair
     bool complete = false;
     ToulBar2::vnsKcur = k;
     ToulBar2::vnsLDScur = (ToulBar2::lds) ? discrepancy : -1;
@@ -573,7 +573,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
     // Save
     wcsp->setSolution(bestUb, &bestSolution);
     if (ToulBar2::vnsOutput) {
-        //cout << "# ------------------------------------------" << endl;
+        // cout << "# ------------------------------------------" << endl;
         double elapsedTime = realTime() - ToulBar2::startRealTime;
         ToulBar2::vnsOutput << "InstanceVnsBestTime " << elapsedTime << endl;
         ToulBar2::vnsOutput << "Cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;

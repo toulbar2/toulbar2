@@ -25,7 +25,7 @@ void treeClusterFusion(TCDGraph::vertex_descriptor p, TCDGraph::vertex_descripto
 {
     TCDGraph::vertex_iterator vend;
     tie(tuples::ignore, vend) = vertices(cg);
-    if (degree(v, cg) > 1 || p == *vend) //on est pas sur une feuille
+    if (degree(v, cg) > 1 || p == *vend) // on est pas sur une feuille
     {
         TCDGraph::adjacency_iterator a, aend;
 
@@ -143,9 +143,9 @@ void TreeDecRefinement::print_dec_satistics()
 
 double TreeDecRefinement::ecart_type(vector<int> data)
 {
-    double moy = 0.0; //mean
-    double ecart_type = 0.0; //standard deviation
-    vector<double> diff; //array of differences between data and mean
+    double moy = 0.0; // mean
+    double ecart_type = 0.0; // standard deviation
+    vector<double> diff; // array of differences between data and mean
     diff.reserve(data.size());
     diff.resize(data.size());
 
@@ -153,7 +153,7 @@ double TreeDecRefinement::ecart_type(vector<int> data)
         moy += data[i];
     moy /= data.size();
 
-    //compute standard deviation
+    // compute standard deviation
     for (uint i = 0; i < data.size(); i++) {
         diff[i] = pow(data[i] - moy, 2);
         ecart_type += diff[i];
@@ -285,7 +285,7 @@ void cluster_graph_absorption(TCDGraph& m_graph, TCDGraph& abs_graph)
         }
     }
 
-    //creation du spanning tree pour la fusion
+    // creation du spanning tree pour la fusion
     tie(e, eend) = edges(abs_graph);
     set<Cluster_edge> edges;
     for (; e != eend; ++e)

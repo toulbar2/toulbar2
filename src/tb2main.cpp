@@ -368,7 +368,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_verbose, (char*)"-v", SO_OPT }, // verbose level
     { OPT_debug, (char*)"-Z", SO_OPT }, // debug level
     { OPT_dumpWCSP, (char*)"-z", SO_OPT }, // dump wcsp
-    //stdin format
+    // stdin format
     { OPT_stdin, (char*)"--stdin", SO_REQ_SEP },
 
     // file extension (NOT USED!?!)
@@ -439,13 +439,13 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_boostingBTD, (char*)"-E:", SO_NONE },
     { OPT_varOrder, (char*)"-O", SO_REQ_SEP }, // filename of variable order
     { OPT_problemsaved_filename, (char*)"--save", SO_REQ_SEP }, // filename of saved problem
-    { OPT_showSolutions, (char*)"-s", SO_OPT }, //print solution found
-    { OPT_showSolutions, (char*)"--show", SO_OPT }, //print solution found
+    { OPT_showSolutions, (char*)"-s", SO_OPT }, // print solution found
+    { OPT_showSolutions, (char*)"--show", SO_OPT }, // print solution found
     { OPT_writeSolution, (char*)"-w", SO_OPT }, //  write last/all solutions found in file (default filename "sol")
 
     { OPT_pedigreePenalty, (char*)"-u", SO_REQ_SEP }, // int ..
     { OPT_allSolutions, (char*)"-a", SO_OPT }, // counting option ...print solution found
-    { OPT_approximateCountingBTD, (char*)"-D", SO_NONE }, //approximate counting
+    { OPT_approximateCountingBTD, (char*)"-D", SO_NONE }, // approximate counting
     { OPT_binaryBranching, (char*)"-b", SO_NONE },
     { OPT_binaryBranching, (char*)"-binaryBranching", SO_NONE },
     { NO_OPT_binaryBranching, (char*)"-b:", SO_NONE },
@@ -491,26 +491,26 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
 
     { OPT_VACINT, (char*)"-vacint", SO_OPT },
-    { OPT_VACINT, (char*)"-strictAC", SO_OPT }, //deprecated
-    { OPT_VACINT, (char*)"-sac", SO_OPT }, //deprecated
+    { OPT_VACINT, (char*)"-strictAC", SO_OPT }, // deprecated
+    { OPT_VACINT, (char*)"-sac", SO_OPT }, // deprecated
     { NO_OPT_VACINT, (char*)"-vacint:", SO_NONE },
-    { NO_OPT_VACINT, (char*)"-sac:", SO_NONE }, //deprecated
+    { NO_OPT_VACINT, (char*)"-sac:", SO_NONE }, // deprecated
     { OPT_VACthreshold, (char*)"-vacthr", SO_NONE },
-    { OPT_VACthreshold, (char*)"-VACthreshold", SO_NONE }, //deprecated
+    { OPT_VACthreshold, (char*)"-VACthreshold", SO_NONE }, // deprecated
     { NO_OPT_VACthreshold, (char*)"-vacthr:", SO_NONE },
     { OPT_RASPS, (char*)"-rasps", SO_OPT },
-    { OPT_RASPS, (char*)"-RINS", SO_OPT }, //deprecated
-    { OPT_RASPS, (char*)"-rins", SO_OPT }, //deprecated
+    { OPT_RASPS, (char*)"-RINS", SO_OPT }, // deprecated
+    { OPT_RASPS, (char*)"-rins", SO_OPT }, // deprecated
     { NO_OPT_RASPS, (char*)"-rasps:", SO_NONE },
-    { NO_OPT_RASPS, (char*)"-RINS:", SO_NONE }, //deprecated
-    { NO_OPT_RASPS, (char*)"-rins:", SO_NONE }, //deprecated
+    { NO_OPT_RASPS, (char*)"-RINS:", SO_NONE }, // deprecated
+    { NO_OPT_RASPS, (char*)"-rins:", SO_NONE }, // deprecated
     { OPT_RASPSangle, (char*)"-raspsdeg", SO_REQ_SEP },
-    { OPT_RASPSangle, (char*)"-RINSangle", SO_OPT }, //deprecated
-    { OPT_RASPSangle, (char*)"-auto", SO_OPT }, //deprecated
+    { OPT_RASPSangle, (char*)"-RINSangle", SO_OPT }, // deprecated
+    { OPT_RASPSangle, (char*)"-auto", SO_OPT }, // deprecated
     { NO_OPT_RASPSangle, (char*)"-raspsdeg:", SO_NONE },
-    { NO_OPT_RASPSangle, (char*)"-auto:", SO_NONE }, //deprecated
+    { NO_OPT_RASPSangle, (char*)"-auto:", SO_NONE }, // deprecated
     { OPT_RASPSreset, (char*)"-raspsini", SO_NONE },
-    { OPT_RASPSreset, (char*)"-RINSreset:", SO_NONE }, //deprecated
+    { OPT_RASPSreset, (char*)"-RINSreset:", SO_NONE }, // deprecated
     { NO_OPT_RASPSreset, (char*)"-raspsini:", SO_NONE },
     { OPT_RASPSlds, (char*)"-raspslds", SO_OPT },
 
@@ -525,7 +525,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
     { OPT_trwsNIterComputeUb, (char*)"--trws-n-iters-compute-ub", SO_REQ_SEP },
 
-    //preprocessing
+    // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
     { OPT_singletonConsistency, (char*)"-S", SO_NONE },
     { OPT_GenAMOforPB, (char*)"-amo", SO_NONE },
@@ -577,7 +577,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_divMethod, (char*)"-divmethod", SO_REQ_SEP }, // encoding of diversity constraint
     { OPT_divMethod, (char*)"-divm", SO_REQ_SEP }, // encoding of diversity constraint
     // MENDELSOFT
-    { OPT_generation, (char*)"-g", SO_NONE }, //sort pedigree by increasing generation number and if equal by increasing individual number
+    { OPT_generation, (char*)"-g", SO_NONE }, // sort pedigree by increasing generation number and if equal by increasing individual number
     //	{ OPT_pedigree_by_MPE,  		(char*) "-y", 				SO_OPT			}, // bayesian flag
     { MENDEL_OPT_genotypingErrorRate, (char*)"-genoError", SO_REQ_SEP },
     { MENDEL_OPT_resolution, (char*)"-precision", SO_REQ_SEP },
@@ -740,7 +740,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
             sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
         } else {
             strcpy(buffer, ".");
-            //path separator added to the path value
+            // path separator added to the path value
             sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
         }
         return (bin_path);
@@ -1119,7 +1119,7 @@ int _tmain(int argc, TCHAR* argv[])
         ToulBar2::verbose = -1;
 #endif
 
-    //#pragma STDC FENV_ACCESS ON
+    // #pragma STDC FENV_ACCESS ON
     std::fesetround(FE_TONEAREST);
 
     setlocale(LC_ALL, "C");
@@ -1146,7 +1146,7 @@ int _tmain(int argc, TCHAR* argv[])
 
     char* random_desc = NULL; // benchmark description set from command line;
 
-    //default file extension : can be enforced using --foo_ext option in command line
+    // default file extension : can be enforced using --foo_ext option in command line
 
     std::map<std::string, string> file_extension_map;
     file_extension_map["wcsp_ext"] = ".wcsp";
@@ -1229,7 +1229,7 @@ int _tmain(int argc, TCHAR* argv[])
 
         if (args.LastError() == SO_SUCCESS) {
 
-            //if (check_file_ext(to_string(args.OptionText()),"_ext") )
+            // if (check_file_ext(to_string(args.OptionText()),"_ext") )
             if (strstr(args.OptionText(), "_ext")) {
                 string force_extension = args.OptionText();
                 force_extension.erase(force_extension.begin(), force_extension.begin() + 2);
@@ -1431,7 +1431,7 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::btdRootCluster = root;
             }
 
-            //Choose root heuristically
+            // Choose root heuristically
             if (args.OptionId() == OPT_RootHeu) {
                 int root = atoi(args.OptionArg());
                 if (root > 0 || (args.OptionArg()[0] == '0' && args.OptionArg()[1] == 0))
@@ -1451,7 +1451,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (subcluster >= 1)
                     ToulBar2::btdSubTree = subcluster;
             }
-            //cluster Max size
+            // cluster Max size
             if (args.OptionId() == OPT_splitClusterMaxSize) {
                 int cmaxsize = atoi(args.OptionArg());
                 if (cmaxsize >= 1)
@@ -1580,7 +1580,7 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::showSolutions = 1;
             }
 
-            //#############################################
+            // #############################################
             if (args.OptionId() == OPT_writeSolution) {
                 if (!ToulBar2::writeSolution)
                     ToulBar2::writeSolution = 1;
@@ -1812,14 +1812,14 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             if (args.OptionId() == OPT_costThreshold) {
-                //Cost ct = string2Cost(args.OptionArg());
-                //if (ct > UNIT_COST)
+                // Cost ct = string2Cost(args.OptionArg());
+                // if (ct > UNIT_COST)
                 ToulBar2::costThresholdS = args.OptionArg();
             }
 
             if (args.OptionId() == OPT_costThresholdPre) {
-                //Cost ct = string2Cost(args.OptionArg());
-                //if (ct > UNIT_COST)
+                // Cost ct = string2Cost(args.OptionArg());
+                // if (ct > UNIT_COST)
                 ToulBar2::costThresholdPreS = args.OptionArg();
             }
 
@@ -2243,8 +2243,8 @@ int _tmain(int argc, TCHAR* argv[])
             ////////////////////////////////////////////////////////////////////////////////////////
             /////				DEBUG and verbose LEVEL  management + DUMP
             ////////////////////////////////////////////////////////////////////////////////////////
-            //verbose mode
-            //   v: verbosity level
+            // verbose mode
+            //    v: verbosity level
             if (args.OptionId() == OPT_verbose) {
                 if (args.OptionArg() != NULL) {
                     ToulBar2::verbose = atoi(args.OptionArg());
@@ -2942,7 +2942,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             //////////////////////VARIABLE ORDERING ////////////////////////////////////
             // filename containing variable order
-            //if (strstr(problem,".order"))
+            // if (strstr(problem,".order"))
             if (check_file_ext(problem, file_extension_map["order_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading variable order in file: " << problem << endl;
@@ -2953,7 +2953,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
             // filename containing list of clusters in topological ordering
-            //if (strstr(problem,".cov"))
+            // if (strstr(problem,".cov"))
             if (check_file_ext(problem, file_extension_map["treedec_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading tree decomposition in file: " << problem << endl;
@@ -2970,7 +2970,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
 
             // filename containing list of clusters without the running intersection property
-            //if (strstr(problem,".dec"))
+            // if (strstr(problem,".dec"))
             if (check_file_ext(problem, file_extension_map["clusterdec_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading cluster decomposition in file: " << problem << endl;
@@ -3022,7 +3022,7 @@ int _tmain(int argc, TCHAR* argv[])
         throw BadConfiguration();
     }
 
-    //TODO: If --show_options then dump ToulBar2 object here
+    // TODO: If --show_options then dump ToulBar2 object here
 
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
@@ -3262,7 +3262,7 @@ int _tmain(int argc, TCHAR* argv[])
             }
         }
 
-        //TODO: If --show_options then dump ToulBar2 object here
+        // TODO: If --show_options then dump ToulBar2 object here
 
         if (certificate) {
             if (certificateFilename != NULL)
@@ -3408,7 +3408,7 @@ int _tmain(int argc, TCHAR* argv[])
       sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
       system(line); */
 
-    //delete solver; // it takes CPU time for nothing!!
+    // delete solver; // it takes CPU time for nothing!!
     return 0;
 }
 

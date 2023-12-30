@@ -7,7 +7,7 @@
 
 #include "tb2enumvar.hpp"
 #include "tb2binconstr.hpp"
-//#include "tb2ternaryconstr.hpp"
+// #include "tb2ternaryconstr.hpp"
 #include "tb2vac.hpp"
 
 class VACVariable : public EnumeratedVariable {
@@ -244,49 +244,49 @@ public:
 /**
  * A class that stores information about a ternary cost function
  */
-//class VACTernaryConstraint : public TernaryConstraint {
+// class VACTernaryConstraint : public TernaryConstraint {
 //
-//private:
-//    vector<int> kX; /**< The k_XYZ(X,v) counters: nb. of cost request on X,v by this cost function */
-//    vector<int> kY; /**< The k_XYZ(Y,v) counters: nb. of cost request on Y,v by this cost function */
-//    vector<int> kZ; /**< The k_XYZ(Z,v) counters: nb. of cost request on Z,v by this cost function */
-//    vector<Long> kX_timeStamp;
-//    vector<Long> kY_timeStamp;
-//    vector<Long> kZ_timeStamp;
+// private:
+//     vector<int> kX; /**< The k_XYZ(X,v) counters: nb. of cost request on X,v by this cost function */
+//     vector<int> kY; /**< The k_XYZ(Y,v) counters: nb. of cost request on Y,v by this cost function */
+//     vector<int> kZ; /**< The k_XYZ(Z,v) counters: nb. of cost request on Z,v by this cost function */
+//     vector<Long> kX_timeStamp;
+//     vector<Long> kY_timeStamp;
+//     vector<Long> kZ_timeStamp;
 //
-//    StoreCost myThreshold; /** The local thresold used to break loops */
+//     StoreCost myThreshold; /** The local thresold used to break loops */
 //
-//public:
-//    VACTernaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz, vector<Cost>& tab);
-//    VACTernaryConstraint(WCSP* wcsp);
-//    ~VACTernaryConstraint();
+// public:
+//     VACTernaryConstraint(WCSP* wcsp, EnumeratedVariable* xx, EnumeratedVariable* yy, EnumeratedVariable* zz, BinaryConstraint* xy, BinaryConstraint* xz, BinaryConstraint* yz, vector<Cost>& tab);
+//     VACTernaryConstraint(WCSP* wcsp);
+//     ~VACTernaryConstraint();
 //
-//    int getK(VACVariable* var, Value v, Long timeStamp);
-//    void setK(VACVariable* var, Value v, int c, Long timeStamp);
+//     int getK(VACVariable* var, Value v, Long timeStamp);
+//     void setK(VACVariable* var, Value v, int c, Long timeStamp);
 //
-//    void setThreshold(Cost c) { myThreshold = c; }
-//    Cost getThreshold() { return myThreshold; }
+//     void setThreshold(Cost c) { myThreshold = c; }
+//     Cost getThreshold() { return myThreshold; }
 //
-//    bool isNull(Cost c);
+//     bool isNull(Cost c);
 //
-//    Cost getVACCost(VACVariable* xx, VACVariable* yy, VACVariable* zz, Value u, Value v, Value w)
-//    {
-//        Cost c = getCost(xx, yy, zz, u, v, w);
-//        if (isNull(c))
-//            return MIN_COST;
-//        else
-//            return c;
-//    }
-//    void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
-//    void VACextend(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
+//     Cost getVACCost(VACVariable* xx, VACVariable* yy, VACVariable* zz, Value u, Value v, Value w)
+//     {
+//         Cost c = getCost(xx, yy, zz, u, v, w);
+//         if (isNull(c))
+//             return MIN_COST;
+//         else
+//             return c;
+//     }
+//     void VACproject(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC projects on value */
+//     void VACextend(VACVariable* x, Value v, Cost c); /**< Modifies Delta counters, then VAC extends from value */
 //
-//    bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
+//     bool revise(VACVariable* var, Value v); /**< AC2001 based Revise for Pass1 : Revise value wrt this cost function */
 //
-//    friend ostream& operator<<(ostream& os, VACTernaryConstraint& c)
-//    {
-//        return os;
-//    }
-//};
+//     friend ostream& operator<<(ostream& os, VACTernaryConstraint& c)
+//     {
+//         return os;
+//     }
+// };
 
 #endif /*TB2VACUTILS_HPP_*/
 
