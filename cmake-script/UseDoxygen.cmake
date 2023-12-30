@@ -43,6 +43,7 @@ if(BUILD_API_DOC_LATEX STREQUAL "ON")
     if(PDFLATEX_COMPILER)
       set(DOXYFILE_PDFLATEX "YES")
     endif()
+
     if(DOXYGEN_DOT_EXECUTABLE)
       set(DOXYFILE_DOT "YES")
     endif()
@@ -52,18 +53,9 @@ if(BUILD_API_DOC_LATEX STREQUAL "ON")
       COMMAND ${DOXYFILE_MAKE}
       COMMENT "Running LaTeX for Doxygen documentation in ${CMAKE_CURRENT_BINARY_DIR}/latex..."
       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/latex")
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf DESTINATION ${doc_destination}/${Toulbar2_NAME})
-  else()
-    set(DOXYGEN_LATEX "NO")
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/doc/refman.pdf DESTINATION ${doc_destination}/${Toulbar2_NAME})
   endif()
-else()
-  set(DOXYFILE_GENERATE_LATEX "NO")
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/doc/refman.pdf DESTINATION ${doc_destination}/${Toulbar2_NAME})
 endif()
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION ${doc_destination}/${Toulbar2_NAME})
-
-
-
-
+if(BUILD_SPHINX_DOC STREQUAL "ON")
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sphinx/html DESTINATION ${doc_destination}/toulbar2-doc)
+endif()
