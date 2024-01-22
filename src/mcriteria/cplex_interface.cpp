@@ -632,7 +632,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 
       IloExpr expr(env);
 
-      for(unsigned int scope_ind = 0; cope_ind < func.scope.size(); scope_ind ++) {
+      for(unsigned int scope_ind = 0; scope_ind < func.scope.size(); scope_ind ++) {
 
         unsigned int var_ind = func.scope[scope_ind];
         mcriteria::Var& variable = var[var_ind];
