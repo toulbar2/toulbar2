@@ -287,7 +287,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
       continue;
     }
     mcriteria::TupleCostFunction& func = *dynamic_cast<mcriteria::TupleCostFunction*>(func_base);
-    if(func.scope.size() < 2 || func.hard) {
+    if(func.scope.size() < 2 || (func.hard && func.all_tuples)) {
       continue;
     }
 
