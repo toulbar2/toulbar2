@@ -4343,8 +4343,14 @@ void WCSP::read_lp(const char* fileName)
 #endif
 
     auto pb = baryonyx::make_problem(file);
-    assert(pb);
-    assert(pb.status == baryonyx::file_format_error_tag::success);
+    if (!pb) {
+        cerr << "Could not read lp file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    if (pb.status != baryonyx::file_format_error_tag::success) {
+        cerr << "Wrong lp format : " << pb.status << endl;
+        throw WrongFileFormat();
+    }
 
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
 
@@ -4357,7 +4363,7 @@ void WCSP::read_lp(const char* fileName)
     map<string, int> varnames;
     assert(pb.vars.names.size() == pb.vars.values.size());
     for (unsigned int i = 0; i < pb.vars.names.size(); i++) {
-        assert(pb.vars.values[i].type == baryonyx::variable_type::binary || pb.vars.values[i].type == baryonyx::variable_type::general || (pb.vars.values[i].type == baryonyx::variable_type::real && pb.vars.values[i].min == pb.vars.values[i].max));
+        //assert(pb.vars.values[i].type == baryonyx::variable_type::binary || pb.vars.values[i].type == baryonyx::variable_type::general || (pb.vars.values[i].type == baryonyx::variable_type::real && pb.vars.values[i].min == pb.vars.values[i].max));
 #ifdef WCSPFORMATONLY
         int var = makeEnumeratedVariable(to_string(pb.vars.names[i]), 0, pb.vars.values[i].max - pb.vars.values[i].min);
 #else
