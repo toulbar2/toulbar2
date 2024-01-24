@@ -1,7 +1,7 @@
 #include "tb2linearconstr.hpp"
 #include "core/tb2wcsp.hpp"
 
-//#define verify
+// #define verify
 
 LinearConstraint::LinearConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : GlobalConstraint(wcsp, scope_in, arity_in, 0)
@@ -40,7 +40,7 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
 
     pair<Cost, bool> result;
     vector<int> cDomain;
-    //bool deleted = false;
+    // bool deleted = false;
     bool flag = false;
     for (int i = 0; i < arity_; i++) {
         cDomain.clear();
@@ -64,7 +64,7 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
                 throw InternalError();
             }
             cDomain.erase(it);
-            //deleted = true;
+            // deleted = true;
         }
 
         if (!cDomain.empty()) {
@@ -78,7 +78,7 @@ void LinearConstraint::checkRemoved(MIP& mip, Cost& cost, vector<int>& rmv)
 #endif
                 mip.colUpperBound(var1, 0); // removeDomain
             }
-            //deleted = true;
+            // deleted = true;
         }
     }
     if (flag) {

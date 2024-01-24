@@ -118,7 +118,7 @@ private:
 
     struct CCTreeNode; // Forward declaration
     vector<CCTreeNode> nodeStore;
-    //typedef vector<CCTreeNode>::iterator CCTreeNodePtr;
+    // typedef vector<CCTreeNode>::iterator CCTreeNodePtr;
     typedef CCTreeNode* CCTreeNodePtr;
 
     struct CCTreeNode {
@@ -150,7 +150,7 @@ private:
     CCTreeNodePtr ccTreeRoot;
     RangeMinQuery<int> RMQ;
 
-    //CCTreeNodePtr PtrNULL() {return nodeStore.end();}
+    // CCTreeNodePtr PtrNULL() {return nodeStore.end();}
     CCTreeNodePtr PtrNULL() { return NULL; }
     CCTreeNodePtr createNewNode();
 
@@ -201,7 +201,7 @@ public:
 
     Cost eval(const Tuple& s);
 
-    void read(istream& file, bool mult = true) {} //No parameter needed
+    void read(istream& file, bool mult = true) {} // No parameter needed
     void initMemoization();
     string getName() { return "MST"; }
     void dump(ostream& os, bool original = true);

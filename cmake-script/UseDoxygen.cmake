@@ -10,12 +10,21 @@ ENDIF (DOXYGEN_FOUND)
 
 set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+set(sphinx_conf_in ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py.in)
+set(sphinx_conf ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py)
+
 # output directory for code source documentation  
 
 configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+configure_file(${sphinx_conf_in} ${sphinx_conf} @ONLY)
 
 add_custom_target(doc ALL
   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp)
+
+add_custom_target(sphinx-doc ALL COMMAND make BUILDDIR=${CMAKE_CURRENT_BINARY_DIR}/sphinx docs
+                   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs
+)
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
@@ -34,6 +43,7 @@ if(BUILD_API_DOC_LATEX STREQUAL "ON")
     if(PDFLATEX_COMPILER)
       set(DOXYFILE_PDFLATEX "YES")
     endif()
+
     if(DOXYGEN_DOT_EXECUTABLE)
       set(DOXYFILE_DOT "YES")
     endif()
@@ -43,18 +53,9 @@ if(BUILD_API_DOC_LATEX STREQUAL "ON")
       COMMAND ${DOXYFILE_MAKE}
       COMMENT "Running LaTeX for Doxygen documentation in ${CMAKE_CURRENT_BINARY_DIR}/latex..."
       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/latex")
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf DESTINATION ${doc_destination}/${Toulbar2_NAME})
-  else()
-    set(DOXYGEN_LATEX "NO")
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/doc/refman.pdf DESTINATION ${doc_destination}/${Toulbar2_NAME})
   endif()
-else()
-  set(DOXYFILE_GENERATE_LATEX "NO")
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/doc/refman.pdf DESTINATION ${doc_destination}/${Toulbar2_NAME})
 endif()
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION ${doc_destination}/${Toulbar2_NAME})
-
-
-
-
+if(BUILD_SPHINX_DOC STREQUAL "ON")
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sphinx/html DESTINATION ${doc_destination}/toulbar2-doc)
+endif()

@@ -8,7 +8,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 TernaryConstraint::TernaryConstraint(WCSP* wcsp,
@@ -372,7 +372,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
 
 /*
  * Propagation methods
- * 
+ *
  */
 bool TernaryConstraint::project(EnumeratedVariable* x, Value value, Cost cost, vector<StoreCost>& deltaCostsX)
 {
@@ -559,7 +559,7 @@ bool TernaryConstraint::separability(EnumeratedVariable* vy, EnumeratedVariable*
 void TernaryConstraint::separate(EnumeratedVariable* vy, EnumeratedVariable* vz)
 {
     Cost cost, minCost = MAX_COST;
-    //assert(separability(vy,vz));
+    // assert(separability(vy,vz));
     first(vy, vz);
     vector<Cost> costsZX((size_t)zvar->getDomainInitSize() * (size_t)xvar->getDomainInitSize(), MIN_COST);
     vector<Cost> costsXY((size_t)xvar->getDomainInitSize() * (size_t)yvar->getDomainInitSize(), MIN_COST);
@@ -841,7 +841,7 @@ bool TernaryConstraint::checkTreeDecomposition()
     return (!wcsp->getTreeDec() || (wcsp->getTreeDec()->isSameCluster(cluster, xy->getCluster()) && wcsp->getTreeDec()->isSameCluster(cluster, xz->getCluster()) && wcsp->getTreeDec()->isSameCluster(cluster, yz->getCluster())));
 }
 
-//Triangle::Triangle(WCSP *wcsp,
+// Triangle::Triangle(WCSP *wcsp,
 //				  EnumeratedVariable *xx,
 //				  EnumeratedVariable *yy,
 //				  EnumeratedVariable *zz,
@@ -864,9 +864,9 @@ bool TernaryConstraint::checkTreeDecomposition()
 //
 //						  }
 
-//activate {
+// activate {
 //	xyz = wcsp->newTernaryConstr(x,y,z,this);
-//}
+// }
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

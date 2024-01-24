@@ -5,11 +5,11 @@
 #ifndef TB2LPSCONSTR_HPP_
 #define TB2LPSCONSTR_HPP_
 
-//#include "stddef.h"
+// #include "stddef.h"
 #include "tb2linearconstr.hpp"
 
-//#define upper_bound first
-//#define lower_bound second
+// #define upper_bound first
+// #define lower_bound second
 
 class LPSConstraint : public LinearConstraint {
 private:
@@ -28,8 +28,7 @@ private:
 public:
     static const int VALUE = 1;
     static const int VAR = 0;
-    LPSConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                 arity_in,
+    LPSConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in,
         int* constrcounter);
 
     ~LPSConstraint()

@@ -5,8 +5,8 @@
 #ifndef TB2GLOBALCARDCONSTR_HPP_
 #define TB2GLOBALCARDCONSTR_HPP_
 
-//#include "glpk.h"
-//#include "stddef.h"
+// #include "glpk.h"
+// #include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
 
 class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint {
@@ -20,34 +20,33 @@ private:
     {
         return make_pair(varindex + 1, mapval[val]);
     }
-    //JP Start// This array stores the respective weight of each bound
+    // JP Start// This array stores the respective weight of each bound
     map<Value, pair<Cost, Cost>> weights;
     int nDistinctDomainValue;
-    //JP End//
+    // JP End//
 public:
-    //JP Start// New type
+    // JP Start// New type
     static const int EMPTY = -1;
     static const int WVALUE = 2;
-    //JP End//
+    // JP End//
     static const int VALUE = 1;
     static const int VAR = 0;
-    GlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                               arity_in);
+    GlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
     ~GlobalCardinalityConstraint()
     {
         /*if (ToulBar2::consistencyLevel != FINE_IC) {
-				cout << "no. of GAC propagation = " << count << endl;
-				cout << "no. of FDAC propagation = " << count_fdac << endl;
-				cout << "no. of error = " << error << endl;
-			}*/
+                                cout << "no. of GAC propagation = " << count << endl;
+                                cout << "no. of FDAC propagation = " << count_fdac << endl;
+                                cout << "no. of error = " << error << endl;
+                        }*/
     }
 
     string getName();
     Cost evalOriginal(const Tuple& s);
     void read(istream& file, bool mult = true);
 
-    //GlobalCostFunctionParameters* getParameters() {return this;}
+    // GlobalCostFunctionParameters* getParameters() {return this;}
     void addValueAndBounds(Value value, int upper = -1, int lower = 0)
     {
         if (upper == -1)

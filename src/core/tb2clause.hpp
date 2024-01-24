@@ -6,8 +6,8 @@
 #include "tb2enumvar.hpp"
 #include "tb2wcsp.hpp"
 
-//TODO: avoid enumeration on all variables if they are already assigned and removed (using backtrackable domain data structure).
-//in order to speed-up propagate function if the support variable has a zero unary cost
+// TODO: avoid enumeration on all variables if they are already assigned and removed (using backtrackable domain data structure).
+// in order to speed-up propagate function if the support variable has a zero unary cost
 
 // warning! we assume binary variables
 class WeightedClause : public AbstractNaryConstraint {
@@ -29,8 +29,9 @@ class WeightedClause : public AbstractNaryConstraint {
         assert(lb <= cost);
         Constraint::projectLB(c);
     }
+    // Extends unaries on values that satisfy the clause inside the clause and project to c0
     void extend(Cost c)
-    {
+    { // extension of unaries before projecting to lb:
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* x = scope[i];
             if (x->unassigned()) {
@@ -45,6 +46,7 @@ class WeightedClause : public AbstractNaryConstraint {
         }
         projectLB(c);
     }
+    // assignment of varIndex satisfies the clause
     void satisfied(int varIndex)
     {
         nonassigned = 0;
@@ -54,10 +56,10 @@ class WeightedClause : public AbstractNaryConstraint {
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* x = scope[i];
             assert(deconnected(i));
-            if (i != varIndex) {
+            if (i != varIndex) { // the assigned satisfying variable is left as is. This accounts for the increase of the global lb in extend
                 Cost c = deltaCosts[i];
                 Value v = getClause(i);
-                if (c > MIN_COST) {
+                if (c > MIN_COST) { // we extended, now we give back
                     deltaCosts[i] = MIN_COST;
                     if (x->unassigned()) {
                         if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
@@ -506,7 +508,7 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << tuple[i];
+                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(tuple[i]) : std::to_string(tuple[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost));
@@ -520,7 +522,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (printed)
                             os << ",";
-                        os << t[i];
+                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
                         printed = true;
                     }
                     os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));

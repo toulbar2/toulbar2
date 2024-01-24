@@ -7,7 +7,7 @@
 
 #include "core/tb2types.hpp"
 
-class MIP { //Wrapper Interface for MIP solver
+class MIP { // Wrapper Interface for MIP solver
 public:
 #ifdef ILOGCPLEX
     static MIP* makeMIP();

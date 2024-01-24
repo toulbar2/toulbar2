@@ -53,7 +53,7 @@ protected:
     // construct the flow network
     virtual size_t GetGraphAllocatedSize() = 0;
     virtual void buildGraph(Graph& g) = 0;
-    //inline void buildGraph() {buildGraph(graph);}
+    // inline void buildGraph() {buildGraph(graph);}
     inline void augmentGraph(int varindex, map<Value, Cost>& delta)
     {
         augmentStructure(*graph, cost, varindex, delta);
@@ -63,7 +63,7 @@ protected:
     // construct the flow in the network
     // the network changed to the residual network
     virtual Cost constructFlow(Graph& g);
-    //inline Cost constructFlow() {return constructFlow(graph);}
+    // inline Cost constructFlow() {return constructFlow(graph);}
 
     // compute the domains of a variable from the network
     virtual void getDomainFromGraph(Graph& graph, int varindex, vector<int>& domain);
@@ -88,7 +88,7 @@ public:
     virtual void initStructure();
     virtual void end() {}
 
-    //void propagate();
+    // void propagate();
 
     // check whether the consistency is achieved
     bool verify() { return true; }

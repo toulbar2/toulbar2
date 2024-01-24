@@ -1,6 +1,6 @@
 /** \file tb2domain.hpp
  *  \brief Storable enumerated domain.
- * 
+ *
  */
 
 #ifndef TB2DOMAIN_HPP_
@@ -40,10 +40,14 @@ public:
 
     void shrink(Value inf, Value sup);
     unsigned int getInitSize() const { return initSize; }
-    unsigned int get(Value v, unsigned int notFound) const { auto it = mapping.find(v); return ((it==mapping.end())?notFound:it->second); }
-    Value getinv(unsigned int idx, Value notFound) const { return ((idx < initSize)?all[idx].content:notFound); }
-    unsigned int toIndex(Value v) const { return ((contiguous)?(v - distanceToZero):get(v,initSize)); }
-    Value toValue(int idx) const { return ((contiguous)?(idx + distanceToZero):getinv(idx, notFoundValue)); }
+    unsigned int get(Value v, unsigned int notFound) const
+    {
+        auto it = mapping.find(v);
+        return ((it == mapping.end()) ? notFound : it->second);
+    }
+    Value getinv(unsigned int idx, Value notFound) const { return ((idx < initSize) ? all[idx].content : notFound); }
+    unsigned int toIndex(Value v) const { return ((contiguous) ? (v - distanceToZero) : get(v, initSize)); }
+    Value toValue(int idx) const { return ((contiguous) ? (idx + distanceToZero) : getinv(idx, notFoundValue)); }
     unsigned int toCurrentIndex(Value v)
     {
         assert(canbe(v));
@@ -81,7 +85,7 @@ public:
         return *newSup;
     }
 
-    //Finds the first available element whose value is greater or equal to v
+    // Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v)
     {
         if (!contiguous) {
@@ -98,7 +102,7 @@ public:
         return iter;
     }
 
-    //Finds the first available element whose value is lower or equal to v
+    // Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v)
     {
         if (!contiguous) {

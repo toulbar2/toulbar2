@@ -20,7 +20,7 @@ find_package(LibLZMA)
 IF(LIBLZMA_FOUND)
     SET (all_depends  ${all_depends} ${LIBLZMA_LIBRARIES}) 
 ELSE(LIBLZMA_FOUND)
-    add_compile_definitions(" -DNO_LZMA ")
+    add_compile_definitions("NO_LZMA")
 ENDIF(LIBLZMA_FOUND)
 
 MESSAGE(STATUS "   Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")

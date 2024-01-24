@@ -32,7 +32,7 @@ private:
         }
     };
 
-    vector<map<Value, Cost>> weightMap; //weight of each value
+    vector<map<Value, Cost>> weightMap; // weight of each value
     Cost top;
 
     // Data structure for computing the min. cost
@@ -50,8 +50,8 @@ private:
     int ancestor(int i);
     void recompute();
 
-    //pick one value out of the n domains with smallest weight,
-    //and choose the largest one
+    // pick one value out of the n domains with smallest weight,
+    // and choose the largest one
     Cost largest;
     void findLargest();
 
@@ -67,8 +67,8 @@ public:
     virtual ~MaxConstraint();
 
     void read(istream& file, bool mult = true);
-    //void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
-    //void setViolationMeasure(int measure) {if(configuring) mode = measure;}
+    // void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
+    // void setViolationMeasure(int measure) {if(configuring) mode = measure;}
     void setAssignmentWeight(EnumeratedVariable* variable, Value value, Cost weight)
     {
 

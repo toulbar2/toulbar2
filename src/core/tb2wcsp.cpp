@@ -2455,10 +2455,10 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, Wei
     WeightedCSPConstraint* ctr;
     try {
         ctr = new WeightedCSPConstraint(this, scope2.data(), scope.size(), (WCSP*)problem, (WCSP*)negproblem, lb, ub, duplicateHard, strongDuality);
-    } catch(const Contradiction&) {
+    } catch (const Contradiction&) {
         // clean all potential knapsack constraints
-        auto it = constrs.begin()+nCtr+1;
-        while(it != constrs.end()) {
+        auto it = constrs.begin() + nCtr + 1;
+        while (it != constrs.end()) {
             assert(!(*it)->isBinary() && !(*it)->isTernary() && !(*it)->isNary() && !(*it)->isGlobal() && !(*it)->extension());
             (*it)->deconnect();
             delete *it;
@@ -2551,7 +2551,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     }
     vector<int> tobedel;
     vector<int> VarIdx;
-    map<int,int> InvVarIdx;
+    map<int, int> InvVarIdx;
     vector<int> RealScopeIdx; // Remove redundant var from scopeIndex
     for (int i = 0; i < arity; ++i) {
         auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
@@ -2569,7 +2569,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
     int CurrentVarIdx;
-    for (int i = 0; i < ((kp>1)?1:arity); ++i) {
+    for (int i = 0; i < ((kp > 1) ? 1 : arity); ++i) {
         CurrentVarIdx = VarIdx[i];
         if (!kp) {
             file >> readw;
@@ -2586,7 +2586,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         } else {
             file >> readnbval;
             for (int j = 0; j < readnbval; ++j) {
-                if (kp>1) {
+                if (kp > 1) {
                     file >> CurrentVarIdx;
                     assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
                     CurrentVarIdx = InvVarIdx[CurrentVarIdx];
@@ -5040,19 +5040,25 @@ bool WCSP::verify()
     if (ToulBar2::LcLevel >= LC_AC) {
         for (unsigned int i = 0; i < constrs.size(); i++) {
             if (constrs[i]->connected() && !constrs[i]->verify()) {
-                if (ToulBar2::verbose >= 1) cout << endl << *constrs[i];
+                if (ToulBar2::verbose >= 1)
+                    cout << endl
+                         << *constrs[i];
                 return false;
             }
         }
         for (int i = 0; i < elimBinOrder; i++) {
             if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->verify()) {
-                if (ToulBar2::verbose >= 1) cout << endl << *elimBinConstrs[i];
+                if (ToulBar2::verbose >= 1)
+                    cout << endl
+                         << *elimBinConstrs[i];
                 return false;
             }
         }
         for (int i = 0; i < elimTernOrder; i++) {
             if (elimTernConstrs[i]->connected() && !elimTernConstrs[i]->verify()) {
-                if (ToulBar2::verbose >= 1) cout << endl << *elimTernConstrs[i];
+                if (ToulBar2::verbose >= 1)
+                    cout << endl
+                         << *elimTernConstrs[i];
                 return false;
             }
         }
@@ -5710,7 +5716,7 @@ void WCSP::propagate(bool fromscratch)
                     int eac_iter = 0;
                     while (objectiveChanged || !NC.empty() || !IncDec.empty() || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
                         || (ToulBar2::LcLevel >= LC_DAC
-                               && !DAC.empty())
+                            && !DAC.empty())
                         || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())) {
                         eac_iter++;
                         propagateIncDec();

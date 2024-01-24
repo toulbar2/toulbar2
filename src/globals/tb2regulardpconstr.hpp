@@ -68,7 +68,7 @@ private:
 
         void dump(ostream& os, bool original)
         {
-            assert(original); //TODO: case original is false
+            assert(original); // TODO: case original is false
             os << nstate << endl;
             os << init.size();
             for (vector<int>::iterator i = init.begin(); i != init.end(); i++)

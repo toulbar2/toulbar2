@@ -109,13 +109,13 @@ bool Graph::modifyCost(int u, int v, Cost cost, int tag)
     if ((v < 0) || (v >= size()))
         return exist;
 
-    //int originalWeight = -1;
+    // int originalWeight = -1;
     int rEdgeIndex = -1;
 
     for (BTListWrapper<int>::iterator i = vertexList[u]->edgeList[v]->begin(); i != vertexList[u]->edgeList[v]->end(); ++i) {
         List_Node& edge = *(adjlist[u][*i]);
         if ((tag == NO_TAG) || (tag == edge.tag)) {
-            //originalWeight = edge.weight;
+            // originalWeight = edge.weight;
             rEdgeIndex = edge.rEdgeIndex;
             edge.weight = cost;
             exist = true;
@@ -145,12 +145,12 @@ bool Graph::increaseCost(int u, int v, Cost cost, int tag)
     if ((v < 0) || (v >= size()))
         return exist;
 
-    //int originalWeight = -1;
+    // int originalWeight = -1;
     int rEdgeIndex = -1;
     for (BTListWrapper<int>::iterator i = vertexList[u]->edgeList[v]->begin(); i != vertexList[u]->edgeList[v]->end(); ++i) {
         List_Node& edge = *(adjlist[u][*i]);
         if ((tag == NO_TAG) || (tag == edge.tag)) {
-            //originalWeight = edge.weight;
+            // originalWeight = edge.weight;
             rEdgeIndex = edge.rEdgeIndex;
             edge.weight += cost;
             exist = true;
@@ -234,18 +234,18 @@ void Graph::addFlow(int u, int v, Cost flowval)
 pair<int, Cost> Graph::minCostFlow(int s, int t)
 {
 
-    //int n = size();
+    // int n = size();
     Cost flow = 0;
     Cost cost = 0;
     bool stopped = false;
 
-    //shortest_path(s);
-    //for (int i=0;i<n;i++) potential[i] = d[i];
+    // shortest_path(s);
+    // for (int i=0;i<n;i++) potential[i] = d[i];
     int iterationCount = 0;
     while (!stopped) {
         iterationCount++;
         stopped = false;
-        //shortest_path_with_potential(s);
+        // shortest_path_with_potential(s);
         shortest_path(s);
         int u = t;
         Cost minc = MAX_COST + 1;
@@ -273,7 +273,7 @@ pair<int, Cost> Graph::minCostFlow(int s, int t)
                 addFlow(p[u], u, minc);
                 u = p[u];
             }
-            //for (int i=0;i<n;i++) potential[i] += d[i];
+            // for (int i=0;i<n;i++) potential[i] += d[i];
         }
     }
 
@@ -341,7 +341,7 @@ pair<Cost, bool> Graph::augment(int s, int t, bool can_change)
         }
         if (exist)
             addFlow(t, s, minc);
-        //for (int i=0;i<size();i++) potential[i] = d[i];
+        // for (int i=0;i<size();i++) potential[i] = d[i];
     }
 
     return result;
@@ -442,10 +442,10 @@ void Graph::print(ostream& os)
 
     /*os << "==potential==\n";
 
-	for (int u=0;u<gsize;u++) {
-		os << u << ": " << potential[u] << " ";
-	}
-	os << "\n";
+        for (int u=0;u<gsize;u++) {
+                os << u << ": " << potential[u] << " ";
+        }
+        os << "\n";
      */
     os << "==graph===\n";
 
@@ -527,68 +527,68 @@ void Graph::printPath(int s, int t)
 /*
 void Graph::shortest_path_with_potential(int s) {
 
-	int n = size();
-	for (int i=0;i<n;i++) {
-		p[i] = -1;  
-		d[i] = INF; 
-		counter[i] = 0; 
-	}
-	d[s] = 0;   p[s] = s;
+        int n = size();
+        for (int i=0;i<n;i++) {
+                p[i] = -1;
+                d[i] = INF;
+                counter[i] = 0;
+        }
+        d[s] = 0;   p[s] = s;
 
-	priority_queue<pair<Cost, int> > Q;
-	Q.push(make_pair(0, s));	
-	for (int i=0;i<n;i++) {
-		int u = -1;
-		while (!Q.empty()) {
-			pair<Cost, int> top = Q.top();
-			Q.pop();	
-			if (counter[top.second] == 0) {
-				u = top.second;
-				break;
-			}
-		}
-		if (u == -1) break;
-		counter[u]++;
-		for (BTListWrapper<int>::iterator j = vertexList[u]->neighbor.begin(); j !=
-						vertexList[u]->neighbor.end();++j) {
-			BTListWrapper<int> &edgeList = *(vertexList[u]->edgeList[*j]);
-			for (BTListWrapper<int>::iterator k = edgeList.begin(); k !=
-				edgeList.end();++k) {		
-				List_Node &edge = *(adjlist[u][*k]);
-				Cost weight = edge.weight + potential[u] - potential[edge.adj];
-				if (weight < 0) {
-					cout << "(u,v): " << u << " " << edge.adj << " weight: " <<
-					edge.weight << "\n";
-				}
-				assert(weight >= 0);
-				if ((d[u] + weight < d[edge.adj])) {
-					d[edge.adj] = d[u] + weight;
-					p[edge.adj] = u;
-					Q.push(make_pair(-d[edge.adj], edge.adj));
-				}
-			}
-		}
-	}	
+        priority_queue<pair<Cost, int> > Q;
+        Q.push(make_pair(0, s));
+        for (int i=0;i<n;i++) {
+                int u = -1;
+                while (!Q.empty()) {
+                        pair<Cost, int> top = Q.top();
+                        Q.pop();
+                        if (counter[top.second] == 0) {
+                                u = top.second;
+                                break;
+                        }
+                }
+                if (u == -1) break;
+                counter[u]++;
+                for (BTListWrapper<int>::iterator j = vertexList[u]->neighbor.begin(); j !=
+                                                vertexList[u]->neighbor.end();++j) {
+                        BTListWrapper<int> &edgeList = *(vertexList[u]->edgeList[*j]);
+                        for (BTListWrapper<int>::iterator k = edgeList.begin(); k !=
+                                edgeList.end();++k) {
+                                List_Node &edge = *(adjlist[u][*k]);
+                                Cost weight = edge.weight + potential[u] - potential[edge.adj];
+                                if (weight < 0) {
+                                        cout << "(u,v): " << u << " " << edge.adj << " weight: " <<
+                                        edge.weight << "\n";
+                                }
+                                assert(weight >= 0);
+                                if ((d[u] + weight < d[edge.adj])) {
+                                        d[edge.adj] = d[u] + weight;
+                                        p[edge.adj] = u;
+                                        Q.push(make_pair(-d[edge.adj], edge.adj));
+                                }
+                        }
+                }
+        }
 
-	for (int i=0;i<n;i++) {
-		d[i] = d[i] - potential[s] + potential[i];
-	}
+        for (int i=0;i<n;i++) {
+                d[i] = d[i] - potential[s] + potential[i];
+        }
 
 }
- */
+*/
 
 /*
    set<set<int> >& Graph::compute_scc() {
-   if (!p) p = new int[gsize];	
-   if (!d) d = new Cost[gsize];	
-   if (!low) low = new Cost[gsize];	
-   if (!out) out = new bool[gsize];	
+   if (!p) p = new int[gsize];
+   if (!d) d = new Cost[gsize];
+   if (!low) low = new Cost[gsize];
+   if (!out) out = new bool[gsize];
 
    for (int i=0;i<gsize;i++) {
    d[i] = low[i] = 0;
    p[i] = -1;
    out[i] = false;
-   }	
+   }
 
    vector<int> stk;
    scc.clear();
@@ -596,7 +596,7 @@ void Graph::shortest_path_with_potential(int s) {
 
    scc_dfs(0, ts, stk);
 
-   return scc;	
+   return scc;
 
    }
 

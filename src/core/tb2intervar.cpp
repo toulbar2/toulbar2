@@ -8,7 +8,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 IntervalVariable::IntervalVariable(WCSP* w, string n, Value iinf, Value isup)
@@ -31,7 +31,7 @@ void IntervalVariable::print(ostream& os)
 
 /*
  * Propagation methods
- * 
+ *
  */
 
 void IntervalVariable::projectInfCost(Cost cost)

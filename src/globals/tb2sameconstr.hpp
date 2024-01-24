@@ -9,34 +9,33 @@
 
 class SameConstraint : public FlowBasedGlobalConstraint {
 private:
-    //int def;
+    // int def;
     void buildIndex();
     vector<int> group[2];
     int nDistinctDomainValues;
     pair<int, int> mapto(int varindex, Value val);
-    //void checkRemoved(Graph &graph, vector<int> &rmv);
+    // void checkRemoved(Graph &graph, vector<int> &rmv);
     size_t GetGraphAllocatedSize();
     void buildGraph(Graph& g);
-    //void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
-    //void augmentGraph(Graph &graph, int &cost, int varindex);
+    // void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
+    // void augmentGraph(Graph &graph, int &cost, int varindex);
 public:
-    SameConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                  arity_in);
+    SameConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
     ~SameConstraint() {}
 
     Cost evalOriginal(const Tuple& s);
     /*void addToGroup(int gp, Variable *var) {
-			for (int i=0;i<arity_;i++) {
-				if (getVar(i) == var) {
-					group[gp][size[gp]] = i;
-					size[gp]++;
-					break;
-				}
-			}
-		}
-		void addToGroupX(Variable *var) {addToGroup(0, var);}
-		void addToGroupY(Variable *var) {addToGroup(1, var);}
+                        for (int i=0;i<arity_;i++) {
+                                if (getVar(i) == var) {
+                                        group[gp][size[gp]] = i;
+                                        size[gp]++;
+                                        break;
+                                }
+                        }
+                }
+                void addToGroupX(Variable *var) {addToGroup(0, var);}
+                void addToGroupY(Variable *var) {addToGroup(1, var);}
      */
     string getName() { return "ssame"; }
     void read(istream& file, bool mult = true);

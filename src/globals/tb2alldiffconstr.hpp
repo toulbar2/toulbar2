@@ -17,7 +17,7 @@ private:
     {
         return make_pair(varindex + 1, mapval[val]);
     }
-    //void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
+    // void getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain);
     size_t GetGraphAllocatedSize();
     void buildGraph(Graph& g);
 
@@ -28,8 +28,7 @@ public:
 
     string getName() { return "salldiff"; }
 
-    AllDiffConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int
-                                                                     arity_in);
+    AllDiffConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
     ~AllDiffConstraint()
     {
@@ -40,9 +39,9 @@ public:
     void organizeConfig();
 
     void decompose();
-    //void initStructure() {if (mode != DECBI) FlowBasedGlobalConstraint::init();}
-    //void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}
-    //void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
+    // void initStructure() {if (mode != DECBI) FlowBasedGlobalConstraint::init();}
+    // void end() {if (mode != DECBI) FlowBasedGlobalConstraint::end();}
+    // void findFullSupport2(int index, vector<int> &supportProvide, bool isEAC);
 
     //    void print(ostream& os);
     void dump(ostream& os, bool original = true);

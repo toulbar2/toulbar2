@@ -23,7 +23,7 @@ private:
     // grammar, assuming in CNF
 
     /*struct Rule {
-        int from;        
+        int from;
         Cost weight;
         int to[2];
     };
@@ -79,8 +79,8 @@ public:
     Cost eval(const Tuple& s);
 
     void read(istream& file, bool mult = true);
-    //void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
-    //void setViolationMeasure(int measure) {if(configuring) mode = measure;}
+    // void setDefaultViolationCost(Cost cost) {if(configuring) def = cost;}
+    // void setViolationMeasure(int measure) {if(configuring) mode = measure;}
     WeightedCNFCFG* getGrammar() { return &cfg; }
     void initMemoization();
 

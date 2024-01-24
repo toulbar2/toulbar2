@@ -22,7 +22,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         if (ToulBar2::clusterFile.find(".cov") != string::npos)
             cover = true;
         std::fstream file(ToulBar2::clusterFile.c_str());
-        //file >> clustersNumber;
+        // file >> clustersNumber;
         set<int> nbvars;
         set<int> nbunvars;
         while (!file.eof()) {
@@ -102,7 +102,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         for (int i = 0; i < nc; i++) {
             Cluster* ct = td->getCluster(i);
             if (ct->getSep())
-                ct->getSep()->deconnect(); //deconnect separator constraints
+                ct->getSep()->deconnect(); // deconnect separator constraints
             set<int> unassignedvars;
             set<int> cvars = ct->getVars();
             for (TVars::iterator iter = cvars.begin(); iter != cvars.end(); ++iter)
@@ -256,7 +256,7 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
     if (ToulBar2::verbose >= 1)
         cout << "Select cluster " << c << endl;
     zone z = m_graph[c].vars;
-    //if variables are missing
+    // if variables are missing
     if (z.size() < neighborhood_size) {
         queue<int> fifo;
         TCDGraph::adjacency_iterator v, vend;
@@ -266,9 +266,9 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
             tie(v, vend) = adjacent_vertices(currclu, m_graph);
             if (v != vend) {
                 vector<int> neighbors(v, vend);
-                //merge neighbors of current cluster
+                // merge neighbors of current cluster
                 shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
-                //add them to list
+                // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -280,7 +280,7 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
             if (fifo.size() == 0) {
                 assert(selclusters.size() < clusters.size());
                 while (selclusters.count(i) > 0) {
-                    i = (i + 1) % clusters.size(); //TODO: use file instead in order to shuffle clusters randomly
+                    i = (i + 1) % clusters.size(); // TODO: use file instead in order to shuffle clusters randomly
                 }
                 fifo.push(clusters[i]);
                 selclusters.insert(clusters[i]);
@@ -361,7 +361,7 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
     file.pop_back();
     selclusters.insert(c);
     zone z = m_graph[c].vars;
-    //if variables are missing
+    // if variables are missing
     if (z.size() < neighborhood_size) {
         queue<int> fifo;
         TCDGraph::adjacency_iterator v, vend;
@@ -371,9 +371,9 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
             tie(v, vend) = adjacent_vertices(currclu, m_graph);
             if (v != vend) {
                 vector<int> neighbors(v, vend);
-                //merge neighbors of current cluster
+                // merge neighbors of current cluster
                 shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
-                //add them to list
+                // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -385,7 +385,7 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
             if (fifo.size() == 0) {
                 assert(selclusters.size() < clusters.size());
                 while (selclusters.count(i) > 0) {
-                    i = (i + 1) % clusters.size(); //TODO: use file instead in order to shuffle clusters randomly
+                    i = (i + 1) % clusters.size(); // TODO: use file instead in order to shuffle clusters randomly
                 }
                 fifo.push(clusters[i]);
                 selclusters.insert(clusters[i]);
@@ -410,7 +410,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
     set<int> selclusters;
     selclusters.insert(CurrentCluster);
     zone z = m_graph[CurrentCluster].vars;
-    //if variables are missing
+    // if variables are missing
     if (z.size() < neighborhood_size) {
         queue<int> fifo;
         TCDGraph::adjacency_iterator v, vend;
@@ -420,9 +420,9 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             tie(v, vend) = adjacent_vertices(currclu, m_graph);
             if (v != vend) {
                 vector<int> neighbors(v, vend);
-                //merge neighbors of current cluster
+                // merge neighbors of current cluster
                 shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
-                //add them to list
+                // add them to list
                 for (vector<int>::iterator it = neighbors.begin(); it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
                         fifo.push(*it);
@@ -433,7 +433,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             if (fifo.size() == 0) {
                 assert(selclusters.size() < clusters.size());
                 while (selclusters.count(i) > 0) {
-                    i = (i + 1) % clusters.size(); //TODO: use file instead in order to shuffle clusters randomly
+                    i = (i + 1) % clusters.size(); // TODO: use file instead in order to shuffle clusters randomly
                 }
                 fifo.push(clusters[i]);
                 selclusters.insert(clusters[i]);
@@ -451,7 +451,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
     set<int> selclusters;
     selclusters.insert(CurrentCluster);
     zone z = m_graph[CurrentCluster].vars;
-    //if variables are missing
+    // if variables are missing
     if (z.size() < NeighborhoodSize && number > 0) {
         queue<int> fifo;
         TCDGraph::adjacency_iterator v, vend;
@@ -462,9 +462,9 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             tie(v, vend) = adjacent_vertices(currclu, m_graph);
             if (v != vend) {
                 vector<int> neighbors(v, vend);
-                //merge neighbors of current cluster
+                // merge neighbors of current cluster
                 shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
-                //add them to list
+                // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -476,7 +476,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             if (fifo.size()) {
                 assert(selclusters.size() < clusters.size());
                 while (selclusters.count(i) > 0) {
-                    i = (i + 1) % clusters.size(); //TODO: use file instead in order to shuffle clusters randomly
+                    i = (i + 1) % clusters.size(); // TODO: use file instead in order to shuffle clusters randomly
                 }
                 fifo.push(clusters[i]);
                 selclusters.insert(clusters[i]);
@@ -525,9 +525,9 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
             tie(v, vend) = adjacent_vertices(currclu, m_graph);
             if (v != vend) {
                 vector<int> neighbors(v, vend);
-                //merge neighbors of current cluster
+                // merge neighbors of current cluster
                 shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
-                //add them to list
+                // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -539,7 +539,7 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
             if (fifo.size() == 0) {
                 assert(selclusters.size() < clusters.size());
                 while (selclusters.count(i) > 0) {
-                    i = (i + 1) % clusters.size(); //TODO: use file instead in order to shuffle clusters randomly
+                    i = (i + 1) % clusters.size(); // TODO: use file instead in order to shuffle clusters randomly
                 }
                 fifo.push(clusters[i]);
                 selclusters.insert(clusters[i]);

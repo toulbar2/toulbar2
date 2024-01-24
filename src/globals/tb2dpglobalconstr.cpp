@@ -81,8 +81,8 @@ void DPGlobalConstraint::propagateAC()
     bool changed = true;
     clear();
 
-    //Cost thisUb;
-    //thisUb = wcsp->getUb();
+    // Cost thisUb;
+    // thisUb = wcsp->getUb();
     for (int i = 0; i < arity(); i++) {
         EnumeratedVariable* x = scope[i];
         bool first = true;
@@ -95,9 +95,9 @@ void DPGlobalConstraint::propagateAC()
             first = false;
 
             Cost cost = r.first;
-            /*if(cost >= thisUb || cost + wcsp->getLb() + scope[i]->getCost(*it) >= thisUb){            
-			  x->remove(*it);
-			  changed = true;
+            /*if(cost >= thisUb || cost + wcsp->getLb() + scope[i]->getCost(*it) >= thisUb){
+                          x->remove(*it);
+                          changed = true;
             }else */
             if (cost > 0) {
                 project(i, *it, cost);
@@ -133,9 +133,9 @@ void DPGlobalConstraint::findSupport(int var, bool& changed)
             first = false;
             cost = r.first;
         }
-        //deltaCost[var][x->toIndex(*it)] += x->getCost(*it);
+        // deltaCost[var][x->toIndex(*it)] += x->getCost(*it);
         deltaCost[var][x->toIndex(*it)] += preUnaryCosts[var][x->toIndex(*it)];
-        //Cost delta = cost - x->getCost(*it);
+        // Cost delta = cost - x->getCost(*it);
         Cost delta = cost - preUnaryCosts[var][x->toIndex(*it)];
         if (delta > 0) {
             project(var, *it, delta, true); // NC will be delayed (avoid forward checking on binary/ternay cost functions)
@@ -147,7 +147,7 @@ void DPGlobalConstraint::findSupport(int var, bool& changed)
             record(r.second);
     }
     x->findSupport();
-    changed = true; //Detect any change in variable domain or unary costs
+    changed = true; // Detect any change in variable domain or unary costs
 }
 
 void DPGlobalConstraint::propagateDAC()
@@ -203,13 +203,13 @@ bool DPGlobalConstraint::isEAC(int var, Value val)
     return ret;
 }
 
-//TODO: applies DAC order when enumerating variables (fullySupportedSet does not preserve DAC order)
+// TODO: applies DAC order when enumerating variables (fullySupportedSet does not preserve DAC order)
 void DPGlobalConstraint::findFullSupportEAC(int var)
 {
     assert(fullySupportedSet[var].find(var) == fullySupportedSet[var].end());
 
     clear();
-    //fullySupportedSet[var].insert(var);
+    // fullySupportedSet[var].insert(var);
     for (set<int>::iterator it = fullySupportedSet[var].begin(); it != fullySupportedSet[var].end(); ++it) {
         EnumeratedVariable* x = scope[*it];
         if (x->unassigned() && (*it != var)) {
@@ -220,7 +220,7 @@ void DPGlobalConstraint::findFullSupportEAC(int var)
             }
         }
     }
-    //fullySupportedSet[var].erase(var);
+    // fullySupportedSet[var].erase(var);
     EnumeratedVariable* cur = scope[var];
     for (EnumeratedVariable::iterator jt = cur->begin(); jt != cur->end(); ++jt) {
         /* fix the problem in EAC */

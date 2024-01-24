@@ -1,18 +1,18 @@
 /*=============================================================================
  * parser for CSP instances represented in XML format
- * 
+ *
  * Copyright (c) 2008 Olivier ROUSSEL (olivier.roussel <at> cril.univ-artois.fr)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,18 +49,18 @@ namespace CSPXMLParser {
 using namespace std;
 
 /**
-   * TODO
-   *
-   * - handle operator priorities (infix only)
-   * - distinguish booleans from integers in the valuation of an AST
-   */
+ * TODO
+ *
+ * - handle operator priorities (infix only)
+ * - distinguish booleans from integers in the valuation of an AST
+ */
 
 /**
-   * return value of a function represented in an abstract syntax tree
-   * (AST).
-   *
-   * one day we'll switch to a union with an int/bool/...
-   */
+ * return value of a function represented in an abstract syntax tree
+ * (AST).
+ *
+ * one day we'll switch to a union with an int/bool/...
+ */
 typedef int FunctionValue;
 
 /// possible types for a variable or an expression
@@ -76,8 +76,8 @@ struct VarInfo {
 typedef map<string, VarInfo> VariableInfo; // list of variables (when used)
 
 /**
-   * an interface to get the value of a variable
-   */
+ * an interface to get the value of a variable
+ */
 class VariableValuation {
 public:
     virtual ~VariableValuation() {}
@@ -98,8 +98,8 @@ class ASTList;
 class ASTDict;
 
 /**
-   * @brief An abstract node of an abstract syntax tree (AST).
-   */
+ * @brief An abstract node of an abstract syntax tree (AST).
+ */
 class AST {
 public:
     virtual ~AST() {}
@@ -299,8 +299,8 @@ public:
 };
 
 /**
-   * @brief A variable represented in the AST.
-   */
+ * @brief A variable represented in the AST.
+ */
 class ASTVar : public AST {
 protected:
     string name;
@@ -365,8 +365,8 @@ public:
 };
 
 /**
-   * @brief An integer constant represented in the AST.
-   */
+ * @brief An integer constant represented in the AST.
+ */
 class ASTInteger : public AST {
 protected:
     int val;
@@ -429,8 +429,8 @@ public:
 };
 
 /**
-   * @brief A boolean constant represented in the AST.
-   */
+ * @brief A boolean constant represented in the AST.
+ */
 class ASTBoolean : public AST {
 protected:
     bool val;
@@ -493,8 +493,8 @@ public:
 };
 
 /**
-   * @brief a list of (heterogeneous) elements represented in the AST.
-   */
+ * @brief a list of (heterogeneous) elements represented in the AST.
+ */
 class ASTList : public AST {
 protected:
     deque<AST*> list;
@@ -609,9 +609,9 @@ public:
 };
 
 /**
-   * @brief an associative array of (heterogeneous) elements
-   * represented in the AST.
-   */
+ * @brief an associative array of (heterogeneous) elements
+ * represented in the AST.
+ */
 class ASTDict : public AST {
 protected:
     map<string, AST*> dict;
@@ -741,8 +741,8 @@ public:
 };
 
 /**
-   * @brief A generic representation of a function inside the AST
-   */
+ * @brief A generic representation of a function inside the AST
+ */
 class ASTAbstractFunction : public AST {
 protected:
     int nbarg;
@@ -1338,10 +1338,10 @@ public:
 };
 
 /**
-   * for internal use only
-   *
-   * ??? this should be moved somewhere else
-   */
+ * for internal use only
+ *
+ * ??? this should be moved somewhere else
+ */
 class ASTDictKey : public AST {
 private:
     const string key;
@@ -1423,16 +1423,16 @@ inline bool AST::getBoolean() const
 }
 
 /**
-   * will throw bad_cast if this is not a dictionary
-   */
+ * will throw bad_cast if this is not a dictionary
+ */
 inline const ASTList& AST::list() const
 {
     return dynamic_cast<const ASTList&>(*this);
 }
 
 /**
-   * will throw bad_cast if this is not a dictionary
-   */
+ * will throw bad_cast if this is not a dictionary
+ */
 inline const ASTDict& AST::dict() const
 {
     return dynamic_cast<const ASTDict&>(*this);
@@ -1454,9 +1454,9 @@ inline const AST& AST::operator[](const string& key) const
 }
 
 /**
-   * this class is used by the parser whenever it needs to create an
-   * AST node.
-   */
+ * this class is used by the parser whenever it needs to create an
+ * AST node.
+ */
 class DefaultASTFactory {
 public:
     typedef AST ASTType;

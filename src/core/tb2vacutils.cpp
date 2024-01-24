@@ -45,35 +45,35 @@ void VACVariable::init()
     linkSeekSupport.content.timeStamp = -1;
 }
 
-//void VACVariable::remove(Value value)
+// void VACVariable::remove(Value value)
 //{
-//    if (ToulBar2::singletonConsistency)
-//        vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + value);
-//    EnumeratedVariable::remove(value);
-//}
+//     if (ToulBar2::singletonConsistency)
+//         vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + value);
+//     EnumeratedVariable::remove(value);
+// }
 //
-//void VACVariable::removeFast(Value value)
+// void VACVariable::removeFast(Value value)
 //{
-//    if (ToulBar2::singletonConsistency)
-//        vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + value);
-//    EnumeratedVariable::removeFast(value);
-//}
+//     if (ToulBar2::singletonConsistency)
+//         vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + value);
+//     EnumeratedVariable::removeFast(value);
+// }
 //
-//void VACVariable::increase(Value newInf)
+// void VACVariable::increase(Value newInf)
 //{
-//    if (ToulBar2::singletonConsistency)
-//        for (int i = inf; i <= newInf; i++)
-//            vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
-//    EnumeratedVariable::increase(newInf);
-//}
+//     if (ToulBar2::singletonConsistency)
+//         for (int i = inf; i <= newInf; i++)
+//             vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
+//     EnumeratedVariable::increase(newInf);
+// }
 //
-//void VACVariable::decrease(Value newSup)
+// void VACVariable::decrease(Value newSup)
 //{
-//    if (ToulBar2::singletonConsistency)
-//        for (int i = sup; i >= newSup; i--)
-//            vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
-//    EnumeratedVariable::decrease(newSup);
-//}
+//     if (ToulBar2::singletonConsistency)
+//         for (int i = sup; i >= newSup; i--)
+//             vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
+//     EnumeratedVariable::decrease(newSup);
+// }
 
 /******************************
  * min-sum diffusion algorithm
@@ -312,32 +312,32 @@ bool VACBinaryConstraint::revise(VACVariable* var, Value v)
 VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp, EnumeratedVariable *xx, EnumeratedVariable *yy, EnumeratedVariable *zz, BinaryConstraint *xy, BinaryConstraint *xz, BinaryConstraint *yz, vector<Cost> &tab) :  TernaryConstraint(wcsp, xx, yy, zz, xy, xz, yz, tab, storeCost), myThreshold(MIN_COST)
 {
    for (int a = 0; a < xx->getDomainInitSize(); a++) {
-	   	kX.push_back(0);
-	   	kX_timeStamp.push_back(0);
+                kX.push_back(0);
+                kX_timeStamp.push_back(0);
    }
    for (int b = 0; b < yy->getDomainInitSize(); b++) {
-	   	kY.push_back(0);
-	   	kY_timeStamp.push_back(0);
+                kY.push_back(0);
+                kY_timeStamp.push_back(0);
    }
    for (int c = 0; c < zz->getDomainInitSize(); c++) {
-	   	kZ.push_back(0);
-	   	kZ_timeStamp.push_back(0);
+                kZ.push_back(0);
+                kZ_timeStamp.push_back(0);
    }
 }
 
 VACTernaryConstraint::VACTernaryConstraint (WCSP *wcsp) : TernaryConstraint(wcsp) , myThreshold(MIN_COST)
 {
    for (int a = 0; a < wcsp->getMaxDomainSize(); a++) {
-	   	kX.push_back(0);
-	   	kX_timeStamp.push_back(0);
+                kX.push_back(0);
+                kX_timeStamp.push_back(0);
    }
    for (int b = 0; b < wcsp->getMaxDomainSize(); b++) {
-	   	kY.push_back(0);
-	   	kY_timeStamp.push_back(0);
+                kY.push_back(0);
+                kY_timeStamp.push_back(0);
    }
    for (int c = 0; c < wcsp->getDomainInitSize(); c++) {
-	   	kZ.push_back(0);
-	   	kZ_timeStamp.push_back(0);
+                kZ.push_back(0);
+                kZ_timeStamp.push_back(0);
    }
 }
 
@@ -375,27 +375,27 @@ void VACTernaryConstraint::VACextend(VACVariable* x, Value v, Cost c) {
 
 int VACTernaryConstraint::getK (VACVariable* var, Value v, Long timeStamp) {
   if(var == (VACVariable*) getVar(0)) {
-  	if(kX_timeStamp[var->toIndex(v)] < timeStamp) return 0;
-  	else return kX[var->toIndex(v)];
+        if(kX_timeStamp[var->toIndex(v)] < timeStamp) return 0;
+        else return kX[var->toIndex(v)];
   }  else if(var == (VACVariable*) getVar(1)) {
-  	if(kY_timeStamp[var->toIndex(v)] < timeStamp) return 0;
-  	else return kY[var->toIndex(v)];
+        if(kY_timeStamp[var->toIndex(v)] < timeStamp) return 0;
+        else return kY[var->toIndex(v)];
   }  else {
-	if(kZ_timeStamp[var->toIndex(v)] < timeStamp) return 0;
-	else return kZ[var->toIndex(v)];
+        if(kZ_timeStamp[var->toIndex(v)] < timeStamp) return 0;
+        else return kZ[var->toIndex(v)];
   }
 }
 
 void VACTernaryConstraint::setK (VACVariable* var, Value v, int c, Long timeStamp) {
   if(var == getVar(0)) {
-  	kX[var->toIndex(v)] = c;
-  	kX_timeStamp[var->toIndex(v)] = timeStamp;
+        kX[var->toIndex(v)] = c;
+        kX_timeStamp[var->toIndex(v)] = timeStamp;
   } else if(var == getVar(1)) {
     kY[var->toIndex(v)] = c;
-   	kY_timeStamp[var->toIndex(v)] = timeStamp; 					   
+        kY_timeStamp[var->toIndex(v)] = timeStamp;
   }	 else {
-	kZ[var->toIndex(v)] = c;
-	kZ_timeStamp[var->toIndex(v)] = timeStamp;
+        kZ[var->toIndex(v)] = c;
+        kZ_timeStamp[var->toIndex(v)] = timeStamp;
   }
 }
 
@@ -413,53 +413,53 @@ bool VACTernaryConstraint::revise (VACVariable* var, Value v) {
   pair<Value,Value> sup = getSupport(var,v);
   pair<Value,Value> minsup = sup;
   if(var != xi) {
-	  if (var != xj) {
-		 xi = (VACVariable*)getVar(2); xj = (VACVariable*)getVar(0); xl = (VACVariable*)getVar(1);
-	  } else {
-		 xi = (VACVariable*)getVar(1); xj = (VACVariable*)getVar(0);
-	  }
+          if (var != xj) {
+                 xi = (VACVariable*)getVar(2); xj = (VACVariable*)getVar(0); xl = (VACVariable*)getVar(1);
+          } else {
+                 xi = (VACVariable*)getVar(1); xj = (VACVariable*)getVar(0);
+          }
   }
   Cost cost, minCost = wcsp->getUb();
 
   assert(getindex(xj) < getindex(xl)); // check support is correctly oriented w.r.t. xj/first and xl/second
   if(xj->canbe(sup.first) && xl->canbe(sup.second)) {
-	  bool unarytest = true;
-	  if(xj->getVACCost(sup.first) != MIN_COST) { wipeout = xj->removeVAC(sup.first);  unarytest= false;}
-	  if(xl->getVACCost(sup.second) != MIN_COST) { wipeout = xl->removeVAC(sup.second); unarytest= false;}
-	  if (unarytest) {
-		  if (getVACCost(xi,xj,xl,v,sup.first,sup.second) == MIN_COST) {
-		    return false;
-		  }
-	  }
+          bool unarytest = true;
+          if(xj->getVACCost(sup.first) != MIN_COST) { wipeout = xj->removeVAC(sup.first);  unarytest= false;}
+          if(xl->getVACCost(sup.second) != MIN_COST) { wipeout = xl->removeVAC(sup.second); unarytest= false;}
+          if (unarytest) {
+                  if (getVACCost(xi,xj,xl,v,sup.first,sup.second) == MIN_COST) {
+                    return false;
+                  }
+          }
   }
 
   for (EnumeratedVariable::iterator it = xj->lower_bound(sup); it != xj->end(); ++it) {
-	  Value w = *it;	
-	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
-	  else {
-	      cost = getVACCost(xi,xj,v, w);
-	      if (cost == MIN_COST) {		
-	      	setSupport(xi,v,w);
-	        return false;
-	      } else if (cost < minCost) {
-	      	  minCost = cost;
-	          minsup = w;
-	      }
-	  }
+          Value w = *it;
+          if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
+          else {
+              cost = getVACCost(xi,xj,v, w);
+              if (cost == MIN_COST) {
+                setSupport(xi,v,w);
+                return false;
+              } else if (cost < minCost) {
+                  minCost = cost;
+                  minsup = w;
+              }
+          }
   }
   for (EnumeratedVariable::iterator it = xj->begin(); it != xj->lower_bound(sup); ++it) {
-	  Value w = *it;	
-	  if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
-	  else {
-	      cost = getVACCost(xi,xj,v, w);
-	      if (cost == MIN_COST) {		
-	      	setSupport(xi,v,w);
-	        return false;
-	      } else if (cost < minCost) {
-	      	  minCost = cost;
-	          minsup = w;
-	      }
-	  }
+          Value w = *it;
+          if(xj->getVACCost(w) != MIN_COST) { wipeout = xj->removeVAC(w); xj->queueVAC(); }
+          else {
+              cost = getVACCost(xi,xj,v, w);
+              if (cost == MIN_COST) {
+                setSupport(xi,v,w);
+                return false;
+              } else if (cost < minCost) {
+                  minCost = cost;
+                  minsup = w;
+              }
+          }
   }
 
   setSupport(xi,v,minsup);

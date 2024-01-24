@@ -359,7 +359,7 @@ bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
         if (ToulBar2::verbose >= 3) {
             for (int i = 0; i < arity(); ++i)
                 cout << tuple[i] << " ";
-            //cout << endl;
+            // cout << endl;
             cout << " : " << cost << " =? " << c1 << " + " << c2 << " : " << c1 + c2 << endl;
         }
         if (cost < wcsp->getUb() && c1 + c2 != cost)

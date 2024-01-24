@@ -9,7 +9,7 @@
 
 /*
  * Constructors and misc.
- * 
+ *
  */
 
 /// \return size of the cartesian product of all initial domains in the constraint scope.
@@ -270,7 +270,7 @@ void AbstractNaryConstraint::projectNary()
         }
         if (flag)
             projectNaryTernary(xyz);
-        //else cout << "ternary empty!" << endl;
+        // else cout << "ternary empty!" << endl;
     } else if (nunassigned == 2) {
         BinaryConstraint* xy = wcsp->newBinaryConstr(x, y, this);
         wcsp->elimBinOrderInc();
@@ -292,7 +292,7 @@ void AbstractNaryConstraint::projectNary()
         }
         if (flag)
             projectNaryBinary(xy);
-        //else cout << "binary empty!" << endl;
+        // else cout << "binary empty!" << endl;
     } else if (nunassigned == 1) {
         for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
             Value xval = *iterx;

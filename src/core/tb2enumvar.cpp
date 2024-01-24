@@ -517,7 +517,7 @@ void EnumeratedVariable::propagateEAC()
 
 void EnumeratedVariable::propagateDEE(Value a, Value b, bool dee)
 {
-    //cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
+    // cout << "check DEE for " << *this << " " << a << " -> " << b << " " << dee << endl;
     if (a == b)
         return;
     Cost costa = getCost(a);
@@ -1177,7 +1177,7 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
     }
 
     if (n3links > 1)
-        return false; //TODO: continue if it is a duplicated ternary with the same scope as xyz
+        return false; // TODO: continue if it is a duplicated ternary with the same scope as xyz
 
     TreeDecomposition* td = wcsp->getTreeDec();
     if (td && (!td->isSameCluster(cluster, xyz->getCluster()) || (n2links > 0 && !td->isSameCluster(cluster, links[0].constr->getCluster())) || (n2links > 1 && !td->isSameCluster(cluster, links[1].constr->getCluster())))) {

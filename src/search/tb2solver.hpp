@@ -357,8 +357,8 @@ protected:
     void* searchSize;
 
     BigInteger nbSol;
-    Long nbSGoods; //number of #good which created
-    Long nbSGoodsUse; //number of #good which used
+    Long nbSGoods; // number of #good which created
+    Long nbSGoodsUse; // number of #good which used
     map<int, BigInteger> ubSol; // upper bound of solution number
     double timeDeconnect; // time for the disconnection
     int tailleSep;
@@ -371,7 +371,7 @@ protected:
     Long nbHybridNew;
     Long nbRecomputationNodes;
 
-    //only for pretty print of optimality gap information
+    // only for pretty print of optimality gap information
     Cost initialLowerBound;
     Cost globalLowerBound;
     Cost globalUpperBound;
@@ -441,9 +441,9 @@ protected:
     Long initWorkerNbDEE;
     Long initWorkerNbRecomputationNodes;
     mpi::communicator world;
-    queue<int> idleQ; //MASTER ONLY container with the rank of the free workers
-    std::unordered_map<int, OpenNode> activeWork; //MASTER ONLY map the rank i of a worker with an open node currently explored by the worker
-    std::unordered_map<int, Cost> bestsolWork; //MASTER ONLY map the rank i of a worker with the cost of the best solution sent by the master
+    queue<int> idleQ; // MASTER ONLY container with the rank of the free workers
+    std::unordered_map<int, OpenNode> activeWork; // MASTER ONLY map the rank i of a worker with an open node currently explored by the worker
+    std::unordered_map<int, Cost> bestsolWork; // MASTER ONLY map the rank i of a worker with the cost of the best solution sent by the master
 
     inline bool MPI_interrupted()
     {

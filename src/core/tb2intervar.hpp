@@ -1,6 +1,6 @@
 /** \file tb2variable.hpp
  *  \brief Variable with domain represented by an interval.
- * 
+ *
  */
 
 #ifndef TB2INTERVAR_HPP_
@@ -107,7 +107,7 @@ public:
     }
     iterator rend() { return end(); }
 
-    //Finds the first available element whose value is greater or equal to v
+    // Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v)
     {
         if (v <= sup)
@@ -116,7 +116,7 @@ public:
             return end();
     }
 
-    //Finds the first available element whose value is lower or equal to v
+    // Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v)
     {
         if (v >= inf)

@@ -55,7 +55,7 @@ inline bool operator<(const Cluster_edge& __x, const Cluster_edge& __y)
 {
     return __x.get_property() < __y.get_property();
 }
-}
+} // namespace boost
 #endif
 
 extern void cluster_graph_absorption(TCDGraph& input, TCDGraph& output);
@@ -67,7 +67,7 @@ protected:
     LocalSearch* l;
 
 public:
-    //initialization
+    // initialization
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_) = 0;
     virtual const zone getNeighborhood(size_t neighborhood_size) = 0;
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const = 0;

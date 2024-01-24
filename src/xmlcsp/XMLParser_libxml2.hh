@@ -1,18 +1,18 @@
 /*=============================================================================
  * parser for CSP instances represented in XML format
- * 
+ *
  * Copyright (c) 2008 Olivier ROUSSEL (olivier.roussel <at> cril.univ-artois.fr)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,20 +37,20 @@ namespace CSPXMLParser {
 using namespace std;
 
 /**
-   * A class to represent a UTF8 encoded string passed by the XML
-   * parser. This string is normally read-only and the memory is not
-   * owned by this class. The end of the string is represented
-   * either by the first NUL character, or by an end pointer
-   * (whichever comes first). The end pointer is used to represent
-   * substring without having to copy the substring.
-   *
-   * The append() method provides a limited interface to a writeable
-   * string. When this method is used, memory is allocated (and owned
-   * by this class) and is automatically resized when necessary. This
-   * is a kind of copy-on-write mechanism.
-   *
-   * This class can also represent a null string (in the SQL sense).
-   */
+ * A class to represent a UTF8 encoded string passed by the XML
+ * parser. This string is normally read-only and the memory is not
+ * owned by this class. The end of the string is represented
+ * either by the first NUL character, or by an end pointer
+ * (whichever comes first). The end pointer is used to represent
+ * substring without having to copy the substring.
+ *
+ * The append() method provides a limited interface to a writeable
+ * string. When this method is used, memory is allocated (and owned
+ * by this class) and is automatically resized when necessary. This
+ * is a kind of copy-on-write mechanism.
+ *
+ * This class can also represent a null string (in the SQL sense).
+ */
 class UTF8String {
 public:
     typedef unsigned char Byte;
@@ -229,8 +229,8 @@ public:
 
     protected:
         /**
-       * return the number of bytes of the current code point
-       */
+         * return the number of bytes of the current code point
+         */
         inline int codeLength(int ch)
         {
             if (ch < 0x80)
@@ -609,8 +609,8 @@ public:
 };
 
 /**
-   * represents the attribute list of a XML tag
-   */
+ * represents the attribute list of a XML tag
+ */
 class AttributeList {
 public:
     typedef unsigned char Byte;
@@ -678,8 +678,8 @@ private:
 };
 
 /**
-   * @brief the parser using the libxml2 library
-   */
+ * @brief the parser using the libxml2 library
+ */
 template <class Callback = CSPParserCallback,
     class ASTFactory = DefaultASTFactory,
     class CostRepresentation = DefaultCostRepresentation>

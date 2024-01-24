@@ -22,9 +22,9 @@ void MaxConstraint::read(istream& file, bool mult)
     if (mult)
         def *= ToulBar2::costMultiplier;
     /*for(int i = 0; i < n; i++){
-		EnumeratedVariable * x = scope[i];        
+                EnumeratedVariable * x = scope[i];
         for(EnumeratedVariable::iterator it = x->begin(); it != x->end(); ++it)
-            weightMap[i][*it] = def; 
+            weightMap[i][*it] = def;
     }*/
 
     int nTuple;
@@ -43,7 +43,7 @@ void MaxConstraint::read(istream& file, bool mult)
 
 void MaxConstraint::dump(ostream& os, bool original)
 {
-    assert(original); //TODO: case original is false
+    assert(original); // TODO: case original is false
     if (original) {
         os << arity_;
         for (int i = 0; i < arity_; i++)

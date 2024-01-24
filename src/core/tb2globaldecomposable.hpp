@@ -207,7 +207,7 @@ public:
     void display();
 };
 
-//WeightedGcc using several WeightedAmongs
+// WeightedGcc using several WeightedAmongs
 class WeightedGcc : public DecomposableGlobalCostFunction {
 private:
     string semantics;
@@ -294,7 +294,7 @@ private:
     string semantics;
     Cost baseCost;
     unsigned int distance;
-    int method; //Dual=0, Hidden=1, Ternary=2
+    int method; // Dual=0, Hidden=1, Ternary=2
 
 public:
     WeightedDiverse();

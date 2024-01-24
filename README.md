@@ -24,7 +24,7 @@ graphical models:
 * 2010 UAI APPROXIMATE INFERENCE CHALLENGE [UAI 2010][uai2010] (winner on 1200-second MPE task)
 * The Probabilistic Inference Challenge [PIC 2011][pic2011] (second place by ficolofo on 1-hour MAP task)
 * UAI 2014 Inference Competition [UAI 2014][uai2014] (winner on all MAP task categories, see Proteus, Robin, and IncTb entries)
-* XCSP3 2022 Competition [XCSP3 2022][xcsp2022] (second place on Mini COP and Parallel COP tracks)
+* [XCSP3][xcsp] Competitions (second place on Mini COP and Parallel COP tracks in 2022, first place on Mini COP in 2023)
 * UAI 2022 Inference Competition [UAI 2022][uai2022] (winner on all MPE and MMAP task categories)
 
 [cpai08]: http://www.cril.univ-artois.fr/CPAI08/
@@ -32,7 +32,7 @@ graphical models:
 [uai2010]: http://www.cs.huji.ac.il/project/UAI10/summary.php
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
-[xcsp2022]: https://xcsp.org/competitions
+[xcsp]: https://xcsp.org/competitions
 [uai2022]: https://uaicompetition.github.io/uci-2022/results/final-leader-board
 
 toulbar2 is now also able to collaborate with ML code that can learn
@@ -112,7 +112,7 @@ Optional libraries:
 * libxml2-dev
 * libxcsp3parser
 
-On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries.
+On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries. For Mac with ARM64, add option -DBoost=OFF to cmake.
 
 Commands for compiling toulbar2 on Linux/MacOS with cmake (binary in build/bin/\*/toulbar2):
 

@@ -46,9 +46,9 @@ int main(int argc, char* argv[])
     // uncomment if INCOP local search enable
     //	ToulBar2::incop_cmd = Incop_cmd; // option -i
     // uncomment the following lines if variable neighborhood search enable
-    //ToulBar2::lds = 4;
-    //ToulBar2::restart = 10000;
-    //#ifdef OPENMPI
+    // ToulBar2::lds = 4;
+    // ToulBar2::restart = 10000;
+    // #ifdef OPENMPI
     //     if (world.size() > 1) {
     //    	 ToulBar2::searchMethod = RPDGVNS;
     //    	 ToulBar2::vnsParallel = true;
@@ -58,13 +58,13 @@ int main(int argc, char* argv[])
     //    	 ToulBar2::searchMethod = DGVNS;
     //    	 ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
     //     }
-    //#else
+    // #else
     //	ToulBar2::searchMethod = DGVNS;
     //	ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
     //**or**
     //  ToulBar2::searchMethod = VNS;
     //  ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
-    //#endif
+    // #endif
 
     // create a problem with three 0/1 variables
     initCosts(); // last check for compatibility issues between ToulBar2 options and Cost data-type
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
     //	solver->getWCSP()->print(cout);
     //	ToulBar2::verbose = verbose;
 
-    //tb2checkOptions();
+    // tb2checkOptions();
     if (solver->solve()) {
 #ifdef OPENMPI
         if (world.rank() == WeightedCSPSolver::MASTER) {

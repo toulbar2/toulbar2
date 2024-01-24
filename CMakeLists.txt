@@ -26,7 +26,6 @@ SET(CMAKE_MACOSX_RPATH 1)
 ##########################################
 
 project("toulbar2")
-
 MESSAGE(STATUS "##########################################")
 MESSAGE(STATUS "project: ${PROJECT_NAME} toolkit compilation cmake file version 0.99")
 MESSAGE(STATUS "source: ${CMAKE_CURRENT_SOURCE_DIR} ")
@@ -58,6 +57,7 @@ OPTION(LONG_PROBABILITY  "use long double to encode probabilities [default:on]" 
 OPTION(QUAD_PROBABILITY  "use quadmath to encode probabilities [default:off]" OFF)
 OPTION(BUILD_API_DOC "build and install HTML documentation with doxygen [default:off]" OFF)
 OPTION(BUILD_API_DOC_LATEX "build and install LaTeX PDF documentation with doxygen [default:off]" OFF)
+OPTION(BUILD_SPHINX_DOC "build Sphinx documentation[default:off]" OFF)
 OPTION(STATIC "static compilation flag [default: off]" OFF)
 OPTION(verbose "verbose mode [default:on]" ON)
 OPTION(COVER_TEST "cover test [default:on]" ON)
@@ -432,9 +432,9 @@ ENDIF (BENCH)
 ##########################################
 # Doc generation
 ##########################################
-IF (BUILD_API_DOC)
+IF (BUILD_API_DOC OR BUILD_SPHINX_DOC)
   include(${My_cmake_script}/UseDoxygen.cmake)  
-ENDIF (BUILD_API_DOC)
+ENDIF (BUILD_API_DOC OR BUILD_SPHINX_DOC)
 
 ADD_CUSTOM_TARGET(man ALL)
 

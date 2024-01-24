@@ -821,8 +821,8 @@ public:
         }
     }
 
-    //Trick! instead of doing remove(index) now, let AC queue do the job.
-    //So several incdec events on the same constraint can be merged into one AC event
+    // Trick! instead of doing remove(index) now, let AC queue do the job.
+    // So several incdec events on the same constraint can be merged into one AC event
     void increase(int index)
     {
         if (index == 0)
@@ -1270,7 +1270,7 @@ public:
         linkY->content.scopeIndex = 1;
         linkZ->content.scopeIndex = 2;
         setDACScopeIndex();
-        //resetConflictWeight(); // warning! it is done before having updated costs!! it will be done later in fillElimConstrBinaries
+        // resetConflictWeight(); // warning! it is done before having updated costs!! it will be done later in fillElimConstrBinaries
         elimFrom(from1);
     }
 
@@ -1837,8 +1837,8 @@ template <typename T1, typename T2, typename T3, typename T4>
 void TernaryConstraint::projectTernaryBinary(T1 getCost, T2 getCostYZX, T3 addCostYZX, bool functionalX, T4 getFunctionX,
     EnumeratedVariable* x, EnumeratedVariable* y, EnumeratedVariable* z, BinaryConstraint* yzin)
 {
-    //cout << "PROJECT " << *this <<endl;
-    //cout << "on " << y->getName() << "," << z->getName() << endl;
+    // cout << "PROJECT " << *this <<endl;
+    // cout << "on " << y->getName() << "," << z->getName() << endl;
 
     bool flag = false;
     for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
@@ -1918,14 +1918,14 @@ bool TernaryConstraint::isEAC(T1 getCostWithBinaries, bool functionalY, T2 getFu
 }
 
 // A triangle of three binary cost functions (maxRPC/PIC)
-//class Triangle : public AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>
+// class Triangle : public AbstractTernaryConstraint<EnumeratedVariable,EnumeratedVariable,EnumeratedVariable>
 //{
 //    BinaryConstraint* xy;
 //    BinaryConstraint* xz;
 //    BinaryConstraint* yz;
 //    TernaryConstraint* xyz;
 //
-//public:
+// public:
 //    Triangle(WCSP *wcsp,
 //					  EnumeratedVariable *xx,
 //					  EnumeratedVariable *yy,

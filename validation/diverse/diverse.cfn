@@ -1,0 +1,6 @@
+{
+    problem: { name: "diverse_example", mustbe: "<5"},
+    variables: { "v1#": ["a", "b"], "v2#": ["a", "b"] , "v3#": ["a", "b"], "v4#": ["a", "b"]},
+    functions: {
+    }
+}

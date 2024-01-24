@@ -87,7 +87,7 @@ public:
         unsigned int ix = x->toIndex(vx);
         unsigned int iy = y->toIndex(vy);
         Cost res = costs[ix * sizeY + iy];
-        //if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
+        // if (res >= wcsp->getUb() || res - deltaCostsX[ix] - deltaCostsY[iy] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
         res -= deltaCostsX[ix] + deltaCostsY[iy];
         assert(res >= MIN_COST);
         return res;
@@ -162,7 +162,7 @@ public:
         vindex[getIndex(xx)] = xx->toIndex(vx);
         vindex[getIndex(yy)] = yy->toIndex(vy);
         Cost res = costs[vindex[0] * sizeY + vindex[1]];
-        //if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
+        // if (res >= wcsp->getUb() || res - deltaCostsX[vindex[0]] - deltaCostsY[vindex[1]] + wcsp->getLb() >= wcsp->getUb()) return wcsp->getUb();
         res -= deltaCostsX[vindex[0]] + deltaCostsY[vindex[1]];
         assert(res >= MIN_COST);
         return res;
@@ -292,7 +292,7 @@ public:
                 ix = x->toIndex(*iterx);
                 iy = y->toIndex(*itery);
                 Cost c = costs[ix * sizeY + iy];
-                //if(costs[ix * sizeY + iy] < wcsp->getUb()) //BUG with BTD: ub is only local, deltaCosts should be considered
+                // if(costs[ix * sizeY + iy] < wcsp->getUb()) //BUG with BTD: ub is only local, deltaCosts should be considered
                 {
                     costs[ix * sizeY + iy] = c + xy->getCost(x, y, *iterx, *itery);
                 }
@@ -369,7 +369,7 @@ public:
                 if (CUT(cost - delta, ub)) {
                     costs[ix * sizeY + iy] = mult_ub + delta;
                     modified = true;
-            }
+                }
             }
         }
         if (modified) {
@@ -587,8 +587,8 @@ public:
                 findFullSupportY();
         }
     }
-    //Trick! instead of doing remove(index) now, let AC queue do the job.
-    //So several incdec events on the same constraint can be merged into one AC event
+    // Trick! instead of doing remove(index) now, let AC queue do the job.
+    // So several incdec events on the same constraint can be merged into one AC event
     void increase(int index)
     {
         if (index == 0)

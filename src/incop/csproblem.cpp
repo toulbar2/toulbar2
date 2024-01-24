@@ -108,7 +108,7 @@ void CSProblem::random_configuration(Configuration* configuration)
 /* choix aleatoire d'une variable */
 int CSProblem::random_variable(Configuration* configuration)
 {
-    //return  (int) (mydrand() * nbvar);
+    // return  (int) (mydrand() * nbvar);
     return (myrand() % nbvar);
 }
 
@@ -232,8 +232,8 @@ int CSProblem::move_evaluation
   //  *ofile << " move evaluation " << var_changee << " " << val_changee << " "
 
   return (configuration->valuation+
-	   ((FullincrCSPConfiguration*)configuration)->tabconflicts[var_changee][val_changee]
-	  -((FullincrCSPConfiguration*)configuration)->tabconflicts[var_changee][configuration->config[var_changee]]);
+           ((FullincrCSPConfiguration*)configuration)->tabconflicts[var_changee][val_changee]
+          -((FullincrCSPConfiguration*)configuration)->tabconflicts[var_changee][configuration->config[var_changee]]);
 }
 */
 

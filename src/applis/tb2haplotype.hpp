@@ -41,11 +41,11 @@ class Haplotype {
     map<int, int> gencorrects;
 
     vector<Double> maplocus; // marker map
-    map<int, vector<int>> transmission; //pair <individual id, transmission vector>
+    map<int, vector<int>> transmission; // pair <individual id, transmission vector>
     map<pair<int, int>, Double, classcomp> W;
     int sire;
     Double K;
-    //Double multiplier; // for conversion in integer cost
+    // Double multiplier; // for conversion in integer cost
 
     void typeAscendants(int individual);
     int fixGenerationNumber(int index);

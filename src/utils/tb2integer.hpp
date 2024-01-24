@@ -125,7 +125,7 @@ struct BigInteger {
         char* p = NULL;
         p = mpz_get_str(p, 10, integer);
         if (strlen(p) > 300)
-        //if(strlen(p)-1>=6)
+        // if(strlen(p)-1>=6)
         {
             os << p[0] << '.';
             for (int i = 1; i <= 5; i++)
@@ -135,8 +135,8 @@ struct BigInteger {
             else
                 os << "e+" << strlen(p) - 1;
         } else
-            os << mpz_get_d(integer); //p;
-        //os << mpz_get_d(integer);
+            os << mpz_get_d(integer); // p;
+        // os << mpz_get_d(integer);
     }
     friend ostream& operator<<(ostream& os, const BigInteger& i)
     {

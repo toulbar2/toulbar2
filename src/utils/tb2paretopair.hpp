@@ -1,6 +1,6 @@
 /** \file tb2paretopair.hpp
  *  \brief ParetoPair numbers with basic operations.
- * 
+ *
  */
 
 #ifndef TB2PARETOPAIR_HPP_
@@ -233,8 +233,8 @@ inline ParetoPair MULT(ParetoPair a, Double b)
     else if (a.p < (int)((Double)PARETOPAIR_MAX.p / b) && a.q < (int)((Double)PARETOPAIR_MAX.q / b))
         return ParetoPair(((int)((Double)a.p * b), (int)((Double)a.q * b));
     else {
-        cerr << "Error: cost multiplication overflow!" << endl;
-        throw InternalError();
+            cerr << "Error: cost multiplication overflow!" << endl;
+            throw InternalError();
     }
 }
 inline ParetoPair GLB(ParetoPair a, ParetoPair b) { return ParetoPair(min(a.p, b.p), min(a.q, b.q)); }

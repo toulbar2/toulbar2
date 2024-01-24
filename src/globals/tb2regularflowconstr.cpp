@@ -78,8 +78,8 @@ void RegularFlowConstraint::organizeConfig()
         subdef = insdef = deldef = def;
     }
 
-    //int nstate = dfa.size();
-    //graph.setSize(nstate * (arity_ + 1) + 2);
+    // int nstate = dfa.size();
+    // graph.setSize(nstate * (arity_ + 1) + 2);
 
     if (insdef > 0) {
         /*Graph g;
@@ -111,7 +111,7 @@ void RegularFlowConstraint::organizeConfig()
         min_priority_queue<pair<int, Cost>> q;
 
         table.resize(dfa.size());
-        //g.shortest_path(s, table[s]);
+        // g.shortest_path(s, table[s]);
         for (int s = 0; s < dfa.size(); s++) {
             vector<Cost>& d = table[s];
             d.resize(dfa.size());
@@ -191,7 +191,7 @@ Cost RegularFlowConstraint::evalOriginal(const Tuple& s)
 {
 
     typedef pair<Cost, pair<int, int>> Element;
-    //priority_queue<Element, vector<Element>, greater<Element> > minqueue;
+    // priority_queue<Element, vector<Element>, greater<Element> > minqueue;
     min_priority_queue<Element> minqueue;
     for (vector<int>::iterator i = dfa.init.begin(); i != dfa.init.end(); i++) {
         minqueue.push(make_pair(0, make_pair(0, *i)));
@@ -257,9 +257,9 @@ void RegularFlowConstraint::buildGraph(Graph& g)
 void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)
 {
 
-    //if (g.size() == 0) g.setSize(dfa.size()*(arity_ + 1) + 2);
+    // if (g.size() == 0) g.setSize(dfa.size()*(arity_ + 1) + 2);
 
-    //g.clearEdge();
+    // g.clearEdge();
     for (vector<int>::iterator i = dfa.init.begin(); i != dfa.init.end(); i++) {
         g.addEdge(0, (*i) + 1, 0, 1, NO_TAG, false);
     }
@@ -316,7 +316,7 @@ void RegularFlowConstraint::buildGraphBasic(Graph& g, bool needRebuildIndex)
 void RegularFlowConstraint::findProjection(Graph& graph, StoreCost& cost, int varindex, map<Value, Cost>& delta)
 {
 
-    //pair<int, bool> result;
+    // pair<int, bool> result;
     EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
 
     computeShortestPath(graph, cost);
@@ -346,7 +346,7 @@ void RegularFlowConstraint::findProjection(Graph& graph, StoreCost& cost, int va
 void RegularFlowConstraint::checkRemoved(Graph& graph, StoreCost& cost, vector<int>& rmv)
 {
 
-    //for (int varindex = 0; varindex < arity_; varindex++) {
+    // for (int varindex = 0; varindex < arity_; varindex++) {
     for (vector<int>::iterator i = rmv.begin(); i != rmv.end(); i++) {
         int varindex = *i;
         EnumeratedVariable* x = (EnumeratedVariable*)getVar(varindex);
@@ -437,7 +437,7 @@ void RegularFlowConstraint::computeShortestPath(Graph& g, StoreCost& cost)
             }
         }
     }
-    //cost = graph.augment(0, graph.size() - 1, false).first;
+    // cost = graph.augment(0, graph.size() - 1, false).first;
 }
 
 void RegularFlowConstraint::dump(ostream& os, bool original)
@@ -465,15 +465,15 @@ string RegularFlowConstraint::getName()
     return name.str();
 }
 
-//void RegularFlowConstraint::print(ostream& os) {
-//    os << "sregular(";
-//    for (int i = 0; i < arity_; i++) {
-//        os << scope[i]->wcspIndex;
-//        if (i < arity_ - 1) os << ",";
-//    }
-//    os << ")[" << subdef << "," << insdef << "," << deldef << "]";
-//    dfa.dump(os, true);
-//}
+// void RegularFlowConstraint::print(ostream& os) {
+//     os << "sregular(";
+//     for (int i = 0; i < arity_; i++) {
+//         os << scope[i]->wcspIndex;
+//         if (i < arity_ - 1) os << ",";
+//     }
+//     os << ")[" << subdef << "," << insdef << "," << deldef << "]";
+//     dfa.dump(os, true);
+// }
 
 /* Local Variables: */
 /* c-basic-offset: 4 */

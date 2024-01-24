@@ -941,7 +941,7 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
                         if(add_noise) {
                             wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost+(Double)dis(gen) - mincost) * pow(10, _tb2_decimalpoint))));
                         } else {
-                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost- mincost) * pow(10, _tb2_decimalpoint))));
+                            wcsp->postNaryConstraintTuple(cst_ind, tuple, (Cost)min((Double)MAX_COST, roundl((cost - mincost) * pow(10, _tb2_decimalpoint))));
                         }
                     }
 

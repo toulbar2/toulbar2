@@ -4,7 +4,7 @@
 
 #include "core/tb2types.hpp"
 
-//Must be included after tb2types.hpp
+// Must be included after tb2types.hpp
 #include "tb2system.hpp"
 #include "tb2utils.hpp"
 #include "tb2btlist.hpp"
@@ -28,14 +28,14 @@ std::mt19937 myrandom_generator{ std::random_device{}() };
 #include <sys/resource.h>
 #include <sys/times.h>
 
-//double cpuTime()
+// double cpuTime()
 //{
-//    static struct tms buf;
+//     static struct tms buf;
 //
-//    times(&buf);
-//    double res = ((double) (buf.tms_utime+buf.tms_stime+buf.tms_cutime+buf.tms_cstime)) / ((double) sysconf(_SC_CLK_TCK));
-//    return (res>0)?res:0;
-//}
+//     times(&buf);
+//     double res = ((double) (buf.tms_utime+buf.tms_stime+buf.tms_cutime+buf.tms_cstime)) / ((double) sysconf(_SC_CLK_TCK));
+//     return (res>0)?res:0;
+// }
 
 double cpuTime()
 {

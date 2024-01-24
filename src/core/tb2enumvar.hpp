@@ -1,6 +1,6 @@
 /** \file tb2enumvar.hpp
  *  \brief Variable with domain represented by an enumerated domain.
- * 
+ *
  */
 
 #ifndef TB2ENUMVAR_HPP_
@@ -251,7 +251,7 @@ public:
     }
     iterator rend() { return end(); }
 
-    //Finds the first available element whose value is greater or equal to v
+    // Finds the first available element whose value is greater or equal to v
     iterator lower_bound(Value v)
     {
         if (assigned()) {
@@ -265,7 +265,7 @@ public:
             return iterator(this, domain.lower_bound(max(getInf(), v)));
     }
 
-    //Finds the first available element whose value is lower or equal to v
+    // Finds the first available element whose value is lower or equal to v
     iterator upper_bound(Value v)
     {
         if (assigned()) {

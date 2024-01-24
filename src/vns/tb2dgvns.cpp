@@ -100,7 +100,7 @@ bool VNSSolver::solve(bool first)
                 ch->printClusters(cout);
             cout << "Problem decomposition in " << ch->getSize() << " clusters with size distribution: min: " << ch->getMinClusterSize() << " median: " << ch->getMedianClusterSize() << " mean: " << ch->getMeanClusterSize() << " max: " << ch->getMaxClusterSize() << endl;
         }
-        //vns/lds+cp
+        // vns/lds+cp
         Long nbRestart = 1;
         Long restart = 1;
         int lds = ToulBar2::vnsLDSmin;
@@ -110,7 +110,7 @@ bool VNSSolver::solve(bool first)
             Long rank = 1;
             int k = ToulBar2::vnsKmin;
             while (!complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
-                //neighborhood and partial instantiation
+                // neighborhood and partial instantiation
                 set<int> neighborhood = h->getNeighborhood(k);
                 if (ToulBar2::verbose >= 1) {
                     cout << "LDS " << lds << " Neighborhood " << k << ": ";
@@ -130,7 +130,7 @@ bool VNSSolver::solve(bool first)
                     }
                 }
 
-                //repair
+                // repair
                 ToulBar2::vnsKcur = k;
                 ToulBar2::vnsLDScur = (ToulBar2::lds) ? lds : -1;
                 if (ToulBar2::lds)
@@ -138,7 +138,7 @@ bool VNSSolver::solve(bool first)
                 else
                     complete = repair_recursiveSolve(variables, values, bestUb);
 
-                //updating
+                // updating
                 if (lastUb >= bestUb) {
                     if (h->incrementK()) {
                         rank++;

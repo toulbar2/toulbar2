@@ -1,6 +1,6 @@
 /** \file tb2variable.hpp
  *  \brief Abstract Variable class extended with unary costs.
- * 
+ *
  */
 
 #ifndef TB2VARIABLE_HPP_
@@ -12,7 +12,7 @@
 
 /*
  * Main class
- * 
+ *
  */
 
 class Variable : public WCSPLink {
@@ -28,7 +28,7 @@ protected:
     StoreInt fulleac; // =1 if assigning this variable and all its neighbors to their EAC support value has a zero cost, =0 otherwise
 
     ConstraintList constrs;
-    //ConstraintList triangles;
+    // ConstraintList triangles;
 
     // incremental NC data
     StoreCost maxCost;

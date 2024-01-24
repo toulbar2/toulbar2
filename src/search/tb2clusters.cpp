@@ -5,8 +5,8 @@
 
 #include "tb2clusters.hpp"
 #include "core/tb2naryconstr.hpp"
-//#include "applis/tb2pedigree.hpp"
-//#include "applis/tb2haplotype.hpp"
+// #include "applis/tb2pedigree.hpp"
+// #include "applis/tb2haplotype.hpp"
 
 /*
  * Comparison between cluster sons
@@ -114,7 +114,7 @@ void Separator::assign(int varIndex)
         assert(nonassigned >= 0);
         if (nonassigned == 0) {
             if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot()))
-                return; //TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
+                return; // TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
             queueSep();
         }
@@ -206,7 +206,7 @@ void Separator::set(Cost clb, Cost cub, Solver::OpenList** open)
     if (ToulBar2::verbose >= 1)
         cout << ")";
     assert(clb < cub || clb + deltares >= MIN_COST);
-    //assert(nogoods.find(t) == nogoods.end() || nogoods[Tuple(t)].second <= MAX(MIN_COST, c + deltares));
+    // assert(nogoods.find(t) == nogoods.end() || nogoods[Tuple(t)].second <= MAX(MIN_COST, c + deltares));
     TNoGoods::iterator itng = nogoods.find(t);
     if (ToulBar2::verbose >= 3) {
         cout << " <C" << cluster->getId() << ",";
@@ -477,7 +477,7 @@ BigInteger Separator::getSg(Cost& res, BigInteger& nb)
         if (ToulBar2::verbose >= 1)
             cout << ") Use #good  with nb = " << p.second << "solutions on cluster " << cluster->getId() << endl;
         /*		assert(res + p.first >= MIN_COST);
-		res += p.first;*/
+                res += p.first;*/
         nb = p.second;
         /*res = MAX(MIN_COST,res);*/
         return nb;
@@ -896,7 +896,7 @@ void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 // side-effect: remember last solution
 void Cluster::getSolution(TAssign& sol)
 {
-    static Tuple s; //FIXME: unsafe???
+    static Tuple s; // FIXME: unsafe???
 
     TVars::iterator it, iter_begin, iter_end;
 
@@ -1027,7 +1027,7 @@ void Cluster::quickIntersection(Cluster* cj, TVars& cjsep)
 
 void Cluster::print()
 {
-    //cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
+    // cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
 
     cout << "cluster " << getId();
 
@@ -1036,7 +1036,7 @@ void Cluster::print()
     while (itp != endVars()) {
         if (!isSepVar(*itp)) {
             cout << wcsp->getVar(*itp)->getName() << ",";
-            //cout << *itp << "C" << wcsp->getVar(*itp)->getCluster() << ",";
+            // cout << *itp << "C" << wcsp->getVar(*itp)->getCluster() << ",";
             assert(wcsp->getVar(*itp)->getCluster() == -1 || wcsp->getVar(*itp)->getCluster() == getId());
         }
         ++itp;
@@ -1078,24 +1078,24 @@ void Cluster::print()
     }
 
     /*
-  	cout << " ctrs {";
-  	TCtrs::iterator itctr = beginCtrs();
-  	while(itctr != endCtrs()) {
-  	  Constraint* ctr = *itctr;
-  	  cout << "( ";
-  	  for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
-  	  cout << ">C" << ctr->getCluster() << ")";
-  	  ++itctr;
-  	}
-  	cout << "}";
-	cout << " descendants {";
-	TClusters::iterator itd = beginDescendants();
-	while(itd != endDescendants()) {
+        cout << " ctrs {";
+        TCtrs::iterator itctr = beginCtrs();
+        while(itctr != endCtrs()) {
+          Constraint* ctr = *itctr;
+          cout << "( ";
+          for(int i=0;i<ctr->arity();i++) cout << ctr->getVar(i)->wcspIndex << " ";
+          cout << ">C" << ctr->getCluster() << ")";
+          ++itctr;
+        }
+        cout << "}";
+        cout << " descendants {";
+        TClusters::iterator itd = beginDescendants();
+        while(itd != endDescendants()) {
       cout << (*itd)->getId();
       ++itd;
       if(itd != endDescendants()) cout << ",";
-	}
-	cout << "}";
+        }
+        cout << "}";
      */
 
     cout << endl;
@@ -1103,7 +1103,7 @@ void Cluster::print()
 
 void Cluster::dump()
 {
-    //cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
+    // cout << "(" << id << ",n:" << getNbVars() << ",lb:" << getLb() << ") ";
 
     char clusterVarsFilename[128];
     char sepVarsFilename[128];
@@ -1784,14 +1784,14 @@ void TreeDecomposition::makeDescendants(Cluster* c)
 
 void TreeDecomposition::makeRootedRec(Cluster* c, Cluster* father, TClusters& unvisited)
 {
-    //cout << "makeRootedRec " << c << " (" << c->getId() << ") with father cluster " << father << " (" << ((father)?father->getId():NULL) << ")" << endl;
+    // cout << "makeRootedRec " << c << " (" << c->getId() << ") with father cluster " << father << " (" << ((father)?father->getId():NULL) << ")" << endl;
     TClusters::iterator itj = c->beginEdges();
     while (itj != c->endEdges()) {
         Cluster* cj = *itj;
         assert(cj != c);
         assert(cj != father);
         assert(cj->getId() >= 0 && clusters[cj->getId()] == cj); // must be a valid cluster inside the list of clusters
-        //cout << "makeRootedRec " << c << " (" << c->getId() << ")" << " on child cluster " << cj << " (" << cj->getId() << ")" << endl;
+        // cout << "makeRootedRec " << c << " (" << c->getId() << ")" << " on child cluster " << cj << " (" << cj->getId() << ")" << endl;
         ++itj;
         cj->removeEdge(c);
         cj->setParent(c);
@@ -1893,7 +1893,7 @@ int TreeDecomposition::makeRooted()
                     root = temproots.front();
                     temproots.pop_front();
                 } else {
-                    //Error, some clusters are missing in the decomposition tree
+                    // Error, some clusters are missing in the decomposition tree
                     cerr << "Input tree decomposition file is not valid! (may-be cycles within cluster parents)" << endl;
                     throw WrongFileFormat();
                 }
@@ -2248,7 +2248,7 @@ void TreeDecomposition::buildFromOrderForApprox()
 
     vector<int> order;
     bool firstComponent = true;
-    int sizepart = 0; //number of parts in the built partition
+    int sizepart = 0; // number of parts in the built partition
     ConstraintSet totalusedctrs; // constraints already in a part
     vector<int> degreeinusedctr; // number of constraints not adding for each variable
     //	int nbcstr = 0;					//
@@ -2309,7 +2309,7 @@ void TreeDecomposition::buildFromOrderForApprox()
         if (sizepart == 1)
             cout << endl;
         cout << "part " << sizepart << " : " << currentRevElimOrder.size() << " variables and " << currentusedctrs.size() << " constraints (really added)\n";
-        if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 3) //affichage
+        if (ToulBar2::debug >= 1 || ToulBar2::verbose >= 3) // affichage
         {
             cout << "\tVariables : ";
             for (vector<Variable*>::iterator it = currentRevElimOrder.begin(); it != currentRevElimOrder.end(); it++) {
@@ -2399,7 +2399,7 @@ void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet
         int maxsize = -1;
         Variable* maxvar = NULL; /* next variable */
 
-        //Choose the nex variable
+        // Choose the nex variable
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             Variable* x = wcsp->getVar(order[i]);
             if (inusedvars.find(x->wcspIndex) != inusedvars.end()) {
@@ -2428,7 +2428,7 @@ void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet
                                 scopectr.insert(x->wcspIndex);
                         }
                     }
-                    if (scopectr.size() == 0) { //all edges of the ctr are in the sub graph => the cstr is added in this current part
+                    if (scopectr.size() == 0) { // all edges of the ctr are in the sub graph => the cstr is added in this current part
                         if (included(sc, listeVars[maxvar->wcspIndex])) {
                             ConstraintSet subctr;
                             nbcstr++;
@@ -2487,7 +2487,7 @@ void TreeDecomposition::insert(int sizepart, vector<Variable*> currentRevElimOrd
                     c->addCtr(ctr);
                     for (int k = 0; k < ctr->arity(); k++) {
                         if (ctr->getVar(k)->unassigned()) {
-                            //assert(currentusedvars.find(ctr->getVar(k)->wcspIndex) != currentusedvars.end());
+                            // assert(currentusedvars.find(ctr->getVar(k)->wcspIndex) != currentusedvars.end());
                             c->addVar(ctr->getVar(k));
                         }
                     }
@@ -2783,7 +2783,7 @@ void TreeDecomposition::dump(Cluster* c)
 void TreeDecomposition::updateInTD(Cluster* c)
 {
     if (c->getFreedom()) {
-        //all the descendants clusters are discarded from the TD
+        // all the descendants clusters are discarded from the TD
         for (TClusters::iterator iter = c->beginDescendants(); iter != c->endDescendants(); ++iter)
             if ((*iter)->getId() != c->getId()) {
                 (*iter)->setIsCurrInTD(false);
