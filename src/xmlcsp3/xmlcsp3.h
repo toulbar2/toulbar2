@@ -49,12 +49,36 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildVariableInteger(string id, int minValue, int maxValue) override {
-        int v = problem->makeEnumeratedVariable(id, minValue, maxValue);
+        // warning! forbidden characters /#[]{}:, and spaces in cfn format
+        string varname = id;
+        std::ranges::replace(varname, '[', '(');
+        std::ranges::replace(varname, ']', ')');
+        std::ranges::replace(varname, '{', '(');
+        std::ranges::replace(varname, '}', ')');
+        std::ranges::replace(varname, '/', '_');
+        std::ranges::replace(varname, '#', '_');
+        std::ranges::replace(varname, ':', '_');
+        std::ranges::replace(varname, ',', '_');
+        std::ranges::replace(varname, ' ', '_');
+        std::ranges::replace(varname, '\t', '_');
+        int v = problem->makeEnumeratedVariable(varname, minValue, maxValue);
         mapping[id] = v;
     }
 
     void buildVariableInteger(string id, vector<int> &values) override {
-        int v = problem->makeEnumeratedVariable(id,values);
+        // warning! forbidden characters /#[]{}:, and spaces in cfn format
+        string varname = id;
+        std::ranges::replace(varname, '[', '(');
+        std::ranges::replace(varname, ']', ')');
+        std::ranges::replace(varname, '{', '(');
+        std::ranges::replace(varname, '}', ')');
+        std::ranges::replace(varname, '/', '_');
+        std::ranges::replace(varname, '#', '_');
+        std::ranges::replace(varname, ':', '_');
+        std::ranges::replace(varname, ',', '_');
+        std::ranges::replace(varname, ' ', '_');
+        std::ranges::replace(varname, '\t', '_');
+        int v = problem->makeEnumeratedVariable(varname,values);
         mapping[id] = v;
     }
 

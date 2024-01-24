@@ -233,6 +233,7 @@ bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
 Double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
+bool ToulBar2::lp;
 
 bool ToulBar2::addAMOConstraints;
 bool ToulBar2::addAMOConstraints_;
@@ -458,6 +459,7 @@ void tb2init()
     ToulBar2::qpbo = false;
     ToulBar2::qpboQuadraticCoefMultiplier = 2.;
     ToulBar2::opb = false;
+    ToulBar2::lp = false;
 
     ToulBar2::addAMOConstraints = false;
     ToulBar2::addAMOConstraints_ = false;
@@ -575,7 +577,7 @@ void tb2checkOptions()
         ToulBar2::divNbSol = min((Long)ToulBar2::divNbSol, ToulBar2::allSolutions);
         ToulBar2::allSolutions = 0;
     }
-    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb)) {
+    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb || ToulBar2::lp)) {
         cerr << "Error: cost multiplier cannot be used with UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
         throw BadConfiguration();
     }
@@ -4825,8 +4827,8 @@ void WCSP::dump_CFN(ostream& os, bool original)
     // dump filename in ToulBar2::problemsaved_filename
 
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (vars[i]->getInf() < 0 || !vars[i]->enumerated()) {
-            cerr << "Error: cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
+        if (!vars[i]->enumerated()) {
+            cerr << "Error: cannot save domain of non-enumerated variable " << vars[i]->getName() << endl;
             throw InternalError();
         }
     }

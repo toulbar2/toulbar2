@@ -166,6 +166,10 @@ enum {
     OPT_opbgz_ext,
     OPT_opbbz2_ext,
     OPT_opbxz_ext,
+    OPT_lp_ext,
+    OPT_lpgz_ext,
+    OPT_lpbz2_ext,
+    OPT_lpxz_ext,
     OPT_treedec_ext,
     OPT_clusterdec_ext,
 
@@ -412,6 +416,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_opbgz_ext, (char*)"--opbgz_ext", SO_REQ_SEP },
     { OPT_opbbz2_ext, (char*)"--opbbz2_ext", SO_REQ_SEP },
     { OPT_opbxz_ext, (char*)"--opbxz_ext", SO_REQ_SEP },
+    { OPT_lp_ext, (char*)"--lp_ext", SO_REQ_SEP },
+    { OPT_lpgz_ext, (char*)"--lpgz_ext", SO_REQ_SEP },
+    { OPT_lpbz2_ext, (char*)"--lpbz2_ext", SO_REQ_SEP },
+    { OPT_lpxz_ext, (char*)"--lpxz_ext", SO_REQ_SEP },
     { OPT_treedec_ext, (char*)"--treedec_ext", SO_REQ_SEP },
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
@@ -787,6 +795,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
     cout << "   *.opb : pseudo-Boolean optimization format" << endl;
+    cout << "   *.lp : integer linear programming format" << endl;
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
 #if defined(XMLFLAG)
@@ -810,7 +819,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
 #ifdef BOOST
-    cout << "Note: cfn, cnf, LG, qpbo, opb, uai, wcnf, wcsp";
+    cout << "Note: cfn, cnf, lp, LG, qpbo, opb, uai, wcnf, wcsp";
 #if defined(XMLFLAG) || defined(XMLFLAG3)
     cout << ", xml";
 #endif
@@ -829,7 +838,7 @@ void help_msg(char* toulbar2filename)
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)" << endl;
-    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or cfn files resp. (default value is " << ToulBar2::resolution << ")" << endl;
+    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or costs in cfn/lp/opb/qpbo files resp. (default value is " << ToulBar2::resolution << " except for cfn)" << endl;
     cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
@@ -1192,6 +1201,10 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["opbgz_ext"] = ".opb.gz";
     file_extension_map["opbbz2_ext"] = ".opb.bz2";
     file_extension_map["opbxz_ext"] = ".opb.xz";
+    file_extension_map["lp_ext"] = ".lp";
+    file_extension_map["lpgz_ext"] = ".lp.gz";
+    file_extension_map["lpbz2_ext"] = ".lp.bz2";
+    file_extension_map["lpxz_ext"] = ".lp.xz";
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
 
@@ -2883,6 +2896,39 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading xz compressed pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::opb = true;
                 strext.insert(".opb.xz");
+                strfile.push_back(problem);
+                ToulBar2::xz = true;
+            }
+
+            // integer linear programming file
+            if (check_file_ext(problem, file_extension_map["lp_ext"]) || ToulBar2::stdin_format.compare("lp") == 0) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading integer linear programming file:" << problem << endl;
+                ToulBar2::lp = true;
+                strext.insert(".lp");
+                strfile.push_back(problem);
+            }
+            if (check_file_ext(problem, file_extension_map["lpgz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading gzip'd integer linear programming file:" << problem << endl;
+                ToulBar2::lp = true;
+                strext.insert(".lp.gz");
+                strfile.push_back(problem);
+                ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["lpbz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd integer linear programming file:" << problem << endl;
+                ToulBar2::lp = true;
+                strext.insert(".lp.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
+            }
+            if (check_file_ext(problem, file_extension_map["lpxz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading xz compressed integer linear programming file:" << problem << endl;
+                ToulBar2::lp = true;
+                strext.insert(".lp.xz");
                 strfile.push_back(problem);
                 ToulBar2::xz = true;
             }

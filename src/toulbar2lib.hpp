@@ -435,6 +435,7 @@ public:
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char* fileName) = 0; ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
     virtual void read_opb(const char* fileName) = 0; ///< \brief load pseudo-Boolean optimization problem
+    virtual void read_lp(const char* fileName) = 0; ///< \brief load integer linear programming problem
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual Double getSolutionValue() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found

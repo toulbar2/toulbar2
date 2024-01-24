@@ -13,6 +13,7 @@
 #include "core/tb2globaldecomposable.hpp"
 #include "core/tb2clqcover.hpp"
 #include "core/tb2knapsack.hpp"
+#include "lp-parser.hpp"
 
 #ifdef BOOST
 #define BOOST_IOSTREAMS_NO_LIB
@@ -41,6 +42,11 @@ typedef struct {
     EnumeratedVariable* var;
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
+
+typedef struct {
+    EnumeratedVariable* var;
+    vector<Double> costs;
+} TemporaryUnaryConstraintDouble;
 
 /**
  * \defgroup wcspformat Weighted Constraint Satisfaction Problem file format (wcsp)
@@ -2338,6 +2344,8 @@ Cost WCSP::read_wcsp(const char* fileName)
         read_qpbo(fileName);
     } else if (ToulBar2::opb) {
         read_opb(fileName);
+    } else if (ToulBar2::lp) {
+        read_lp(fileName);
     } else {
         read_legacy(fileName);
     }
@@ -3858,7 +3866,7 @@ void WCSP::read_qpbo(const char* fileName)
     for (int e = 0; e < m; e++) {
         sumcost += 2. * std::abs(cost[e]);
     }
-    Double multiplier = Exp10((Double)ToulBar2::resolution);
+    Double multiplier = Exp10((Double)ToulBar2::resolution); // warning! precision of costs depends on the chosen resolution but toulbar2 outputs costs as if it was always zero resolution.
     ToulBar2::costMultiplier = multiplier;
     if (!minimize)
         ToulBar2::costMultiplier *= -1.0;
@@ -4018,7 +4026,7 @@ void WCSP::read_opb(const char* fileName)
 #ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
-        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed opb format files." << endl;
         throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
@@ -4290,6 +4298,205 @@ void WCSP::read_opb(const char* fileName)
     sortConstraints();
     if (ToulBar2::verbose >= 0)
         cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
+}
+
+void WCSP::read_lp(const char* fileName)
+{
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
+        zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed lp format files." << endl;
+        throw WrongFileFormat();
+#endif
+    } else if (ToulBar2::xz) {
+#ifndef NO_LZMA
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed lp format files." << endl;
+        throw WrongFileFormat();
+#endif
+    }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open opb file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed lp format files." << endl;
+        throw WrongFileFormat();
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open lp file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
+
+    auto pb = baryonyx::make_problem(file);
+    assert(pb);
+    assert(pb.status == baryonyx::file_format_error_tag::success);
+
+    updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
+
+    int maxarity = 0;
+    int maxdom = 0;
+    int nbvar = 0;
+    int nblinear = 0;
+    vector<TemporaryUnaryConstraintDouble> unaryconstrs;
+
+    map<string, int> varnames;
+    assert(pb.vars.names.size() == pb.vars.values.size());
+    for (unsigned int i = 0; i < pb.vars.names.size(); i++) {
+        assert(pb.vars.values[i].type == baryonyx::variable_type::binary || pb.vars.values[i].type == baryonyx::variable_type::general || (pb.vars.values[i].type == baryonyx::variable_type::real && pb.vars.values[i].min == pb.vars.values[i].max));
+#ifdef WCSPFORMATONLY
+        int var = makeEnumeratedVariable(to_string(pb.vars.names[i]), 0, pb.vars.values[i].max - pb.vars.values[i].min);
+#else
+        int var = makeEnumeratedVariable(to_string(pb.vars.names[i]), pb.vars.values[i].min, pb.vars.values[i].max);
+#endif
+        varnames[to_string(pb.vars.names[i])] = var;
+        for (int v = pb.vars.values[i].min; v <= pb.vars.values[i].max; v++) {
+            string valname = "v";
+            valname += to_string(v);
+            addValueName(var, valname);
+        }
+        nbvar++;
+        maxdom = max(maxdom, pb.vars.values[i].max - pb.vars.values[i].min + 1);
+    }
+
+    // read objective function
+    Double multiplier = Exp10((Double)ToulBar2::resolution);
+    //ToulBar2::decimalPoint = abs(ToulBar2::resolution);
+    ToulBar2::costMultiplier = multiplier;
+    if (pb.type == baryonyx::objective_function_type::maximize) {
+        ToulBar2::costMultiplier *= -1.0;
+    }
+
+    assert(pb.objective.qelements.size() == 0); // quadratic objective function not taken into account yet!
+
+    for (auto &elem: pb.objective.elements) {
+        Double mult = elem.factor;
+        if (multiplier * std::abs(mult) * max(abs(pb.vars.values[elem.variable_index].min), abs(pb.vars.values[elem.variable_index].max)) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
+            cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        mult *= ToulBar2::costMultiplier;
+        EnumeratedVariable* x = (EnumeratedVariable*)vars[elem.variable_index];
+        TemporaryUnaryConstraintDouble unaryconstr;
+        unaryconstr.var = x;
+        for (int v = pb.vars.values[elem.variable_index].min; v <= pb.vars.values[elem.variable_index].max; v++) {
+            unaryconstr.costs.push_back(mult * v);
+        }
+        unaryconstrs.push_back(unaryconstr);
+    }
+
+    // read linear constraints
+    for (auto &ctr: pb.greater_constraints) {
+        vector<int> scopeIndex;
+        string params;
+        maxarity = max(maxarity, (int)ctr.elements.size());
+        nblinear++;
+        params = to_string(ctr.value);
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min =  pb.vars.values[x].min;
+            int max =  pb.vars.values[x].max;
+            long long coef = ctr.elements[i].factor;
+            params += " " + to_string(max - min + 1);
+            scopeIndex.push_back(x);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += " " + to_string(v - min);
+#else
+                params += " " + to_string(v);
+#endif
+                params += " " + to_string(coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+    }
+    for (auto &ctr: pb.less_constraints) {
+        vector<int> scopeIndex;
+        string params;
+        maxarity = max(maxarity, (int)ctr.elements.size());
+        nblinear++;
+        params = to_string(-ctr.value);
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min =  pb.vars.values[x].min;
+            int max =  pb.vars.values[x].max;
+            long long coef = ctr.elements[i].factor;
+            params += " " + to_string(max - min + 1);
+            scopeIndex.push_back(x);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += " " + to_string(v - min);
+#else
+                params += " " + to_string(v);
+#endif
+                params += " " + to_string(-coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+    }
+    for (auto &ctr: pb.equal_constraints) {
+        vector<int> scopeIndex;
+        string params;
+        maxarity = max(maxarity, (int)ctr.elements.size());
+        nblinear++;
+        params = to_string(ctr.value);
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min =  pb.vars.values[x].min;
+            int max =  pb.vars.values[x].max;
+            long long coef = ctr.elements[i].factor;
+            params += " " + to_string(max - min + 1);
+            scopeIndex.push_back(x);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += " " + to_string(v - min);
+#else
+                params += " " + to_string(v);
+#endif
+                params += " " + to_string(coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+        params = to_string(-ctr.value);
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min =  pb.vars.values[x].min;
+            int max =  pb.vars.values[x].max;
+            long long coef = ctr.elements[i].factor;
+            params += " " + to_string(max - min + 1);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += " " + to_string(v - min);
+#else
+                params += " " + to_string(v);
+#endif
+                params += " " + to_string(-coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+    }
+
+    // apply basic initial propagation AFTER complete network loading
+    for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+    }
+    sortConstraints();
+    if (ToulBar2::verbose >= 0)
+        cout << "c Read " << nbvar << " variables, with " << maxdom << " values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
 }
 
 /* Local Variables: */

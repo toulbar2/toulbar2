@@ -28,7 +28,7 @@ public:
     T content;
 
 public:
-    DLink<T>()
+    DLink()
         : removed(true)
         , next(NULL)
         , prev(NULL)

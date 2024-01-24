@@ -164,6 +164,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
         .def_readwrite_static("opb", &ToulBar2::opb)
+        .def_readwrite_static("lp", &ToulBar2::lp)
 #ifdef BOOST
         .def_readwrite_static("addAMOConstraints", &ToulBar2::addAMOConstraints)
 #endif
@@ -499,6 +500,8 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::qpbo = true;
             if (strstr(fileName, ".opb"))
                 ToulBar2::opb = true;
+            if (strstr(fileName, ".lp"))
+                ToulBar2::lp = true;
             if (strstr(fileName, ".uai")) {
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
@@ -551,6 +554,8 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::qpbo = true;
             if (strstr(fileName, ".opb"))
                 ToulBar2::opb = true;
+            if (strstr(fileName, ".lp"))
+                ToulBar2::lp = true;
             if (strstr(fileName, ".uai")) {
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;

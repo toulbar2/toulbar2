@@ -841,6 +841,7 @@ public:
     static bool qpbo; ///< \internal do not use
     static Double qpboQuadraticCoefMultiplier; ///< \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
     static bool opb; ///< \internal do not use
+    static bool lp; ///< \internal do not use
 
     static bool addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
     static bool addAMOConstraints_; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
@@ -872,7 +873,7 @@ public:
     static TLogProb logU; ///< \internal do not use (upper bound on rejected potentials)
     static TLogProb logepsilon; ///< \brief approximation factor for computing the log-partition function (command line option -epsilon)
     static bool uaieval; ///< \internal do not use
-    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb") (command line option --stdin)
+    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb", "lp") (command line option --stdin)
 
     static double startCpuTime; ///< \internal do not use
     static double startRealTime; ///< \internal do not use

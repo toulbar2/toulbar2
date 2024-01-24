@@ -605,6 +605,7 @@ public:
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
     void read_opb(const char* fileName); ///< \brief load pseudo-Boolean optimization problem
+    void read_lp(const char* fileName); ///< \brief load integer linear programming problem
     void read_legacy(const char* fileName); ///< \brief load problem in wcsp format
     void read_legacy(istream& file); ///< \brief load problem in wcsp format (internal use)
 
