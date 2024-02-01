@@ -33,6 +33,10 @@
 #include <unordered_map>
 #include <utility>
 
+extern const char* PrintFormatProb;
+
+int baryonyx::precision;
+
 std::ostream& operator << (std::ostream& os, const baryonyx::file_format_error_tag& obj)
 {
    os << static_cast<std::underlying_type<baryonyx::file_format_error_tag>::type>(obj);
@@ -166,20 +170,20 @@ struct operator_token {
 struct real_token {
   constexpr real_token() noexcept = default;
 
-  constexpr real_token(double value_, int read_) : value(value_), read(read_) {}
+  constexpr real_token(Double value_, int read_) : value(value_), read(read_) {}
 
-  double value = 0.0;
+  Double value = 0.0;
   int read = 0;
 };
 
 struct function_element_token {
   constexpr function_element_token() noexcept = default;
 
-  constexpr function_element_token(double factor_, std::string_view name_,
+  constexpr function_element_token(Double factor_, std::string_view name_,
                                    int read_) noexcept
       : factor(factor_), name(name_), read(read_) {}
 
-  double factor = 0.0;
+  Double factor = 0.0;
   std::string_view name = {};
   int read = 0;
 };
@@ -187,11 +191,11 @@ struct function_element_token {
 struct sub_bound_token {
   constexpr sub_bound_token() noexcept = default;
 
-  constexpr sub_bound_token(double value_, int read_,
+  constexpr sub_bound_token(Double value_, int read_,
                             baryonyx::operator_type op_) noexcept
       : value(value_), read(read_), op(op_) {}
 
-  double value = 0;
+  Double value = 0.0;
   int read = 0;
   baryonyx::operator_type op = baryonyx::operator_type::equal;
 };
@@ -199,12 +203,12 @@ struct sub_bound_token {
 struct bound_token {
   constexpr bound_token() noexcept = default;
 
-  constexpr bound_token(double min_, double max_, std::string_view name_,
+  constexpr bound_token(Double min_, Double max_, std::string_view name_,
                         int read_) noexcept
       : min(min_), max(max_), name(name_), read(read_) {}
 
-  double min = 0.0;
-  double max = std::numeric_limits<int>::infinity();
+  Double min = 0.0;
+  Double max = std::numeric_limits<Double>::infinity();
   std::string_view name;
   int read = 0;
 };
@@ -465,23 +469,23 @@ struct problem_parser {
     // m_problem.vars.values[id].max = bound.max;
 
     m_problem.vars.values[id].min =
-        (bound.min == -std::numeric_limits<double>::infinity()
+        (bound.min == -std::numeric_limits<Double>::infinity()
              ? std::numeric_limits<int>::min()
-             : static_cast<int>(bound.min));
+             : static_cast<int>(baryonyx::Ceil(bound.min)));
 
     m_problem.vars.values[id].max =
-        (bound.max == std::numeric_limits<double>::infinity()
+        (bound.max == std::numeric_limits<Double>::infinity()
              ? std::numeric_limits<int>::max()
-             : static_cast<int>(bound.max));
+             : static_cast<int>(baryonyx::Floor(bound.max)));
 
     return true;
   }
 };
 
 // constexpr copy_n problem
-std::optional<double> read_real(const std::string_view buf) noexcept {
+std::optional<Double> read_real(const std::string_view buf) noexcept {
   if (buf.size() >= 3 && are_equal(buf, "inf"))
-    return std::numeric_limits<double>::infinity();
+    return std::numeric_limits<Double>::infinity();
 
   constexpr std::size_t max_digits = 320;
   if (buf.size() > max_digits)
@@ -491,8 +495,16 @@ std::optional<double> read_real(const std::string_view buf) noexcept {
   std::copy_n(buf.data(), buf.size(), std::begin(buffer));
   buffer[buf.size()] = '\0';
 
-  double result = 0;
-  if (auto read = std::sscanf(buffer, "%lf", &result); read > 0)
+  auto pos = buf.find('.');
+  if (pos != std::string_view::npos) {
+      int decimal = buf.substr(buf.find('.') + 1).size();
+      if (baryonyx::precision < decimal) {
+          baryonyx::precision = decimal;
+      }
+  }
+
+  Double result = 0.0;
+  if (auto read = std::sscanf(buffer, PrintFormatProb, &result); read > 0)
     return result;
   else
     return std::nullopt;
@@ -501,7 +513,7 @@ std::optional<double> read_real(const std::string_view buf) noexcept {
 // constexpr
 std::optional<real_token> read_real(const std::string_view buf_1,
                                     const std::string_view buf_2) noexcept {
-  std::optional<double> value_opt;
+  std::optional<Double> value_opt;
 
   if (buf_1 == "-") {
     value_opt = read_real(buf_2);
@@ -600,7 +612,7 @@ read_quadratic_element(const std::string_view buf_1,
 }
 
 raw_problem_status read_quadratic_element(stream_buffer &buf, problem_parser &p,
-                                          double sign_factor) noexcept {
+                                          Double sign_factor) noexcept {
   if (buf.first() != "[")
     return baryonyx::file_format_error_tag::bad_objective_quadratic;
 
@@ -725,8 +737,8 @@ read_function_element(const std::string_view buf_1,
 std::optional<sub_bound_token> read_left_bound_token(
     const std::string_view buf_1, const std::string_view buf_2,
     const std::string_view buf_3, const std::string_view buf_4) noexcept {
-  double value = 0.0;
-  double negative = 1.0;
+  Double value = 0.0;
+  Double negative = 1.0;
 
   if (buf_1 == "+" || buf_1 == "-") {
     if (buf_1 == "-")
@@ -759,7 +771,7 @@ std::optional<sub_bound_token> read_left_bound_token(
 std::optional<sub_bound_token> read_right_bound_token(
     const std::string_view buf_1, const std::string_view buf_2,
     const std::string_view buf_3, const std::string_view buf_4) noexcept {
-  double negative = 1.0;
+  Double negative = 1.0;
   baryonyx::operator_type op = baryonyx::operator_type::equal;
 
   if (auto operator_token = read_operator(buf_1, buf_2); operator_token) {
@@ -817,7 +829,7 @@ read_bound(const stream_buffer::string_view_array &tokens) noexcept {
 
     if (!starts_with_operator(tokens[read]))
       return bound_token(left_opt->value,
-                         std::numeric_limits<double>::infinity(), *name_opt,
+                         std::numeric_limits<Double>::infinity(), *name_opt,
                          read + 1);
 
     auto right_opt = read_right_bound_token(tokens[read], tokens[read + 1],
@@ -846,7 +858,7 @@ read_bound(const stream_buffer::string_view_array &tokens) noexcept {
       if (tokens[1]== "=") {
           return bound_token(right_opt->value, right_opt->value, *name_opt, 1 + right_opt->read);
       } else if (tokens[1]== ">") {
-          return bound_token(right_opt->value, std::numeric_limits<double>::infinity(), *name_opt, 1 + right_opt->read);
+          return bound_token(right_opt->value, std::numeric_limits<Double>::infinity(), *name_opt, 1 + right_opt->read);
       } else if (tokens[1]== "<") {
           return bound_token(0.0, right_opt->value, *name_opt, 1 + right_opt->read);
       } else {
@@ -854,8 +866,8 @@ read_bound(const stream_buffer::string_view_array &tokens) noexcept {
       }
     }
 
-    return bound_token(-std::numeric_limits<double>::infinity(),
-                       +std::numeric_limits<double>::infinity(), *name_opt, 1);
+    return bound_token(-std::numeric_limits<Double>::infinity(),
+                       +std::numeric_limits<Double>::infinity(), *name_opt, 1);
   }
 
   return std::nullopt;
@@ -944,6 +956,9 @@ bool starts_with_quadratic(const std::string_view buf_1,
 }
 
 raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
+  baryonyx::precision = 0;
+  int obj_precision = 0;
+
   if (auto obj_type = read_objective_type(buf.first()); !obj_type)
     return baryonyx::file_format_error_tag::bad_objective_function_type;
   else
@@ -956,7 +971,7 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
 
   while (!is_keyword(buf.first())) {
     if (starts_with_quadratic(buf.first(), buf.second())) {
-      double factor = 1.0;
+      Double factor = 1.0;
 
       if (buf.first() == "-") {
         factor = -1.0;
@@ -983,6 +998,8 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
     return baryonyx::file_format_error_tag::bad_objective;
   }
 
+  obj_precision = baryonyx::precision;
+
   if (auto read = read_subject_to(buf.first(), buf.second(), buf.third());
       read) {
     buf.pop_front(read);
@@ -990,8 +1007,9 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
 
     while (!buf.first().empty() && !is_keyword(buf.first())) {
       std::string_view label;
-      int value;
+      Double value;
       std::vector<baryonyx::function_element> elements;
+      baryonyx::precision = 0;
 
       if (starts_with_name(buf.first()) && buf.second() == ":") {
         label = p.m_problem.strings->append(buf.first());
@@ -1013,9 +1031,9 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
                                });
 
         if (it == elements.end())
-          elements.emplace_back(static_cast<int>(elem->factor), id);
+          elements.emplace_back(elem->factor, id);
         else
-          it->factor += static_cast<int>(elem->factor);
+          it->factor += elem->factor;
       }
 
       buf.pop_front(elem->read);
@@ -1036,9 +1054,9 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
                                  });
 
           if (it == elements.end())
-            elements.emplace_back(static_cast<int>(elem->factor), id);
+            elements.emplace_back(elem->factor, id);
           else
-            it->factor += static_cast<int>(elem->factor);
+            it->factor += elem->factor;
         }
 
         if (elements.back().variable_index == -1)
@@ -1055,21 +1073,21 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
       auto value_opt = read_real(buf.first(), buf.second());
       if (!value_opt)
         return baryonyx::file_format_error_tag::bad_constraint;
-      value = static_cast<int>(value_opt->value);
+      value = value_opt->value;
       buf.pop_front(value_opt->read);
 
       switch (operator_opt->op) {
       case baryonyx::operator_type::equal:
         p.m_problem.equal_constraints.emplace_back(label, std::move(elements),
-                                                   value, constraint_next_id++);
+                                                   value, constraint_next_id++, baryonyx::precision);
         break;
       case baryonyx::operator_type::greater:
-        p.m_problem.greater_constraints.emplace_back(
-            label, std::move(elements), value, constraint_next_id++);
+        p.m_problem.greater_constraints.emplace_back(label, std::move(elements),
+                                                     value, constraint_next_id++, baryonyx::precision);
         break;
       case baryonyx::operator_type::less:
         p.m_problem.less_constraints.emplace_back(label, std::move(elements),
-                                                  value, constraint_next_id++);
+                                                  value, constraint_next_id++, baryonyx::precision);
         break;
       }
     }
@@ -1115,6 +1133,8 @@ raw_problem_status parse(stream_buffer &buf, problem_parser &p) noexcept {
       else
         buf.pop_front();
   }
+
+  baryonyx::precision = obj_precision;
 
   if (auto read = read_end(buf.first(), buf.second()); read) {
     buf.pop_front(read);

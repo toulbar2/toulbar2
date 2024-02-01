@@ -34,8 +34,11 @@
 #include <vector>
 
 #include <cstdint>
+#include <cmath>
 
 #include <type_traits>
+
+typedef long double Double;
 
 namespace baryonyx {
 
@@ -44,6 +47,18 @@ using index = std::int32_t;
 
 /** @c value is used as value for variable. */
 using var_value = std::int_least8_t;
+
+static constexpr Double epsilon = 1e-9;
+
+static Double Floor(Double v)
+{
+    return std::max(floorl(v - epsilon), floorl(v + epsilon));
+}
+
+static Double Ceil(Double v)
+{
+    return std::min(ceill(v - epsilon), ceill(v + epsilon));
+}
 
 struct string_buffer {
   constexpr static std::size_t string_buffer_node_length = 1024 * 1024;
@@ -121,7 +136,7 @@ struct variable_value {
       : min(min_), max(max_), type(type_) {}
 
   int min{0};
-  int max{std::numeric_limits<int>::infinity()};
+  int max{std::numeric_limits<int>::max()};
   variable_type type{variable_type::real};
 };
 
@@ -133,51 +148,52 @@ struct variables {
 struct function_element {
   function_element() = default;
 
-  function_element(int factor_, index variable_index_) noexcept
+  function_element(Double factor_, index variable_index_) noexcept
       : factor(factor_), variable_index(variable_index_) {}
 
-  int factor = {0};
+  Double factor = {0.0};
   index variable_index{-1};
 };
 
 struct objective_function_element {
-  objective_function_element(double factor_, index variable_index_) noexcept
+  objective_function_element(Double factor_, index variable_index_) noexcept
       : factor(factor_), variable_index(variable_index_) {}
 
-  double factor = {0};
+  Double factor = {0.0};
   index variable_index{-1};
 };
 
 struct objective_quadratic_element {
   objective_quadratic_element() noexcept = default;
 
-  constexpr objective_quadratic_element(double factor_, index variable_index_a_,
+  constexpr objective_quadratic_element(Double factor_, index variable_index_a_,
                                         index variable_index_b_) noexcept
       : factor(factor_), variable_index_a(variable_index_a_),
         variable_index_b(variable_index_b_) {}
 
-  double factor = 0;
-  index variable_index_a = -1;
-  index variable_index_b = -1;
+  Double factor = {0.0};
+  index variable_index_a{-1};
+  index variable_index_b{-1};
 };
 
 struct constraint {
   constraint() = default;
 
   constraint(std::string_view label_, std::vector<function_element> &&elements_,
-             int value_, int id_)
-      : label(label_), elements(elements_), value(value_), id(id_) {}
+             Double value_, int id_, int precision_)
+      : label(label_), elements(elements_), value(value_), id(id_), precision(precision_) {}
 
   std::string_view label;
   std::vector<function_element> elements;
-  int value = {0};
+  Double value = {0.0};
   int id;
+  int precision = {0};
 };
 
 struct objective_function {
   std::vector<objective_function_element> elements;
   std::vector<objective_quadratic_element> qelements;
-  double value = {0};
+  Double value = {0.0};
 };
 
 struct affected_variables {
@@ -215,6 +231,8 @@ struct raw_problem {
 raw_problem make_problem(std::istream &is) noexcept;
 
 raw_problem make_problem(std::string_view file_path) noexcept;
+
+extern int precision;
 
 } // namespace baryonyx
 

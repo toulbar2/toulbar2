@@ -43,11 +43,6 @@ typedef struct {
     vector<Cost> costs;
 } TemporaryUnaryConstraint;
 
-typedef struct {
-    EnumeratedVariable* var;
-    vector<Double> costs;
-} TemporaryUnaryConstraintDouble;
-
 /**
  * \defgroup wcspformat Weighted Constraint Satisfaction Problem file format (wcsp)
  *
@@ -4358,7 +4353,7 @@ void WCSP::read_lp(const char* fileName)
     int maxdom = 0;
     int nbvar = 0;
     int nblinear = 0;
-    vector<TemporaryUnaryConstraintDouble> unaryconstrs;
+    vector<TemporaryUnaryConstraint> unaryconstrs;
 
     map<string, int> varnames;
     assert(pb.vars.names.size() == pb.vars.values.size());
@@ -4379,28 +4374,49 @@ void WCSP::read_lp(const char* fileName)
         maxdom = max(maxdom, pb.vars.values[i].max - pb.vars.values[i].min + 1);
     }
 
-    // read objective function
+    if (ToulBar2::resolution_Update) {
+        if (ToulBar2::resolution >= 0) {
+            ToulBar2::resolution = min(ToulBar2::resolution, baryonyx::precision);
+        } else {
+            if (ToulBar2::verbose >= 0) {
+                cerr << "Sorry, cannot use a negative value for precision! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+        }
+    } else {
+        ToulBar2::resolution = baryonyx::precision;
+    }
     Double multiplier = Exp10((Double)ToulBar2::resolution);
-    //ToulBar2::decimalPoint = abs(ToulBar2::resolution);
-    ToulBar2::costMultiplier = multiplier;
+    ToulBar2::decimalPoint = abs(ToulBar2::resolution);
+
+    // read objective function
+    ToulBar2::costMultiplier = 1.0;
     if (pb.type == baryonyx::objective_function_type::maximize) {
         ToulBar2::costMultiplier *= -1.0;
     }
 
     assert(pb.objective.qelements.size() == 0); // quadratic objective function not taken into account yet!
 
+    Double minObj = 0.0;
     for (auto &elem: pb.objective.elements) {
-        Double mult = elem.factor;
+        Double mult = elem.factor * ToulBar2::costMultiplier;
         if (multiplier * std::abs(mult) * max(abs(pb.vars.values[elem.variable_index].min), abs(pb.vars.values[elem.variable_index].max)) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
             cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
             throw BadConfiguration();
         }
-        mult *= ToulBar2::costMultiplier;
+        mult = multiplier * min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
+        if (mult  < minObj) minObj = mult;
+    }
+    assert(minObj <= 0.0);
+    negCost -= static_cast<Cost>(minObj);
+
+    for (auto &elem: pb.objective.elements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
         EnumeratedVariable* x = (EnumeratedVariable*)vars[elem.variable_index];
-        TemporaryUnaryConstraintDouble unaryconstr;
+        TemporaryUnaryConstraint unaryconstr;
         unaryconstr.var = x;
         for (int v = pb.vars.values[elem.variable_index].min; v <= pb.vars.values[elem.variable_index].max; v++) {
-            unaryconstr.costs.push_back(mult * v);
+            unaryconstr.costs.push_back(static_cast<Cost>(mult * v - minObj));
         }
         unaryconstrs.push_back(unaryconstr);
     }
@@ -4411,12 +4427,21 @@ void WCSP::read_lp(const char* fileName)
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
-        params = to_string(ctr.value);
+        Double multiplier = Exp10((Double) ((ToulBar2::resolution_Update)?(min(ToulBar2::resolution, ctr.precision)):ctr.precision));
+        if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
+            cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        params = to_string(static_cast<long long int>(baryonyx::Floor(ctr.value * multiplier)));
         for (unsigned int i = 0; i < ctr.elements.size(); i++) {
             int x = ctr.elements[i].variable_index;
             int min =  pb.vars.values[x].min;
             int max =  pb.vars.values[x].max;
-            long long coef = ctr.elements[i].factor;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
             params += " " + to_string(max - min + 1);
             scopeIndex.push_back(x);
             for (int v = min; v <= max; v++) {
@@ -4435,12 +4460,21 @@ void WCSP::read_lp(const char* fileName)
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
-        params = to_string(-ctr.value);
+        Double multiplier = Exp10((Double) ((ToulBar2::resolution_Update)?(min(ToulBar2::resolution, ctr.precision)):ctr.precision));
+        if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
+            cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));
         for (unsigned int i = 0; i < ctr.elements.size(); i++) {
             int x = ctr.elements[i].variable_index;
             int min =  pb.vars.values[x].min;
             int max =  pb.vars.values[x].max;
-            long long coef = ctr.elements[i].factor;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
             params += " " + to_string(max - min + 1);
             scopeIndex.push_back(x);
             for (int v = min; v <= max; v++) {
@@ -4459,12 +4493,21 @@ void WCSP::read_lp(const char* fileName)
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
-        params = to_string(ctr.value);
+        Double multiplier = Exp10((Double) ((ToulBar2::resolution_Update)?(min(ToulBar2::resolution, ctr.precision)):ctr.precision));
+        if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
+            cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        params = to_string(static_cast<long long int>(baryonyx::Floor(ctr.value * multiplier)));
         for (unsigned int i = 0; i < ctr.elements.size(); i++) {
             int x = ctr.elements[i].variable_index;
             int min =  pb.vars.values[x].min;
             int max =  pb.vars.values[x].max;
-            long long coef = ctr.elements[i].factor;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
             params += " " + to_string(max - min + 1);
             scopeIndex.push_back(x);
             for (int v = min; v <= max; v++) {
@@ -4477,12 +4520,16 @@ void WCSP::read_lp(const char* fileName)
             }
         }
         postKnapsackConstraint(scopeIndex, params, false, true, false);
-        params = to_string(-ctr.value);
+        params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));
         for (unsigned int i = 0; i < ctr.elements.size(); i++) {
             int x = ctr.elements[i].variable_index;
             int min =  pb.vars.values[x].min;
             int max =  pb.vars.values[x].max;
-            long long coef = ctr.elements[i].factor;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
             params += " " + to_string(max - min + 1);
             for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
@@ -4497,12 +4544,18 @@ void WCSP::read_lp(const char* fileName)
     }
 
     // apply basic initial propagation AFTER complete network loading
+    if (multiplier * std::abs(pb.objective.value) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
+        cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+        throw BadConfiguration();
+    }
+    postNullaryConstraint(static_cast<Cost>(pb.objective.value * ToulBar2::costMultiplier * multiplier));
+
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     sortConstraints();
     if (ToulBar2::verbose >= 0)
-        cout << "c Read " << nbvar << " variables, with " << maxdom << " values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
+        cout << "c Read " << nbvar << " variables, with " << maxdom << " values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier * multiplier << ", shifting value: " << -negCost << ")" << endl;
 }
 
 /* Local Variables: */

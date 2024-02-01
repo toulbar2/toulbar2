@@ -578,7 +578,7 @@ void tb2checkOptions()
         ToulBar2::allSolutions = 0;
     }
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb || ToulBar2::lp)) {
-        cerr << "Error: cost multiplier cannot be used with UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
+        cerr << "Error: cost multiplier cannot be used with LP, UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::haplotype || ToulBar2::pedigree || ToulBar2::bep || ToulBar2::xmlflag)) {
