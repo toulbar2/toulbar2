@@ -4389,7 +4389,7 @@ void WCSP::read_lp(const char* fileName)
 
     assert(pb.objective.qelements.size() == 0); // quadratic objective function not taken into account yet!
 
-    Double minObj = 0.0;
+    Double totalShiftCost = 0.0;
     for (auto &elem: pb.objective.elements) {
         Double mult = elem.factor * ToulBar2::costMultiplier;
         if (multiplier * std::abs(mult) * max(abs(pb.vars.values[elem.variable_index].min), abs(pb.vars.values[elem.variable_index].max)) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
@@ -4397,18 +4397,19 @@ void WCSP::read_lp(const char* fileName)
             throw BadConfiguration();
         }
         mult = multiplier * min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
-        if (mult  < minObj) minObj = mult;
+        if (mult  < 0.0) totalShiftCost += mult;
     }
-    assert(minObj <= 0.0);
-    negCost -= static_cast<Cost>(minObj);
+    assert(totalShiftCost <= 0.0);
+    negCost -= static_cast<Cost>(totalShiftCost);
 
     for (auto &elem: pb.objective.elements) {
         Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
         EnumeratedVariable* x = (EnumeratedVariable*)vars[elem.variable_index];
         TemporaryUnaryConstraint unaryconstr;
         unaryconstr.var = x;
+        Cost shiftCost = min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
         for (int v = pb.vars.values[elem.variable_index].min; v <= pb.vars.values[elem.variable_index].max; v++) {
-            unaryconstr.costs.push_back(static_cast<Cost>(mult * v - minObj));
+            unaryconstr.costs.push_back(static_cast<Cost>(mult * v - shiftCost));
         }
         unaryconstrs.push_back(unaryconstr);
     }

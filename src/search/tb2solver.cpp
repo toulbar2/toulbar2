@@ -846,8 +846,8 @@ int Solver::getVarMinDomainDivMaxDegree()
             }
         }
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -878,14 +878,14 @@ int Solver::getVarMinDomainDivMaxDegreeRandomized()
             }
         }
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-        } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -918,8 +918,8 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
         }
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -953,15 +953,15 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized()
         }
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < ToulBar2::epsilon * best
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            //        } else if ((heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
-        } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            //        } else if ((heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -999,8 +999,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1037,14 +1037,14 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-        } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -1087,8 +1087,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         // double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
         if ((varIndex < 0)
-            || (heuristic < best - ToulBar2::epsilon * best)
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            || (heuristic < best - (double)ToulBar2::epsilon * best)
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1131,15 +1131,15 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
         Long wdeg = wcsp->getWeightedDegree(*iter);
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         if ((varIndex < 0)
-            || (heuristic < best - ToulBar2::epsilon * best)
-            || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            || (heuristic < best - (double)ToulBar2::epsilon * best)
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            //       } else if ((heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
-        } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            //       } else if ((heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
