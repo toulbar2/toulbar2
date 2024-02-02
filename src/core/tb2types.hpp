@@ -872,6 +872,7 @@ public:
     static TLogProb logZ; ///< \internal do not use (lower bound on log-partition function)
     static TLogProb logU; ///< \internal do not use (upper bound on rejected potentials)
     static TLogProb logepsilon; ///< \brief approximation factor for computing the log-partition function (command line option -epsilon)
+    static Double epsilon; ///< \brief floating-point epsilon
     static bool uaieval; ///< \internal do not use
     static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb", "lp") (command line option --stdin)
 

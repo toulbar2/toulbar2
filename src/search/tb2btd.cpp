@@ -56,8 +56,8 @@ int Solver::getVarMinDomainDivMaxDegree(Cluster* cluster)
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -89,14 +89,14 @@ int Solver::getVarMinDomainDivMaxDegreeRandomized(Cluster* cluster)
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 nbties = 1;
                 ties[0] = varIndex;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
                 ties[nbties] = *iter;
                 nbties++;
             }
@@ -132,8 +132,8 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict(Cluster* cluster)
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -170,14 +170,14 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized(Cluster* cluster)
         if (wcsp->unassigned(*iter)) {
             int deg = wcsp->getDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)wcsp->getDomainSize(*iter) / (double)max(deg, 1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 nbties = 1;
                 ties[0] = varIndex;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
                 ties[nbties] = *iter;
                 nbties++;
             }
@@ -216,8 +216,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegree(Cluster* cluster)
             }
             Long deg = wcsp->getWeightedDegree(*iter) + 1 + unarymediancost; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)domsize / (double)max(deg, (Long)1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -256,14 +256,14 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized(Cluster* cluster)
             }
             Long deg = wcsp->getWeightedDegree(*iter) + 1 + unarymediancost; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             double heuristic = (double)domsize / (double)max(deg, (Long)1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 nbties = 1;
                 ties[0] = varIndex;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
                 ties[nbties] = *iter;
                 nbties++;
             }
@@ -307,8 +307,8 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict(Cluster* cluster)
             double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
             //	      Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             //        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -352,14 +352,14 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized(Cluster* c
             double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
             //	      Long deg = wcsp->getWeightedDegree(*iter) + 1; // - ((WCSP *)wcsp)->getVar(*iter)->nbSeparators();
             //        double heuristic = (double) wcsp->getDomainSize(*iter) / (double) max(deg,(Long)1);
-            if (varIndex < 0 || heuristic < best - epsilon * best
-                || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            if (varIndex < 0 || heuristic < best - ToulBar2::epsilon * best
+                || (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
                 best = heuristic;
                 varIndex = *iter;
                 nbties = 1;
                 ties[0] = varIndex;
                 worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            } else if (heuristic < best + ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
                 ties[nbties] = *iter;
                 nbties++;
             }

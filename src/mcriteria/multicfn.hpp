@@ -102,8 +102,6 @@ public:
     typedef std::map<std::string, std::string> Solution;
 
 public:
-    static constexpr Double epsilon = 1e-6;
-
     static constexpr Double accuracy = 1e-3;
 
 public:

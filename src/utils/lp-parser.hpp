@@ -48,17 +48,8 @@ using index = std::int32_t;
 /** @c value is used as value for variable. */
 using var_value = std::int_least8_t;
 
-static constexpr Double epsilon = 1e-9;
-
-static Double Floor(Double v)
-{
-    return std::max(floorl(v - epsilon), floorl(v + epsilon));
-}
-
-static Double Ceil(Double v)
-{
-    return std::min(ceill(v - epsilon), ceill(v + epsilon));
-}
+Double Floor(Double v);
+Double Ceil(Double v);
 
 struct string_buffer {
   constexpr static std::size_t string_buffer_node_length = 1024 * 1024;

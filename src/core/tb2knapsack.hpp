@@ -62,9 +62,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
     static Double Ceil(Double v)
     {
-        const Double epsilon = 1e-7;
-
-        if (floorl(v) + epsilon > v)
+        if (floorl(v) + ToulBar2::epsilon > v)
             return floorl(v);
         else
             return ceill(v);
@@ -1807,7 +1805,7 @@ public:
                                             }
                                             if (optva > -1) {
                                                 tempAMOy_i[optva] = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - y_cc * Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - clq.back();
-                                                if (tempAMOy_i[optva] + y_cc * Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second) - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] > epsilon) {
+                                                if (tempAMOy_i[optva] + y_cc * Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second) - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] > ToulBar2::epsilon) {
                                                     tempAMOy_i[optva] = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - y_cc * Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second];
                                                     clq.back() = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - y_cc * Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][optva]].second] - tempAMOy_i[optva];
                                                 }

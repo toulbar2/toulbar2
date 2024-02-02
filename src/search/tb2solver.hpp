@@ -22,8 +22,6 @@ class ParallelRandomClusterChoice;
 
 typedef int (Solver::*intFunctionCall_t)();
 
-const double epsilon = 1e-6; // 1./100001.
-
 class Solver : public WeightedCSPSolver {
 public:
     class OpenNode {

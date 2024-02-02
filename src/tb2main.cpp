@@ -1056,7 +1056,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
-    cout << "   -epsilon=[float] : approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
+    cout << "   -epsilon=[float] : floating-point precision (smaller than 1, default value is " << ToulBar2::epsilon << ") or approximation factor for computing the partition function (greater than 1, default value is " << Exp(-ToulBar2::logepsilon) << ")" << endl;
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")";
 #ifdef OPENMPI
@@ -2327,9 +2327,17 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_epsilon) {
                 if (args.OptionArg() != NULL) {
-                    ToulBar2::logepsilon = -Log(atof(args.OptionArg()));
-                    if (ToulBar2::debug)
-                        cout << "New assignment for epsilon = " << Exp(-ToulBar2::logepsilon) << endl;
+                    if (atof(args.OptionArg()) >= 1.) {
+                        ToulBar2::logepsilon = -Log(atof(args.OptionArg()));
+                        if (ToulBar2::debug) {
+                            cout << "New assignment for partition function epsilon = " << Exp(-ToulBar2::logepsilon) << endl;
+                        }
+                    } else {
+                        ToulBar2::epsilon = atof(args.OptionArg());
+                        if (ToulBar2::debug) {
+                            cout << "New assignment for epsilon = " << ToulBar2::epsilon << endl;
+                        }
+                    }
                 }
             }
 

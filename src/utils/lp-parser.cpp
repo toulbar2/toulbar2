@@ -33,9 +33,21 @@
 #include <unordered_map>
 #include <utility>
 
+#include "core/tb2types.hpp"
+
 extern const char* PrintFormatProb;
 
 int baryonyx::precision;
+
+Double baryonyx::Floor(Double v)
+{
+    return floorl(v + ToulBar2::epsilon);
+}
+
+Double baryonyx::Ceil(Double v)
+{
+    return ceill(v - ToulBar2::epsilon);
+}
 
 std::ostream& operator << (std::ostream& os, const baryonyx::file_format_error_tag& obj)
 {

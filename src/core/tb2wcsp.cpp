@@ -262,6 +262,7 @@ bool ToulBar2::isZ;
 TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
+Double ToulBar2::epsilon;
 bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 
 externalfunc ToulBar2::timeOut;
@@ -488,6 +489,7 @@ void tb2init()
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::epsilon = 1e-7;
     ToulBar2::Berge_Dec = false;
 
     ToulBar2::timeOut = NULL;
