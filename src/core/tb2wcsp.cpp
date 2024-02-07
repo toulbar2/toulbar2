@@ -491,7 +491,7 @@ void tb2init()
     ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
     ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::epsilon = 1e-7;
+    ToulBar2::epsilon = 1e-9;
     ToulBar2::Berge_Dec = false;
 
     ToulBar2::timeOut = NULL;

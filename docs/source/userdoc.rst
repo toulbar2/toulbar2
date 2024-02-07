@@ -734,7 +734,7 @@ Probability representation and numerical control
 -epsilon=[float]
         approximation factor for computing the partition
         function (if greater than 1, default value is infinity)
-        or floating-point precision (if smaller than 1, default value is 1e-7)
+        or floating-point precision (if smaller than 1, default value is 1e-9)
 
 Note that in CFN format, costs are given as decimal numbers (the same for giving an initial upper bound, an absolute optimality gap or VAC threshold values)
 whereas in WCSP format costs are non-negative integers only.
