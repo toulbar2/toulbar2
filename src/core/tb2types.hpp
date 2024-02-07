@@ -94,6 +94,7 @@ typedef vector<tValue> Tuple;
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
 const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
 const unsigned int NARYPROJECTION3MAXDOMSIZE = 30; // limit on the maximum initial domain size for nary to ternary projection
+const Long NARYPROJECTION3PRODDOMSIZE = 10000; // limit on the cartesian product of initial domain sizes for nary to ternary projection
 const Long NARYDECONNECTSIZE = 4; // maximum number of initial tuples in nary constraints in order to check for its removal (if it is always satisfied by current domains)
 
 const int MAX_BRANCH_SIZE = 1000000;
@@ -843,9 +844,10 @@ public:
     static bool opb; ///< \internal do not use
     static bool lp; ///< \internal do not use
 
-    static bool addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
+    static int addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
     static bool addAMOConstraints_; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
     static int knapsackDP; ///< \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
+    static bool VAClin; ///< \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
 
     static unsigned int divNbSol; ///< \brief upper bound on the number of diverse solutions (0: no diverse solution) (keep it small as it controls model size)
     static unsigned int divBound; ///< \brief minimum Hamming distance between diverse solutions (command line options -div and -a)

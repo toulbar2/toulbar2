@@ -538,12 +538,12 @@ public:
     void addAMOConstraints();
 #endif
 
-    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false)
+    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {})
     {
         istringstream file(arguments);
-        return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict);
+        return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict, wcnf);
     }
-    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict); // warning! scopeIndex may be modified internally.
+    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict, Tuple wcnf); // warning! scopeIndex may be modified internally.
 
     int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
 

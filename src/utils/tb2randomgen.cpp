@@ -113,9 +113,9 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         istringstream file(arguments);
         cout << "arguments" << arguments << endl;
         if (globalname == "knapsackc")
-            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, true);
+            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, true, {});
         else
-            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, false);
+            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, false, {});
     } else if (globalname == "knapsack") {
         string arguments;
         Long capacity = (myrandln() % (Long)150);
@@ -133,7 +133,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             }
         }
         istringstream file(arguments);
-        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false);
+        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false, {});
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {

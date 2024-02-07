@@ -62,6 +62,7 @@ Available options are (use symbol ":" after an option to remove a default option
    -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions (default option)
    -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is 10)
    -mst : maximum spanning tree DAC ordering
+   -amo=[integer] : automatically detect at-most-one constraints and add them to existing knapsack constraints (positive value) and/or directly in the cost function network up to a given absolute number (non-zero value except -1)
    -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws:)
    -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)
    -k=[integer] : soft local consistency level (NC with Strong NIC for global cost functions=0, (G)AC=1, D(G)AC=2, FD(G)AC=3, (weak) ED(G)AC=4) (default value is 4)
@@ -95,6 +96,7 @@ Available options are (use symbol ":" after an option to remove a default option
    -S : preprocessing only: performs singleton consistency (only in conjunction with option "-A")
    -V : VAC-based value ordering heuristic (default option)
    -vacint : VAC-integrality/Full-EAC variable ordering heuristic
+   -vaclin : VAC applied on linear constraints (must be combined with option -A)
    -vacthr : automatic threshold cost value selection for VAC during search
    -rasps=[integer] : VAC-based upper bound probing heuristic (0: disable, >0: max. nb. of backtracks) (default value is 0)
    -raspslds=[integer] : VAC-based upper bound probing heuristic using LDS instead of DFS (0: DFS, >0: max. discrepancy) (default value is 0)

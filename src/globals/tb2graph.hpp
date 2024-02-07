@@ -41,7 +41,7 @@ public:
     {
         for (vector<DLink<int>*>::iterator it = blockStore.begin();
              it != blockStore.end(); it++) {
-            delete[] *it;
+            delete[] * it;
         }
         blockStore.clear();
     }

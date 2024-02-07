@@ -28,6 +28,9 @@ private:
     Queue SeekSupport; /**< Non backtrackable list; collect all variables with a deletion caused by binary constraints during Pass1 */
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
+    int PBconflict;
+    vector<pair<int, Value>> PBkillersctr;
+    vector<int> KnapsackList;
 
     Cost prevItThreshold; /**< The previous cost threshold (theta) for the iterative threshold descent */
     Cost itThreshold; /**< The cost threshold (theta) for the iterative threshold descent */

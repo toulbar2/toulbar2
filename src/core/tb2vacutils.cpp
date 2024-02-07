@@ -34,6 +34,7 @@ void VACVariable::init()
         k_timeStamp.push_back(0);
         k.push_back(0);
         killer.push_back(0);
+        PBkillers.emplace_back();
     }
     linkVACQueue.content.var = this;
     linkVACQueue.content.timeStamp = -1;
@@ -62,7 +63,7 @@ void VACVariable::init()
 // void VACVariable::increase(Value newInf)
 //{
 //     if (ToulBar2::singletonConsistency)
-//         for (int i = inf; i <= newInf; i++)
+//         for (int i = inf; i < newInf; i++)
 //             vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
 //     EnumeratedVariable::increase(newInf);
 // }
@@ -70,7 +71,7 @@ void VACVariable::init()
 // void VACVariable::decrease(Value newSup)
 //{
 //     if (ToulBar2::singletonConsistency)
-//         for (int i = sup; i >= newSup; i--)
+//         for (int i = sup; i > newSup; i--)
 //             vac->singleton.insert(wcsp->getMaxDomainSize() * wcspIndex + i);
 //     EnumeratedVariable::decrease(newSup);
 // }

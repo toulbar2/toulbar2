@@ -235,9 +235,10 @@ Double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
 bool ToulBar2::lp;
 
-bool ToulBar2::addAMOConstraints;
+int ToulBar2::addAMOConstraints;
 bool ToulBar2::addAMOConstraints_;
 int ToulBar2::knapsackDP;
+bool ToulBar2::VAClin;
 
 char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
@@ -462,9 +463,10 @@ void tb2init()
     ToulBar2::opb = false;
     ToulBar2::lp = false;
 
-    ToulBar2::addAMOConstraints = false;
+    ToulBar2::addAMOConstraints = -1;
     ToulBar2::addAMOConstraints_ = false;
     ToulBar2::knapsackDP = -2;
+    ToulBar2::VAClin = false;
 
     ToulBar2::varOrder = NULL;
     ToulBar2::btdMode = 0;
@@ -727,6 +729,10 @@ void tb2checkOptions()
     }
     if (ToulBar2::vac && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning VAC assumes AC supports
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::addAMOConstraints != -1 && ToulBar2::VAClin) {
+        cerr << "Erro: VAC on linear constraints with additionnal At-Most-One (AMO) constraints is not implemented!" << endl;
         throw BadConfiguration();
     }
     if ((ToulBar2::pwc < 0 || ToulBar2::hve < 0) && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning PWC assumes AC supports
@@ -2414,13 +2420,13 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
     } else if (gcname == "clique") {
         postCliqueConstraint(scopeIndex, arity, file);
     } else if (gcname == "knapsackc") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, true, true);
+        postKnapsackConstraint(scopeIndex, arity, file, false, true, true, {});
     } else if (gcname == "knapsackp") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+        postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
     } else if (gcname == "knapsackv") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, 2, false);
+        postKnapsackConstraint(scopeIndex, arity, file, false, 2, false, {});
     } else if (gcname == "knapsack") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, false, false);
+        postKnapsackConstraint(scopeIndex, arity, file, false, false, false, {});
     } else if (gcname == "cfnconstraint") {
         int wcspind;
         file >> wcspind;
@@ -2497,7 +2503,7 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
 #ifdef CLIQUE2KNAPSACK
-    return postKnapsackConstraint(scopeIndex, arity, file, true, true, false);
+    return postKnapsackConstraint(scopeIndex, arity, file, true, true, false, {});
 #else
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
@@ -2531,10 +2537,11 @@ bool WCSP::isKnapsack()
     return false;
 }
 
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict)
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict, Tuple wcnf)
 {
     assert(ToulBar2::bilevel <= 1);
     // Eliminate variable with weight 0
+    vector<int> Weightzero, CorrAMO, VirtualVar;
     Long readw;
     Value readv1;
     Long capacity;
@@ -2543,268 +2550,294 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     unsigned int size;
     int readnbval;
     Long minweight;
-    //    vector<tValue> clausetuple(arity, 0);
-    //    bool isclause = 0;
-    vector<EnumeratedVariable*> scopeVars;
     int ar = arity;
-    if (!isclique) {
-        file >> capacity;
-    } else {
-        capacity = -1;
-        file >> skip;
-    }
-    vector<int> tobedel;
-    vector<int> VarIdx;
-    map<int, int> InvVarIdx;
-    vector<int> RealScopeIdx; // Remove redundant var from scopeIndex
-    for (int i = 0; i < arity; ++i) {
-        auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
-        if (it == scopeVars.end()) {
-            scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
-            VarIdx.push_back(scopeVars.size() - 1);
-            InvVarIdx[scopeIndex[i]] = scopeVars.size() - 1;
-            RealScopeIdx.push_back(scopeIndex[i]);
-        } else {
-            ar -= 1;
-            VarIdx.push_back(distance(scopeVars.begin(), it));
-        }
-    }
-    vector<int> CorrAMO(ar), VirtualVar(ar);
+    vector<EnumeratedVariable*> scopeVars;
+    vector<vector<pair<int, int>>> AMO;
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
-    int CurrentVarIdx;
-    for (int i = 0; i < ((kp > 1) ? 1 : arity); ++i) {
-        CurrentVarIdx = VarIdx[i];
-        if (!kp) {
-            file >> readw;
-            if (readw != 0) {
-                if (scopeVars[CurrentVarIdx]->canbe(1)) {
-                    auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), 1);
-                    if (it == VarVal[CurrentVarIdx].end()) {
-                        weights[CurrentVarIdx].push_back(readw);
-                        VarVal[CurrentVarIdx].push_back(1);
-                    } else
-                        weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
-                }
-            }
+    if (wcnf.empty()) {
+        if (!isclique) {
+            file >> capacity;
         } else {
-            file >> readnbval;
-            for (int j = 0; j < readnbval; ++j) {
-                if (kp > 1) {
-                    file >> CurrentVarIdx;
-                    assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
-                    CurrentVarIdx = InvVarIdx[CurrentVarIdx];
+            capacity = -1;
+            file >> skip;
+        }
+        vector<int> tobedel;
+        vector<int> VarIdx;
+        map<int, int> InvVarIdx;
+        for (int i = 0; i < arity; ++i) {
+            auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
+            if (it == scopeVars.end()) {
+                assert((int)vars.size() > scopeIndex[i]);
+                scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
+                VarIdx.push_back(scopeVars.size() - 1);
+                InvVarIdx[scopeIndex[i]] = scopeVars.size() - 1;
+            } else {
+                ar -= 1;
+                VarIdx.push_back(distance(scopeVars.begin(), it));
+            }
+        }
+        int CurrentVarIdx;
+        // for (int i = 0; i < ((kp>1)?1:arity); ++i) {
+        for (int i = 0; i < arity; ++i) {
+            CurrentVarIdx = VarIdx[i];
+            if (!kp) {
+                file >> readw;
+                if (readw != 0) {
+                    if (scopeVars[CurrentVarIdx]->canbe(1)) {
+                        auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), 1);
+                        if (it == VarVal[CurrentVarIdx].end()) {
+                            weights[CurrentVarIdx].push_back(readw);
+                            VarVal[CurrentVarIdx].push_back(1);
+                        } else
+                            weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
+                    }
                 }
-                file >> readv1;
-                if (scopeVars[CurrentVarIdx]->canbe(readv1)) {
-                    if (!isclique) {
-                        file >> readw;
-                        if (readw != 0) {
-                            auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), readv1);
-                            if (it == VarVal[CurrentVarIdx].end()) {
-                                VarVal[CurrentVarIdx].push_back(readv1);
-                                weights[CurrentVarIdx].push_back(readw);
-                            } else
-                                weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
+            } else {
+                file >> readnbval;
+                for (int j = 0; j < readnbval; ++j) {
+                    if (kp > 1) {
+                        file >> CurrentVarIdx;
+                        assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
+                        CurrentVarIdx = InvVarIdx[CurrentVarIdx];
+                    }
+                    file >> readv1;
+                    if (scopeVars[CurrentVarIdx]->canbe(readv1)) {
+                        if (!isclique) {
+                            file >> readw;
+                            if (readw != 0) {
+                                auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), readv1);
+                                if (it == VarVal[CurrentVarIdx].end()) {
+                                    VarVal[CurrentVarIdx].push_back(readv1);
+                                    weights[CurrentVarIdx].push_back(readw);
+                                } else
+                                    weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
+                            }
+                        } else {
+                            VarVal[CurrentVarIdx].push_back(readv1);
+                            weights[CurrentVarIdx].push_back(-1);
                         }
                     } else {
-                        VarVal[CurrentVarIdx].push_back(readv1);
-                        weights[CurrentVarIdx].push_back(-1);
-                    }
-                } else {
-                    if (!isclique) {
-                        file >> skip;
+                        if (!isclique) {
+                            file >> skip;
+                        }
                     }
                 }
             }
         }
-    }
-    for (int i = 0; i < ar; ++i) {
-        if (!weights[i].empty()) {
-            CurrentVarIdx = VarIdx[i];
-            minweight = *min_element(weights[i].begin(), weights[i].end());
-            size = scopeVars[i]->getDomainSize();
-            if (size != VarVal[i].size()) {
-                weights[i].push_back(0);
-                auto* VV = new Value[size];
-                scopeVars[i]->getDomain(VV);
-                for (unsigned int j = 0; j < size; j++) {
-                    if (find(VarVal[i].begin(), VarVal[i].end(), VV[j]) == VarVal[i].end())
-                        NotVarVal[i].push_back(VV[j]);
-                }
-                VarVal[i].push_back(NotVarVal[i][0]);
-                if (minweight < 0) {
+        assert((int)weights.size() == ar);
+        assert((int)scopeVars.size() == ar);
+        assert((int)VarVal.size() == ar);
+        for (int i = 0; i < ar; ++i) {
+            if (!weights[i].empty()) {
+                minweight = *min_element(weights[i].begin(), weights[i].end());
+                size = scopeVars[i]->getDomainSize();
+                if (size != VarVal[i].size()) {
+                    weights[i].push_back(0);
+                    auto* VV = new Value[size];
+                    scopeVars[i]->getDomain(VV);
+                    for (unsigned int j = 0; j < size; j++) {
+                        if (find(VarVal[i].begin(), VarVal[i].end(), VV[j]) == VarVal[i].end())
+                            NotVarVal[i].push_back(VV[j]);
+                    }
+                    VarVal[i].push_back(NotVarVal[i][0]);
+                    if (minweight < 0) {
+                        for (unsigned int j = 0; j < weights[i].size(); j++)
+                            weights[i][j] -= minweight;
+                        capacity -= minweight;
+                    }
+                    delete[] VV;
+                } else {
                     for (unsigned int j = 0; j < weights[i].size(); j++)
                         weights[i][j] -= minweight;
                     capacity -= minweight;
                 }
-                delete[] VV;
-            } else {
-                for (unsigned int j = 0; j < weights[i].size(); j++)
-                    weights[i][j] -= minweight;
-                capacity -= minweight;
             }
-            if (weights[i].size() == 1) {
+            if (weights[i].size() > 1) {
+                CorrAMO.push_back(0);
+                VirtualVar.push_back(0);
+            } else {
                 tobedel.push_back(i);
             }
-        } else
-            tobedel.push_back(i);
-    }
-    sort(tobedel.begin(), tobedel.end(), greater<int>());
-    for (unsigned int i = 0; i < tobedel.size(); ++i) {
-        scopeVars.erase(scopeVars.begin() + tobedel[i]);
-        RealScopeIdx[tobedel[i]] = -1;
-        weights.erase(weights.begin() + tobedel[i]);
-        VarVal.erase(VarVal.begin() + tobedel[i]);
-        NotVarVal.erase(NotVarVal.begin() + tobedel[i]);
-        CorrAMO.pop_back();
-        VirtualVar.pop_back();
-        ar--;
-    }
-    assert(ar >= 0);
-    if (ar == 0) {
-        return -INT_MAX;
-    }
-    if (capacity > 0) {
-        for (unsigned int i = 0; i < weights.size(); ++i) {
-            for (unsigned int j = 0; j < weights[i].size(); ++j) {
-                if (weights[i][j] > capacity) {
-                    weights[i][j] = capacity;
+        }
+        sort(tobedel.begin(), tobedel.end(), greater<int>());
+        for (unsigned int i = 0; i < tobedel.size(); ++i) {
+            scopeVars.erase(scopeVars.begin() + tobedel[i]);
+            VarVal.erase(VarVal.begin() + tobedel[i]);
+            weights.erase(weights.begin() + tobedel[i]);
+            NotVarVal.erase(NotVarVal.begin() + tobedel[i]);
+            scopeIndex[tobedel[i]] = -1;
+            ar--;
+        }
+        assert(ar >= 0);
+        if (ar == 0) {
+            return -INT_MAX;
+        }
+        if (capacity > 0) {
+            for (unsigned int i = 0; i < weights.size(); ++i) {
+                for (unsigned int j = 0; j < weights[i].size(); ++j) {
+                    if (weights[i][j] > capacity) {
+                        weights[i][j] = capacity;
+                    }
                 }
             }
         }
-    }
-    vector<vector<pair<int, int>>> AMO;
-    if (conflict) {
-        for (unsigned int i = 0; i < VarVal.size(); ++i) {
-            if (VarVal[i][0] == 1) {
-                reverse(VarVal[i].begin(), VarVal[i].end());
-                reverse(weights[i].begin(), weights[i].end());
-                if ((int)NotVarVal[i].size() > 0)
-                    NotVarVal[i][0] = 1;
-                else
-                    NotVarVal[i].push_back(1);
+        if (conflict) {
+            for (unsigned int i = 0; i < VarVal.size(); ++i) {
+                if (VarVal[i][0] == 1) {
+                    reverse(VarVal[i].begin(), VarVal[i].end());
+                    reverse(weights[i].begin(), weights[i].end());
+                    if ((int)NotVarVal[i].size() > 0)
+                        NotVarVal[i][0] = 1;
+                    else
+                        NotVarVal[i].push_back(1);
+                }
             }
-        }
-        Original_weights = weights;
-        vector<int> TempScopeIdx, ScopeIdx;
-        int nbAMO, readvar, k, k1, w;
-        bool ok;
-        vector<vector<pair<EnumeratedVariable*, int>>> VarAMO;
-        vector<pair<int, int>> TempAMO;
-        vector<pair<EnumeratedVariable*, int>> TempVarAMO;
-        file >> nbAMO;
-        vector<Value> TempVarVal, TempNotVarVal;
-        vector<Long> TempWeights;
-        for (int i = 0; i < nbAMO; ++i) {
-            file >> readnbval;
-            if (readnbval > 1) {
-                TempVarAMO.clear();
-                TempAMO.clear();
-                TempScopeIdx.clear();
-                TempVarVal.clear();
-                TempWeights.clear();
-                TempNotVarVal.clear();
-                for (int j = 0; j < readnbval; ++j) {
-                    file >> readvar;
-                    assert(getDomainSize(readvar) <= 2 && getInf(readvar) >= 0 && getSup(readvar) <= 1);
-                    file >> readv1;
+            Original_weights = weights;
+            vector<int> TempScopeIdx, ScopeIdx;
+            int nbAMO, readvar, k, k1, w;
+            bool ok;
+            vector<vector<pair<EnumeratedVariable*, int>>> VarAMO;
+            vector<pair<int, int>> TempAMO;
+            vector<pair<EnumeratedVariable*, int>> TempVarAMO;
+            file >> nbAMO;
+            for (int i = 0; i < nbAMO; ++i) {
+                file >> readnbval;
+                if (readnbval > 1) {
+                    TempVarAMO.clear();
+                    TempAMO.clear();
+                    TempScopeIdx.clear();
+                    for (int j = 0; j < readnbval; ++j) {
+                        file >> readvar;
+                        file >> readv1;
+                        ok = false;
+                        k = 0;
+                        k1 = 0;
+                        while (!ok && k < (int)scopeVars.size()) {
+                            if (readvar == scopeIndex[k]) {
+                                ok = true;
+                                TempVarAMO.push_back(pair(scopeVars[k1], readv1));
+                                TempScopeIdx.push_back(k1);
+                                ScopeIdx.push_back(k1);
+                                TempAMO.push_back(pair(k1, readv1));
+                            }
+                            k++;
+                            if (!ok && scopeIndex[k] != -1) {
+                                k1++;
+                            }
+                        }
+                    }
+                    if (TempAMO.size() > 1) {
+                        VarVal.push_back({});
+                        weights.push_back({});
+                        NotVarVal.push_back({});
+                        for (unsigned int j = 0; j <= TempScopeIdx.size(); ++j) {
+                            w = 0;
+                            VarVal.back().push_back(j);
+                            for (unsigned int l = 0; l < TempScopeIdx.size(); ++l) {
+                                if (l == j)
+                                    w += weights[TempScopeIdx[l]][TempVarAMO[l].second];
+                                else
+                                    w += weights[TempScopeIdx[l]][1 - TempVarAMO[l].second];
+                            }
+                            weights.back().push_back(w);
+                        }
+                        NotVarVal.back().push_back(VarVal.back().back());
+                        VarAMO.push_back(TempVarAMO);
+                        AMO.push_back(TempAMO);
+                        VirtualVar.push_back((int)AMO.size());
+                        for (unsigned int j = 0; j < TempScopeIdx.size(); ++j) {
+                            scopeVars.push_back(TempVarAMO[j].first);
+                            CorrAMO.push_back((int)AMO.size());
+                            Original_weights.push_back(weights[TempScopeIdx[j]]);
+                        }
+                    } else if (TempAMO.size() == 1)
+                        ScopeIdx.pop_back();
+                } else if (readnbval == 1) {
+                    file >> skip;
+                    file >> skip;
+                }
+            }
+            sort(ScopeIdx.begin(), ScopeIdx.end(), greater<int>());
+            for (unsigned int j = 0; j < ScopeIdx.size(); ++j) {
+                VarVal.erase(VarVal.begin() + ScopeIdx[j]);
+                weights.erase(weights.begin() + ScopeIdx[j]);
+                VirtualVar.erase(VirtualVar.begin() + ScopeIdx[j]);
+                scopeVars.erase(scopeVars.begin() + ScopeIdx[j]);
+                CorrAMO.erase(CorrAMO.begin() + ScopeIdx[j]);
+                NotVarVal.erase(NotVarVal.begin() + ScopeIdx[j]);
+                Original_weights.erase(Original_weights.begin() + ScopeIdx[j]);
+            }
+            for (unsigned int i = 0; i < AMO.size(); ++i) {
+                for (unsigned int j = 0; j < AMO[i].size(); ++j) {
                     ok = false;
                     k = 0;
-                    k1 = 0;
-                    while (!ok && k < (int)scopeVars.size()) {
-                        if (readvar == RealScopeIdx[k]) {
+                    while (!ok) {
+                        if (VarAMO[i][j].first == scopeVars[k]) {
+                            AMO[i][j].first = k;
                             ok = true;
-                            TempVarAMO.push_back(make_pair(scopeVars[k1], readv1));
-                            TempScopeIdx.push_back(k1);
-                            ScopeIdx.push_back(k1);
-                            TempAMO.push_back(make_pair(k1, readv1));
                         }
                         k++;
-                        if (!ok && RealScopeIdx[k] != -1) {
-                            k1++;
-                        }
                     }
                 }
-                if (TempAMO.size() > 1) {
-                    for (unsigned int j = 0; j <= TempScopeIdx.size(); ++j) {
-                        w = 0;
-                        TempVarVal.push_back(j);
-                        for (unsigned int l = 0; l < TempScopeIdx.size(); ++l) {
-                            if (l == j)
-                                w += weights[TempScopeIdx[l]][TempVarAMO[l].second];
-                            else
-                                w += weights[TempScopeIdx[l]][1 - TempVarAMO[l].second];
-                        }
-                        TempWeights.push_back(w);
-                    }
-                    TempNotVarVal.push_back(TempVarVal.back());
-                    weights.push_back(TempWeights);
-                    VarVal.push_back(TempVarVal);
-                    NotVarVal.push_back(TempNotVarVal);
-                    VarAMO.push_back(TempVarAMO);
-                    AMO.push_back(TempAMO);
-                    VirtualVar.push_back((int)AMO.size());
-                    for (unsigned int j = 0; j < TempScopeIdx.size(); ++j) {
-                        scopeVars.push_back(TempVarAMO[j].first);
-                        CorrAMO.push_back((int)AMO.size());
-                        Original_weights.push_back(weights[TempScopeIdx[j]]);
-                    }
-                } else if (TempAMO.size() == 1)
-                    ScopeIdx.pop_back();
-            } else if (readnbval == 1) {
-                file >> skip;
-                file >> skip;
             }
+            TempVarAMO.clear();
+            TempScopeIdx.clear();
+            VarAMO.clear();
+            ScopeIdx.clear();
+            TempScopeIdx.clear();
         }
-        sort(ScopeIdx.begin(), ScopeIdx.end(), greater<int>());
-        for (unsigned int j = 0; j < ScopeIdx.size(); ++j) {
-            VarVal.erase(VarVal.begin() + ScopeIdx[j]);
-            weights.erase(weights.begin() + ScopeIdx[j]);
-            VirtualVar.erase(VirtualVar.begin() + ScopeIdx[j]);
-            scopeVars.erase(scopeVars.begin() + ScopeIdx[j]);
-            CorrAMO.erase(CorrAMO.begin() + ScopeIdx[j]);
-            NotVarVal.erase(NotVarVal.begin() + ScopeIdx[j]);
-            Original_weights.erase(Original_weights.begin() + ScopeIdx[j]);
+        for (unsigned int i = 0; i < weights.size(); ++i) {
+            MaxWeight += *max_element(weights[i].begin(), weights[i].end());
         }
-        for (unsigned int i = 0; i < AMO.size(); ++i) {
-            for (unsigned int j = 0; j < AMO[i].size(); ++j) {
-                ok = false;
-                k = 0;
-                while (!ok) {
-                    if (VarAMO[i][j].first == scopeVars[k]) {
-                        AMO[i][j].first = k;
-                        ok = true;
-                    }
-                    k++;
-                }
-            }
+    } else {
+        assert((int)scopeVars.size() == ar);
+        for (int i = 0; i < ar; i++) {
+            scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+            weights.push_back({ 1, 0 });
+            MaxWeight = ar;
+            VarVal.push_back({ 1 - wcnf[i], wcnf[i] });
+            NotVarVal.push_back({ wcnf[i] });
+            CorrAMO.push_back(0);
+            VirtualVar.push_back(0);
         }
-        TempVarAMO.clear();
-        TempScopeIdx.clear();
-        VarAMO.clear();
-        ScopeIdx.clear();
-        TempScopeIdx.clear();
+        Original_weights = weights;
+        capacity = 1;
     }
-    for (unsigned int i = 0; i < weights.size(); ++i) {
-        MaxWeight += *max_element(weights[i].begin(), weights[i].end());
-    }
+
     AbstractNaryConstraint* cc = NULL;
-    // #ifdef UNITKNAPSACK2CLAUSE
-    //     if (isclause) {
-    //         assert(ar == (int)clausetuple.size());
-    //         if (ToulBar2::verbose >= 3)
-    //             cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
-    //         cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
-    //     } else {
-    // #endif
-    cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
-    // #ifdef UNITKNAPSACK2CLAUSE
-    //     }
-    // #endif
-    if (isDelayedNaryCtr)
+#ifdef UNITKNAPSACK2CLAUSE    
+    vector<tValue> clausetuple(ar, 0);
+    bool isclause = 0;
+    if (isclause) {
+        assert(ar == (int)clausetuple.size());
+        if (ToulBar2::verbose >= 3)
+            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
+        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
+    } else {
+#endif
+        assert((int)scopeVars.size() == ar);
+        assert(ar == (int)weights.size());
+        assert((int)VarVal.size() == ar);
+        assert((int)CorrAMO.size() == ar);
+        assert((int)NotVarVal.size() == ar);
+        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
+#ifdef UNITKNAPSACK2CLAUSE
+    }
+#endif
+    if (isDelayedNaryCtr) {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr;
+        if (!AMO.empty()) {
+            for (int i = 0; i < (int)AMO.size(); ++i) {
+                tctr = new TernaryConstraint(this);
+                elimTernConstrs.push_back(tctr);
+                bctr = new BinaryConstraint(this);
+                elimBinConstrs.push_back(bctr);
+            }
+        }
         delayedNaryCtr.push_back(cc->wcspIndex);
-    else {
+    } else {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
@@ -2814,6 +2847,14 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             else
                 bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
+        }
+        if (!AMO.empty()) {
+            for (int i = 0; i < (int)AMO.size(); ++i) {
+                tctr = new TernaryConstraint(this);
+                elimTernConstrs.push_back(tctr);
+                bctr = new BinaryConstraint(this);
+                elimBinConstrs.push_back(bctr);
+            }
         }
         cc->propagate();
     }
@@ -3060,7 +3101,7 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
                     }
                 }
                 istringstream file(params);
-                postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+                postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
             }
             return INT_MIN;
         } else {
