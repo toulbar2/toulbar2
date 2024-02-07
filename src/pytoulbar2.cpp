@@ -169,6 +169,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("addAMOConstraints", &ToulBar2::addAMOConstraints)
 #endif
         .def_readwrite_static("knapsackDP", &ToulBar2::knapsackDP)
+        .def_readwrite_static("VAClin", &ToulBar2::VAClin)
         .def_readwrite_static("divNbSol", &ToulBar2::divNbSol)
         .def_readwrite_static("divBound", &ToulBar2::divBound)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)

@@ -566,7 +566,7 @@ public:
                 return;
             }
 
-            if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE) && (!strongDuality || nonassigned == 0)) {
+            if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE) && (!strongDuality || nonassigned == 0)) {
                 deconnect();
                 projectNary();
             } else {

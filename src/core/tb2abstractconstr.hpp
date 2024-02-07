@@ -462,6 +462,7 @@ class AbstractNaryConstraint : public Constraint {
 protected:
     int arity_;
     unsigned int maxInitDomSize;
+    Long prodInitDomSize;
 
     EnumeratedVariable** scope;
     EnumeratedVariable** scope_dac; // scope sorted by increasing DAC order
@@ -477,6 +478,7 @@ public:
         : Constraint(wcsp)
         , arity_(arity_in)
         , maxInitDomSize(0)
+        , prodInitDomSize(0)
     {
 #if defined(NO_STORE_BINARY_COSTS) || defined(NO_STORE_TERNARY_COSTS)
         cerr << "Sorry, no " << arity_in << "-ary cost functions!" << endl;
@@ -497,12 +499,14 @@ public:
             links[i] = var->link(this, i);
             evalTuple.push_back(0);
         }
+        prodInitDomSize = getDomainInitSizeProduct();
         setDACScopeIndex();
     }
 
     AbstractNaryConstraint(WCSP* wcsp)
         : Constraint(wcsp)
         , maxInitDomSize(0)
+        , prodInitDomSize(0)
     {
     }
 

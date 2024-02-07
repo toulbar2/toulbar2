@@ -351,7 +351,8 @@ Preprocessing
 
 -amo
         automatically detects at-most-one constraints and adds them to existing
-        knapsack/linear/pseudo-boolean constraints.
+        knapsack constraints (positive value) and/or directly in the cost function network
+        up to a given absolute number (non-zero value except -1)
 
 -mst    find a maximum spanning tree ordering for DAC
 
@@ -590,6 +591,9 @@ Node processing \& bounding options
 
 -C=[float]
         multiplies all costs internally by this number when loading the problem (cannot be done with cfn format and probabilistic graphical models in uai/LG formats) (default value is 1)
+
+-vaclin
+        automatic threshold cost value selection for VAC during search (must be combined with option -A)
 
 -vacthr
         automatic threshold cost value selection for VAC during search (must be combined with option -A)

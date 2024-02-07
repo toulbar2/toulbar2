@@ -8,6 +8,7 @@
 #include "core/tb2binconstr.hpp"
 #include "core/tb2knapsack.hpp"
 #include "core/tb2naryconstr.hpp"
+#include "core/tb2vacutils.hpp"
 
 #ifdef BOOST
 #include <boost/config.hpp>
@@ -700,8 +701,9 @@ int cmpValueCost3(const void* p1, const void* p2)
     else
         return 0;
 }
+
 template <typename T>
-static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g)
+static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g, vector<int> CorrespVertices)
 {
     Graph G;
     for (unsigned int i = 0; i < scope.size(); ++i) {
@@ -710,13 +712,13 @@ static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g)
     }
     for (unsigned int i = 0; i < scope.size(); i++) {
         for (unsigned int j = i + 1; j < scope.size(); j++) {
-            if (edge(2 * scope[i], 2 * scope[j], g).second)
+            if (edge(CorrespVertices[scope[i]], CorrespVertices[scope[j]], g).second)
                 add_edge(2 * i, 2 * j, G);
-            if (edge(2 * scope[i] + 1, 2 * scope[j], g).second)
+            if (edge(CorrespVertices[scope[i]] + 1, CorrespVertices[scope[j]], g).second)
                 add_edge(2 * i + 1, 2 * j, G);
-            if (edge(2 * scope[i], 2 * scope[j] + 1, g).second)
+            if (edge(CorrespVertices[scope[i]], CorrespVertices[scope[j]] + 1, g).second)
                 add_edge(2 * i, 2 * j + 1, G);
-            if (edge(2 * scope[i] + 1, 2 * scope[j] + 1, g).second)
+            if (edge(CorrespVertices[scope[i]] + 1, CorrespVertices[scope[j]] + 1, g).second)
                 add_edge(2 * i + 1, 2 * j + 1, G);
         }
     }
@@ -726,43 +728,52 @@ static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g)
     for (unsigned int i = 0; i < scope.size(); ++i) {
         order.push_back(i);
     }
-    if (G.m_vertices[2 * order[0]].m_out_edges.size() > G.m_vertices[2 * order[0] + 1].m_out_edges.size())
-        Temp.push_back(0);
+    // sort order by degree instead of taking the first variable
+    sort(order.begin(), order.end(),
+        [&](int x, int y) {
+            return (max(degree(2 * x, G), degree(2 * x + 1, G)) > max(degree(2 * y, G), degree(2 * y + 1, G)) || (max(degree(2 * x, G), degree(2 * x + 1, G)) == max(degree(2 * y, G), degree(2 * y + 1, G)) && x < y));
+        });
+    if (degree(2 * order[0], G) > degree(2 * order[0] + 1, G))
+        Tempclq.push_back({ 2 * order[0] });
     else
-        Temp.push_back(1);
-    Tempclq.push_back(Temp);
-    bool ok;
-    unsigned j, k, curr;
+        Tempclq.push_back({ 2 * order[0] + 1 });
     for (int i = 1; i < (int)order.size(); i++) {
-        ok = false;
-        j = 0;
-        curr = 2 * order[i] + 1;
-        if (G.m_vertices[2 * order[i]].m_out_edges.size() > G.m_vertices[2 * order[i] + 1].m_out_edges.size())
-            curr = 2 * order[order[i]];
-        while (!ok && j < Tempclq.size()) {
-            k = 0;
+        bool ok = false;
+        int j = 0;
+        int curr = 2 * order[i] + 1;
+        if (degree(2 * order[i], G) > degree(2 * order[i] + 1, G))
+            curr = 2 * order[i];
+        while (!ok && j < (int)Tempclq.size()) {
+            int k = 0;
             ok = true;
-            while (ok && k < Tempclq[j].size()) {
-                if (!edge(curr, Tempclq[j][k], G).second && !edge(Tempclq[j][k], curr, G).second)
+            while (ok && k < (int)Tempclq[j].size()) {
+                if (!edge(curr, Tempclq[j][k], G).second && !edge(Tempclq[j][k], curr, G).second) // undirected graph should always have both terms equal
                     ok = false;
                 k++;
             }
             j++;
         }
         if (ok) {
+            assert(j > 0);
             Tempclq[j - 1].push_back(curr);
-        } else {
-            Temp.clear();
-            Temp.push_back(curr);
-            Tempclq.push_back(Temp);
-        }
+            // update Tempclq to keep a sorted list of cliques of decreasing size
+            if (j - 1 > 0 && Tempclq[j - 1].size() > Tempclq[j - 2].size()) {
+                int jnew = j - 2;
+                while (jnew > 0 && Tempclq[j - 1].size() > Tempclq[jnew - 1].size()) {
+                    jnew--;
+                }
+                assert(jnew < j - 1);
+                swap(Tempclq[jnew], Tempclq[j - 1]);
+            }
+        } else
+            Tempclq.push_back({ curr });
     }
     vector<vector<pair<int, int>>> clq;
     vector<pair<int, int>> clq2;
     for (unsigned int i = 0; i < Tempclq.size(); ++i) {
         clq2.clear();
         for (unsigned int l = 0; l < Tempclq[i].size(); ++l) {
-            clq2.push_back(make_pair(scope[(int)floor(Tempclq[i][l] / 2.0 + 0.1)], Tempclq[i][l] % 2));
+            clq2.push_back(make_pair(scope[Tempclq[i][l] / 2], Tempclq[i][l] % 2)); // scope[(int)floor(Tempclq[i][l] / 2.0 + 0.1)]
         }
         if (clq2.size() > 1)
             clq.push_back(clq2);
@@ -773,89 +784,291 @@ static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g)
 void WCSP::addAMOConstraints()
 {
     if (ToulBar2::verbose >= 1)
-        cout << "Add AMO constraints to knapsack contraints." << endl;
+        cout << "Add AMO constraints to knapsack constraints." << endl;
     double startCpuTime = cpuTime();
     double startRealTime = realTime();
-
-    vector<int> Var;
     Graph G;
-    int count = 0;
-    if (ToulBar2::verbose >= 1)
-        cout << "Construct Graph of size " << vars.size() << endl;
+    vector<int> CorrespVertices{ 0 };
+    vector<unsigned int> DomainSizes;
+    vector<vector<Value>> Domains;
+    vector<map<Value, int>> DomainsInv;
+    vector<Cost> ucosts;
     for (int i = 0; i < (int)vars.size(); ++i) {
-        if (vars[i]->unassigned() && vars[i]->getDomainSize() == 2 && vars[i]->getInf() == 0 && vars[i]->getSup() == 1) {
-            Var.push_back(i);
-            assert(i == vars[i]->wcspIndex);
-        }
-        add_vertex(G);
-        add_vertex(G);
-    }
-    for (unsigned int varIndex = 0; varIndex < Var.size(); varIndex++) {
-        int size = getDomainSize(Var[varIndex]);
+        EnumeratedVariable* var = (EnumeratedVariable*)vars[i];
+        int size = getDomainSize(var->wcspIndex);
         ValueCost sorted[size];
-        getEnumDomainAndCost(Var[varIndex], sorted);
-        qsort(sorted, size, sizeof(ValueCost), cmpValueCost3);
-        for (int a = 0; a < size; a++) {
-            int storedepth = Store::getDepth();
-            try {
-                Store::store();
-                assign(Var[varIndex], sorted[a].value);
-            } catch (const Contradiction&) {
-            }
-            for (unsigned int i = 0; i < Var.size(); ++i) {
-                if (vars[Var[i]]->assigned() && i != varIndex) {
-                    add_edge(2 * Var[varIndex] + sorted[a].value, 2 * Var[i] + 1 - vars[Var[i]]->getValue(), G);
+        getEnumDomainAndCost(var->wcspIndex, sorted);
+        map<Value, int> DomainInv;
+        for (int a = 0; a < size; ++a) {
+            add_vertex(G);
+            ucosts.push_back(sorted[a].cost);
+            DomainInv[sorted[a].value] = a;
+        }
+        DomainSizes.push_back(size);
+        Domains.push_back(getEnumDomain(i));
+        DomainsInv.push_back(DomainInv);
+        CorrespVertices.push_back(CorrespVertices.back() + size);
+    }
+    CorrespVertices.pop_back();
+    if (ToulBar2::verbose >= 1)
+        cout << "Construct a conflict graph of size " << num_vertices(G) << endl;
+    int elimDegree_ = ToulBar2::elimDegree_;
+    ToulBar2::elimDegree_ = -1; // Warning! constructive disjunction is not compatible with variable elimination!!
+    for (unsigned int varIndex = 0; varIndex < vars.size(); varIndex++) {
+        EnumeratedVariable* var = (EnumeratedVariable*)vars[varIndex];
+        if (var->unassigned()) {
+            int size = getDomainSize(var->wcspIndex);
+            ValueCost sorted[size];
+            getEnumDomainAndCost(var->wcspIndex, sorted);
+            qsort(sorted, size, sizeof(ValueCost), cmpValueCost3);
+            set<pair<int, Value>> disjunctive;
+            bool first = true;
+            for (int a = 0; a < size; a++)
+                if (canbe(var->wcspIndex, sorted[a].value)) {
+                    bool pruned = false;
+                    int storedepth = Store::getDepth();
+                    try {
+                        Store::store();
+                        assign(var->wcspIndex, sorted[a].value);
+                        propagate();
+                        set<pair<int, Value>> removals;
+                        for (unsigned int i = 0; i < vars.size(); ++i) {
+                            EnumeratedVariable* vari = (EnumeratedVariable*)vars[i];
+                            if (i != varIndex && vari->getDomainSize() != DomainSizes[i]) {
+                                assert(DomainSizes[i] == Domains[i].size());
+                                for (unsigned int j = 0; j < DomainSizes[i]; ++j) {
+                                    if (vari->cannotbe(Domains[i][j])) {
+                                        add_edge(CorrespVertices[varIndex] + DomainsInv[varIndex][sorted[a].value], CorrespVertices[i] + j, G);
+                                        if (first || disjunctive.size() > 0)
+                                            removals.insert(make_pair(vari->wcspIndex, Domains[i][j]));
+                                    }
+                                }
+                            }
+                        }
+                        if (first) {
+                            first = false;
+                            disjunctive = removals;
+                        } else if (disjunctive.size() > 0) {
+                            set<pair<int, Value>> intersection;
+                            set_intersection(disjunctive.begin(), disjunctive.end(), removals.begin(), removals.end(), inserter(intersection, intersection.end()));
+                            disjunctive = intersection;
+                        }
+                    } catch (const Contradiction&) {
+                        whenContradiction();
+                        pruned = true;
+                    }
+                    Store::restore(storedepth);
+                    if (pruned) {
+                        assert(canbe(var->wcspIndex, sorted[a].value));
+                        remove(var->wcspIndex, sorted[a].value); // singleton consistency for free!
+                        propagate();
+                        if (ToulBar2::verbose >= 0) {
+                            cout << ".";
+                        }
+                    }
                 }
+            if (disjunctive.size() > 0) { // constructive disjunction for free!
+                for (auto elt : disjunctive) {
+                    if (canbe(elt.first, elt.second)) {
+                        remove(elt.first, elt.second);
+                        if (ToulBar2::verbose >= 0) {
+                            cout << "+";
+                        }
+                    }
+                }
+                propagate();
             }
-            Store::restore(storedepth);
         }
     }
-    if (ToulBar2::verbose >= 1)
-        cout << "Graph done." << endl;
-    count = 0;
-    vector<int> scope;
-    vector<int> scope2;
+    ToulBar2::elimDegree_ = elimDegree_;
+    for (unsigned int i = 0; i < vars.size(); ++i) {
+        EnumeratedVariable* vari = (EnumeratedVariable*)vars[i];
+        for (unsigned int j = 0; j < DomainSizes[i]; ++j) {
+            if (vari->cannotbe(Domains[i][j]) || vari->getDomainSize() != 2 || vari->toValue(0) != 0 || vari->toValue(vari->getDomainInitSize() - 1) != 1) {
+                clear_vertex(CorrespVertices[i] + j, G);
+            }
+        }
+    }
+    if (ToulBar2::verbose >= 1) {
+        if (ToulBar2::verbose >= 4) {
+            for (auto iter = edges(G).first; iter != edges(G).second; ++iter) {
+                cout << "Edge: " << *iter << endl;
+            }
+        }
+        cout << "Graph done with " << num_edges(G) << " edges." << endl;
+    }
+    int count = 0;
     vector<vector<pair<int, int>>> clq;
     int MaxAMO = 0;
-    int total = 0;
-    unsigned int nbconstrs = constrs.size();
-    for (unsigned int i = 0; i < nbconstrs; ++i) {
-        auto* k = dynamic_cast<KnapsackConstraint*>(constrs[i]);
-        if (!k)
-            continue;
-        else {
-            if (constrs[i]->arity() > 3 && constrs[i]->connected()) {
-                scope.clear();
-                scope2.clear();
-                clq.clear();
-                // scope=k->GetOrder();
-                for (int j = 0; j < constrs[i]->arity(); j++) {
-                    if (constrs[i]->getVar(j)->unassigned()) {
-                        scope2.push_back(constrs[i]->getVar(j)->wcspIndex);
-                    }
-                }
-                if (scope2.size() > 3) {
-                    clq = FindClique(scope2, G);
-                    if (clq.size() > 0) {
-                        for (unsigned int j = 0; j < clq.size(); ++j) {
-                            if ((int)clq[j].size() > MaxAMO)
-                                MaxAMO = clq[j].size();
-                            if ((int)clq[j].size() > 1)
-                                total += 1;
+    if (ToulBar2::addAMOConstraints >= 0) {
+        bool b = false;
+        int total = 0;
+        vector<int> scope2;
+        unsigned int nbconstrs = constrs.size();
+        for (unsigned int i = 0; i < nbconstrs; ++i) {
+            auto* k = dynamic_cast<KnapsackConstraint*>(constrs[i]);
+            if (!k)
+                continue;
+            else {
+                if (constrs[i]->arity() > 3 && constrs[i]->connected()) {
+                    scope2.clear();
+                    clq.clear();
+                    for (int j = 0; j < constrs[i]->arity(); j++) {
+                        if (constrs[i]->getVar(j)->unassigned() && constrs[i]->getVar(j)->getDomainSize() == 2) { // TODO: find cliques for non-Boolean domains
+                            scope2.push_back(constrs[i]->getVar(j)->wcspIndex);
                         }
-                        count++;
-                        k->addAMOConstraints(clq, vars, this);
+                    }
+                    if (scope2.size() > 3) {
+                        clq = FindClique(scope2, G, CorrespVertices);
+                        if (!clq.empty()) {
+                            b = true;
+                            for (unsigned int j = 0; j < clq.size(); ++j) {
+                                if ((int)clq[j].size() > MaxAMO)
+                                    MaxAMO = (int)clq[j].size();
+                                if ((int)clq[j].size() == (int)constrs[i]->arity())
+                                    b = false;
+                                if ((int)clq[j].size() > 1)
+                                    total += 1;
+                            }
+                            if (b) {
+                                count++;
+                                k->addAMOConstraints(clq, vars, this);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        if (ToulBar2::verbose >= 0) {
+            if (count > 0)
+                cout << count << " knapsack constraint" << ((count > 1) ? "s" : "") << " extended with " << total << " AMO constraint" << ((total > 1) ? "s" : "") << " of maximum arity " << MaxAMO;
+            else
+                cout << "No local AMO constraints added";
+            cout << " in " << ((ToulBar2::parallel) ? (realTime() - startRealTime) : (cpuTime() - startCpuTime)) << " seconds." << endl;
+        }
     }
-    if (ToulBar2::verbose >= 0) {
-        if (count > 0)
-            cout << count << " knapsack constraint" << ((count > 1) ? "s" : "") << " extended with " << total << " AMO constraint" << ((total > 1) ? "s" : "") << " of maximum arity " << MaxAMO;
-        else
-            cout << "No AMO constraint added";
-        cout << " in " << ((ToulBar2::parallel) ? (realTime() - startRealTime) : (cpuTime() - startCpuTime)) << " seconds." << endl;
+    int count2 = 0;
+    clq.clear();
+    if (ToulBar2::addAMOConstraints != 0) {
+        // see Katsirelos et al paper at CP 2017 for a better list of overlapping cliques
+        // TODO: try graph coloring heuristics like DSATUR on the complementary graph for a better clique cover
+        vector<int> Temp;
+        vector<vector<int>> Tempclq;
+        vector<int> order;
+        for (unsigned int i = 0; i < num_vertices(G); ++i) {
+            order.push_back(i);
+        }
+        // sort order by degree instead of taking the first variable
+        assert(ucosts.size() == num_vertices(G));
+        sort(order.begin(), order.end(),
+            [&](int x, int y) {
+                return (degree(x, G) > degree(y, G) || (degree(x, G) == degree(y, G) && ucosts[x] > ucosts[y]) || (degree(x, G) == degree(y, G) && ucosts[x] == ucosts[y] && x < y));
+            });
+        Tempclq.push_back({ order[0] });
+        for (int i = 1; i < (int)num_vertices(G); ++i) {
+            bool ok = false;
+            int j = 0;
+            int curr = order[i];
+            while (!ok && j < (int)Tempclq.size()) {
+                int k = 0;
+                ok = true;
+                while (ok && k < (int)Tempclq[j].size()) {
+                    if (!edge(curr, Tempclq[j][k], G).second && !edge(Tempclq[j][k], curr, G).second)
+                        ok = false;
+                    k++;
+                }
+                j++;
+            }
+            if (ok) {
+                assert(j > 0);
+                Tempclq[j - 1].push_back(curr);
+                // update Tempclq to keep a sorted list of cliques of decreasing size
+                if (j - 1 > 0 && Tempclq[j - 1].size() > Tempclq[j - 2].size()) {
+                    int jnew = j - 2;
+                    while (jnew > 0 && Tempclq[j - 1].size() > Tempclq[jnew - 1].size()) {
+                        jnew--;
+                    }
+                    assert(jnew < j - 1);
+                    swap(Tempclq[jnew], Tempclq[j - 1]);
+                }
+            } else {
+                Tempclq.push_back({ curr });
+            }
+        }
+        if ((int)Tempclq.size() > abs(ToulBar2::addAMOConstraints))
+            Tempclq.resize(abs(ToulBar2::addAMOConstraints));
+        for (unsigned int i = 0; i < Tempclq.size(); ++i) {
+            if (Tempclq[i].size() > 2) {
+                clq.push_back({});
+                for (unsigned int l = 0; l < Tempclq[i].size(); ++l) {
+                    int f = 0;
+                    while (CorrespVertices[f] < Tempclq[i][l] && f + 1 < (int)CorrespVertices.size() && Tempclq[i][l] >= CorrespVertices[f + 1]) {
+                        f++;
+                    }
+                    clq.back().push_back(make_pair(vars[f]->wcspIndex, Tempclq[i][l] - CorrespVertices[f]));
+                }
+                // sort scope of cliques by wcspIndex (lexicographic order)
+                sort(clq.back().begin(), clq.back().end(),
+                    [&](pair<int, int> x, pair<int, int> y) {
+                        return (x.first < y.first);
+                    });
+            }
+        }
+        AbstractNaryConstraint* cc = NULL;
+        vector<EnumeratedVariable*> scopeVars;
+        vector<vector<Long>> weights;
+        vector<vector<Value>> VarVal, NotVarVal;
+        vector<int> CorrAMO;
+        MaxAMO = 0;
+        for (int i = 0; i < (int)clq.size(); ++i) {
+            int arity_ = (int)clq[i].size();
+            if (arity_ > 2) {
+                count2++;
+                if (arity_ > MaxAMO)
+                    MaxAMO = arity_;
+                weights.resize(arity_, { 0, 1 });
+                CorrAMO.resize(arity_, 0);
+                VarVal.resize(arity_);
+                NotVarVal.resize(arity_);
+                scopeVars.resize(arity_);
+                for (int j = 0; j < arity_; j++) {
+                    scopeVars[j] = (EnumeratedVariable*)vars[clq[i][j].first];
+                    int size = scopeVars[j]->getDomainSize();
+                    Value* VV = new Value[size];
+                    scopeVars[j]->getDomain(VV);
+                    NotVarVal[j] = {};
+                    for (int l = 0; l < size; l++) {
+                        if (l != clq[i][j].second)
+                            NotVarVal[j].push_back(VV[l]);
+                    }
+                    VarVal[j] = { clq[i][j].second, NotVarVal[j].front() };
+                }
+                cc = new KnapsackConstraint(this, scopeVars.data(), arity_, arity_ - 1, weights, arity_, VarVal,
+                    NotVarVal, {}, weights, CorrAMO, CorrAMO, arity_);
+                BinaryConstraint* bctr;
+                TernaryConstraint* tctr = new TernaryConstraint(this);
+                elimTernConstrs.push_back(tctr);
+                for (int j = 0; j < 3; j++) {
+                    if (!ToulBar2::vac)
+                        bctr = new BinaryConstraint(this);
+                    else
+                        bctr = new VACBinaryConstraint(this);
+                    elimBinConstrs.push_back(bctr);
+                }
+                cc->propagate();
+            }
+        }
+        if (ToulBar2::verbose >= 0) {
+            if (count2 > 0)
+                cout << count2 << " AMO constraint" << ((count2 > 1) ? "s" : "") << " of maximum arity " << MaxAMO << " directly added to the problem";
+            else
+                cout << "No global AMO constraints added";
+            cout << " in " << ((ToulBar2::parallel) ? (realTime() - startRealTime) : (cpuTime() - startCpuTime)) << " seconds." << endl;
+        }
+    }
+    if (count > 0 || count2 > 0) {
+        propagate();
     }
 }
 

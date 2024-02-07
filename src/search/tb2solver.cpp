@@ -1775,7 +1775,7 @@ void Solver::singletonConsistency()
             int size = wcsp->getDomainSize(varIndex);
             ValueCost sorted[size];
             // ValueCost* sorted = new ValueCost [size];
-            wcsp->iniSingleton();
+            // wcsp->iniSingleton(); //Warning! constructive disjunction is not compatible with variable elimination
             wcsp->getEnumDomainAndCost(varIndex, sorted);
             qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
             for (int a = 0; a < size; a++) {
@@ -1791,7 +1791,7 @@ void Solver::singletonConsistency()
                     done = false;
                 }
                 Store::restore(storedepth);
-                wcsp->updateSingleton();
+                // wcsp->updateSingleton();
                 // cout << "(" << varIndex << "," << a <<  ")" << endl;
                 if (deadend) {
                     wcsp->remove(varIndex, sorted[a].value);
@@ -1803,7 +1803,7 @@ void Solver::singletonConsistency()
                     // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
                 }
             }
-            wcsp->removeSingleton();
+            // wcsp->removeSingleton();
             // delete [] sorted;
         }
     }
@@ -2728,6 +2728,10 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::vac && ToulBar2::VAClin && wcsp->getMaxDomainSize() > 2) {
+        cerr << "Error: VAClin not implemented with non Boolean variables (remove -vaclin option)." << endl;
+        throw BadConfiguration();
+    }
 
     if (ToulBar2::searchMethod != DFBB) {
         if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
@@ -2812,6 +2816,9 @@ void Solver::beginSolve(Cost ub)
 
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
+
+    //    if (ToulBar2::addAMOConstraints != -1)
+    //        ToulBar2::addAMOConstraints_ = true; // only bound propagation for knapsack constraints before adding them AMO constraints
 
     if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted csp constraints
         ToulBar2::LcLevel = LC_AC;
@@ -2926,6 +2933,14 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             cout << "PILS solving time: " << cpuTime() - pilsStartTime << " seconds." << endl;
     }
     ToulBar2::lds = lds;
+
+#ifdef BOOST
+    if (ToulBar2::addAMOConstraints != -1) {
+        ToulBar2::addAMOConstraints_ = true;
+        wcsp->addAMOConstraints();
+        ToulBar2::addAMOConstraints_ = false;
+    }
+#endif
 
     if (ToulBar2::singletonConsistency) {
         singletonConsistency();

@@ -247,6 +247,8 @@ enum {
 
     OPT_VACINT,
     NO_OPT_VACINT,
+    OPT_VACLIN,
+    NO_OPT_VACLIN,
     OPT_VACthreshold,
     NO_OPT_VACthreshold,
     OPT_RASPS,
@@ -498,6 +500,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
     { OPT_costMultiplier, (char*)"-C", SO_REQ_SEP },
 
+    { OPT_VACLIN, (char*)"-vaclin", SO_NONE },
+    { NO_OPT_VACLIN, (char*)"-vaclin:", SO_NONE },
     { OPT_VACINT, (char*)"-vacint", SO_OPT },
     { OPT_VACINT, (char*)"-strictAC", SO_OPT }, // deprecated
     { OPT_VACINT, (char*)"-sac", SO_OPT }, // deprecated
@@ -536,7 +540,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
     { OPT_singletonConsistency, (char*)"-S", SO_NONE },
-    { OPT_GenAMOforPB, (char*)"-amo", SO_NONE },
+    { OPT_GenAMOforPB, (char*)"-amo", SO_OPT },
     { OPT_DynPB, (char*)"-kpdp", SO_OPT },
     { OPT_preprocessTernary, (char*)"-t", SO_OPT },
     { NO_OPT_preprocessTernary, (char*)"-t:", SO_NONE },
@@ -922,8 +926,8 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::MSTDAC)
         cout << " (default option)";
     cout << endl;
-    cout << "   -amo : automatically detect at-most-one constraints and add them to existing knapsack/linear/pseudo-boolean constraints";
-    if (ToulBar2::addAMOConstraints)
+    cout << "   -amo=[integer] : automatically detect at-most-one constraints and add them to existing knapsack constraints (positive value) and/or directly in the cost function network up to a given absolute number (non-zero value except -1)";
+    if (ToulBar2::addAMOConstraints != -1)
         cout << " (default option)";
     cout << endl;
 #endif
@@ -991,6 +995,10 @@ void help_msg(char* toulbar2filename)
     cout << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
     if (ToulBar2::FullEAC)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -vaclin : VAC applied on linear constraints (in conjunction with option \"-A\")";
+    if (ToulBar2::VAClin)
         cout << " (default option)";
     cout << endl;
     cout << "   -vacthr : automatic threshold cost value selection for VAC during search";
@@ -1208,7 +1216,7 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
 
-    assert(cerr << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
+    assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 
     string VER; //  release version
     string CMD; //  command line option
@@ -1824,6 +1832,12 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::vac = 0;
             }
 
+            if (args.OptionId() == OPT_VACLIN) {
+                ToulBar2::VAClin = true;
+            } else if (args.OptionId() == NO_OPT_VACLIN) {
+                ToulBar2::VAClin = false;
+            }
+
             if (args.OptionId() == OPT_costThreshold) {
                 // Cost ct = string2Cost(args.OptionArg());
                 // if (ct > UNIT_COST)
@@ -1853,8 +1867,11 @@ int _tmain(int argc, TCHAR* argv[])
 
 #ifdef BOOST
             if (args.OptionId() == OPT_GenAMOforPB) {
-                ToulBar2::addAMOConstraints = true;
-                ToulBar2::addAMOConstraints_ = true;
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::addAMOConstraints = atoi(args.OptionArg());
+                } else {
+                    ToulBar2::addAMOConstraints = 0;
+                }
             }
 #endif
 

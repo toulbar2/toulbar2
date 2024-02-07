@@ -7,7 +7,7 @@
 
 #include "tb2enumvar.hpp"
 #include "tb2binconstr.hpp"
-// #include "tb2ternaryconstr.hpp"
+//#include "tb2ternaryconstr.hpp"
 #include "tb2vac.hpp"
 
 class VACVariable : public EnumeratedVariable {
@@ -20,7 +20,7 @@ private:
     vector<Long> k_timeStamp; /**< timestamp for the counter k (one per value) */
     vector<int> k; /**< Number of cost requests per value for all cost functions */
     vector<int> killer; /**< The killer of each value : the other variable index (binary case)*/
-
+    vector<vector<pair<int, Value>>> PBkillers;
     int maxk; /**< The Max number of cost requests seen on this variable, used for stats */
     Long maxk_timeStamp; /**< timestamp for maxk */
 
@@ -104,6 +104,8 @@ public:
 
     int getKiller(Value v) { return killer[toIndex(v)]; }
     void setKiller(Value v, int i) { killer[toIndex(v)] = i; }
+    vector<pair<int, Value>> getPBkillers(Value v) { return PBkillers[toIndex(v)]; }
+    void setPBkillers(Value v, vector<pair<int, Value>> i) { PBkillers[toIndex(v)] = i; }
 
     Cost getVACCost(Value v)
     {
