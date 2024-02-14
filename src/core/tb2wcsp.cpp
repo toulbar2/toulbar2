@@ -2578,8 +2578,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             }
         }
         int CurrentVarIdx;
-        // for (int i = 0; i < ((kp>1)?1:arity); ++i) {
-        for (int i = 0; i < arity; ++i) {
+        for (int i = 0; i < ((kp>1)?1:arity); ++i) {
             CurrentVarIdx = VarIdx[i];
             if (!kp) {
                 file >> readw;
