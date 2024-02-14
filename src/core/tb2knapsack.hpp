@@ -58,7 +58,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<bool> VACExtToLast;
     vector<int> VACkLastValue; // Store the number of quantum requestes by the values in NotVarVal
     int VACwaslastValue; // Is set to the idx of the last variable, if the last iteration of VACpass2 was on a values in NotVarval.
-    Constraint* fromElim1;
+
     void projectLB(Cost c)
     {
         if (c > 0) {
@@ -305,7 +305,10 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
-        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in, vector<vector<pair<int, int>>> AMO_in, vector<vector<Long>> Original_weigths_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in, int nonassinged_in, const vector<vector<StoreCost>> InitDel = vector<vector<StoreCost>>(), const StoreCost lb_in = MIN_COST, const StoreCost assigneddelta_in = MIN_COST, const Long Original_capacity_in = 0, Constraint* fromElim1_in = NULL)
+        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in,
+        vector<vector<pair<int, int>>> AMO_in, vector<vector<Long>> Original_weigths_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
+        int nonassinged_in, const vector<vector<StoreCost>> InitDel = vector<vector<StoreCost>>(), const StoreCost lb_in = MIN_COST,
+        const StoreCost assigneddelta_in = MIN_COST, const Long Original_capacity_in = 0, Constraint* fromElim1_in = NULL)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , carity(arity_in)
         , Original_capacity(capacity_in)
@@ -323,8 +326,8 @@ public:
         , VirtualVar(std::move(VirtualVar_in))
         , CorrAMO(std::move(CorrAMO_in))
         , AlwaysSatisfied(0)
-        , fromElim1(NULL)
     {
+        elimFrom(fromElim1_in);
         if (!weights.empty()) {
             if (!InitDel.empty())
                 deltaCosts = InitDel;
@@ -388,7 +391,6 @@ public:
                     nbVirtualVar.emplace_back((int)AMO[i].size());
                 }
             }
-            fromElim1 = fromElim1_in;
             get_current_scope();
 #ifndef NDEBUG
             Long Sumw = 0;
@@ -428,6 +430,40 @@ public:
         assert(varIndex >= 0);
         assert(varIndex < arity_);
         return conflictWeights[varIndex] + Constraint::getConflictWeight();
+    }
+
+    //-----------------------------------------------------------------
+    void getWeights(std::vector<std::vector<std::pair<unsigned int, Double>>>& pweights)
+    {
+
+        for (int i = 0; i < arity_; i++) {
+            pweights.push_back(std::vector<std::pair<unsigned int, Double>>());
+
+            if (NotVarVal[i].empty()) {
+                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
+                    pweights.back().push_back(new_pair);
+                }
+            } else {
+                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j] - weights[i].back());
+                    pweights.back().push_back(new_pair);
+                }
+            }
+        }
+    }
+
+    //-----------------------------------------------------------------
+    Double getCapacity()
+    {
+
+        Long wnot = 0;
+        for (int i = 0; i < arity_; i++) {
+            if (!NotVarVal[i].empty())
+                wnot += weights[i].back();
+        }
+
+        return Original_capacity - wnot;
     }
 
     void InitVac()

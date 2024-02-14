@@ -7,8 +7,13 @@
 #define MULTI_CFN_HPP
 
 #include <string>
+#include <memory>
 
 #include "toulbar2lib.hpp"
+
+#ifdef ILOGCPLEX
+#include <ilcplex/ilocplex.h>
+#endif
 
 class MultiCFN; // forward delaration
 
@@ -55,10 +60,55 @@ public:
 class CostFunction {
 
 public:
+    enum Type { Tuple,
+        Linear };
+
+public:
     /*!
      * \brief constructor
      */
-    CostFunction(MultiCFN* multicfn);
+    CostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief print the cost function data
+     * \brief os the stream to print to
+     */
+    void print(std::ostream& os);
+
+    /*!
+     * \brief return the arity of the cost function
+     */
+    virtual unsigned int arity();
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param tuple the tuple
+     */
+    virtual Double getCost(std::vector<unsigned int>& tuple) = 0;
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType() = 0;
+
+public:
+    MultiCFN* multicfn;
+    std::string name;
+    unsigned int net_index; /* index of the network this cost function belongs to */
+    std::vector<unsigned int> scope; /* internal variable indexes */
+};
+
+/*!
+ * \class TupleCostFunction
+ * \brief store cost function data: name, scope, costs
+ */
+class TupleCostFunction : public CostFunction {
+
+public:
+    /*!
+     * \brief constructor
+     */
+    TupleCostFunction(MultiCFN* multicfn, unsigned int net_index);
 
     /*!
      * \brief print the cost function data
@@ -70,36 +120,104 @@ public:
      * \brief return the cost of a given tuple
      * \param tuple the tuple
      */
-    Double getCost(std::vector<unsigned int>& tuple);
+    virtual Double getCost(std::vector<unsigned int>& tuple);
 
     /*!
-     * \brief return the arity of the cost function
+     * \brief get the max and min cost of the cost function
+     * \param min_cost the minimum cost of the function returned by the method
+     * \param min_cost the maximum cost of the function returned by the method
      */
-    unsigned int arity();
+    void getMinMaxCost(double& min_cost, double& max_cost);
+
+    /*!
+     * \brief compute the total number of tuples
+     */
+    size_t compute_n_tuples();
+
+    /*!
+     * \brief check in the costs if the cost function is a hard constraint
+     */
+    bool detectIfHard();
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType()
+    {
+        return CostFunction::Type::Tuple;
+    }
 
 public:
-    MultiCFN* multicfn;
-
-    std::string name;
-    std::vector<unsigned int> scope; /* internal variable indexes */
-
     // cost table
     Double default_cost;
     std::vector<Double> costs;
     std::vector<std::vector<unsigned int>> tuples; // value indexes of the variables
+    size_t n_total_tuples; // total number of tuples (length of the domain cartesian product)
+    bool all_tuples; // true if all tuples are stored, false otherwise (default_cost)
+    bool hard; // true if all costs are either null or =infinity, the cost function is then used only as a constraint
+};
+
+/*!
+ * \class LinearCostFunction
+ * \brief store a linear cost function data: name, scope, coefficients
+ */
+class LinearCostFunction : public CostFunction {
+
+public:
+    /*!
+     * \brief constructor
+     */
+    LinearCostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief print the cost function data
+     * \brief os the stream to print to
+     */
+    void print(std::ostream& os);
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param tuple the tuple
+     */
+    virtual Double getCost(std::vector<unsigned int>& tuple);
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType()
+    {
+        return CostFunction::Type::Linear;
+    }
+
+public:
+    Double capacity;
+    std::vector<std::vector<std::pair<unsigned int, Double>>> weights; // for each variable of the scope, a list of values and their weight
 };
 
 } // namespace mcriteria
 
 /*!
  * \class MultiCFN
- * \brief store a combination of several cost function network
+ * \brief store a combination of several cost function networks.
+ * one new class: multiwcsp to create a wcsp as the linear combination of wcsp's given as input
+ * makeWeightedCSPSolver: possibility to give a wcsp as input, which will be used as the instance solved by the solver (works only with the base Solver class, otherwise, a new weightedCSP is created withinin the solver object)
+ * adding a function for the python API for weightedCSP to read an instance independently from the solver
+ * adding the multiwcsp object and methods in the python API
+ * modification of the python API in makeWeightedCSPSolver to take a weightedCSP as input
+ * modification of the python API to create a weightedCSP object without solvers
+ * modification of the python API to read an instance file directly from a weightedCSP object
  */
 class MultiCFN {
 
 public:
     // type representing a solution of a multicfn
     typedef std::map<std::string, std::string> Solution;
+
+// ILP encoding type: direct or tuple
+#ifdef ILOGCPLEX
+    enum ILP_encoding { ILP_Direct,
+        ILP_Tuple };
+#endif
 
 public:
     static constexpr Double accuracy = 1e-3;
@@ -163,6 +281,11 @@ public:
     unsigned int getDecimalPoint();
 
     /*!
+     * \brief get the wcsp's unit cost precision as double
+     */
+    Double getUnitCost();
+
+    /*!
      * \brief print the cfn
      * \brief os the stream to print to
      */
@@ -178,6 +301,30 @@ public:
      * \param wcsp the weighted csp to be filled
      */
     void makeWeightedCSP(WeightedCSP* wcsp);
+
+#ifdef ILOGCPLEX
+
+    /*!
+     * \brief export the multicfn to a cplex model data structure
+     * \param model the cplex model data structure
+     * \param objectives list of networks to combine in the optimized criterion
+     * \param constraints list of global constraints in the model: network index with two bounds, one bound may be infinity
+     * \param domain_vars the list of cplex variables corresponding the multicfn variables
+     */
+    void makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding, std::vector<size_t>& objectives, std::vector<std::pair<size_t, std::pair<Double, Double>>>& constraints, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+
+    /*!
+     * \brief extract the cplex solution
+     * \param cplex the cplex solver object
+     * \param domain_vars the cplex variables
+     * \param solution the MultiCFN solution
+     */
+    void getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& domain_vars, MultiCFN::Solution& solution);
+
+    // debug
+    Double computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+
+#endif
 
     /*!
      * \brief convert a tuple to a cost index, rightmost value indexed first
@@ -208,12 +355,25 @@ public:
      */
     std::vector<Double> computeSolutionValues(Solution& solution);
 
+    void outputNetSolutionCosts(size_t index, Solution& solution);
+
     /*!
      * \brief convert a solution returned by ToulBar2 to a dictionary with variable names and values as labels
      * \param solution the solution given bu ToulBar2
      * \return the solution as a dictionary
      */
     Solution convertToSolution(std::vector<Value>& solution);
+
+    /*!
+     * \brief activate the noise parameter to add uniform random noise to each cost in every cost function
+     * \param activation true activates the noise
+     */
+    void setNoiseActivation(bool activation);
+
+    /*!
+     * \brief set the min and max value for uniform noise perturbation of the costs
+     */
+    void setNoiseLevel(Double min_level, Double max_level);
 
 private: /* private methods */
     /*!
@@ -223,7 +383,17 @@ private: /* private methods */
     void exportToWCSP(WCSP* wcsp);
 
     /*!
-     * \brief axtrect the solution and the objective values from the created wcsp
+     * \brief export a tuple cost function to the wcsp
+     */
+    void exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double top, std::uniform_real_distribution<>& dis);
+
+    /*!
+     * \brief export a linear cost function to the wcsp
+     */
+    void exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind);
+
+    /*!
+     * \brief  extract the solution and the objective values from the created wcsp
      */
     void extractSolution();
 
@@ -233,6 +403,13 @@ private: /* private methods */
      * \param cstr the original tb2 cost function
      */
     void addCostFunction(WCSP* wcsp, Constraint* cstr);
+
+    /*!
+     * \brief add a cost function to the network
+     * \param wcsp the tb2 wcsp
+     * \param cstr the original tb2 cost function
+     */
+    void addTupleCostFunction(WCSP* wcsp, Constraint* cstr);
 
     /*!
      * \brief compute a TOP (infinity) value and a minimum cost for the internal representation of the cfn costs
@@ -247,13 +424,35 @@ private: /* private methods */
      */
     void checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var);
 
+    /*!
+     * \brief check if a linear constraint is verifed for a solution
+     * \param sol the solution to check
+     * \return true if the solution verifies the constraint
+     */
+    bool checkLinCostFuncConsistency(unsigned int func_ind, Solution& sol);
+
+#ifdef ILOGCPLEX
+
+    /*!
+     * \brief fill ilog expression with terms representing the objective function of a network
+     * \param expr the ilog expression to fill
+     * \param index the index of the network to add in the expression
+     * \param weighted true if the expression should be multiplied by the network weight, false otherwise
+     * \parma negShift all the costs of every cost function to obtain only positive costs, and add the corresponding constant
+     * \param domain_vars the ilog variables representing variable domains
+     * \param tuple_vars the ilog variables representing cost function tuples
+     */
+    void addCriterion(IloExpr& expr, size_t index, bool weighted, bool negShift, std::vector<IloNumVarArray>& domain_vars, std::vector<std::shared_ptr<IloNumVarArray>>& tuple_vars);
+
+#endif
+
 public: // public attributes
     // variables
     std::vector<mcriteria::Var> var; // variables
     std::map<std::string, int> var_index; // index of variables
 
     // cost functions
-    std::vector<mcriteria::CostFunction> cost_function; // list of the cost functions
+    std::vector<mcriteria::CostFunction*> cost_function; // list of the cost functions
     std::map<std::string, unsigned int> cost_function_index; // map between cfn names and indices
 
 private: // private attributes
@@ -267,6 +466,13 @@ private: // private attributes
     std::vector<Double> _original_costMultipliers; // list of cost multipliers of all the original wcsp
 
     unsigned int _tb2_decimalpoint; // precision of the wcsp
+    Double _tb2_unit_cost; // toulbar2 cost precision as Double
+
+    // parameter that add noise to the costs during exportation if activated
+    bool add_noise;
+    Double noise_min, noise_max;
+    std::random_device rd;
+    std::mt19937 gen;
 
     /* solution */
     WCSP* _wcsp; // pointer to the wcsp containing the combination of the input wcsps
