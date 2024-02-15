@@ -40,7 +40,7 @@ Double MultiCFN::computeCriteriaSol(IloCplex& cplex, size_t index, bool weighted
       if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
         continue;
       }
-      if(weighted && fabs(func.costs[tuple_ind]) <= MultiCFN::epsilon) {
+      if(weighted && fabs(func.costs[tuple_ind]) <= ToulBar2::epsilon) {
         continue;
       }
 
@@ -179,7 +179,7 @@ void MultiCFN::addCriterion(IloExpr& expr, size_t index, bool weighted, bool neg
       if(func.costs[tuple_ind] == std::numeric_limits<Double>::infinity()) {
         continue;
       }
-      // if(weighted && fabs(func.costs[tuple_ind]) <= MultiCFN::epsilon) {
+      // if(weighted && fabs(func.costs[tuple_ind]) <= ToulBar2::epsilon) {
       //   continue;
       // }
 
@@ -680,7 +680,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
     } else if(bounds.second == std::numeric_limits<Double>::infinity()) {
       model.add(IloNum(bounds.first) <= cstr_expr);
     } else {
-      if(fabs(bounds.second-bounds.first) < getUnitCost()-MultiCFN::epsilon) {
+      if(fabs(bounds.second-bounds.first) < getUnitCost()-ToulBar2::epsilon) {
         model.add(cstr_expr == IloNum(bounds.second));
       } else {
         model.add(IloNum(bounds.first) <= cstr_expr <= IloNum(bounds.second));
