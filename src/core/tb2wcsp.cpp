@@ -2552,7 +2552,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     Long minweight;
     int ar = arity;
     vector<EnumeratedVariable*> scopeVars;
-    vector<vector<pair<int, int>>> AMO;
+    vector<vector<pair<int, Value>>> AMO;
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
     if (wcnf.empty()) {
@@ -2697,7 +2697,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             int nbAMO, readvar, k, k1, w;
             bool ok;
             vector<vector<pair<EnumeratedVariable*, int>>> VarAMO;
-            vector<pair<int, int>> TempAMO;
+            vector<pair<int, Value>> TempAMO;
             vector<pair<EnumeratedVariable*, int>> TempVarAMO;
             file >> nbAMO;
             for (int i = 0; i < nbAMO; ++i) {
@@ -2737,7 +2737,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                                 if (l == j)
                                     w += weights[TempScopeIdx[l]][TempVarAMO[l].second];
                                 else
-                                    w += weights[TempScopeIdx[l]][1 - TempVarAMO[l].second];
+                                    w += weights[TempScopeIdx[l]][!TempVarAMO[l].second];
                             }
                             weights.back().push_back(w);
                         }
@@ -2795,7 +2795,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
             weights.push_back({ 1, 0 });
             MaxWeight = ar;
-            VarVal.push_back({ 1 - wcnf[i], wcnf[i] });
+            VarVal.push_back({ !wcnf[i], wcnf[i] });
             NotVarVal.push_back({ wcnf[i] });
             CorrAMO.push_back(0);
             VirtualVar.push_back(0);

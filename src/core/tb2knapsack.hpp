@@ -40,7 +40,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<vector<Double>> yAMO_i;
     vector<std::array<Double, 4>> Slopes;
     int nbRealVar;
-    vector<vector<pair<int, int>>> AMO; // Represent AMO constraints
+    vector<vector<pair<int, Value>>> AMO; // Represent AMO constraints
     vector<vector<Long>> Original_weigths;
     vector<int> VirtualVar, CorrAMO; // VirtualVar has size Number of AMO constraint + number of variable in no AMO constraint, it returns if a given index represents a virtual var (an AMO constraint) or a real one.
     // CorrAMO has size arity and gives on which AMO constraint the given variable belongs (0 if it is in no AMO constraint).
@@ -306,7 +306,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
         vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in,
-        vector<vector<pair<int, int>>> AMO_in, vector<vector<Long>> Original_weigths_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
+        vector<vector<pair<int, Value>>> AMO_in, vector<vector<Long>> Original_weigths_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
         int nonassinged_in, const vector<vector<StoreCost>> InitDel = vector<vector<StoreCost>>(), const StoreCost lb_in = MIN_COST,
         const StoreCost assigneddelta_in = MIN_COST, const Long Original_capacity_in = 0, Constraint* fromElim1_in = NULL)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
@@ -1597,7 +1597,7 @@ public:
             return sumdelta;
     }
 
-    void addAMOConstraints(vector<vector<pair<int, int>>> clq, vector<Variable*> vars, WCSP* wcsp)
+    void addAMOConstraints(vector<vector<pair<int, Value>>> clq, vector<Variable*> vars, WCSP* wcsp)
     {
         vector<Long> TempWeight;
         vector<int> SortedVec, Temp;
@@ -1664,8 +1664,8 @@ public:
         for (int i = 0; i < arity_ - nbvarinAMO; ++i) {
             VirtualVar.push_back(0);
             CorrAMO.push_back(0);
-            VarVal.push_back(vector<int>{ 0, 1 });
-            NotVarVal.push_back(vector<int>{ 1 });
+            VarVal.push_back(vector<Value>{ 0, 1 });
+            NotVarVal.push_back(vector<Value>{ 1 });
             weights.push_back(Original_weigths[i]);
             if (scopeVars[i]->unassigned())
                 MaxWeight += *max_element(weights[i].begin(), weights[i].end());
@@ -1796,7 +1796,7 @@ public:
                     if (scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first]->unassigned()) {
                         arityclq++;
                         scopeVars.push_back((EnumeratedVariable*)scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first]);
-                        VarValclq.push_back({ 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second });
+                        VarValclq.push_back({ !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second });
                         NotVarValclq.push_back({ AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second });
                         deltaclq.push_back({ deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second], deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second] });
                     } else {
@@ -1811,7 +1811,7 @@ public:
         } else {
             vector<int> VirtualVarclq;
             vector<vector<Long>> Originalweightsclq;
-            vector<vector<pair<int, int>>> AMOclq;
+            vector<vector<pair<int, Value>>> AMOclq;
             VarValclq.push_back({});
             weightsclq.push_back({});
             AMOclq.push_back({});
@@ -1833,7 +1833,7 @@ public:
             }
             weightsclq.back().push_back(0);
             VarValclq.back().push_back(arityclq);
-            NotVarValclq.push_back({ arityclq });
+            NotVarValclq.push_back({ (Value)arityclq });
             CorrAMOclq.resize(arityclq, 1);
             VirtualVarclq.push_back(1);
             return new KnapsackConstraint(wcsp, scopeVars.data(), arityclq, 1, weightsclq, 1, VarValclq, NotVarValclq,

@@ -703,7 +703,7 @@ int cmpValueCost3(const void* p1, const void* p2)
 }
 
 template <typename T>
-static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g, vector<int> CorrespVertices)
+static vector<vector<pair<int, Value>>> FindClique(vector<int> scope, T& g, vector<int> CorrespVertices)
 {
     Graph G;
     for (unsigned int i = 0; i < scope.size(); ++i) {
@@ -768,8 +768,8 @@ static vector<vector<pair<int, int>>> FindClique(vector<int> scope, T& g, vector
         } else
             Tempclq.push_back({ curr });
     }
-    vector<vector<pair<int, int>>> clq;
-    vector<pair<int, int>> clq2;
+    vector<vector<pair<int, Value>>> clq;
+    vector<pair<int, Value>> clq2;
     for (unsigned int i = 0; i < Tempclq.size(); ++i) {
         clq2.clear();
         for (unsigned int l = 0; l < Tempclq[i].size(); ++l) {
@@ -898,7 +898,7 @@ void WCSP::addAMOConstraints()
         cout << "Graph done with " << num_edges(G) << " edges." << endl;
     }
     int count = 0;
-    vector<vector<pair<int, int>>> clq;
+    vector<vector<pair<int, Value>>> clq;
     int MaxAMO = 0;
     if (ToulBar2::addAMOConstraints >= 0) {
         bool b = false;
@@ -1010,7 +1010,7 @@ void WCSP::addAMOConstraints()
                 }
                 // sort scope of cliques by wcspIndex (lexicographic order)
                 sort(clq.back().begin(), clq.back().end(),
-                    [&](pair<int, int> x, pair<int, int> y) {
+                    [&](pair<int, Value> x, pair<int, Value> y) {
                         return (x.first < y.first);
                     });
             }
