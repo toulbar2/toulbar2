@@ -57,7 +57,7 @@ public:
         if (isValueNames())
             return valueNames[index];
         else
-            return "v" + std::to_string(toValue((unsigned int) index));
+            return "v" + std::to_string(toValue((unsigned int)index));
     }
     unsigned int toIndex(const string& vname)
     {

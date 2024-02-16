@@ -105,7 +105,7 @@ void Variable::deconnect(DLink<ConstraintLink>* link, bool reuse)
             queueEliminate();
     }
     if (reuse) {
-//        assert(Store::getDepth() == 0);
+        //        assert(Store::getDepth() == 0);
         link->prev = NULL;
         link->next = NULL;
     }

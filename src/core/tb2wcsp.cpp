@@ -2578,7 +2578,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             }
         }
         int CurrentVarIdx;
-        for (int i = 0; i < ((kp>1)?1:arity); ++i) {
+        for (int i = 0; i < ((kp > 1) ? 1 : arity); ++i) {
             CurrentVarIdx = VarIdx[i];
             if (!kp) {
                 file >> readw;
@@ -2805,7 +2805,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     }
 
     AbstractNaryConstraint* cc = NULL;
-#ifdef UNITKNAPSACK2CLAUSE    
+#ifdef UNITKNAPSACK2CLAUSE
     vector<tValue> clausetuple(ar, 0);
     bool isclause = 0;
     if (isclause) {
