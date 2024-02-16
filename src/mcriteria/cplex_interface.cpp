@@ -8,7 +8,7 @@ using namespace std;
 //--------------------------------------------------------------------------------------------
 bool isNull(Double cost)
 {
-    return fabs(cost) <= 1e-4;
+    return fabs(cost) <= ToulBar2::epsilon;
 }
 
 //--------------------------------------------------------------------------------------------
@@ -693,7 +693,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& domain_vars, MultiCFN::Solution& solution)
 {
 
-    IloNum const tolerance = cplex.getParam(IloCplex::Param::MIP::Tolerances::Integrality);
+    //IloNum const tolerance = cplex.getParam(IloCplex::Param::MIP::Tolerances::Integrality);
 
     cout << std::setprecision(15);
 
@@ -710,7 +710,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
             for (size_t ind = 0; ind < static_cast<size_t>(domain_vars[var_ind].getSize()); ind++) {
                 // cout << cplex.getValue(domain_vars[var_ind][ind]) << ", ";
                 if (cplex.isExtracted(domain_vars[var_ind][ind])) {
-                    if (fabs(cplex.getValue(domain_vars[var_ind][ind]) - 1.) <= 1e-4) {
+                    if (fabs(cplex.getValue(domain_vars[var_ind][ind]) - 1.) <= ToulBar2::epsilon) {
                         val_ind = ind;
                         cpt++;
                     }
@@ -720,7 +720,7 @@ void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& do
         } else if (variable.nbValues() == 2) {
             // cout << cplex.getValue(domain_vars[var_ind][0]) << ", ";
             if (cplex.isExtracted(domain_vars[var_ind][0])) {
-                if (fabs(cplex.getValue(domain_vars[var_ind][0]) - 1.) <= 1e-4) {
+                if (fabs(cplex.getValue(domain_vars[var_ind][0]) - 1.) <= ToulBar2::epsilon) {
                     val_ind = 1;
                 }
             }

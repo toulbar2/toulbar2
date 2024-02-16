@@ -15,9 +15,8 @@ private:
      */
     Bicriteria();
 
-    // static constexpr Double delta = 1e-3; // constant for defining weights to compute the optimal points individually in the objectives
-
 public: /* types and enum */
+    static constexpr Double Delta = 1e-7; // constant for defining weights to compute the optimal points individually in the objectives (should be equal to 10**(-resolution))
     /*!
      * \brief type representing a point in the objective space
      */
@@ -95,7 +94,7 @@ public: /* static functions */
      * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
-    static void computeSupportedPoints(MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
+    static void computeSupportedPoints(MultiCFN* multicfn, unsigned int first_cfn_index, unsigned int second_cfn_index, pair<OptimDir, OptimDir> optim_dir, Double delta = Delta);
 
     /*!
      * \brief compute a list of supported points for a bi-objective cost function network when optimizing respectively the first and the second cfn in the multicfn object
@@ -103,7 +102,7 @@ public: /* static functions */
      * \param optim_dir the optimization direction of the two objectives: Optim_Max or Optim_Dir
      * \param delta constant for defining weights to compute the optimal points individually in the objectives
      */
-    static void computeSupportedPoints(MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, Double delta = 1e-3);
+    static void computeSupportedPoints(MultiCFN* multicfn, pair<OptimDir, OptimDir> optim_dir, Double delta = Delta);
 
     /*!
      * \brief compute additional (potentially non dominated) solutions via enumeration in a nondominated triangle

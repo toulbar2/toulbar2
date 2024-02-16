@@ -220,9 +220,6 @@ public:
 #endif
 
 public:
-    static constexpr Double accuracy = 1e-3;
-
-public:
     /*!
      * \brief default constructor
      */
