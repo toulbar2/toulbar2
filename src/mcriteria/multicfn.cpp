@@ -51,7 +51,7 @@ void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria:
     /* check consistencies between domain value names */
     unsigned int cpt_check = 0;
     for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
-        string value_name = tb2_var->getValueName(tb2_val_ind);
+        string value_name = tb2_var->getValueNameOrGenerate(tb2_val_ind);
         if (multicfn_var.str_to_index.find(value_name) != multicfn_var.str_to_index.end()) {
             cpt_check++;
         }
@@ -109,10 +109,6 @@ void MultiCFN::push_back(WCSP* wcsp, Double weight)
 
         // make sure the variable has value names
         // assert(tb2_var->isValueNames());
-        if (!tb2_var->isValueNames()) {
-            cerr << "error: the wcsp variables must have value names to be inserted in a multicfn!" << endl;
-            throw WrongFileFormat();
-        }
 
         string name = tb2_var->getName();
 
@@ -131,7 +127,7 @@ void MultiCFN::push_back(WCSP* wcsp, Double weight)
         // read the domain: tb2 indexes and local indexes here are the same, i.e. values are inserted in the same order
         this->var.back().domain_str.resize(tb2_var->getDomainInitSize());
         for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
-            this->var.back().domain_str[tb2_val_ind] = tb2_var->getValueName(tb2_val_ind);
+            this->var.back().domain_str[tb2_val_ind] = tb2_var->getValueNameOrGenerate(tb2_val_ind);
             this->var.back().str_to_index.insert(make_pair(this->var.back().domain_str[tb2_val_ind], tb2_val_ind));
         }
     }
@@ -218,7 +214,7 @@ void MultiCFN::push_back(WCSP* wcsp, Double weight)
         for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
 
             /* compute the value index for the variable recorded in the data structure */
-            unsigned int val_ind = var[var_ind].str_to_index[tb2_var->getValueName(tb2_val_ind)];
+            unsigned int val_ind = var[var_ind].str_to_index[tb2_var->getValueNameOrGenerate(tb2_val_ind)];
 
             costFunc->tuples[val_ind] = { val_ind };
 
@@ -291,7 +287,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(cstr_kp->getVar(i));
 
             for (unsigned int j = 0; j < cost_func_ptr->weights[i].size(); j++) {
-                string val_name = tb2_var->getValueName(cost_func_ptr->weights[i][j].first);
+                string val_name = tb2_var->getValueNameOrGenerate(cost_func_ptr->weights[i][j].first);
                 unsigned int mcfn_val_ind = var[cost_func_ptr->scope[i]].str_to_index[val_name];
                 cost_func_ptr->weights[i][j] = make_pair(mcfn_val_ind, cost_func_ptr->weights[i][j].second);
             }
@@ -363,8 +359,8 @@ void MultiCFN::addTupleCostFunction(WCSP* wcsp, Constraint* cstr)
                 vector<mcriteria::Var*> variables = { &var[cost_func.scope[0]], &var[cost_func.scope[1]] };
 
                 // convert original value indexes to own indexes
-                unsigned int val1_ind = variables[0]->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
-                unsigned int val2_ind = variables[1]->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
+                unsigned int val1_ind = variables[0]->str_to_index[tb2_var1->getValueNameOrGenerate(tb2_val1_ind)];
+                unsigned int val2_ind = variables[1]->str_to_index[tb2_var2->getValueNameOrGenerate(tb2_val2_ind)];
 
                 vector<unsigned int> tuple = { val1_ind, val2_ind };
 
@@ -404,9 +400,9 @@ void MultiCFN::addTupleCostFunction(WCSP* wcsp, Constraint* cstr)
             for (unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind++) {
                 for (unsigned int tb2_val3_ind = 0; tb2_val3_ind < tb2_var3->getDomainInitSize(); tb2_val3_ind++) {
 
-                    unsigned int val1_ind = var1->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
-                    unsigned int val2_ind = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
-                    unsigned int val3_ind = var3->str_to_index[tb2_var3->getValueName(tb2_val3_ind)];
+                    unsigned int val1_ind = var1->str_to_index[tb2_var1->getValueNameOrGenerate(tb2_val1_ind)];
+                    unsigned int val2_ind = var2->str_to_index[tb2_var2->getValueNameOrGenerate(tb2_val2_ind)];
+                    unsigned int val3_ind = var3->str_to_index[tb2_var3->getValueNameOrGenerate(tb2_val3_ind)];
 
                     vector<mcriteria::Var*> variables = { var1, var2, var3 };
                     vector<unsigned int> tuple = { val1_ind, val2_ind, val3_ind };
@@ -468,7 +464,7 @@ void MultiCFN::addTupleCostFunction(WCSP* wcsp, Constraint* cstr)
 
             vector<unsigned int> own_tuple;
             for (unsigned int var_ind = 0; var_ind < t.size(); var_ind++) {
-                string value_name = tb2_vars[var_ind]->getValueName(t[var_ind]);
+                string value_name = tb2_vars[var_ind]->getValueNameOrGenerate(t[var_ind]);
                 own_tuple.push_back(own_vars[var_ind]->str_to_index[value_name]);
             }
 
@@ -759,7 +755,7 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
         vector<Double> costs(tb2_var->getDomainInitSize());
 
         for (unsigned int tb2_val_ind = 0; tb2_val_ind < tb2_var->getDomainInitSize(); tb2_val_ind++) {
-            unsigned int own_val_ind = own_var->str_to_index[tb2_var->getValueName(tb2_val_ind)];
+            unsigned int own_val_ind = own_var->str_to_index[tb2_var->getValueNameOrGenerate(tb2_val_ind)];
 
             if (tcost_func->costs[own_val_ind] == numeric_limits<Double>::infinity()) {
                 costs[tb2_val_ind] = top;
@@ -797,8 +793,8 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
             for (unsigned int tb2_val2_ind = 0; tb2_val2_ind < tb2_var2->getDomainInitSize(); tb2_val2_ind++) {
 
                 vector<unsigned int> tuple(2);
-                tuple[0] = var1->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
-                tuple[1] = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
+                tuple[0] = var1->str_to_index[tb2_var1->getValueNameOrGenerate(tb2_val1_ind)];
+                tuple[1] = var2->str_to_index[tb2_var2->getValueNameOrGenerate(tb2_val2_ind)];
 
                 Double cost = tcost_func->costs[tupleToIndex({ var1, var2 }, tuple)];
 
@@ -845,9 +841,9 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
                 for (unsigned int tb2_val3_ind = 0; tb2_val3_ind < tb2_var3->getDomainInitSize(); tb2_val3_ind++) {
 
                     vector<unsigned int> tuple(3);
-                    tuple[0] = var1->str_to_index[tb2_var1->getValueName(tb2_val1_ind)];
-                    tuple[1] = var2->str_to_index[tb2_var2->getValueName(tb2_val2_ind)];
-                    tuple[2] = var3->str_to_index[tb2_var3->getValueName(tb2_val3_ind)];
+                    tuple[0] = var1->str_to_index[tb2_var1->getValueNameOrGenerate(tb2_val1_ind)];
+                    tuple[1] = var2->str_to_index[tb2_var2->getValueNameOrGenerate(tb2_val2_ind)];
+                    tuple[2] = var3->str_to_index[tb2_var3->getValueNameOrGenerate(tb2_val3_ind)];
 
                     Double cost = tcost_func->costs[tupleToIndex({ var1, var2, var3 }, tuple)];
 
@@ -1040,7 +1036,7 @@ void MultiCFN::extractSolution()
         string name = tb2_var->getName();
         if (name.rfind(HIDDEN_VAR_TAG, 0) == 0)
             continue; // avoid intermediate variables created during preprocessing
-        string value_name = tb2_var->getValueName(tb2_var->toIndex(sol[tb2_var_ind]));
+        string value_name = tb2_var->getValueNameOrGenerate(tb2_var->toIndex(sol[tb2_var_ind]));
 
         auto& comb_var = var[var_index[name]];
 
@@ -1172,7 +1168,7 @@ MultiCFN::Solution MultiCFN::convertToSolution(std::vector<Value>& solution)
 
     for (unsigned int var_ind = 0; var_ind < solution.size(); var_ind++) {
         auto var = dynamic_cast<EnumeratedVariable*>(_wcsp->getVar(var_ind));
-        string val_name = var->getValueName(var->toIndex(solution[var_ind]));
+        string val_name = var->getValueNameOrGenerate(var->toIndex(solution[var_ind]));
         res.insert(std::make_pair(var->getName(), val_name));
     }
 
