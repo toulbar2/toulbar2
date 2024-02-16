@@ -414,8 +414,14 @@ private:
         while (token[current_token_buffer]
                    .buffer[token[current_token_buffer].current]
             != '\0') {
-            if (is_separator(token[current_token_buffer]
-                                 .buffer[token[current_token_buffer].current]))
+            if ((!starts_with_number ||
+                 (token[current_token_buffer].buffer[token[current_token_buffer].current - 1] != 'e'
+                  &&
+                  token[current_token_buffer].buffer[token[current_token_buffer].current - 1] != 'E'
+                 )
+                )
+                &&
+                is_separator(token[current_token_buffer].buffer[token[current_token_buffer].current]))
                 break;
 
             if (starts_with_number && !is_number(token[current_token_buffer].buffer[token[current_token_buffer].current]))
@@ -423,6 +429,9 @@ private:
 
             ++token[current_token_buffer].current;
         }
+
+        //cout << std::string_view(&token[current_token_buffer].buffer[start],
+        //    token[current_token_buffer].current - start) << endl;
 
         return std::string_view(&token[current_token_buffer].buffer[start],
             token[current_token_buffer].current - start);
@@ -552,9 +561,23 @@ std::optional<Double> read_real(const std::string_view buf) noexcept
     std::copy_n(buf.data(), buf.size(), std::begin(buffer));
     buffer[buf.size()] = '\0';
 
+    auto posexp = buf.find("e-");
+    if (posexp == std::string_view::npos) {
+        posexp = buf.find("E-");
+    }
     auto pos = buf.find('.');
     if (pos != std::string_view::npos) {
-        int decimal = buf.substr(buf.find('.') + 1).size();
+        int decimal = buf.substr(buf.find('.') + 1, (posexp == std::string_view::npos) ? posexp : (posexp - pos - 1)).size();
+        if (posexp != std::string_view::npos) {
+            decimal += atoi(buffer + posexp + 2);
+        }
+        //cout << "decimal:" << decimal << endl;
+        if (baryonyx::precision < decimal) {
+            baryonyx::precision = decimal;
+        }
+    } else if (posexp != std::string_view::npos) {
+        int decimal = atoi(buffer + posexp + 2);
+        //cout << "decimal:" << decimal << endl;
         if (baryonyx::precision < decimal) {
             baryonyx::precision = decimal;
         }
