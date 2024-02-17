@@ -561,22 +561,26 @@ std::optional<Double> read_real(const std::string_view buf) noexcept
     std::copy_n(buf.data(), buf.size(), std::begin(buffer));
     buffer[buf.size()] = '\0';
 
-    auto posexp = buf.find("e-");
-    if (posexp == std::string_view::npos) {
-        posexp = buf.find("E-");
+    auto posexpneg = buf.find("e-");
+    if (posexpneg == std::string_view::npos) {
+        posexpneg = buf.find("E-");
     }
     auto pos = buf.find('.');
     if (pos != std::string_view::npos) {
+        auto posexp = buf.find("e");
+        if (posexp == std::string_view::npos) {
+            posexp = buf.find("E");
+        }
         int decimal = buf.substr(buf.find('.') + 1, (posexp == std::string_view::npos) ? posexp : (posexp - pos - 1)).size();
-        if (posexp != std::string_view::npos) {
-            decimal += atoi(buffer + posexp + 2);
+        if (posexpneg != std::string_view::npos) {
+            decimal += atoi(buffer + posexpneg + 2);
         }
         //cout << "decimal:" << decimal << endl;
         if (baryonyx::precision < decimal) {
             baryonyx::precision = decimal;
         }
-    } else if (posexp != std::string_view::npos) {
-        int decimal = atoi(buffer + posexp + 2);
+    } else if (posexpneg != std::string_view::npos) {
+        int decimal = atoi(buffer + posexpneg + 2);
         //cout << "decimal:" << decimal << endl;
         if (baryonyx::precision < decimal) {
             baryonyx::precision = decimal;
