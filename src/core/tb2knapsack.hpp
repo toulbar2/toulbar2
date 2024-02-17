@@ -77,7 +77,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     void Updatelastval0(int idx)
     {
         if (!lastval0ok[idx] && !scope[idx]->canbe(lastval0[idx])) {
-            int last = lastval0[idx];
+            Value last = lastval0[idx];
             unsigned int j = 0;
             while (j < NotVarVal[idx].size() && last == lastval0[idx]) {
                 if (scope[idx]->canbe(NotVarVal[idx][j])) {
@@ -117,7 +117,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
                     return true;
                 Updatelastval0(idx);
                 if (!scope[idx]->canbe(lastval1[idx])) {
-                    int last = lastval1[idx];
+                    Value last = lastval1[idx];
                     unsigned int j = 0;
                     while (j < VarVal[idx].size() - 1 && last == lastval1[idx]) {
                         if (scope[idx]->canbe(VarVal[idx][j]))
@@ -1496,7 +1496,7 @@ public:
                     }
                     k++;
                 }
-                res += deltaCosts[i][var->toValue(s[i])];
+                res += deltaCosts[i][s[i]]; //[i][var->toValue(s[i])];
                 if (breakAMO[CorrAMO[i] - 1] > 1) {
                     res = wcsp->getUb();
                     break;
@@ -1722,25 +1722,25 @@ public:
         EnumeratedVariable* y = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first];
         BinaryConstraint* xy = wcsp->newBinaryConstr(x, y, this);
         wcsp->elimBinOrderInc();
-        currCost = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
+        currCost = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
         if (nbValue[currentidx] == 3) {
             assert(currCost - minAMOCost >= MIN_COST);
-            xy->setcost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, currCost - minAMOCost);
+            xy->setcost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, currCost - minAMOCost);
         } else
-            xy->setcost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, MAX_COST);
+            xy->setcost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, MAX_COST);
         xy->setcost(AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, MAX_COST);
-        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
+        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
         assert(currCost - minAMOCost >= MIN_COST);
-        xy->setcost(AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, currCost - minAMOCost);
-        currCost -= deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
-        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
+        xy->setcost(AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, currCost - minAMOCost);
+        currCost -= deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
+        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
         assert(currCost - minAMOCost >= MIN_COST);
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][0] = MIN_COST;
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1] = MIN_COST;
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][0] = MIN_COST;
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][1] = MIN_COST;
 
-        xy->setcost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, currCost - minAMOCost);
+        xy->setcost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, currCost - minAMOCost);
         projectNaryBinary(xy);
     }
 
@@ -1753,26 +1753,26 @@ public:
         TernaryConstraint* xyz = wcsp->newTernaryConstr(x, y, z, this);
         wcsp->elimTernOrderInc();
         xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
-        xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
-        xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
-        xyz->setcost(x, y, z, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
-        currCost = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second];
+        xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
+        xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
+        xyz->setcost(x, y, z, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
+        currCost = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second];
         if (nbValue[currentidx] == 4) {
             assert(currCost - minAMOCost >= MIN_COST);
-            xyz->setcost(x, y, z, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
+            xyz->setcost(x, y, z, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
         } else
-            xyz->setcost(x, y, z, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
-        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
+            xyz->setcost(x, y, z, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, MAX_COST);
+        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
         assert(currCost - minAMOCost >= MIN_COST);
-        xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
-        currCost -= deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
-        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
+        xyz->setcost(x, y, z, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
+        currCost -= deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second];
+        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
         assert(currCost - minAMOCost >= MIN_COST);
-        xyz->setcost(x, y, z, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
-        currCost -= deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
-        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second];
+        xyz->setcost(x, y, z, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
+        currCost -= deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second];
+        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second] - deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second];
         assert(currCost - minAMOCost >= MIN_COST);
-        xyz->setcost(x, y, z, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, 1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
+        xyz->setcost(x, y, z, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].second, !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][2]].second, currCost - minAMOCost);
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][0] = MIN_COST;
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][0]].first][1] = MIN_COST;
         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][1]].first][0] = MIN_COST;
@@ -1798,7 +1798,7 @@ public:
                         scopeVars.push_back((EnumeratedVariable*)scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first]);
                         VarValclq.push_back({ !AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second, AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second });
                         NotVarValclq.push_back({ AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second });
-                        deltaclq.push_back({ deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second], deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second] });
+                        deltaclq.push_back({ deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second], deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second] });
                     } else {
                         assert(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].first]->getValue() != AMO[VirtualVar[currentvar] - 1][current_val_idx[currentidx][l]].second);
                     }
@@ -1887,7 +1887,7 @@ public:
                                     nbVirtualVar[CorrAMO[varIndex] - 1] = 0;
                                     for (unsigned int i = 0; i < AMO[CorrAMO[varIndex] - 1].size(); ++i) {
                                         if (assigned[AMO[CorrAMO[varIndex] - 1][i].first] == 0) {
-                                            assigneddeltas += deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first][1 - AMO[CorrAMO[varIndex] - 1][i].second];
+                                            assigneddeltas += deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first][!AMO[CorrAMO[varIndex] - 1][i].second];
                                             assigned[AMO[CorrAMO[varIndex] - 1][i].first] = 2;
                                             toassign.push_back(i);
                                             fill(deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first].begin(), deltaCosts[AMO[CorrAMO[varIndex] - 1][i].first].end(), MIN_COST);
@@ -1921,7 +1921,7 @@ public:
                                                 nonassigned = nonassigned - 1;
                                                 nbVirtualVar[CorrAMO[varIndex] - 1] = 0;
                                                 if (scope[AMO[CorrAMO[varIndex] - 1][k1].first]->unassigned()) {
-                                                    scope[AMO[CorrAMO[varIndex] - 1][k1].first]->remove(1 - AMO[CorrAMO[varIndex] - 1][k1].second);
+                                                    scope[AMO[CorrAMO[varIndex] - 1][k1].first]->remove(!AMO[CorrAMO[varIndex] - 1][k1].second);
                                                 }
                                             }
                                             k1++;
@@ -2003,7 +2003,7 @@ public:
                                     scope[current_scope_idx[i]]->project(1, temp1 - mindelta, true);
                                     scope[current_scope_idx[i]]->findSupport();
                                 } else {
-                                    mindelta = deltaCosts[current_scope_idx[i]][scope[current_scope_idx[i]]->getValue()];
+                                    mindelta = deltaCosts[current_scope_idx[i]][scope[current_scope_idx[i]]->toIndex(scope[current_scope_idx[i]]->getValue())];
                                     if (mindelta != MIN_COST) {
                                         TobeProjected += mindelta;
                                         assigneddeltas += mindelta;
@@ -2020,7 +2020,7 @@ public:
                                     currentval = current_val_idx[i][j];
                                     if (currentval != (int)AMO[VirtualVar[currentvar] - 1].size()) {
                                         if (scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->assigned()) {
-                                            mindelta = deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getValue()];
+                                            mindelta = deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->toIndex(scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getValue())];
                                             TobeProjected += mindelta;
                                             assigneddeltas += mindelta;
                                             deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][1] = MIN_COST;
@@ -2029,9 +2029,9 @@ public:
                                                 for (int l = 0; l < nbValue[i]; ++l) {
                                                     if (l != j && current_val_idx[i][l] != (int)AMO[VirtualVar[currentvar] - 1].size()) {
                                                         ToAssign.push_back(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]]);
-                                                        assert(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first]->canbe(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].second));
-                                                        TobeProjected += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].second];
-                                                        assigneddeltas += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].second];
+                                                        assert(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first]->canbe(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].second));
+                                                        TobeProjected += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].second];
+                                                        assigneddeltas += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].second];
                                                         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first][1] = MIN_COST;
                                                         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][l]].first][0] = MIN_COST;
                                                     }
@@ -2064,8 +2064,8 @@ public:
                                                     else
                                                         currCost += MAX_COST;
                                                 } else {
-                                                    if (scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].first]->canbe(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].second))
-                                                        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].second];
+                                                    if (scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].first]->canbe(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].second))
+                                                        currCost += deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][k]].second];
                                                     else
                                                         currCost += MAX_COST;
                                                 }
@@ -2085,11 +2085,11 @@ public:
                                         // Project To unary
                                         mindelta = min(deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][0], deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][1]);
                                         temp1 = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second];
-                                        temp0 = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second];
+                                        temp0 = deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second];
                                         deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second] = MIN_COST;
-                                        deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second] = MIN_COST;
+                                        deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second] = MIN_COST;
                                         scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first]->project(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second, temp1 - mindelta, true);
-                                        scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first]->project(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second, temp0 - mindelta, true);
+                                        scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first]->project(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].second, temp0 - mindelta, true);
                                         scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][0]].first]->findSupport();
                                     } else {
                                         Store::freeze();
@@ -2164,8 +2164,8 @@ public:
                                 lastval0[currentvar] = 0;
                                 lastval0ok[currentvar] = true;
                                 if (nbVirtualVar[VirtualVar[currentvar] - 1] == 1) {
-                                    if (scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].first]->canbe(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].second))
-                                        scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].first]->remove(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].second);
+                                    if (scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].first]->canbe(!AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].second))
+                                        scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].first]->remove(!AMO[VirtualVar[currentvar] - 1][current_val_idx[k][0]].second);
                                     b = true;
                                 }
                             }
@@ -2374,14 +2374,14 @@ public:
                         if (firstAMOval) {
                             for (int k = 0; k < (int)AMO[VirtualVar[currentvar] - 1].size(); ++k) {
                                 if (scope[AMO[VirtualVar[currentvar] - 1][k].first]->unassigned()) {
-                                    BaseCost += scope[AMO[VirtualVar[currentvar] - 1][k].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][k].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][k].first][1 - AMO[VirtualVar[currentvar] - 1][k].second];
+                                    BaseCost += scope[AMO[VirtualVar[currentvar] - 1][k].first]->getCost(!AMO[VirtualVar[currentvar] - 1][k].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][k].first][!AMO[VirtualVar[currentvar] - 1][k].second];
                                 }
                             }
                             firstAMOval = false;
                         }
                         Profit[currentvar][currentval] = BaseCost;
                         if (currentval != (int)AMO[VirtualVar[currentvar] - 1].size()) {
-                            Profit[currentvar][currentval] += scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] - scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][currentval].second) - deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][1 - AMO[VirtualVar[currentvar] - 1][currentval].second];
+                            Profit[currentvar][currentval] += scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] - scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second) - deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second];
                         }
                     }
                     storew += weights[currentvar][currentval] * OptSol[currentvar][currentval];
@@ -2575,22 +2575,22 @@ public:
                                 deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(AMO[VirtualVar[currentvar] - 1][currentval].second,C);
                             }
-                            C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][1 - AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][currentval].first][1 - AMO[VirtualVar[currentvar] - 1][currentval].second]));
-                            deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][1 - AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
+                            C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second]));
+                            deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                             if (C > MIN_COST) {
-                                assert(scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][currentval].second) >= C);
-                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, 1 - AMO[VirtualVar[currentvar] - 1][currentval].second, C });
-                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(1 - AMO[VirtualVar[currentvar] - 1][currentval].second, C);
+                                assert(scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second) >= C);
+                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
+                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(!AMO[VirtualVar[currentvar] - 1][currentval].second, C);
                             } else if (C < MIN_COST) {
-                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, 1 - AMO[VirtualVar[currentvar] - 1][currentval].second, C });
-                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->project(1 - AMO[VirtualVar[currentvar] - 1][currentval].second, -C,true);
+                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
+                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->project(!AMO[VirtualVar[currentvar] - 1][currentval].second, -C,true);
                             }
                         } else if (OptSol[currentvar][currentval] == 0) {
-                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][currentval].second);
+                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
-                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, 1 - AMO[VirtualVar[currentvar] - 1][currentval].second, C });
-                                deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][1 - AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
-                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(1 - AMO[VirtualVar[currentvar] - 1][currentval].second,C);
+                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
+                                deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
+                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(!AMO[VirtualVar[currentvar] - 1][currentval].second,C);
                             }
                             C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second]) + clq[n]);
                             deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
@@ -2609,11 +2609,11 @@ public:
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, AMO[VirtualVar[currentvar] - 1][currentval].second, C });
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(AMO[VirtualVar[currentvar] - 1][currentval].second,C);
                             }
-                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][currentval].second);
+                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
-                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, 1 - AMO[VirtualVar[currentvar] - 1][currentval].second, C });
-                                deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][1 - AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
-                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(1 - AMO[VirtualVar[currentvar] - 1][currentval].second,C);
+                                tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
+                                deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
+                                // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(!AMO[VirtualVar[currentvar] - 1][currentval].second,C);
                             }
                         }
                         // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->findSupport();
@@ -2960,7 +2960,7 @@ public:
                                                     if (OptSol[currentvar][current_val_idx[i][j]] == 1) {
                                                         tempAMOy_i.push_back(0);
                                                     } else {
-                                                        tempAMOy_i.push_back(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]));
+                                                        tempAMOy_i.push_back(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]));
                                                         if (OptSol[currentvar][current_val_idx[i][j]] > 0) {
                                                             C = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - tempAMOy_i.back();
                                                             if (C < clq.back())
@@ -2980,7 +2980,7 @@ public:
                                             for (int j = 0; j < nbValue[i]; ++j) {
                                                 Minyamo = 0;
                                                 if (current_val_idx[i][j] != (int)AMO[VirtualVar[currentvar] - 1].size()) {
-                                                    Minyamo = min(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][1 - AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]), scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - clq.back());
+                                                    Minyamo = min(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]), scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - clq.back());
                                                     tempAMOy_i[j] = Minyamo;
                                                 }
                                             }
