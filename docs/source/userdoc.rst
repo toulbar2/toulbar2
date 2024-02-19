@@ -812,7 +812,7 @@ The available **file formats** (possibly compressed by gzip or bzip2 or xz, e.g.
   - Cost Function Network format (:ref:`.cfn<cfn_format>` file extension)
   - Weighted Constraint Satisfaction Problem (:ref:`.wcsp<wcsp_format>` file extension)
   - Probabilistic Graphical Model (`.uai <http://www.cs.huji.ac.il/project/PASCAL/fileFormat.php>`_ / .LG file extension ; the file format .LG is identical to .UAI except that we expect log-potentials)
-  - Weigthed Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
+  - Weighted Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
   - Quadratic Unconstrained Pseudo-Boolean Optimization (:ref:`.qpbo<qpbo_format>` file extension)
   - Pseudo-Boolean Optimization (`.opb <http://www.cril.univ-artois.fr/PB16/format.pdf>`_ file extension)
   - Integer Linear Programming (`.lp <https://www.ibm.com/docs/en/SSSA5P_22.1.1/ilog.odms.cplex.help/CPLEX/FileFormats/topics/LP.html>`_ file extension)

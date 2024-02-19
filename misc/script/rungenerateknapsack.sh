@@ -11,7 +11,7 @@ tctr=0
 nary=1
 tight=80
 n=5
-d=2
+d=3
 K=1
 
 while (( $n < $nend )) ; do
@@ -22,7 +22,7 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="knapsack-$n-$d-$tight-$bctr-$tctr-0-$nary-$seed"
+    randomfile="knapsackp-$n-$d-$tight-$bctr-$tctr-0-$nary-$seed"
 #    echo $randomfile
     ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -ub=1000000 -z=1 > /dev/null
     python2 ./misc/script/wcsp2lp-support.py problem.wcsp problem.lp > /dev/null

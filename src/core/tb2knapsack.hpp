@@ -23,16 +23,16 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<StoreInt> GreatestWeightIdx;
     vector<StoreInt> assigned;
     vector<StoreInt> lastval0ok;
-    vector<int> nbValue;
-    vector<int> current_scope_idx;
+    vector<int> nbValue; // for each connected variable, number of feasible values in VarVal (dimension of carity)
+    vector<int> current_scope_idx; // for each connected variable, its index in VarVal (dimension of carity)
     vector<Value> lastval1;
     vector<Value> lastval0;
     vector<Cost> UnaryCost0;
-    vector<vector<int>> current_val_idx;
-    vector<vector<Long>> weights; // knapsack linear positive integer coefficients
-    vector<vector<Value>> VarVal;
-    vector<vector<Value>> NotVarVal;
-    vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs for value 1 to the cost function
+    vector<vector<int>> current_val_idx; // for each connected variable, indexes in VarVal of feasible values (dimension of carity * nbValue[i])
+    vector<vector<Long>> weights; // knapsack linear positive integer coefficients (can be less than domain size) ; for each variable, it gives a weight associated to a value in VarVal
+    vector<vector<Value>> VarVal; // for each variable, a list of values having a weight (same dimensions as weights)
+    vector<vector<Value>> NotVarVal; // for each variable, a set of values having the same weight as the last value in VarVal for the corresponding variable (same dimensions as weights)
+    vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs to values in the cost function (same dimensions as weights)
     vector<vector<Double>> OptSol;
     vector<int> arrvar; // temporary data structure for propagate
     vector<vector<Cost>> Profit; // temporary data structure for propagate
@@ -41,7 +41,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<std::array<Double, 4>> Slopes;
     int nbRealVar;
     vector<vector<pair<int, Value>>> AMO; // Represent AMO constraints
-    vector<vector<Long>> Original_weigths;
+    vector<vector<Long>> Original_weights;
     vector<int> VirtualVar, CorrAMO; // VirtualVar has size Number of AMO constraint + number of variable in no AMO constraint, it returns if a given index represents a virtual var (an AMO constraint) or a real one.
     // CorrAMO has size arity and gives on which AMO constraint the given variable belongs (0 if it is in no AMO constraint).
     vector<StoreInt> nbVirtualVar;
@@ -76,7 +76,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     }
     void Updatelastval0(int idx)
     {
-        if (!lastval0ok[idx] && !scope[idx]->canbe(lastval0[idx])) {
+        if (!lastval0ok[idx] && scope[idx]->cannotbe(lastval0[idx])) {
             Value last = lastval0[idx];
             unsigned int j = 0;
             while (j < NotVarVal[idx].size() && last == lastval0[idx]) {
@@ -306,7 +306,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
         vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in,
-        vector<vector<pair<int, Value>>> AMO_in, vector<vector<Long>> Original_weigths_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
+        vector<vector<pair<int, Value>>> AMO_in, vector<vector<Long>> Original_weights_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
         int nonassinged_in, const vector<vector<StoreCost>> InitDel = vector<vector<StoreCost>>(), const StoreCost lb_in = MIN_COST,
         const StoreCost assigneddelta_in = MIN_COST, const Long Original_capacity_in = 0, Constraint* fromElim1_in = NULL)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
@@ -322,7 +322,7 @@ public:
         , VarVal(std::move(VarVal_in))
         , NotVarVal(std::move(NotVarVal_in))
         , AMO(std::move(AMO_in))
-        , Original_weigths(std::move(Original_weigths_in))
+        , Original_weights(std::move(Original_weights_in))
         , VirtualVar(std::move(VirtualVar_in))
         , CorrAMO(std::move(CorrAMO_in))
         , AlwaysSatisfied(0)
@@ -1604,11 +1604,11 @@ public:
         vector<Value> TempVal;
         MaxWeight = 0;
         int nbvarinAMO = 0;
-        Original_weigths = weights;
+        Original_weights = weights;
         for (unsigned int i = 0; i < VarVal.size(); ++i) {
             if (VarVal[i][0] == 1) {
                 reverse(VarVal[i].begin(), VarVal[i].end());
-                reverse(Original_weigths[i].begin(), Original_weigths[i].end());
+                reverse(Original_weights[i].begin(), Original_weights[i].end());
                 reverse(deltaCosts[i].begin(), deltaCosts[i].end());
                 if ((int)NotVarVal[i].size() > 0)
                     NotVarVal[i][0] = 1;
@@ -1647,12 +1647,12 @@ public:
         }
 
         vector<vector<StoreCost>> sortdel = deltaCosts;
-        vector<vector<Long>> sortOW = Original_weigths;
+        vector<vector<Long>> sortOW = Original_weights;
         vector<Long> sortconfW = conflictWeights;
         vector<StoreInt> sortass = assigned;
         for (int i = 0; i < arity_; ++i) {
             deltaCosts[i] = sortdel[SortedVec[i]];
-            Original_weigths[i] = sortOW[SortedVec[i]];
+            Original_weights[i] = sortOW[SortedVec[i]];
             conflictWeights[i] = sortconfW[SortedVec[i]];
             assigned[i] = sortass[SortedVec[i]];
         }
@@ -1666,7 +1666,7 @@ public:
             CorrAMO.push_back(0);
             VarVal.push_back(vector<Value>{ 0, 1 });
             NotVarVal.push_back(vector<Value>{ 1 });
-            weights.push_back(Original_weigths[i]);
+            weights.push_back(Original_weights[i]);
             if (scopeVars[i]->unassigned())
                 MaxWeight += *max_element(weights[i].begin(), weights[i].end());
         }
@@ -1680,16 +1680,16 @@ public:
                 TempWeight.push_back(0);
                 for (int k = 0; k < (int)clq[i].size(); ++k) {
                     if (k == j) {
-                        TempWeight.back() += Original_weigths[arity_ - nbvarinAMO + k + n][clq[i][k].second];
+                        TempWeight.back() += Original_weights[arity_ - nbvarinAMO + k + n][clq[i][k].second];
                     } else {
-                        TempWeight.back() += Original_weigths[arity_ - nbvarinAMO + k + n][1 - clq[i][k].second];
+                        TempWeight.back() += Original_weights[arity_ - nbvarinAMO + k + n][1 - clq[i][k].second];
                     }
                 }
             }
             TempWeight.push_back(0);
             for (int j = 0; j < (int)clq[i].size(); ++j) {
                 TempVal.push_back(j);
-                TempWeight.back() += Original_weigths[arity_ - nbvarinAMO + j + n][1 - clq[i][j].second];
+                TempWeight.back() += Original_weights[arity_ - nbvarinAMO + j + n][1 - clq[i][j].second];
             }
             MaxWeight += *max_element(TempWeight.begin(), TempWeight.end());
             TempVal.push_back(clq[i].size());
@@ -1712,7 +1712,7 @@ public:
                 wcsp->elimBinConstrs.push_back(bctr);
             }
         }
-        new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weigths, CorrAMO, VirtualVar, nonassigned, deltaCosts, lb, assigneddeltas, Original_capacity);
+        new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, nonassigned, deltaCosts, lb, assigneddeltas, Original_capacity);
     }
 
     void ProjectAMOtoBinary(Cost minAMOCost, int currentvar, int currentidx)
@@ -1954,7 +1954,7 @@ public:
                                 TobeProjected += mindelta;
                                 for (int j = 0; j < nbValue[i]; ++j) {
                                     assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
-                                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
+                                    if (!NotVarVal[current_scope_idx[i]].empty() && current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
                                         Group_ProjectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                                     } else
                                         scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
@@ -2152,7 +2152,7 @@ public:
                 while (k2 < nbValue[k] && !b) {
                     currentval = current_val_idx[k][k2];
                     if (MaxWeight - weights[currentvar][GreatestWeightIdx[currentvar]] + weights[currentvar][currentval] < capacity) {
-                        if (currentval == (int)VarVal[currentvar].size() - 1) {
+                        if (!NotVarVal[currentvar].empty() && currentval == (int)VarVal[currentvar].size() - 1) {
                             if (VirtualVar[currentvar] == 0) {
                                 for (unsigned int i = 0; i < NotVarVal[currentvar].size(); ++i) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][i]))
@@ -2289,7 +2289,7 @@ public:
                 if (CorrAMO[tempdeltaCosts[i][0]] > 0)
                     scope[tempdeltaCosts[i][0]]->extend(tempdeltaCosts[i][1], tempdeltaCosts[i][2]);
                 else {
-                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
+                    if (NotVarVal[tempdeltaCosts[i][0]].empty() || tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
                         scope[tempdeltaCosts[i][0]]->extend(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], tempdeltaCosts[i][2]);
                     else
                         Group_extendNVV(tempdeltaCosts[i][0], tempdeltaCosts[i][2]);
@@ -2298,7 +2298,7 @@ public:
                 if (CorrAMO[tempdeltaCosts[i][0]] > 0)
                     scope[tempdeltaCosts[i][0]]->project(tempdeltaCosts[i][1], -tempdeltaCosts[i][2], true);
                 else {
-                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
+                    if (NotVarVal[tempdeltaCosts[i][0]].empty() || tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
                         scope[tempdeltaCosts[i][0]]->project(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], -tempdeltaCosts[i][2], true);
                     else
                         Group_ProjectNVV(tempdeltaCosts[i][0], -tempdeltaCosts[i][2]);
@@ -2344,7 +2344,7 @@ public:
                     currentval = current_val_idx[i][j];
                     if (VirtualVar[currentvar] == 0) {
                         assert(scope[currentvar]->getCost(VarVal[currentvar][currentval]) >= MIN_COST);
-                        if (currentval == (int)VarVal[currentvar].size() - 1) {
+                        if (currentval == (int)VarVal[currentvar].size() - 1) { //TODO: !NotVarVal[currentvar].empty() &&
                             if (!diff0 && !lastval0ok[currentvar] && scope[currentvar]->getCost(VarVal[currentvar].back()) > MIN_COST) {
                                 UnaryCost0[currentvar] = MAX_COST;
                                 for (unsigned int l = 0; l < NotVarVal[currentvar].size(); l++) {
@@ -2575,7 +2575,7 @@ public:
                                 deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(AMO[VirtualVar[currentvar] - 1][currentval].second,C);
                             }
-                            C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second]));
+                            C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second]));
                             deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                             if (C > MIN_COST) {
                                 assert(scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second) >= C);
@@ -2592,7 +2592,7 @@ public:
                                 deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->extend(!AMO[VirtualVar[currentvar] - 1][currentval].second,C);
                             }
-                            C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second]) + clq[n]);
+                            C = Ceil(-deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] + yAMO_i[n][j] + y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second]) + clq[n]);
                             deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                             if (C > MIN_COST) {
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, AMO[VirtualVar[currentvar] - 1][currentval].second, C });
@@ -2778,7 +2778,7 @@ public:
                                 for (int i = 0; i < carity; ++i) {
                                     cout << scope[current_scope_idx[i]]->getName();
                                     for (unsigned int j = 0; j < VarVal[current_scope_idx[i]].size(); ++j) {
-                                        cout << " " << j << " : " << Profit[current_scope_idx[i]][current_val_idx[i][j]] << "/"
+                                        cout << " " << VarVal[current_scope_idx[i]][current_val_idx[i][j]] << " (" << current_val_idx[i][j] << ") : " << Profit[current_scope_idx[i]][current_val_idx[i][j]] << "/"
                                              << weights[current_scope_idx[i]][current_val_idx[i][j]];
                                     }
                                     cout << endl;
@@ -2821,11 +2821,14 @@ public:
                                 if (c > 0) {
                                     vector<vector<Double>> RealOptSol = OptSol;
                                     vector<int> EDACORDER;
+                                    assert((int)current_scope_idx.size() == carity);
                                     for (int i = 0; i < carity; ++i) {
                                         EDACORDER.push_back(i);
                                     }
                                     sort(EDACORDER.begin(), EDACORDER.end(),
                                         [&](int& x, int& y) {
+                                            assert(current_scope_idx[x]<arity_);
+                                            assert(current_scope_idx[y]<arity_);
                                             return scope[current_scope_idx[x]]->getDACOrder() < scope[current_scope_idx[y]]->getDACOrder(); // TODO: checks if it favors absorbing more unary costs for the last variables in the DAC order or the opposite?!
                                         });
 
@@ -2960,15 +2963,15 @@ public:
                                                     if (OptSol[currentvar][current_val_idx[i][j]] == 1) {
                                                         tempAMOy_i.push_back(0);
                                                     } else {
-                                                        tempAMOy_i.push_back(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]));
+                                                        tempAMOy_i.push_back(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]));
                                                         if (OptSol[currentvar][current_val_idx[i][j]] > 0) {
-                                                            C = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - tempAMOy_i.back();
+                                                            C = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - tempAMOy_i.back();
                                                             if (C < clq.back())
                                                                 clq.back() = C;
                                                             fracvalue = true;
                                                         }
                                                         if (!fracvalue) {
-                                                            C = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - tempAMOy_i.back();
+                                                            C = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - tempAMOy_i.back();
                                                             if (C < clq.back())
                                                                 clq.back() = C;
                                                         }
@@ -2980,7 +2983,7 @@ public:
                                             for (int j = 0; j < nbValue[i]; ++j) {
                                                 Minyamo = 0;
                                                 if (current_val_idx[i][j] != (int)AMO[VirtualVar[currentvar] - 1].size()) {
-                                                    Minyamo = min(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]), scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weigths[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - clq.back());
+                                                    Minyamo = min(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]), scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - clq.back());
                                                     tempAMOy_i[j] = Minyamo;
                                                 }
                                             }
@@ -3182,7 +3185,7 @@ public:
                 for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
                     os << j;
                     os << ":";
-                    os << Original_weigths[i][j];
+                    os << Original_weights[i][j];
                     os << ":";
                     os << deltaCosts[i][0];
                     if (j < deltaCosts[i].size() - 1)
@@ -3225,7 +3228,7 @@ public:
                     os << " " << -1 << " knapsackc " << Original_capacity;
                     for (int i = 0; i < arity_; i++) {
                         os << " 2 "
-                           << "0 " << Original_weigths[i][0] << " 1 " << Original_weigths[i][1];
+                           << "0 " << Original_weights[i][0] << " 1 " << Original_weights[i][1];
                     }
                     os << " " << AMO.size();
                     for (unsigned int i = 0; i < AMO.size(); ++i) {
@@ -3283,7 +3286,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (scope[i]->unassigned())
                             os << " 2 "
-                               << "0 " << Original_weigths[i][0] << " 1 " << Original_weigths[i][1];
+                               << "0 " << Original_weights[i][0] << " 1 " << Original_weights[i][1];
                     }
                     os << " " << AMO.size();
                     for (unsigned int i = 0; i < AMO.size(); ++i) {
