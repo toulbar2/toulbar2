@@ -2631,6 +2631,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             if (!weights[i].empty()) {
                 minweight = *min_element(weights[i].begin(), weights[i].end());
                 size = scopeVars[i]->getDomainSize();
+                assert(size >= VarVal[i].size());
                 if (size != VarVal[i].size()) {
                     weights[i].push_back(0);
                     auto* VV = new Value[size];
@@ -2639,6 +2640,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                         if (find(VarVal[i].begin(), VarVal[i].end(), VV[j]) == VarVal[i].end())
                             NotVarVal[i].push_back(VV[j]);
                     }
+                    assert(NotVarVal[i].size() >= 1);
                     VarVal[i].push_back(NotVarVal[i][0]);
                     if (minweight < 0) {
                         for (unsigned int j = 0; j < weights[i].size(); j++)
@@ -2647,9 +2649,29 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                     }
                     delete[] VV;
                 } else {
-                    for (unsigned int j = 0; j < weights[i].size(); j++)
+                    for (unsigned int j = 0; j < weights[i].size(); j++) {
                         weights[i][j] -= minweight;
+                    }
                     capacity -= minweight;
+                    int wsize = weights[i].size();
+                    for (int j = wsize - 1; j >= 0; j--) { // move all zero-weight elements at the end of VarVal and push them into NotVarVal
+                        if (weights[i][j] == 0) {
+                            NotVarVal[i].push_back(VarVal[i][j]);
+                            if (j < wsize - 1) { // swap with last nonzero element of weights
+                                weights[i][j] = weights[i][wsize - 1];
+                                weights[i][wsize - 1] = 0;
+                                Value value = VarVal[i][j];
+                                VarVal[i][j] = VarVal[i][wsize - 1];
+                                VarVal[i][wsize - 1] = value;
+                            }
+                            wsize--;
+                        }
+                    }
+                    assert(NotVarVal[i].size() >= 1);
+                    assert(wsize + NotVarVal[i].size() == weights[i].size());
+                    VarVal[i].resize(wsize+1);
+                    weights[i].resize(wsize+1);
+                    assert(weights[i].back() == 0);
                 }
             }
             if (weights[i].size() > 1) {

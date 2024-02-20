@@ -337,6 +337,8 @@ public:
             sameweight = true;
             for (int i = 0; i < (int)weights.size(); i++) {
                 assert(VarVal[i].size() > 1);
+                assert(NotVarVal[i].size() >= 1);
+                assert(find(NotVarVal[i].begin(), NotVarVal[i].end(), VarVal[i].back()) != NotVarVal[i].end());
                 OptSol.emplace_back(weights[i].size(), 0.);
                 Profit.emplace_back(weights[i].size(), MIN_COST);
                 if (InitDel.empty())
@@ -348,13 +350,13 @@ public:
                 GreatestWeightIdx.emplace_back(max_element(weights[i].begin(), weights[i].end()) - weights[i].begin());
                 LowestWeightIdx.emplace_back(min_element(weights[i].begin(), weights[i].end()) - weights[i].begin());
                 InitLargestWeight.emplace_back(weights[i][GreatestWeightIdx[i]]);
-                if (NotVarVal[i].empty()) {
-                    lastval0.push_back(scope[i]->getInf() - 1);
-                    lastval0ok.emplace_back(true);
-                } else {
-                    lastval0.push_back(NotVarVal[i][0]);
-                    lastval0ok.emplace_back(false);
-                }
+                //if (NotVarVal[i].empty()) {
+                //    lastval0.push_back(scope[i]->getInf() - 1);
+                //    lastval0ok.emplace_back(true);
+                //} else {
+                lastval0.push_back(NotVarVal[i][0]);
+                lastval0ok.emplace_back(false);
+                //}
                 lastval1.push_back(VarVal[i][0]);
                 assert(VarVal[i].size() == weights[i].size());
                 if (maxdom < VarVal[i].size())
@@ -439,17 +441,17 @@ public:
         for (int i = 0; i < arity_; i++) {
             pweights.push_back(std::vector<std::pair<unsigned int, Double>>());
 
-            if (NotVarVal[i].empty()) {
-                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
-                    pweights.back().push_back(new_pair);
-                }
-            } else {
-                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j] - weights[i].back());
-                    pweights.back().push_back(new_pair);
-                }
+//            if (NotVarVal[i].empty()) {
+//                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+//                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
+//                    pweights.back().push_back(new_pair);
+//                }
+//            } else {
+            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j] - weights[i].back());
+                pweights.back().push_back(new_pair);
             }
+//            }
         }
     }
 
@@ -459,8 +461,8 @@ public:
 
         Long wnot = 0;
         for (int i = 0; i < arity_; i++) {
-            if (!NotVarVal[i].empty())
-                wnot += weights[i].back();
+//            if (!NotVarVal[i].empty())
+            wnot += weights[i].back();
         }
 
         return Original_capacity - wnot;
@@ -1954,7 +1956,7 @@ public:
                                 TobeProjected += mindelta;
                                 for (int j = 0; j < nbValue[i]; ++j) {
                                     assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
-                                    if (!NotVarVal[current_scope_idx[i]].empty() && current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
+                                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
                                         Group_ProjectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                                     } else
                                         scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
@@ -2152,7 +2154,7 @@ public:
                 while (k2 < nbValue[k] && !b) {
                     currentval = current_val_idx[k][k2];
                     if (MaxWeight - weights[currentvar][GreatestWeightIdx[currentvar]] + weights[currentvar][currentval] < capacity) {
-                        if (!NotVarVal[currentvar].empty() && currentval == (int)VarVal[currentvar].size() - 1) {
+                        if (currentval == (int)VarVal[currentvar].size() - 1) {
                             if (VirtualVar[currentvar] == 0) {
                                 for (unsigned int i = 0; i < NotVarVal[currentvar].size(); ++i) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][i]))
@@ -2289,7 +2291,7 @@ public:
                 if (CorrAMO[tempdeltaCosts[i][0]] > 0)
                     scope[tempdeltaCosts[i][0]]->extend(tempdeltaCosts[i][1], tempdeltaCosts[i][2]);
                 else {
-                    if (NotVarVal[tempdeltaCosts[i][0]].empty() || tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
+                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
                         scope[tempdeltaCosts[i][0]]->extend(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], tempdeltaCosts[i][2]);
                     else
                         Group_extendNVV(tempdeltaCosts[i][0], tempdeltaCosts[i][2]);
@@ -2298,7 +2300,7 @@ public:
                 if (CorrAMO[tempdeltaCosts[i][0]] > 0)
                     scope[tempdeltaCosts[i][0]]->project(tempdeltaCosts[i][1], -tempdeltaCosts[i][2], true);
                 else {
-                    if (NotVarVal[tempdeltaCosts[i][0]].empty() || tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
+                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
                         scope[tempdeltaCosts[i][0]]->project(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], -tempdeltaCosts[i][2], true);
                     else
                         Group_ProjectNVV(tempdeltaCosts[i][0], -tempdeltaCosts[i][2]);
@@ -2344,7 +2346,7 @@ public:
                     currentval = current_val_idx[i][j];
                     if (VirtualVar[currentvar] == 0) {
                         assert(scope[currentvar]->getCost(VarVal[currentvar][currentval]) >= MIN_COST);
-                        if (currentval == (int)VarVal[currentvar].size() - 1) { //TODO: !NotVarVal[currentvar].empty() &&
+                        if (currentval == (int)VarVal[currentvar].size() - 1) {
                             if (!diff0 && !lastval0ok[currentvar] && scope[currentvar]->getCost(VarVal[currentvar].back()) > MIN_COST) {
                                 UnaryCost0[currentvar] = MAX_COST;
                                 for (unsigned int l = 0; l < NotVarVal[currentvar].size(); l++) {
