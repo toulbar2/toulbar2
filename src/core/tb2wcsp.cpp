@@ -2537,7 +2537,7 @@ bool WCSP::isKnapsack()
     return false;
 }
 
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict, Tuple wcnf)
+int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflictgraph, Tuple wcnf)
 {
     assert(ToulBar2::bilevel <= 1);
     // Eliminate variable with weight 0
@@ -2692,6 +2692,9 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         }
         assert(ar >= 0);
         if (ar == 0) {
+            if (capacity > 0) {
+                THROWCONTRADICTION;
+            }
             return -INT_MAX;
         }
         if (capacity > 0) {
@@ -2703,7 +2706,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
                 }
             }
         }
-        if (conflict) {
+        if (conflictgraph) {
             for (unsigned int i = 0; i < VarVal.size(); ++i) {
                 if (VarVal[i][0] == 1) {
                     reverse(VarVal[i].begin(), VarVal[i].end());
