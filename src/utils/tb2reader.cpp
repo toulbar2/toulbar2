@@ -4419,7 +4419,7 @@ void WCSP::read_lp(const char* fileName)
         EnumeratedVariable* x = (EnumeratedVariable*)vars[elem.variable_index];
         TemporaryUnaryConstraint unaryconstr;
         unaryconstr.var = x;
-        Cost shiftCost = min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
+        Double shiftCost = min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
         for (int v = pb.vars.values[elem.variable_index].min; v <= pb.vars.values[elem.variable_index].max; v++) {
             unaryconstr.costs.push_back((Cost)roundl(mult * v - shiftCost));
         }
