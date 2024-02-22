@@ -3870,7 +3870,7 @@ void WCSP::read_qpbo(const char* fileName)
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         throw BadConfiguration();
     }
-    Cost top = (Cost)multiplier * sumcost + 1;
+    Cost top = (Cost)roundl(multiplier * sumcost) + UNIT_COST;
     ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
@@ -3881,43 +3881,43 @@ void WCSP::read_qpbo(const char* fileName)
             if (booldom) {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        costs[3] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
                         negCost += costs[0];
                     }
                 } else {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
                         negCost += costs[0];
                     } else {
-                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        costs[3] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[3] = costs[0];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
+                        costs[1] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[2] = costs[1];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
+                        costs[1] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[2] = costs[1];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[3] = costs[0];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             }
@@ -3926,35 +3926,35 @@ void WCSP::read_qpbo(const char* fileName)
             if (booldom) {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * cost[e]);
                     } else {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * cost[e]);
-                        negCost += (Cost)(multiplier * cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * cost[e]);
+                        negCost += (Cost)roundl(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
-                        negCost += (Cost)(multiplier * -cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * -cost[e]);
+                        negCost += (Cost)roundl(multiplier * -cost[e]);
                     } else {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * -cost[e]);
                     }
                 }
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
-                        negCost += (Cost)(multiplier * cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * 2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * cost[e]);
                     } else {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
-                        negCost += (Cost)(multiplier * cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * 2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
-                        negCost += (Cost)(multiplier * -cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * -2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * -cost[e]);
                     } else {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
-                        negCost += (Cost)(multiplier * -cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * -2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * -cost[e]);
                     }
                 }
             }
@@ -4409,7 +4409,7 @@ void WCSP::read_lp(const char* fileName)
         totalShiftCost += mult;
     }
     assert(totalShiftCost <= 0.0);
-    negCost -= static_cast<Cost>(totalShiftCost);
+    negCost -= (Cost)roundl(totalShiftCost);
 
     for (auto& elem : pb.objective.elements) {
         Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
@@ -4418,7 +4418,7 @@ void WCSP::read_lp(const char* fileName)
         unaryconstr.var = x;
         Cost shiftCost = min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
         for (int v = pb.vars.values[elem.variable_index].min; v <= pb.vars.values[elem.variable_index].max; v++) {
-            unaryconstr.costs.push_back(static_cast<Cost>(mult * v - shiftCost));
+            unaryconstr.costs.push_back((Cost)roundl(mult * v - shiftCost));
         }
         unaryconstrs.push_back(unaryconstr);
     }
@@ -4552,7 +4552,7 @@ void WCSP::read_lp(const char* fileName)
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         throw BadConfiguration();
     }
-    postNullaryConstraint(static_cast<Cost>(pb.objective.value * ToulBar2::costMultiplier * multiplier));
+    postNullaryConstraint((Cost)roundl(pb.objective.value * ToulBar2::costMultiplier * multiplier));
 
     for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);

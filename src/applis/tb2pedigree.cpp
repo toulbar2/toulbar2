@@ -76,7 +76,7 @@ void Pedigree::iniProb(WCSP* wcsp)
         cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
         throw BadConfiguration();
     }
-    wcsp->updateUb((Cost)((Long)TopProb));
+    wcsp->updateUb((Cost)roundl(TopProb));
 }
 
 typedef struct {

@@ -3691,18 +3691,18 @@ bool Solver::solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, 
         if (posx[e] != posy[e]) {
             vector<Cost> costs(4, 0);
             if (cost[e] > 0) {
-                costs[1] = (Cost)(multiplier * 2. * cost[e]);
+                costs[1] = (Cost)roundl(multiplier * 2. * cost[e]);
                 costs[2] = costs[1];
             } else {
-                costs[0] = (Cost)(multiplier * -2. * cost[e]);
+                costs[0] = (Cost)roundl(multiplier * -2. * cost[e]);
                 costs[3] = costs[0];
             }
             wcsp->postBinaryConstraint(posx[e] - 1, posy[e] - 1, costs);
         } else {
             if (cost[e] > 0) {
-                unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * cost[e]);
             } else {
-                unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * -cost[e]);
             }
         }
     }

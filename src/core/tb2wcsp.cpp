@@ -5406,7 +5406,7 @@ void WCSP::propagateTRWS()
                                 tmpM[k] = numeric_limits<Cost>::max();
                                 for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
                                     unsigned int j = s->toIndex(*sIter);
-                                    tmpM[k] = min<Cost>(tmpM[k], static_cast<Cost>(trunc(s->getTRWSGamma() * thetaHat[j])) - binctr->trwsM[j] + getCost(j, k));
+                                    tmpM[k] = min<Cost>(tmpM[k], (Cost)(truncl(s->getTRWSGamma() * thetaHat[j])) - binctr->trwsM[j] + getCost(j, k));
                                 }
                                 delta = min<Cost>(delta, tmpM[k]);
                             }
@@ -5512,7 +5512,7 @@ void WCSP::propagateTRWS()
                 Cost c = s->normalizeTRWS();
                 delta += c;
                 for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-                    Cost availableCost = static_cast<Cost>(trunc(s->getTRWSGamma() * s->getCost(*sIter)));
+                    Cost availableCost = (Cost)(truncl(s->getTRWSGamma() * s->getCost(*sIter)));
                     for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
                         Constraint* constraint = (*iter).constr;
                         if (constraint->isBinary()) {
@@ -7076,7 +7076,7 @@ Cost WCSP::Prob2Cost(TProb p) const
         cerr << "Overflow when converting probability to cost." << endl;
         throw InternalError();
     }
-    Cost c = (Cost)res;
+    Cost c = (Cost)roundl(res);
     if (c > MAX_COST / 2)
         return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
     return c;
@@ -7092,7 +7092,7 @@ Cost WCSP::LogProb2Cost(TLogProb p) const
         //            cout << "Warning: converting energy " << -p << " to Top\n";
         //        }
     } else
-        c = (Cost)res;
+        c = (Cost)roundl(res);
     return c;
 }
 
