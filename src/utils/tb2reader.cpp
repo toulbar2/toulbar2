@@ -4359,6 +4359,10 @@ void WCSP::read_lp(const char* fileName)
     map<string, int> varnames;
     assert(pb.vars.names.size() == pb.vars.values.size());
     for (unsigned int i = 0; i < pb.vars.names.size(); i++) {
+        if (!pb.vars.values[i].touched) {
+            assert(pb.vars.values[i].min == std::numeric_limits<int>::min());
+            pb.vars.values[i].min = 0;
+        }
         // assert(pb.vars.values[i].type == baryonyx::variable_type::binary || pb.vars.values[i].type == baryonyx::variable_type::general || (pb.vars.values[i].type == baryonyx::variable_type::real && pb.vars.values[i].min == pb.vars.values[i].max));
         if (pb.vars.values[i].max == std::numeric_limits<int>::max()) {
             cerr << "Sorry, cannot represent unbounded variable domain for " << pb.vars.names[i] << " (must add a valid upper bound)" << endl;
@@ -4408,7 +4412,6 @@ void WCSP::read_lp(const char* fileName)
         mult = multiplier * min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
         totalShiftCost += mult;
     }
-    assert(totalShiftCost <= 0.0);
     negCost -= (Cost)roundl(totalShiftCost);
 
     for (auto& elem : pb.objective.elements) {

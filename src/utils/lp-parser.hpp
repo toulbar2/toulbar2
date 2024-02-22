@@ -128,13 +128,15 @@ struct variable_value {
     variable_value() = default;
 
     variable_value(int min_, int max_, variable_type type_)
-        : min(min_)
+        : touched(true)
+        , min(min_)
         , max(max_)
         , type(type_)
     {
     }
 
-    int min{ 0 };
+    bool touched{ false };
+    int min{ std::numeric_limits<int>::min() };
     int max{ std::numeric_limits<int>::max() };
     variable_type type{ variable_type::real };
 };

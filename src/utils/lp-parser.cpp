@@ -507,8 +507,9 @@ struct problem_parser {
             return false;
 
         m_problem.vars.values[id].type = baryonyx::variable_type::binary;
-        m_problem.vars.values[id].min = 0;
-        m_problem.vars.values[id].max = 1;
+        m_problem.vars.values[id].min = max(0, m_problem.vars.values[id].min);
+        m_problem.vars.values[id].max = min(1, m_problem.vars.values[id].max);
+        m_problem.vars.values[id].touched = true;
 
         return true;
     }
@@ -535,13 +536,15 @@ struct problem_parser {
         // m_problem.vars.values[id].min = bound.min;
         // m_problem.vars.values[id].max = bound.max;
 
-        m_problem.vars.values[id].min = (bound.min == -std::numeric_limits<Double>::infinity()
+        m_problem.vars.values[id].min = max((bound.min == -std::numeric_limits<Double>::infinity()
                 ? std::numeric_limits<int>::min()
-                : static_cast<int>(baryonyx::Ceil(bound.min)));
+                : static_cast<int>(baryonyx::Ceil(bound.min))), m_problem.vars.values[id].min);
 
-        m_problem.vars.values[id].max = (bound.max == std::numeric_limits<Double>::infinity()
+        m_problem.vars.values[id].max = min((bound.max == std::numeric_limits<Double>::infinity()
                 ? std::numeric_limits<int>::max()
-                : static_cast<int>(baryonyx::Floor(bound.max)));
+                : static_cast<int>(baryonyx::Floor(bound.max))), m_problem.vars.values[id].max);
+
+        m_problem.vars.values[id].touched = true;
 
         return true;
     }
@@ -1167,10 +1170,14 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p) noexcept
             case baryonyx::operator_type::equal:
                 if (elements.size() == 1) {
                     int val = static_cast<int>(baryonyx::Floor(value / elements[0].factor));
-                    assert(val >= p.m_problem.vars.values[elements[0].variable_index].min);
-                    assert(val <= p.m_problem.vars.values[elements[0].variable_index].max);
+                    if (val < p.m_problem.vars.values[elements[0].variable_index].min ||
+                        val > p.m_problem.vars.values[elements[0].variable_index].max) {
+                        cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be equal to " << val << endl;
+                        throw WrongFileFormat();
+                    }
                     p.m_problem.vars.values[elements[0].variable_index].min = val;
                     p.m_problem.vars.values[elements[0].variable_index].max = val;
+                    p.m_problem.vars.values[elements[0].variable_index].touched = true;
                 } else {
                     p.m_problem.equal_constraints.emplace_back(label, std::move(elements), value, constraint_next_id++, baryonyx::precision);
                 }
@@ -1178,8 +1185,12 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p) noexcept
             case baryonyx::operator_type::greater:
                 if (elements.size() == 1) {
                     int val = static_cast<int>(baryonyx::Ceil(value / elements[0].factor));
-                    assert(val <= p.m_problem.vars.values[elements[0].variable_index].max);
+                    if (val > p.m_problem.vars.values[elements[0].variable_index].max) {
+                        cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be greater than " << val << endl;
+                        throw WrongFileFormat();
+                    }
                     p.m_problem.vars.values[elements[0].variable_index].min = max(p.m_problem.vars.values[elements[0].variable_index].min, val);
+                    p.m_problem.vars.values[elements[0].variable_index].touched = true;
                 } else {
                     p.m_problem.greater_constraints.emplace_back(label, std::move(elements), value, constraint_next_id++, baryonyx::precision);
                 }
@@ -1187,8 +1198,12 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p) noexcept
             case baryonyx::operator_type::less:
                 if (elements.size() == 1) {
                     int val = static_cast<int>(baryonyx::Floor(value / elements[0].factor));
-                    assert(val >= p.m_problem.vars.values[elements[0].variable_index].min);
+                    if (val < p.m_problem.vars.values[elements[0].variable_index].min) {
+                        cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be less than " << val << endl;
+                        throw WrongFileFormat();
+                    }
                     p.m_problem.vars.values[elements[0].variable_index].max = min(p.m_problem.vars.values[elements[0].variable_index].max, val);
+                    p.m_problem.vars.values[elements[0].variable_index].touched = true;
                 } else {
                     p.m_problem.less_constraints.emplace_back(label, std::move(elements), value, constraint_next_id++, baryonyx::precision);
                 }
