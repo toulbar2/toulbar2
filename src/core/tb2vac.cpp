@@ -828,7 +828,7 @@ void VACExtension::enforcePass2()
                 } else {
                     knap->RestVACGroupExt();
                     for (int k = 0; k < (int)wasLastVal.size(); ++k) {
-                        if (xi->getVACCost(wasLastVal[k]) == MIN_COST) {
+                        if (!xi->getPBkillers(wasLastVal[k]).empty()  && xi->getPBkillers(wasLastVal[k])[0].first== PBKILLERSxi[0].first) {
                             xi->setPBkillers(wasLastVal[k], killers);
                             xi->setK(wasLastVal[k], usek, nbIterations);
                         }
@@ -939,8 +939,7 @@ bool VACExtension::enforcePass3()
             int xjk = xj->getK(w, nbIterations);
             if (maxk < xjk)
                 maxk = xjk;
-            for (EnumeratedVariable::iterator iti = xi->begin();
-                 iti != xi->end(); ++iti) {
+            for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
                 Value v = *iti;
                 if (cij->getK(xi, v, nbIterations) != 0) {
                     Cost ecost = lambda * cij->getK(xi, v, nbIterations);
@@ -1001,9 +1000,12 @@ bool VACExtension::enforcePass3()
             ValueProjected = knap->VACproject(xj, w, lambda * xjk);
             for (int k = 0; k < (int)ValueProjected.size(); ++k) {
                 assert(xj->canbe(ValueProjected[k]));
-                assert(xjk == xj->getK(ValueProjected[k], nbIterations) || xj->getVACCost(ValueProjected[k]) > MIN_COST);
                 xj->VACproject(ValueProjected[k], lambda * xjk);
-                xj->setK(ValueProjected[k], 0, nbIterations);
+                if(!xj->getPBkillers(ValueProjected[k]).empty() && xj->getPBkillers(ValueProjected[k])[0].first==PBKILLERSxj[0].first){
+                    assert(xjk == xj->getK(ValueProjected[k], nbIterations) || xj->getVACCost(ValueProjected[k]) > MIN_COST);
+                    xj->setK(ValueProjected[k], 0, nbIterations);
+                }
+
             }
             queueFindSupport.push(j);
             if (ToulBar2::LcLevel == LC_AC) {

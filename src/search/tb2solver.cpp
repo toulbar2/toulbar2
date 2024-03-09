@@ -2729,8 +2729,7 @@ void Solver::beginSolve(Cost ub)
         throw BadConfiguration();
     }
     if (ToulBar2::vac && ToulBar2::VAClin && wcsp->getMaxDomainSize() > 2) {
-        cerr << "Error: VAClin not implemented with non Boolean variables (remove -vaclin option)." << endl;
-        throw BadConfiguration();
+        cerr << "Warning: VAClin with non Boolean variables is still under test (-vaclin option)." << endl;
     }
 
     if (ToulBar2::searchMethod != DFBB) {
