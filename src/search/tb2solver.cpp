@@ -2728,10 +2728,6 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
-    if (ToulBar2::vac && ToulBar2::VAClin && wcsp->getMaxDomainSize() > 2) {
-        cerr << "Warning: VAClin with non Boolean variables is still under test (-vaclin option)." << endl;
-    }
-
     if (ToulBar2::searchMethod != DFBB) {
         if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
             ToulBar2::vnsLDSmax = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();

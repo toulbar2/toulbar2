@@ -11,7 +11,7 @@ tctr=0
 nary=1
 tight=80
 n=5
-d=2
+d=3
 K=1
 
 while (( $n < $nend )) ; do

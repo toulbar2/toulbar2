@@ -881,23 +881,15 @@ bool VACExtension::enforcePass3()
     Cost lambda = minlambda;
 
     // if (ToulBar2::verbose > 2) cout << "VAC Enforce Pass 3.   minlambda " << minlambda << " , var: " << inconsistentVariable << endl;
-    int i, j;
-    VACVariable *xi, *xj;
-    VACBinaryConstraint* cij;
-    int i0;
-    VACVariable* xi0;
-    if (PBconflict == -1) {
-        i0 = inconsistentVariable;
-        xi0 = (VACVariable*)wcsp->getVar(i0);
-    }
-    Value w;
+
+    VACVariable* xi0 = (PBconflict == -1) ? (VACVariable*)wcsp->getVar(inconsistentVariable) : NULL;
 
     int maxk = 0;
 
     if (!util) { // Empty R ?
         assert(bneckVar != -1 || bneckCF != NULL);
         if (bneckVar != -1) {
-            xi = (VACVariable*)wcsp->getVar(bneckVar);
+            VACVariable *xi = (VACVariable*)wcsp->getVar(bneckVar);
             xi->setThreshold(bneckCost + UNIT_COST);
         } else if (bneckCF != NULL) {
             bneckCF->setThreshold(bneckCost + UNIT_COST);
@@ -926,14 +918,14 @@ bool VACExtension::enforcePass3()
     maxk = 0;
     stack<int> queueFindSupport;
     while (!queueR->empty()) {
-        j = queueR->top().first;
-        w = queueR->top().second;
+        int j = queueR->top().first;
+        Value w = queueR->top().second;
         queueR->pop();
-        xj = (VACVariable*)wcsp->getVar(j);
+        VACVariable *xj = (VACVariable*)wcsp->getVar(j);
         if (xj->getPBkillers(w).empty()) {
-            i = xj->getKiller(w);
-            xi = (VACVariable*)wcsp->getVar(i);
-            cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
+            int i = xj->getKiller(w);
+            VACVariable *xi = (VACVariable*)wcsp->getVar(i);
+            VACBinaryConstraint *cij = (VACBinaryConstraint*)xi->getConstrNotDuplicate(xj);
             assert(cij);
             assert(!cij->isDuplicate());
             int xjk = xj->getK(w, nbIterations);
@@ -975,7 +967,7 @@ bool VACExtension::enforcePass3()
             vector<Value> Extended;
             for (int k = 1; k < (int)PBKILLERSxj.size(); ++k) {
                 Extended.clear();
-                xi = (VACVariable*)wcsp->getVar(PBKILLERSxj[k].first);
+                VACVariable *xi = (VACVariable*)wcsp->getVar(PBKILLERSxj[k].first);
                 if (xi->canbe(PBKILLERSxj[k].second) && knap->getkVAC(xi, PBKILLERSxj[k].second, nbIterations) != 0) {
                     Cost ecost = lambda * knap->getkVAC(xi, PBKILLERSxj[k].second, nbIterations);
                     Extended = knap->VACextend(xi, PBKILLERSxj[k].second, ecost);
@@ -1031,7 +1023,7 @@ bool VACExtension::enforcePass3()
         k2->VACPass3(&EPT, minlambda, PBkillersctr);
         bool findsupp = false;
         for (int l = 0; l < (int)EPT.size(); ++l) {
-            xi = (VACVariable*)wcsp->getVar(EPT[l].first.first);
+            VACVariable *xi = (VACVariable*)wcsp->getVar(EPT[l].first.first);
             if (EPT[l].second > MIN_COST) {
                 xi->VACextend(EPT[l].first.second, EPT[l].second);
             } else {
@@ -1052,15 +1044,15 @@ bool VACExtension::enforcePass3()
             }
         }
         for (int l = 0; l < (int)PBkillersctr.size(); ++l) {
-            xi = (VACVariable*)wcsp->getVar(PBkillersctr[l].first);
+            VACVariable *xi = (VACVariable*)wcsp->getVar(PBkillersctr[l].first);
             xi->findSupport();
             xi->propagateNC();
         }
     }
     while (!queueFindSupport.empty()) {
-        j = queueFindSupport.top();
+        int j = queueFindSupport.top();
         queueFindSupport.pop();
-        xj = (VACVariable*)wcsp->getVar(j);
+        VACVariable *xj = (VACVariable*)wcsp->getVar(j);
         xj->findSupport();
         xj->propagateNC();
     }
