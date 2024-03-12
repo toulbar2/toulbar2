@@ -461,8 +461,7 @@ struct problem_parser {
         m_cache_variable.try_emplace(string, size);
 
         m_problem.vars.names.emplace_back(string);
-        m_problem.vars.values.emplace_back(0, std::numeric_limits<int>::max(),
-            baryonyx::variable_type::real);
+        m_problem.vars.values.emplace_back();
 
         return size;
     }
@@ -536,15 +535,14 @@ struct problem_parser {
         // m_problem.vars.values[id].min = bound.min;
         // m_problem.vars.values[id].max = bound.max;
 
-        m_problem.vars.values[id].min = max((bound.min == -std::numeric_limits<Double>::infinity()
-                ? std::numeric_limits<int>::min()
-                : static_cast<int>(baryonyx::Ceil(bound.min))), m_problem.vars.values[id].min);
+        if (bound.min != -std::numeric_limits<Double>::infinity()) {
+            m_problem.vars.values[id].min = max(static_cast<int>(baryonyx::Ceil(bound.min)), m_problem.vars.values[id].min);
+            m_problem.vars.values[id].touched = true;
+        }
 
-        m_problem.vars.values[id].max = min((bound.max == std::numeric_limits<Double>::infinity()
-                ? std::numeric_limits<int>::max()
-                : static_cast<int>(baryonyx::Floor(bound.max))), m_problem.vars.values[id].max);
-
-        m_problem.vars.values[id].touched = true;
+        if (bound.max != +std::numeric_limits<Double>::infinity()) {
+            m_problem.vars.values[id].max = min(static_cast<int>(baryonyx::Floor(bound.max)), m_problem.vars.values[id].max);
+        }
 
         return true;
     }
@@ -918,7 +916,7 @@ read_bound(const stream_buffer::string_view_array& tokens) noexcept
 
         if (!starts_with_operator(tokens[read]))
             return bound_token(left_opt->value,
-                std::numeric_limits<Double>::infinity(), *name_opt,
+                +std::numeric_limits<Double>::infinity(), *name_opt,
                 read + 1);
 
         auto right_opt = read_right_bound_token(tokens[read], tokens[read + 1],
@@ -943,12 +941,12 @@ read_bound(const stream_buffer::string_view_array& tokens) noexcept
             if (!right_opt)
                 return std::nullopt;
 
-            if (tokens[1] == "=") {
+            if (right_opt->op == baryonyx::operator_type::equal) {
                 return bound_token(right_opt->value, right_opt->value, *name_opt, 1 + right_opt->read);
-            } else if (tokens[1] == ">") {
-                return bound_token(right_opt->value, std::numeric_limits<Double>::infinity(), *name_opt, 1 + right_opt->read);
-            } else if (tokens[1] == "<") {
-                return bound_token(0.0, right_opt->value, *name_opt, 1 + right_opt->read);
+            } else if (right_opt->op == baryonyx::operator_type::greater) {
+                return bound_token(right_opt->value, +std::numeric_limits<Double>::infinity(), *name_opt, 1 + right_opt->read);
+            } else if (right_opt->op == baryonyx::operator_type::less) {
+                return bound_token(-std::numeric_limits<Double>::infinity(), right_opt->value, *name_opt, 1 + right_opt->read);
             } else {
                 return std::nullopt;
             }
@@ -1203,7 +1201,6 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p) noexcept
                         throw WrongFileFormat();
                     }
                     p.m_problem.vars.values[elements[0].variable_index].max = min(p.m_problem.vars.values[elements[0].variable_index].max, val);
-                    p.m_problem.vars.values[elements[0].variable_index].touched = true;
                 } else {
                     p.m_problem.less_constraints.emplace_back(label, std::move(elements), value, constraint_next_id++, baryonyx::precision);
                 }

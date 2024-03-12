@@ -127,15 +127,7 @@ enum class operator_type {
 struct variable_value {
     variable_value() = default;
 
-    variable_value(int min_, int max_, variable_type type_)
-        : touched(true)
-        , min(min_)
-        , max(max_)
-        , type(type_)
-    {
-    }
-
-    bool touched{ false };
+    bool touched{ false }; // true if min value is explicitly specified in the problem file (either a unary constraint or a left bound or a binary variable)
     int min{ std::numeric_limits<int>::min() };
     int max{ std::numeric_limits<int>::max() };
     variable_type type{ variable_type::real };
