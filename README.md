@@ -31,7 +31,7 @@ graphical models:
 [uai2008]: http://graphmod.ics.uci.edu/uai08/Evaluation/Report
 [uai2010]: http://www.cs.huji.ac.il/project/UAI10/summary.php
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
-[uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
+[uai2014]: https://personal.utdallas.edu/~vibhav.gogate/uai14-competition/leaders.html 
 [xcsp]: https://xcsp.org/competitions
 [uai2022]: https://uaicompetition.github.io/uci-2022/results/final-leader-board
 
