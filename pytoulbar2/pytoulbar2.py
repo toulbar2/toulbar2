@@ -84,7 +84,7 @@ class CFN:
         self.Contradiction = tb2.Contradiction
         self.SolverOut = tb2.SolverOut
         self.Option = tb2.option
-        self.Top = tb2.MAX_COST // 10**resolution    # can be used to represent forbidden assignments
+        self.Top = float('inf') # can be used to represent forbidden assignments
         self.Limit = None
         tb2.check()    # checks compatibility between selected options
 
@@ -262,9 +262,9 @@ class CFN:
                 raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
             
             self.CFN.wcsp.postNullaryConstraint(mincost)
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, tb2.MAX_COST if isinf(defcost) else int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
-                self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
+                self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], tb2.MAX_COST if isinf(tcosts[i]) else int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
             self.CFN.wcsp.postNaryConstraintEnd(idx)
         
     def AddLinearConstraint(self, coefs, scope, operand = '==', rightcoef = 0):
