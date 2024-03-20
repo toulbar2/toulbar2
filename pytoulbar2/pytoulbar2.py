@@ -96,6 +96,8 @@ class CFN:
 
     @staticmethod
     def flatten(S):
+        """Warning: this recursive method might exceed maximum recursion depth
+        """
         if S == []:
             return S
         if isinstance(S[0], list):
@@ -298,10 +300,18 @@ class CFN:
             iscope.append(v) 
 
         if operand == '>=' or operand == '>' or operand == '==':
-            params = str((rightcoef + 1) if (operand == '>') else rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+            params = str((rightcoef + 1) if (operand == '>') else rightcoef)
+            for i,v in enumerate(iscope):
+                params += ' ' + str(self.CFN.wcsp.getDomainInitSize(v))
+                for valindex in range(self.CFN.wcsp.getDomainInitSize(v)):
+                    params += ' ' + str(self.CFN.wcsp.toValue(v, valindex)) + ' ' + str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
         if operand == '<=' or operand == '<' or operand == '==':
-            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
+            for i,v in enumerate(iscope):
+                params += ' ' + str(self.CFN.wcsp.getDomainInitSize(v))
+                for valindex in range(self.CFN.wcsp.getDomainInitSize(v)):
+                    params += ' ' + str(self.CFN.wcsp.toValue(v, valindex)) + ' ' + str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
     def AddSumConstraint(self, scope, operand = '==', rightcoef = 0):
@@ -354,14 +364,16 @@ class CFN:
             for v in iscope:
                 vtuples = [[str(val), str(coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
-                params += ' ' + ' '.join(self.flatten(vtuples))
+                for e in vtuples:
+                    params += ' ' + str(e[0]) + ' ' + str(e[1])
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
         if operand == '<=' or operand == '<' or operand == '==':
             params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
             for v in iscope:
                 vtuples = [[str(val), str(-coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
-                params += ' ' + ' '.join(self.flatten(vtuples))
+                for e in vtuples:
+                    params += ' ' + str(e[0]) + ' ' + str(e[1])
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
     def AddAllDifferent(self, scope, encoding = 'binary', excepted = None, incremental = False):
