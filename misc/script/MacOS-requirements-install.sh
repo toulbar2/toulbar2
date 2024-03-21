@@ -10,6 +10,7 @@ brew install cmake
 brew install gmp
 brew install zlib
 brew install xz
+brew install bzip2
 brew install boost
 brew install pybind11
 pip3 install pybind11
