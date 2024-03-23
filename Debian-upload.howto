@@ -29,3 +29,40 @@ git commit -am "Adapting changelog and patches to new version"
 debuild -B -j4
 # si cela fonctionne, push sur salsa (branches master et upstream)
 # sinon s'acharner...
+
+
+# Utilisation d'un docker Debian
+
+apt update
+apt upgrade
+apt install adduser
+adduser tschiex
+apt install fish
+apt install git
+apt install build-essential
+apt install sudo devscripts vim quilt
+apt install cmake bc doxygen doxygen-latex python3-sphinx python3-myst-parser python3-sphinx-rtd-theme latexmk libgmp-dev graphviz libboost-graph-dev libboost-iostreams-dev libjemalloc-dev zlib1g-dev liblzma-dev pkg-config
+apt install git-buildpackage python3-breathe libbz2-dev
+su - tschiex
+chsh
+
+# install .quiltrc:
+
+	
+# On another shell
+
+docker ps -a
+docker cp .ssh/ 922ef07b2037:/home/tschiex
+
+# back 2 docker (root)
+chown -R tschiex:tschiex /home/tschiex/.ssh
+su - tschiex
+eval (ssh-agent -c); ssh-add ~/.ssh/id_ed25519
+git clone git@salsa.debian.org:science-team/toulbar2.git
+git config --global user.name "Thomas Schiex"
+git config --global user.email "thomas.schiex@toulouse.inra.fr"
+git checkout upstream
+git checkout master
+
+docker ps -a
+docker commit <ps> tschiex/tb2-debian-unstable 
