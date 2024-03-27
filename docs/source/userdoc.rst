@@ -584,10 +584,10 @@ Node processing \& bounding options
 -V      VAC-based value ordering heuristic (default option)
 
 -T=[decimal]
-        threshold cost value for VAC (any decimal cost below this threshold is considered as null by VAC thus speeding-up its convergence, default value is 1)
+        threshold cost value for VAC (any decimal cost below this threshold is considered as null by VAC thus speeding-up its convergence, default value is 1, except for the cfn format where it is equal to the decimal cost precision, e.g. 0.001 if 3 digits of precision)
 
 -P=[decimal]
-        threshold cost value for VAC during the preprocessing phase only (default value is 1)
+        threshold cost value for VAC during the preprocessing phase only (default value is 1, except for the cfn format where it is equal to the decimal cost precision, e.g. 0.001 if 3 digits of precision)
 
 -C=[float]
         multiplies all costs internally by this number when loading the problem (cannot be done with cfn format and probabilistic graphical models in uai/LG formats) (default value is 1)
