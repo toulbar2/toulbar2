@@ -88,10 +88,11 @@ e.g.:
 <!-- (_README_5)= -->
 ## Installation from sources
 
-Compilation requires git, cmake and a C++-11 capable compiler (in C++11 mode). 
+Compilation requires git, cmake and a C++-20 capable compiler (in C++20 mode). 
 
 Required library:
 * libgmp-dev
+* bc (used during cmake)
 
 Recommended libraries (default use):
 * libboost-graph-dev
