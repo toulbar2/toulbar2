@@ -650,6 +650,8 @@ void VACExtension::enforcePass1()
 #ifdef INCREMENTALVAC
                         xi->queueVAC2();
 #endif
+                        if (ToulBar2::vacValueHeuristic)
+                            xi->queueSeekSupport();
                     }
                 }
             }
