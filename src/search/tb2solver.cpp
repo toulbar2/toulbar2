@@ -2724,8 +2724,8 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         throw BadConfiguration();
     }
-    if ((ToulBar2::hve <= 0 || ToulBar2::pwc < 0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
-        cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
+    if ((ToulBar2::hve <= 0 || ToulBar2::pwc < 0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > ((ToulBar2::VAClin)?wcsp->numberOfConnectedKnapsackConstraints():0) + wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
+        cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::searchMethod != DFBB) {

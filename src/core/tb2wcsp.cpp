@@ -466,7 +466,7 @@ void tb2init()
     ToulBar2::addAMOConstraints = -1;
     ToulBar2::addAMOConstraints_ = false;
     ToulBar2::knapsackDP = -2;
-    ToulBar2::VAClin = false;
+    ToulBar2::VAClin = true;
 
     ToulBar2::varOrder = NULL;
     ToulBar2::btdMode = 0;
@@ -4281,9 +4281,9 @@ void WCSP::preprocessing()
                 propagate();
             }
         }
-        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
+        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin)?numberOfConnectedKnapsackConstraints():0) + numberOfConnectedBinaryConstraints()) {
             if (ToulBar2::verbose) {
-                cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
+                cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
             }
             ToulBar2::FullEAC = false;
         }
@@ -4579,10 +4579,19 @@ unsigned int WCSP::numberOfConnectedBinaryConstraints() const
 {
     unsigned int res = 0;
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected() && constrs[i]->arity() == 2 && !constrs[i]->isSep())
+        if (constrs[i]->connected() && constrs[i]->isBinary() && !constrs[i]->isSep())
             res++;
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep())
+            res++;
+    return res;
+}
+
+unsigned int WCSP::numberOfConnectedKnapsackConstraints() const
+{
+    unsigned int res = 0;
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && constrs[i]->isKnapsack())
             res++;
     return res;
 }

@@ -198,6 +198,7 @@ public:
     virtual unsigned int numberOfConstraints() const = 0; ///< \brief initial number of cost functions (before variable elimination)
     virtual unsigned int numberOfConnectedConstraints() const = 0; ///< \brief current number of cost functions
     virtual unsigned int numberOfConnectedBinaryConstraints() const = 0; ///< \brief current number of binary cost functions
+    virtual unsigned int numberOfConnectedKnapsackConstraints() const = 0; ///< \brief current number of knapsack cost functions
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
     virtual unsigned int medianArity() const = 0; ///< \brief median arity of current cost functions

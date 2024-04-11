@@ -435,6 +435,7 @@ public:
     unsigned int numberOfConstraints() const { return constrs.size(); } ///< \brief initial number of cost functions
     unsigned int numberOfConnectedConstraints() const; ///< \brief current number of cost functions
     unsigned int numberOfConnectedBinaryConstraints() const; ///< \brief current number of binary cost functions
+    unsigned int numberOfConnectedKnapsackConstraints() const; ///< \brief current number of knapsack cost functions
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
     unsigned int medianDegree() const; ///< \brief median current degree of variables
     unsigned int medianArity() const; ///< \brief median arity of current cost functions
