@@ -712,8 +712,8 @@ void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind)
     args += to_string(int(lcost_func->capacity));
     for (size_t scope_ind = 0; scope_ind < scope.size(); scope_ind++) {
 
-        mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[0]];
-        EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind]->scope[0]].name)));
+        mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[scope_ind]];
+        EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind]->scope[scope_ind]].name)));
 
         // compute the number of value to indicate for the variable
         auto iter = find_if(lcost_func->weights[scope_ind].begin(), lcost_func->weights[scope_ind].end(), [](auto elt) { return elt.first == 0; });
