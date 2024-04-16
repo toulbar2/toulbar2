@@ -3312,14 +3312,14 @@ public:
                                 os << " " << VarVal[i].size();
                                 for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
                                     assert(scope[i]->canbe(VarVal[i][j]));
-                                    os << " " << VarVal[i][j];
+                                    os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
                                     os << " " << weights[i][j];
                                 }
                             } else {
                                 os << " " << VarVal[i].size() - 1;
                                 for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
                                     assert(scope[i]->canbe(VarVal[i][j]));
-                                    os << " " << VarVal[i][j];
+                                    os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
                                     os << " " << weights[i][j] - weights[i].back();
                                 }
                             }

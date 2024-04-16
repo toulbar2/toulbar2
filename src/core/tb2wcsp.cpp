@@ -4804,7 +4804,7 @@ void WCSP::dump(ostream& os, bool original)
     }
     if (getLb() > MIN_COST || getNegativeLb() != MIN_COST) {
         if (getLb() < getNegativeLb()) {
-            cerr << "Warning! Negative problem lower bound cannot be represented in wcsp format! (fixed to zero)" << endl;
+            cerr << "Warning! Negative problem lower bound cannot be represented in wcsp format! (fixed to zero instead of " << getLb() - getNegativeLb() << ")" << endl;
         }
         os << "0 " << max(MIN_COST, getLb() - getNegativeLb()) << " 0" << endl;
     }
