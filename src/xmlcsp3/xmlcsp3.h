@@ -56,7 +56,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 *it = '(';
             } else if(*it == ']' || *it == '}') {
                 *it = ')';
-            } else if(*it == '/' || *it == '{' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+            } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
                 *it = '_';
             }
         }
@@ -72,7 +72,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 *it = '(';
             } else if(*it == ']' || *it == '}') {
                 *it = ')';
-            } else if(*it == '/' || *it == '{' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+            } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
                 *it = '_';
             }
         }
