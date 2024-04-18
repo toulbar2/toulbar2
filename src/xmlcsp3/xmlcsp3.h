@@ -51,16 +51,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildVariableInteger(string id, int minValue, int maxValue) override {
         // warning! forbidden characters /#[]{}:, and spaces in cfn format
         string varname = id;
-        std::ranges::replace(varname, '[', '(');
-        std::ranges::replace(varname, ']', ')');
-        std::ranges::replace(varname, '{', '(');
-        std::ranges::replace(varname, '}', ')');
-        std::ranges::replace(varname, '/', '_');
-        std::ranges::replace(varname, '#', '_');
-        std::ranges::replace(varname, ':', '_');
-        std::ranges::replace(varname, ',', '_');
-        std::ranges::replace(varname, ' ', '_');
-        std::ranges::replace(varname, '\t', '_');
+        for(auto it = varname.begin(); it != varname.end(); it ++) {
+            if(*it == '[' || *it == '{') {
+                *it = '(';
+            } else if(*it == ']' || *it == '}') {
+                *it = ')';
+            } else if(*it == '/' || *it == '{' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+                *it = '_';
+            }
+        }
         int v = problem->makeEnumeratedVariable(varname, minValue, maxValue);
         mapping[id] = v;
     }
@@ -68,16 +67,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildVariableInteger(string id, vector<int> &values) override {
         // warning! forbidden characters /#[]{}:, and spaces in cfn format
         string varname = id;
-        std::ranges::replace(varname, '[', '(');
-        std::ranges::replace(varname, ']', ')');
-        std::ranges::replace(varname, '{', '(');
-        std::ranges::replace(varname, '}', ')');
-        std::ranges::replace(varname, '/', '_');
-        std::ranges::replace(varname, '#', '_');
-        std::ranges::replace(varname, ':', '_');
-        std::ranges::replace(varname, ',', '_');
-        std::ranges::replace(varname, ' ', '_');
-        std::ranges::replace(varname, '\t', '_');
+        for(auto it = varname.begin(); it != varname.end(); it ++) {
+            if(*it == '[' || *it == '{') {
+                *it = '(';
+            } else if(*it == ']' || *it == '}') {
+                *it = ')';
+            } else if(*it == '/' || *it == '{' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+                *it = '_';
+            }
+        }
         int v = problem->makeEnumeratedVariable(varname,values);
         mapping[id] = v;
     }
