@@ -92,10 +92,10 @@ constraint
        sum(i in 1..num_weights[j])( knapsack_weight[cum_weights[j] + i] * bool2int(p[knapsack_variable[cum_weights[j] + i]] = knapsack_value[cum_weights[j] + i]) ) >= knapsack_capacity[j]
    )
 %
-% solution checker for MANN_a9.clq.dzn: objective=29
+% solution checker for .dzn: objective=
 %   /\
-%   forall(j in 1..45) (
-%   	   p[j] = [1,1,1,0,1,0,0,0,1,1,0,1,1,0,1,1,1,0,1,0,1,0,1,1,0,1,1,0,1,1,1,0,1,0,1,1,0,1,1,1,0,1,0,1,1][j]
+%   forall(j in 1..num_variables) (
+%   	   p[j] = [0,0,0,...][j]
 %   )
 ;
 
