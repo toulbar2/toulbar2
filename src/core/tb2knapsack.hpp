@@ -494,6 +494,40 @@ public:
         }
         NbIteVAC = 0;
     }
+
+    bool VACNeedPropagate(){
+        bool removed =false;
+        int j;
+        int i=0;
+        int k;
+        NbIteVAC++;
+        while( i < arity_ && !removed) {
+        //for (int i= 0; i < arity_; ++i ) {
+            j=0;
+            if (assigned[i] == 0) {
+
+                //for (int j = 0; j < (int) VarVal[i].size() - 1; ++j) {
+                while(j < (int)VarVal[i].size() - 1 && !removed) {
+                    if (DeleteValVAC[i][j] == 0 && !scope[i]->canbe(VarVal[i][j])) {
+                        DeleteValVAC[i][j] = NbIteVAC;
+                        removed = true;
+                    }
+                    j++;
+                }
+                if (DeleteValVAC[i].back() == 0) {
+                    k = 0;
+                    while (k < (int) NotVarVal[i].size() && !scope[i]->canbe(NotVarVal[i][k]))
+                        k++;
+                    if (k == (int) NotVarVal[i].size()) {
+                        DeleteValVAC[i].back() = NbIteVAC;
+                        removed = true;
+                    }
+                }
+            }
+            i++;
+        }
+        return removed;
+    }
     Cost VACPass1(vector<pair<int, Value>>* Killer, vector<pair<int, Value>>* Killed, Cost lambda, Cost itThreshold)
     {
         assert(Killer->empty());
@@ -512,7 +546,6 @@ public:
                 EmptyNotVarVal.push_back(false);
         }
         int k = 0;
-        bool ValueRemoval = false;
         k1 = 0;
         Long MaxW = 0;
         vector<Long> GreatW;
@@ -542,7 +575,6 @@ public:
         }
         if (MaxW < capacity) {
             k = 0;
-            Killer->clear();
             Killer->push_back({ this->wcspIndex, 0 });
             for (int i = 0; i < carity; ++i) {
                 currentvar = current_scope_idx[i];
@@ -576,12 +608,10 @@ public:
                         for (unsigned int j = 0; j < NotVarVal[currentvar].size(); ++j) {
                             if (scope[currentvar]->canbe(NotVarVal[currentvar][j])) {
                                 Killed->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][j] });
-                                ValueRemoval = true;
                             }
                         }
                     } else {
                         Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
-                        ValueRemoval = true;
                     }
                     assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                 }
@@ -686,7 +716,6 @@ public:
             }
             Cost C = MIN_COST;
             Killed->clear();
-            Killer->clear();
             Killer->push_back({ this->wcspIndex, 0 });
             for (int i = 0; i < carity; i++) {
                 currentvar = current_scope_idx[i];
@@ -743,40 +772,29 @@ public:
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][l])) {
                                         Killed->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
-                                        ValueRemoval = true;
                                     }
                                 }
                             } else {
                                 assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                                 Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
-                                ValueRemoval = true;
                             }
                         }
                     }
                 }
             }
-            if (ValueRemoval) {
-                NbIteVAC++;
-                bool test = false;
-                for (int i = 0; i < arity_; ++i) {
-                    for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
-                        if (DeleteValVAC[i][j] == 0 && !scope[i]->canbe(VarVal[i][j])) {
-                            DeleteValVAC[i][j] = NbIteVAC;
-                            test = true;
-                        }
-                    }
-                    if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
-                        test = true;
-                        DeleteValVAC[i].back() = NbIteVAC;
+            for (int i = 0; i < arity_; ++i) {
+                for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
+                    if (DeleteValVAC[i][j] == 0 && !scope[i]->canbe(VarVal[i][j])) {
+                        DeleteValVAC[i][j] = NbIteVAC;
                     }
                 }
-                if (test)
-                    Killer->insert(Killer->begin(), { this->wcspIndex, NbIteVAC });
-                else {
-                    NbIteVAC--;
-                    Killer->insert(Killer->begin(), { this->wcspIndex, 0 });
+                if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
+                    DeleteValVAC[i].back() = NbIteVAC;
                 }
             }
+            assert(Killer->empty());
+            Killer->insert(Killer->begin(), { this->wcspIndex, NbIteVAC });
+
             return MIN_COST;
         }
     }
@@ -808,7 +826,6 @@ public:
         k1 = 0;
         Long MaxW = weights[TestedVar_idx][TestedVal_idx];
         vector<Long> GreatW;
-        Long GreatTestedVar = 0;
         for (int i = 0; i < arity_; i++) {
             if (assigned[i] == 0 && scope[i]->wcspIndex != TestedVal.first) {
                 nbValue[k1] = 0;
@@ -831,13 +848,6 @@ public:
                 current_scope_idx[k1] = i;
                 k1++;
                 carity++;
-            } else if (scope[i]->wcspIndex == TestedVal.first) {
-                for (int l = 0; l < (int)VarVal[i].size(); ++l) {
-                    if ((DeleteValVAC[i][l] == 0 || DeleteValVAC[i][l] > CurrIte) && scope[i]->canbe(VarVal[i][l])) {
-                        if (weights[i][l] > GreatTestedVar)
-                            GreatTestedVar = weights[i][l];
-                    }
-                }
             }
         }
 
@@ -869,8 +879,6 @@ public:
             return kia * lambda;
         }
         k = 0;
-        MaxW += GreatTestedVar - weights[TestedVar_idx][TestedVal_idx];
-
         Long W = weights[TestedVar_idx][TestedVal_idx];
         Cost c = -lb + assigneddeltas + deltaCosts[TestedVar_idx][TestedVal_idx];
         int item1 = 0;
@@ -987,7 +995,7 @@ public:
                         }
                     } else {
                         C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * weights[currentvar][currentval]);
-                        if (C >= c) {
+                        if (C > 0) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
@@ -995,9 +1003,9 @@ public:
                             } else {
                                 Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                             }
-                        } else if (C > LimitTuple) {
+                        }/* else if (C > LimitTuple) {
                             LimitTuple = C;
-                        }
+                        }*/
                     }
                 }
             }

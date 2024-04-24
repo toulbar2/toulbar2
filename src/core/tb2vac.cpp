@@ -588,6 +588,8 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
 
 void VACExtension::enforcePass1()
 {
+    bool firstit;
+    firstit= true;
     if (ToulBar2::verbose >= 4)
         cout << "enforcePass1 itThreshold: " << itThreshold << endl;
     VACVariable* xj;
@@ -613,8 +615,8 @@ void VACExtension::enforcePass1()
         if (VAC.empty() && ToulBar2::VAClin) {
             for (int i = 0; i < (int)KnapsackList.size(); ++i) {
                 auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[KnapsackList[i]]);
-                if (k && k->connected()) {
-                    bool wipeout = false;
+                if (k && k->connected() && (k->VACNeedPropagate() || firstit)) {
+                    bool wipeout;
                     vector<pair<int, Value>> killers;
                     vector<pair<int, Value>> killed;
                     Cost OPT;
@@ -655,6 +657,7 @@ void VACExtension::enforcePass1()
                     }
                 }
             }
+            firstit=false;
         }
     }
     inconsistentVariable = -1;
