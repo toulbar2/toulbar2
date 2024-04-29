@@ -203,9 +203,9 @@ struct real_token {
 };
 
 struct function_element_token {
-    constexpr function_element_token() noexcept = default;
+    function_element_token() noexcept = default;
 
-    constexpr function_element_token(Double factor_, std::string_view name_,
+    function_element_token(Double factor_, std::string_view name_,
         int read_) noexcept
         : factor(factor_)
         , name(name_)
@@ -214,7 +214,7 @@ struct function_element_token {
     }
 
     Double factor = 0.0;
-    std::string_view name = {};
+    std::string name = {}; //GQ: replace std::string_view by std::string to avoid memory issue with stream-buffer
     int read = 0;
 };
 

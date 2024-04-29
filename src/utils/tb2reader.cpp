@@ -4400,8 +4400,6 @@ void WCSP::read_lp(const char* fileName)
         ToulBar2::costMultiplier *= -1.0;
     }
 
-    assert(pb.objective.qelements.size() == 0); // quadratic objective function not taken into account yet!
-
     Double totalShiftCost = 0.0;
     for (auto& elem : pb.objective.elements) {
         Double mult = elem.factor * ToulBar2::costMultiplier;
@@ -4412,8 +4410,18 @@ void WCSP::read_lp(const char* fileName)
         mult = multiplier * min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
         totalShiftCost += mult;
     }
+    for (auto& elem : pb.objective.qelements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier;
+        if (multiplier * std::abs(mult) * max(abs(pb.vars.values[elem.variable_index_a].min), abs(pb.vars.values[elem.variable_index_a].max)) * max(abs(pb.vars.values[elem.variable_index_b].min), abs(pb.vars.values[elem.variable_index_b].max)) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
+            cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        mult = multiplier * min(min(mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].max), min(mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].max));
+        totalShiftCost += mult;
+    }
     negCost -= (Cost)roundl(totalShiftCost);
 
+    // linear objective
     for (auto& elem : pb.objective.elements) {
         Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
         EnumeratedVariable* x = (EnumeratedVariable*)vars[elem.variable_index];
@@ -4424,6 +4432,18 @@ void WCSP::read_lp(const char* fileName)
             unaryconstr.costs.push_back((Cost)roundl(mult * v - shiftCost));
         }
         unaryconstrs.push_back(unaryconstr);
+    }
+    // quadratic objective
+    for (auto& elem : pb.objective.qelements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
+        vector<Cost> costs;
+        Double shiftCost = min(min(mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].max), min(mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].max));
+        for (int v = pb.vars.values[elem.variable_index_a].min; v <= pb.vars.values[elem.variable_index_a].max; v++) {
+            for (int w = pb.vars.values[elem.variable_index_b].min; w <= pb.vars.values[elem.variable_index_b].max; w++) {
+                costs.push_back((Cost)roundl(mult * v * w - shiftCost));
+            }
+        }
+        postBinaryConstraint(elem.variable_index_a, elem.variable_index_b, costs);
     }
 
     // read linear constraints
