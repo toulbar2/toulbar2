@@ -34,6 +34,7 @@ file(
   ${My_Source}/vns/*.*pp 
   ${My_Source}/mcriteria/*.*pp
   ${My_Source}/ToulbarVersion.*pp
+  ${My_Source}/convex/*.*pp
   )
 
 IF(CPLEX)

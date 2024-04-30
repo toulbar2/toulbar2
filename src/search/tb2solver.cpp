@@ -2764,6 +2764,15 @@ void Solver::beginSolve(Cost ub)
             }
         }
     }
+    if (ToulBar2::lrBCD_cmd.size() > 0) {
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+            if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
+                cout << "Warning! Cannot use LR-BCD local search with bounds arc propagation (non enumerated variable domains)." << endl;
+                ToulBar2::pils_cmd = "";
+                break;
+            }
+        }
+    }
     if (((WCSP*)wcsp)->isAlreadyTreeDec(ToulBar2::varOrder)) {
         if (ToulBar2::btdMode >= 3) {
             cout << "Warning! Cannot apply path decomposition with a given tree decomposition file." << endl;
@@ -2918,7 +2927,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         if (ToulBar2::verbose >= 0)
             cout << "INCOP solving time: " << cpuTime() - incopStartTime << " seconds." << endl;
     }
-    if (ToulBar2::pils_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 0) {
+    if (ToulBar2::pils_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 2 && getWCSP()->numberOfConnectedBinaryConstraints() > 1) {
         double pilsStartTime = cpuTime();
         vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
@@ -2926,6 +2935,15 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         pils(ToulBar2::pils_cmd, bestsol);
         if (ToulBar2::verbose >= 0)
             cout << "PILS solving time: " << cpuTime() - pilsStartTime << " seconds." << endl;
+    }
+    if (ToulBar2::lrBCD_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 2 && getWCSP()->numberOfConnectedBinaryConstraints() > 1) {
+        double lrBCDStartTime = cpuTime();
+        vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
+            bestsol[i] = (wcsp->canbe(i, wcsp->getBestValue(i)) ? wcsp->getBestValue(i) : wcsp->getSupport(i));
+        lrBCD(ToulBar2::lrBCD_cmd, bestsol);
+        if (ToulBar2::verbose >= 0)
+            cout << "LR-BCD solving time: " << cpuTime() - lrBCDStartTime << " seconds." << endl;
     }
     ToulBar2::lds = lds;
 

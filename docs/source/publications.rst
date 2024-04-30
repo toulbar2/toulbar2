@@ -147,6 +147,12 @@ What are the algorithms inside toulbar2 ?
   A Beldjilali, P Montalbano, D Allouche, G Katsirelos, and S de Givry,
   In Proc. of CP-22, volume 235, pages 7:1-7:10, Haifa, Israel, 2022.
   
+- **Low rank block coordinate descent (LR-BCD)**
+
+  `Efficient Low Rank Convex Bounds for Pairwise Discrete Graphical Models <https://proceedings.mlr.press/v162/durante22a/durante22a.pdf>`_,
+  Valentin Durante, George Katsirelos, and Thomas Schiex,
+  In Proc. of the 39th International Conference on Machine Learning (ICML), PMLR 162:5726-5741, 2022. 
+ 
 - **Virtual Pairwise Consistency (pwc, hve)**
 
   `Virtual Pairwise Consistency in Cost Function Networks <https://miat.inrae.fr/degivry/Montalbano23a.pdf>`_,

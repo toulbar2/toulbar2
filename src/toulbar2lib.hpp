@@ -613,6 +613,13 @@ public:
     /// \warning cannot solve problems with non-binary cost functions
     virtual Cost pils(string cmd, vector<Value>& solution) = 0;
 
+    // LR-BCD local search
+    /// \brief solves the current problem using LR-BCD local search @ Valentin Durante, George Katsirelos, Thomas Schiex
+    /// \return best solution cost found
+    /// \param cmd command line argument for LR-BCD local search solver (cmd format: maxiter rank nbroundings)
+    /// \warning cannot solve problems with non-binary cost functions
+    virtual Cost lrBCD(string cmd, vector<Value>& solution) = 0;
+
     /// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its
     /// non-zero half squared matrix costs (can be positive or negative, with \f$\forall i, posx[i] \leq posy[i]\f$)

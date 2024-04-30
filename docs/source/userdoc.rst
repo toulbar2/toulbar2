@@ -420,6 +420,13 @@ Initial upper bounding
         *nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC 
         nbEvalMax strengthMin strengthMax incrFactor decrFactor*.
 
+-lrbcd=["string"]
+        initial upperbound found by LR-BCD local search solver.
+        The string parameter is optional, using "5 -2 3" by default with the
+        following meaning:
+        *maxiter rank nbroundings*.
+        (a negative rank means dividing the theoretical rank by the given absolute value)
+
 -x=[(,i[:math:`=\#<>`]a)*]
         performs an elementary operation (':math:`=`':assign,
         ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with

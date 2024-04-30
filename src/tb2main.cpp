@@ -33,6 +33,7 @@ const Long epsmultiplier = 30;
 // INCOP and PILS default command line options
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
 const string PILS_cmd = "3 0 0.333 100 500 10000 0.1 0.5 0.1 0.1";
+const string LRBCD_cmd = "5 -2 3";
 
 //* definition of path separtor depending of OS '/'  => Unix ;'\' ==> windows
 #ifdef __WIN32__
@@ -303,6 +304,8 @@ enum {
     NO_OPT_localsearch,
     OPT_pils,
     NO_OPT_pils,
+    OPT_lrBCD,
+    NO_OPT_lrBCD,
     OPT_EDAC,
     OPT_ub,
     OPT_divDist,
@@ -578,7 +581,12 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_burst, (char*)"-burst:", SO_NONE },
 #endif
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
+    { NO_OPT_localsearch, (char*)"-i:", SO_NONE },
     { OPT_pils, (char*)"-pils", SO_OPT }, // PILS option default or string for pils argument
+    { NO_OPT_pils, (char*)"-pils:", SO_NONE },
+    { OPT_lrBCD, (char*)"-lrBCD", SO_OPT }, // LR-BCD option default or string for LR-BCD arguments
+    { OPT_lrBCD, (char*)"-lrbcd", SO_OPT },
+    { NO_OPT_lrBCD, (char*)"-lrbcd:", SO_NONE },
     { OPT_EDAC, (char*)"-k", SO_REQ_SEP },
     { OPT_ub, (char*)"-ub", SO_REQ_SEP }, // init upper bound in cli
     { OPT_divDist, (char*)"-div", SO_REQ_SEP }, // distance between solutions
@@ -953,6 +961,10 @@ void help_msg(char* toulbar2filename)
     cout << "   -pils=[\"string\"] : initial upperbound found by PILS local search solver." << endl;
     cout << "       string parameter is optional, using \"" << PILS_cmd << "\" by default with the following meaning:" << endl;
     cout << "       nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC nbEvalMax strengthMin strengthMax incrFactor decrFactor" << endl;
+    cout << "   -lrbcd=[\"string\"] : initial upperbound found by LR-BCD local search solver." << endl;
+    cout << "       string parameter is optional, using \"" << LRBCD_cmd << "\" by default with the following meaning:" << endl;
+    cout << "       maxiter rank nbroundings" << endl;
+    cout << "       (a negative rank means dividing the theoretical rank by the given absolute value)" << endl;
 #ifdef BOOST
     cout << "   -vns : unified decomposition guided variable neighborhood search (a problem decomposition can be given as *.dec, *.cov, or *.order input files or using tree decomposition options such as -O)";
 #ifdef OPENMPI
@@ -2185,6 +2197,8 @@ int _tmain(int argc, TCHAR* argv[])
                 } else {
                     ToulBar2::incop_cmd = Incop_cmd;
                 }
+            } else if (args.OptionId() == NO_OPT_localsearch) {
+                ToulBar2::incop_cmd = "";
             }
 
             // local search PILS
@@ -2194,6 +2208,19 @@ int _tmain(int argc, TCHAR* argv[])
                 } else {
                     ToulBar2::pils_cmd = PILS_cmd;
                 }
+            } else if (args.OptionId() == NO_OPT_pils) {
+                ToulBar2::pils_cmd = "";
+            }
+
+            // local search LR-BCD
+            if (args.OptionId() == OPT_lrBCD) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::lrBCD_cmd = args.OptionArg();
+                } else {
+                    ToulBar2::lrBCD_cmd = LRBCD_cmd;
+                }
+            } else if (args.OptionId() == NO_OPT_lrBCD) {
+                ToulBar2::lrBCD_cmd = "";
             }
 
             // EDAC OPTION

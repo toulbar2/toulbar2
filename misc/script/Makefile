@@ -1,4 +1,4 @@
-SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
+SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp convex/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
 
 # Comment the following line if BOOST Graph library uninstalled
 BOOST = -DBOOST
@@ -83,6 +83,6 @@ iloglue: iloglue.cpp libtb2.so
 	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lboost_graph -lboost_iostreams -lgmp -lz -lbz2 -llzma
 
 clean:
-	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o pils/src/exe/*.o mcriteria/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
+	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o convex/*.o pils/src/exe/*.o mcriteria/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
 
 all: toulbar2

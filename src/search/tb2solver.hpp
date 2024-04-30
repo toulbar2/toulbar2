@@ -506,6 +506,10 @@ public:
     Cost pils(vector<Value>& solution, int nbruns = 3, int perturb_id = 0, double perturb_s = 0.333, unsigned long long flatMax = 100, unsigned long long nEvalHC = 500, unsigned long long nEvalMax = 10000, double strengthMin = 0.1, double strengthMax = 0.5, double incrFactor = 0.1, double decrFactor = 0.1);
     Cost pils(string cmd, vector<Value>& solution);
 
+    // LR-BCD local search
+    Cost lrBCD(size_t maxiter, int k, size_t nbR, vector<Value>& solution);
+    Cost lrBCD(string cmd, vector<Value>& solution);
+
     bool solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, int* sol);
 
     void dump_wcsp(const char* fileName, bool original = true, ProblemFormat format = WCSP_FORMAT);

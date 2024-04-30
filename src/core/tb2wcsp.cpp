@@ -276,6 +276,7 @@ Double ToulBar2::sigma;
 
 string ToulBar2::incop_cmd;
 string ToulBar2::pils_cmd;
+string ToulBar2::lrBCD_cmd;
 
 string ToulBar2::clusterFile;
 ofstream ToulBar2::vnsOutput;
@@ -504,6 +505,7 @@ void tb2init()
 
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
+    ToulBar2::lrBCD_cmd = "";
 
     ToulBar2::searchMethod = DFBB;
 
@@ -731,8 +733,8 @@ void tb2checkOptions()
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         throw BadConfiguration();
     }
-    if (ToulBar2::addAMOConstraints != -1 && ToulBar2::VAClin) {
-        cerr << "Erro: VAC on linear constraints with additionnal At-Most-One (AMO) constraints is not implemented!" << endl;
+    if (ToulBar2::addAMOConstraints != -1 && ToulBar2::vac && ToulBar2::VAClin) {
+        cerr << "Error: VAC on linear constraints with additionnal At-Most-One (AMO) constraints is not implemented!" << endl;
         throw BadConfiguration();
     }
     if ((ToulBar2::pwc < 0 || ToulBar2::hve < 0) && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning PWC assumes AC supports
@@ -760,6 +762,10 @@ void tb2checkOptions()
     }
     if (ToulBar2::pils_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
         cout << "Error: Cannot use PILS local search for (weighted) counting (remove -i option)." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::lrBCD_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
+        cout << "Error: Cannot use LR BCD local search for (weighted) counting (remove -i option)." << endl;
         throw BadConfiguration();
     }
     if (!ToulBar2::binaryBranching && ToulBar2::hbfs) {
