@@ -8,9 +8,9 @@
 #include <eigen3/Eigen/Dense>
 #include <core/tb2binconstr.hpp>
 
-// typedef for dense vectors and matrices
-typedef Eigen::VectorXd DnVec;
-typedef Eigen::MatrixXd DnMat;
+// typedef for dense vectors and matrices using Double entries
+typedef Eigen::Matrix<Double, Eigen::Dynamic, 1> DnVec;
+typedef Eigen::Matrix<Double, Eigen::Dynamic, Eigen::Dynamic> DnMat;
 
 // return a vector of int with the domain indices
 // In :
@@ -129,7 +129,7 @@ DnVec unaryCost(WeightedCSP* wcsp)
             size_t indI = dom[var2index[i]];
 
             for (size_t k = 0; k < domcosts.size(); k++) {
-                unaryCost(indI + k) = (double)domcosts[k].second;
+                unaryCost(indI + k) = (Double)domcosts[k].second;
             }
         }
     }
@@ -141,7 +141,7 @@ DnVec unaryCost(WeightedCSP* wcsp)
 // In :
 //      - WeightedCSP* wcsp
 // Out :
-//      - vector<double> binaryCost
+//      - vector<Double> binaryCost
 DnMat binaryCost(WeightedCSP* wcsp)
 {
     assert(wcsp);
@@ -165,7 +165,7 @@ DnMat binaryCost(WeightedCSP* wcsp)
 
             for (size_t i = 0; i < domi.size(); i++) {
                 for (size_t j = 0; j < domj.size(); j++) {
-                    double cost = (double)ctr->getCost(domi[i], domj[j]);
+                    Double cost = (Double)ctr->getCost(domi[i], domj[j]);
                     if (cost != 0) {
                         binaryCost(indI + i, indJ + j) += 0.5 * cost;
                         binaryCost(indJ + j, indI + i) += 0.5 * cost; // binaryCost must be symmetric
@@ -186,7 +186,7 @@ DnMat binaryCost(WeightedCSP* wcsp)
 
             for (size_t i = 0; i < domi.size(); i++) {
                 for (size_t j = 0; j < domj.size(); j++) {
-                    double cost = (double)ctr->getCost(domi[i], domj[j]);
+                    Double cost = (Double)ctr->getCost(domi[i], domj[j]);
                     if (cost != 0) {
                         binaryCost(indI + i, indJ + j) += 0.5 * cost;
                         binaryCost(indJ + j, indI + i) += 0.5 * cost; // binaryCost must be symmetric

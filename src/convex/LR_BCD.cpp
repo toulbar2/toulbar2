@@ -14,14 +14,15 @@
 
 using namespace std;
 
-// typedef for dense vectors and matrices
-typedef Eigen::VectorXd DnVec;
-typedef Eigen::MatrixXd DnMat;
+// typedef for dense vectors and matrices using Double entries
+typedef Eigen::Matrix<Double, Eigen::Dynamic, 1> DnVec;
+typedef Eigen::Matrix<Double, Eigen::Dynamic, Eigen::Dynamic> DnMat;
 
 /////////////////////////  LR-BCD code  /////////////////////////
 //                                                             //
 //      Compute primal lower bound using LR-BCD                //
 //      Compute feasible integer solution using GW heuristic   //
+//      and local 1-opt search                                 //
 //                                                             //
 /////////////////////////////////////////////////////////////////
 
@@ -50,8 +51,8 @@ size_t getRank(WeightedCSP* wcsp)
 //      - DnVec &v
 //      - size_t k
 //      - default_random_engine &generator
-//      - normal_distribution<double> &distribution
-void randUnit(DnVec& v, size_t k) //, default_random_engine& generator, normal_distribution<double>& distribution)
+//      - normal_distribution<Double> &distribution
+void randUnit(DnVec& v, size_t k) //, default_random_engine& generator, normal_distribution<Double>& distribution)
 {
     assert(k > 0);
 
@@ -78,8 +79,8 @@ DnMat mixingInit(WeightedCSP* wcsp, size_t k)
 
     //default_random_engine generator;
     //generator.seed(time(0));
-    // normal_distribution<double> distribution(0, 1); // normal distribution
-    //uniform_real_distribution<double> distribution(-1.0, 1.0); // uniform distribution
+    // normal_distribution<Double> distribution(0, 1); // normal distribution
+    //uniform_real_distribution<Double> distribution(-1.0, 1.0); // uniform distribution
 
     for (size_t j = 0; j < n; j++) {
         for (size_t i = 0; i < k; i++) {
@@ -95,15 +96,15 @@ DnMat mixingInit(WeightedCSP* wcsp, size_t k)
 // In :
 //      - WeightedCSP* wcsp
 // Out :
-//      - double bias
-double bias(WeightedCSP* wcsp)
+//      - Double bias
+Double bias(WeightedCSP* wcsp)
 {
     assert(wcsp);
 
-    double unaryBias = 0;
-    double binaryBias = 0;
-    double lb = wcsp->getLb();
-    double acc = 0;
+    Double unaryBias = 0;
+    Double binaryBias = 0;
+    Double lb = wcsp->getLb();
+    Double acc = 0;
 
     // sum of unary costs
     for (size_t i = 0; i < wcsp->numberOfVariables(); i++) {
@@ -111,7 +112,7 @@ double bias(WeightedCSP* wcsp)
             vector<pair<Value, Cost>> domcosts = wcsp->getEnumDomainAndCost(i); // get variable values and corresponding unary cost
 
             for (size_t k = 0; k < domcosts.size(); k++) {
-                acc += (double)domcosts[k].second;
+                acc += (Double)domcosts[k].second;
             }
 
             unaryBias += 0.5 * acc;
@@ -130,7 +131,7 @@ double bias(WeightedCSP* wcsp)
 
             for (size_t i = 0; i < domi.size(); i++) {
                 for (unsigned j = 0; j < domj.size(); j++) {
-                    acc += (double)ctr->getCost(domi[i], domj[j]);
+                    acc += (Double)ctr->getCost(domi[i], domj[j]);
                 }
             }
             binaryBias += 0.25 * acc;
@@ -146,7 +147,7 @@ double bias(WeightedCSP* wcsp)
 
             for (size_t i = 0; i < domi.size(); i++) {
                 for (unsigned j = 0; j < domj.size(); j++) {
-                    acc += (double)ctr->getCost(domi[i], domj[j]);
+                    acc += (Double)ctr->getCost(domi[i], domj[j]);
                 }
             }
             binaryBias += 0.25 * acc;
@@ -171,7 +172,7 @@ DnVec rounding(const DnMat& V, const vector<size_t>& domains, size_t n, size_t k
 
     //default_random_engine generator;
     //generator.seed(i + 1);
-    //normal_distribution<double> distribution(0, 1);
+    //normal_distribution<Double> distribution(0, 1);
     mysrand(abs(ToulBar2::seed) + i);
 
     DnVec r = DnVec::Zero(k);
@@ -185,8 +186,8 @@ DnVec rounding(const DnMat& V, const vector<size_t>& domains, size_t n, size_t k
         size_t last = domains[i + 1];
 
         int ind = first;
-        double max = fabs(r.dot(V.col(first)));
-        double previous_max = max;
+        Double max = fabs(r.dot(V.col(first)));
+        Double previous_max = max;
 
         for (size_t j = first + 1; j < last; j++) {
             // compute new trial point
@@ -235,13 +236,13 @@ vector<int> mc2tb2(DnVec& intSol, vector<size_t>& domains)
 //      - const DnMat &C: objective matrix
 //      - const DnMat &V: low rank matrix
 // Out :
-//      - double eval : function value
-double evalFun(const DnMat& C, const DnMat& V)
+//      - Double eval : function value
+Double evalFun(const DnMat& C, const DnMat& V)
 {
 
     DnMat A = C * V.transpose();
     A = V * A;
-    double eval = A.trace();
+    Double eval = A.trace();
 
     return eval;
 }
@@ -251,12 +252,12 @@ double evalFun(const DnMat& C, const DnMat& V)
 //      - const DnMat &C: objective matrix
 //      - const DnVec &V: vector
 // Out :
-//      - double eval : function value
-double evalFun(const DnMat& C, const DnVec& V)
+//      - Double eval : function value
+Double evalFun(const DnMat& C, const DnVec& V)
 {
 
     DnVec A = C * V;
-    double eval = V.dot(A);
+    Double eval = V.dot(A);
 
     return eval;
 }
@@ -295,15 +296,15 @@ DnMat objectiveVec(size_t first, size_t last, const DnMat& C, const DnMat& V, si
 //    - const DnVec& u
 //    - size_t d
 // Out
-//    - vector<double> angles
-vector<double> angles(const DnMat& G, const DnVec& u, size_t d)
+//    - vector<Double> angles
+vector<Double> angles(const DnMat& G, const DnVec& u, size_t d)
 {
 
-    vector<double> angles(d, 0);
+    vector<Double> angles(d, 0);
 
     for (size_t i = 0; i < d; i++) {
         DnVec g = G.col(i);
-        double a = acos(g.dot(u) / g.norm());
+        Double a = acos(g.dot(u) / g.norm());
         angles[i] = a;
     }
 
@@ -342,11 +343,11 @@ DnVec relaxedSol(const DnMat& G, const DnVec& u, size_t d, size_t k)
         w(i) = u(r);
     }
 
-    double r = 4 - (4. / d);
+    Double r = 4 - (4. / d);
 
-    double gamma = g.squaredNorm() - (1. / d) * pow(w.dot(g), 2);
-    double beta = -sqrt(r / gamma);
-    double alpha = -(1. / d) * (beta * w.dot(g) + d - 2);
+    Double gamma = g.squaredNorm() - (1. / d) * pow(w.dot(g), 2);
+    Double beta = -sqrt(r / gamma);
+    Double alpha = -(1. / d) * (beta * w.dot(g) + d - 2);
     DnVec res = alpha * w + beta * g;
 
     return res;
@@ -359,19 +360,19 @@ DnVec relaxedSol(const DnMat& G, const DnVec& u, size_t d, size_t k)
 //      - const DnVec &rSol
 //      - size_t k
 // Out :
-//      - double dualInit
-double dualInit(const DnMat& G, const DnVec& u, const DnVec& rSol, size_t k)
+//      - Double dualInit
+Double dualInit(const DnMat& G, const DnVec& u, const DnVec& rSol, size_t k)
 {
     assert(k > 0);
 
     DnVec x = rSol.head(k);
     DnVec g = G.col(0);
 
-    double nrm_g = g.norm();
-    double nrm_x = x.norm();
-    double angle_g_x = acos(g.dot(x) / (nrm_g * nrm_x));
-    double angle_u_x = acos(u.dot(x) / nrm_x);
-    double dualInit = -nrm_g * sin(angle_g_x) / sin(angle_u_x);
+    Double nrm_g = g.norm();
+    Double nrm_x = x.norm();
+    Double angle_g_x = acos(g.dot(x) / (nrm_g * nrm_x));
+    Double angle_u_x = acos(u.dot(x) / nrm_x);
+    Double dualInit = -nrm_g * sin(angle_g_x) / sin(angle_u_x);
 
     return dualInit;
 }
@@ -379,21 +380,21 @@ double dualInit(const DnMat& G, const DnVec& u, const DnVec& rSol, size_t k)
 // Compute the solution angles to the primal problem
 // In :
 //      - const DnMat &G
-//      - const vector<double> &angles
-//      - double dualOpti
+//      - const vector<Double> &angles
+//      - Double dualOpti
 //      - size_t d
 // Out :
-//      - vector<double> solAngle
-vector<double> solAngle(const DnMat& G, const vector<double>& angles, double dualOpti, size_t d)
+//      - vector<Double> solAngle
+vector<Double> solAngle(const DnMat& G, const vector<Double>& angles, Double dualOpti, size_t d)
 {
     assert(d > 0);
 
-    vector<double> solAngle(d, 0);
+    vector<Double> solAngle(d, 0);
 
     for (size_t i = 0; i < d; i++) {
         DnVec g = G.col(i);
-        double nrm_g = g.norm();
-        double theta = angles[i];
+        Double nrm_g = g.norm();
+        Double theta = angles[i];
 
         solAngle[i] = fmod(M_PI - atan(nrm_g * sin(theta) / (nrm_g * cos(theta) + dualOpti)), M_PI);
     }
@@ -404,16 +405,16 @@ vector<double> solAngle(const DnMat& G, const vector<double>& angles, double dua
 // Compute the solution vectors to the primal problem
 // In :
 //      - const DnMat &G
-//      - const vector<double> &solAngle
-//      - const vector<double> &angles
+//      - const vector<Double> &solAngle
+//      - const vector<Double> &angles
 //      - const DnVec &u
-//      - vector<double> &Vb
+//      - vector<Double> &Vb
 //      - size_t d
 //      - size_t k
 // Out :
-//      - vector<double> res
-DnMat vecSol(const DnMat& G, const vector<double>& solAngle,
-    const vector<double>& angles, const DnVec& u, size_t d, size_t k)
+//      - vector<Double> res
+DnMat vecSol(const DnMat& G, const vector<Double>& solAngle,
+    const vector<Double>& angles, const DnVec& u, size_t d, size_t k)
 {
     assert(d > 0);
     assert(k > 0);
@@ -421,16 +422,16 @@ DnMat vecSol(const DnMat& G, const vector<double>& solAngle,
     DnMat res(k, d);
     for (size_t i = 0; i < d; i++) {
         DnVec g = G.col(i);
-        double nrm_g = g.norm();
-        double vdot = u.dot(g);
-        double x = solAngle[i];
-        double theta = angles[i];
-        double c_x = cos(x);
-        double c_tx = cos(x + theta);
-        double denom = g.squaredNorm() - pow(vdot, 2);
+        Double nrm_g = g.norm();
+        Double vdot = u.dot(g);
+        Double x = solAngle[i];
+        Double theta = angles[i];
+        Double c_x = cos(x);
+        Double c_tx = cos(x + theta);
+        Double denom = g.squaredNorm() - pow(vdot, 2);
 
-        double b = (nrm_g * c_tx - c_x * vdot) / denom;
-        double a = c_x - vdot * b;
+        Double b = (nrm_g * c_tx - c_x * vdot) / denom;
+        Double a = c_x - vdot * b;
 
         assert(b < 0);
 
@@ -448,13 +449,13 @@ DnMat vecSol(const DnMat& G, const vector<double>& solAngle,
 //      - size_t first
 //      - size_t last
 // Out :
-//      - double currDelta
-double currentDelta(const DnMat& G, const DnMat& V, const DnMat& Vb, size_t first,
+//      - Double currDelta
+Double currentDelta(const DnMat& G, const DnMat& V, const DnMat& Vb, size_t first,
     size_t last)
 {
     assert(0 <= first && first <= last);
 
-    double currDelta = 0;
+    Double currDelta = 0;
     for (size_t i = first; i < last; i++) {
         currDelta += 2 * (V.col(i) - Vb.col(i - first)).dot(G.col(i - first));
     }
@@ -481,15 +482,15 @@ void solUpdate(DnMat& V, const DnMat& Vb, size_t first, size_t last)
 // In :
 //      - const DnMat &G
 //      - const DnVec &u
-//      - double x
+//      - Double x
 //      - size_t d
 // Out :
-//      - double res : value of the jacobian at x
-double jac_h(const DnMat& G, const DnVec& u, double x, size_t d)
+//      - Double res : value of the jacobian at x
+Double jac_h(const DnMat& G, const DnVec& u, Double x, size_t d)
 {
     assert(d > 0);
 
-    double res = 0;
+    Double res = 0;
 
     for (size_t i = 0; i < d; i++) {
         DnVec w = G.col(i) + x * u;
@@ -504,15 +505,15 @@ double jac_h(const DnMat& G, const DnVec& u, double x, size_t d)
 // In :
 //      - const DnMat &G
 //      - const DnVec &u
-//      - double x
+//      - Double x
 //      - size_t d
 // Out :
-//      - double res : value of the hessian at x
-double hess_h(const DnMat& G, const DnVec& u, double x, size_t d)
+//      - Double res : value of the hessian at x
+Double hess_h(const DnMat& G, const DnVec& u, Double x, size_t d)
 {
     assert(d > 0);
 
-    double res = 0;
+    Double res = 0;
 
     for (size_t i = 0; i < d; i++) {
         DnVec g = G.col(i);
@@ -527,25 +528,25 @@ double hess_h(const DnMat& G, const DnVec& u, double x, size_t d)
 // In :
 //      - const DnMat &G
 //      - const DnVec &u
-//      - double x
+//      - Double x
 //      - size_t d
 //      - size_t maxiter
 //      - size_t &N_it
 // Out :
-//      - double x_curr : optimizer of the dual problem
-double newton(const DnMat& G, const DnVec& u, double x, size_t d, size_t maxiter, size_t& N_it)
+//      - Double x_curr : optimizer of the dual problem
+Double newton(const DnMat& G, const DnVec& u, Double x, size_t d, size_t maxiter, size_t& N_it)
 {
     assert(d > 0);
     assert(maxiter > 0);
 
-    double x_curr = x;
-    double jac = jac_h(G, u, x, d);
-    double jac_curr = jac;
+    Double x_curr = x;
+    Double jac = jac_h(G, u, x, d);
+    Double jac_curr = jac;
     size_t it = 0;
-    double eps = pow(10, -7);
+    Double eps = pow(10, -7);
 
-    double step_size = 0.80;
-    double alpha = 0.60; // correction parameter for the step size
+    Double step_size = 0.80;
+    Double alpha = 0.60; // correction parameter for the step size
 
     while (abs(jac) > eps && it < maxiter) {
         x_curr = x_curr - step_size * jac_h(G, u, x_curr, d) / hess_h(G, u, x_curr, d);
@@ -574,11 +575,11 @@ double newton(const DnMat& G, const DnVec& u, double x, size_t d, size_t maxiter
 //      - DnMat &V
 //      - const DnMat &u
 //      - const vector<size_t> &domains
-//      - double &delta
+//      - Double &delta
 //      - size_t k
 //      - size_t i
 //      - size_t &N_it
-void solveBCD(const DnMat& C, DnMat& V, const DnVec& u, const vector<size_t>& domains, double& delta, size_t k, size_t i, size_t& N_it)
+void solveBCD(const DnMat& C, DnMat& V, const DnVec& u, const vector<size_t>& domains, Double& delta, size_t k, size_t i, size_t& N_it)
 {
     assert(k > 0);
     assert(i >= 0);
@@ -589,16 +590,16 @@ void solveBCD(const DnMat& C, DnMat& V, const DnVec& u, const vector<size_t>& do
     size_t maxiter = 100;
 
     DnMat G = objectiveVec(first, last, C, V, k);
-    vector<double> a = angles(G, u, d);
+    vector<Double> a = angles(G, u, d);
 
     DnVec solRelax = relaxedSol(G, u, d, k);
-    double dual = dualInit(G, u, solRelax, k);
+    Double dual = dualInit(G, u, solRelax, k);
 
     // Dual opti
-    double dualOpti = newton(G, u, dual, d, maxiter, N_it);
+    Double dualOpti = newton(G, u, dual, d, maxiter, N_it);
 
     // Build solution vectors
-    vector<double> angleOpti = solAngle(G, a, dualOpti, d);
+    vector<Double> angleOpti = solAngle(G, a, dualOpti, d);
     DnMat Vb = vecSol(G, angleOpti, a, u, d, k);
 
     delta += currentDelta(G, V, Vb, first, last);
@@ -609,12 +610,12 @@ void solveBCD(const DnMat& C, DnMat& V, const DnVec& u, const vector<size_t>& do
 // In :
 //      - WeightedCSP* wcsp
 //      - const DnMat &C
-//      - double tol
+//      - Double tol
 //      - size_t maxiter
 //      - size_t k
 // Out :
-//      - vector<double> V : low-rank solution to the SDP
-DnMat LR_BCD(WeightedCSP* wcsp, const DnMat& C, double tol, size_t maxiter, size_t k)
+//      - vector<Double> V : low-rank solution to the SDP
+DnMat LR_BCD(WeightedCSP* wcsp, const DnMat& C, Double tol, size_t maxiter, size_t k)
 {
     assert(maxiter > 0);
     assert(k > 0);
@@ -626,7 +627,7 @@ DnMat LR_BCD(WeightedCSP* wcsp, const DnMat& C, double tol, size_t maxiter, size
 
     // Stopping criteria
     bool stop = false;
-    double delta = 0;
+    Double delta = 0;
 
     DnVec q = DnVec::Zero(d + 1);
     DnVec g = DnVec::Zero(k);
@@ -634,7 +635,7 @@ DnMat LR_BCD(WeightedCSP* wcsp, const DnMat& C, double tol, size_t maxiter, size
     // V init
     DnMat V = mixingInit(wcsp, k);
     DnMat V_old = V;
-    double f_val = evalFun(C, V);
+    Double f_val = evalFun(C, V);
 
     for (size_t i = 0; i < maxiter; i++) {
         DnVec u = V.col(d);
@@ -648,8 +649,8 @@ DnMat LR_BCD(WeightedCSP* wcsp, const DnMat& C, double tol, size_t maxiter, size
 
         assert(delta > 0); // delta should always be positive
         DnMat V_diff = V - V_old;
-        double fun_criterion = delta / (1 + fabs(f_val));
-        double step_criterion = V_diff.norm() / (1 + V_old.norm());
+        Double fun_criterion = delta / (1 + fabs(f_val));
+        Double step_criterion = V_diff.norm() / (1 + V_old.norm());
 
         stop = (fun_criterion < tol) || (step_criterion < tol);
 
@@ -669,18 +670,18 @@ DnMat LR_BCD(WeightedCSP* wcsp, const DnMat& C, double tol, size_t maxiter, size
 //      - const DnMat &C
 //      - const vector<size_t> &domains
 //      - DnVec &x
-//      - double f
+//      - Double f
 //      - size_t n
 // Out :
-//      - double min : value of the new solution after 1-opt
-double oneOptSearch(const DnMat& C, const vector<size_t>& domains, DnVec& x, double f, size_t n)
+//      - Double min : value of the new solution after 1-opt
+Double oneOptSearch(const DnMat& C, const vector<size_t>& domains, DnVec& x, Double f, size_t n)
 {
     assert(n > 0);
 
     bool changed = true;
     DnVec work = DnVec::Zero(n);
-    double min = f;
-    double cont = 0;
+    Double min = f;
+    Double cont = 0;
 
     while (changed) {
 
@@ -693,7 +694,7 @@ double oneOptSearch(const DnMat& C, const vector<size_t>& domains, DnVec& x, dou
 
             // flip the entry 1 to -1 in the domain of each variable
             size_t ind = first;
-            double current_value = min;
+            Double current_value = min;
 
             for (size_t j = first; j < last; j++) {
                 if (x(j) == 1) {
@@ -746,9 +747,9 @@ double oneOptSearch(const DnMat& C, const vector<size_t>& domains, DnVec& x, dou
 //      - size_t n
 //      - size_t k
 // Out :
-//      - double min : value of the new solution after multiple 1-opt
+//      - Double min : value of the new solution after multiple 1-opt
 //      - DnVec bestSol : best integer solution found
-tuple<double, DnVec> multipleRounding(WeightedCSP* wcsp, const DnMat& C, DnMat& V,
+tuple<Double, DnVec> multipleRounding(WeightedCSP* wcsp, const DnMat& C, DnMat& V,
     const vector<size_t> domains, size_t nbRound, size_t n, size_t k)
 {
     assert(wcsp);
@@ -758,8 +759,8 @@ tuple<double, DnVec> multipleRounding(WeightedCSP* wcsp, const DnMat& C, DnMat& 
 
     DnVec work(n);
     DnVec bestSol = work;
-    double min = DBL_MAX;
-    double trial_sol = min;
+    Double min = DBL_MAX;
+    Double trial_sol = min;
 
     for (size_t i = 0; i < nbRound; i++) {
         if (ToulBar2::interrupted) {
@@ -812,7 +813,7 @@ Cost Solver::lrBCD(size_t maxiter, int k, size_t nbR, vector<Value>& solution)
     //srand(time(0)); //SdG: already done in tb2main
 
     // set tolerance for the stopping criterion
-    double tol = 1e-3;
+    Double tol = 1e-3;
 
     // set low rank factorization rank
 //    switch (k) {
@@ -845,15 +846,16 @@ Cost Solver::lrBCD(size_t maxiter, int k, size_t nbR, vector<Value>& solution)
     V = LR_BCD(wcsp, Q, tol, maxiter, k);
 
     // compute lower bound
-    // double lb = evalFun(Q, V, k, nb_rows) + bias(wcsp);
+    Double lb = evalFun(Q, V) + bias(wcsp);
+    assert(lb <= wcsp->getUb());
     if (ToulBar2::verbose >= 1) {
-        cout << "LR-BCD approximate dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(evalFun(Q, V) + bias(wcsp)) << std::setprecision(DECIMAL_POINT) << endl;
+        cout << "LR-BCD approximate dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(lb) << std::setprecision(DECIMAL_POINT) << endl;
     }
 
     // compute upper bound with GW heuristic
     vector<size_t> dom = domains(wcsp);
     DnVec intSol;
-    double ub_oneopt = DBL_MAX;
+    Double ub_oneopt = DBL_MAX;
 
     // compute upper bound with GW + 1-opt search
     tie(ub_oneopt, intSol) = multipleRounding(wcsp, Q, V, dom, nbR, nb_cols, k);
