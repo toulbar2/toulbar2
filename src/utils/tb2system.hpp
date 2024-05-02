@@ -94,14 +94,29 @@ inline double mydrand()
     static std::uniform_real_distribution<double> myrandom_uddistribution(0.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
+inline double mydrandl()
+{
+    static std::uniform_real_distribution<Double> myrandom_uddistribution(0.0, 1.0);
+    return myrandom_uddistribution(myrandom_generator);
+}
 inline double myurand()
 {
     static std::uniform_real_distribution<double> myrandom_uddistribution(-1.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
+inline double myurandl()
+{
+    static std::uniform_real_distribution<Double> myrandom_uddistribution(-1.0, 1.0);
+    return myrandom_uddistribution(myrandom_generator);
+}
 inline double mynrand()
 {
     static std::normal_distribution<double> myrandom_nddistribution(0.0, 1.0);
+    return myrandom_nddistribution(myrandom_generator);
+}
+inline double mynrandl()
+{
+    static std::normal_distribution<Double> myrandom_nddistribution(0.0, 1.0);
     return myrandom_nddistribution(myrandom_generator);
 }
 
