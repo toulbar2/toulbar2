@@ -66,7 +66,6 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             }
             arguments.append(" " + to_string(countone) + kparguments);
         }
-        cout << arguments << endl;
         if (globalname == "knapsackc") {
             vector<int> AMO1;
             vector<int> AMO2;
@@ -111,7 +110,6 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             arguments.append(kparguments);
         }
         istringstream file(arguments);
-        cout << "arguments" << arguments << endl;
         if (globalname == "knapsackc")
             wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, true, {});
         else
