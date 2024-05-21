@@ -814,16 +814,18 @@ void VACExtension::enforcePass2()
                 auto* knap = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBKILLERSxi[0].first]);
                 vector<pair<int, Value>> killers;
                 killers.clear();
+                int usek = 0;
+                
                 Cost OPT = knap->VACPass2(PBKILLERSxi, { i, v }, &killers, wcsp->getUb(), xi->getK(v, nbIterations));
                 vector<Value> wasLastVal = knap->getVACwaslastValue(v);
-                int usek = 0;
                 for (int k = 0; k < (int)wasLastVal.size(); ++k) {
-                    if (xi->getVACCost(wasLastVal[k]) == MIN_COST && xi->getK(wasLastVal[k], nbIterations) > usek) {
+                    if (xi->getVACCost(wasLastVal[k]) == MIN_COST && !xi->getPBkillers(wasLastVal[k]).empty()  && xi->getPBkillers(wasLastVal[k])[0].first== PBKILLERSxi[0].first && xi->getK(wasLastVal[k], nbIterations) > usek) {
                         usek = xi->getK(wasLastVal[k], nbIterations);
                     }
                 }
+                knap->IncreasekConstraintVAC(usek);
                 assert(!killers.empty());
-                OPT = OPT / (usek+knap->getkConstraintVAC());
+                OPT = OPT /(knap->getkConstraintVAC());
                 if (OPT < minlambda)
                     minlambda = OPT;
                 if (minlambda < UNIT_COST) { // A unary cost bottleneck here

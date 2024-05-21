@@ -1025,7 +1025,7 @@ public:
             if (TestedVal_idx == (int)VarVal[TestedVar_idx].size() - 1) {
                 VACwaslastValue = TestedVar_idx;
             }
-            IncreasekConstraintVAC(kia);
+            
             return c;
         } else {
             if (TestedVal_idx == (int)VarVal[TestedVar_idx].size() - 1) {
