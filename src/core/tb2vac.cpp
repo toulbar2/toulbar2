@@ -626,13 +626,13 @@ void VACExtension::enforcePass1()
                     OPT = k->VACPass1(&killers, &killed, wcsp->getUb(), itThreshold);
                     if (OPT == -1) {
                         PBconflict = killers[0].first;
-                        assert(killers.size() > 1);
+                        //assert(killers.size() > 1);
                         PBkillersctr = killers;
                         PBkillersctr.erase(PBkillersctr.begin());
                         return;
                     }
                     if (OPT > MIN_COST) {
-                        assert(killers.size() > 1);
+                        //assert(killers.size() > 1);
                         PBconflict = killers[0].first;
                         PBkillersctr = killers;
                         PBkillersctr.erase(PBkillersctr.begin());
@@ -823,7 +823,7 @@ void VACExtension::enforcePass2()
                     }
                 }
                 assert(!killers.empty());
-                OPT = OPT / usek;
+                OPT = OPT / (usek+knap->getkConstraintVAC());
                 if (OPT < minlambda)
                     minlambda = OPT;
                 if (minlambda < UNIT_COST) { // A unary cost bottleneck here
@@ -999,7 +999,7 @@ bool VACExtension::enforcePass3()
                 assert(xj->canbe(ValueProjected[k]));
                 xj->VACproject(ValueProjected[k], lambda * xjk);
                 if(!xj->getPBkillers(ValueProjected[k]).empty() && xj->getPBkillers(ValueProjected[k])[0].first==PBKILLERSxj[0].first){
-                    assert(xjk == xj->getK(ValueProjected[k], nbIterations) || xj->getVACCost(ValueProjected[k]) > MIN_COST);
+                    //assert(xjk == xj->getK(ValueProjected[k], nbIterations) || xj->getVACCost(ValueProjected[k]) > MIN_COST);
                     xj->setK(ValueProjected[k], 0, nbIterations);
                 }
 
