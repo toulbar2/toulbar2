@@ -58,6 +58,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<bool> VACExtToLast;
     vector<int> VACkLastValue; // Store the number of quantum requestes by the values in NotVarVal
     int VACwaslastValue; // Is set to the idx of the last variable, if the last iteration of VACpass2 was on a values in NotVarval.
+    int kConstraintVAC; //Number of time a constraint is involved in a conflict resolution.
 
     void projectLB(Cost c)
     {
@@ -492,6 +493,7 @@ public:
                 }
             }
         }
+        kConstraintVAC=0;
         NbIteVAC = 0;
     }
 
@@ -530,6 +532,7 @@ public:
     }
     Cost VACPass1(vector<pair<int, Value>>* Killer, vector<pair<int, Value>>* Killed, Cost lambda, Cost itThreshold)
     {
+        assert(kConstraintVAC==0);
         assert(Killer->empty());
         assert(Killed->empty());
         int currentvar, currentval;
@@ -559,6 +562,8 @@ public:
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
                         Profit[i][l] = deltaCosts[i][l] + lambda;
+                        if(DeleteValVAC[i][l]==0)
+                            DeleteValVAC[i][l]=NbIteVAC;
                     } else if (DeleteValVAC[i][l] != -1) {
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
@@ -597,6 +602,7 @@ public:
             }
             return -1;
         }
+        NbIteVAC++;
         k = 0;
         for (int i = 0; i < carity; ++i) {
             currentvar = current_scope_idx[i];
@@ -610,8 +616,10 @@ public:
                                 Killed->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][j] });
                             }
                         }
+                        DeleteValVAC[currentvar].back()=NbIteVAC;
                     } else {
                         Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                        DeleteValVAC[currentvar][currentval]=NbIteVAC;
                     }
                     assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                 }
@@ -774,9 +782,11 @@ public:
                                         Killed->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                     }
                                 }
+                                DeleteValVAC[currentvar].back()=NbIteVAC;
                             } else {
                                 assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                                 Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                                DeleteValVAC[currentvar][currentval]=NbIteVAC;
                             }
                         }
                     }
@@ -785,11 +795,12 @@ public:
             for (int i = 0; i < arity_; ++i) {
                 for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
                     if (DeleteValVAC[i][j] == 0 && !scope[i]->canbe(VarVal[i][j])) {
-                        DeleteValVAC[i][j] = NbIteVAC;
+                        //Values that are removed before this propagation. 
+                        DeleteValVAC[i][j] = NbIteVAC-1;
                     }
                 }
                 if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
-                    DeleteValVAC[i].back() = NbIteVAC;
+                    DeleteValVAC[i].back() = NbIteVAC-1;
                 }
             }
             assert(Killer->empty());
@@ -822,7 +833,7 @@ public:
         VACwaslastValue = -1;
 
         int CurrIte = PBkiller[0].second;
-
+        assert(DeleteValVAC[TestedVar_idx][TestedVal_idx]>0);
         k1 = 0;
         Long MaxW = weights[TestedVar_idx][TestedVal_idx];
         vector<Long> GreatW;
@@ -832,7 +843,7 @@ public:
                 Updatelastval0(i);
                 GreatW.push_back(0);
                 for (int l = 0; l < (int)VarVal[i].size(); ++l) {
-                    if (DeleteValVAC[i][l] <= CurrIte && DeleteValVAC[i][l] != 0) {
+                    if (DeleteValVAC[i][l] < CurrIte && DeleteValVAC[i][l] != 0) {
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
                         Profit[i][l] = deltaCosts[i][l] + lambda;
@@ -1014,6 +1025,7 @@ public:
             if (TestedVal_idx == (int)VarVal[TestedVar_idx].size() - 1) {
                 VACwaslastValue = TestedVar_idx;
             }
+            IncreasekConstraintVAC(kia);
             return c;
         } else {
             if (TestedVal_idx == (int)VarVal[TestedVar_idx].size() - 1) {
@@ -1167,6 +1179,14 @@ public:
             else
                 return kVAC[i].back();
         }
+    }
+    void IncreasekConstraintVAC(int addcount)
+    {
+        kConstraintVAC+=addcount;
+    }
+    int getkConstraintVAC()
+    {
+        return kConstraintVAC;
     }
     void setkVAC(Variable* var, Value v, int c, Long timeStamp)
     {
