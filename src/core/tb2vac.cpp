@@ -125,6 +125,9 @@ void VACExtension::histogram()
 
 void VACExtension::iniThreshold()
 {
+    if (!ToulBar2::RASPS && Store::getDepth() >= abs(ToulBar2::vac)) {
+        return;
+    }
     if (scaleCost.size() > 0 && scaleVAC.size() == 0)
         histogram();
     Cost c = MAX_COST;
