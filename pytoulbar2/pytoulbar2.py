@@ -286,9 +286,6 @@ class CFN:
         if (isinstance(coefs, int)):
             coefs = [coefs for v in scope]
         assert(len(coefs) == len(scope))
-        sscope = set(scope)
-        if len(scope) != len(sscope):
-            raise RuntimeError("Duplicate variable in scope: "+str(scope))
         if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddLinearConstraint: "+str(operand))
         iscope = []
@@ -298,7 +295,23 @@ class CFN:
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
-
+        sscope = set(iscope)
+        if len(iscope) != len(sscope):
+            coefs_ = []
+            iscope_ = []
+            sscope = set()
+            index = {}
+            for i, v in enumerate(iscope):
+                if v in sscope:
+                    coefs_[index[v]] += coefs[i]
+                else:
+                	index[v] = len(iscope_)
+                	coefs_.append(coefs[i])
+                	iscope_.append(v)
+                	sscope.add(v)
+            assert(len(iscope_) == len(sscope))
+            coefs = coefs_
+            iscope = iscope_
         if operand == '>=' or operand == '>' or operand == '==':
             params = str((rightcoef + 1) if (operand == '>') else rightcoef)
             for i,v in enumerate(iscope):

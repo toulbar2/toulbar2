@@ -49,38 +49,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     }
 
     void buildVariableInteger(string id, int minValue, int maxValue) override {
-        // warning! forbidden characters /#[]{}:, and spaces in cfn format
-        string varname = id;
-        for(auto it = varname.begin(); it != varname.end(); it ++) {
-            if(*it == '[' || *it == '{') {
-                *it = '(';
-            } else if(*it == ']' || *it == '}') {
-                *it = ')';
-            } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
-                *it = '_';
-            }
-        }
-        int v = problem->makeEnumeratedVariable(varname, minValue, maxValue);
+        int v = problem->makeEnumeratedVariable(id, minValue, maxValue);
         mapping[id] = v;
     }
 
     void buildVariableInteger(string id, vector<int> &values) override {
-        // warning! forbidden characters /#[]{}:, and spaces in cfn format
-        string varname = id;
-        for(auto it = varname.begin(); it != varname.end(); it ++) {
-            if(*it == '[' || *it == '{') {
-                *it = '(';
-            } else if(*it == ']' || *it == '}') {
-                *it = ')';
-            } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
-                *it = '_';
-            }
-        }
-        int v = problem->makeEnumeratedVariable(varname,values);
+        int v = problem->makeEnumeratedVariable(id,values);
         mapping[id] = v;
     }
 
     int getMyVar(string var) {
+        if (mapping.find(var) == mapping.end()) {
+            buildVariableInteger(var, std::stoi(var), std::stoi(var));
+        }
         assert(mapping.find(var) != mapping.end());
         assert(mapping[var] >= 0 && mapping[var] < (int)problem->numberOfVariables());
         return mapping[var];
@@ -92,26 +73,26 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     // transforms a vector of XVariable in vector of toulbar2 variable indices and add it to dest (assuming only one occurrence of each variable)
     void toMyVariables(vector<XVariable*> &src, vector<int> &dest) {
-        set<int> control;
+        //set<int> control;
 #ifndef NDEBUG
         size_t initsize = dest.size();
 #endif
         for(unsigned int i = 0;i<src.size();i++) {
             dest.push_back(getMyVar(src[i]));
-            control.insert(getMyVar(src[i]));
+            //control.insert(getMyVar(src[i]));
         }
         assert(dest.size() > initsize);
-        assert(dest.size() - initsize == control.size());
+        //assert(dest.size() - initsize == control.size());
     }
 
     // transforms a vector of string Variable name in vector of toulbar2 variable indices and add it to dest
     void toMyVariables(vector<string> &src, vector<int> &dest) {
-        set<int> control;
+        //set<int> control;
         for(unsigned int i = 0;i<src.size();i++) {
             dest.push_back(getMyVar(src[i]));
-            control.insert(getMyVar(src[i]));
+            //control.insert(getMyVar(src[i]));
         }
-        assert(dest.size() == control.size());
+        //assert(dest.size() == control.size());
         assert(dest.size() > 0);
     }
 
@@ -2188,6 +2169,61 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             params += " 1 " + to_string(value) + " 1";
         }
         problem->postKnapsackConstraint(vars, params, false, true, false);
+    }
+
+    void buildConstraintElement(string id, vector<int> &list, XVariable *index, int startIndex, XCondition &xc) {
+        assert(startIndex == 0);
+        int varindex = getMyVar(index->id);
+        if (xc.operandType == OperandType::VARIABLE) {
+            int varvalue = getMyVar(xc.var);
+            assert(varindex != varvalue);
+            assert(problem->getDomainInitSize(varindex) == list.size());
+            vector<Cost> costs(problem->getDomainInitSize(varvalue) * problem->getDomainInitSize(varindex), MIN_COST);
+            for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
+                for (unsigned int b=0; b < problem->getDomainInitSize(varindex); b++) {
+                    switch (xc.op) {
+                    case OrderType::LE:
+                        if (list[b] > problem->toValue(varvalue, a)) {
+                            costs[a * problem->getDomainInitSize(varindex) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::LT:
+                        if (list[b] >= problem->toValue(varvalue, a)) {
+                            costs[a * problem->getDomainInitSize(varindex) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::GE:
+                        if (list[b] < problem->toValue(varvalue, a)) {
+                            costs[a * problem->getDomainInitSize(varindex) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::GT:
+                        if (list[b] <= problem->toValue(varvalue, a)) {
+                            costs[a * problem->getDomainInitSize(varindex) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        if (list[b] != problem->toValue(varvalue, a)) {
+                            costs[a * problem->getDomainInitSize(varindex) + b] = MAX_COST;
+                        }
+                        break;
+                    case OrderType::NE:
+                        if (list[b] == problem->toValue(varvalue, a)) {
+                            costs[a * problem->getDomainInitSize(varindex) + b] = MAX_COST;
+                        }
+                        break;
+                    default:
+                        cerr << "Sorry operator " << xc.op << " not implemented in element constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                }
+            }
+            problem->postBinaryConstraint(varvalue, varindex, costs);
+        } else {
+            cerr << "Sorry operand type " << xc.operandType << " not implemented in element constraint!" << endl;
+            throw WrongFileFormat();
+        }
     }
 
     void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *index, int startIndex, XCondition &xc) override {

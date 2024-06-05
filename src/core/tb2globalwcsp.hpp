@@ -757,7 +757,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
         } else {
@@ -774,7 +774,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << "\"" << scope[i]->getName() << "\"";
+                    os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
         }

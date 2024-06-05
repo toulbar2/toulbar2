@@ -180,6 +180,21 @@ void free_all(T& t)
     t.swap(tmp);
 }
 
+// warning! forbidden characters /#[]{}:, and spaces in cfn format for object names
+static inline std::string name2cfn(std::string s)
+{
+    for(auto it = s.begin(); it != s.end(); it ++) {
+        if(*it == '[' || *it == '{') {
+            *it = '(';
+        } else if(*it == ']' || *it == '}') {
+            *it = ')';
+        } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+            *it = '_';
+        }
+    }
+    return s;
+}
+
 #include "tb2system.hpp"
 
 // Cormen et al, 1990. pages 152, 158, and 184

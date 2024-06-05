@@ -56,7 +56,7 @@ namespace XCSP3Core {
         Node *fromStringToTree(std::string);
 
         int arity() {
-            return listOfVariables.size();
+            return static_cast<int>(listOfVariables.size());
         }
 
 

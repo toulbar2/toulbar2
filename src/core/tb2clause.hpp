@@ -498,7 +498,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
             os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(MIN_COST)) << ",\n\"costs\":[";
@@ -508,7 +508,7 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(tuple[i]) : std::to_string(tuple[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(tuple[i])) : std::to_string(tuple[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost));
@@ -522,7 +522,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (printed)
                             os << ",";
-                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                        os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : std::to_string(t[i]));
                         printed = true;
                     }
                     os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
@@ -542,7 +542,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << "\"" << scope[i]->getName() << "\"";
+                    os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
             os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(MIN_COST)) << ",\n\"costs\":[";

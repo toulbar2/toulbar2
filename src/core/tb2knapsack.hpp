@@ -3404,7 +3404,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
 
@@ -3468,7 +3468,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << "\"" << scope[i]->getName() << "\"";
+                    os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
 
@@ -3487,7 +3487,7 @@ public:
                                 if (scope[i]->canbe(VarVal[i][j])) {
                                     if (printed)
                                         os << ",";
-                                    os << "[" << scope[i]->getName() << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
+                                    os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
                                     printed = true;
                                 }
                             }
@@ -3496,7 +3496,7 @@ public:
                                 if (scope[i]->canbe(VarVal[i][j])) {
                                     if (printed)
                                         os << ",";
-                                    os << "[" << scope[i]->getName() << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                                    os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
                                     printed = true;
                                 }
                             }

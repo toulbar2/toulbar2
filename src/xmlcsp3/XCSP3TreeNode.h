@@ -28,6 +28,7 @@
 
 #include<cmath>
 #include<iostream>
+#include <string>
 #include <vector>
 #include <map>
 #include<algorithm>
@@ -367,7 +368,7 @@ namespace XCSP3Core {
 
 
         int evaluate(std::map<std::string, int> &tuple) override {
-            return pow(parameters[0]->evaluate(tuple), parameters[1]->evaluate(tuple));
+            return (int)pow(parameters[0]->evaluate(tuple), parameters[1]->evaluate(tuple));
         }
     };
 

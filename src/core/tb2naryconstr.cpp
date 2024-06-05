@@ -1524,7 +1524,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
         for (int i = 0; i < arity_; i++) {
             if (printed)
                 os << ",";
-            os << "\"" << scope[i]->getName() << "\"";
+            os << "\"" << name2cfn(scope[i]->getName()) << "\"";
             printed = true;
         }
         os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) << ",\n\"costs\":[";
@@ -1539,7 +1539,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (unsigned int i = 0; i < t.size(); i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : std::to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
@@ -1553,7 +1553,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (int i = 0; i < a; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : std::to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(costs[idx]));
@@ -1580,7 +1580,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             if (scope[i]->unassigned()) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
         os << "],\"defaultcost\":" << ((wcsp->getUb() > default_cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) : "inf") << ",\n\"costs\":[";

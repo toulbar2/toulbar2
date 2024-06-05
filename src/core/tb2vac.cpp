@@ -828,7 +828,7 @@ void VACExtension::enforcePass2()
                 }
                 knap->IncreasekConstraintVAC(usek);
                 assert(!killers.empty());
-                OPT = OPT /(knap->getkConstraintVAC());
+                OPT = OPT / max(1, knap->getkConstraintVAC());
                 if (OPT < minlambda)
                     minlambda = OPT;
                 if (minlambda < UNIT_COST) { // A unary cost bottleneck here

@@ -4941,13 +4941,13 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0)
             continue;
         if (original) {
-            os << "\"" << s->getName() << "\":";
+            os << "\"" << name2cfn(s->getName()) << "\":";
             os << "[";
             printed = false;
             for (size_t p = 0; p < s->getDomainInitSize(); p++) {
                 if (printed)
                     os << ",";
-                os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
+                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(p)) : ("v" + std::to_string(s->toValue(p)))) << "\"";
                 printed = true;
             }
             os << "]";
@@ -4955,7 +4955,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << ",";
             os << "\n";
         } else if (s->unassigned()) {
-            os << "\"" << s->getName() << "\":";
+            os << "\"" << name2cfn(s->getName()) << "\":";
             int domsize = s->getDomainSize();
             Value* values = new Value[domsize];
             s->getDomain(values);
@@ -4964,7 +4964,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             for (int p = 0; p < domsize; p++) {
                 if (printed)
                     os << ",";
-                os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
+                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(values[p]))) : ("v" + std::to_string(values[p]))) << "\"";
                 printed = true;
             }
             os << "]";
@@ -4974,7 +4974,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             os << "\n";
         } else {
             assert(s->assigned());
-            cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
+            cout << " " << name2cfn(s->getName()) << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(s->getValue()))) : ("v" + std::to_string(s->getValue()))));
         }
     }
     if (!original && nvars != vars.size()) {
@@ -4998,7 +4998,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
-            os << vars[i]->getName() << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
+            os << name2cfn(vars[i]->getName()) << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
             os << "\"costs\":[";
             Cost failed = MIN_COST;
             for (int v = 0; v < size; v++) {
