@@ -40,6 +40,8 @@ class CFN:
         
         Top (decimal cost): maximum decimal cost (it can be used to represent a forbidden cost).
         
+        Variables (dict): associative array returning the original domain (list or iterable) associated to a given variable name (str).
+        
         VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).
         
         VariableNames (list): array of created variable names (str) sorted by their index number.
@@ -142,7 +144,7 @@ class CFN:
 
     def AddFunction(self, scope, costs, incremental = False):
         """AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
-        The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable). 
+        The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable and also GetDomainInitSize). 
      
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
@@ -563,6 +565,57 @@ class CFN:
 
         """
         return self.CFN.wcsp.getEnumDomain(self.VariableIndices[var] if isinstance(var, str) else var)
+
+    def GetDomainInitSize(self, var):
+        """GetDomainInitSize returns the initial domain size of a given variable.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+
+        Returns:
+            Initial domain size (int). See also GetValue, GetValueName, and GetValueIndex.
+
+        """
+        return self.CFN.wcsp.getDomainInitSize(self.VariableIndices[var] if isinstance(var, str) else var)
+
+    def GetValue(self, var, index):
+        """GetValue returns the value at position index in the initial domain of a given variable.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+            index (int): index of the value in the initial domain of the variable (see also GetDomainInitSize).
+
+        Returns:
+            domain value (int). In symbolic domains, the returned value is equal to index (see note in AddVariable).
+
+        """
+        return self.CFN.wcsp.toValue(self.VariableIndices[var] if isinstance(var, str) else var, index)
+
+    def GetValueName(self, var, index):
+        """GetValueName returns the symbolic value at position index in the initial domain of a given variable.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+            index (int): index of the value in the initial domain of the variable (see also GetDomainInitSize).
+
+        Returns:
+            symbolic name corresponding to a domain value (str).
+
+        """
+        return self.CFN.wcsp.getValueName(self.VariableIndices[var] if isinstance(var, str) else var, self.GetValue(var, index))
+
+    def GetValueIndex(self, var, value):
+        """GetValueIndex returns the position index in the initial domain of a given variable which corresponds to the given value.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+            value (int|str): domain value (or its symbolic name).
+
+        Returns:
+            Index of the value in the initial domain of the variable (int).
+
+        """
+        return self.CFN.wcsp.toIndex(self.VariableIndices[var] if isinstance(var, str) else var, value)
 
     def GetNbConstrs(self):
         """GetNbConstrs returns the number of non-unary cost functions.
