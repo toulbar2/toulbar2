@@ -429,6 +429,8 @@ class CFN:
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST);
             elif (encoding=='walldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
+            else:
+                raise RuntimeError("Unknown encoding for AllDifferent: "+encoding)
 
     def AddGlobalFunction(self, scope, gcname, *parameters):
         """AddGlobalFunction creates a soft global cost function. 

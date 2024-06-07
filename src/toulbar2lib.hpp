@@ -271,7 +271,7 @@ public:
     virtual int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
-    virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(vector<int> scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \deprecated
     virtual void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) = 0;
     virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0; /// \deprecated
@@ -298,10 +298,10 @@ public:
     /// \param values a vector of values to be restricted
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
-    virtual int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
+    virtual int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
     virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    virtual void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \deprecated
 
     /// \brief post a soft or weighted regular cost function
@@ -315,7 +315,7 @@ public:
     /// \param accepting_States a vector of WeightedObjInt specifying the final states
     /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
-    virtual int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
+    virtual int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
     virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< \deprecated
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
@@ -325,7 +325,7 @@ public:
     /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for DAG-based propagator: "var", for network-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
-    virtual int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< post a soft alldifferent cost function
+    virtual int postWAllDiff(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< post a soft alldifferent cost function
     virtual int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< \deprecated
     virtual void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost) = 0; ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
 
@@ -419,7 +419,7 @@ public:
     /// \param values a vector of values (same size as scope)
     /// \param method the network decomposition method (0:Dual, 1:Hidden, 2:Ternary)
     /// \note depending on the decomposition method, it adds dual and/or hidden variables
-    virtual void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
+    virtual void postWDivConstraint(vector<int> scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
 
     virtual vector<vector<int>>* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
     virtual vector<int> getBergeDecElimOrder() = 0; ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)

@@ -488,7 +488,7 @@ public:
     int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
-    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
+    int postNaryConstraintBegin(vector<int> scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
@@ -557,12 +557,12 @@ public:
     }
     void postGlobalFunction(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true);
 
-    int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
+    int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
     int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub); ///< \deprecated
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex); } ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex); } ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \deprecated
-    int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost,
+    int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
         const vector<WeightedObjInt>& initial_States,
         const vector<WeightedObjInt>& accepting_States,
@@ -573,7 +573,7 @@ public:
         const vector<WeightedObjInt>& accepting_States,
         const vector<DFATransition>& Wtransitions); ///< \deprecated
     void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
-    int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
+    int postWAllDiff(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \deprecated
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
     int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
@@ -592,7 +592,7 @@ public:
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
-    void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
+    void postWDivConstraint(vector<int> scope, unsigned int distance, vector<Value>& values, int method = 0);
 
     bool isKnapsack(); ///< \brief true if there are knapsack constraints defined in the problem
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem

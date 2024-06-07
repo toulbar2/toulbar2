@@ -432,7 +432,7 @@ PYBIND11_MODULE(pytb2, m)
             },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def(
-            "postNaryConstraintBegin", [](WeightedCSP& s, vector<int>& scope, Cost defval, Long nbtuples, bool forcenary) {
+            "postNaryConstraintBegin", [](WeightedCSP& s, vector<int> scope, Cost defval, Long nbtuples, bool forcenary) {
                 return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
             },
             py::arg("scope"), py::arg("defval"), py::arg("nbtuples"), py::arg("forcenary") = !NARY2CLAUSE)
@@ -452,10 +452,10 @@ PYBIND11_MODULE(pytb2, m)
                 return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
             },
             py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
-        .def("postWAmong", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
-        .def("postWVarAmong", (void(WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
-        .def("postWRegular", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
-        .def("postWAllDiff", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost)) & WeightedCSP::postWAllDiff)
+        .def("postWAmong", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
+        .def("postWVarAmong", (void(WeightedCSP::*)(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
+        .def("postWRegular", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
+        .def("postWAllDiff", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost)) & WeightedCSP::postWAllDiff)
         //        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values)) &WeightedCSP::postWGcc)
         //        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
         //        .def("postWSameGcc", &WeightedCSP::postWSameGcc)

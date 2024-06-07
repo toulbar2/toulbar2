@@ -2257,7 +2257,7 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
-void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, vector<Value>& values, int method)
+void WCSP::postWDivConstraint(vector<int> scopeIndex, unsigned int distance, vector<Value>& values, int method)
 {
     assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
