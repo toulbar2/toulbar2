@@ -3679,7 +3679,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint* ctr = constrs[i];
-        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary)) {
+        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary)) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3779,7 +3779,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             EnumeratedVariable* neighbor = static_cast<EnumeratedVariable*>(getVar(var.first));
             for (ConstraintList::iterator iter = neighbor->getConstrs()->begin(); iter != neighbor->getConstrs()->end(); ++iter) {
                 Constraint* ctr = (*iter).constr;
-                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
+                if (!ctr->isSep() && ctr->arity() >= 2 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
                     neighborCtrs.insert(ctr);
                 }
             }
@@ -3854,7 +3854,9 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             listOfDualCosts[j][valj] += ctrextend->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
         }
         //        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
-        ctrextend->clearFiniteCosts();
+        if (ctrextend->extension() && ctrextend->arity() <= 3) { //TODO: clear only arity 2?
+            ctrextend->clearFiniteCosts();
+        }
         ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
         //        ctrincluding->propagate();
     }
