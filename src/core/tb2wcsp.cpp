@@ -3679,7 +3679,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint* ctr = constrs[i];
-        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary)) {
+        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= MAX_NB_TUPLES) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
