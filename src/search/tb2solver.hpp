@@ -24,6 +24,8 @@ typedef int (Solver::*intFunctionCall_t)();
 
 class Solver : public WeightedCSPSolver {
 public:
+    static Solver* CurrentSolver; // Current solver used by open node heuristics
+
     class OpenNode {
     private:
 #ifdef OPENMPI
@@ -48,12 +50,11 @@ public:
             , last(last_)
         {
         }
-        bool operator<(const OpenNode& right) const { return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last))); } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
+        bool operator<(const OpenNode& right) const { int res = 0; if (ToulBar2::sortBFS) return ((cost > right.cost) || (cost == right.cost && (res = Solver::recHeuristicCmp(*this, first, right, right.first)) == 2) || (cost == right.cost && res == 1 && last >= right.last)); else return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last))); } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const { return MAX(MIN_COST, cost - delta); }
     };
 
-    class CPStore;
     class OpenList FINAL : public std::priority_queue<OpenNode> {
     private:
         Cost clb; // current cluster lower bound built from closed nodes (independent of any soft arc consistency cost moves)
@@ -330,6 +331,43 @@ public:
     };
 #endif
 
+    // returns 0 if left preferred or 1 if equal or 2 if right preferred
+    // prefer open nodes with best (smallest dom/max_at_any_depth(wdeg+1)) variable heuristic values first (lexicographic order)
+    // in case of prefix equality, prefer the shortest (included) open node to favor discrepancy first
+    static int recHeuristicCmp(const OpenNode& left, ptrdiff_t curLeft, const OpenNode& right, ptrdiff_t curRight) {
+        if (curLeft < left.last) {
+            if (curRight < right.last) {
+                int varLeft = (*Solver::CurrentSolver->cp)[curLeft].varIndex;
+                int varRight  = (*Solver::CurrentSolver->cp)[curRight].varIndex;
+                double heurLeft = (double) Solver::CurrentSolver->getWCSP()->getDomainSize(varLeft) / (double)(Solver::CurrentSolver->heuristics[varLeft] + 1);
+                double heurRight = (double) Solver::CurrentSolver->getWCSP()->getDomainSize(varRight) / (double)(Solver::CurrentSolver->heuristics[varRight] + 1);
+                if (heurLeft < heurRight - (double)ToulBar2::epsilon * heurRight) {
+                    return 0;
+                } else if (heurLeft < heurRight + (double)ToulBar2::epsilon * heurRight) {
+                    Cost costLeft = Solver::CurrentSolver->getWCSP()->getMaxUnaryCost(varLeft);
+                    Cost costRight = Solver::CurrentSolver->getWCSP()->getMaxUnaryCost(varRight);
+                    if (costLeft > costRight) {
+                        return 0;
+                    } else if (costLeft < costRight) {
+                        return 2;
+                    } else {
+                        return recHeuristicCmp(left, curLeft+1, right, curRight+1);
+                    }
+                } else {
+                    return 2;
+                }
+            } else { // right=last
+                return 2;
+            }
+        } else { // cur=last
+            if (curRight < right.last) {
+                return 0;
+            } else { //right=last
+                return 1;
+            }
+        }
+    }
+
     void addChoicePoint(ChoicePointOp op, int varIndex, Value value, bool reverse);
     void addOpenNode(CPStore& cp, OpenList& open, Cost lb, Cost delta = MIN_COST); ///< \param delta cost moved out from the cluster by soft arc consistency
     void restore(CPStore& cp, OpenNode node);
@@ -353,6 +391,7 @@ protected:
     BTList<Value>* unassignedVars;
     int lastConflictVar;
     void* searchSize;
+    vector<Long> heuristics; // precomputed heuristic value for each variable
 
     BigInteger nbSol;
     Long nbSGoods; // number of #good which created

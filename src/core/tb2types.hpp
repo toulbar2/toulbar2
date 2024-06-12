@@ -932,6 +932,7 @@ public:
     static Long hbfsBeta; ///< \brief  maximum recomputation node redundancy percentage threshold value (command line option -hbfsmax)
     static ptrdiff_t hbfsCPLimit; ///< \brief maximum number of stored choice points before switching to normal DFS (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
     static ptrdiff_t hbfsOpenNodeLimit; ///< \brief maximum number of stored open nodes before switching to normal DFS (command line option -open) (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
+    static Long sortBFS; ///< \brief number of visited open nodes before sorting the remaining open nodes (command line option -sopen)
 #ifdef OPENMPI
     static bool burst; ///< \brief in parallel HBFS, workers send open nodes as soon as possible to the master (command line option -burst)
 #endif

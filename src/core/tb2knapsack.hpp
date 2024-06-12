@@ -70,8 +70,9 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
     static Double Ceil(Double v)
     {
-        if (floorl(v) + ToulBar2::epsilon > v)
-            return floorl(v);
+        Double res = floorl(v);
+        if (res + ToulBar2::epsilon > v)
+            return res;
         else
             return ceill(v);
     }
@@ -1295,7 +1296,7 @@ public:
         assert(from != NULL);
         if (!sameweight) { // TODO: else Constraint::incConflictWeight(1)
             if (from == this) {
-                if (deconnected() || nonassigned == arity_) {
+                if (nonassigned == arity_ || deconnected()) {
                     Constraint::incConflictWeight(1);
                 } else {
                     get_current_scope();

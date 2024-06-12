@@ -254,6 +254,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("hbfsBeta", &ToulBar2::hbfsBeta)
         .def_readwrite_static("hbfsCPLimit", &ToulBar2::hbfsCPLimit)
         .def_readwrite_static("hbfsOpenNodeLimit", &ToulBar2::hbfsOpenNodeLimit)
+        .def_readwrite_static("sortBFS", &ToulBar2::sortBFS)
         .def_readwrite_static("eps", &ToulBar2::eps)
 #ifdef OPENMPI
         .def_readwrite_static("burst", &ToulBar2::burst)

@@ -28,6 +28,8 @@ extern void newsolution(int wcspId, void* solver);
 
 const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
+Solver* Solver::CurrentSolver;
+
 /*
  * Solver constructors
  *
@@ -133,6 +135,7 @@ Solver::Solver(Cost initUpperBound, WeightedCSP* wcsp)
         this->wcsp = wcsp;
         dynamic_cast<WCSP*>(wcsp)->setSolver((void*)this);
     }
+    CurrentSolver = this;
 }
 
 Solver::~Solver()
@@ -167,7 +170,9 @@ void Solver::initVarHeuristic()
         unsigned int i = wcsp->getDACOrder(j);
         allVars[i]->content = j;
     }
+    heuristics.clear();
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+        heuristics.push_back(wcsp->getDegree(i));
         unassignedVars->push_back(allVars[i], false);
         if (wcsp->assigned(allVars[i]->content) || (ToulBar2::nbDecisionVars > 0 && allVars[i]->content >= ToulBar2::nbDecisionVars))
             unassignedVars->erase(allVars[i], false);
@@ -998,7 +1003,9 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
             wcsp->getEnumDomainAndCost(*iter, array);
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
-        double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+        Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
+        double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
             || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -1036,7 +1043,9 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
             wcsp->getEnumDomainAndCost(*iter, array);
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
-        double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
+        Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
+        double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
             || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
@@ -1084,6 +1093,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         // double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
         if ((varIndex < 0)
@@ -1129,6 +1139,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         if ((varIndex < 0)
             || (heuristic < best - (double)ToulBar2::epsilon * best)
@@ -2152,7 +2163,10 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         if (ToulBar2::verbose >= 1 && cluster)
             cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
         Cost lastUb = MAX_COST;
+        Long iterBFS = 0;
+        Long sortBFS = ToulBar2::sortBFS;
         while (clb < cub && !open_->finished() && (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
+            iterBFS++;
             if (cluster) {
                 cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -2179,6 +2193,37 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                         ((WCSP*)wcsp)->getVar(i)->queueEliminate();
                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                     }
+                }
+                if (ToulBar2::sortBFS) {
+                    //re-sort open nodes at every new solution
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "Sort open nodes using heuristics.." << endl;
+                    }
+                    OpenList *resort = new OpenList;
+                    for (auto iter = open_->begin(); iter != open_->end(); ++iter) {
+                        resort->push(*iter);
+                    }
+                    delete open_;
+                    open_ = resort;
+                    open = resort;
+                }
+            } else if (ToulBar2::sortBFS && iterBFS >= sortBFS) {
+                //re-sort open nodes
+                if (ToulBar2::verbose >= 1) {
+                    cout << "Sort open nodes using heuristics.." << endl;
+                }
+                OpenList *resort = new OpenList;
+                for (auto iter = open_->begin(); iter != open_->end(); ++iter) {
+                   resort->push(*iter);
+                }
+                delete open_;
+                open_ = resort;
+                open = resort;
+                while (sortBFS <= iterBFS) {
+                    sortBFS *= 2;
+                }
+                if (ToulBar2::verbose >= 1) {
+                    cout << "Limit before next sorting: " << sortBFS << " (" << nbNodes << ")" << endl;
                 }
             }
             int storedepthBFS = Store::getDepth();
@@ -3299,6 +3344,7 @@ bool Solver::solve(bool first)
                                     wcsp->resetWeightedDegree();
                                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                                         wcsp->setBestValue(i, wcsp->getSup(i) + 1);
+                                        heuristics[i] = wcsp->getDegree(i);
                                     }
                                 }
                             }

@@ -278,7 +278,7 @@ public:
     {
         assert(from != NULL);
         if (from == this) {
-            if (deconnected() || nonassigned == arity_) {
+            if (nonassigned == arity_ || deconnected()) {
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {

@@ -308,6 +308,7 @@ Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
 Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
 ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
 ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
+Long ToulBar2::sortBFS; // number of visited open nodes before sorting the remaining open nodes
 #ifdef OPENMPI
 bool ToulBar2::burst;
 #endif
@@ -537,6 +538,7 @@ void tb2init()
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
     ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
+    ToulBar2::sortBFS = 0LL;
 #ifdef OPENMPI
     ToulBar2::burst = true;
 #endif
@@ -568,6 +570,8 @@ void tb2init()
     WeightedCSPConstraint::FullEAC = false;
     WeightedCSPConstraint::RASPS = false;
     WeightedCSPConstraint::useRASPS = 0;
+
+    Solver::CurrentSolver = NULL;
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2

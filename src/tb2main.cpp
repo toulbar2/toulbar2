@@ -29,6 +29,7 @@ const double relativegap = 0.0001;
 const int maxdivnbsol = 1000;
 const int heuristicfreedomlimit = 5;
 const Long epsmultiplier = 30;
+const Long sortbfs = 2;
 
 // INCOP and PILS default command line options
 const string Incop_cmd = "0 1 3 idwa 100000 cv v 0 200 1 0 0";
@@ -295,6 +296,8 @@ enum {
     OPT_open,
     OPT_hbfs_alpha,
     OPT_hbfs_beta,
+    OPT_hbfs_sort,
+    NO_OPT_hbfs_sort,
     OPT_eps,
 #ifdef OPENMPI
     OPT_burst,
@@ -575,6 +578,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_open, (char*)"-open", SO_REQ_SEP },
     { OPT_hbfs_alpha, (char*)"-hbfsmin", SO_REQ_SEP },
     { OPT_hbfs_beta, (char*)"-hbfsmax", SO_REQ_SEP },
+    { OPT_hbfs_sort, (char*)"-sopen", SO_OPT },
+    { NO_OPT_hbfs_sort, (char*)"-sopen:", SO_NONE },
     { OPT_eps, (char*)"-eps", SO_OPT },
 #ifdef OPENMPI
     { OPT_burst, (char*)"-burst", SO_NONE },
@@ -1086,6 +1091,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -hbfsmin=[integer] : hybrid best-first search compromise between BFS and DFS minimum node redundancy alpha percentage threshold (default value is " << 100 / ToulBar2::hbfsAlpha << "%)" << endl;
     cout << "   -hbfsmax=[integer] : hybrid best-first search compromise between BFS and DFS maximum node redundancy beta percentage threshold (default value is " << 100 / ToulBar2::hbfsBeta << "%)" << endl;
     cout << "   -open=[integer] : hybrid best-first search limit on the number of open nodes (default value is " << ToulBar2::hbfsOpenNodeLimit << ")" << endl;
+    cout << "   -sopen=[integer] : number of visited open nodes before sorting the remaining open nodes (double this limit for the next sorting) (default value is " << ToulBar2::sortBFS << ")" << endl;
 #ifdef OPENMPI
     cout << "   -burst : in parallel hybrid best-first search, workers send solutions and open nodes as soon as possible";
     if (ToulBar2::burst)
@@ -2160,6 +2166,20 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::hbfs = 1; // initial value to perform a greedy search exploration before visiting a new open search node
                 if (ToulBar2::debug)
                     cout << "hybrid BFS ON with open node limit = " << ToulBar2::hbfsOpenNodeLimit << endl;
+            }
+            if (args.OptionId() == OPT_hbfs_sort) {
+                ToulBar2::sortBFS = sortbfs;
+                if (args.OptionArg() != NULL) {
+                    Long sortbfs_ = atoll(args.OptionArg());
+                    if (sortbfs_ > 0LL)
+                        ToulBar2::sortBFS = sortbfs_;
+                }
+                if (ToulBar2::debug)
+                    cout << "sort BFS ON with open node limit = " << ToulBar2::sortBFS << endl;
+            } else if (args.OptionId() == NO_OPT_hbfs_sort) {
+                if (ToulBar2::debug)
+                    cout << "sort BFS OFF" << endl;
+                ToulBar2::sortBFS = 0LL;
             }
 #ifdef OPENMPI
             if (args.OptionId() == OPT_burst) {

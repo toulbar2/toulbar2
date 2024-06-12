@@ -3506,7 +3506,7 @@ void WCSP::solution_XML(bool opt)
         cout << "<instantiation type=\"solution\"> <list>";
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0 && getName(i).rfind(HIDDEN_VAR_TAG, 0) != 0) {
             cout << " " << getName(i);
         }
     }
@@ -3520,7 +3520,7 @@ void WCSP::solution_XML(bool opt)
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
 #else // XCSP3
-        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0 && getName(i).rfind(HIDDEN_VAR_TAG, 0) != 0) {
             cout << " " << value;
         }
 #endif
