@@ -609,6 +609,16 @@ void tb2checkOptions()
     if (ToulBar2::searchMethod != DFBB && ToulBar2::restart < 1) {
         ToulBar2::restart = 1; // Force random variable selection during (LDS) search within variable neighborhood search methods
     }
+    if (ToulBar2::sortBFS && !ToulBar2::weightedDegree) {
+        cerr << "Error: sorting open nodes requires weighted degree heuristics (add -q or remove -sopen option)." << endl;
+        throw BadConfiguration();
+    }
+#ifdef OPENMPI
+    if (ToulBar2::sortBFS && ToulBar2::weightedDegree && ToulBar2::parallel) {
+        cerr << "Error: sorting open nodes using weighted degree heuristics not implemented with parallel search methods (remove -sopen option)." << endl;
+        throw BadConfiguration();
+    }
+#endif
     if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::searchMethod != DFBB) {
         cerr << "Error: cannot find all solutions or compute a partition function with VNS. Deactivate either option." << endl;
         throw BadConfiguration();

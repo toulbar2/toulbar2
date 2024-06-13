@@ -150,14 +150,21 @@ What are the algorithms inside toulbar2 ?
 - **Low rank block coordinate descent (LR-BCD)**
 
   `Efficient Low Rank Convex Bounds for Pairwise Discrete Graphical Models <https://proceedings.mlr.press/v162/durante22a/durante22a.pdf>`_,
-  Valentin Durante, George Katsirelos, and Thomas Schiex,
+  V Durante, G Katsirelos, and T Schiex,
   In Proc. of the 39th International Conference on Machine Learning (ICML), PMLR 162:5726-5741, 2022. 
  
 - **Virtual Pairwise Consistency (pwc, hve)**
 
   `Virtual Pairwise Consistency in Cost Function Networks <https://miat.inrae.fr/degivry/Montalbano23a.pdf>`_,
-  P Montalbano, D Allouche, S de Givry, G Katsirelos, and Tomas Werner
+  P Montalbano, D Allouche, S de Givry, G Katsirelos, and T Werner
   In Proc. of CP-AI-OR'2023, Nice, France, 2023.
+ 
+- **Bi-Objective Combinatorial Optimization (global bounding constraint)**
+
+  `Bi-Objective Discrete Graphical Model Optimization <https://miat.inrae.fr/degivry/Buchet24a.pdf>`_,
+  S Buchet, D Allouche, S de Givry, and T Schiex
+  In Proc. of CP-AI-OR'2024, Uppsala, Sweden, 2024.
+  
    
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------

@@ -475,6 +475,9 @@ Tree search algorithms and tree decomposition selection
         hybrid best-first search limit on the number
         of stored open nodes (default value is -1, i.e., no limit)
 
+-sopen=[integer]
+        number of visited open nodes before sorting the remaining open nodes based on weighted degree heuristics (double this limit for the next sorting) (see also option -q) (default value is 0, i.e., no sorting)
+
 -burst
         in parallel HBFS, workers send their solutions and open nodes as soon as possible (by default)
         For using a parallel version of HBFS, after compiling with MPI option (cmake -DMPI=ON .)

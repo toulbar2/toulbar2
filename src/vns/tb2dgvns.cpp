@@ -235,7 +235,13 @@ bool VNSSolver::solve(bool first)
                 wcsp->enforceUb();
                 wcsp->propagate();
                 ToulBar2::vac = vac;
-                hybridSolve();
+                wcsp->resetWeightedDegree();
+                for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                    heuristics[i] = wcsp->getDegree(i);
+                }
+                initialDepth = Store::getDepth();
+                pair<Cost, Cost> res = hybridSolve();
+                globalLowerBound = res.first;
             } catch (const Contradiction&) {
                 wcsp->whenContradiction();
             }
