@@ -229,6 +229,19 @@ public:
             if (problem) {
                 protect(true);
                 try {
+                    for (int i = 0; i < arity_in && connected(); i++) {
+                        for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                            Value a = scope_in[i]->toValue(j);
+                            EnumeratedVariable* vari = ((EnumeratedVariable*)problem->getVar(i));
+#ifndef NDEBUG
+                            Value b = vari->toValue(j);
+                            assert(a == b);
+#endif
+                            if (scope_in[i]->cannotbe(a) && vari->canbe(a)) {
+                                problem->remove(i, a);
+                            }
+                        }
+                    }
                     problem->propagate(true); // preprocessing();
                 } catch (const Contradiction&) {
                     deconnect();
@@ -236,10 +249,32 @@ public:
                     throw;
                 }
                 unprotect();
+                for (int i = 0; i < arity_in && connected(); i++) {
+                    for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                        Value a = scope_in[i]->toValue(j);
+                        EnumeratedVariable* vari = ((EnumeratedVariable*)problem->getVar(i));
+                        if (scope_in[i]->canbe(a) && vari->cannotbe(a)) {
+                            scope_in[i]->remove(a);
+                        }
+                    }
+                }
             }
             if (connected() && negproblem) {
                 protect(true);
                 try {
+                    for (int i = 0; i < arity_in && connected(); i++) {
+                        for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                            Value a = scope_in[i]->toValue(j);
+                            EnumeratedVariable* vari = ((EnumeratedVariable*)negproblem->getVar(i));
+#ifndef NDEBUG
+                            Value b = vari->toValue(j);
+                            assert(a == b);
+#endif
+                            if (scope_in[i]->cannotbe(a) && vari->canbe(a)) {
+                                negproblem->remove(i, a);
+                            }
+                        }
+                    }
                     negproblem->propagate(true); // preprocessing();
                 } catch (const Contradiction&) {
                     deconnect();
@@ -247,6 +282,15 @@ public:
                     throw;
                 }
                 unprotect();
+                for (int i = 0; i < arity_in && connected(); i++) {
+                    for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                        Value a = scope_in[i]->toValue(j);
+                        EnumeratedVariable* vari = ((EnumeratedVariable*)negproblem->getVar(i));
+                        if (scope_in[i]->canbe(a) && vari->cannotbe(a)) {
+                            scope_in[i]->remove(a);
+                        }
+                    }
+                }
             }
         }
     }

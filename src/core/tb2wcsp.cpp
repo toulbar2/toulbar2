@@ -603,7 +603,7 @@ void tb2checkOptions()
         ToulBar2::heuristicFreedom = false;
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
-        cerr << "Error: BTD-like search methods are compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
+        cerr << "Error: BTD-like search methods are not compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::restart < 1) {
@@ -611,6 +611,10 @@ void tb2checkOptions()
     }
     if (ToulBar2::sortBFS && !ToulBar2::weightedDegree) {
         cerr << "Error: sorting open nodes requires weighted degree heuristics (add -q or remove -sopen option)." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::sortBFS && ToulBar2::btdMode >= 1) {
+        cerr << "Error: sorting open nodes is not implemented with BTD-like search methods (use '-B=0' or remove -sopen option)." << endl;
         throw BadConfiguration();
     }
 #ifdef OPENMPI

@@ -10,6 +10,7 @@ DESCRIPTION
 from math import isinf
 try :
     import pytoulbar2.pytb2 as tb2
+    tb2.init()
 except :
     pass
 
@@ -50,8 +51,6 @@ class CFN:
     
     """
     def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1):
-        tb2.init()
-        
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.seed = seed    # random seed number (use -1 if a pseudo-randomly generated seed is wanted)
@@ -502,10 +501,12 @@ class CFN:
         self.CFN.read(filename)
         self.VariableIndices = {}
         self.VariableNames = []
+        self.Variables = {}
         for i in range(self.CFN.wcsp.numberOfVariables()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
             self.VariableNames.append(name)
+            self.Variables[name] = self.Domain(name)
 
     def Parse(self, certificate):
         """Parse performs a list of elementary reduction operations on domains of variables.
@@ -992,7 +993,16 @@ class CFN:
         """
 
         multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp)
-
+        
+        self.VariableIndices = {}
+        self.VariableNames = []
+        self.Variables = {}
+        for i in range(self.CFN.wcsp.numberOfVariables()):
+            name = self.CFN.wcsp.getName(i)
+            self.VariableIndices[name] = i
+            self.VariableNames.append(name)
+            self.Variables[name] = self.Domain(name)
+        
         return
 
 class MultiCFN:
