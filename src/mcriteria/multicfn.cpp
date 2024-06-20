@@ -505,9 +505,54 @@ unsigned int MultiCFN::nbVariables()
 }
 
 //---------------------------------------------------------------------------
+unsigned int MultiCFN::nbCostFunctions()
+{
+    return cost_function.size();
+}
+
+//---------------------------------------------------------------------------
 std::string MultiCFN::getNetworkName(unsigned int index)
 {
     return network_names[index];
+}
+
+//---------------------------------------------------------------------------
+int MultiCFN::getVariableIndex(std::string name)
+{
+    auto found = var_index.find(name);
+    if (found != var_index.end()) {
+        return found->second;
+    } else {
+        return -1;
+    }
+}
+
+//---------------------------------------------------------------------------
+unsigned int MultiCFN::nbValues(unsigned int index)
+{
+    assert(index < var.size());
+    return var[index].nbValues();
+}
+
+//---------------------------------------------------------------------------
+std::vector<unsigned int> MultiCFN::getScope(unsigned int index)
+{
+    assert(index < cost_function.size());
+    return cost_function[index]->scope;
+}
+
+//---------------------------------------------------------------------------
+mcriteria::CostFunction::Type MultiCFN::getType(unsigned int index)
+{
+    assert(index < cost_function.size());
+    return cost_function[index]->getType();
+}
+
+//---------------------------------------------------------------------------
+Double MultiCFN::getCost(unsigned int index, std::vector<unsigned int>& tuple)
+{
+    assert(index < cost_function.size());
+    return cost_function[index]->getCost(tuple);
 }
 
 //---------------------------------------------------------------------------
@@ -557,7 +602,50 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::exportToWCSP(WCSP* wcsp)
+void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
+{
+    if (scopes.size() > 0 || constrs.size() > 0) {
+        set<unsigned int> inter;
+        if (scopes.size() > 0) {
+            set<unsigned int> union_of_scopes;
+            for (set<unsigned int> s : scopes) {
+                union_of_scopes.insert(s.begin(), s.end());
+            }
+            if (vars.size() > 0) {
+                std::set_intersection(vars.begin(), vars.end(),
+                        union_of_scopes.begin(), union_of_scopes.end(),
+                        std::inserter(inter, inter.begin()));
+            } else {
+                inter.swap(union_of_scopes);
+            }
+        }
+        if (constrs.size() > 0) {
+            set<unsigned int> union_of_constrs;
+            for (unsigned int i : constrs) {
+                union_of_constrs.insert(cost_function[i]->scope.begin(), cost_function[i]->scope.end());
+            }
+            if (inter.size() > 0) {
+                std::set<unsigned int> temp_set;
+                std::set_intersection(inter.begin(), inter.end(),
+                        union_of_constrs.begin(), union_of_constrs.end(),
+                        std::inserter(temp_set, temp_set.begin()));
+                inter.swap(temp_set);
+            } else if (vars.size() > 0) {
+                std::set_intersection(vars.begin(), vars.end(),
+                        union_of_constrs.begin(), union_of_constrs.end(),
+                        std::inserter(inter, inter.begin()));
+            } else {
+                inter.swap(union_of_constrs);
+            }
+        }
+        exportToWCSP_(wcsp, inter, scopes, constrs);
+    } else {
+        exportToWCSP_(wcsp, vars, scopes, constrs);
+    }
+}
+
+//---------------------------------------------------------------------------
+void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
 {
     /* to do: do not erase the content of the wcsp passed as parameter -> addition of negcost and c0 */
 
@@ -627,6 +715,8 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
 
+        if (vars.size() > 0 && vars.count(var_ind) == 0) continue; // skip this variable if it is not part of the induced graph
+
         if (wcsp->getVarIndex(var[var_ind].name) == wcsp->numberOfVariables()) {
 
             wcsp->makeEnumeratedVariable(var[var_ind].name, 0, var[var_ind].nbValues() - 1);
@@ -661,6 +751,12 @@ void MultiCFN::exportToWCSP(WCSP* wcsp)
 
     // export the cost functions
     for (unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind++) {
+
+        if (constrs.size() > 0 && constrs.count(func_ind) == 0) continue; // skip this function if it is not part of the partial graph
+        set<unsigned int> scope = set<unsigned int>(cost_function[func_ind]->scope.begin(), cost_function[func_ind]->scope.end());
+        if (scopes.size() > 0 && scopes.count(scope) == 0) continue; // skip this function if its scope is not part of the partial graph
+        if (vars.size() > 0 && !(std::includes(vars.begin(), vars.end(), scope.begin(), scope.end()))) continue;// skip this function if its scope is not included in the induced graph
+
         switch (cost_function[func_ind]->getType()) {
         case mcriteria::CostFunction::Tuple:
             exportTupleCostFunction(wcsp, func_ind, top, dis);
@@ -952,14 +1048,14 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
 }
 
 //---------------------------------------------------------------------------
-WeightedCSP* MultiCFN::makeWeightedCSP()
+WeightedCSP* MultiCFN::makeWeightedCSP(const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
 {
 
     _sol_extraction = false;
 
     _wcsp = dynamic_cast<WCSP*>(WeightedCSP::makeWeightedCSP(MAX_COST));
 
-    exportToWCSP(_wcsp);
+    exportToWCSP(_wcsp, vars, scopes, constrs);
 
     /* debug */
     // _wcsp->print(cout);
@@ -968,14 +1064,14 @@ WeightedCSP* MultiCFN::makeWeightedCSP()
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::makeWeightedCSP(WeightedCSP* wcsp)
+void MultiCFN::makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
 {
 
     _sol_extraction = false;
 
     _wcsp = dynamic_cast<WCSP*>(wcsp);
 
-    exportToWCSP(_wcsp);
+    exportToWCSP(_wcsp, vars, scopes, constrs);
 }
 
 //---------------------------------------------------------------------------

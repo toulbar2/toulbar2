@@ -378,7 +378,7 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
         if (not isdigit(svar[0])) {
             var = wcsp->getVarIndex(to_string(svar));
             if ((unsigned int)var >= wcsp->numberOfVariables()) {
-                cerr << "Certificate " << certif2 << " incorrect!" << endl;
+                cerr << "Certificate " << svar << " incorrect!" << endl;
                 throw WrongFileFormat();
             }
         } else {
@@ -388,7 +388,7 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
         if (not isdigit(svalue[0])) {
             unsigned int idx = wcsp->toIndex(var, to_string(svalue));
             if (idx >= wcsp->getDomainInitSize(var)) {
-                cerr << "Certificate " << certif2 << " incorrect!" << endl;
+                cerr << "Certificate " << svalue << " incorrect!" << endl;
                 throw WrongFileFormat();
             }
             value = wcsp->toValue(var, idx);

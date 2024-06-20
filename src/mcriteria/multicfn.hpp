@@ -40,7 +40,7 @@ public:
     void print(ostream& os);
 
     /*!
-     * \brief number of values in the domaine of the variable
+     * \brief number of values in the domain of the variable
      * \return the number of values
      */
     unsigned int nbValues();
@@ -266,11 +266,52 @@ public:
     unsigned int nbVariables();
 
     /*!
+     * \brief number of cost functions in the problem
+     * \return the number of cost functions
+     */
+    unsigned int nbCostFunctions();
+
+    /*!
      * \brief get the name of one of the network added to the multiwcsp
      * \param index the index of the network
-     * \return the name associated to hte networks
+     * \return the name associated to the network
      */
     std::string getNetworkName(unsigned int index);
+
+    /*!
+     * \brief get the index of one of the variable added to the multiwcsp
+     * \param name the name of the variable
+     * \return the index associated to the variable or -1 if not found
+     */
+    int getVariableIndex(std::string name);
+
+    /*!
+     * \brief number of values in the domain of the variable
+     * \param index the index of the variable (must be lower than nbVariables())
+     * \return the number of values in the domain of the variable
+     */
+    unsigned int nbValues(unsigned int index);
+
+    /*!
+     * \brief scope of the cost function
+     * \param index the index of the cost function (must be lower than nbCostFunctions())
+     * \return the list of variable indexes in the scope of the cost function
+     */
+    std::vector<unsigned int> getScope(unsigned int index);
+
+    /*!
+     * \brief type of the cost function
+     * \param index the index of the cost function (must be lower than nbCostFunctions())
+     * \return the type of the cost function
+     */
+    mcriteria::CostFunction::Type getType(unsigned int index);
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param index the index of the cost function (must be lower than nbCostFunctions())
+     * \param tuple the tuple
+     */
+    Double getCost(unsigned int index, std::vector<unsigned int>& tuple);
 
     /*!
      * \brief return the precision used in the combined wcsp (max of the decimalPoint of the wcsp given as input)
@@ -290,14 +331,20 @@ public:
 
     /*!
      * \brief make a wcsp from the convex combination of all the wcsps
+     * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
+     * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
+     * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
      */
-    WeightedCSP* makeWeightedCSP();
+    WeightedCSP* makeWeightedCSP(const set<unsigned int>& vars =  {}, const set<set<unsigned int>>& scopes =  {}, const set<unsigned int>& constrs =  {});
 
     /*!
      * \brief fill a wcsp with the convex combination of all the wcsps already added
      * \param wcsp the weighted csp to be filled
+     * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
+     * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
+     * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
      */
-    void makeWeightedCSP(WeightedCSP* wcsp);
+    void makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars =  {}, const set<set<unsigned int>>& scopes =  {}, const set<unsigned int>& constrs =  {});
 
 #ifdef ILOGCPLEX
 
@@ -376,8 +423,12 @@ private: /* private methods */
     /*!
      * \brief send the cfn to toulbar2
      * \param wcsp tb2 wcsp
+     * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
+     * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
+     * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
      */
-    void exportToWCSP(WCSP* wcsp);
+    void exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs);
+    void exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs);
 
     /*!
      * \brief export a tuple cost function to the wcsp

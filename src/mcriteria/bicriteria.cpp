@@ -98,7 +98,7 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
     // WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
     // WCSP* pb = dynamic_cast<WCSP*>(solver->getWCSP());
-    // combiner.exportToWCSP(pb);
+    // combiner.exportToWCSP(pb, {}, {}, {});
 
     /* debug */
     // ofstream file("latin_combined.cfn");

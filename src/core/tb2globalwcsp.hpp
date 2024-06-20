@@ -230,7 +230,7 @@ public:
                 protect(true);
                 try {
                     for (int i = 0; i < arity_in && connected(); i++) {
-                        for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                        for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
                             Value a = scope_in[i]->toValue(j);
                             EnumeratedVariable* vari = ((EnumeratedVariable*)problem->getVar(i));
 #ifndef NDEBUG
@@ -250,7 +250,7 @@ public:
                 }
                 unprotect();
                 for (int i = 0; i < arity_in && connected(); i++) {
-                    for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                    for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
                         Value a = scope_in[i]->toValue(j);
                         EnumeratedVariable* vari = ((EnumeratedVariable*)problem->getVar(i));
                         if (scope_in[i]->canbe(a) && vari->cannotbe(a)) {
@@ -263,7 +263,7 @@ public:
                 protect(true);
                 try {
                     for (int i = 0; i < arity_in && connected(); i++) {
-                        for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                        for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
                             Value a = scope_in[i]->toValue(j);
                             EnumeratedVariable* vari = ((EnumeratedVariable*)negproblem->getVar(i));
 #ifndef NDEBUG
@@ -283,7 +283,7 @@ public:
                 }
                 unprotect();
                 for (int i = 0; i < arity_in && connected(); i++) {
-                    for (int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                    for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
                         Value a = scope_in[i]->toValue(j);
                         EnumeratedVariable* vari = ((EnumeratedVariable*)negproblem->getVar(i));
                         if (scope_in[i]->canbe(a) && vari->cannotbe(a)) {

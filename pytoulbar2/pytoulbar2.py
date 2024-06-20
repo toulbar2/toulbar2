@@ -981,18 +981,21 @@ class CFN:
         """
         self.CFN.wcsp.whenContradiction()
 
-    def InitFromMultiCFN(self, multicfn):
+    def InitFromMultiCFN(self, multicfn, vars=set(), scopes=set(), constrs=set()):
         """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFN).
 
         Args:
             multicfn (MultiCFN): the instance containing the CFNs.
+            vars (set<int|str>): the set of variable indexes to extract the induced graph (if empty then no restriction)
+            scopes (set<set<int>>): the set of allowed scopes to extract the partial graph (if empty then no restriction)
+            constrs (set<int>): the set of allowed cost function indexes (same index as stored in MultiCFN) to extract the partial graph (if empty then no restriction)
             
         Note:
             After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
 
         """
 
-        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp)
+        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), scopes, constrs)
         
         self.VariableIndices = {}
         self.VariableNames = []
@@ -1050,8 +1053,23 @@ class MultiCFN:
 
         self.MultiCFN.setWeight(cfn_index, weight)
 
+
+    def GetVariableIndex(self, name):
+        """GetVariableIndex returns the index of the variable in the combined cfn
+
+        Args:
+            name (str): name of the variable.
+
+        Returns:
+            The index of the variable or -1 if not found (int).
+
+        """
+
+        return self.MultiCFN.getVariableIndex(name)
+
+
     def GetSolution(self):
-        """GetSolution returns the solution of a the combined cfn after being solved.
+        """GetSolution returns the solution of the combined cfn after being solved.
 
         Returns:
             The solution of the cfn (dic).
