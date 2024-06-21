@@ -665,7 +665,11 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
     for (unsigned int net_ind = 0; net_ind < nbNetworks(); net_ind++) {
 
         assert(isfinite(_doriginal_lbs[net_ind]));
-        global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
+        set<unsigned int> emptyset;
+        if ((vars.size() == 0 && scopes.size() == 0 && constrs.size() == 0) ||
+            (scopes.size() > 0 && scopes.count(emptyset) == 1)) {
+            global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
+        }
 
         // if (_original_costMultipliers[net_ind] * weights[net_ind] < 0) {
         //     if (ToulBar2::verbose >= 0) {

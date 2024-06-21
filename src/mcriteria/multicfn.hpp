@@ -426,6 +426,7 @@ private: /* private methods */
      * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
      * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
      * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
+     * \warning export the problem lower bound only if no restrictions are given (or if scopes contains the emptyset)
      */
     void exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs);
     void exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs);

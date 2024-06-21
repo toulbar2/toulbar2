@@ -992,6 +992,7 @@ class CFN:
             
         Note:
             After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
+            The problem lower bound of multicfn is exported only if no restrictions are given (or if scopes contains the emptyset).
 
         """
 
