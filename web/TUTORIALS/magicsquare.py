@@ -36,4 +36,4 @@ if res and len(res[0]) == N*N:
 		print([res[0][i * N + j] for j in range(N)])
 	# and its magic number
 	print("Magic:", int(magic))
-	
+

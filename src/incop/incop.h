@@ -138,6 +138,7 @@ public:
     int domainsize;
 
     CSPConfiguration(int nbvar, int domsize);
+    virtual ~CSPConfiguration() {}
 };
 
 /* L'incrémentalité avec stockage de la participation à l'évaluation des valeurs courantes des
@@ -149,7 +150,7 @@ public:
     Long* tabconflicts;
     IncrCSPConfiguration(int nbvar);
     IncrCSPConfiguration(int nbvar, int nbcol);
-    ~IncrCSPConfiguration();
+    virtual ~IncrCSPConfiguration();
     void copy_element(Configuration* config2);
     void init_conflicts();
     void incr_conflicts(int var, int val, int index, Long incr);
@@ -171,7 +172,7 @@ public:
     Long** tabconflicts;
 
     FullincrCSPConfiguration(int nbvar, int domainsize);
-    ~FullincrCSPConfiguration();
+    virtual ~FullincrCSPConfiguration();
     void copy_element(Configuration* config2);
     void init_conflicts();
     void incr_conflicts(int var, int val, int index, Long incr);
@@ -208,7 +209,7 @@ public:
     int variable;
     int value;
     CSPMove();
-    ~CSPMove() { ; };
+    virtual ~CSPMove() { ; };
     int eqmove(Move* move);
     void copymove(Move* move);
     /* le mouvement stocké tabou est le mouvement inverse du mouvement effectué */
@@ -414,7 +415,7 @@ public:
     /** number of moves done */
     int nbmoves;
     LSAlgorithm(int nbmov);
-    ~LSAlgorithm();
+    virtual ~LSAlgorithm();
     /* faisabilité d'un mouvement  (sous ou au niveau du seuil pour marche de GWW) */
     /** feasability of a move (under or at threshold level pour GWW walks) */
     virtual int isfeasible(Move* move);
@@ -665,7 +666,7 @@ public:
     /** the local search algorithm used */
     LSAlgorithm* walkalgorithm;
     /* destructeur */
-    ~GWWAlgorithm();
+    virtual ~GWWAlgorithm();
     /* recherche locale sur l'ensemble de la population */
     /** local search on the whole population */
     virtual void populationrandomwalk(OpProblem* problem, Configuration** population);

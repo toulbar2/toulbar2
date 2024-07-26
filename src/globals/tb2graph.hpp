@@ -187,7 +187,7 @@ public:
     Graph(int n, int depth);
 
     // destructor
-    ~Graph();
+    virtual ~Graph();
 
     // connect the node from u to v with weight w, capacity c and a tag tag
     // if tag = -1, multiple edge allowed

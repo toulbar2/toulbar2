@@ -89,12 +89,6 @@ class CFN:
         self.Limit = None
         tb2.check()    # checks compatibility between selected options
 
-    def __del__(self):
-        del self.Variables
-        del self.VariableIndices
-        del self.VariableNames
-        del self.CFN
-
     @staticmethod
     def flatten(S):
         """Warning: this recursive method might exceed maximum recursion depth
@@ -982,7 +976,7 @@ class CFN:
         self.CFN.wcsp.whenContradiction()
 
     def InitFromMultiCFN(self, multicfn, vars=set(), scopes=set(), constrs=set()):
-        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFN).
+        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFNs).
 
         Args:
             multicfn (MultiCFN): the instance containing the CFNs.
@@ -1021,7 +1015,6 @@ class MultiCFN:
         self.MultiCFN = tb2.MultiCFN()
 
         return
-
     
     def PushCFN(self, CFN, weight=1.0):
         """PushCFN add a CFN to the instance.

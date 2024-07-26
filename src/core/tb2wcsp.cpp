@@ -881,6 +881,8 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
     , elimSpace(0)
 {
     instance = wcspCounter++;
+    if (ToulBar2::debug)
+        cout << "--- create WCSP " << getIndex() << " ---" << endl;
     if (ToulBar2::vac)
         vac = new VACExtension(this);
     else
@@ -893,6 +895,8 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
 
 WCSP::~WCSP()
 {
+    if (ToulBar2::debug)
+        cout << "--- delete WCSP " << getIndex() << " ---" << endl;
     if (vac)
         delete vac;
     if (vars.size())
