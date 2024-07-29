@@ -564,18 +564,42 @@ public:
 
     double computeTightness() override
     {
-        double res = 0.; // FIXME: take into account elimBinConstr and elimTernConstr
-        if (problem) {
+        double res = 0.;
+        if (problem && problem->numberOfConnectedConstraints() > 0) {
             for (unsigned int c = 0; c < problem->numberOfConstraints(); c++) {
-                if (problem->getCtr(c)->connected()) {
+                if (problem->getCtr(c)->connected() && !problem->getCtr(c)->isSep()) {
                     res += problem->getCtr(c)->getTightness();
                 }
             }
+            for (int i = 0; i < problem->getElimBinOrder(); i++) {
+                BinaryConstraint *c = (BinaryConstraint *)problem->getElimBinCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
+                }
+            }
+            for (int i = 0; i < problem->getElimTernOrder(); i++) {
+                TernaryConstraint *c = (TernaryConstraint *)problem->getElimTernCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
+                }
+            }
             return res / problem->numberOfConnectedConstraints();
-        } else if (negproblem) {
+        } else if (negproblem && negproblem->numberOfConnectedConstraints() > 0) {
             for (unsigned int c = 0; c < negproblem->numberOfConstraints(); c++) {
-                if (negproblem->getCtr(c)->connected()) {
+                if (negproblem->getCtr(c)->connected() && !negproblem->getCtr(c)->isSep()) {
                     res += negproblem->getCtr(c)->getTightness();
+                }
+            }
+            for (int i = 0; i < negproblem->getElimBinOrder(); i++) {
+                BinaryConstraint *c = (BinaryConstraint *)negproblem->getElimBinCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
+                }
+            }
+            for (int i = 0; i < negproblem->getElimTernOrder(); i++) {
+                TernaryConstraint *c = (TernaryConstraint *)negproblem->getElimTernCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
                 }
             }
             return res / negproblem->numberOfConnectedConstraints();
