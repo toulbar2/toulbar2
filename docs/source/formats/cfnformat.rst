@@ -391,7 +391,8 @@ Global cost functions using a cost function network-based propagator (decompose 
                type: woverlap
                params: {
                   metric: hard
-                  cost: 2.01comparator: >
+                  cost: 2.01
+                  comparator: >
                   to: 1
                   }
               }
