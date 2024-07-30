@@ -49,7 +49,6 @@ bool CmpVarStruct::operator()(const int lhs, const int rhs) const
 Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in)
     , cluster(NULL)
-    , nonassigned(arity_in)
     , isUsed(false)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
@@ -79,7 +78,6 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
 
 Separator::Separator(WCSP* wcsp)
     : AbstractNaryConstraint(wcsp)
-    , nonassigned(0)
     , isUsed(false)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
@@ -110,9 +108,8 @@ void Separator::assign(int varIndex)
 {
     if (connected(varIndex)) {
         deconnect(varIndex);
-        nonassigned = nonassigned - 1;
-        assert(nonassigned >= 0);
-        if (nonassigned == 0) {
+        assert(getNonAssigned() >= 0);
+        if (getNonAssigned() == 0) {
             if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot()))
                 return; // TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
@@ -124,12 +121,12 @@ void Separator::assign(int varIndex)
 void Separator::propagate()
 {
     if (ToulBar2::verbose >= 3)
-        cout << this << " propagate C" << cluster->getId() << " " << nonassigned << " " << cluster->getParent()->getId() << " " << connected() << endl;
+        cout << this << " propagate C" << cluster->getId() << " " << getNonAssigned() << " " << cluster->getParent()->getId() << " " << connected() << endl;
     for (int i = 0; connected() && i < arity_; i++) {
         if (getVar(i)->assigned())
             assign(i);
     }
-    if (cluster->getIsCurrInTD() && nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
+    if (cluster->getIsCurrInTD() && getNonAssigned() == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
         wcsp->revise(this);
         if (ToulBar2::allSolutions) {
             Cost res = MIN_COST;

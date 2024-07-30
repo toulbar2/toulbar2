@@ -12,7 +12,6 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     int carity;
     Long Original_capacity;
     Cost Original_ub;
-    StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     StoreLong capacity; // knapsack capacity
     StoreLong MaxWeight;
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
@@ -313,7 +312,6 @@ public:
         , carity(arity_in)
         , Original_capacity(capacity_in)
         , Original_ub(wcsp->getUb())
-        , nonassigned(nonassinged_in)
         , capacity(capacity_in)
         , MaxWeight(MaxWeight_in)
         , lb(lb_in)
@@ -416,15 +414,6 @@ public:
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     bool isKnapsack() const FINAL { return true; }
-
-    void reconnect() override
-    {
-        if (deconnected()) {
-            nonassigned = arity_;
-            AbstractNaryConstraint::reconnect();
-        }
-    }
-    int getNonAssigned() const { return nonassigned; }
 
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
     Long getConflictWeight(int varIndex) const override
@@ -1177,7 +1166,7 @@ public:
         assert(from != NULL);
         if (!sameweight) { // TODO: else Constraint::incConflictWeight(1)
             if (from == this) {
-                if (nonassigned == arity_ || deconnected()) {
+                if (getNonAssigned() == arity_ || deconnected()) {
                     Constraint::incConflictWeight(1);
                 } else {
                     get_current_scope();
@@ -1624,7 +1613,7 @@ public:
                 wcsp->elimBinConstrs.push_back(bctr);
             }
         }
-        new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, nonassigned, deltaCosts, lb, assigneddeltas, Original_capacity);
+        new KnapsackConstraint(wcsp, scopeVars.data(), arity_, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, getNonAssigned(), deltaCosts, lb, assigneddeltas, Original_capacity);
     }
 
     void ProjectAMOtoBinary(Cost minAMOCost, int currentvar, int currentidx)
@@ -1766,7 +1755,6 @@ public:
             if (assigned[varIndex] == 0) {
                 assigned[varIndex] = 1;
                 if (scope[varIndex]->assigned()) {
-                    nonassigned = nonassigned - 1;
                     assigned[varIndex] = 2;
                     deconnect(varIndex);
                 }
@@ -1807,7 +1795,6 @@ public:
                                     }
                                     for (unsigned int i = 0; i < toassign.size(); ++i) {
                                         if (scope[AMO[CorrAMO[varIndex] - 1][toassign[i]].first]->unassigned()) {
-                                            nonassigned = nonassigned - 1;
                                             scope[AMO[CorrAMO[varIndex] - 1][toassign[i]].first]->remove(AMO[CorrAMO[varIndex] - 1][toassign[i]].second);
                                         }
                                     }
@@ -1830,7 +1817,6 @@ public:
                                                 fill(deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first].begin(), deltaCosts[AMO[CorrAMO[varIndex] - 1][k1].first].end(), MIN_COST);
                                                 MaxWeight -= weights[nbRealVar + CorrAMO[varIndex] - 1][GreatestWeightIdx[nbRealVar + CorrAMO[varIndex] - 1]];
                                                 assigned[AMO[CorrAMO[varIndex] - 1][k1].first] = 2;
-                                                nonassigned = nonassigned - 1;
                                                 nbVirtualVar[CorrAMO[varIndex] - 1] = 0;
                                                 if (scope[AMO[CorrAMO[varIndex] - 1][k1].first]->unassigned()) {
                                                     scope[AMO[CorrAMO[varIndex] - 1][k1].first]->remove(!AMO[CorrAMO[varIndex] - 1][k1].second);
@@ -1883,7 +1869,7 @@ public:
                         }
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
-                    } else if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
+                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             projectNary();
@@ -2038,9 +2024,8 @@ public:
                 }
             } else {
                 if (assigned[varIndex] == 1 && scope[varIndex]->assigned()) {
-                    nonassigned = nonassigned - 1;
                     assigned[varIndex] = 2;
-                    if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
+                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             projectNary();
@@ -2611,7 +2596,7 @@ public:
                     if (assigned[i] == 0 && !isunassigned(i)) {
                         assign(i);
                         b = true;
-                    } /* indique à la contrainte que cette  variable est affectée (donc met à jour nonassigned..) */
+                    }
                     else
                         assert(assigned[i] > 0 || scope[i]->unassigned());
                 } else {
@@ -2624,7 +2609,7 @@ public:
             if (connected() && !b && !AlwaysSatisfied) {
                 if (!fastverify()) {
                     THROWCONTRADICTION;
-                } else if (nonassigned > 3 && ToulBar2::LcLevel >= LC_AC) {
+                } else if (getNonAssigned() > 3 && ToulBar2::LcLevel >= LC_AC) {
                     get_current_scope();
 #ifndef NDEBUG
                     for (int i = 0; i < carity; ++i) {
@@ -2959,7 +2944,7 @@ public:
                         }
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
-                    } else if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
+                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             projectNary();
@@ -3116,7 +3101,7 @@ public:
             }
         }
         os << " arity: " << arity_;
-        os << " unassigned: " << unassignedAMO << "/" << nonassigned << "/" << unassigned_ << endl;
+        os << " unassigned: " << unassignedAMO << "/" << getNonAssigned() << "/" << unassigned_ << endl;
     }
 
     void dump(ostream& os, bool original = true) override
@@ -3187,7 +3172,7 @@ public:
                 }
             }
         } else {
-            os << nonassigned;
+            os << getNonAssigned();
             for (int i = 0; i < arity_; i++) {
                 if (scope[i]->unassigned())
                     os << " " << scope[i]->getCurrentVarId();

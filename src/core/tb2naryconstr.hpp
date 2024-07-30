@@ -12,7 +12,6 @@ class NaryConstraint : public AbstractNaryConstraint {
     Cost* costs;
     ptrdiff_t costSize;
     Cost default_cost; // default cost returned when tuple t is not found in TUPLES (used by function eval(t))
-    StoreInt nonassigned; // nonassigned variables during search, must be backtrackable (StoreInt)!
     ConstraintSet* filters;
     TUPLES::iterator tuple_it;
     vector<Long> conflictWeights; // used by weighted degree heuristics
@@ -25,15 +24,6 @@ public:
     bool extension() const FINAL { return true; }
     bool isNary() const FINAL { return true; }
 
-    void reconnect()
-    {
-        if (deconnected()) {
-            nonassigned = arity_;
-            AbstractNaryConstraint::reconnect();
-        }
-    }
-    int getNonAssigned() const { return nonassigned; }
-
     Long getConflictWeight() const { return Constraint::getConflictWeight(); }
     Long getConflictWeight(int varIndex) const
     {
@@ -45,7 +35,7 @@ public:
     {
         assert(from != NULL);
         if (from == this) {
-            if (nonassigned == arity_ || deconnected()) {
+            if (getNonAssigned() == arity_ || deconnected()) {
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {

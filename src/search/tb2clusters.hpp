@@ -59,7 +59,6 @@ private:
     Cluster* cluster;
     TVars vars;
     vector<vector<StoreCost>> delta; // structure to record the costs that leave the cluster
-    StoreInt nonassigned; // number of non assigned variables during search
     StoreInt isUsed;
     StoreCost lbPrevious;
     StoreInt optPrevious;
