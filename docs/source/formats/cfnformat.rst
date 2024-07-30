@@ -392,7 +392,7 @@ Global cost functions using a cost function network-based propagator (decompose 
                params: {
                   metric: hard
                   cost: 2.01
-                  comparator: >
+                  comparator: ">"
                   to: 1
                   }
               }
