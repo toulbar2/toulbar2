@@ -67,11 +67,12 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
     static Double Ceil(Double v)
     {
-        Double res = floorl(v);
-        if (res + ToulBar2::epsilon > v)
-            return res;
-        else
-            return ceill(v);
+//        Double res = floorl(v);
+//        if (res + ToulBar2::epsilon > v)
+//            return res;
+//        else
+//            return ceill(v);
+        return ceill(v - ToulBar2::epsilon);
     }
     void Updatelastval0(int idx)
     {

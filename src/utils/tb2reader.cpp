@@ -702,10 +702,10 @@ Cost CFNStreamReader::readHeader()
     }
 
     if (token[0] == '>') {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     }
     if (ToulBar2::bilevel == 3) {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     }
 
     if (ToulBar2::verbose >= 1)
@@ -3863,9 +3863,9 @@ void WCSP::read_qpbo(const char* fileName)
         sumcost += 2. * std::abs(cost[e]);
     }
     Double multiplier = Exp10((Double)ToulBar2::resolution); // warning! precision of costs depends on the chosen resolution but toulbar2 outputs costs as if it was always zero resolution.
-    ToulBar2::costMultiplier = multiplier;
+    ToulBar2::setCostMultiplier(multiplier);
     if (!minimize)
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         throw BadConfiguration();
@@ -4090,9 +4090,9 @@ void WCSP::read_opb(const char* fileName)
     bool opt = true;
     int opsize = 4;
     Double multiplier = Exp10((Double)ToulBar2::resolution);
-    ToulBar2::costMultiplier = multiplier;
+    ToulBar2::setCostMultiplier(multiplier);
     if (token.substr(0, 4) == "max:") {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     } else if (token.substr(0, 4) != "min:") {
         opt = false;
         opsize = 0;
@@ -4395,9 +4395,9 @@ void WCSP::read_lp(const char* fileName)
     ToulBar2::decimalPoint = abs(min(ToulBar2::resolution, baryonyx::precision));
 
     // read objective function
-    ToulBar2::costMultiplier = 1.0;
+    ToulBar2::setCostMultiplier(1.0);
     if (pb.type == baryonyx::objective_function_type::maximize) {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     }
 
     Double totalShiftCost = 0.0;

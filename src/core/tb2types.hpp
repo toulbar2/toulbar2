@@ -828,6 +828,7 @@ public:
     static unsigned int trwsNIterNoChange; ///< \brief stops TRW-S when n iterations did not change the lower bound (command line option --trws-n-iters-no-change)
     static unsigned int trwsNIterComputeUb; ///< \brief computes an upper bound every n steps in TRW-S (command line option --trws-n-iters-compute-ub)
     static Double costMultiplier; ///< \brief multiplies all costs internally by this number when loading a problem in WCSP format (command line option -C)
+    static Cost costMultiplier_; ///< \internal do not use (should be set by setCostMultiplier)
     static unsigned int decimalPoint; ///< \internal do not use
     static string deltaUbS; ///< \brief stops search if the absolute optimality gap reduces below a given value in CFN format (command line option -agap)
     static Cost deltaUb; ///< \internal do not use
@@ -948,21 +949,30 @@ public:
     static vector<Cost> negCostBLP;
     static vector<Cost> initialLbBLP;
     static vector<Cost> initialUbBLP;
+
+    static Double getCostMultiplier() {
+        assert(costMultiplier_ == max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier))));
+        return costMultiplier;
+    }
+    static Cost getCostMultiplierInt() {
+        assert(costMultiplier_ == max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier))));
+        return costMultiplier_;
+    }
+    static void setCostMultiplier(Double mult) {
+        costMultiplier = mult;
+        costMultiplier_ = max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier)));
+        assert(costMultiplier_ >= 1);
+    }
 };
 
-#if defined(INT_COST) || defined(SHORT_COST)
+#if defined(INT_COST) || defined(SHORT_COST) || defined(LONGLONG_COST)
 inline Cost rounding(Cost lb)
 {
-    return (((lb % max(UNIT_COST, (Cost)floorl(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floorl(ToulBar2::costMultiplier)) : lb);
-}
-inline bool CUT(Cost lb, Cost ub) { return rounding(lb) >= ub; }
-inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
-#endif
-
-#ifdef LONGLONG_COST
-inline Cost rounding(Cost lb)
-{
-    return (((lb % max(UNIT_COST, (Cost)floorl(std::abs(ToulBar2::costMultiplier)))) != MIN_COST) ? (lb + (Cost)floorl(std::abs(ToulBar2::costMultiplier))) : lb);
+    if (ToulBar2::costMultiplier_ > 1 && ((lb % ToulBar2::costMultiplier_) != MIN_COST)) {
+        return lb + ToulBar2::costMultiplier_;
+    } else {
+        return lb;
+    }
 }
 inline bool CUT(Cost lb, Cost ub)
 {

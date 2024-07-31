@@ -1043,7 +1043,7 @@ bool starts_with_quadratic(const std::string_view buf_1,
     return buf_1 == "[" || (buf_1 == "+" && buf_2 == "[") || (buf_1 == "-" && buf_2 == "[");
 }
 
-raw_problem_status parse(stream_buffer& buf, problem_parser& p) noexcept
+raw_problem_status parse(stream_buffer& buf, problem_parser& p)
 {
     baryonyx::precision = 0;
     int obj_precision = 0;

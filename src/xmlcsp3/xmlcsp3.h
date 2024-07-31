@@ -3233,7 +3233,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void buildObjectiveMaximizeVariable(XVariable *x) override {
         ToulBar2::xmlcop = true;
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
         buildUnaryCostFunction(-1, x);
     }
 
@@ -3470,7 +3470,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void buildObjectiveMaximize(ExpressionObjective type, vector<XVariable *> &list, vector<int> &coefs) override {
         ToulBar2::xmlcop = true;
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
         buildObjective(-UNIT_COST, type, list, coefs);
     }
 
@@ -3627,7 +3627,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<int> &coefs) override {
         ToulBar2::xmlcop = true;
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
         buildObjective(-UNIT_COST, type, trees, coefs);
     }
 

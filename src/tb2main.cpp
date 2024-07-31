@@ -1871,7 +1871,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_costMultiplier) {
                 double co = atof(args.OptionArg());
                 if (co > MIN_COST)
-                    ToulBar2::costMultiplier = co;
+                    ToulBar2::setCostMultiplier(co);
             }
 
             if (args.OptionId() == OPT_qpbo_mult) {
@@ -3275,7 +3275,7 @@ int _tmain(int argc, TCHAR* argv[])
                             cerr << "Sorry, bilevel optimization requires the same objective sense in all its input files! " << strfile.front() << " and " << f << " differ!!" << endl;
                             throw WrongFileFormat();
                         }
-                        ToulBar2::costMultiplier = UNIT_COST;
+                        ToulBar2::setCostMultiplier(1.0);
                         ToulBar2::negCostBLP.push_back(solver->getWCSP()->getNegativeLb());
                         solver->getWCSP()->decreaseLb(-solver->getWCSP()->getNegativeLb()); // reset negCost
                         assert(solver->getWCSP()->getNegativeLb() == MIN_COST);
@@ -3317,7 +3317,7 @@ int _tmain(int argc, TCHAR* argv[])
                         cout << endl;
                     }
                     assert(ToulBar2::decimalPoint == ToulBar2::decimalPointBLP.front());
-                    ToulBar2::costMultiplier = ToulBar2::costMultiplierBLP.front();
+                    ToulBar2::setCostMultiplier(ToulBar2::costMultiplierBLP.front());
                     solver->getWCSP()->decreaseLb(ToulBar2::negCostBLP[0] + ToulBar2::negCostBLP[2]); // Problem1.shift + ProblemNeg2.shift
                     solver->getWCSP()->setLb(ToulBar2::initialLbBLP[0] + ToulBar2::initialLbBLP[2]); // Problem1.lb + ProblemNeg2.lb
                     solver->getWCSP()->setUb(max(UNIT_COST, ToulBar2::initialUbBLP[0] - (ToulBar2::initialLbBLP[1] - ToulBar2::negCostBLP[1]))); // Problem1.ub - Problem2.lb

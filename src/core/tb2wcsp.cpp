@@ -216,6 +216,7 @@ unsigned int ToulBar2::trwsNIter;
 unsigned int ToulBar2::trwsNIterNoChange;
 unsigned int ToulBar2::trwsNIterComputeUb;
 Double ToulBar2::costMultiplier;
+Cost ToulBar2::costMultiplier_;
 unsigned int ToulBar2::decimalPoint;
 string ToulBar2::deltaUbS;
 Cost ToulBar2::deltaUb;
@@ -445,7 +446,7 @@ void tb2init()
     ToulBar2::trwsNIter = 1000;
     ToulBar2::trwsNIterNoChange = 5;
     ToulBar2::trwsNIterComputeUb = 100;
-    ToulBar2::costMultiplier = UNIT_COST;
+    ToulBar2::setCostMultiplier(1.0);
     ToulBar2::decimalPoint = 0;
     ToulBar2::deltaUbS = "0";
     ToulBar2::deltaUb = MIN_COST;

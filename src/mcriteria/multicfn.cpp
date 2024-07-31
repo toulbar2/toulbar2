@@ -577,8 +577,7 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
 
     for (unsigned int net_ind = 0; net_ind < networks.size(); net_ind++) {
 
-        Double weight = weights[net_ind];
-        assert(isfinite(weight));
+        assert(isfinite(weights[net_ind]));
 
         Double net_top = 0.;
 
@@ -651,7 +650,7 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
 
     // floating point precision
     ToulBar2::decimalPoint = _tb2_decimalpoint;
-    ToulBar2::costMultiplier = 1.0; // minimization only
+    ToulBar2::setCostMultiplier(1.0); // minimization only
 
     // precompute the new lowerbound
     Double global_lb = 0.;
