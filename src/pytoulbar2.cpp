@@ -66,6 +66,7 @@ extern void newsolution(int wcspId, void* solver);
 PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
+    m.def("reinit", []() { tb2reinit(); }); // must be called before solving again
     m.attr("MAX_COST") = py::int_(MAX_COST);
     m.attr("MIN_COST") = py::int_(MIN_COST);
 

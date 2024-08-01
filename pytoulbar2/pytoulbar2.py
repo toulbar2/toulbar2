@@ -27,6 +27,7 @@ class CFN:
                             -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies).
         seed (int): random seed.
         verbose (int): verbosity control (-1: no message, 0: search statistics, 1: search tree, 2-7: propagation information).
+        init (bool): starts from scratch, forgets previous CFNs (default value is True). Must be set to False if this CFN depends on a previous CFN (e.g. this CFN is given as input to a AddWeightedCSPConstraint). 
     
     Members:
         CFN (WeightedCSPSolver): python interface to C++ class WeightedCSPSolver.
@@ -50,7 +51,9 @@ class CFN:
     See pytoulbar2test.py example in src repository.
     
     """
-    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1):
+    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, init=True):
+        if init:
+            tb2.reinit();
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.seed = seed    # random seed number (use -1 if a pseudo-randomly generated seed is wanted)
@@ -477,7 +480,7 @@ class CFN:
             iscope.append(v)
         multicfn = MultiCFN()
         multicfn.PushCFN(problem, -1)
-        negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose)
+        negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose, init = False)
         negproblem.InitFromMultiCFN(multicfn)
         negproblem.UpdateUB(1. - problem.GetLB())
         # keep alive both problem and negproblem

@@ -329,16 +329,125 @@ vector<Cost> ToulBar2::initialUbBLP;
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
+    // backtrack trailing mechanism
     Store::depth = 0;
 
+    // input file format
     ToulBar2::stdin_format = "";
+    ToulBar2::cfn = false;
+    ToulBar2::gz = false;
+    ToulBar2::bz2 = false;
+    ToulBar2::xz = false;
+    ToulBar2::bayesian = false;
+    ToulBar2::uai = 0;
+    ToulBar2::markov_log = 0;
+    ToulBar2::xmlflag = false;
+    ToulBar2::xmlcop = false;
+    ToulBar2::maxsateval = false;
+    ToulBar2::uaieval = false;
+    ToulBar2::wcnf = false;
+    ToulBar2::qpbo = false;
+    ToulBar2::qpboQuadraticCoefMultiplier = 2.;
+    ToulBar2::opb = false;
+    ToulBar2::lp = false;
+
+    // specific options for bep/pedigree/haplotype problems
+    ToulBar2::errorg = 0.05;
+    ToulBar2::foundersprob_class = 0;
+    ToulBar2::consecutiveAllele = false;
+    ToulBar2::pedigreeCorrectionMode = 0;
+    ToulBar2::pedigreePenalty = 0;
+    ToulBar2::allelefreqdistrib.clear();
+    ToulBar2::pedigree = NULL;
+    ToulBar2::haplotype = NULL;
+    ToulBar2::bep = NULL;
+
+    // initial upperbound in decimal cost and more
     ToulBar2::externalUB = "";
+    ToulBar2::decimalPoint = 0;
+    ToulBar2::deltaUbS = "0";
+    ToulBar2::deltaUb = MIN_COST;
+    ToulBar2::deltaUbAbsolute = MIN_COST;
+    ToulBar2::deltaUbRelativeGap = 0.;
+    ToulBar2::setCostMultiplier(1.0);
+
+    // main floating-point precision and resolution for probabilistic graphical models and integer programs
+    ToulBar2::epsilon = 1e-9;
+    ToulBar2::resolution = 7;
+    ToulBar2::resolution_Update = false;
+    ToulBar2::NormFactor = 1;
+
+    // verbosity, debugging, and solution output
     ToulBar2::verbose = 0;
 
-    ToulBar2::FullEAC = false;
-    ToulBar2::VACthreshold = false;
-    ToulBar2::nbTimesIsVAC = 0;
-    ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
+    ToulBar2::debug = 0;
+    ToulBar2::verifyOpt = false;
+    ToulBar2::verifiedOptimum = MAX_COST;
+
+    ToulBar2::showSolutions = 0;
+    ToulBar2::showHidden = false;
+    ToulBar2::writeSolution = 0;
+    ToulBar2::solutionFile = NULL;
+    ToulBar2::solutionFileRewindPos = 0L;
+    ToulBar2::solution_uai_file = NULL;
+    ToulBar2::solution_uai_filename = "sol";
+    ToulBar2::problemsaved_filename = "";
+
+    // dump problem into a file
+    ToulBar2::dumpWCSP = 0;
+    ToulBar2::dumpOriginalAfterPreprocessing = false;
+
+    // find/count all/diverse solutions
+    ToulBar2::allSolutions = 0;
+    ToulBar2::approximateCountingBTD = false;
+    ToulBar2::divNbSol = 0;
+    ToulBar2::divBound = 0;
+    ToulBar2::divWidth = 0;
+    ToulBar2::divMethod = 0;
+    ToulBar2::divRelax = 0;
+
+    // compute partition function
+    ToulBar2::isZ = false;
+    ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
+
+    // bi-level optimization
+    ToulBar2::bilevel = 0;
+    ToulBar2::decimalPointBLP.clear();
+    ToulBar2::costMultiplierBLP.clear();
+    ToulBar2::negCostBLP.clear();
+    ToulBar2::initialLbBLP.clear();
+    ToulBar2::initialUbBLP.clear();
+
+    // preprocessing
+#ifdef NO_STORE_BINARY_COSTS
+    ToulBar2::elimDegree = 1;
+#else
+    ToulBar2::elimDegree = 3;
+#endif
+    ToulBar2::elimDegree_preprocessing = -1;
+    ToulBar2::elimDegree_ = -1;
+    ToulBar2::elimDegree_preprocessing_ = -1;
+    ToulBar2::elimSpaceMaxMB = 0;
+
+    ToulBar2::preprocessTernaryRPC = 0;
+    ToulBar2::preprocessFunctional = 1;
+    ToulBar2::costfuncSeparate = true;
+    ToulBar2::preprocessNary = 10;
+    ToulBar2::singletonConsistency = false;
+    ToulBar2::minsumDiffusion = 0;
+
+    ToulBar2::trwsAccuracy = -1; // 0.001;
+    ToulBar2::trwsOrder = false;
+    ToulBar2::trwsNIter = 1000;
+    ToulBar2::trwsNIterNoChange = 5;
+    ToulBar2::trwsNIterComputeUb = 100;
+
+    ToulBar2::hve = 0;
+    ToulBar2::pwc = 0;
+    ToulBar2::pwcMinimalDualGraph = true;
+
     ToulBar2::RASPS = false;
     ToulBar2::useRASPS = 0;
     ToulBar2::RASPSreset = false;
@@ -349,171 +458,69 @@ void tb2init()
     ToulBar2::RASPSnbBacktracks = 1000;
     ToulBar2::RASPSitThresholds.clear();
 
-    ToulBar2::debug = 0;
-    ToulBar2::showSolutions = 0;
-    ToulBar2::showHidden = false;
-    ToulBar2::writeSolution = 0;
-    ToulBar2::solutionFile = NULL;
-    ToulBar2::solutionFileRewindPos = 0L;
-    ToulBar2::allSolutions = 0;
-    ToulBar2::dumpWCSP = 0;
-    ToulBar2::dumpOriginalAfterPreprocessing = false;
-    ToulBar2::approximateCountingBTD = false;
-#ifdef NO_STORE_BINARY_COSTS
-    ToulBar2::elimDegree = 1;
-#else
-    ToulBar2::elimDegree = 3;
-#endif
-    ToulBar2::elimDegree_preprocessing = -1;
-    ToulBar2::elimDegree_ = -1;
-    ToulBar2::elimDegree_preprocessing_ = -1;
-    ToulBar2::elimSpaceMaxMB = 0;
-    ToulBar2::preprocessTernaryRPC = 0;
-    ToulBar2::hve = 0;
-    ToulBar2::pwc = 0;
-    ToulBar2::pwcMinimalDualGraph = true;
-    ToulBar2::preprocessFunctional = 1;
-    ToulBar2::costfuncSeparate = true;
-    ToulBar2::preprocessNary = 10;
-    ToulBar2::LcLevel = LC_EDAC;
-    ToulBar2::maxEACIter = MAX_EAC_ITER;
-    ToulBar2::QueueComplexity = false;
-    ToulBar2::binaryBranching = true;
-    ToulBar2::lastConflict = true;
-    ToulBar2::dichotomicBranching = 1;
-    ToulBar2::dichotomicBranchingSize = 10;
-    ToulBar2::sortDomains = false;
-    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
-    ToulBar2::solutionBasedPhaseSaving = true;
-    ToulBar2::bisupport = 0.;
-    ToulBar2::lds = 0;
-    ToulBar2::limited = false;
-    ToulBar2::restart = -1;
-    ToulBar2::backtrackLimit = LONGLONG_MAX;
-    ToulBar2::generation = false;
-    ToulBar2::minsumDiffusion = 0;
-    ToulBar2::Static_variable_ordering = false;
-    ToulBar2::weightedDegree = 1000000;
-    ToulBar2::weightedTightness = 0;
-    ToulBar2::MSTDAC = false;
+    ToulBar2::addAMOConstraints = -1;
+    ToulBar2::addAMOConstraints_ = false;
+    ToulBar2::knapsackDP = -2;
+
+    // dead-end elimination dominance pruning
     ToulBar2::DEE = 1;
     ToulBar2::DEE_ = 0;
-    ToulBar2::nbDecisionVars = 0;
-    ToulBar2::singletonConsistency = false;
-    ToulBar2::vacValueHeuristic = true;
 
-    ToulBar2::setvalue = NULL;
-    ToulBar2::setmin = NULL;
-    ToulBar2::setmax = NULL;
-    ToulBar2::removevalue = NULL;
-    ToulBar2::setminobj = NULL;
-    ToulBar2::newsolution = NULL;
-    ToulBar2::pedigree = NULL;
-    ToulBar2::haplotype = NULL;
+    // level of local consistency during search
+    ToulBar2::LcLevel = LC_EDAC;
+    ToulBar2::maxEACIter = MAX_EAC_ITER;
 
-    ToulBar2::cfn = false;
-    ToulBar2::gz = false;
-    ToulBar2::bz2 = false;
-    ToulBar2::xz = false;
-    ToulBar2::bayesian = false;
-    ToulBar2::uai = 0;
-    ToulBar2::solution_uai_file = NULL;
-    ToulBar2::solution_uai_filename = "sol";
-    ToulBar2::problemsaved_filename = "";
-    ToulBar2::markov_log = 0;
-    ToulBar2::xmlflag = false;
-    ToulBar2::xmlcop = false;
-    ToulBar2::maxsateval = false;
-    ToulBar2::uaieval = false;
-
-    ToulBar2::resolution = 7;
-    ToulBar2::resolution_Update = false;
-    ToulBar2::errorg = 0.05;
-    ToulBar2::NormFactor = 1;
-    ToulBar2::foundersprob_class = 0;
-    ToulBar2::consecutiveAllele = false;
-    ToulBar2::pedigreeCorrectionMode = 0;
-    ToulBar2::pedigreePenalty = 0;
-    ToulBar2::allelefreqdistrib.clear();
+    ToulBar2::FullEAC = false;
 
     ToulBar2::vac = 0;
     ToulBar2::costThresholdS = "";
     ToulBar2::costThresholdPreS = "";
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
-    ToulBar2::trwsAccuracy = -1; // 0.001;
-    ToulBar2::trwsOrder = false;
-    ToulBar2::trwsNIter = 1000;
-    ToulBar2::trwsNIterNoChange = 5;
-    ToulBar2::trwsNIterComputeUb = 100;
-    ToulBar2::setCostMultiplier(1.0);
-    ToulBar2::decimalPoint = 0;
-    ToulBar2::deltaUbS = "0";
-    ToulBar2::deltaUb = MIN_COST;
-    ToulBar2::deltaUbAbsolute = MIN_COST;
-    ToulBar2::deltaUbRelativeGap = 0.;
-
-    ToulBar2::divNbSol = 0;
-    ToulBar2::divBound = 0;
-    ToulBar2::divWidth = 0;
-    ToulBar2::divMethod = 0;
-    ToulBar2::divRelax = 0;
-
-    ToulBar2::bep = NULL;
-    ToulBar2::wcnf = false;
-    ToulBar2::qpbo = false;
-    ToulBar2::qpboQuadraticCoefMultiplier = 2.;
-    ToulBar2::opb = false;
-    ToulBar2::lp = false;
-
-    ToulBar2::addAMOConstraints = -1;
-    ToulBar2::addAMOConstraints_ = false;
-    ToulBar2::knapsackDP = -2;
+    ToulBar2::VACthreshold = false;
+    ToulBar2::nbTimesIsVAC = 0;
+    ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
     ToulBar2::VAClin = true;
 
+    // branching heuristics
+    ToulBar2::binaryBranching = true;
+    ToulBar2::dichotomicBranching = 1;
+    ToulBar2::dichotomicBranchingSize = 10;
+
+    // variable ordering heuristics
+    ToulBar2::Static_variable_ordering = false;
+    ToulBar2::weightedDegree = 1000000;
+    ToulBar2::weightedTightness = 0;
+    ToulBar2::lastConflict = true;
+    ToulBar2::nbDecisionVars = 0;
+
+    // value ordering heuristics
+    ToulBar2::sortDomains = false;
+    ToulBar2::vacValueHeuristic = true;
+    ToulBar2::solutionBasedPhaseSaving = true;
+    ToulBar2::bisupport = 0.;
+
+    // constraint/propagation ordering heuristics
+    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
+    ToulBar2::MSTDAC = false;
+    ToulBar2::generation = false;
+    ToulBar2::QueueComplexity = false;
     ToulBar2::varOrder = NULL;
-    ToulBar2::btdMode = 0;
-    ToulBar2::btdSubTree = -1;
-    ToulBar2::btdRootCluster = -1;
-    ToulBar2::rootHeuristic = 0;
-    ToulBar2::reduceHeight = false;
 
-    ToulBar2::startCpuTime = 0;
-    ToulBar2::startRealTime = 0;
-    ToulBar2::startRealTimeAfterPreProcessing = 0;
-
-    ToulBar2::splitClusterMaxSize = 0;
-    ToulBar2::boostingBTD = 0.;
-    ToulBar2::maxSeparatorSize = -1;
-    ToulBar2::minProperVarSize = 0;
-
-    ToulBar2::heuristicFreedom = false;
-    ToulBar2::heuristicFreedomLimit = 5;
-
-    ToulBar2::isZ = false;
-    ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::epsilon = 1e-9;
-    ToulBar2::Berge_Dec = false;
-
-    ToulBar2::timeOut = NULL;
-    ToulBar2::interrupted = false;
-
-    ToulBar2::learning = false;
-
+    // random generator
     ToulBar2::seed = 1;
     ToulBar2::sigma = 0.;
 
+    // local search methods in preprocessing
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
     ToulBar2::lrBCD_cmd = "";
 
+    // VNS and/or branch-and-bound methods using parallelism or not
     ToulBar2::searchMethod = DFBB;
+    ToulBar2::parallel = false;
 
-    ToulBar2::clusterFile = "";
-    ToulBar2::vnsOutput.setstate(std::ios::failbit);
-
+    // VNS heuristics
     ToulBar2::vnsInitSol = LS_INIT_DFBB;
     ToulBar2::vnsLDSmin = 1;
     ToulBar2::vnsLDSmax = -1;
@@ -531,8 +538,17 @@ void tb2init()
     ToulBar2::vnsParallelSync = false;
     ToulBar2::vnsOptimumS = "";
     ToulBar2::vnsOptimum = MIN_COST;
-    ToulBar2::parallel = false;
 
+    ToulBar2::clusterFile = "";
+    ToulBar2::vnsOutput.setstate(std::ios::failbit);
+
+    // partial search heuristics
+    ToulBar2::lds = 0;
+    ToulBar2::limited = false;
+    ToulBar2::restart = -1;
+    ToulBar2::backtrackLimit = LONGLONG_MAX;
+
+    // (parallel) hybrid best-first search
     ToulBar2::hbfs = 1;
     ToulBar2::hbfsGlobalLimit = 16384;
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
@@ -546,17 +562,44 @@ void tb2init()
     ToulBar2::eps = 0;
     ToulBar2::epsFilename = "subproblems.txt";
 
-    ToulBar2::verifyOpt = false;
-    ToulBar2::verifiedOptimum = MAX_COST;
+    // backtrack with tree decomposition methods
+    ToulBar2::btdMode = 0;
+    ToulBar2::btdSubTree = -1;
+    ToulBar2::btdRootCluster = -1;
+    ToulBar2::rootHeuristic = 0;
+    ToulBar2::reduceHeight = false;
+    ToulBar2::Berge_Dec = false;
+    ToulBar2::splitClusterMaxSize = 0;
+    ToulBar2::boostingBTD = 0.;
+    ToulBar2::maxSeparatorSize = -1;
+    ToulBar2::minProperVarSize = 0;
 
-    ToulBar2::bilevel = 0;
-    ToulBar2::decimalPointBLP.clear();
-    ToulBar2::costMultiplierBLP.clear();
-    ToulBar2::negCostBLP.clear();
-    ToulBar2::initialLbBLP.clear();
-    ToulBar2::initialUbBLP.clear();
+    ToulBar2::heuristicFreedom = false;
+    ToulBar2::heuristicFreedomLimit = 5;
 
-    WCSP::CollectionOfWCSP.clear();
+    //TODO: backtrack with conflict-free learning
+    ToulBar2::learning = false;
+
+    // solver statistics
+    ToulBar2::startCpuTime = 0;
+    ToulBar2::startRealTime = 0;
+    ToulBar2::startRealTimeAfterPreProcessing = 0;
+
+    tb2reinit();
+}
+
+/// \brief initialization of ToulBar2 global variables before next call to solving methods
+void tb2reinit()
+{
+    ToulBar2::setvalue = NULL;
+    ToulBar2::setmin = NULL;
+    ToulBar2::setmax = NULL;
+    ToulBar2::removevalue = NULL;
+    ToulBar2::setminobj = NULL;
+    ToulBar2::newsolution = NULL;
+    ToulBar2::timeOut = NULL;
+
+    ToulBar2::interrupted = false;
 
     WeightedCSPConstraint::MasterWeightedCSP = NULL;
     WeightedCSPConstraint::WeightedCSPConstraints.clear();

@@ -650,6 +650,8 @@ public:
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)
 extern void tb2init();
+/// \brief reinitialization of ToulBar2 global variables before next call to solving methods
+extern void tb2reinit();
 /// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
 extern void tb2checkOptions();
 #endif /*TOULBAR2LIB_HPP_*/
