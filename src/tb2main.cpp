@@ -3526,7 +3526,9 @@ int _tmain(int argc, TCHAR* argv[])
       sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
       system(line); */
 
-    // delete solver; // it takes CPU time for nothing!!
+#ifndef NDEBUG
+    delete solver; // it takes CPU time for nothing!!
+#endif
     return 0;
 }
 

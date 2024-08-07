@@ -70,6 +70,11 @@ public:
     CostFunction(MultiCFN* multicfn, unsigned int net_index);
 
     /*!
+     * \brief destructor
+     */
+    virtual ~CostFunction() {}
+
+    /*!
      * \brief print the cost function data
      * \brief os the stream to print to
      */
@@ -109,6 +114,11 @@ public:
      * \brief constructor
      */
     TupleCostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief destructor
+     */
+    ~TupleCostFunction() {}
 
     /*!
      * \brief print the cost function data
@@ -168,6 +178,11 @@ public:
      * \brief constructor
      */
     LinearCostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief destructor
+     */
+    ~LinearCostFunction() {}
 
     /*!
      * \brief print the cost function data
@@ -231,6 +246,11 @@ public:
      * \param weights a list of weights for each wcsp
      */
     MultiCFN(std::vector<WCSP*>& wcsps, std::vector<Double>& weights);
+
+    /*!
+     * \brief destructor (delete all constraints)
+     */
+    ~MultiCFN();
 
     /*!
      * \brief add a wcsp to the network, create the variables if they do not exist, the wcsp is stored internally, the original wcsp will not be referenced
@@ -332,19 +352,19 @@ public:
     /*!
      * \brief make a wcsp from the convex combination of all the wcsps
      * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
-     * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
-     * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
+     * \param scopes the optional list of allowed scopes to extract the partial graph (if missing or empty then no restriction)
+     * \param constrs the optional list of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
      */
-    WeightedCSP* makeWeightedCSP(const set<unsigned int>& vars =  {}, const set<set<unsigned int>>& scopes =  {}, const set<unsigned int>& constrs =  {});
+    WeightedCSP* makeWeightedCSP(const set<unsigned int>& vars = {}, const vector<set<unsigned int>>& scopes = {}, const vector<unsigned int>& constrs = {});
 
     /*!
      * \brief fill a wcsp with the convex combination of all the wcsps already added
      * \param wcsp the weighted csp to be filled
      * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
-     * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
-     * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
+     * \param scopes the optional list of allowed scopes to extract the partial graph (if missing or empty then no restriction)
+     * \param constrs the optional list of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
      */
-    void makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars =  {}, const set<set<unsigned int>>& scopes =  {}, const set<unsigned int>& constrs =  {});
+    void makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars = {}, const vector<set<unsigned int>>& scopes = {}, const vector<unsigned int>& constrs = {});
 
 #ifdef ILOGCPLEX
 
@@ -424,11 +444,11 @@ private: /* private methods */
      * \brief send the cfn to toulbar2
      * \param wcsp tb2 wcsp
      * \param vars the optional set of variable indexes to extract the induced graph (if missing or empty then no restriction)
-     * \param scopes the optional set of allowed scopes to extract the partial graph (if missing or empty then no restriction)
-     * \param constrs the optional set of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
+     * \param scopes the optional list of allowed scopes to extract the partial graph (if missing or empty then no restriction)
+     * \param constrs the optional list of allowed cost function indexes (same index as in cfn dump file) to extract the partial graph (if missing or empty then no restriction)
      * \warning export the problem lower bound only if no restrictions are given (or if scopes contains the emptyset)
      */
-    void exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs);
+    void exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const vector<set<unsigned int>>& scopes, const vector<unsigned int>& constrs);
     void exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs);
 
     /*!

@@ -978,14 +978,14 @@ class CFN:
         """
         self.CFN.wcsp.whenContradiction()
 
-    def InitFromMultiCFN(self, multicfn, vars=set(), scopes=set(), constrs=set()):
+    def InitFromMultiCFN(self, multicfn, vars=[], scopes=[], constrs=[]):
         """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFNs).
 
         Args:
             multicfn (MultiCFN): the instance containing the CFNs.
-            vars (set<int|str>): the set of variable indexes to extract the induced graph (if empty then no restriction)
-            scopes (set<set<int>>): the set of allowed scopes to extract the partial graph (if empty then no restriction)
-            constrs (set<int>): the set of allowed cost function indexes (same index as stored in MultiCFN) to extract the partial graph (if empty then no restriction)
+            vars (list<int|str>): the list of variable indexes to extract the induced graph (if empty then no restriction)
+            scopes (list<set<int|str>>): the list of allowed scopes to extract the partial graph (if empty then no restriction)
+            constrs (list<int>): the list of allowed cost function indexes (same index as stored in MultiCFN) to extract the partial graph (if empty then no restriction)
             
         Note:
             After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
@@ -993,7 +993,7 @@ class CFN:
 
         """
 
-        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), scopes, constrs)
+        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), [set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in scope]) for scope in scopes], list(constrs))
         
         self.VariableIndices = {}
         self.VariableNames = []

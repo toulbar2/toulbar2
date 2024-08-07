@@ -96,7 +96,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20" )
 # -fsanitize=address -fsanitize=undefined -Wconversion -Wsign-conversion
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftrapping-math -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math -march=native -flto" )
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math -march=native" ) #  -flto
 
 IF(CPLEX)
   MESSAGE("CPLEX location: ${CPLEX_LOCATION}")
@@ -146,14 +146,14 @@ IF(STATIC)
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --disable-shared --enable-static -static-libgcc -static-libstdc++")   # -flto 
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --disable-shared --enable-static -static-libgcc -static-libstdc++")
   SET (all_depends  ${all_depends} "z") 
   SET (all_depends  ${all_depends} "m") 
   SET (all_depends  ${all_depends} "pthread") 
   SET (all_depends  ${all_depends} "dl") # it should be present at the end of library ordering (checks manually no dynamic flags occur in the final link command)
 ELSE(STATIC)
   SET(BUILD_SHARED_LIBS ON) #shared library building
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")
 ENDIF(STATIC)
 
 ##########################################

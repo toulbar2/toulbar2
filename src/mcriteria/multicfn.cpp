@@ -38,6 +38,16 @@ MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
     }
 }
 
+
+//---------------------------------------------------------------------------
+MultiCFN::~MultiCFN()
+{
+    for (auto ctr: cost_function) {
+        delete ctr;
+    }
+}
+
+
 //---------------------------------------------------------------------------
 void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var)
 {
@@ -601,8 +611,10 @@ pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
+void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const vector<set<unsigned int>>& scopes_, const vector<unsigned int>& constrs_)
 {
+    set<set<unsigned int>> scopes(scopes_.begin(), scopes_.end());
+    set<unsigned int> constrs(constrs_.begin(), constrs_.end());
     if (scopes.size() > 0 || constrs.size() > 0) {
         set<unsigned int> inter;
         if (scopes.size() > 0) {
@@ -1051,7 +1063,7 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
 }
 
 //---------------------------------------------------------------------------
-WeightedCSP* MultiCFN::makeWeightedCSP(const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
+WeightedCSP* MultiCFN::makeWeightedCSP(const set<unsigned int>& vars, const vector<set<unsigned int>>& scopes, const vector<unsigned int>& constrs)
 {
 
     _sol_extraction = false;
@@ -1067,7 +1079,7 @@ WeightedCSP* MultiCFN::makeWeightedCSP(const set<unsigned int>& vars, const set<
 }
 
 //---------------------------------------------------------------------------
-void MultiCFN::makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars, const set<set<unsigned int>>& scopes, const set<unsigned int>& constrs)
+void MultiCFN::makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars, const vector<set<unsigned int>>& scopes, const vector<unsigned int>& constrs)
 {
 
     _sol_extraction = false;
