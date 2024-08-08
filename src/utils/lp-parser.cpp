@@ -1164,14 +1164,29 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p)
             value = value_opt->value;
             buf.pop_front(value_opt->read);
 
+            // swap (<=,>=) operators if there is a negative factor in a unary constraint
+            if (operator_opt->op != baryonyx::operator_type::equal && elements.size() == 1 && elements[0].factor < -ToulBar2::epsilon) {
+                if (operator_opt->op == baryonyx::operator_type::greater) {
+                    operator_opt->op = baryonyx::operator_type::less;
+                } else {
+                    assert(operator_opt->op == baryonyx::operator_type::less);
+                    operator_opt->op = baryonyx::operator_type::greater;
+                }
+            }
+
             switch (operator_opt->op) {
             case baryonyx::operator_type::equal:
                 if (elements.size() == 1) {
                     int val = static_cast<int>(baryonyx::Floor(value / elements[0].factor));
+                    int val2 = static_cast<int>(baryonyx::Ceil(value / elements[0].factor));
+                    if (val != val2) {
+                        cerr << "Sorry, cannot assign variable " << p.m_problem.vars.names[elements[0].variable_index] << " to a fractional value " << (value / elements[0].factor) << endl;
+                        throw BadConfiguration();
+                    }
                     if (val < p.m_problem.vars.values[elements[0].variable_index].min ||
                         val > p.m_problem.vars.values[elements[0].variable_index].max) {
                         cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be equal to " << val << endl;
-                        throw WrongFileFormat();
+                        throw Contradiction();
                     }
                     p.m_problem.vars.values[elements[0].variable_index].min = val;
                     p.m_problem.vars.values[elements[0].variable_index].max = val;
@@ -1185,7 +1200,7 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p)
                     int val = static_cast<int>(baryonyx::Ceil(value / elements[0].factor));
                     if (val > p.m_problem.vars.values[elements[0].variable_index].max) {
                         cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be greater than " << val << endl;
-                        throw WrongFileFormat();
+                        throw Contradiction();
                     }
                     p.m_problem.vars.values[elements[0].variable_index].min = max(p.m_problem.vars.values[elements[0].variable_index].min, val);
                     p.m_problem.vars.values[elements[0].variable_index].touched = true;
@@ -1198,7 +1213,7 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p)
                     int val = static_cast<int>(baryonyx::Floor(value / elements[0].factor));
                     if (val < p.m_problem.vars.values[elements[0].variable_index].min) {
                         cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be less than " << val << endl;
-                        throw WrongFileFormat();
+                        throw Contradiction();
                     }
                     p.m_problem.vars.values[elements[0].variable_index].max = min(p.m_problem.vars.values[elements[0].variable_index].max, val);
                 } else {

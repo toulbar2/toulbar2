@@ -4372,6 +4372,10 @@ void WCSP::read_lp(const char* fileName)
             cerr << "Sorry, cannot represent unbounded variable domain for " << pb.vars.names[i] << " (must add a valid lower bound)" << endl;
             throw BadConfiguration();
         }
+        if (pb.vars.values[i].min > pb.vars.values[i].max) {
+            cerr << "Infeasible problem! " << pb.vars.names[i] << " has a lower bound " << pb.vars.values[i].min << " greater than its upper bound " << pb.vars.values[i].max << endl;
+            throw Contradiction();
+        }
 #ifdef WCSPFORMATONLY
         int var = makeEnumeratedVariable(to_string(pb.vars.names[i]), 0, pb.vars.values[i].max - pb.vars.values[i].min);
 #else

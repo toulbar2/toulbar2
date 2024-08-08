@@ -116,11 +116,6 @@ public:
     TupleCostFunction(MultiCFN* multicfn, unsigned int net_index);
 
     /*!
-     * \brief destructor
-     */
-    ~TupleCostFunction() {}
-
-    /*!
      * \brief print the cost function data
      * \brief os the stream to print to
      */
@@ -178,11 +173,6 @@ public:
      * \brief constructor
      */
     LinearCostFunction(MultiCFN* multicfn, unsigned int net_index);
-
-    /*!
-     * \brief destructor
-     */
-    ~LinearCostFunction() {}
 
     /*!
      * \brief print the cost function data
