@@ -2198,7 +2198,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     free(Nfile2);
 
     // Done internally by the CFN reader
-    if (!ToulBar2::cfn) {
+    if (!ToulBar2::cfn && !ToulBar2::lp) {
         if (ToulBar2::deltaUbS.length() != 0) {
             ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
             ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
@@ -4574,6 +4574,27 @@ void WCSP::read_lp(const char* fileName)
 
     ToulBar2::resolution = min(ToulBar2::resolution, baryonyx::precision);
 
+    Cost upperBound = getUb();
+    if (ToulBar2::externalUB.length() != 0) {
+        upperBound = min(upperBound, decimalToCost(ToulBar2::externalUB, 0) + negCost);
+    }
+    if (ToulBar2::deltaUbS.length() != 0) {
+        ToulBar2::deltaUbAbsolute = max(MIN_COST, decimalToCost(ToulBar2::deltaUbS, 0));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)upperBound));
+        if (ToulBar2::deltaUb > MIN_COST) {
+            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+            upperBound += ToulBar2::deltaUb;
+        }
+    }
+    updateUb(upperBound);
+
+    if (ToulBar2::costThresholdS.size())
+        ToulBar2::costThreshold = decimalToCost(ToulBar2::costThresholdS, 0);
+    if (ToulBar2::costThresholdPreS.size())
+        ToulBar2::costThresholdPre = decimalToCost(ToulBar2::costThresholdPreS, 0);
+    if (ToulBar2::vnsOptimumS.size())
+        ToulBar2::vnsOptimum = decimalToCost(ToulBar2::vnsOptimumS, 0) + negCost;
+
     // apply basic initial propagation AFTER complete network loading
     if (multiplier * std::abs(pb.objective.value) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
@@ -4586,7 +4607,7 @@ void WCSP::read_lp(const char* fileName)
     }
     sortConstraints();
     if (ToulBar2::verbose >= 0)
-        cout << "c Read " << nbvar << " variables, with " << maxdom << " values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier * multiplier << ", shifting value: " << -negCost << ")" << endl;
+        cout << "c Read " << nbvar << " variables, with " << maxdom << " values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (precision: " << ToulBar2::decimalPoint << ", shifting value: " << -negCost << ")" << endl;
 }
 
 /* Local Variables: */
