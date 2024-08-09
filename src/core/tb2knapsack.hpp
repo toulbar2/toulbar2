@@ -49,17 +49,18 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     Long NbNodes = -1;
     bool sameweight;
     vector<vector<Cost>> tempdeltaCosts;
-    vector<bool> Booleanvar;
+    set<int> tempvars;
+    vector<bool> Booleanvar; // true if initial domain is {0,1}
     vector<vector<int>> kTimeStamp;
     vector<vector<int>> kVAC;// Store the number of quantum requested by each value
-    vector<vector<int>> DeleteValVAC; //Store, for each value, the VAC iteration in which it was removed. Is equal -1 if the value was removed before the enforcment of VAC and 0 if the value is still available.
+    vector<vector<int>> DeleteValVAC; //Store, for each value, the VAC iteration in which it was removed. Is equal -1 if the value was removed before the enforcement of VAC and 0 if the value is still available.
     int NbIteVAC; //Number of iteration of VAC
     vector<bool> VACExtToLast; //Indicates if some cost has already been extended to values in NotVarVal. It is necessary to avoid extending the same cost multiple time. 
     int kConstraintVAC; //Number of time a constraint is involved in a conflict resolution.
     vector<vector<bool>> VACLastVALChecked; //Store for each value in Notvarval if the given value has already been processed by phase 2.
     void projectLB(Cost c)
     {
-        if (c > 0) {
+        if (c > MIN_COST) {
             lb += c;
             Constraint::projectLB(c);
         }
@@ -116,7 +117,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
                 if (Booleanvar[idx])
                     return true;
                 Updatelastval0(idx);
-                if (!scope[idx]->canbe(lastval1[idx])) {
+                if (scope[idx]->cannotbe(lastval1[idx])) {
                     Value last = lastval1[idx];
                     unsigned int j = 0;
                     while (j < VarVal[idx].size() - 1 && last == lastval1[idx]) {
@@ -151,7 +152,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             }
         }
     }
-    void Group_ProjectNVV(int var, Cost C)
+    void Group_projectNVV(int var, Cost C)
     {
         for (unsigned int i = 0; i < NotVarVal[var].size(); i++) {
             if (scope[var]->canbe(NotVarVal[var][i]))
@@ -176,7 +177,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
                 scope[var]->project(VarVal[var][value], -C, true);
                 deltaCosts[var][value] += C;
             } else {
-                Group_ProjectNVV(var, -C);
+                Group_projectNVV(var, -C);
                 deltaCosts[var].back() += C;
             }
         }
@@ -370,7 +371,7 @@ public:
                 VACLastVALChecked.emplace_back(NotVarVal[i].size(), false);
             }
             for (int j = 0; j < (int)weights.size(); ++j) {
-                current_val_idx.emplace_back(maxdom, MIN_COST);
+                current_val_idx.emplace_back(maxdom, 0);
                 current_scope_idx.emplace_back(0);
             }
             nbRealVar = (int)weights.size() - (int)AMO.size();
@@ -631,17 +632,6 @@ public:
         int iter = 0;
         Double xk = 0;
         if (W < capacity) {
-            // Sort the Slopes
-            sort(Slopes.begin(), Slopes.end(),
-                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-                    if (x[3] == y[3]) {
-                        if (x[0] == y[0])
-                        return MIN(capacity, weights[int(x[0])][int(x[1])]) <= MIN(capacity, weights[int(y[0])][int(y[1])]);
-                        else
-                            return scope[int(x[0])]->getDACOrder() < scope[int(y[0])]->getDACOrder(); // TODO: checks if it favors aborbing more unary costs for the last variables in the DAC order or the opposite?!
-                    } else
-                        return x[3] < y[3];
-                });
             // Find the optimal solution
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
@@ -844,17 +834,6 @@ public:
         int iter = 0;
         Double xk = 0;
         if (W < capacity) {
-            // Sort the Slopes
-            sort(Slopes.begin(), Slopes.end(),
-                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-                    if (x[3] == y[3]) {
-                        if (x[0] == y[0])
-                        return MIN(capacity, weights[int(x[0])][int(x[1])]) <= MIN(capacity, weights[int(y[0])][int(y[1])]);
-                        else
-                            return scope[int(x[0])]->getDACOrder() < scope[int(y[0])]->getDACOrder(); // TODO: checks if it favors aborbing more unary costs for the last variables in the DAC order or the opposite?!
-                    } else
-                        return x[3] < y[3];
-                });
             // Find the optimal solution
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
@@ -922,17 +901,6 @@ public:
         int iter = 0;
         Double xk = 0;
         if (W < capacity) {
-            // Sort the Slopes
-            sort(Slopes.begin(), Slopes.end(),
-                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-                    if (x[3] == y[3]) {
-                        if (x[0] == y[0])
-                        return MIN(capacity, weights[int(x[0])][int(x[1])]) <= MIN(capacity, weights[int(y[0])][int(y[1])]);
-                        else
-                            return scope[int(x[0])]->getDACOrder() < scope[int(y[0])]->getDACOrder(); // TODO: checks if it favors aborbing more unary costs for the last variables in the DAC order or the opposite?!
-                    } else
-                        return x[3] < y[3];
-                });
             // Find the optimal solution
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
@@ -1179,7 +1147,7 @@ public:
                         }
                         sort(EDACORDER.begin(), EDACORDER.end(),
                             [&](int& x, int& y) {
-                                return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // TODO: checks if it favors aborbing more unary costs for the last variables in the DAC order or the opposite?!
+                                return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // TODO: checks if it favors absorbing more unary costs for the last variables in the DAC order or the opposite?!
                             });
                         for (int i = 0; i < nbRealVar; ++i) {
                             MaxW = -1;
@@ -1275,6 +1243,7 @@ public:
         conflictWeights.assign(conflictWeights.size(), 0);
         Constraint::resetConflictWeight();
     }
+    // code never used
     vector<int> GetOrder()
     {
         vector<Double> WeightedProfit;
@@ -1288,12 +1257,16 @@ public:
             }
         }
         sort(OutScope.begin(), OutScope.end(),
-            [&](int& x, int& y) {
-                if (WeightedProfit[x] == WeightedProfit[y]) {
-                    return weights[x] < weights[y];
-                } else
-                    return WeightedProfit[x] < WeightedProfit[y];
-            });
+             [&](int& x, int& y) {
+            if (WeightedProfit[x] == WeightedProfit[y]) {
+                if (weights[x][1] == weights[y][1]) {
+                    return scope[x]->getDACOrder() > scope[y]->getDACOrder();
+                } else {
+                    return weights[x][1] > weights[y][1];
+                }
+            } else
+                return WeightedProfit[x] < WeightedProfit[y];
+        });
         for (int i = 0; i < (int)OutScope.size(); ++i) {
             ROutScope.push_back(scope[OutScope[i]]->wcspIndex);
         }
@@ -1309,17 +1282,6 @@ public:
         int iter = 0;
         Double xk = 0;
         if (W < capacity) {
-            // Sort the Slopes
-            sort(Slopes.begin(), Slopes.end(),
-                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-                    if (x[3] == y[3]) {
-                        if (x[0] == y[0])
-                            return weights[int(x[0])][int(x[1])] <= weights[int(y[0])][int(y[1])];
-                        else
-                            return scope[int(x[0])]->getDACOrder() < scope[int(y[0])]->getDACOrder(); // TODO: checks if it favors aborbing more unary costs for the last variables in the DAC order or the opposite?!
-                    } else
-                        return x[3] < y[3];
-                });
             // Find the optimal solution
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
@@ -1368,8 +1330,8 @@ public:
         Cost res = -lb + assigneddeltas;
         for (int i = 0; i < arity_; i++) {
             auto* var = (EnumeratedVariable*)getVar(i);
-            if (ToulBar2::verbose >= 4)
-                cout << var->getName() << " " << s[i] << " ";
+//            if (ToulBar2::verbose >= 4)
+//                cout << var->getName() << " " << s[i] << " ";
             if (CorrAMO[i] == 0) {
                 auto it = find(VarVal[i].begin(), VarVal[i].end(), var->toValue(s[i]));
                 if (it == VarVal[i].end()) {
@@ -1854,7 +1816,7 @@ public:
                                 for (int j = 0; j < nbValue[i]; ++j) {
                                     assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
                                     if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                                        Group_ProjectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                                        Group_projectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                                     } else
                                         scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                                 }
@@ -2098,8 +2060,6 @@ public:
 
     void ObjConsistency()
     {
-        int k = 0, k2;
-        int currentvar;
         Cost SumMin = MIN_COST;
         int OP = 0;
         if (AMO.empty()) {
@@ -2109,12 +2069,13 @@ public:
             assert(SumMin <= lb - assigneddeltas);
             bool b = false;
             int size = (int)tempdeltaCosts.size();
+            int k = 0;
             while (k < carity) {
-                currentvar = current_scope_idx[k];
+                int currentvar = current_scope_idx[k];
                 assert(scope[currentvar]->canbe(VarVal[currentvar][LowestWeightIdx[currentvar]]));
                 // Determine if at least one value of the current variable can be erased.
-                k2 = 0;
                 if (SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][GreatestWeightIdx[currentvar]] > lb - assigneddeltas) {
+                    int k2 = 0;
                     while (k2 < nbValue[k]) {
                         if (OP < size && currentvar == tempdeltaCosts[OP][0] && current_val_idx[k][k2] == tempdeltaCosts[OP][1]) {
                             b = true;
@@ -2123,19 +2084,20 @@ public:
                             b = false;
                         }
                         if (SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] > lb - assigneddeltas) {
-                            assert(SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas > 0);
+                            assert(SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas > MIN_COST);
                             if (b) {
                                 tempdeltaCosts[OP - 1][2] -= SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
                             } else {
                                 tempdeltaCosts.push_back({ currentvar, current_val_idx[k][k2], -(SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas) });
                             }
-                            if (current_val_idx[k][k2] < (int)VarVal[currentvar].size() - 1) {
-                                // Group_ProjectNVV(currentvar, SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]]-lb+assigneddeltas);
-                                deltaCosts[currentvar][current_val_idx[k][k2]] -= SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
-                            } else {
-                                // scope[currentvar]->project(VarVal[currentvar][current_val_idx[k][k2]], SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]]-lb+assigneddeltas, true);
-                                deltaCosts[currentvar][current_val_idx[k][k2]] -= SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
-                            }
+                            //                            if (current_val_idx[k][k2] < (int)VarVal[currentvar].size() - 1) {
+                            //                                // Group_ProjectNVV(currentvar, SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]]-lb+assigneddeltas);
+                            //                                deltaCosts[currentvar][current_val_idx[k][k2]] -= SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
+                            //                            } else {
+                            //                                // scope[currentvar]->project(VarVal[currentvar][current_val_idx[k][k2]], SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]]-lb+assigneddeltas, true);
+                            //                                deltaCosts[currentvar][current_val_idx[k][k2]] -= SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
+                            //                            }
+                            deltaCosts[currentvar][current_val_idx[k][k2]] -= SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
                             assert(SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] <= lb - assigneddeltas);
                         }
                         assert(SumMin - deltaCosts[currentvar][LowestWeightIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] <= lb - assigneddeltas);
@@ -2161,12 +2123,11 @@ public:
             int size = (int)tempdeltaCosts.size();
             for (int j = 0; j < arity_; ++j) {
                 if (assigned[j] == 0) {
-                    currentvar = j;
+                    int currentvar = j;
                     if (OP < size - 1 && currentvar == tempdeltaCosts[OP][0]) {
                         if (1 - Mindeltaidx[j] != tempdeltaCosts[OP][1])
                             OP++;
                     }
-                    k2 = 0;
                     if (SumMin - deltaCosts[j][Mindeltaidx[j]] + deltaCosts[j][1 - Mindeltaidx[j]] > lb - assigneddeltas) {
                         if (OP < size && currentvar == tempdeltaCosts[OP][0] && 1 - Mindeltaidx[j] == tempdeltaCosts[OP][1]) {
                             assert(1 - Mindeltaidx[j] == tempdeltaCosts[OP][1]);
@@ -2182,8 +2143,9 @@ public:
                 }
             }
         }
+        tempvars.clear();
         for (int i = 0; i < (int)tempdeltaCosts.size(); ++i) {
-            if (tempdeltaCosts[i][2] > 0) {
+            if (tempdeltaCosts[i][2] > MIN_COST) {
                 if (CorrAMO[tempdeltaCosts[i][0]] > 0)
                     scope[tempdeltaCosts[i][0]]->extend(tempdeltaCosts[i][1], tempdeltaCosts[i][2]);
                 else {
@@ -2199,17 +2161,20 @@ public:
                     if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
                         scope[tempdeltaCosts[i][0]]->project(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], -tempdeltaCosts[i][2], true);
                     else
-                        Group_ProjectNVV(tempdeltaCosts[i][0], -tempdeltaCosts[i][2]);
+                        Group_projectNVV(tempdeltaCosts[i][0], -tempdeltaCosts[i][2]);
                 }
+                tempvars.insert(tempdeltaCosts[i][0]);
             }
         }
         for (int i = 0; i < carity; ++i) {
-            if (VirtualVar[current_scope_idx[i]] == 0)
-                scope[current_scope_idx[i]]->findSupport();
-            else {
-                for (int j = 0; j < nbValue[i]; ++j) {
-                    if (current_val_idx[i][j] != (int)AMO[VirtualVar[current_scope_idx[i]] - 1].size())
-                        scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first]->findSupport();
+            if (tempvars.find(current_scope_idx[i]) != tempvars.end()) { // SdG: findSupport required only if some projections have been made
+                if (VirtualVar[current_scope_idx[i]] == 0) {
+                    scope[current_scope_idx[i]]->findSupport();
+                } else {
+                    for (int j = 0; j < nbValue[i]; ++j) {
+                        if (current_val_idx[i][j] != (int)AMO[VirtualVar[current_scope_idx[i]] - 1].size())
+                            scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][j]].first]->findSupport();
+                    }
                 }
             }
         }
@@ -2298,7 +2263,7 @@ public:
             return false;
     }
 
-    // Return a vector containing the slopes, a slope is defined between 2 values of a variable : <Var, Val1, Val2, slopes>
+    // Return a vector containing the slopes, a slope is defined between 2 values of a variable : <Var, Val1, Val2, slope>
     void ComputeSlopes(Long* W, Cost* c)
     {
         int item1 = 0;
@@ -2316,7 +2281,7 @@ public:
                     if ((VirtualVar[currentvar] == 0 && MIN(weights[currentvar][x], capacity) == MIN(weights[currentvar][y], capacity)) || (VirtualVar[currentvar] != 0 && weights[currentvar][x] == weights[currentvar][y])) {
                         if (Profit[currentvar][x] == Profit[currentvar][y]) {
                             if (VirtualVar[currentvar] == 0) {
-                                if (scope[currentvar]->getSupport() == VarVal[currentvar][x]) {
+                                if (scope[currentvar]->getSupport() == VarVal[currentvar][y]) {
                                     return true;
                                 } else
                                     return false;
@@ -2333,7 +2298,7 @@ public:
             item1 = arrvar[k];
             while (k > 0) {
                 k--;
-                // We don't consider dominated items : p_i < p_j && w_i > w_j   (i dominate j)
+                // We don't consider dominated items : p_i < p_j && w_i > w_j   (i dominates j)
                 if (VirtualVar[currentvar] == 0) {
                     if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && MIN(weights[currentvar][arrvar[k]], capacity) < MIN(weights[currentvar][item1], capacity)) {
                         // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
@@ -2384,9 +2349,27 @@ public:
     // Find the optimal solution. Follow the order of the slopes and modify OptSol until we fill the constraint
     void FindOpt(vector<std::array<Double, 4>>& Slopes, Long* W, Cost* c, Double* xk, int* iter)
     {
+        // Sort the Slopes in increasing order
+        sort(Slopes.begin(), Slopes.end(),
+                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
+            if (x[3] == y[3]) { // same slope value
+                if (x[0] == y[0]) { // same variable
+                    Long mx1 = MIN(capacity, weights[int(x[0])][int(x[1])]);
+                    Long my1 = MIN(capacity, weights[int(y[0])][int(y[1])]);
+                    assert(mx1 != my1);
+                    return mx1 < my1; // keep slopes ordered by weights inside a variable
+                } else {
+                    return scope[int(x[0])]->getDACOrder() > scope[int(y[0])]->getDACOrder(); // it favors absorbing more unary costs for the last variables in the DAC order
+                }
+            } else { // increasing slope order
+                return x[3] < y[3];
+            }
+        });
+
         int currentVar;
         Long capacityLeft;
         while (*W < capacity) {
+            assert(*iter < (int)Slopes.size());
             currentVar = int(Slopes[*iter][0]);
             if (VirtualVar[currentVar] == 0) {
                 if (*W + MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]) >= capacity) {
@@ -2429,33 +2412,32 @@ public:
     // Do the Extension/Projection
     void ExtensionProjection(vector<Double>& y_i, Double y_cc, vector<vector<Double>> yAMO_i, vector<Double> clq)
     {
-        int n = 0, currentvar, currentval;
-        Cost C;
+        int n = 0;
         tempdeltaCosts.clear();
         for (int i = 0; i < carity; i++) {
-            currentvar = current_scope_idx[i];
+            int currentvar = current_scope_idx[i];
             if (VirtualVar[currentvar] == 0) {
                 for (int j = 0; j < nbValue[i]; ++j) {
-                    currentval = current_val_idx[i][j];
+                    int currentval = current_val_idx[i][j];
                     if (OptSol[currentvar][currentval] > 0) {
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
                             if (UnaryCost0[currentvar] > MIN_COST) {
-                                tempdeltaCosts.push_back({ current_scope_idx[i], current_val_idx[i][j], UnaryCost0[currentvar] });
+                                tempdeltaCosts.push_back({ currentvar, currentval, UnaryCost0[currentvar] });
                                 // Group_extendNVV(currentvar, UnaryCost0[currentvar]);
                                 deltaCosts[currentvar][currentval] += UnaryCost0[currentvar];
                             }
                         } else {
-                            C = scope[currentvar]->getCost(VarVal[currentvar][currentval]);
+                            Cost C = scope[currentvar]->getCost(VarVal[currentvar][currentval]);
                             if (C > MIN_COST) {
-                                tempdeltaCosts.push_back({ current_scope_idx[i], current_val_idx[i][j], C });
+                                tempdeltaCosts.push_back({ currentvar, currentval, C });
                                 deltaCosts[currentvar][currentval] += C;
                                 // scope[currentvar]->extend(VarVal[currentvar][currentval],C);
                             }
                         }
                     } else {
-                        C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * MIN(weights[currentvar][currentval], capacity));
+                        Cost C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * MIN(weights[currentvar][currentval], capacity));
                         if (C != MIN_COST) {
-                            tempdeltaCosts.push_back({ current_scope_idx[i], current_val_idx[i][j], C });
+                            tempdeltaCosts.push_back({ currentvar, currentval, C });
                             deltaCosts[currentvar][currentval] += C;
                             //   ExtOrProJ(currentvar, currentval,C);
                         }
@@ -2464,10 +2446,10 @@ public:
                 // scope[currentvar]->findSupport();
             } else {
                 for (int j = 0; j < nbValue[i]; ++j) {
-                    currentval = current_val_idx[i][j];
+                    int currentval = current_val_idx[i][j];
                     if (currentval != (int)AMO[VirtualVar[currentvar] - 1].size()) {
                         if (OptSol[currentvar][currentval] == 1) {
-                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second);
+                            Cost C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, AMO[VirtualVar[currentvar] - 1][currentval].second, C });
                                 deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
@@ -2484,7 +2466,7 @@ public:
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->project(!AMO[VirtualVar[currentvar] - 1][currentval].second, -C,true);
                             }
                         } else if (OptSol[currentvar][currentval] == 0) {
-                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second);
+                            Cost C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
                                 deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][!AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
@@ -2501,7 +2483,7 @@ public:
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->project(AMO[VirtualVar[currentvar] - 1][currentval].second, -C,true);
                             }
                         } else {
-                            C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second);
+                            Cost C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
                                 deltaCosts[AMO[VirtualVar[currentvar] - 1][currentval].first][AMO[VirtualVar[currentvar] - 1][currentval].second] += C;
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, AMO[VirtualVar[currentvar] - 1][currentval].second, C });
@@ -2592,7 +2574,7 @@ public:
         // propagates from scratch the constraint
         if (connected()) {
             bool b = false;
-            for (int i = 0; connected() && i < arity_; i++) {
+            for (int i = 0; !b && connected() && i < arity_; i++) { // SdG: do not continue to assign if one assign already done
                 if (CorrAMO[i] == 0) {
                     if (assigned[i] == 0 && !isunassigned(i)) {
                         assign(i);
@@ -2660,7 +2642,7 @@ public:
                             assert(nbValue[i] > 1);
                         }
 #endif
-                        // Return True if the last optimal solution has a cost of 0
+                        // Return true if the last optimal solution has a non-zero cost or its (average) weight is less than the capacity
                         b = ComputeProfit();
                         if (ToulBar2::knapsackDP > -2 && NbNodes != wcsp->getNbNodes()) {
                             NbNodes = wcsp->getNbNodes();
@@ -2678,6 +2660,9 @@ public:
                                     for (unsigned int j = 0; j < VarVal[current_scope_idx[i]].size(); ++j) {
                                         cout << " " << VarVal[current_scope_idx[i]][current_val_idx[i][j]] << " (" << current_val_idx[i][j] << ") : " << Profit[current_scope_idx[i]][current_val_idx[i][j]] << "/"
                                              << weights[current_scope_idx[i]][current_val_idx[i][j]];
+                                        if (j < VarVal[current_scope_idx[i]].size() - 1) {
+                                            cout << ",";
+                                        }
                                     }
                                     cout << endl;
                                 }
@@ -2685,8 +2670,9 @@ public:
 #ifndef NDEBUG
                             for (unsigned int i = 0; i < Slopes.size(); ++i) {
                                 assert(Slopes[i].size() == 4);
-                                assert(Slopes[i][3] >= MIN_COST);
-                                assert(Slopes[i][3] < MAX_COST);
+                                assert(!std::isnan(Slopes[i][3]));
+                                assert(Slopes[i][3] >= (Double)MIN_COST);
+                                assert(Slopes[i][3] < (Double)MAX_COST);
                             }
                             Long Sumw = 0;
                             for (int i = 0; i < carity; ++i) {
@@ -2762,7 +2748,7 @@ public:
                                                 } else {
                                                     totrans = UnaryCost0[current_scope_idx[EDACORDER[i]]] - GAP;
                                                     if (totrans < MIN_COST) {
-                                                        Group_ProjectNVV(current_scope_idx[EDACORDER[i]], -totrans);
+                                                        Group_projectNVV(current_scope_idx[EDACORDER[i]], -totrans);
                                                     } else if (totrans > MIN_COST) {
                                                         Group_extendNVV(current_scope_idx[EDACORDER[i]], totrans);
                                                     }
@@ -2814,24 +2800,13 @@ public:
                                 DoDyn = false;
                             } else {
                                 if (W < capacity) {
-                                    // Sort the Slopes
-                                    sort(Slopes.begin(), Slopes.end(),
-                                        [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-                                            if (x[3] == y[3]) {
-                                                if (x[0] == y[0])
-                                                    return MIN(capacity, weights[int(x[0])][int(x[1])]) <= MIN(capacity, weights[int(y[0])][int(y[1])]);
-                                                else
-                                                    return scope[int(x[0])]->getDACOrder() < scope[int(y[0])]->getDACOrder(); // TODO: checks if it favors aborbing more unary costs for the last variables in the DAC order or the opposite?!
-                                            } else
-                                                return x[3] < y[3];
-                                        });
                                     // Find the optimal solution
                                     FindOpt(Slopes, &W, &c, &xk, &iter);
                                 }
                                 if (c > 0) {
                                     assert(W >= capacity);
                                     assert(xk >= 0 && xk <= 1);
-                                    assert(iter <= (int)Slopes.size());
+                                    assert((Slopes.empty() && iter==0) || iter < (int)Slopes.size());
                                     // Compute the dual variable y_cc and y_i using the optimal primal solution
                                     Double y_cc = 0;
                                     if (!Slopes.empty())
@@ -2840,17 +2815,16 @@ public:
                                         y_cc = 0;
                                     y_i.clear();
                                     yAMO_i.clear();
-                                    assert(y_cc >= MIN_COST);
-                                    int k = 0, currentvar;
+                                    assert(y_cc >= 0.);
                                     vector<Double> clq;
                                     for (int i = 0; i < carity; i++) {
-                                        k = 0;
-                                        currentvar = current_scope_idx[i];
+                                        int currentvar = current_scope_idx[i];
                                         if (VirtualVar[currentvar] == 0) {
-                                            while (OptSol[currentvar][current_val_idx[i][k]] == 0)
+                                            int k = 0;
+                                            while (OptSol[currentvar][current_val_idx[i][k]] == 0.)
                                                 k++;
                                             y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc * MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
-                                            assert(y_i[i] < MAX_COST);
+                                            assert(y_i.back() < MAX_COST);
                                         } else {
                                             tempAMOy_i.clear();
                                             Double C;
@@ -2890,7 +2864,7 @@ public:
                                     }
                                     // Use y_cc and y_i to extend/project the right cost
                                     ExtensionProjection(y_i, y_cc, yAMO_i, clq);
-                                    assert(c > 0);
+                                    assert(c > MIN_COST);
                                     projectLB(c);
                                     ObjConsistency();
                                 }
@@ -2929,7 +2903,7 @@ public:
                                 for (int j = 0; j < nbValue[i]; ++j) {
                                     assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
                                     if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                                        Group_ProjectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                                        Group_projectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                                     } else
                                         scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
                                 }
