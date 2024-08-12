@@ -18,7 +18,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     StoreCost assigneddeltas;
     vector<Long> conflictWeights; // used by weighted degree heuristics
     vector<StoreInt> LowestWeightIdx;
-    vector<Cost> InitLargestWeight;
+    vector<Long> InitLargestWeight;
     vector<StoreInt> GreatestWeightIdx;
     vector<StoreInt> assigned;
     vector<StoreInt> lastval0ok;
@@ -662,7 +662,7 @@ public:
                     currentval = current_val_idx[i][j];
                     if (OptSol[currentvar][currentval] == 0) {
                         C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * MIN(capacity, weights[currentvar][currentval]));
-                        if (C > 0 && !scope[currentvar]->canbe(VarVal[currentvar][currentval])) {
+                        if (C > MIN_COST && scope[currentvar]->cannotbe(VarVal[currentvar][currentval])) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
@@ -671,7 +671,7 @@ public:
                                 Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                             }
                         }
-                    } else if (!scope[currentvar]->canbe(VarVal[currentvar][currentval])) {
+                    } else if (scope[currentvar]->cannotbe(VarVal[currentvar][currentval])) {
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
                             for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                 Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
@@ -1133,34 +1133,34 @@ public:
     void incConflictWeight(Constraint* from) override
     {
         assert(from != NULL);
-        if (!sameweight) { // TODO: else Constraint::incConflictWeight(1)
+        if (!sameweight) {
             if (from == this) {
                 if (getNonAssigned() == arity_ || deconnected()) {
                     Constraint::incConflictWeight(1);
                 } else {
-                    get_current_scope();
+                    //get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
                     if (!verify()) {
-                        Long SumW = 0, MaxW;
+                        Long SumW = 0;
                         vector<int> EDACORDER;
-                        for (int i = 0; i < nbRealVar; ++i) {
+                        for (unsigned int i = 0; i < weights.size(); ++i) {
                             EDACORDER.push_back(i);
                         }
                         sort(EDACORDER.begin(), EDACORDER.end(),
                             [&](int& x, int& y) {
-                                return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // TODO: checks if it favors absorbing more unary costs for the last variables in the DAC order or the opposite?!
+                                return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
                             });
-                        for (int i = 0; i < nbRealVar; ++i) {
-                            MaxW = -1;
-                            if (!scope[i]->canbe(VarVal[i][GreatestWeightIdx[i]])) {
+                        for (unsigned int i = 0; i < weights.size(); ++i) {
+                            if (scope[i]->cannotbe(VarVal[i][GreatestWeightIdx[i]])) {
+                                Long MaxW = -1;
                                 for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
                                     if (scope[i]->canbe(VarVal[i][j]) && MaxW < weights[i][j]) {
                                         GreatestWeightIdx[i] = j;
                                         MaxW = weights[i][j];
                                     }
                                 }
-                                if (!scope[i]->canbe(VarVal[i].back())) {
+                                if (scope[i]->cannotbe(VarVal[i].back())) {
                                     unsigned int k = 0;
-                                    while (k < NotVarVal[i].size() && !scope[i]->canbe(NotVarVal[i][k])) {
+                                    while (k < NotVarVal[i].size() && scope[i]->cannotbe(NotVarVal[i][k])) {
                                         k = k + 1;
                                     }
                                     if (k < NotVarVal[i].size() && MaxW < weights[i].back()) {
@@ -1176,10 +1176,9 @@ public:
                         }
                         int breakamo = 0;
                         for (unsigned int i = 0; i < AMO.size(); ++i) {
+                            Long MaxW = -1;
                             if (lastval0ok[nbRealVar + i])
                                 MaxW = weights[nbRealVar + i].back();
-                            else
-                                MaxW = -1;
                             breakamo = 0;
                             for (unsigned int j = 0; j < AMO[i].size(); ++j) {
 
@@ -1204,22 +1203,25 @@ public:
                         }
                         if (breakamo <= 1) {
                             assert(SumW < Original_capacity);
+                            //cout << "#" << wcspIndex << "# " << SumW;
                             for (unsigned int i = 0; i < weights.size(); ++i) {
-                                if (VirtualVar[i] == 0) {
-                                    if (SumW - weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]] >= Original_capacity)
+                                if (VirtualVar[EDACORDER[i]] == 0) {
+                                    if (SumW - weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]] >= Original_capacity) {
                                         conflictWeights[EDACORDER[i]]++;
-                                    else
+                                        //cout << " " << SumW << ":" << scope[EDACORDER[i]]->wcspIndex << ":" << conflictWeights[EDACORDER[i]];
+                                    } else
                                         SumW += -weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]];
                                 } else {
-                                    if (SumW - weights[i][GreatestWeightIdx[i]] + InitLargestWeight[i] >= Original_capacity) {
-                                        for (unsigned int j = 0; j < AMO[VirtualVar[i] - 1].size(); ++j) {
-                                            if (scope[AMO[VirtualVar[i] - 1][j].first]->assigned())
-                                                conflictWeights[AMO[VirtualVar[i] - 1][j].first]++;
+                                    if (SumW - weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]] >= Original_capacity) {
+                                        for (unsigned int j = 0; j < AMO[VirtualVar[EDACORDER[i]] - 1].size(); ++j) {
+                                            if (scope[AMO[VirtualVar[EDACORDER[i]] - 1][j].first]->assigned())
+                                                conflictWeights[AMO[VirtualVar[EDACORDER[i]] - 1][j].first]++;
                                         }
                                     } else
-                                        SumW += -weights[i][GreatestWeightIdx[i]] + InitLargestWeight[i];
+                                        SumW += -weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]];
                                 }
                             }
+                            //cout << endl;
                         }
                     } else {
                         Constraint::incConflictWeight(1); // Increase ConflictWeight of the constraint or the conflict weight of each assigned variables ?
@@ -1236,6 +1238,8 @@ public:
                     }
                 }
             }
+        } else {
+            Constraint::incConflictWeight(from);
         }
     }
     void resetConflictWeight() override
@@ -2713,7 +2717,7 @@ public:
                                         [&](int& x, int& y) {
                                             assert(current_scope_idx[x]<arity_);
                                             assert(current_scope_idx[y]<arity_);
-                                            return scope[current_scope_idx[x]]->getDACOrder() < scope[current_scope_idx[y]]->getDACOrder(); // TODO: checks if it favors absorbing more unary costs for the last variables in the DAC order or the opposite?!
+                                            return scope[current_scope_idx[x]]->getDACOrder() < scope[current_scope_idx[y]]->getDACOrder(); // SdG: favor projections to first variables in DAC order
                                         });
 
                                     for (int i = 0; i < carity; ++i) {
