@@ -1140,15 +1140,19 @@ public:
                 } else {
                     //get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
                     if (!verify()) {
-                        Long SumW = 0;
-                        vector<int> EDACORDER;
+                        vector<int> varorder;
                         for (unsigned int i = 0; i < weights.size(); ++i) {
-                            EDACORDER.push_back(i);
+                            varorder.push_back(i);
                         }
-                        sort(EDACORDER.begin(), EDACORDER.end(),
+                        sort(varorder.begin(), varorder.end(),
                             [&](int& x, int& y) {
-                                return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
+                                if (InitLargestWeight[x] == InitLargestWeight[y]) {
+                                    return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
+                                } else {
+                                    return InitLargestWeight[x] < InitLargestWeight[y];
+                                }
                             });
+                        Long SumW = 0;
                         for (unsigned int i = 0; i < weights.size(); ++i) {
                             if (scope[i]->cannotbe(VarVal[i][GreatestWeightIdx[i]])) {
                                 Long MaxW = -1;
@@ -1205,20 +1209,20 @@ public:
                             assert(SumW < Original_capacity);
                             //cout << "#" << wcspIndex << "# " << SumW;
                             for (unsigned int i = 0; i < weights.size(); ++i) {
-                                if (VirtualVar[EDACORDER[i]] == 0) {
-                                    if (SumW - weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]] >= Original_capacity) {
-                                        conflictWeights[EDACORDER[i]]++;
+                                if (VirtualVar[varorder[i]] == 0) {
+                                    if (SumW - weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]] >= Original_capacity) {
+                                        conflictWeights[varorder[i]]++;
                                         //cout << " " << SumW << ":" << scope[EDACORDER[i]]->wcspIndex << ":" << conflictWeights[EDACORDER[i]];
                                     } else
-                                        SumW += -weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]];
+                                        SumW += -weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]];
                                 } else {
-                                    if (SumW - weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]] >= Original_capacity) {
-                                        for (unsigned int j = 0; j < AMO[VirtualVar[EDACORDER[i]] - 1].size(); ++j) {
-                                            if (scope[AMO[VirtualVar[EDACORDER[i]] - 1][j].first]->assigned())
-                                                conflictWeights[AMO[VirtualVar[EDACORDER[i]] - 1][j].first]++;
+                                    if (SumW - weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]] >= Original_capacity) {
+                                        for (unsigned int j = 0; j < AMO[VirtualVar[varorder[i]] - 1].size(); ++j) {
+                                            if (scope[AMO[VirtualVar[varorder[i]] - 1][j].first]->assigned())
+                                                conflictWeights[AMO[VirtualVar[varorder[i]] - 1][j].first]++;
                                         }
                                     } else
-                                        SumW += -weights[EDACORDER[i]][GreatestWeightIdx[EDACORDER[i]]] + InitLargestWeight[EDACORDER[i]];
+                                        SumW += -weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]];
                                 }
                             }
                             //cout << endl;
