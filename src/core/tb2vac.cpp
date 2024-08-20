@@ -254,7 +254,7 @@ bool VACExtension::propagate()
     bool acSupportOK = false;
     if (ToulBar2::VAClin) {
         KnapsackList.clear();
-        for (int i = 0; i < (int)wcsp->constrs.size(); ++i) {
+        for (int i = 0; i < (int)wcsp->constrs.size(); ++i) { //TODO: maintain a list of connected linear constraints
             auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[i]);
             if (k && k->connected()) {
                 k->InitVac();
@@ -592,17 +592,14 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
 
 void VACExtension::enforcePass1()
 {
-    bool firstit;
-    firstit= true;
+    bool firstit = true;
     if (ToulBar2::verbose >= 4)
         cout << "enforcePass1 itThreshold: " << itThreshold << endl;
-    VACVariable* xj;
-    VACBinaryConstraint* cij;
     PBkillersctr.clear();
     while (!VAC.empty()) {
         if (ToulBar2::interrupted)
             throw TimeOut();
-        xj = (VACVariable*)VAC.pop_first();
+        VACVariable* xj = (VACVariable*)VAC.pop_first();
         for (EnumeratedVariable::iterator it = xj->begin(); it != xj->end(); ++it) {
             if (xj->getVACCost(*it) > MIN_COST){
                 xj->removeVAC(*it);
@@ -615,12 +612,12 @@ void VACExtension::enforcePass1()
              itc != xj->getConstrs()->end(); ++itc) {
             Constraint* c = (*itc).constr;
             if (c->isBinary() && !c->isDuplicate()) {
-                cij = (VACBinaryConstraint*)c;
+                VACBinaryConstraint* cij = (VACBinaryConstraint*)c;
                 if (enforcePass1(xj, cij))
                     return;
             }
         }
-        //Apply phase 1 on all the knapsack constraints
+        //Apply phase 1 on all the connected knapsack constraints after propagating all binary cost functions
         if (VAC.empty() && ToulBar2::VAClin) {
             for (int i = 0; i < (int)KnapsackList.size(); ++i) {
                 auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[KnapsackList[i]]);
@@ -628,17 +625,16 @@ void VACExtension::enforcePass1()
                     bool wipeout;
                     vector<pair<int, Value>> killers;
                     vector<pair<int, Value>> killed;
-                    Cost OPT;
                     VACVariable* xi;
                     killed.clear();
                     killers.clear();
-                    OPT = k->VACPass1(&killers, &killed, wcsp->getUb(), itThreshold);
+                    Cost OPT = k->VACPass1(&killers, &killed, wcsp->getUb(), itThreshold);
                     //OPT=-1 Only if the constraint is infeasible
                     if (OPT == -1) {
                         PBconflict = killers[0].first;
                         //assert(killers.size() > 1);
                         PBkillersctr = killers;
-                        PBkillersctr.erase(PBkillersctr.begin());
+                        PBkillersctr.erase(PBkillersctr.begin()); //TODO: avoid this operation (removing a value inside a vector is costly)
                         return;
                     }
                     if (OPT > MIN_COST) {
@@ -646,9 +642,9 @@ void VACExtension::enforcePass1()
                         //assert(killers.size() > 1);
                         PBconflict = killers[0].first;
                         PBkillersctr = killers;
-                        PBkillersctr.erase(PBkillersctr.begin());
+                        PBkillersctr.erase(PBkillersctr.begin()); //TODO: avoid this operation (removing a value inside a vector is costly)
                         minlambda = OPT;
-                        k->IncreasekConstraintVAC(-k->getkConstraintVAC());
+                        k->IncreasekConstraintVAC(-k->getkConstraintVAC()); // set to zero counter kConstraintVAC
                         k->IncreasekConstraintVAC(1);
                         return;
                     }
@@ -747,16 +743,18 @@ void VACExtension::enforcePass2()
         for (int k = 0; k < (int)PBkillersctr.size(); ++k) {
             xi = (VACVariable*)wcsp->getVar(PBkillersctr[k].first);
             if(xi->canbe(PBkillersctr[k].second)){
-            xi->addToK(PBkillersctr[k].second, 1, nbIterations);
-            Cost cost = xi->getVACCost(PBkillersctr[k].second);
-            if (cost > MIN_COST) {
-                if (cost < minlambda)
-                    minlambda = cost; // NB: we don't need to check for bottleneck here as k=1 necessarily
-            } else if (xi->canbe(PBkillersctr[k].second)) {
-                xi->setMark(PBkillersctr[k].second, nbIterations);
+                xi->addToK(PBkillersctr[k].second, 1, nbIterations);
+                Cost cost = xi->getVACCost(PBkillersctr[k].second);
+                if (cost > MIN_COST) {
+                    if (cost < minlambda) {
+                        minlambda = cost; // NB: we don't need to check for bottleneck here as k=1 necessarily
+                    }
+                } else {
+                    assert(xi->canbe(PBkillersctr[k].second));
+                    xi->setMark(PBkillersctr[k].second, nbIterations);
+                }
             }
         }
-    }
     }
     while (!queueP->empty()) {
         i = queueP->top().first;
