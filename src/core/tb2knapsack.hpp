@@ -855,7 +855,6 @@ public:
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc *  MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
             }
-            Cost C = MIN_COST;
             for (int i = 0; i < carity; i++) {
                 currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
@@ -869,8 +868,9 @@ public:
                                 Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                         }
                     } else {
-                        C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * MIN(capacity,weights[currentvar][currentval]));
-                        if (C > 0 && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
+                        // C = opposite of reduced cost (optimistic)
+                        Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(capacity,weights[currentvar][currentval]));
+                        if (C > MIN_COST && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
@@ -892,7 +892,6 @@ public:
     */
     void VACPass3(vector<pair<pair<int, Value>, Cost>>* EPT, Cost minlambda, vector<pair<int, Value>> PBKiller)
     {
-        int currentval;
         get_current_scope();
         ComputeProfit();
         Long W = 0;
@@ -914,20 +913,18 @@ public:
                 y_cc = 0;
             y_i.clear();
             assert(y_cc >= MIN_COST);
-            int k = 0, currentvar;
             for (int i = 0; i < carity; i++) {
-                k = 0;
-                currentvar = current_scope_idx[i];
+                int k = 0;
+                int currentvar = current_scope_idx[i];
                 while (OptSol[currentvar][current_val_idx[i][k]] == 0)
                     k++;
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc *  MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
             }
-            Cost C;
             for (int i = 0; i < carity; i++) {
-                currentvar = current_scope_idx[i];
+                int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
-                    currentval = current_val_idx[i][j];
+                    int currentval = current_val_idx[i][j];
                     if (OptSol[currentvar][currentval] > 0) {
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
                             if (UnaryCost0[currentvar] > MIN_COST) {
@@ -938,14 +935,15 @@ public:
                                 }
                             }
                         } else {
-                            C = scope[currentvar]->getCost(VarVal[currentvar][currentval]);
+                            Cost C = scope[currentvar]->getCost(VarVal[currentvar][currentval]);
                             if (C > MIN_COST) {
                                 EPT->push_back({ { scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] }, C });
                                 deltaCosts[currentvar][currentval] += C;
                             }
                         }
                     } else {
-                        C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * MIN(weights[currentvar][currentval], capacity));
+                        // opposite of reduced cost (optimistic)
+                        Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(weights[currentvar][currentval], capacity));
                         if (C != MIN_COST) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
@@ -2443,7 +2441,8 @@ public:
                             }
                         }
                     } else {
-                        Cost C = Ceil(-deltaCosts[currentvar][currentval] + y_i[i] + y_cc * MIN(weights[currentvar][currentval], capacity));
+                        // opposite of reduced cost (optimistic)
+                        Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(weights[currentvar][currentval], capacity));
                         if (C != MIN_COST) {
                             tempdeltaCosts.push_back({ currentvar, currentval, C });
                             deltaCosts[currentvar][currentval] += C;
