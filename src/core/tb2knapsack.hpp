@@ -552,13 +552,15 @@ public:
                 Updatelastval0(i);
                 GreatW.push_back(0);
                 for (int l = 0; l < (int)VarVal[i].size(); ++l) {
-                    if (DeleteValVAC[i][l] != -1 && scope[i]->cannotbe(VarVal[i][l])) {
+                    if (DeleteValVAC[i][l] != -1 && scope[i]->cannotbe(VarVal[i][l])) { // this value has been removed during VAC
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
                         Profit[i][l] = deltaCosts[i][l] + lambda;
-                        if(DeleteValVAC[i][l]==0)
+                        if(DeleteValVAC[i][l]==0) { // if missing then add the current timestamp for this removed value
                             DeleteValVAC[i][l]=NbIteVAC;
-                    } else if (DeleteValVAC[i][l] != -1) {
+                        }
+                    } else if (DeleteValVAC[i][l] != -1) { // this value is still valid in the current domain
+                        assert(DeleteValVAC[i][l]==0);
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
                         Profit[i][l] = deltaCosts[i][l];
@@ -629,7 +631,7 @@ public:
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
         // Check if the optimal cost is greater than itThreshold
-        assert(c >= MIN_COST);
+        // Warning! c can be negative due to rounding effects
         if (c >= itThreshold) {
             Double y_cc = 0.;
             if (!Slopes.empty())
@@ -859,7 +861,7 @@ public:
                 currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     currentval = current_val_idx[i][j];
-                    if (OptSol[currentvar][currentval] > 0 && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
+                    if (OptSol[currentvar][currentval] > 0. && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
@@ -2284,7 +2286,7 @@ public:
             arrvar.resize(nbValue[i]);
             sort(arrvar.begin(), arrvar.end(),
                 [&](int x, int y) {
-                    if ((VirtualVar[currentvar] == 0 && MIN(weights[currentvar][x], capacity) == MIN(weights[currentvar][y], capacity)) || (VirtualVar[currentvar] != 0 && weights[currentvar][x] == weights[currentvar][y])) {
+                    if (MIN(weights[currentvar][x], capacity) == MIN(weights[currentvar][y], capacity)) {
                         if (Profit[currentvar][x] == Profit[currentvar][y]) {
                             if (VirtualVar[currentvar] == 0) {
                                 if (scope[currentvar]->getSupport() == VarVal[currentvar][y]) {
@@ -2305,7 +2307,7 @@ public:
             while (k > 0) {
                 k--;
                 // We don't consider dominated items : p_i < p_j && w_i > w_j   (i dominates j)
-                if (VirtualVar[currentvar] == 0) {
+//                if (VirtualVar[currentvar] == 0) {
                     if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && MIN(weights[currentvar][arrvar[k]], capacity) < MIN(weights[currentvar][item1], capacity)) {
                         // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
                         // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
@@ -2321,33 +2323,33 @@ public:
                         }
                         item1 = arrvar[k];
                     }
-                } else {
-                    if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && weights[currentvar][arrvar[k]] < weights[currentvar][item1]) {
-                        // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
-                        // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
-                        // If it is dominated, we replace the last slope else we add a new one
-                        if (Slopes.empty() || Slopes.back()[0] != currentvar || Slopes.back()[3] >= Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]))
-                            Slopes.push_back({ Double(currentvar), Double(arrvar[k]), Double(item1), Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]) });
-                        else {
-                            Slopes.back() = { Double(currentvar), Double(arrvar[k]), Slopes.back()[2], Double((Profit[currentvar][Slopes.back()[2]] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][Slopes.back()[2]] - weights[currentvar][arrvar[k]]) };
-                            while (Slopes.size() > 1 && Slopes.end()[-2][0] == Slopes.back()[0] && Slopes.back()[3] >= Slopes.end()[-2][3]) {
-                                Slopes.end()[-2] = { Double(currentvar), Slopes.back()[1], Slopes.end()[-2][2], Double((Profit[currentvar][Slopes.end()[-2][2]] - Profit[currentvar][Slopes.back()[1]])) / (weights[currentvar][Slopes.end()[-2][2]] - weights[currentvar][Slopes.back()[1]]) };
-                                Slopes.pop_back();
-                            }
-                        }
-                        item1 = arrvar[k];
-                    }
-                }
+//                } else {
+//                    if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && weights[currentvar][arrvar[k]] < weights[currentvar][item1]) {
+//                        // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
+//                        // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
+//                        // If it is dominated, we replace the last slope else we add a new one
+//                        if (Slopes.empty() || Slopes.back()[0] != currentvar || Slopes.back()[3] >= Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]))
+//                            Slopes.push_back({ Double(currentvar), Double(arrvar[k]), Double(item1), Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]) });
+//                        else {
+//                            Slopes.back() = { Double(currentvar), Double(arrvar[k]), Slopes.back()[2], Double((Profit[currentvar][Slopes.back()[2]] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][Slopes.back()[2]] - weights[currentvar][arrvar[k]]) };
+//                            while (Slopes.size() > 1 && Slopes.end()[-2][0] == Slopes.back()[0] && Slopes.back()[3] >= Slopes.end()[-2][3]) {
+//                                Slopes.end()[-2] = { Double(currentvar), Slopes.back()[1], Slopes.end()[-2][2], Double((Profit[currentvar][Slopes.end()[-2][2]] - Profit[currentvar][Slopes.back()[1]])) / (weights[currentvar][Slopes.end()[-2][2]] - weights[currentvar][Slopes.back()[1]]) };
+//                                Slopes.pop_back();
+//                            }
+//                        }
+//                        item1 = arrvar[k];
+//                    }
+//                }
             }
             // Compute a first Solution
             if (Slopes.size() == 0 || Slopes.back()[0] != currentvar) {
-                OptSol[currentvar][item1] = 1;
                 *W += weights[currentvar][item1];
                 *c += Profit[currentvar][item1];
+                OptSol[currentvar][item1] = 1;
             } else {
                 *W += weights[currentvar][Slopes.back()[1]];
-                OptSol[currentvar][Slopes.back()[1]] = 1;
                 *c += Profit[currentvar][Slopes.back()[1]];
+                OptSol[currentvar][Slopes.back()[1]] = 1;
             }
         }
     }
@@ -2377,7 +2379,7 @@ public:
         while (*W < capacity) {
             assert(*iter < (int)Slopes.size());
             currentVar = int(Slopes[*iter][0]);
-            if (VirtualVar[currentVar] == 0) {
+//            if (VirtualVar[currentVar] == 0) {
                 if (*W + MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]) >= capacity) {
                     capacityLeft = capacity - *W;
                     *xk = Double(capacityLeft) / (MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]));
@@ -2394,24 +2396,24 @@ public:
                     *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
                     *iter = *iter + 1;
                 }
-            } else {
-                if (*W + weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]] >= capacity) {
-                    capacityLeft = capacity - *W;
-                    *xk = Double(capacityLeft) / (weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]]);
-                    OptSol[currentVar][Slopes[*iter][2]] = *xk;
-                    OptSol[currentVar][Slopes[*iter][1]] = 1 - *xk;
-                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
-                    *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
-                    assert(capacityLeft > 0);
-                } else {
-                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1);
-                    OptSol[currentVar][Slopes[*iter][1]] = 0;
-                    OptSol[currentVar][Slopes[*iter][2]] = 1;
-                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
-                    *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
-                    *iter = *iter + 1;
-                }
-            }
+//            } else {
+//                if (*W + weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]] >= capacity) {
+//                    capacityLeft = capacity - *W;
+//                    *xk = Double(capacityLeft) / (weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]]);
+//                    OptSol[currentVar][Slopes[*iter][2]] = *xk;
+//                    OptSol[currentVar][Slopes[*iter][1]] = 1 - *xk;
+//                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
+//                    *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
+//                    assert(capacityLeft > 0);
+//                } else {
+//                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1);
+//                    OptSol[currentVar][Slopes[*iter][1]] = 0;
+//                    OptSol[currentVar][Slopes[*iter][2]] = 1;
+//                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
+//                    *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
+//                    *iter = *iter + 1;
+//                }
+//            }
         }
     }
 
