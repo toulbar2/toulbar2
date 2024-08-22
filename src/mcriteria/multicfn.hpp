@@ -386,7 +386,7 @@ public:
      * \param tuple the tuple: value indexes for each variable
      * \return the index corresponding to the tuple
      */
-    unsigned int tupleToIndex(std::vector<mcriteria::Var*> variables, std::vector<unsigned int> tuple);
+    unsigned int tupleToIndex(const std::vector<mcriteria::Var*>& variables, const std::vector<unsigned int>& tuple);
 
     /*!
      * \brief get the solution of the created wcsp after being solved

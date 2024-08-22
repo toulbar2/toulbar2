@@ -542,12 +542,20 @@ public:
 
         // Check which values are still available.
         // Removed values take a large cost (delta + lambda).
+        Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
+        Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0 and satisfies the constraint
+        int verifsplitvar = -1;
+        int verifsplitval0 = -1;
+        int verifsplitval1 = -1;
+        bool verifsplitok = true; // checks if there is atmost one split variable in OptSol
         int k1 = 0;
         Long MaxW = 0;
         vector<Long> GreatW;
         carity = 0;
         for (int i = 0; i < arity_; i++) {
             if (assigned[i] == 0) {
+                Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
+                Double storew = 0;
                 nbValue[k1] = 0;
                 Updatelastval0(i);
                 GreatW.push_back(0);
@@ -566,8 +574,29 @@ public:
                         Profit[i][l] = deltaCosts[i][l];
                         if (weights[i][l] > GreatW.back())
                             GreatW.back() = weights[i][l];
+                    } else {
+                        Profit[i][l] = deltaCosts[i][l] + lambda;
+                    }
+                    storec += Profit[i][l] * OptSol[i][l];
+                    storew += weights[i][l] * OptSol[i][l];
+                    if (OptSol[i][l] > 0. && OptSol[i][l] < 1.) {
+                        if (verifsplitvar == -1 || verifsplitvar == i) {
+                            verifsplitvar = i;
+                            if (verifsplitval0 == -1) {
+                                verifsplitval0 = l;
+                            } else {
+                                assert(verifsplitval0 != -1);
+                                assert(verifsplitval1 == -1);
+                                verifsplitval1 = l;
+                            }
+                        } else {
+                            verifsplitok = false;
+                        }
                     }
                 }
+                // Compute the cost of the last optimal solution
+                verifopt += Ceil(storec);
+                verifweight += Ceil(storew);
                 MaxW += GreatW.back();
                 current_scope_idx[k1] = i;
                 k1++;
@@ -621,14 +650,46 @@ public:
                 }
             }
         }
+        if (lb == MIN_COST) { // it is just a hard constraint with all tuples either zero or top, no more pruning can be done.
+            for (int i = 0; i < arity_; ++i) {
+                for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
+                    if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
+                        //Values that are removed before this propagation.
+                        DeleteValVAC[i][j] = NbIteVAC-1;
+                    }
+                }
+                if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
+                    DeleteValVAC[i].back() = NbIteVAC-1;
+                }
+            }
+            assert(Killer->empty());
+            Killer->insert(Killer->begin(), { this->wcspIndex, NbIteVAC });
+
+            return MIN_COST;
+        }
         Long W = 0;
         Cost c = -lb + assigneddeltas;
-        ComputeSlopes(&W, &c);
         int iter = 0;
         Double xk = 0.;
-        if (W < capacity) {
-            // Find the optimal solution
-            FindOpt(Slopes, &W, &c, &xk, &iter);
+        if (verifopt > MIN_COST || verifweight < capacity || !verifsplitok) {
+            ComputeSlopes(&W, &c);
+            if (W < capacity) {
+                // Find the optimal solution
+                FindOpt(Slopes, &W, &c, &xk, &iter);
+            }
+        } else {
+            // last optimal solution satisfies the constraint and has a zero cost.
+            W = verifweight;
+            c = verifopt;
+            Slopes.clear();
+            if (verifsplitvar != -1) {
+                assert(verifsplitok);
+                assert(verifsplitval0 != -1);
+                assert(verifsplitval1 != -1);
+                xk = OptSol[verifsplitvar][verifsplitval1];
+                assert(MIN(capacity,weights[verifsplitvar][verifsplitval1]) != MIN(capacity,weights[verifsplitvar][verifsplitval0]));
+                Slopes.push_back({Double(verifsplitvar), Double(verifsplitval0), Double(verifsplitval1), Double(Profit[verifsplitvar][verifsplitval1] - Profit[verifsplitvar][verifsplitval0]) / (MIN(capacity,weights[verifsplitvar][verifsplitval1]) - MIN(capacity,weights[verifsplitvar][verifsplitval0]))});
+            }
         }
         // Check if the optimal cost is greater than itThreshold
         // Warning! c can be negative due to rounding effects
@@ -655,7 +716,7 @@ public:
                 int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     int currentval = current_val_idx[i][j];
-                    if (OptSol[currentvar][currentval] == 0) {
+                    if (OptSol[currentvar][currentval] == 0.) {
                         // C = opposite of reduced cost (optimistic)
                         Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(capacity, weights[currentvar][currentval]));
 //                        if (C!=0. && C!=lambda){
@@ -693,7 +754,7 @@ public:
             for (int i = 0; i < carity; i++) {
                 int k = 0;
                 int currentvar = current_scope_idx[i];
-                while (OptSol[currentvar][current_val_idx[i][k]] == 0)
+                while (OptSol[currentvar][current_val_idx[i][k]] == 0.)
                     k++;
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc * MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
@@ -852,7 +913,7 @@ public:
             for (int i = 0; i < carity; i++) {
                 k = 0;
                 currentvar = current_scope_idx[i];
-                while (OptSol[currentvar][current_val_idx[i][k]] == 0)
+                while (OptSol[currentvar][current_val_idx[i][k]] == 0.)
                     k++;
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc *  MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
@@ -892,7 +953,7 @@ public:
     /* This function aims to derive a sequence of EPTs increasing the lower bound by at least lambda. 
         Either by propagating the constraint or by following the cost moves indicated in PBKiller.
     */
-    void VACPass3(vector<pair<pair<int, Value>, Cost>>* EPT, Cost minlambda, vector<pair<int, Value>> PBKiller)
+    void VACPass3(vector<pair<pair<int, Value>, Cost>>* EPT, Cost minlambda, vector<pair<int, Value>>& PBKiller)
     {
         get_current_scope();
         ComputeProfit();
@@ -918,7 +979,7 @@ public:
             for (int i = 0; i < carity; i++) {
                 int k = 0;
                 int currentvar = current_scope_idx[i];
-                while (OptSol[currentvar][current_val_idx[i][k]] == 0)
+                while (OptSol[currentvar][current_val_idx[i][k]] == 0.)
                     k++;
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc *  MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
@@ -927,7 +988,7 @@ public:
                 int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     int currentval = current_val_idx[i][j];
-                    if (OptSol[currentvar][currentval] > 0) {
+                    if (OptSol[currentvar][currentval] > 0.) {
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
                             if (UnaryCost0[currentvar] > MIN_COST) {
                                 deltaCosts[currentvar][currentval] += UnaryCost0[currentvar];
@@ -1469,7 +1530,7 @@ public:
             return sumdelta;
     }
 
-    void addAMOConstraints(vector<vector<pair<int, Value>>> clq, vector<Variable*> vars, WCSP* wcsp)
+    void addAMOConstraints(vector<vector<pair<int, Value>>>& clq, vector<Variable*>& vars, WCSP* wcsp)
     {
         vector<Long> TempWeight;
         vector<int> SortedVec, Temp;
@@ -2260,8 +2321,7 @@ public:
             verifweight += Ceil(storew);
             assert(*max_element(Profit[i].begin(), Profit[i].end()) < MAX_COST);
         }
-        // assert(verifopt >= 0 || verifweight < capacity);
-        if (verifopt > 0 || verifweight < capacity)
+        if (verifopt > MIN_COST || verifweight < capacity)
             return true;
         else
             return false;
@@ -2275,7 +2335,7 @@ public:
         Slopes.clear();
         for (int i = 0; i < carity; i++) {
             currentvar = current_scope_idx[i];
-            fill(OptSol[currentvar].begin(), OptSol[currentvar].end(), 0);
+            fill(OptSol[currentvar].begin(), OptSol[currentvar].end(), 0.);
             // Sort the value in ascending weight
             arrvar.clear();
             arrvar = current_val_idx[i];
@@ -2341,11 +2401,11 @@ public:
             if (Slopes.size() == 0 || Slopes.back()[0] != currentvar) {
                 *W += weights[currentvar][item1];
                 *c += Profit[currentvar][item1];
-                OptSol[currentvar][item1] = 1;
+                OptSol[currentvar][item1] = 1.;
             } else {
                 *W += weights[currentvar][Slopes.back()[1]];
                 *c += Profit[currentvar][Slopes.back()[1]];
-                OptSol[currentvar][Slopes.back()[1]] = 1;
+                OptSol[currentvar][Slopes.back()[1]] = 1.;
             }
         }
     }
@@ -2380,14 +2440,14 @@ public:
                     capacityLeft = capacity - *W;
                     *xk = Double(capacityLeft) / (MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]));
                     OptSol[currentVar][Slopes[*iter][2]] = *xk;
-                    OptSol[currentVar][Slopes[*iter][1]] = 1 - *xk;
+                    OptSol[currentVar][Slopes[*iter][1]] = 1. - *xk;
                     *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
                     *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
                     assert(capacityLeft > 0);
                 } else {
-                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1);
-                    OptSol[currentVar][Slopes[*iter][1]] = 0;
-                    OptSol[currentVar][Slopes[*iter][2]] = 1;
+                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1.);
+                    OptSol[currentVar][Slopes[*iter][1]] = 0.;
+                    OptSol[currentVar][Slopes[*iter][2]] = 1.;
                     *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
                     *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
                     *iter = *iter + 1;
@@ -2397,14 +2457,14 @@ public:
 //                    capacityLeft = capacity - *W;
 //                    *xk = Double(capacityLeft) / (weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]]);
 //                    OptSol[currentVar][Slopes[*iter][2]] = *xk;
-//                    OptSol[currentVar][Slopes[*iter][1]] = 1 - *xk;
+//                    OptSol[currentVar][Slopes[*iter][1]] = 1. - *xk;
 //                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
 //                    *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
 //                    assert(capacityLeft > 0);
 //                } else {
 //                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1);
-//                    OptSol[currentVar][Slopes[*iter][1]] = 0;
-//                    OptSol[currentVar][Slopes[*iter][2]] = 1;
+//                    OptSol[currentVar][Slopes[*iter][1]] = 0.;
+//                    OptSol[currentVar][Slopes[*iter][2]] = 1.;
 //                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
 //                    *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
 //                    *iter = *iter + 1;
@@ -2414,7 +2474,7 @@ public:
     }
 
     // Do the Extension/Projection
-    void ExtensionProjection(vector<Double>& y_i, Double y_cc, vector<vector<Double>> yAMO_i, vector<Double> clq)
+    void ExtensionProjection(const vector<Double>& y_i, Double y_cc, const vector<vector<Double>>& yAMO_i, const vector<Double>& clq)
     {
         int n = 0;
         tempdeltaCosts.clear();
@@ -2423,7 +2483,7 @@ public:
             if (VirtualVar[currentvar] == 0) {
                 for (int j = 0; j < nbValue[i]; ++j) {
                     int currentval = current_val_idx[i][j];
-                    if (OptSol[currentvar][currentval] > 0) {
+                    if (OptSol[currentvar][currentval] > 0.) {
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
                             if (UnaryCost0[currentvar] > MIN_COST) {
                                 tempdeltaCosts.push_back({ currentvar, currentval, UnaryCost0[currentvar] });
@@ -2453,7 +2513,7 @@ public:
                 for (int j = 0; j < nbValue[i]; ++j) {
                     int currentval = current_val_idx[i][j];
                     if (currentval != (int)AMO[VirtualVar[currentvar] - 1].size()) {
-                        if (OptSol[currentvar][currentval] == 1) {
+                        if (OptSol[currentvar][currentval] == 1.) {
                             Cost C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, AMO[VirtualVar[currentvar] - 1][currentval].second, C });
@@ -2470,7 +2530,7 @@ public:
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
                                 // scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->project(!AMO[VirtualVar[currentvar] - 1][currentval].second, -C,true);
                             }
-                        } else if (OptSol[currentvar][currentval] == 0) {
+                        } else if (OptSol[currentvar][currentval] == 0.) {
                             Cost C = scope[AMO[VirtualVar[currentvar] - 1][currentval].first]->getCost(!AMO[VirtualVar[currentvar] - 1][currentval].second);
                             if (C > MIN_COST) {
                                 tempdeltaCosts.push_back({ AMO[VirtualVar[currentvar] - 1][currentval].first, !AMO[VirtualVar[currentvar] - 1][currentval].second, C });
@@ -2552,11 +2612,11 @@ public:
             }
             for (int i = 0; i < carity; ++i) {
                 if (i != removed) {
-                    fill(OptSol[current_scope_idx[i]].begin(), OptSol[current_scope_idx[i]].end(), 0);
+                    fill(OptSol[current_scope_idx[i]].begin(), OptSol[current_scope_idx[i]].end(), 0.);
                     if (i < removed) {
-                        OptSol[current_scope_idx[i]][current_val_idx[i][last[lp].second[i]]] = 1;
+                        OptSol[current_scope_idx[i]][current_val_idx[i][last[lp].second[i]]] = 1.;
                     } else {
-                        OptSol[current_scope_idx[i]][current_val_idx[i][last[lp].second[i - 1]]] = 1;
+                        OptSol[current_scope_idx[i]][current_val_idx[i][last[lp].second[i - 1]]] = 1.;
                     }
                 }
             }
@@ -2732,10 +2792,10 @@ public:
                                         int j = 0;
                                         while (RealOptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][j]] == 0)
                                             j++;
-                                        OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][j]] = 0;
+                                        OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][j]] = 0.;
                                         for (int k = 0; k < nbValue[EDACORDER[i]]; ++k) {
                                             if (j != k) {
-                                                OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] = 1;
+                                                OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] = 1.;
                                                 c2 = max_value(NewWeightforDyn, NewProfforDyn, capacity - weights[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]], MaxWeight - weights[current_scope_idx[EDACORDER[i]]][GreatestWeightIdx[current_scope_idx[EDACORDER[i]]]], EDACORDER[i]) - lb + assigneddeltas + Profit[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]];
                                                 assert(c2 >= c);
                                                 Cost GAP = c2 - c;
@@ -2760,7 +2820,7 @@ public:
                                                     deltaCosts[current_scope_idx[EDACORDER[i]]].back() += totrans;
                                                     ProfforDyn[EDACORDER[i]].back() = deltaCosts[current_scope_idx[EDACORDER[i]]].back();
                                                 }
-                                                OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] = 0;
+                                                OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] = 0.;
                                             } else {
                                                 if (current_val_idx[EDACORDER[i]][k] < (int)VarVal[current_scope_idx[EDACORDER[i]]].size() - 1) {
                                                     Cost C = scope[current_scope_idx[EDACORDER[i]]]->getCost(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]]);
@@ -2776,7 +2836,7 @@ public:
                                                 }
                                             }
                                         }
-                                        OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][j]] = 1;
+                                        OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][j]] = 1.;
                                         scope[current_scope_idx[EDACORDER[i]]]->findSupport();
                                     }
                                     OptSol = RealOptSol;
@@ -2837,11 +2897,11 @@ public:
                                             bool fracvalue = false;
                                             for (int j = 0; j < nbValue[i]; ++j) {
                                                 if (current_val_idx[i][j] != (int)AMO[VirtualVar[currentvar] - 1].size()) {
-                                                    if (OptSol[currentvar][current_val_idx[i][j]] == 1) {
+                                                    if (OptSol[currentvar][current_val_idx[i][j]] == 1.) {
                                                         tempAMOy_i.push_back(0);
                                                     } else {
                                                         tempAMOy_i.push_back(scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][!AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]));
-                                                        if (OptSol[currentvar][current_val_idx[i][j]] > 0) {
+                                                        if (OptSol[currentvar][current_val_idx[i][j]] > 0.) {
                                                             C = scope[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first]->getCost(AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second) + deltaCosts[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second] - y_cc * MIN(capacity, Original_weights[AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].first][AMO[VirtualVar[currentvar] - 1][current_val_idx[i][j]].second]) - tempAMOy_i.back();
                                                             if (C < clq.back())
                                                                 clq.back() = C;

@@ -824,15 +824,15 @@ void VACExtension::enforcePass2()
                     }
                 }
             } else {
-                vector<pair<int, Value>> PBKILLERSxi = xi->getPBkillers(v);
+                pair<int, Value> PBKILLERSxi0 = xi->getPBkillers(v)[0];
                 queueR->push(pair<int, Value>(i, v));
-                auto* knap = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBKILLERSxi[0].first]);
+                auto* knap = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBKILLERSxi0.first]);
                 vector<pair<int, Value>> killers;
                 killers.clear();
                 int usek = 0;
                 // alreadysendk is only useful for the values in NotVarVal. It captures the maximal number of quantum requested by the already processed values in NotVarVal.
                 int alreadysendk=0; 
-                Cost OPT = knap->VACPass2(PBKILLERSxi[0].second, { i, v }, &killers, wcsp->getUb(), xi->getK(v, nbIterations));
+                Cost OPT = knap->VACPass2(PBKILLERSxi0.second, { i, v }, &killers, wcsp->getUb(), xi->getK(v, nbIterations));
                 vector<Value> wasLastVal = knap->waslastValue(i,v);
                 usek = xi->getK(v, nbIterations);
                 if(wasLastVal.size()>1){
@@ -858,7 +858,7 @@ void VACExtension::enforcePass2()
                     for (int k = 1; k < (int)killers.size(); ++k) {
                         xj = (VACVariable*)wcsp->getVar(killers[k].first);
                         if (xj->canbe(killers[k].second)) {
-                            int w = killers[k].second;
+                            Value w = killers[k].second;
                             xj->addToK(w, usek, nbIterations);
                             if (xj->getK(w, nbIterations) > maxk)
                                 maxk = xj->getK(w, nbIterations);
@@ -980,7 +980,7 @@ bool VACExtension::enforcePass3()
             cij->VACproject(xj, w, lambda * xj->getK(w, nbIterations));
             queueFindSupport.push(j);
         } else {
-            vector<pair<int, Value>> PBKILLERSxj = xj->getPBkillers(w);
+            const vector<pair<int, Value>>& PBKILLERSxj = xj->getPBkillers(w);
             auto* knap = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBKILLERSxj[0].first]);
             int xjk = xj->getK(w, nbIterations);
             if (maxk < xjk)

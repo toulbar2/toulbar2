@@ -141,7 +141,7 @@ void TreeDecRefinement::print_dec_satistics()
     ToulBar2::vnsOutput << endl;
 }
 
-double TreeDecRefinement::ecart_type(vector<int> data)
+double TreeDecRefinement::ecart_type(vector<int>& data)
 {
     double moy = 0.0; // mean
     double ecart_type = 0.0; // standard deviation

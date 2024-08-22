@@ -1090,7 +1090,7 @@ void MultiCFN::makeWeightedCSP(WeightedCSP* wcsp, const set<unsigned int>& vars,
 }
 
 //---------------------------------------------------------------------------
-unsigned int MultiCFN::tupleToIndex(vector<mcriteria::Var*> variables, vector<unsigned int> tuple)
+unsigned int MultiCFN::tupleToIndex(const vector<mcriteria::Var*>& variables, const vector<unsigned int>& tuple)
 {
     unsigned int cost_index = 0;
     unsigned int acc = 1;
