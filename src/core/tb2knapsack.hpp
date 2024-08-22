@@ -706,9 +706,9 @@ public:
                     if (OptSol[currentvar][currentval] == 0.) {
                         // C = opposite of reduced cost (optimistic)
                         Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(capacity, weights[currentvar][currentval]));
-//                        if (C!=0. && C!=lambda){
-//                            cout << "VACPass1 with C=" << C << " for variable " << scope[currentvar]->getName() << " and value " << VarVal[currentvar][currentval] << " when pruning by reduced costs with theta=" << itThreshold << endl;
-//                        }
+                        // if (C!=0. && C!=lambda){
+                        //   cout << "VACPass1 with C=" << C << " for variable " << scope[currentvar]->getName() << " and value " << VarVal[currentvar][currentval] << " when pruning by reduced costs with theta=" << itThreshold << endl;
+                        // }
                         if (C <= -itThreshold + c && scope[currentvar]->canbe(VarVal[currentvar][currentval])) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
@@ -720,17 +720,17 @@ public:
                             } else {
                                 assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                                 if(DeleteValVAC[currentvar][currentval]==0){
-                                Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
-                                DeleteValVAC[currentvar][currentval]=NbIteVAC;
+                                    Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                                    DeleteValVAC[currentvar][currentval]=NbIteVAC;
+                                }
                             }
                         }
                     }
                 }
             }
-            }
             for (int i = 0; i < arity_; ++i) {
                 for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
-                    if (DeleteValVAC[i][j] == 0 && !scope[i]->canbe(VarVal[i][j])) {
+                    if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
                         //Values that are removed before this propagation. 
                         DeleteValVAC[i][j] = NbIteVAC-1;
                     }
@@ -2192,18 +2192,14 @@ public:
     {
         Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
         Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0
-        Double storec, storew; // Used to check if the last optimal solution has still a cost of 0
-        Cost UN, BaseCost;
-        bool diff0, firstAMOval;
-        int currentvar, currentval;
         for (int i = 0; i < carity; i++) {
-            storec = 0;
-            storew = 0;
-            currentvar = current_scope_idx[i];
+            Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
+            Double storew = 0;
+            int currentvar = current_scope_idx[i];
             UnaryCost0[currentvar] = MIN_COST;
-            diff0 = true;
-            firstAMOval = true;
-            BaseCost = MIN_COST;
+            bool diff0 = true;
+            bool firstAMOval = true;
+            Cost BaseCost = MIN_COST;
             if (Booleanvar[currentvar]) {
                 Profit[currentvar][0] = scope[currentvar]->getCost(VarVal[currentvar][0]) + deltaCosts[currentvar][0];
                 Profit[currentvar][1] = scope[currentvar]->getCost(VarVal[currentvar][1]) + deltaCosts[currentvar][1];
@@ -2212,7 +2208,7 @@ public:
                 storec += Profit[currentvar][1] * OptSol[currentvar][1] + Profit[currentvar][0] * OptSol[currentvar][0];
             } else {
                 for (int j = 0; j < nbValue[i]; j++) {
-                    currentval = current_val_idx[i][j];
+                    int currentval = current_val_idx[i][j];
                     if (VirtualVar[currentvar] == 0) {
                         assert(scope[currentvar]->getCost(VarVal[currentvar][currentval]) >= MIN_COST);
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
@@ -2221,10 +2217,10 @@ public:
                                 for (unsigned int l = 0; l < NotVarVal[currentvar].size(); l++) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][l])) {
                                         assert(scope[currentvar]->getCost(NotVarVal[currentvar][l]) >= MIN_COST);
-                                        UN = scope[currentvar]->getCost(NotVarVal[currentvar][l]);
-                                        if (UN < UnaryCost0[currentvar]) {
-                                            UnaryCost0[currentvar] = UN;
-                                            if (UN == MIN_COST) {
+                                        Cost unarycost = scope[currentvar]->getCost(NotVarVal[currentvar][l]);
+                                        if (unarycost < UnaryCost0[currentvar]) {
+                                            UnaryCost0[currentvar] = unarycost;
+                                            if (unarycost == MIN_COST) {
                                                 lastval0[currentvar] = NotVarVal[currentvar][l];
                                                 VarVal[currentvar].back() = lastval0[currentvar];
                                                 break;
