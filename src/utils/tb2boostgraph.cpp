@@ -906,10 +906,10 @@ void WCSP::addAMOConstraints()
         vector<int> scope2;
         unsigned int nbconstrs = constrs.size();
         for (unsigned int i = 0; i < nbconstrs; ++i) {
-            auto* k = dynamic_cast<KnapsackConstraint*>(constrs[i]);
-            if (!k)
+            if (!constrs[i]->isKnapsack())
                 continue;
             else {
+                KnapsackConstraint *k = (KnapsackConstraint *)constrs[i];
                 if (constrs[i]->arity() > 3 && constrs[i]->connected()) {
                     scope2.clear();
                     clq.clear();

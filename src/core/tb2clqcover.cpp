@@ -256,9 +256,9 @@ void CliqueConstraint::initialize_binary()
         auto& xvar = *current_scope[i];
         for (auto&& cle : *xvar.getConstrs()) {
             auto* cons = cle.constr;
-            auto* bincons = dynamic_cast<BinaryConstraint*>(cons);
-            if (!bincons)
+            if (!cons->isBinary())
                 continue;
+            BinaryConstraint *bincons = (BinaryConstraint *)cons;
             auto& bcons = *bincons;
             auto& yvar = [&]() -> EnumeratedVariable& {
                 if (&xvar == bcons.getVar(0))

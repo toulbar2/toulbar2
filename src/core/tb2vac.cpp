@@ -255,9 +255,8 @@ bool VACExtension::propagate()
     if (ToulBar2::VAClin) {
         KnapsackList.clear();
         for (int i = 0; i < (int)wcsp->constrs.size(); ++i) { //TODO: maintain a list of connected linear constraints
-            auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[i]);
-            if (k && k->connected()) {
-                k->InitVac();
+            if (wcsp->constrs[i]->isKnapsack() && wcsp->constrs[i]->connected()) {
+                ((KnapsackConstraint*)wcsp->constrs[i])->InitVac();
                 KnapsackList.push_back(i);
             }
         }
@@ -506,9 +505,8 @@ bool VACExtension::propagate()
         if (!isvac) {
             if (ToulBar2::VAClin) {
                 for (int i = 0; i < (int)KnapsackList.size(); ++i) {
-                    auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[KnapsackList[i]]);
-                    if (k && k->connected()) {
-                        k->ResetVACLastValTested();
+                    if (wcsp->constrs[KnapsackList[i]]->isKnapsack() && wcsp->constrs[KnapsackList[i]]->connected()) {
+                        ((KnapsackConstraint *)wcsp->constrs[KnapsackList[i]])->ResetVACLastValTested();
                     }
                 }
             }
@@ -521,10 +519,9 @@ bool VACExtension::propagate()
                 throw Contradiction();
             }
             util = enforcePass3();
-            for (int i = 0; i < (int)wcsp->constrs.size(); ++i) {
-                auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[i]);
-                if (k && k->connected()) {
-                    k->InitVac();
+            for (int i = 0; i < (int)wcsp->constrs.size(); ++i) { //TODO: why not removing this loop?!
+                if (wcsp->constrs[i]->isKnapsack() && wcsp->constrs[i]->connected()) {
+                    ((KnapsackConstraint *)wcsp->constrs[i])->InitVac();
                 }
             }
         } else {
@@ -620,11 +617,13 @@ void VACExtension::enforcePass1()
         //Apply phase 1 on all the connected knapsack constraints after propagating all binary cost functions
         if (VAC.empty() && ToulBar2::VAClin) {
             for (int i = 0; i < (int)KnapsackList.size(); ++i) {
-                auto* k = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[KnapsackList[i]]);
-                if (k && k->connected() && (k->VACNeedPropagate() || firstit)) {
+                if (!wcsp->constrs[KnapsackList[i]]->isKnapsack())
+                    continue;
+                KnapsackConstraint* k = (KnapsackConstraint *)wcsp->constrs[KnapsackList[i]];
+                if (k->connected() && (k->VACNeedPropagate() || firstit)) {
                     bool wipeout;
-                    vector<pair<int, Value>> killers;
-                    vector<pair<int, Value>> killed;
+                    static vector<pair<int, Value>> killers;  /// \warning NOT SAFE FOR MULTITHREADING!!!
+                    static vector<pair<int, Value>> killed;
                     VACVariable* xi;
                     killed.clear();
                     killers.clear();
@@ -633,16 +632,14 @@ void VACExtension::enforcePass1()
                     if (OPT == -1) {
                         PBconflict = killers[0].first;
                         //assert(killers.size() > 1);
-                        PBkillersctr = killers;
-                        PBkillersctr.erase(PBkillersctr.begin()); //TODO: avoid this operation (removing a value inside a vector is costly)
+                        PBkillersctr = {killers.begin() + 1, killers.end()};
                         return;
                     }
                     if (OPT > MIN_COST) {
                         assert(OPT>=itThreshold);
                         //assert(killers.size() > 1);
                         PBconflict = killers[0].first;
-                        PBkillersctr = killers;
-                        PBkillersctr.erase(PBkillersctr.begin()); //TODO: avoid this operation (removing a value inside a vector is costly)
+                        PBkillersctr = {killers.begin() + 1, killers.end()};
                         minlambda = OPT;
                         k->IncreasekConstraintVAC(-k->getkConstraintVAC()); // set to zero counter kConstraintVAC
                         k->IncreasekConstraintVAC(1);
@@ -826,8 +823,9 @@ void VACExtension::enforcePass2()
             } else {
                 pair<int, Value> PBKILLERSxi0 = xi->getPBkillers(v)[0];
                 queueR->push(pair<int, Value>(i, v));
-                auto* knap = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBKILLERSxi0.first]);
-                vector<pair<int, Value>> killers;
+                assert(wcsp->constrs[PBKILLERSxi0.first]->isKnapsack());
+                KnapsackConstraint* knap = (KnapsackConstraint*)wcsp->constrs[PBKILLERSxi0.first];
+                static vector<pair<int, Value>> killers;  /// \warning NOT SAFE FOR MULTITHREADING!!!
                 killers.clear();
                 int usek = 0;
                 // alreadysendk is only useful for the values in NotVarVal. It captures the maximal number of quantum requested by the already processed values in NotVarVal.
@@ -981,7 +979,8 @@ bool VACExtension::enforcePass3()
             queueFindSupport.push(j);
         } else {
             const vector<pair<int, Value>>& PBKILLERSxj = xj->getPBkillers(w);
-            auto* knap = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBKILLERSxj[0].first]);
+            assert(wcsp->constrs[KnapsackList[PBKILLERSxj[0].first]]->isKnapsack());
+            KnapsackConstraint* knap = (KnapsackConstraint *)wcsp->constrs[KnapsackList[PBKILLERSxj[0].first]];
             int xjk = xj->getK(w, nbIterations);
             if (maxk < xjk)
                 maxk = xjk;
@@ -1043,9 +1042,10 @@ bool VACExtension::enforcePass3()
         xi0->extendAll(lambda);
         xi0->projectLB(lambda);
     } else {
-        auto* k2 = dynamic_cast<KnapsackConstraint*>(wcsp->constrs[PBconflict]);
-        // vector<vector<Cost>> EPT;
-        vector<pair<pair<int, Value>, Cost>> EPT;
+        assert(wcsp->constrs[PBconflict]->isKnapsack());
+        KnapsackConstraint* k2 = (KnapsackConstraint *)wcsp->constrs[PBconflict];
+        static vector<pair<pair<int, Value>, Cost>> EPT;  /// \warning NOT SAFE FOR MULTITHREADING!!!
+        EPT.clear();
         k2->RestVACGroupExt();
         k2->VACPass3(&EPT, minlambda, PBkillersctr);
         for (int l = 0; l < (int)EPT.size(); ++l) {

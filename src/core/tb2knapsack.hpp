@@ -82,6 +82,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             unsigned int j = 0;
             while (j < NotVarVal[idx].size() && last == lastval0[idx]) {
                 if (scope[idx]->canbe(NotVarVal[idx][j])) {
+                    assert(lastval0[idx] != NotVarVal[idx][j]);
                     lastval0[idx] = NotVarVal[idx][j];
                     VarVal[idx].back() = lastval0[idx];
                 } else
@@ -817,11 +818,8 @@ public:
         int k1 = 0;
         carity = 0;
         int k = 0;
-        int TestedVar_idx = 0;
-        int TestedVal_idx;
-        //Detect what is the index of TestedVal
-        while (TestedVal.first != scope[TestedVar_idx]->wcspIndex)
-            TestedVar_idx++;
+        int TestedVar_idx = getIndex(wcsp->getVar(TestedVal.first));
+        int TestedVal_idx = -1;
         auto it = find(VarVal[TestedVar_idx].begin(), VarVal[TestedVar_idx].end(), TestedVal.second);
         if (it != VarVal[TestedVar_idx].end()) {
             TestedVal_idx = distance(VarVal[TestedVar_idx].begin(), it);
@@ -834,6 +832,8 @@ public:
                 return kia * lambda;
             }
         }
+        assert(TestedVar_idx >= 0 && TestedVar_idx < (int)weights.size());
+        assert(TestedVal_idx >= 0 && TestedVal_idx < (int)weights[TestedVar_idx].size());
         assert(DeleteValVAC[TestedVar_idx][TestedVal_idx]>0);
         k1 = 0;
         Long MaxW = weights[TestedVar_idx][TestedVal_idx];
