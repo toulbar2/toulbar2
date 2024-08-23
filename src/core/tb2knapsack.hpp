@@ -524,11 +524,11 @@ public:
         The function returns -1 if the constraint is infeasible.
         It returns the optimal cost if it is greater than the threshold and 0 otherwise.
     */
-    Cost VACPass1(vector<pair<int, Value>>* Killer, vector<pair<int, Value>>* Killed, Cost lambda, Cost itThreshold)
+    Cost VACPass1(vector<pair<int, Value>>& Killer, vector<pair<int, Value>>& Killed, Cost lambda, Cost itThreshold)
     {
         assert(kConstraintVAC==0);
-        assert(Killer->empty());
-        assert(Killed->empty());
+        Killer.clear();
+        Killed.clear();
         //EmptyNotVarVal[i]=true only if all the values in NotVarVal[i] have been removed.
         vector<bool> EmptyNotVarVal;
         for (int i = 0; i < arity_; ++i) {
@@ -606,17 +606,17 @@ public:
         }
         //If the constraint can't be satisfied then find an explanation
         if (MaxW < capacity) {
-            Killer->push_back({ this->wcspIndex, 0 });
+            Killer.push_back({ this->wcspIndex, 0 });
             for (int i = 0; i < carity; ++i) {
                 int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     if (weights[currentvar][current_val_idx[i][j]] > GreatW[i]) {
                         if (MaxW + weights[currentvar][current_val_idx[i][j]] - GreatW[i] >= capacity)
                             if (current_val_idx[i][j] < (int)VarVal[currentvar].size() - 1)
-                                Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] });
+                                Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] });
                             else {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                    Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                 }
                             }
                         else {
@@ -639,12 +639,12 @@ public:
                     if (currentval == (int)VarVal[currentvar].size() - 1) {
                         for (unsigned int j = 0; j < NotVarVal[currentvar].size(); ++j) {
                             if (scope[currentvar]->canbe(NotVarVal[currentvar][j])) {
-                                Killed->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][j] });
+                                Killed.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][j] });
                             }
                         }
                         DeleteValVAC[currentvar].back()=NbIteVAC;
                     } else {
-                        Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                        Killed.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                         DeleteValVAC[currentvar][currentval]=NbIteVAC;
                     }
                     assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
@@ -663,8 +663,8 @@ public:
                     DeleteValVAC[i].back() = NbIteVAC-1;
                 }
             }
-            assert(Killer->empty());
-            Killer->insert(Killer->begin(), { this->wcspIndex, NbIteVAC });
+            assert(Killer.empty());
+            Killer.insert(Killer.begin(), { this->wcspIndex, NbIteVAC });
 
             return MIN_COST;
         }
@@ -710,8 +710,8 @@ public:
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc * MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
             }
-            Killed->clear();
-            Killer->push_back({ this->wcspIndex, 0 });
+            Killed.clear();
+            Killer.push_back({ this->wcspIndex, 0 });
             //Compute an explanation
             for (int i = 0; i < carity; i++) {
                 int currentvar = current_scope_idx[i];
@@ -726,19 +726,19 @@ public:
                         if (C > MIN_COST && scope[currentvar]->cannotbe(VarVal[currentvar][currentval])) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                    Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                 }
                             } else {
-                                Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                                Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                             }
                         }
                     } else if (scope[currentvar]->cannotbe(VarVal[currentvar][currentval])) {
                         if (currentval == (int)VarVal[currentvar].size() - 1) {
                             for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                             }
                         } else {
-                            Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                            Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                         }
                     }
                 }
@@ -775,14 +775,14 @@ public:
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][l]) && DeleteValVAC[currentvar].back()==0) {
-                                        Killed->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                        Killed.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                     }
                                 }
                                 DeleteValVAC[currentvar].back()=NbIteVAC;
                             } else {
                                 assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                                 if(DeleteValVAC[currentvar][currentval]==0){
-                                    Killed->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                                    Killed.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                                     DeleteValVAC[currentvar][currentval]=NbIteVAC;
                                 }
                             }
@@ -801,8 +801,8 @@ public:
                     DeleteValVAC[i].back() = NbIteVAC-1;
                 }
             }
-            assert(Killer->empty());
-            Killer->insert(Killer->begin(), { this->wcspIndex, NbIteVAC });
+            assert(Killer.empty());
+            Killer.insert(Killer.begin(), { this->wcspIndex, NbIteVAC });
 
             return MIN_COST;
         }
@@ -812,13 +812,15 @@ public:
         It returns the cost of the optimal tuple using TestedVal.
         Killer captures an explanation 
     */
-    Cost VACPass2(int CurrIte, pair<int, Value> TestedVal, vector<pair<int, Value>>* Killer, Cost lambda, int kia)
+    Cost VACPass2(int CurrIte, pair<int, Value> TestedVal, vector<pair<int, Value>>& Killer, Cost lambda, int kia)
     {
+        Killer.clear();
         int currentvar, currentval;
         int k1 = 0;
         carity = 0;
         int k = 0;
         int TestedVar_idx = getIndex(wcsp->getVar(TestedVal.first));
+        assert(scope[TestedVar_idx]->wcspIndex == TestedVal.first);
         int TestedVal_idx = -1;
         auto it = find(VarVal[TestedVar_idx].begin(), VarVal[TestedVar_idx].end(), TestedVal.second);
         if (it != VarVal[TestedVar_idx].end()) {
@@ -868,17 +870,17 @@ public:
         //If the constraint can't be satisfied then find an explanation and return a large cost
         if (MaxW < capacity) {
             k = 0;
-            Killer->push_back({ this->wcspIndex, CurrIte });
+            Killer.push_back({ this->wcspIndex, CurrIte });
             for (int i = 0; i < carity; ++i) {
                 currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     if (weights[currentvar][current_val_idx[i][j]] > GreatW[i]) {
                         if (MaxW + weights[currentvar][current_val_idx[i][j]] - GreatW[i] >= capacity)
                             if (current_val_idx[i][j] < (int)VarVal[currentvar].size() - 1)
-                                Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] });
+                                Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] });
                             else {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                    Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                 }
                             }
                         else {
@@ -900,7 +902,7 @@ public:
             // Find the optimal solution
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
-        Killer->push_back({ this->wcspIndex, CurrIte });
+        Killer.push_back({ this->wcspIndex, CurrIte });
         //If the optimal cost is greater than 0 then find an explanation
         if (c > MIN_COST) {
             Double y_cc = 0;
@@ -925,10 +927,10 @@ public:
                     if (OptSol[currentvar][currentval] > 0. && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                    Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                 }
                             } else {
-                                Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                                Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                         }
                     } else {
                         // C = opposite of reduced cost (optimistic)
@@ -936,10 +938,10 @@ public:
                         if (C > MIN_COST && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    Killer->push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                                    Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                 }
                             } else {
-                                Killer->push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                                Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                             }
                     }
                 }
@@ -953,8 +955,9 @@ public:
     /* This function aims to derive a sequence of EPTs increasing the lower bound by at least lambda. 
         Either by propagating the constraint or by following the cost moves indicated in PBKiller.
     */
-    void VACPass3(vector<pair<pair<int, Value>, Cost>>* EPT, Cost minlambda, vector<pair<int, Value>>& PBKiller)
+    void VACPass3(vector<pair<pair<int, Value>, Cost>>& EPT, Cost minlambda, vector<pair<int, Value>>& PBKiller)
     {
+        EPT.clear();
         get_current_scope();
         ComputeProfit();
         Long W = 0;
@@ -994,13 +997,13 @@ public:
                                 deltaCosts[currentvar][currentval] += UnaryCost0[currentvar];
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][l]))
-                                        EPT->push_back({ { scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] }, UnaryCost0[currentvar] });
+                                        EPT.push_back({ { scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] }, UnaryCost0[currentvar] });
                                 }
                             }
                         } else {
                             Cost C = scope[currentvar]->getCost(VarVal[currentvar][currentval]);
                             if (C > MIN_COST) {
-                                EPT->push_back({ { scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] }, C });
+                                EPT.push_back({ { scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] }, C });
                                 deltaCosts[currentvar][currentval] += C;
                             }
                         }
@@ -1011,10 +1014,10 @@ public:
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     if (scope[currentvar]->canbe(NotVarVal[currentvar][l]))
-                                        EPT->push_back({ { scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] }, C });
+                                        EPT.push_back({ { scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] }, C });
                                 }
                             } else
-                                EPT->push_back({ { scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] }, C });
+                                EPT.push_back({ { scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] }, C });
                             assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
                             deltaCosts[currentvar][currentval] += C;
                         }
@@ -1029,7 +1032,7 @@ public:
                     j++;
                 assert(j < arity_);
                 if(scope[j]->canbe(PBKiller[i].second)){
-                    EPT->push_back({ { PBKiller[i].first, PBKiller[i].second }, minlambda });
+                    EPT.push_back({ { PBKiller[i].first, PBKiller[i].second }, minlambda });
                 if (j < arity_) {
                     auto it = find(VarVal[j].begin(), VarVal[j].end(), PBKiller[i].second);
                     if (it != VarVal[j].end() && VarVal[j].back() != PBKiller[i].second) {

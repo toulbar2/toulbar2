@@ -250,7 +250,7 @@ bool VACExtension::propagate()
 
     breakCycles = 0;
 
-    static vector<tuple<VACVariable*, Value, bool>> acSupport; /// \warning NOT SAFE FOR MULTITHREADING!!!
+    acSupport.clear();
     bool acSupportOK = false;
     if (ToulBar2::VAClin) {
         KnapsackList.clear();
@@ -622,12 +622,8 @@ void VACExtension::enforcePass1()
                 KnapsackConstraint* k = (KnapsackConstraint *)wcsp->constrs[KnapsackList[i]];
                 if (k->connected() && (k->VACNeedPropagate() || firstit)) {
                     bool wipeout;
-                    static vector<pair<int, Value>> killers;  /// \warning NOT SAFE FOR MULTITHREADING!!!
-                    static vector<pair<int, Value>> killed;
                     VACVariable* xi;
-                    killed.clear();
-                    killers.clear();
-                    Cost OPT = k->VACPass1(&killers, &killed, wcsp->getUb(), itThreshold);
+                    Cost OPT = k->VACPass1(killers, killed, wcsp->getUb(), itThreshold);
                     //OPT=-1 Only if the constraint is infeasible
                     if (OPT == -1) {
                         PBconflict = killers[0].first;
@@ -825,12 +821,10 @@ void VACExtension::enforcePass2()
                 queueR->push(pair<int, Value>(i, v));
                 assert(wcsp->constrs[PBKILLERSxi0.first]->isKnapsack());
                 KnapsackConstraint* knap = (KnapsackConstraint*)wcsp->constrs[PBKILLERSxi0.first];
-                static vector<pair<int, Value>> killers;  /// \warning NOT SAFE FOR MULTITHREADING!!!
-                killers.clear();
                 int usek = 0;
                 // alreadysendk is only useful for the values in NotVarVal. It captures the maximal number of quantum requested by the already processed values in NotVarVal.
                 int alreadysendk=0; 
-                Cost OPT = knap->VACPass2(PBKILLERSxi0.second, { i, v }, &killers, wcsp->getUb(), xi->getK(v, nbIterations));
+                Cost OPT = knap->VACPass2(PBKILLERSxi0.second, { i, v }, killers, wcsp->getUb(), xi->getK(v, nbIterations));
                 vector<Value> wasLastVal = knap->waslastValue(i,v);
                 usek = xi->getK(v, nbIterations);
                 if(wasLastVal.size()>1){
@@ -979,8 +973,8 @@ bool VACExtension::enforcePass3()
             queueFindSupport.push(j);
         } else {
             const vector<pair<int, Value>>& PBKILLERSxj = xj->getPBkillers(w);
-            assert(wcsp->constrs[KnapsackList[PBKILLERSxj[0].first]]->isKnapsack());
-            KnapsackConstraint* knap = (KnapsackConstraint *)wcsp->constrs[KnapsackList[PBKILLERSxj[0].first]];
+            assert(wcsp->constrs[PBKILLERSxj[0].first]->isKnapsack());
+            KnapsackConstraint* knap = (KnapsackConstraint *)wcsp->constrs[PBKILLERSxj[0].first];
             int xjk = xj->getK(w, nbIterations);
             if (maxk < xjk)
                 maxk = xjk;
@@ -1044,10 +1038,8 @@ bool VACExtension::enforcePass3()
     } else {
         assert(wcsp->constrs[PBconflict]->isKnapsack());
         KnapsackConstraint* k2 = (KnapsackConstraint *)wcsp->constrs[PBconflict];
-        static vector<pair<pair<int, Value>, Cost>> EPT;  /// \warning NOT SAFE FOR MULTITHREADING!!!
-        EPT.clear();
         k2->RestVACGroupExt();
-        k2->VACPass3(&EPT, minlambda, PBkillersctr);
+        k2->VACPass3(EPT, minlambda, PBkillersctr);
         for (int l = 0; l < (int)EPT.size(); ++l) {
             VACVariable *xi = (VACVariable*)wcsp->getVar(EPT[l].first.first);
             if (EPT[l].second > MIN_COST) {

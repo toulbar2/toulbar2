@@ -29,7 +29,11 @@ private:
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
     int PBconflict;
+    vector<tuple<VACVariable*, Value, bool>> acSupport;
     vector<pair<int, Value>> PBkillersctr;
+    vector<pair<int, Value>> killers;
+    vector<pair<int, Value>> killed;
+    vector<pair<pair<int, Value>, Cost>> EPT;
     vector<int> KnapsackList;
 
     Cost prevItThreshold; /**< The previous cost threshold (theta) for the iterative threshold descent */
