@@ -20,6 +20,7 @@ class AllDiffConstraint;
 class GlobalCardinalityConstraint;
 class SameConstraint;
 class RegularFlowConstraint;
+class KnapsackConstraint;
 
 /** Concrete class WCSP containing a weighted constraint satisfaction problem
  *	- problem lower and upper bound
@@ -119,6 +120,8 @@ public:
 
     vector<set<int>> varsBLP; ///< internal sets of variables inside problems (Problem1, Problem2, NegProblem2) waiting for tree decomposition initialization in bilevel optimization
     vector<vector<int>> delayedCtrBLP; ///< internal lists of deconnected ternary constraints between clusters waiting for tree decomposition initialization in bilevel optimization
+
+    KnapsackList knapsackList; ///< List of KnapsackConstraint (backtrackable list)
 
 #ifdef XMLFLAG
     map<int, int> varsDom; ///< structures for solution translation: we don't have to parse the XML file again
@@ -812,6 +815,8 @@ public:
     void queueEliminate(DLink<VariableWithTimeStamp>* link) { Eliminate.push(link, nbNodes); }
     void queueSeparator(DLink<Separator*>* link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator*>* link) { PendingSeparator.erase(link, true); }
+    void queueKnapsack(DLink<KnapsackConstraint*>* link) { knapsackList.push_back(link, true); }
+    void unqueueKnapsack(DLink<KnapsackConstraint*>* link) { knapsackList.erase(link, true); }
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
     void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 

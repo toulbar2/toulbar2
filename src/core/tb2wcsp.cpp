@@ -67,6 +67,7 @@ StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
 StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
 StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
 StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
+StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> Store::storeKnapsack(STORE_SIZE);
 
 int WCSP::wcspCounter = 0;
 
@@ -923,6 +924,7 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
     , elimTernOrder(0)
     , maxDegree(-1)
     , elimSpace(0)
+    , knapsackList(&Store::storeKnapsack)
 {
     instance = wcspCounter++;
     if (ToulBar2::debug)

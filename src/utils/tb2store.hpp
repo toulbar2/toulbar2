@@ -15,6 +15,7 @@
  *  - Store::storeConstraint for backtrackable lists of constraints
  *  - Store::storeVariable for backtrackable lists of variables
  *  - Store::storeSeparator for backtrackable lists of separators (see tree decomposition methods)
+ *  - Store::storeKnapsack for backtrackable lists of knapsack constraints
  *  - Store::storeBigInteger for very large integers ::StoreBigInteger used in solution counting methods
  *
  *  Memory for each stack is dynamically allocated by part of \f$2^x\f$ with \e x initialized to ::STORE_SIZE and increased when needed.
@@ -50,6 +51,7 @@ class Constraint;
 class Variable;
 class Separator;
 class ConstraintLink;
+class KnapsackConstraint;
 
 /*
  * Storable stack
@@ -345,6 +347,7 @@ public:
     static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> storeConstraint;
     static StoreStack<BTList<Variable*>, DLink<Variable*>*> storeVariable;
     static StoreStack<BTList<Separator*>, DLink<Separator*>*> storeSeparator;
+    static StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> storeKnapsack;
 
     /// \return the current (backtrack / tree search) depth
     static int getDepth()
@@ -374,6 +377,7 @@ public:
         storeConstraint.store();
         storeVariable.store();
         storeSeparator.store();
+        storeKnapsack.store();
     }
 
     /// restores the current state to the last copy
@@ -398,6 +402,7 @@ public:
         storeConstraint.restore();
         storeVariable.restore();
         storeSeparator.restore();
+        storeKnapsack.restore();
     }
 
     /// restore the current state to the copy made at depth \c newDepth
@@ -429,6 +434,7 @@ public:
         storeConstraint.freeze();
         storeVariable.freeze();
         storeSeparator.freeze();
+        storeKnapsack.freeze();
     }
 
     /// makes the incremental trailing mechanism on again
@@ -452,6 +458,7 @@ public:
         storeConstraint.unfreeze();
         storeVariable.unfreeze();
         storeSeparator.unfreeze();
+        storeKnapsack.unfreeze();
     }
 };
 

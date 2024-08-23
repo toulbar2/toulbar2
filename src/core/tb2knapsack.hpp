@@ -16,6 +16,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     StoreLong MaxWeight;
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     StoreCost assigneddeltas;
+    DLink<KnapsackConstraint*> linkKnapsack; // link to insert the constraint in knapsacks list
     vector<Long> conflictWeights; // used by weighted degree heuristics
     vector<StoreInt> LowestWeightIdx;
     vector<Long> InitLargestWeight;
@@ -328,6 +329,7 @@ public:
         , CorrAMO(std::move(CorrAMO_in))
         , AlwaysSatisfied(0)
     {
+        linkKnapsack.content = this;
         elimFrom(fromElim1_in);
         if (!weights.empty()) {
             if (!InitDel.empty())
@@ -404,6 +406,8 @@ public:
 #endif
             if (universal()) {
                 deconnect();
+            } else {
+                queueKnapsack();
             }
         } else {
             if (!verify()) {
@@ -417,6 +421,9 @@ public:
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     bool isKnapsack() const FINAL { return true; }
+
+    void queueKnapsack() { wcsp->queueKnapsack(&linkKnapsack); }
+    void unqueueKnapsack() { wcsp->unqueueKnapsack(&linkKnapsack); }
 
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
     Long getConflictWeight(int varIndex) const override
@@ -1638,6 +1645,7 @@ public:
         }
         // TODO: reinitialize current knapsack constraint instead of creating a new constraint
         deconnect();
+        //unqueueKnapsack();
         BinaryConstraint* bctr;
         TernaryConstraint* tctr;
         if (!AMO.empty()) {
@@ -1873,6 +1881,7 @@ public:
                 if (connected()) {
                     if (universal()) {
                         deconnect();
+                        //unqueueKnapsack();
                         wcsp->revise(this);
                         Cost TobeProjected = -lb + assigneddeltas;
                         lb = MIN_COST;
@@ -1907,6 +1916,7 @@ public:
                     } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
+                            //unqueueKnapsack();
                             projectNary();
                         }
                     } else if (AlwaysSatisfied) {
@@ -2028,9 +2038,15 @@ public:
                                         Store::freeze();
                                         AbstractNaryConstraint* cc = ProjectAMOtoNary(minAMOCost, currentvar, i);
                                         cc->deconnect(true);
+                                        if (cc->isKnapsack()) {
+//                                            ((KnapsackConstraint*)cc)->unqueueKnapsack();
+                                        }
                                         toprop.push_back(cc->wcspIndex);
                                         Store::unfreeze();
                                         cc->reconnect();
+                                        if (cc->isKnapsack()) {
+//                                            ((KnapsackConstraint*)cc)->queueKnapsack();
+                                        }
                                     }
                                     nbVirtualVar[VirtualVar[currentvar] - 1] = 0;
                                 } else if (nbnonass > 0)
@@ -2039,6 +2055,7 @@ public:
                         }
                         if (decoctr) {
                             deconnect();
+                            //unqueueKnapsack();
                             assert(TobeProjected >= MIN_COST);
                             Constraint::projectLB(-lb + assigneddeltas);
                             lb = 0;
@@ -2063,6 +2080,7 @@ public:
                     if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
+                            //unqueueKnapsack();
                             projectNary();
                         }
                     }
@@ -2956,6 +2974,7 @@ public:
                     get_current_scope();
                     if (universal() && connected()) {
                         deconnect();
+                        //unqueueKnapsack();
                         wcsp->revise(this);
                         Cost TobeProjected = -lb + assigneddeltas;
                         lb = MIN_COST;
@@ -2990,6 +3009,7 @@ public:
                     } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
+                            //unqueueKnapsack();
                             projectNary();
                         }
                     }
@@ -3447,3 +3467,4 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
+

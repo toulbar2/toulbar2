@@ -253,11 +253,9 @@ bool VACExtension::propagate()
     acSupport.clear();
     bool acSupportOK = false;
     if (ToulBar2::VAClin) {
-        KnapsackList.clear();
-        for (int i = 0; i < (int)wcsp->constrs.size(); ++i) { //TODO: maintain a list of connected linear constraints
-            if (wcsp->constrs[i]->isKnapsack() && wcsp->constrs[i]->connected()) {
-                ((KnapsackConstraint*)wcsp->constrs[i])->InitVac();
-                KnapsackList.push_back(i);
+        for (KnapsackList::iterator iter = wcsp->knapsackList.begin(); iter != wcsp->knapsackList.end(); ++iter) {
+            if ((*iter)->connected()) {
+                (*iter)->InitVac();
             }
         }
     }
@@ -504,9 +502,9 @@ bool VACExtension::propagate()
 #endif
         if (!isvac) {
             if (ToulBar2::VAClin) {
-                for (int i = 0; i < (int)KnapsackList.size(); ++i) {
-                    if (wcsp->constrs[KnapsackList[i]]->isKnapsack() && wcsp->constrs[KnapsackList[i]]->connected()) {
-                        ((KnapsackConstraint *)wcsp->constrs[KnapsackList[i]])->ResetVACLastValTested();
+                for (KnapsackList::iterator iter = wcsp->knapsackList.begin(); iter != wcsp->knapsackList.end(); ++iter) {
+                    if ((*iter)->connected()) {
+                        (*iter)->ResetVACLastValTested();
                     }
                 }
             }
@@ -519,9 +517,9 @@ bool VACExtension::propagate()
                 throw Contradiction();
             }
             util = enforcePass3();
-            for (int i = 0; i < (int)wcsp->constrs.size(); ++i) { //TODO: why not removing this loop?!
-                if (wcsp->constrs[i]->isKnapsack() && wcsp->constrs[i]->connected()) {
-                    ((KnapsackConstraint *)wcsp->constrs[i])->InitVac();
+            for (KnapsackList::iterator iter = wcsp->knapsackList.begin(); iter != wcsp->knapsackList.end(); ++iter) {
+                if ((*iter)->connected()) {
+                    (*iter)->InitVac();
                 }
             }
         } else {
@@ -616,10 +614,8 @@ void VACExtension::enforcePass1()
         }
         //Apply phase 1 on all the connected knapsack constraints after propagating all binary cost functions
         if (VAC.empty() && ToulBar2::VAClin) {
-            for (int i = 0; i < (int)KnapsackList.size(); ++i) {
-                if (!wcsp->constrs[KnapsackList[i]]->isKnapsack())
-                    continue;
-                KnapsackConstraint* k = (KnapsackConstraint *)wcsp->constrs[KnapsackList[i]];
+            for (KnapsackList::iterator iter = wcsp->knapsackList.begin(); iter != wcsp->knapsackList.end(); ++iter) {
+                KnapsackConstraint* k = (*iter);
                 if (k->connected() && (k->VACNeedPropagate() || firstit)) {
                     bool wipeout;
                     VACVariable* xi;
