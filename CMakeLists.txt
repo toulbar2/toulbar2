@@ -353,6 +353,17 @@ IF(LIBTB2)
 ### New cmake, python and pybind11
 #    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
 ###
+
+  ### Create automatically a symbolic link of the pytb2 binary into the  pytoulbar2 folder
+  GET_TARGET_PROPERTY(PYTB2_BINARY_NAME pytb2 OUTPUT_NAME)
+  GET_TARGET_PROPERTY(PYTB2_BINARY_SUFFIX pytb2 SUFFIX)
+
+  # name of the pytb2 binary library
+  SET(PYTB2_BINARY ${PYTB2_BINARY_NAME}${PYTB2_BINARY_SUFFIX})
+
+  ADD_CUSTOM_TARGET(link_target ALL
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_OUTPUT_PATH}/${PYTB2_BINARY} ${CMAKE_CURRENT_SOURCE_DIR}/pytoulbar2/${PYTB2_BINARY})
+  ###
   ENDIF(PYTB2)
   
   IF(MPI)
