@@ -550,20 +550,18 @@ public:
 
         // Check which values are still available.
         // Removed values take a large cost (delta + lambda).
-        Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
-        Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0 and satisfies the constraint
-        int verifsplitvar = -1;
-        int verifsplitval0 = -1;
-        int verifsplitval1 = -1;
-        bool verifsplitok = true; // checks if there is atmost one split variable in OptSol
+//        Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
+//        Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0 and satisfies the constraint
+//        bool verifsplit = false; // checks if there is atleast one split variable in OptSol
+//        int verifones = 0; // checks how many variables have a valid value set to one
         int k1 = 0;
         Long MaxW = 0;
         vector<Long> GreatW;
         carity = 0;
         for (int i = 0; i < arity_; i++) {
             if (assigned[i] == 0) {
-                Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
-                Double storew = 0;
+//                Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
+//                Double storew = 0;
                 nbValue[k1] = 0;
                 Updatelastval0(i);
                 GreatW.push_back(0);
@@ -585,26 +583,18 @@ public:
                     } else {
                         Profit[i][l] = deltaCosts[i][l] + lambda;
                     }
-                    storec += Profit[i][l] * OptSol[i][l];
-                    storew += weights[i][l] * OptSol[i][l];
-                    if (OptSol[i][l] > 0. && OptSol[i][l] < 1.) {
-                        if (verifsplitvar == -1 || verifsplitvar == i) {
-                            verifsplitvar = i;
-                            if (verifsplitval0 == -1) {
-                                verifsplitval0 = l;
-                            } else {
-                                assert(verifsplitval0 != -1);
-                                assert(verifsplitval1 == -1);
-                                verifsplitval1 = l;
-                            }
-                        } else {
-                            verifsplitok = false;
-                        }
-                    }
+//                    storec += Profit[i][l] * OptSol[i][l];
+//                    storew += weights[i][l] * OptSol[i][l];
+//                    assert(OptSol[i][l] >= 0. && OptSol[i][l] <= 1.);
+//                    if (OptSol[i][l] > 0. && OptSol[i][l] < 1.) {
+//                        verifsplit = true;
+//                    } else if (OptSol[i][l] == 1. && scope[i]->canbe(VarVal[i][l])) {
+//                        verifones++;
+//                    }
                 }
                 // Compute the cost of the last optimal solution
-                verifopt += Ceil(storec);
-                verifweight += Ceil(storew);
+//                verifopt += Ceil(storec);
+//                verifweight += Ceil(storew);
                 MaxW += GreatW.back();
                 current_scope_idx[k1] = i;
                 k1++;
@@ -655,6 +645,9 @@ public:
                         DeleteValVAC[currentvar][currentval]=NbIteVAC;
                     }
                     assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
+//                    if (OptSol[currentvar][currentval] == 1.) {
+//                        verifones--;
+//                    }
                 }
             }
         }
@@ -679,26 +672,19 @@ public:
         Cost c = -lb + assigneddeltas;
         int iter = 0;
         Double xk = 0.;
-        if (verifopt > MIN_COST || verifweight < capacity || !verifsplitok) {
+//        assert(0 <= verifones && verifones <= carity);
+//        if (verifopt <= MIN_COST && verifweight >= capacity && !verifsplit && verifones == carity) {
+//            // last optimal solution OptSol is integer and satisfies the constraint and the current domains and has a zero cost.
+//            W = verifweight;
+//            c = verifopt;
+//            Slopes.clear();
+//        } else {
             ComputeSlopes(&W, &c);
             if (W < capacity) {
                 // Find the optimal solution
                 FindOpt(Slopes, &W, &c, &xk, &iter);
             }
-        } else {
-            // last optimal solution satisfies the constraint and has a zero cost.
-            W = verifweight;
-            c = verifopt;
-            Slopes.clear();
-            if (verifsplitvar != -1) {
-                assert(verifsplitok);
-                assert(verifsplitval0 != -1);
-                assert(verifsplitval1 != -1);
-                xk = OptSol[verifsplitvar][verifsplitval1];
-                assert(MIN(capacity,weights[verifsplitvar][verifsplitval1]) != MIN(capacity,weights[verifsplitvar][verifsplitval0]));
-                Slopes.push_back({Double(verifsplitvar), Double(verifsplitval0), Double(verifsplitval1), Double(Profit[verifsplitvar][verifsplitval1] - Profit[verifsplitvar][verifsplitval0]) / (MIN(capacity,weights[verifsplitvar][verifsplitval1]) - MIN(capacity,weights[verifsplitvar][verifsplitval0]))});
-            }
-        }
+//        }
         // Check if the optimal cost is greater than itThreshold
         // Warning! c can be negative due to rounding effects
         if (c >= itThreshold) {
