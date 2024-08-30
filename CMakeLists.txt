@@ -411,16 +411,23 @@ include(${My_cmake_script}/toulbar2test.cmake)
 ##########################################
 # Unit tests
 ##########################################
-IF(COVER_TEST) 
-include(${My_cmake_script}/test.cmake)
+IF(COVER_TEST)
 
-MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
-MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
+  include(${My_cmake_script}/test.cmake)
 
-##########################################
-# Cover tests
-##########################################
-include(${My_cmake_script}/cover-test.cmake)
+  MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
+  MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
+
+  ##########################################
+  # Cover tests
+  ##########################################
+  include(${My_cmake_script}/cover-test.cmake)
+
+  # pytoulbar2 unit tests
+  IF(PYTB2)
+    include(${My_cmake_script}/test_pytb2.cmake)
+  ENDIF(PYTB2)
+
 ENDIF(COVER_TEST)
 
 IF(BENCH)
