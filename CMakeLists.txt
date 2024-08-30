@@ -333,10 +333,9 @@ IF(LIBTB2)
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
   ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
-  IF(WIN64)
-  ELSE(WIN64)
+  IF(NOT WIN64)
     SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
-  ENDIF(WIN64)
+  ENDIF(NOT WIN64)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
@@ -354,16 +353,22 @@ IF(LIBTB2)
 #    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
 ###
 
-  ### Create automatically a symbolic link of the pytb2 binary into the  pytoulbar2 folder
+  ### Create a copy of the pytoulbar2 library
+  ADD_CUSTOM_TARGET(copy_pytb2 ALL
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/pytoulbar2 ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2 BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2)
+  ADD_DEPENDENCIES(copy_pytb2 pytb2)
+
+  ### Create symbolic link of the pytb2 binary into the pytoulbar2 copy directory
   GET_TARGET_PROPERTY(PYTB2_BINARY_NAME pytb2 OUTPUT_NAME)
   GET_TARGET_PROPERTY(PYTB2_BINARY_SUFFIX pytb2 SUFFIX)
 
   # name of the pytb2 binary library
   SET(PYTB2_BINARY ${PYTB2_BINARY_NAME}${PYTB2_BINARY_SUFFIX})
 
-  ADD_CUSTOM_TARGET(link_pytb2 ALL
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_OUTPUT_PATH}/${PYTB2_BINARY} ${CMAKE_CURRENT_SOURCE_DIR}/pytoulbar2/${PYTB2_BINARY} BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/pytoulbar2/${PYTB2_BINARY})
-  ADD_DEPENDENCIES(link_pytb2 pytb2)
+  ADD_CUSTOM_TARGET(link_pytb2_ex ALL
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_OUTPUT_PATH}/${PYTB2_BINARY} ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2/${PYTB2_BINARY} BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2/${PYTB2_BINARY})
+  ADD_DEPENDENCIES(link_pytb2_ex copy_pytb2)
+
   ###
   ENDIF(PYTB2)
   
@@ -418,15 +423,15 @@ IF(COVER_TEST)
   MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
   MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
 
-  ##########################################
-  # Cover tests
-  ##########################################
-  include(${My_cmake_script}/cover-test.cmake)
-
   # pytoulbar2 unit tests
   IF(PYTB2)
     include(${My_cmake_script}/test_pytb2.cmake)
   ENDIF(PYTB2)
+
+  ##########################################
+  # Cover tests
+  ##########################################
+  include(${My_cmake_script}/cover-test.cmake)
 
 ENDIF(COVER_TEST)
 
