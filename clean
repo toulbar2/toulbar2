@@ -1,2 +1,2 @@
 #! /bin/sh
-rm -rf Doxyfile toulbar2-*i386.sh CPackSource* CMakeFiles Makefile CMakeCache.txt *.zip *.gz *.z *.bz2 *.deb _CPack_Packages Testing CTestTestfile.cmake cmake_install.cmake install_manifest.txt CPackSourceConfig.cmake CPackConfig.cmake ChangeLog toulbar2-*-Windows-i386.exe build/ docs/_build docs/_files/*.*
+rm -rf Doxyfile toulbar2-*i386.sh CPackSource* CMakeFiles Makefile CMakeCache.txt *.zip *.gz *.z *.bz2 *.deb _CPack_Packages Testing CTestTestfile.cmake cmake_install.cmake install_manifest.txt CPackSourceConfig.cmake CPackConfig.cmake ChangeLog toulbar2-*-Windows-i386.exe build/ docs/_build docs/_files/*.* pytoulbar2/*.so
