@@ -15,7 +15,7 @@ FOREACH (UTEST ${validation_scripts})
 
     ADD_TEST(NAME validation_pytb2_${TNAME} COMMAND ${Python3_EXECUTABLE} ${UTEST})
     
-    SET_PROPERTY(TEST validation_pytb2_${TNAME} PROPERTY ENVIRONMENT "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(validation_pytb2_${TNAME} PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}")
 
     IF (DEFINED error_regexp)
         set_tests_properties (validation_pytb2_${TNAME} PROPERTIES FAIL_REGULAR_EXPRESSION "${error_regexp}")
