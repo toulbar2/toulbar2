@@ -3146,6 +3146,12 @@ void WCSP::read_uai2008(const char* fileName)
         } else if (arity == 0) {
             scopes.push_back({});
         }
+        // prepare directed constraint graph used for finding a topological order
+        if (!markov) {
+            for (i = 0; i < arity - 1; i++) {
+                getListSuccessors()->at(scopes.back()[i]).push_back(scopes.back().back());
+            }
+        }
     }
 
     ToulBar2::markov_log = 0; // for the MARKOV Case
@@ -3154,6 +3160,7 @@ void WCSP::read_uai2008(const char* fileName)
     vector<vector<Cost>> costs(scopes.size());
     int iunaryctr = 0;
     int ictr = 0;
+    bool errorp = false;
     vector<vector<int>>::iterator it = scopes.begin();
     while (it != scopes.end()) {
         file >> ntuples;
@@ -3169,13 +3176,13 @@ void WCSP::read_uai2008(const char* fileName)
         TProb maxp = 0.;
         for (k = 0; k < ntuples; k++) {
             file >> p;
-            if (ToulBar2::sigma > 0.0) {
+            if (ToulBar2::sigma > 0.) {
                 Double noise = aleaGaussNoise(ToulBar2::sigma);
                 if (ToulBar2::verbose >= 1)
                     cout << "add noise " << noise << " to " << p << endl;
-                p = max(0.0L, p + noise); // can create forbidden tuples
+                p = max((TProb)0., p + noise); // can create forbidden tuples
                 if (!markov)
-                    p = min(p, 1.0L); // in Bayesian networks probability cannot be greater than 1
+                    p = min(p, (TProb)1.); // in Bayesian networks probability cannot be greater than 1
             }
             assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
             costsProb.push_back(p);
@@ -3185,6 +3192,28 @@ void WCSP::read_uai2008(const char* fileName)
             THROWCONTRADICTION;
         if (ToulBar2::uai == 2 && maxp < -1e38)
             THROWCONTRADICTION;
+        // ensures conditional probabilities sum to 1 in the case of a Bayesian network
+        if (!markov) {
+            int domsize = getDomainInitSize((*it).back());
+            for (k = 0; k < ntuples; k += domsize) {
+                TProb cumul = 0.;
+                int k2 = 0;
+                for (; k2 < domsize - 1 && cumul + costsProb[k + k2] <= 1.; k2++) {
+                    cumul += costsProb[k + k2];
+                }
+                assert(cumul <= 1.);
+                for (; k2 < domsize ; k2++) {
+                    if (!errorp && abs( cumul + costsProb[k + k2] - (TProb)1. ) > (TProb)ToulBar2::epsilon) {
+                        cout << "Warning! Conditional probability table for variable " << getName((*it).back()) << " must have been normalized. Try option -epsilon with less precision to remove this warning (e.g., -epsilon=1e-4)." << endl;
+                        errorp = true;
+                    }
+                    costsProb[k + k2] = 1. - cumul;
+                    cumul = 1.;
+                }
+                // Do not need to update maxp because it is only used for Markov network!
+            }
+            assert(k == ntuples);
+        }
 
         Cost minc = MAX_COST;
         Cost maxc = MIN_COST;

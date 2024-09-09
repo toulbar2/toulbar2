@@ -154,7 +154,7 @@ public:
     // return the minimum cost of the tuples
     virtual Cost getMinCost() { return 0; }
 
-    virtual bool universal() { return false; }
+    virtual bool universal(Cost zero = MIN_COST) { return false; }
 
     /*virtual void valueRemoved(int index, Value value) {
           if (ToulBar2::consistencyLevel == FINE_IC) {

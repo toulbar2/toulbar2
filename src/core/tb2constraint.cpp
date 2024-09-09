@@ -260,7 +260,7 @@ Cost Constraint::getCost()
 }
 
 /// \warning always returns false for cost functions in intention
-bool Constraint::universal()
+bool Constraint::universal(Cost zero)
 {
     static Tuple tuple;
     if (!extension())
@@ -270,7 +270,7 @@ bool Constraint::universal()
     //   Cost cost;
     //   firstlex();
     //   while (nextlex(tuple,cost)) {
-    // 	if (cost > MIN_COST) return false;
+    // 	if (cost > zero) return false;
     //   }
     //   return true;
 
@@ -279,10 +279,10 @@ bool Constraint::universal()
     first();
     while (next(tuple, cost)) {
         nbtuples++;
-        if (cost > MIN_COST)
+        if (cost > zero)
             return false;
     }
-    if (getDefCost() > MIN_COST && nbtuples < getDomainSizeProduct())
+    if (getDefCost() > zero && nbtuples < getDomainSizeProduct())
         return false;
     return true;
 }

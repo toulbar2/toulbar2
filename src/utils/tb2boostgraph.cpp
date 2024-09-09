@@ -372,6 +372,43 @@ void WCSP::spanningTreeOrderingBGL(vector<int>& order_inv)
     assert(order_inv.size() == numberOfVariables());
 }
 
+void WCSP::DAGOrdering(vector<int>& order_inv)
+{
+    if (ToulBar2::verbose >= 0)
+        cout << "DAG ordering"; // << endl;
+
+    int  n = numberOfVariables();
+    set<int> roots; // first it assumes all variables as root
+    for (int i = 0; i < n; ++i) {
+        roots.insert(roots.end(), i);
+    }
+    for (int i = 0; i < n; i++) {
+        int sz = getListSuccessors()->at(i).size();
+        for (int j = 0; j < sz; j++) {
+            roots.erase(getListSuccessors()->at(i)[j]);
+        }
+    }
+    vector<bool> marked(n, false);
+    for (int i : roots) {
+        visit(i, order_inv, marked, listofsuccessors);
+    }
+    for (int i = n - 1; i >= 0; i--) {
+        if (!marked[i]) {
+            visit(i, order_inv, marked, listofsuccessors);
+        }
+    }
+
+    if (ToulBar2::verbose >= 1) {
+        cout << ":";
+        for (int i = 0; i < n; i++) {
+            cout << " " << order_inv[i];
+        }
+    }
+    if (ToulBar2::verbose >= 0) cout << endl;
+
+    assert(order_inv.size() == numberOfVariables());
+}
+
 void WCSP::reverseCuthillMcKeeOrderingBGL(vector<int>& order_inv)
 {
     ColoredGraph G;

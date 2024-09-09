@@ -382,7 +382,7 @@ public:
         }
     }
 
-    bool universal() override
+    bool universal(Cost zero = MIN_COST) override
     {
         if (isfinite && problem && negproblem && problem->getLb() >= lb && negproblem->getLb() > -ub + negCost) {
             return true;

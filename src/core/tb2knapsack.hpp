@@ -1359,7 +1359,8 @@ public:
         return y_cc;
     }
 
-    bool universal() override
+    /// \warning This function does not check nonzero finite costs inside the constraint!
+    bool universal(Cost zero = MIN_COST) override
     {
         // returns true if constraint always satisfied
         if (AMO.empty() && capacity <= 0)

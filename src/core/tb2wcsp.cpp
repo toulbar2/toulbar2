@@ -6392,11 +6392,24 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             ctr_inout->reconnect();
         }
         assert(ctr_inout->isNary());
+        Cost prevNegCost = getNegativeLb();
         ((NaryConstraint*)ctr_inout)->project(var);
-        ctr_inout->propagate();
-        if (ToulBar2::verbose >= 1)
-            cout << endl
-                 << "   has result*: " << *ctr_inout << endl;
+        if (ctr_inout->universal((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST)) {
+            if (ToulBar2::isZ) {
+                Cost afterNegCost = getNegativeLb();
+                if (abs( afterNegCost - prevNegCost ) <= var->getDomainInitSize()) {
+                    decreaseLb( prevNegCost - afterNegCost );
+                    assert(getNegativeLb() == prevNegCost);
+                }
+            }
+            ctr_inout->deconnect();
+            ctr_inout = NULL;
+        } else {
+            ctr_inout->propagate();
+            if (ToulBar2::verbose >= 1)
+                cout << endl
+                << "   has result*: " << *ctr_inout << endl;
+        }
         return;
     }
     ctr_inout->deconnect();
@@ -6467,10 +6480,14 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
                     }
                 }
             }
-            decreaseLb(negcost);
+            if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
+                decreaseLb(negcost);
         }
-        ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
-        ctr = getCtr(ctrIndex);
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        if (!zeros) {
+            ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
+            ctr = getCtr(ctrIndex);
+        }
     } break;
     case 2: {
         TernaryConstraint* tctr = (TernaryConstraint*)ctr_inout;
@@ -6499,10 +6516,14 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
                     costs[vxi * evars[1]->getDomainInitSize() + vyi] -= negcost;
                 }
             }
-            decreaseLb(negcost);
+            if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
+                decreaseLb(negcost);
         }
-        ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
-        ctr = getCtr(ctrIndex);
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        if (!zeros) {
+            ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
+            ctr = getCtr(ctrIndex);
+        }
     } break;
     case 1: {
         BinaryConstraint* bctr = ((BinaryConstraint*)ctr_inout);
@@ -6523,14 +6544,22 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             costs.push_back(mincost);
         }
         assert(negcost <= 0);
-        for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
-            vxi = evars[0]->toIndex(*itv0);
-            if (costs[vxi] - negcost > MIN_COST)
-                evars[0]->project(*itv0, costs[vxi] - negcost);
+        if (negcost < 0) {
+            for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
+                costs[vxi] -= negcost;
+            }
+            if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
+                decreaseLb(negcost);
         }
-        evars[0]->findSupport();
-        if (negcost < 0)
-            decreaseLb(negcost);
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        if (!zeros) {
+            for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
+                vxi = evars[0]->toIndex(*itv0);
+                if (costs[vxi] > MIN_COST)
+                    evars[0]->project(*itv0, costs[vxi]);
+            }
+            evars[0]->findSupport();
+        }
     } break;
     default: {
         cerr << "Bad resulting cost function arity during generic variable elimination!";
@@ -6931,6 +6960,9 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
             for (int i = numberOfVariables() - 1; i >= 0; i--)
                 order.push_back(i);
             sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
+            break;
+        case ELIM_DAG_ORDER:
+            DAGOrdering(order);
             break;
         default: {
             cerr << "Variable elimination order " << reinterpret_cast<uintptr_t>(elimVarOrder) << " not implemented yet!" << endl;

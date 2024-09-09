@@ -70,7 +70,7 @@ class WCSP FINAL : public WeightedCSP {
     vector<GlobalConstraint*> globalconstrs; ///< a list of all original global constraints (also inserted in constrs)
     vector<int> delayedNaryCtr; ///< a list of all original nary constraints in extension (also inserted in constrs)
     bool isDelayedNaryCtr; ///< postpone naryctr propagation after all variables have been created
-    vector<vector<int>> listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
+    vector<vector<int>> listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic) or used by UAI Bayesian network topological order heuristic
     StoreInt isPartOfOptimalSolution; ///< true if the current assignment belongs to an optimal solution recorded into bestValues
 
     // make it private because we don't want copy nor assignment
@@ -460,6 +460,7 @@ public:
     int biConnectedComponents();
     void minimumDegreeOrderingBGL(vector<int>& order);
     void spanningTreeOrderingBGL(vector<int>& order);
+    void DAGOrdering(vector<int>& order);
     void reverseCuthillMcKeeOrderingBGL(vector<int>& order);
     void maximumCardinalitySearch(vector<int>& order);
     void minimumFillInOrdering(vector<int>& order);

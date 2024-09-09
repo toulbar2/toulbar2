@@ -1048,6 +1048,7 @@ void help_msg(char* toulbar2filename)
     cout << "                           (-" << ELIM_MST << ") maximum spanning tree ordering (see -mst), (-" << CUTHILL_MCKEE << ") reverse Cuthill-Mckee ordering, (-" << APPROX_MIN_DEGREE << ") approximate minimum degree ordering," << endl;
     cout << "                           (-" << ELIM_FILE_ORDER << ") default file ordering (the same if this option is missing, i.e. use the variable order in which variables appear in the problem file)" << endl;
     cout << "                           (-" << ELIM_LEXICOGRAPHIC_ORDER << ") lexicographic ordering of variable names." << endl;
+    cout << "                           (-" << ELIM_DAG_ORDER << ") topological ordering of variables for Bayesian networks only." << endl;
 #endif
     cout << "   -root=[integer] : root cluster heuristic (0:largest, 1:max. size/(height-size), 2:min. size/(height-size), 3:min. height) (default value is " << ToulBar2::rootHeuristic << ")" << endl;
     cout << "   -minheight : minimizes cluster tree height when searching for the root cluster";

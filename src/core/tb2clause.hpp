@@ -150,12 +150,12 @@ public:
         Constraint::resetConflictWeight();
     }
 
-    bool universal() override
+    bool universal(Cost zero = MIN_COST) override
     {
-        if (cost != MIN_COST || lb != MIN_COST)
+        if (cost > zero || lb > zero)
             return false;
         for (int i = 0; i < arity_; i++)
-            if (deltaCosts[i] != MIN_COST)
+            if (deltaCosts[i] > zero)
                 return false;
         return true;
     }

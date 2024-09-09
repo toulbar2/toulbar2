@@ -200,7 +200,7 @@ public:
     virtual Cost getDefCost() { return MIN_COST; }
     virtual Cost getCost(); /// \warning all variables must be properly assigned and the returned cost might be different than the original cost due to propagation
 
-    virtual bool universal();
+    virtual bool universal(Cost zero = MIN_COST);
     virtual bool ishard(); ///< \brief returns true if all valid tuples have costs either zero or greater than the current upper bound
     virtual bool isfinite(); ///< \brief returns true if all valid tuples have costs strictly lower than the current upper bound minus the current lower bound
 
