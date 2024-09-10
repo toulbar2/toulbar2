@@ -592,7 +592,7 @@ void VACExtension::enforcePass1()
         cout << "enforcePass1 itThreshold: " << itThreshold << endl;
     PBkillersctr.clear();
     while (!VAC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         VACVariable* xj = (VACVariable*)VAC.pop_first();
         for (EnumeratedVariable::iterator it = xj->begin(); it != xj->end(); ++it) {

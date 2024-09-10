@@ -581,7 +581,7 @@ Double MultiCFN::getUnitCost()
 pair<Double, Double> MultiCFN::computeTopMinCost() // top is always positive
 {
 
-    Double top = Pow(1., -_tb2_decimalpoint);
+    Double top = powl(1.L, -_tb2_decimalpoint);
 
     Double global_mincost = 0.;
 

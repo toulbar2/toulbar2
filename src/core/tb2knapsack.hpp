@@ -2641,7 +2641,7 @@ public:
     {
         if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
             return;
-        if (ToulBar2::interrupted) {
+        if (ToulBar2::interrupted && !ToulBar2::isZ) {
             throw TimeOut();
         }
         // propagates from scratch the constraint
@@ -2790,7 +2790,7 @@ public:
                                         });
 
                                     for (int i = 0; i < carity; ++i) {
-                                        if (ToulBar2::interrupted) {
+                                        if (ToulBar2::interrupted && !ToulBar2::isZ) {
                                             throw TimeOut();
                                         }
                                         NewProfforDyn = ProfforDyn;

@@ -499,6 +499,8 @@ protected:
     BigInteger sharpBTD(Cluster* cluster);
     void approximate(BigInteger& nbsol, TreeDecomposition* td);
 
+    Cost logZCurrentEstimate();
+
 public:
     Solver(Cost initUpperBound, WeightedCSP* wcsp = NULL);
 

@@ -13,7 +13,8 @@
 #endif
 
 #ifdef QUAD_PROB
-#include <quadmath.h>
+#include <boost/multiprecision/float128.hpp>
+//#include <quadmath.h>
 #endif
 
 /*
@@ -147,31 +148,29 @@ inline Double Log1p(Double x) { return log1pl(x); }
 #endif
 
 #ifdef QUAD_PROB
-inline std::ostream& operator<<(std::ostream& os, const __float128& f)
-{
-    char y[1024];
-    quadmath_snprintf(y, 1000, "%.30Qg", f);
-    os << y;
-    return os;
-}
+//inline std::ostream& operator<<(std::ostream& os, const __float128& f)
+//{
+//    char y[1024];
+//    quadmath_snprintf(y, 1000, "%.30Qg", f);
+//    os << y;
+//    return os;
+//}
 
-inline std::istream& operator>>(std::istream& is, __float128& f)
-{
-    char y[1024];
-    is >> y;
-    f = strtoflt128(y, NULL);
-    return is;
-}
+//inline std::istream& operator>>(std::istream& is, __float128& f)
+//{
+//    char y[1024];
+//    is >> y;
+//    f = strtoflt128(y, NULL);
+//    return is;
+//}
 
-inline __float128 abs( __float128 x ){return fabsq( x );}
-// inline __float128 sqrt( __float128 x ){return sqrtq( x );}
-inline __float128 Pow(__float128 x, __float128 y) { return powq(x, y); }
-inline __float128 Exp(__float128 x) { return expq(x); }
-inline __float128 Exp10(__float128 x) { return powq(10, x); } // Assumes 10 is representable.
-inline __float128 Expm1(__float128 x) { return expm1q(x); }
-inline __float128 Log(__float128 x) { return logq(x); }
-inline __float128 Log10(__float128 x) { return log10q(x); }
-inline __float128 Log1p(__float128 x) { return log1pq(x); }
+inline boost::multiprecision::float128 Pow(boost::multiprecision::float128 x, boost::multiprecision::float128 y) { return pow(x, y); }
+inline boost::multiprecision::float128 Exp(boost::multiprecision::float128 x) { return exp(x); }
+inline boost::multiprecision::float128 Exp10(boost::multiprecision::float128 x) { return pow(10, x); } // Assumes 10 is representable.
+inline boost::multiprecision::float128 Expm1(boost::multiprecision::float128 x) { return expm1(x); }
+inline boost::multiprecision::float128 Log(boost::multiprecision::float128 x) { return log(x); }
+inline boost::multiprecision::float128 Log10(boost::multiprecision::float128 x) { return log10(x); }
+inline boost::multiprecision::float128 Log1p(boost::multiprecision::float128 x) { return log1p(x); }
 #endif
 
 #if defined(INT_COST) || defined(SHORT_COST)

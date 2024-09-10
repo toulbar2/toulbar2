@@ -4110,7 +4110,7 @@ void WCSP::preprocessing()
     if (ToulBar2::elimDegree_preprocessing <= -3) {
         int deg = medianDegree();
         Double domsize = medianDomainSize();
-        Double size = (Double)numberOfUnassignedVariables() * (sizeof(tValue) * deg + sizeof(Cost)) * Pow(domsize, deg + 1);
+        Double size = (Double)numberOfUnassignedVariables() * (sizeof(tValue) * deg + sizeof(Cost)) * powl(domsize, deg + 1);
         if (ToulBar2::debug >= 2)
             cout << "MAX ESTIMATED ELIM SIZE: " << size << endl;
         assert(ToulBar2::elimSpaceMaxMB > 0);
@@ -5303,7 +5303,7 @@ void WCSP::propagateAC()
     if (Store::getDepth() == 0)
         AC.sort(false);
     while (!AC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
         if (x->unassigned())
@@ -5320,7 +5320,7 @@ void WCSP::propagateDAC()
     if (Store::getDepth() == 0)
         DAC.sort(true);
     while (!DAC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? DAC.pop_max() : DAC.pop());
         if (x->unassigned())
@@ -5668,7 +5668,7 @@ void WCSP::propagateEAC()
     if (Store::getDepth() == 0)
         EAC2.sort(false);
     while (!EAC2.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? EAC2.pop_min() : EAC2.pop());
         if (x->unassigned())
@@ -5692,7 +5692,7 @@ void WCSP::propagateDEE()
         cout << "DEEQueue size: " << DEE.getSize() << endl;
     assert(NC.empty());
     while (!DEE.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)DEE.pop();
         if (x->unassigned() && !((ToulBar2::divNbSol > 1) && Store::getDepth() == 0)) {
@@ -5732,7 +5732,7 @@ void WCSP::propagateFEAC()
     if (ToulBar2::verbose >= 2)
         cout << "FEACQueue size: " << FEAC.getSize() << endl;
     while (!FEAC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)FEAC.pop();
         if (x->unassigned())
@@ -5762,7 +5762,7 @@ void WCSP::propagateFEAC()
 void WCSP::eliminate()
 {
     while (!Eliminate.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)Eliminate.pop();
         if (x->unassigned()) {
@@ -5818,7 +5818,7 @@ bool WCSP::propagated()
 
 void WCSP::propagate(bool fromscratch)
 {
-    if (ToulBar2::interrupted)
+    if (ToulBar2::interrupted && !ToulBar2::isZ)
         throw TimeOut();
     if (!isactivatePropagate()) {
         if (ToulBar2::verbose >= 3)
@@ -5890,7 +5890,7 @@ void WCSP::propagate(bool fromscratch)
                             oldLb = getLb();
                             cont = false;
                             for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
-                                if (ToulBar2::interrupted)
+                                if (ToulBar2::interrupted && !ToulBar2::isZ)
                                     throw TimeOut();
                                 (*(it))->propagate();
                                 if (ToulBar2::LcLevel == LC_SNIC)
@@ -7193,7 +7193,7 @@ Cost WCSP::Prob2Cost(TProb p) const
         cerr << "Overflow when converting probability to cost." << endl;
         throw InternalError();
     }
-    Cost c = (Cost)roundl(res);
+    Cost c = (Cost)Round(res);
     if (c > MAX_COST / 2)
         return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
     return c;
@@ -7209,7 +7209,7 @@ Cost WCSP::LogProb2Cost(TLogProb p) const
         //            cout << "Warning: converting energy " << -p << " to Top\n";
         //        }
     } else
-        c = (Cost)roundl(res);
+        c = (Cost)Round(res);
     return c;
 }
 

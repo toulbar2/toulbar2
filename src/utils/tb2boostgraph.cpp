@@ -389,8 +389,8 @@ void WCSP::DAGOrdering(vector<int>& order_inv)
         }
     }
     vector<bool> marked(n, false);
-    for (int i : roots) {
-        visit(i, order_inv, marked, listofsuccessors);
+    for (auto it = roots.rbegin(); it != roots.rend(); ++it) {
+        visit(*it, order_inv, marked, listofsuccessors);
     }
     for (int i = n - 1; i >= 0; i--) {
         if (!marked[i]) {

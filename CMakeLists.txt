@@ -93,12 +93,16 @@ IF(NOT CMAKE_BUILD_TYPE)
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20" )
+IF(QUAD_PROBABILITY)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++20" )
+ELSE(QUAD_PROBABILITY)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20" )
+ENDIF(QUAD_PROBABILITY)
 # -fsanitize=address -fsanitize=undefined -Wconversion -Wsign-conversion
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftrapping-math -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math -march=native" ) #  -flto
 
-if(QUAD_PROBABILITY)
+IF(QUAD_PROBABILITY)
   SET (all_depends  ${all_depends} "quadmath") 
 ENDIF(QUAD_PROBABILITY)
 
@@ -357,7 +361,7 @@ IF(LIBTB2)
 #    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
 ###
 
-  ### Create a copy of the pytoulbar2 library
+  ### Create a copy of the pytoulbar2 library
   ADD_CUSTOM_TARGET(copy_pytb2 ALL
                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/pytoulbar2 ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2 BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2)
   ADD_DEPENDENCIES(copy_pytb2 pytb2)

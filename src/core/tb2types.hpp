@@ -31,7 +31,8 @@
 // Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
 #ifdef QUAD_PROB
-#include <quadmath.h> // only with gcc/g++
+#include <boost/multiprecision/float128.hpp>
+//#include <quadmath.h> // only with gcc/g++
 #endif
 
 using std::cerr;
@@ -437,9 +438,9 @@ const Cost MAX_COST = PARETOPAIR_MAX;
 #endif
 
 #ifdef QUAD_PROB
-typedef __float128 TProb;
-typedef __float128 TLogProb;
-inline Cost Round(TLogProb f) { return (Cost)roundq(f); }
+typedef boost::multiprecision::float128 TProb;
+typedef boost::multiprecision::float128 TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)round(f); }
 #endif
 
 #ifdef DOUBLE_PROB
