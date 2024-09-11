@@ -171,7 +171,7 @@ void AllDiffConstraint::decompose()
                 ctr->addCosts(x, y, costs);
                 ctr->propagate();
             } else {
-                if (!ToulBar2::vac) {
+                if (!ToulBar2::vac && !ToulBar2::vac_prev) {
                     ctr = new BinaryConstraint(wcsp, x, y, costs);
                 } else {
                     ctr = new VACBinaryConstraint(wcsp, x, y, costs);

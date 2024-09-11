@@ -138,6 +138,7 @@ int ToulBar2::preprocessFunctional;
 bool ToulBar2::costfuncSeparate;
 int ToulBar2::preprocessNary;
 LcLevelType ToulBar2::LcLevel;
+LcLevelType ToulBar2::LcLevel_prev;
 int ToulBar2::maxEACIter;
 bool ToulBar2::QueueComplexity;
 bool ToulBar2::binaryBranching;
@@ -207,6 +208,7 @@ int ToulBar2::pedigreeCorrectionMode;
 int ToulBar2::pedigreePenalty;
 
 int ToulBar2::vac;
+int ToulBar2::vac_prev;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 string ToulBar2::costThresholdS;
@@ -469,11 +471,13 @@ void tb2init()
 
     // level of local consistency during search
     ToulBar2::LcLevel = LC_EDAC;
+    ToulBar2::LcLevel_prev = LC_EDAC;
     ToulBar2::maxEACIter = MAX_EAC_ITER;
 
     ToulBar2::FullEAC = false;
 
     ToulBar2::vac = 0;
+    ToulBar2::vac_prev = 0;
     ToulBar2::costThresholdS = "";
     ToulBar2::costThresholdPreS = "";
     ToulBar2::costThreshold = UNIT_COST;
@@ -1073,7 +1077,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
         ctr->addCosts(x, y, costs);
         ctr->propagate();
     } else {
-        if (!ToulBar2::vac) {
+        if (!ToulBar2::vac && !ToulBar2::vac_prev) {
             ctr
                 = new BinaryConstraint(this, (EnumeratedVariable*)vars[xIndex], (EnumeratedVariable*)vars[yIndex], costs);
         } else {
@@ -1315,7 +1319,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
         BinaryConstraint* xz = x->getConstr(z);
         BinaryConstraint* yz = y->getConstr(z);
 
-        if (!ToulBar2::vac) {
+        if (!ToulBar2::vac && !ToulBar2::vac_prev) {
             if (!xy) {
                 xy = new BinaryConstraint(this, x, y, zerocostsxy);
                 xy->deconnect(true);
@@ -1470,7 +1474,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
             TernaryConstraint* tctr = new TernaryConstraint(this);
             elimTernConstrs.push_back(tctr);
             for (int j = 0; j < 3; j++) {
-                if (!ToulBar2::vac)
+                if (!ToulBar2::vac && !ToulBar2::vac_prev)
                     bctr = new BinaryConstraint(this);
                 else
                     bctr = new VACBinaryConstraint(this);
@@ -1614,7 +1618,7 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
     TernaryConstraint* xyz = new TernaryConstraint(this);
     elimTernConstrs.push_back(xyz);
     for (int j = 0; j < 3; j++) {
-        if (!ToulBar2::vac)
+        if (!ToulBar2::vac && !ToulBar2::vac_prev)
             bctr = new BinaryConstraint(this);
         else
             bctr = new VACBinaryConstraint(this);
@@ -2557,7 +2561,7 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, Wei
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac)
+            if (!ToulBar2::vac && !ToulBar2::vac_prev)
                 bctr = new BinaryConstraint(this);
             else
                 bctr = new VACBinaryConstraint(this);
@@ -2940,7 +2944,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac)
+            if (!ToulBar2::vac && !ToulBar2::vac_prev)
                 bctr = new BinaryConstraint(this);
             else
                 bctr = new VACBinaryConstraint(this);
@@ -3581,7 +3585,7 @@ void WCSP::sortConstraints()
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac)
+            if (!ToulBar2::vac && !ToulBar2::vac_prev)
                 bctr = new BinaryConstraint(this);
             else
                 bctr = new VACBinaryConstraint(this);
@@ -3620,6 +3624,15 @@ void WCSP::sortConstraints()
         }
     }
 
+    if (ToulBar2::isZ) {
+        ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+        ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+        // Temporally deactivate normal propagation and keep Node Consistency only (it allows better variable elimination with normalized conditional probabilty tables in the case of Bayesian networks)
+        ToulBar2::LcLevel_prev = ToulBar2::LcLevel;
+        ToulBar2::LcLevel = LC_NC;
+        ToulBar2::vac_prev = ToulBar2::vac;
+        ToulBar2::vac = 0;
+    }
     if (ToulBar2::Berge_Dec) {
         vector<int> revdac = getBergeDecElimOrder();
         setDACOrder(revdac);
@@ -3633,6 +3646,7 @@ void WCSP::sortConstraints()
             elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
     }
+
     resetTightness();
     for (unsigned int i = 0; i < vars.size(); i++) {
         vars[i]->sortConstraints();
@@ -4138,6 +4152,18 @@ void WCSP::preprocessing()
         } else if (ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
         }
+    }
+    if (ToulBar2::isZ) {
+        // Reactivate normal propagation
+        ToulBar2::LcLevel = ToulBar2::LcLevel_prev;
+        ToulBar2::vac = ToulBar2::vac_prev;
+        vector<int> revDACorder(numberOfVariables(), 0);
+        for (unsigned int i = 0; i < numberOfVariables(); ++i) {
+            assert(numberOfVariables() - getDACOrder(i) - 1 >= 0);
+            assert(numberOfVariables() - getDACOrder(i) - 1 < numberOfVariables());
+            revDACorder[numberOfVariables() - getDACOrder(i) - 1] = i;
+        }
+        setDACOrder(revDACorder); // repropagate everything
     }
 
     int posConstrs = 0;
@@ -6048,7 +6074,7 @@ void WCSP::restoreSolution(Cluster* c)
 void WCSP::initElimConstr()
 {
     BinaryConstraint* xy = NULL;
-    if (!ToulBar2::vac)
+    if (!ToulBar2::vac && !ToulBar2::vac_prev)
         xy = new BinaryConstraint(this);
     else
         xy = new VACBinaryConstraint(this);
@@ -6080,7 +6106,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
     assert(newIndex < elimBinConstrs.size());
     BinaryConstraint* ctr = (BinaryConstraint*)elimBinConstrs[newIndex];
     ctr->fillElimConstr(x, y, from1, from2);
-    if (ToulBar2::vac)
+    if (ToulBar2::vac || ToulBar2::vac_prev)
         ((VACBinaryConstraint*)ctr)->VACfillElimConstr();
     ctr->isDuplicate_ = false;
     ctr->cluster = -1;
@@ -6090,7 +6116,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
 // warning! Do not propagate this new binary cost function
 BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, vector<Cost>& costs)
 {
-    if (!ToulBar2::vac) {
+    if (!ToulBar2::vac && !ToulBar2::vac_prev) {
         return new BinaryConstraint(this, x, y, costs);
     } else {
         return new VACBinaryConstraint(this, x, y, costs);
@@ -6139,7 +6165,7 @@ TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVaria
     BinaryConstraint* xz = x->getConstr(z);
     BinaryConstraint* yz = y->getConstr(z);
 
-    if (!ToulBar2::vac) {
+    if (!ToulBar2::vac && !ToulBar2::vac_prev) {
         if (!xy) {
             xy = new BinaryConstraint(this, x, y, zerocostsxy);
             xy->deconnect(true);

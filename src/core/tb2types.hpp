@@ -820,6 +820,7 @@ public:
     static int pedigreeCorrectionMode; ///< \internal do not use
     static int pedigreePenalty; ///< \internal do not use
     static int vac; ///< \brief enforces VAC at each search node having a search depth less than the absolute value of a given value (0: no VAC, 1: VAC in preprocessing, >1: VAC during search up to a given search depth), if given a negative value then VAC is not performed inside depth-first search of hybrid best-first search method (command line option -A and possibly -hbfs)
+    static int vac_prev; // allows to disconnect soft local consistency temporally
     static string costThresholdS; ///< \brief threshold cost value for VAC in CFN format (command line option -T)
     static string costThresholdPreS; ///< \brief in preprocessing, threshold cost value for VAC in CFN format (command line option -P)
     static Cost costThreshold; ///< \brief threshold cost value for VAC (command line option -T)
@@ -840,6 +841,7 @@ public:
     static bool vacValueHeuristic; ///< \brief VAC-based value ordering heuristic (command line options -V and -A)
     static BEP* bep; ///< \internal do not use
     static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
+    static LcLevelType LcLevel_prev; // allows to disconnect soft local consistency temporally
     static int maxEACIter; ///< \brief maximum number of iterations in EDAC before switching to FDAC
     static bool wcnf; ///< \internal do not use
     static bool qpbo; ///< \internal do not use

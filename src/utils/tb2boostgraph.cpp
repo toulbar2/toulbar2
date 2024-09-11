@@ -1087,7 +1087,7 @@ void WCSP::addAMOConstraints()
                 TernaryConstraint* tctr = new TernaryConstraint(this);
                 elimTernConstrs.push_back(tctr);
                 for (int j = 0; j < 3; j++) {
-                    if (!ToulBar2::vac)
+                    if (!ToulBar2::vac && !ToulBar2::vac_prev)
                         bctr = new BinaryConstraint(this);
                     else
                         bctr = new VACBinaryConstraint(this);
