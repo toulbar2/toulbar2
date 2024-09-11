@@ -3573,10 +3573,12 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
             fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "\n");
         }
+        cout << std::setprecision(ToulBar2::resolution);
         cout << (ToulBar2::logZ + ToulBar2::markov_log - (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) << " <= Log(Z) <= ";
         cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log + (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
         cout << (ToulBar2::logZ + ToulBar2::markov_log - (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) / Log(10.) << " <= Log10(Z) <= ";
         cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log + (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        cout << std::setprecision(DECIMAL_POINT);
         return;
     }
     if (ToulBar2::allSolutions) {
