@@ -1572,6 +1572,7 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
     } else {
 #endif
         xy = xynew;
+        xy->assignCluster();
         xy->reconnect();
 #ifndef NO_STORE_BINARY_COSTS
     }
@@ -1639,6 +1640,7 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
     TernaryConstraint* ctr = x->getConstr(y, z);
     if (!ctr) {
 #endif
+        xyz->assignCluster();
         xyz->fillElimConstrBinaries();
         xyz->reconnect();
 #ifndef NO_STORE_TERNARY_COSTS

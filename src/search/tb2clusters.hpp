@@ -463,7 +463,6 @@ public:
         assert(0 <= i && i < (int)clusters.size());
         return clusters[i];
     }
-    Cluster* var2Cluster(int v);
 
     void setCurrentCluster(Cluster* c) { currentCluster = c->getId(); }
     Cluster* getCurrentCluster() { return getCluster(currentCluster); }

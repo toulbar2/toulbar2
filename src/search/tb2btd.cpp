@@ -756,7 +756,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                                         throw WrongFileFormat();
                                     }
                                     // incCtr->sumScopeIncluded(ctr);
-                                    incCtr->assignCluster();
+                                    // incCtr->assignCluster(); //SdG: done before inside postIncrementalXXXConstraint
                                     incCtr->propagate();
                                 }
                             }

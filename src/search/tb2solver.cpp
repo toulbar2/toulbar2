@@ -3251,7 +3251,7 @@ bool Solver::solve(bool first)
                                         throw WrongFileFormat();
                                     }
                                     // incCtr->sumScopeIncluded(ctr);
-                                    incCtr->assignCluster();
+                                    // incCtr->assignCluster(); //SdG: done before inside postIncrementalXXXConstraint
                                     incCtr->propagate();
                                 }
                             }
