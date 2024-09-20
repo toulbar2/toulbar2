@@ -5841,7 +5841,7 @@ bool WCSP::propagated()
 {
     return (!objectiveChanged && NC.empty() && IncDec.empty() && (!(ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) || AC.empty())
         && (ToulBar2::LcLevel < LC_DAC || DAC.empty()) && (ToulBar2::LcLevel != LC_EDAC || CSP(getLb(), getUb()) || EAC1.empty())
-        && Eliminate.empty() && (!ToulBar2::vac || CSP(getLb(), getUb()) || vac->isVAC()));
+        && Eliminate.empty() && (!ToulBar2::vac || (CSP(getLb(), getUb()) && knapsackList.empty()) || vac->isVAC()));
 }
 
 void WCSP::propagate(bool fromscratch)
@@ -5951,16 +5951,16 @@ void WCSP::propagate(bool fromscratch)
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
-                if (ToulBar2::vac && (ToulBar2::trwsAccuracy < 0) && !CSP(getLb(), getUb())) {
+                if (ToulBar2::vac && (ToulBar2::trwsAccuracy < 0) && (!CSP(getLb(), getUb()) || !knapsackList.empty())) {
                     vac->propagate(); // VAC requires soft AC
                 }
-            } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
+            } while (ToulBar2::vac && (!CSP(getLb(), getUb()) || !knapsackList.empty()) && !vac->isVAC());
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
             || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
             || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
             || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())
             || !Eliminate.empty()
-            || (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC()));
+            || (ToulBar2::vac && (!CSP(getLb(), getUb()) || !knapsackList.empty()) && !vac->isVAC()));
         // TO BE DONE AFTER NORMAL PROPAGATION
         if (td)
             propagateSeparator();

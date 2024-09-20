@@ -22,9 +22,9 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="knapsack-$n-$d-$tight-$bctr-$tctr-0-$nary-$seed"
+    randomfile="knapsack-$n-$d-$tight-$bctr-$tctr-0-$nary"
 #    echo $randomfile
-    ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -ub=1000000 -z=1 > /dev/null
+    ./toulbar2 -random=$randomfile -seed=$seed -C=$K -nopre -k=0 -ub=1000000 -z=1 > /dev/null
     python2 ./misc/script/wcsp2lp-support.py problem.wcsp problem.lp > /dev/null
     ./toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /No solution/{opt=-2} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`

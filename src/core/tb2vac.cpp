@@ -1053,6 +1053,8 @@ bool VACExtension::enforcePass3()
                 xi->queueDAC();
             }
         }
+        if (k2->connected())
+            k2->VACObjConsistency();
     }
     while (!queueFindSupport.empty()) {
         int j = queueFindSupport.top();

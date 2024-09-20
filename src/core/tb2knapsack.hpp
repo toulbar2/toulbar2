@@ -165,22 +165,22 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     // Depending of the value and the cost, extend or project the cost on the value 1 or 0 of the variable var
     void ExtOrProJ(int var, int value, Cost C)
     {
-        if (C > 0) {
+        if (C > MIN_COST) {
             if (value < (int)VarVal[var].size() - 1) {
+                deltaCosts[var][value] += C;
                 assert(scope[var]->getCost(VarVal[var][value]) >= C);
                 scope[var]->extend(VarVal[var][value], C);
-                deltaCosts[var][value] += C;
             } else {
-                Group_extendNVV(var, C);
                 deltaCosts[var].back() += C;
+                Group_extendNVV(var, C);
             }
         } else {
             if (value < (int)VarVal[var].size() - 1) {
-                scope[var]->project(VarVal[var][value], -C, true);
                 deltaCosts[var][value] += C;
+                scope[var]->project(VarVal[var][value], -C, true);
             } else {
-                Group_projectNVV(var, -C);
                 deltaCosts[var].back() += C;
+                Group_projectNVV(var, -C);
             }
         }
     }
@@ -608,15 +608,15 @@ public:
                 int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     if (weights[currentvar][current_val_idx[i][j]] > GreatW[i]) {
-                        if (MaxW + weights[currentvar][current_val_idx[i][j]] - GreatW[i] >= capacity)
-                            if (current_val_idx[i][j] < (int)VarVal[currentvar].size() - 1)
+                        if (MaxW + weights[currentvar][current_val_idx[i][j]] - GreatW[i] >= capacity) {
+                            if (current_val_idx[i][j] < (int)VarVal[currentvar].size() - 1) {
                                 Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][current_val_idx[i][j]] });
-                            else {
+                            } else {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                 }
                             }
-                        else {
+                        } else {
                             MaxW += weights[currentvar][current_val_idx[i][j]] - GreatW[i];
                             GreatW[i] = weights[currentvar][current_val_idx[i][j]];
                         }
@@ -1020,10 +1020,10 @@ public:
             projectLB(c);
         } else {
             for (int i = 0; i < (int)PBKiller.size(); ++i) {
-                int j = 0;
-                while (j < arity_ && PBKiller[i].first != scope[j]->wcspIndex)
-                    j++;
+                int j = getIndex(wcsp->getVar(PBKiller[i].first));
+                assert(j >= 0);
                 assert(j < arity_);
+                assert(scope[j]->wcspIndex == PBKiller[i].first);
                 if(scope[j]->canbe(PBKiller[i].second)){
                     EPT.push_back({ { PBKiller[i].first, PBKiller[i].second }, minlambda });
                 if (j < arity_) {
@@ -1045,9 +1045,9 @@ public:
     //If v is in NotVarVal then the function returns the available values in NotVarVal. Otherwise it returns v.
     vector<Value> waslastValue(int var_idx, Value v){
         vector<Value> LastVal;
-        int i=0;
-        while(scope[i]->wcspIndex!=var_idx)
-            i++;
+        int i=getIndex(wcsp->getVar(var_idx));
+        assert(i >= 0 && i < arity_);
+        assert(scope[i]->wcspIndex == var_idx);
         int j=0;
         while(VarVal[i][j]!=v && j < (int) VarVal[i].size()-1)
             j++;
@@ -1065,9 +1065,9 @@ public:
 
     // Returns whether the value v from variable var_idx has already been processed in phase 2.
     bool getVACLastVALChecked(int var_idx, Value v){
-        int i=0;
-        while(scope[i]->wcspIndex!=var_idx)
-            i++;
+        int i=getIndex(wcsp->getVar(var_idx));
+        assert(i >= 0 && i < arity_);
+        assert(scope[i]->wcspIndex == var_idx);
         int j=0;
         while(NotVarVal[i][j]!=v && j < (int)NotVarVal.size())
             j++;
@@ -1869,9 +1869,21 @@ public:
                     if (universal()) {
                         deconnect();
                         //unqueueKnapsack();
+                        if (!wcsp->vac && lb == MIN_COST) {
+                            assert(assigneddeltas == MIN_COST);
+#ifndef NDEBUG
+                            bool alldeltanull = true;
+                            for (int r = 0; r < arity_ && alldeltanull; r++) {
+                                if (getVar(r)->unassigned()) {
+                                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
+                                }
+                            }
+                            assert(alldeltanull);
+#endif
+                            return;
+                        }
                         wcsp->revise(this);
                         Cost TobeProjected = -lb + assigneddeltas;
-                        lb = MIN_COST;
                         Cost mindelta;
                         for (int i = 0; i < carity; i++) {
                             mindelta = MAX_COST;
@@ -1900,6 +1912,7 @@ public:
                         }
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
+                        lb = MIN_COST;
                     } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
@@ -2045,7 +2058,7 @@ public:
                             //unqueueKnapsack();
                             assert(TobeProjected >= MIN_COST);
                             Constraint::projectLB(-lb + assigneddeltas);
-                            lb = 0;
+                            lb = MIN_COST;
                         }
                         for (vector<int>::iterator idctr = toprop.begin(); idctr != toprop.end(); ++idctr) {
                             wcsp->getCtr(*idctr)->propagate();
@@ -2135,8 +2148,86 @@ public:
         return b;
     }
 
+    void VACObjConsistency()
+    {
+//SdG: VAC may perform extend/project without increasing lb
+//        if (lb == MIN_COST) {
+//            assert(assigneddeltas == MIN_COST);
+//#ifndef NDEBUG
+//            bool alldeltanull = true;
+//            for (int r = 0; r < arity_ && alldeltanull; r++) {
+//                if (getVar(r)->unassigned()) {
+//                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
+//                }
+//            }
+//            assert(alldeltanull);
+//#endif
+//            return;
+//        }
+        get_current_scope();
+        vector<int> LowestDeltaIdx(arity_, 0);
+        vector<int> GreatestDeltaIdx(arity_, 0);
+        Cost SumMin = MIN_COST;
+        for (int i = 0; i < carity; ++i) {
+            int k2 = 0;
+            Cost mindelta = deltaCosts[current_scope_idx[i]][LowestDeltaIdx[current_scope_idx[i]]];
+            Cost maxdelta = deltaCosts[current_scope_idx[i]][GreatestDeltaIdx[current_scope_idx[i]]];
+            while (k2 < nbValue[i]) {
+                Cost cost = deltaCosts[current_scope_idx[i]][current_val_idx[i][k2]];
+                if (cost < mindelta) {
+                    mindelta = cost;
+                    LowestDeltaIdx[current_scope_idx[i]] = current_val_idx[i][k2];
+                } else if (cost > maxdelta) {
+                    maxdelta = cost;
+                    GreatestDeltaIdx[current_scope_idx[i]] = current_val_idx[i][k2];
+                }
+                k2++;
+            }
+            SumMin += mindelta;
+        }
+        assert(SumMin <= lb - assigneddeltas);
+        int k = 0;
+        while (k < carity) {
+            int currentvar = current_scope_idx[k];
+            assert(scope[currentvar]->canbe(VarVal[currentvar][LowestDeltaIdx[currentvar]]));
+            // Determine if at least one value of the current variable has a deltaCost to be projected back to the unary cost.
+            if (SumMin - deltaCosts[currentvar][LowestDeltaIdx[currentvar]] + deltaCosts[currentvar][GreatestDeltaIdx[currentvar]] > lb - assigneddeltas) {
+                int k2 = 0;
+                while (k2 < nbValue[k]) {
+                    Cost deltaInc = SumMin - deltaCosts[currentvar][LowestDeltaIdx[currentvar]] + deltaCosts[currentvar][current_val_idx[k][k2]] - lb + assigneddeltas;
+                    if (deltaInc > MIN_COST) {
+                        ExtOrProJ(currentvar, current_val_idx[k][k2], -deltaInc);
+                        scope[currentvar]->findSupport();
+                        if (ToulBar2::LcLevel == LC_AC) {
+                            scope[currentvar]->queueAC();
+                        } else {
+                            scope[currentvar]->queueAC();
+                            scope[currentvar]->queueEAC1();
+                            scope[currentvar]->queueDAC();
+                        }
+                    }
+                    k2++;
+                }
+            }
+            k++;
+        }
+    }
+
     void ObjConsistency()
     {
+        if (!wcsp->vac && lb == MIN_COST) {
+            assert(assigneddeltas == MIN_COST);
+#ifndef NDEBUG
+            bool alldeltanull = true;
+            for (int r = 0; r < arity_ && alldeltanull; r++) {
+                if (getVar(r)->unassigned()) {
+                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
+                }
+            }
+            assert(alldeltanull);
+#endif
+            return;
+        }
         Cost SumMin = MIN_COST;
         int OP = 0;
         if (AMO.empty()) {
@@ -2512,7 +2603,6 @@ public:
                         if (C != MIN_COST) {
                             tempdeltaCosts.push_back({ currentvar, currentval, C });
                             deltaCosts[currentvar][currentval] += C;
-                            //   ExtOrProJ(currentvar, currentval,C);
                         }
                     }
                 }
@@ -2691,7 +2781,7 @@ public:
 #endif
                     // Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
-                    if (!b && !ToulBar2::addAMOConstraints_ && ToulBar2::LcLevel == LC_EDAC) {
+                    if (!b && !ToulBar2::addAMOConstraints_ && (ToulBar2::LcLevel == LC_EDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST)))) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {
@@ -2811,21 +2901,21 @@ public:
                                                 Cost totrans;
                                                 if (current_val_idx[EDACORDER[i]][k] < (int)VarVal[current_scope_idx[EDACORDER[i]]].size() - 1) {
                                                     totrans = scope[current_scope_idx[EDACORDER[i]]]->getCost(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]]) - GAP;
+                                                    deltaCosts[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] += totrans;
                                                     if (totrans < MIN_COST) {
                                                         scope[current_scope_idx[EDACORDER[i]]]->project(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]], -totrans, true);
                                                     } else if (totrans > MIN_COST) {
                                                         scope[current_scope_idx[EDACORDER[i]]]->extend(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]], totrans);
                                                     }
-                                                    deltaCosts[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] += totrans;
                                                     ProfforDyn[EDACORDER[i]][k] = deltaCosts[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]];
                                                 } else {
                                                     totrans = UnaryCost0[current_scope_idx[EDACORDER[i]]] - GAP;
+                                                    deltaCosts[current_scope_idx[EDACORDER[i]]].back() += totrans;
                                                     if (totrans < MIN_COST) {
                                                         Group_projectNVV(current_scope_idx[EDACORDER[i]], -totrans);
                                                     } else if (totrans > MIN_COST) {
                                                         Group_extendNVV(current_scope_idx[EDACORDER[i]], totrans);
                                                     }
-                                                    deltaCosts[current_scope_idx[EDACORDER[i]]].back() += totrans;
                                                     ProfforDyn[EDACORDER[i]].back() = deltaCosts[current_scope_idx[EDACORDER[i]]].back();
                                                 }
                                                 OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] = 0.;
@@ -2838,8 +2928,8 @@ public:
                                                     }
                                                 } else {
                                                     if (UnaryCost0[current_scope_idx[EDACORDER[i]]] > 0) {
-                                                        Group_extendNVV(current_scope_idx[EDACORDER[i]], UnaryCost0[current_scope_idx[EDACORDER[i]]]);
                                                         deltaCosts[current_scope_idx[EDACORDER[i]]].back() += UnaryCost0[current_scope_idx[EDACORDER[i]]];
+                                                        Group_extendNVV(current_scope_idx[EDACORDER[i]], UnaryCost0[current_scope_idx[EDACORDER[i]]]);
                                                     }
                                                 }
                                             }
@@ -2876,7 +2966,7 @@ public:
                                     // Find the optimal solution
                                     FindOpt(Slopes, &W, &c, &xk, &iter);
                                 }
-                                if (c > 0) {
+                                if (c > MIN_COST) {
                                     assert(W >= capacity);
                                     assert(xk >= 0 && xk <= 1);
                                     assert((Slopes.empty() && iter==0) || iter < (int)Slopes.size());
@@ -2964,7 +3054,6 @@ public:
                         //unqueueKnapsack();
                         wcsp->revise(this);
                         Cost TobeProjected = -lb + assigneddeltas;
-                        lb = MIN_COST;
                         Cost mindelta;
                         for (int i = 0; i < carity; i++) {
                             mindelta = MAX_COST;
@@ -2993,6 +3082,7 @@ public:
                         }
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
+                        lb = MIN_COST;
                     } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
