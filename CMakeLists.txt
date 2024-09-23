@@ -441,6 +441,10 @@ IF(COVER_TEST)
   ##########################################
   include(${My_cmake_script}/cover-test.cmake)
 
+
+  # necessary for memory checking
+  include (CTest)
+
 ENDIF(COVER_TEST)
 
 IF(BENCH)
