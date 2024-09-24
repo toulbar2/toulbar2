@@ -949,6 +949,8 @@ WCSP::~WCSP()
         cout << "--- delete WCSP " << getIndex() << " ---" << endl;
     if (vac)
         delete vac;
+    if (td)
+        delete td;
     if (vars.size())
         for (unsigned int i = 0; i < vars.size(); i++)
             delete vars[i];
