@@ -240,7 +240,14 @@ IF(PYTB2)
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
     OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+  
+    IF ("${Pybind11_INCLUDES}" STREQUAL "" )
+      MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
+    ELSE()
+      MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+    ENDIF()
+
+    
 ### New cmake and python and pybind11
 #  FIND_PACKAGE(pybind11 CONFIG)
 ###
