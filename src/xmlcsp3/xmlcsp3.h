@@ -16,7 +16,7 @@
 
 using namespace XCSP3Core;
 
-#define MAX_COST ((Cost)INT_MAX * 1024)
+#define MAX_COST_XML3 ((Cost)INT_MAX * 1024)
 
 class MySolverCallbacks : public XCSP3CoreCallbacks {
     public:
@@ -37,7 +37,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
         XCSP3CoreCallbacks::recognizeSpecialCountCases = false;
         XCSP3CoreCallbacks::recognizeNValuesCases = true;
-        problem->updateUb(MAX_COST);
+        problem->updateUb(MAX_COST_XML3);
     }
 
     void endInstance() override {
@@ -143,7 +143,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
         assert(vars.size() > 0);
         if (vars.size()==1) {
-            vector<Cost> costs(problem->getDomainInitSize(vars[0]), (isSupport)?MAX_COST:MIN_COST);
+            vector<Cost> costs(problem->getDomainInitSize(vars[0]), (isSupport)?MAX_COST_XML3:MIN_COST);
             for(auto& tuple:tuples) {
                 int pos = problem->toIndex(vars[0], tuple[0]);
                 if (pos < 0 || pos >= problem->getDomainInitSize(vars[0]))
@@ -151,12 +151,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 if (isSupport) {
                     costs[pos] = MIN_COST;
                 } else {
-                    costs[pos] = MAX_COST;
+                    costs[pos] = MAX_COST_XML3;
                 }
             }
             problem->postUnaryConstraint(vars[0], costs);
         } else if (vars.size()==2) {
-            vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), (isSupport)?MAX_COST:MIN_COST);
+            vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), (isSupport)?MAX_COST_XML3:MIN_COST);
             for(auto& tuple:tuples) {
                 int pos0 = problem->toIndex(vars[0], tuple[0]);
                 if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
@@ -167,12 +167,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 if (isSupport) {
                     costs[pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MIN_COST;
                 } else {
-                    costs[pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MAX_COST;
+                    costs[pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MAX_COST_XML3;
                 }
             }
             problem->postBinaryConstraint(vars[0], vars[1], costs);
         } else if (vars.size()==3) {
-            vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), (isSupport)?MAX_COST:MIN_COST);
+            vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), (isSupport)?MAX_COST_XML3:MIN_COST);
             for(auto& tuple:tuples) {
                 int pos0 = problem->toIndex(vars[0], tuple[0]);
                 if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
@@ -187,19 +187,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //                    costs[(size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MIN_COST;
                     costs[(size_t)pos2 * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MIN_COST;
                 } else {
-//                    costs[(size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MAX_COST;
-                    costs[(size_t)pos2 * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MAX_COST;
+//                    costs[(size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MAX_COST_XML3;
+                    costs[(size_t)pos2 * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MAX_COST_XML3;
                 }
             }
 //            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
             problem->postTernaryConstraint(vars[2], vars[0], vars[1], costs);
         } else {
-            int ctridx = problem->postNaryConstraintBegin(vars, (isSupport)?MAX_COST:MIN_COST, tuples.size());
+            int ctridx = problem->postNaryConstraintBegin(vars, (isSupport)?MAX_COST_XML3:MIN_COST, tuples.size());
             for(auto& tuple:tuples) {
                 if (isSupport) {
                     problem->postNaryConstraintTuple(ctridx, tuple, MIN_COST);
                 } else {
-                    problem->postNaryConstraintTuple(ctridx, tuple, MAX_COST);
+                    problem->postNaryConstraintTuple(ctridx, tuple, MAX_COST_XML3);
                 }
             }
             problem->postNaryConstraintEnd(ctridx);
@@ -231,7 +231,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 return;
             }
         }
-        vector<Cost> costs(problem->getDomainInitSize(var), (isSupport)?MAX_COST:MIN_COST);
+        vector<Cost> costs(problem->getDomainInitSize(var), (isSupport)?MAX_COST_XML3:MIN_COST);
         for(auto value:tuples) {
             assert(value != STAR);
             int pos = problem->toIndex(var, value);
@@ -240,7 +240,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             if (isSupport) {
                 costs[pos] = MIN_COST;
             } else {
-                costs[pos] = MAX_COST;
+                costs[pos] = MAX_COST_XML3;
             }
         }
         problem->postUnaryConstraint(var, costs);
@@ -358,23 +358,23 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
                 switch (op) {
                 case OrderType::LE:
-                    costs.push_back((problem->toValue(varx, a) + k <= problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) + k <= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::LT:
-                    costs.push_back((problem->toValue(varx, a) + k < problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) + k < problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::GE:
-                    costs.push_back((problem->toValue(varx, a) + k >= problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) + k >= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::GT:
-                    costs.push_back((problem->toValue(varx, a) + k > problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) + k > problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::IN:
                 case OrderType::EQ:
-                    costs.push_back((problem->toValue(varx, a) + k == problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) + k == problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::NE:
-                    costs.push_back((problem->toValue(varx, a) + k != problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) + k != problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 default:
                     cerr << "Sorry operator " << op << " not implemented!" << endl;
@@ -392,23 +392,23 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
                 switch (op) {
                 case OrderType::LE:
-                    costs.push_back((problem->toValue(varx, a) * mult <= problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * mult <= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::LT:
-                    costs.push_back((problem->toValue(varx, a) * mult < problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * mult < problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::GE:
-                    costs.push_back((problem->toValue(varx, a) * mult >= problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * mult >= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::GT:
-                    costs.push_back((problem->toValue(varx, a) * mult > problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * mult > problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::IN:
                 case OrderType::EQ:
-                    costs.push_back((problem->toValue(varx, a) * mult == problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * mult == problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 case OrderType::NE:
-                    costs.push_back((problem->toValue(varx, a) * mult != problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * mult != problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     break;
                 default:
                     cerr << "Sorry operator " << op << " not implemented!" << endl;
@@ -434,23 +434,23 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
             switch (op) {
             case OrderType::LE:
-                costs.push_back((problem->toValue(varx, a) <= k)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) <= k)?MIN_COST:MAX_COST_XML3);
                 break;
             case OrderType::LT:
-                costs.push_back((problem->toValue(varx, a) < k)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) < k)?MIN_COST:MAX_COST_XML3);
                 break;
             case OrderType::GE:
-                costs.push_back((problem->toValue(varx, a) >= k)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) >= k)?MIN_COST:MAX_COST_XML3);
                 break;
             case OrderType::GT:
-                costs.push_back((problem->toValue(varx, a) > k)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) > k)?MIN_COST:MAX_COST_XML3);
                 break;
             case OrderType::IN:
             case OrderType::EQ:
-                costs.push_back((problem->toValue(varx, a) == k)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) == k)?MIN_COST:MAX_COST_XML3);
                 break;
             case OrderType::NE:
-                costs.push_back((problem->toValue(varx, a) != k)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) != k)?MIN_COST:MAX_COST_XML3);
                 break;
             default:
                 cerr << "Sorry operator " << op << " not implemented!" << endl;
@@ -473,9 +473,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<Cost> costs;
         for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
             if (in) {
-                costs.push_back((problem->toValue(varx, a) >= min && problem->toValue(varx, a) <= max)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) >= min && problem->toValue(varx, a) <= max)?MIN_COST:MAX_COST_XML3);
             } else {
-                costs.push_back((problem->toValue(varx, a) < min || problem->toValue(varx, a) > max)?MIN_COST:MAX_COST);
+                costs.push_back((problem->toValue(varx, a) < min || problem->toValue(varx, a) > max)?MIN_COST:MAX_COST_XML3);
             }
         }
         problem->postUnaryConstraint(varx, costs);
@@ -497,7 +497,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
                     for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
                         for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
-                            costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varz, c))?MIN_COST:MAX_COST);
+                            costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varz, c))?MIN_COST:MAX_COST_XML3);
                         }
                     }
                 }
@@ -506,7 +506,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             } else if (varx == varz) {
                 for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
                     for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
-                        costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varx, a))?MIN_COST:MAX_COST);
+                        costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(varx, a))?MIN_COST:MAX_COST_XML3);
                     }
                 }
                 problem->postBinaryConstraint(varx, vary, costs);
@@ -514,7 +514,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 assert(vary == varz);
                 for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
                     for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
-                        costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(vary, b))?MIN_COST:MAX_COST);
+                        costs.push_back((problem->toValue(varx, a) * problem->toValue(vary, b) == problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
                     }
                 }
                 problem->postBinaryConstraint(varx, vary, costs);
@@ -524,14 +524,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             if (varx != varz) {
                 for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
                     for (unsigned int c = 0; c < problem->getDomainInitSize(varz); c++) {
-                        costs.push_back((problem->toValue(varx, a) * problem->toValue(varx, a) == problem->toValue(varz, c))?MIN_COST:MAX_COST);
+                        costs.push_back((problem->toValue(varx, a) * problem->toValue(varx, a) == problem->toValue(varz, c))?MIN_COST:MAX_COST_XML3);
                     }
                 }
                 problem->postBinaryConstraint(varx, varz, costs);
             } else {
                 assert(varx == varz);
                 for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
-                    costs.push_back((problem->toValue(varx, a) * problem->toValue(varx, a) == problem->toValue(varx, a))?MIN_COST:MAX_COST);
+                    costs.push_back((problem->toValue(varx, a) * problem->toValue(varx, a) == problem->toValue(varx, a))?MIN_COST:MAX_COST_XML3);
                 }
                 problem->postUnaryConstraint(varx, costs);
             }
@@ -566,14 +566,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     vector<Cost> costs;
                     for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
                         for (unsigned int b = 0; b < problem->getDomainInitSize(vars[j]); b++) {
-                            costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b))?MIN_COST:MAX_COST);
+                            costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b))?MIN_COST:MAX_COST_XML3);
                         }
                     }
                     problem->postBinaryConstraint(vars[i], vars[j], costs);
                 }
             }
         } else {
-            problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST);
+            problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
         }
     }
 
@@ -649,7 +649,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     vector<Cost> costs;
                     for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
                         for (unsigned int b = 0; b < problem->getDomainInitSize(vars[j]); b++) {
-                            costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b) || std::find(except.begin(), except.end(), problem->toValue(vars[i], a))!=except.end() || std::find(except.begin(), except.end(), problem->toValue(vars[j], b))!=except.end())?MIN_COST:MAX_COST);
+                            costs.push_back((problem->toValue(vars[i], a)!=problem->toValue(vars[j], b) || std::find(except.begin(), except.end(), problem->toValue(vars[i], a))!=except.end() || std::find(except.begin(), except.end(), problem->toValue(vars[j], b))!=except.end())?MIN_COST:MAX_COST_XML3);
                         }
                     }
                     problem->postBinaryConstraint(vars[i], vars[j], costs);
@@ -1377,7 +1377,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         costs.clear();
                         for (int b = 0; b < (int)problem->getDomainInitSize(vars[i]); b++) {
                             if (problem->toValue(vars[i], b) == currentval) {
-                                costs.push_back(MAX_COST);
+                                costs.push_back(MAX_COST_XML3);
                             } else {
                                 costs.push_back(MIN_COST);
                             }
@@ -1390,7 +1390,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         costs.clear();
                         for (int b = 0; b < (int)problem->getDomainInitSize(vars[i]); b++) {
                             if (problem->toValue(vars[i], b) == currentval) {
-                                costs.push_back(MAX_COST);
+                                costs.push_back(MAX_COST_XML3);
                             } else {
                                 costs.push_back(MIN_COST);
                             }
@@ -1892,32 +1892,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 case OrderType::IN:
                                 case OrderType::EQ:
                                     if (problem->toValue(vars[i], b) != problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                                     }
                                     break;
                                 case OrderType::NE:
                                     if (problem->toValue(vars[i], b) == problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                                     }
                                     break;
                                 case OrderType::LE:
                                     if (problem->toValue(vars[i], b) > problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                                     }
                                     break;
                                 case OrderType::LT:
                                     if (problem->toValue(vars[i], b) >= problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                                     }
                                     break;
                                 case OrderType::GE:
                                     if (problem->toValue(vars[i], b) < problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                                     }
                                     break;
                                 case OrderType::GT:
                                     if (problem->toValue(vars[i], b) <= problem->toValue(varvalue, a)) {
-                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                        costs[(size_t)a * problem->getDomainInitSize(varindex) * problem->getDomainInitSize(vars[i]) + (size_t)problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                                     }
                                     break;
                                 default:
@@ -1951,32 +1951,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             case OrderType::IN:
                             case OrderType::EQ:
                                 if ((Value)i != problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST_XML3;
                                 }
                                 break;
                             case OrderType::NE:
                                 if ((Value)i == problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST_XML3;
                                 }
                                 break;
                             case OrderType::LE:
                                 if ((Value)i > problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST_XML3;
                                 }
                                 break;
                             case OrderType::LT:
                                 if ((Value)i >= problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST_XML3;
                                 }
                                 break;
                             case OrderType::GE:
                                 if ((Value)i < problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST_XML3;
                                 }
                                 break;
                             case OrderType::GT:
                                 if ((Value)i <= problem->toValue(varvalue, a)) {
-                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST;
+                                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)i)] = MAX_COST_XML3;
                                 }
                                 break;
                             default:
@@ -1999,32 +1999,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         case OrderType::IN:
                         case OrderType::EQ:
                             if (problem->toValue(vars[i], b) != (Value)i) {
-                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::NE:
                             if (problem->toValue(vars[i], b) == (Value)i) {
-                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::LE:
                             if (problem->toValue(vars[i], b) > (Value)i) {
-                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::LT:
                             if (problem->toValue(vars[i], b) >= (Value)i) {
-                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::GE:
                             if (problem->toValue(vars[i], b) < (Value)i) {
-                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::GT:
                             if (problem->toValue(vars[i], b) <= (Value)i) {
-                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                                costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                             }
                             break;
                         default:
@@ -2065,7 +2065,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 assert(varindex != vars[i]);
                 for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
                     if (minvalue > problem->toValue(vars[i], b) || maxvalue < problem->toValue(vars[i], b)) {
-                        costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                     }
                 }
                 problem->postBinaryConstraint(varindex, vars[i], costs);
@@ -2088,32 +2088,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     switch (op) {
                     case OrderType::EQ:
                         if (problem->toValue(vars[i], b) != value) {
-                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                         }
                         break;
                     case OrderType::NE:
                         if (problem->toValue(vars[i], b) == value) {
-                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                         }
                         break;
                     case OrderType::LE:
                         if (problem->toValue(vars[i], b) > value) {
-                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                         }
                         break;
                     case OrderType::LT:
                         if (problem->toValue(vars[i], b) >= value) {
-                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                         }
                         break;
                     case OrderType::GE:
                         if (problem->toValue(vars[i], b) < value) {
-                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                         }
                         break;
                     case OrderType::GT:
                         if (problem->toValue(vars[i], b) <= value) {
-                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                            costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                         }
                         break;
                     default:
@@ -2139,7 +2139,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 assert(varindex != vars[i]);
                 for (unsigned int b=0; b < problem->getDomainInitSize(vars[i]); b++) {
                     if (value != problem->toValue(vars[i], b)) {
-                        costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST;
+                        costs[problem->toIndex(varindex, (Value)i) * problem->getDomainInitSize(vars[i]) + b] = MAX_COST_XML3;
                     }
                 }
                 problem->postBinaryConstraint(varindex, vars[i], costs);
@@ -2158,7 +2158,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
             for (unsigned int b=0; b < list.size(); b++) {
                 if (problem->canbe(varindex, (Value)b) && problem->toValue(varvalue, a) != list[b]) {
-                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                    costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                 }
             }
         }
@@ -2209,33 +2209,33 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         switch (xc.op) {
                         case OrderType::LE:
                             if (list[b] > problem->toValue(varvalue, a)) {
-                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::LT:
                             if (list[b] >= problem->toValue(varvalue, a)) {
-                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::GE:
                             if (list[b] < problem->toValue(varvalue, a)) {
-                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::GT:
                             if (list[b] <= problem->toValue(varvalue, a)) {
-                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::IN:
                         case OrderType::EQ:
                             if (list[b] != problem->toValue(varvalue, a)) {
-                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                             }
                             break;
                         case OrderType::NE:
                             if (list[b] == problem->toValue(varvalue, a)) {
-                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST;
+                                costs[a * problem->getDomainInitSize(varindex) + problem->toIndex(varindex, (Value)b)] = MAX_COST_XML3;
                             }
                             break;
                         default:
@@ -2339,7 +2339,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(vars[i][j]), MIN_COST);
                         for (unsigned int b=0; b < problem->getDomainInitSize(vars[i][j]); b++) {
                             if (value != problem->toValue(vars[i][j], b)) {
-                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]) + problem->toIndex(varcolindex, (Value)j) * problem->getDomainInitSize(vars[i][j]) + b] = MAX_COST;
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]) + problem->toIndex(varcolindex, (Value)j) * problem->getDomainInitSize(vars[i][j]) + b] = MAX_COST_XML3;
                             }
                         }
                         problem->postTernaryConstraint(varrowindex, varcolindex, vars[i][j], costs);
@@ -2366,7 +2366,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(varvalue), MIN_COST);
                         for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
                             if (matrix[i][j] != problem->toValue(varvalue, a)) {
-                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(varvalue) + problem->toIndex(varcolindex, (Value)j) * problem->getDomainInitSize(varvalue) + a] = MAX_COST;
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(varvalue) + problem->toIndex(varcolindex, (Value)j) * problem->getDomainInitSize(varvalue) + a] = MAX_COST_XML3;
                             }
                         }
                         problem->postTernaryConstraint(varrowindex, varcolindex, varvalue, costs);
@@ -2396,7 +2396,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             if ((problem->toValue(vars1[i], a) != (Value)j || problem->toValue(vars2[j], b) == (Value)i) && (vars1.size() < vars2.size() || problem->toValue(vars2[j], b) != (Value)i || problem->toValue(vars1[i], a) == (Value)j)) {
                                 costs.push_back(MIN_COST);
                             } else {
-                                costs.push_back(MAX_COST);
+                                costs.push_back(MAX_COST_XML3);
                             }
                         }
                     }
@@ -2425,7 +2425,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             for (unsigned int a = 0; a < problem->getDomainInitSize(vars[i]); a++) {
                 for (unsigned int b = 0; b < problem->getDomainInitSize(varvalue); b++) {
                     if ((problem->toValue(vars[i],a) == 0 && problem->toValue(varvalue,b) == (Value)i) || (problem->toValue(vars[i],a) == 1 && problem->toValue(varvalue,b) != (Value)i)) {
-                        costs[a * problem->getDomainInitSize(varvalue) + b] = MAX_COST;
+                        costs[a * problem->getDomainInitSize(varvalue) + b] = MAX_COST_XML3;
                     }
                 }
             }
@@ -2464,7 +2464,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 for (unsigned int i = 0; i < n; i++) {
                     maxdom = max(maxdom, max(problem->getSup(vars1[i]), problem->getSup(vars2[i])) - min(problem->getInf(vars1[i]), problem->getInf(vars2[i])) + 1);
                 }
-                if (Pow(maxdom, lists[l].size()) < (MAX_COST / maxdom / n)) {
+                if (Pow(maxdom, lists[l].size()) < (MAX_COST_XML3 / maxdom / n)) {
                     vector<int> vars;
                     vector<Long> coefs;
                     Long rightcoef = 0;
@@ -2630,7 +2630,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 if ((a != j) || (a==j && b==n-1 && c==0) || (a==j && b<n-1 && c>=b+1)) {
                                     costs.push_back(MIN_COST);
                                 } else {
-                                    costs.push_back(MAX_COST);
+                                    costs.push_back(MAX_COST_XML3);
                                 }
                             }
                         }
@@ -2644,7 +2644,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             if ((a!=j && b!=i) || (a==j && b!=j) || (b==i && a!=i)) {
                                 costs.push_back(MIN_COST);
                             } else {
-                                costs.push_back(MAX_COST);
+                                costs.push_back(MAX_COST_XML3);
                             }
                         }
                     }
@@ -2753,7 +2753,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             vector<Cost> costs((size_t)problem->getDomainInitSize(tvars[0])
                     * (size_t)problem->getDomainInitSize(tvars[1])
                     * (size_t)problem->getDomainInitSize(tvars[2]),
-                    MAX_COST);
+                    MAX_COST_XML3);
             auto idx = [&](int i, int j, int k) {
                 return problem->toIndex(tvars[0], i) * problem->getDomainInitSize(tvars[1]) * problem->getDomainInitSize(tvars[2])
                         + problem->toIndex(tvars[1], j) * problem->getDomainInitSize(tvars[2])
@@ -3160,7 +3160,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             int pos = problem->toIndex(vars[0], values[v]);
             if (pos < 0 || pos >= costs.size())
                 continue;
-            costs[pos] = MAX_COST;
+            costs[pos] = MAX_COST_XML3;
         }
         problem->postUnaryConstraint(vars[0], costs);  // forbid all values for the first variables except values[0]
         for (int v = 0; v < (int)values.size() - 1; v++) {
@@ -3280,7 +3280,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             problem->decreaseLb(-negcost);
         }
         if (vars.size()==1) {
-            vector<Cost> costs(problem->getDomainInitSize(vars[0]), MAX_COST);
+            vector<Cost> costs(problem->getDomainInitSize(vars[0]), MAX_COST_XML3);
             for(unsigned int i=0; i<tuples.size(); i++) {
                 int pos = problem->toIndex(vars[0], tuples[i][0]);
                 if (pos < 0 || pos >= costs.size())
@@ -3289,7 +3289,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             problem->postUnaryConstraint(vars[0], costs);
         } else if (vars.size()==2) {
-            vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), MAX_COST);
+            vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), MAX_COST_XML3);
             for(unsigned int i=0; i<tuples.size(); i++) {
                 int pos0 = problem->toIndex(vars[0], tuples[i][0]);
                 if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
@@ -3301,7 +3301,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
             problem->postBinaryConstraint(vars[0], vars[1], costs);
         } else if (vars.size()==3) {
-            vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), MAX_COST);
+            vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), MAX_COST_XML3);
             for(unsigned int i=0; i<tuples.size(); i++) {
                 int pos0 = problem->toIndex(vars[0], tuples[i][0]);
                 if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
@@ -3318,7 +3318,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //            problem->postTernaryConstraint(vars[0], vars[1], vars[2], costs);
             problem->postTernaryConstraint(vars[2], vars[0], vars[1], costs);
         } else {
-            int ctridx = problem->postNaryConstraintBegin(vars, MAX_COST, tuples.size());
+            int ctridx = problem->postNaryConstraintBegin(vars, MAX_COST_XML3, tuples.size());
             for(unsigned int i=0; i<tuples.size(); i++) {
                 problem->postNaryConstraintTuple(ctridx, tuples[i], tcosts[i] - negcost);
             }

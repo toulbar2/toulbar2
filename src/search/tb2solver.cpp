@@ -1801,6 +1801,10 @@ void Solver::singletonConsistency()
 {
     bool deadend;
     bool done = false;
+    int vac = ToulBar2::vac;
+    if (ToulBar2::vac) {
+        ToulBar2::vac = Store::getDepth() + 2; // make sure VAC is performed if requested
+    }
     while (!done) {
         done = true;
         for (unsigned int varIndex = 0; varIndex < ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : wcsp->numberOfVariables()); varIndex++) {
@@ -1839,6 +1843,7 @@ void Solver::singletonConsistency()
             // delete [] sorted;
         }
     }
+    ToulBar2::vac = vac;
     if (ToulBar2::verbose >= 0)
         cout << "Done Singleton Consistency" << endl;
 }

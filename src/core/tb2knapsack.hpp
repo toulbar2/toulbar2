@@ -651,23 +651,24 @@ public:
                 }
             }
         }
-        if (lb == MIN_COST) { // it is just a hard constraint with all tuples either zero or top, no more pruning can be done.
-            for (int i = 0; i < arity_; ++i) {
-                for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
-                    if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
-                        //Values that are removed before this propagation.
-                        DeleteValVAC[i][j] = NbIteVAC-1;
-                    }
-                }
-                if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
-                    DeleteValVAC[i].back() = NbIteVAC-1;
-                }
-            }
-            assert(Killer.empty());
-            Killer.insert(Killer.begin(), { this->wcspIndex, NbIteVAC });
-
-            return MIN_COST;
-        }
+//SdG: it may contain finite costs due to previous VAC EPTs but lb remains zero
+//        if (lb == MIN_COST) { // it is just a hard constraint with all tuples either zero or top, no more pruning can be done.
+//            for (int i = 0; i < arity_; ++i) {
+//                for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
+//                    if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
+//                        //Values that are removed before this propagation.
+//                        DeleteValVAC[i][j] = NbIteVAC-1;
+//                    }
+//                }
+//                if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
+//                    DeleteValVAC[i].back() = NbIteVAC-1;
+//                }
+//            }
+//            assert(Killer.empty());
+//            Killer.insert(Killer.begin(), { this->wcspIndex, NbIteVAC });
+//
+//            return MIN_COST;
+//        }
         Long W = 0;
         Cost c = -lb + assigneddeltas;
         int iter = 0;
@@ -1913,7 +1914,7 @@ public:
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
                         lb = MIN_COST;
-                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
+                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             //unqueueKnapsack();
@@ -2077,7 +2078,7 @@ public:
             } else {
                 if (assigned[varIndex] == 1 && scope[varIndex]->assigned()) {
                     assigned[varIndex] = 2;
-                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
+                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             //unqueueKnapsack();
@@ -2781,7 +2782,7 @@ public:
 #endif
                     // Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
-                    if (!b && !ToulBar2::addAMOConstraints_ && (ToulBar2::LcLevel == LC_EDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST)))) {
+                    if (!b && !ToulBar2::addAMOConstraints_ && (ToulBar2::LcLevel >= LC_FDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST)))) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {
@@ -3083,7 +3084,7 @@ public:
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
                         lb = MIN_COST;
-                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
+                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
                         if (connected()) {
                             deconnect(); // this constraint is removed from the current WCSP problem
                             //unqueueKnapsack();

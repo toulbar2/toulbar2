@@ -268,13 +268,17 @@ bool VACExtension::propagate()
 #ifdef INCREMENTALVAC
         prevItThreshold = -1;
         clear();
-        Store::store();
+        if (!CSP(wcsp->getLb(), wcsp->getUb())) {
+            Store::store();
+        }
 #endif
         while (isvac && itThreshold != MIN_COST) {
 #ifndef INCREMENTALVAC
             prevItThreshold = -1;
             clear();
-            Store::store();
+            if (!CSP(wcsp->getLb(), wcsp->getUb())) {
+                Store::store();
+            }
             setNbAssigned(nbvars - nbunassigned);
 #endif
             minlambda = wcsp->getUb() - wcsp->getLb();
