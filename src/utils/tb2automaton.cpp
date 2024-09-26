@@ -85,6 +85,14 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost)
     }
 }
 
+WFA::~WFA() {
+
+    for(auto transition: transitions) {
+        delete transition;
+    }
+
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 void WFA::display()
