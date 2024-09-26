@@ -23,7 +23,9 @@ DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _ari
 
 DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction()
 {
-    delete[] scope;
+    if(scope) {
+        delete[] scope;
+    }
 }
 
 std::unique_ptr<DecomposableGlobalCostFunction>
@@ -1295,7 +1297,7 @@ void WeightedAllDifferent::addToCostFunctionNetwork(WCSP* wcsp)
 
     // Adding WeightedAmong over each variable
     for (int value = inf; value <= sup; value++) {
-        WeightedAmong* wamong = new WeightedAmong(arity, scope);
+        std::unique_ptr<WeightedAmong> wamong = std::make_unique<WeightedAmong>(arity, scope);
         wamong->setSemantics(semantics);
         wamong->setBaseCost(baseCost);
         wamong->addValue(value);
