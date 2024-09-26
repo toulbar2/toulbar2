@@ -1375,7 +1375,7 @@ void WeightedGcc::addToCostFunctionNetwork(WCSP* wcsp)
         //		clb[counter] = lb;
         unsigned int ub = (bound.second).second;
         //		cub[counter] = ub;
-        WeightedAmong* wamong = new WeightedAmong(arity, scope);
+        std::unique_ptr<WeightedAmong> wamong = std::make_unique<WeightedAmong>(arity, scope);
         wamong->setSemantics(semantics);
         wamong->setBaseCost(baseCost);
         wamong->addValue(value);
