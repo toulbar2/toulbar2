@@ -29,6 +29,9 @@ while (( $n < $nend )) ; do
     ./toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /No solution/{opt=-2} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     if [[ $ub1 -gt -2 ]] ; then
+    ub=`expr $ub1 + 2`
+    ./toulbar2 problem.wcsp "${@:1}" -ub=$ub -w | awk 'BEGIN{opt=-1;} /No solution/{opt=-2} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     if [[ $ub1 -lt 0 ]] ; then
       echo "error $nerr found negative toulbar2 optimum! $ub1"
       mv problem.wcsp error$nerr.wcsp

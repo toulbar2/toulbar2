@@ -762,6 +762,11 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #endif
+    if (ToulBar2::vac && !ToulBar2::cfn && !ToulBar2::lp && string2Cost(ToulBar2::externalUB.c_str())==UNIT_COST) {
+        cout << "Warning! Do not need VAC in satisfaction (with option -ub=1)." << endl;
+        ToulBar2::vac = 0;
+    }
+
     if (ToulBar2::FullEAC && ToulBar2::btdMode >= 1) {
         cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -vacint option)." << endl;
         throw BadConfiguration();
@@ -1051,7 +1056,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
 
-    if (ToulBar2::bilevel == 5) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
         return INT_MAX;
     }
 
@@ -1252,7 +1257,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
 
-    if (ToulBar2::bilevel == 5) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
         return INT_MAX;
     }
 
@@ -2777,7 +2782,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
             if (capacity > 0) {
                 THROWCONTRADICTION;
             }
-            return -INT_MAX;
+            return INT_MAX;
         }
         if (capacity > 0) {
             for (unsigned int i = 0; i < weights.size(); ++i) {
@@ -4067,8 +4072,10 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                 }
             }
             int ctri = postBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
-            channelingPWC.push_back((BinaryConstraint*)getCtr(ctri));
-            nbintersections++;
+            if (ctri != INT_MAX) {
+                channelingPWC.push_back((BinaryConstraint*)getCtr(ctri));
+                nbintersections++;
+            }
         }
     }
 

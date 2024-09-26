@@ -933,7 +933,9 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
         unsigned int cst_ind = wcsp->postBinaryConstraint(wcsp->getVarIndex(tb2_var1->getName()), wcsp->getVarIndex(tb2_var2->getName()), costs);
 
         // constraint name
-        wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);
+        if (cst_ind != INT_MAX) {
+            wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);
+        }
 
     } else if (cost_function[func_ind]->scope.size() == 3) { // ternary cost functions
 
@@ -977,7 +979,9 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
 
         unsigned int cst_ind = wcsp->postTernaryConstraint(wcsp->getVarIndex(var1->name), wcsp->getVarIndex(var2->name), wcsp->getVarIndex(var3->name), costs);
 
-        wcsp->getCtr(cst_ind)->setName(tcost_func->name);
+        if (cst_ind != INT_MAX) {
+            wcsp->getCtr(cst_ind)->setName(tcost_func->name);
+        }
 
     } else {
 
@@ -1021,6 +1025,7 @@ void MultiCFN::exportTupleCostFunction(WCSP* wcsp, unsigned int func_ind, Double
             } else {
                 cst_ind = wcsp->postNaryConstraintBegin(scope, (Cost)min((Double)MAX_COST, roundl(top * pow(10, _tb2_decimalpoint))), tcost_func->costs.size());
             }
+            assert(cst_ind != INT_MAX);
 
             // constraint name
             wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);

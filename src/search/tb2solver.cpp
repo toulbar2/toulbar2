@@ -2899,8 +2899,10 @@ void Solver::beginSolve(Cost ub)
     //    if (ToulBar2::addAMOConstraints != -1)
     //        ToulBar2::addAMOConstraints_ = true; // only bound propagation for knapsack constraints before adding them AMO constraints
 
-    if (!ToulBar2::isZ && CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted csp constraints
+    if (!ToulBar2::isZ && CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted CSP constraints
         ToulBar2::LcLevel = LC_AC;
+        ToulBar2::vac = 0;
+        ToulBar2::useRASPS = 0;
     }
 
     // reactivate on-the-fly variable elimination and dead-end elimination if needed
