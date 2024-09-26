@@ -3529,10 +3529,11 @@ int _tmain(int argc, TCHAR* argv[])
 
 #ifndef NDEBUG
     delete solver; // it takes CPU time for nothing!!
-#endif
-
 #ifndef MENDELSOFT
-    delete ToulBar2::bep;
+    if (ToulBar2::bep) {
+        delete ToulBar2::bep;
+    }
+#endif
 #endif
 
     return 0;
