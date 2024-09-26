@@ -41,6 +41,8 @@ public:
     WFA(int _nbStates);
     WFA(istream& file, bool mult = true);
     WFA(int nbSymbol, string forbiddenPattern, Cost cost);
+    
+    ~WFA();
 
     inline unsigned int getNbStates() { return nbStates; }
     inline list<pair<int, Cost>>& getInitialStates() { return initialStates; }

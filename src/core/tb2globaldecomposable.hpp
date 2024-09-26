@@ -19,7 +19,7 @@ public:
     DecomposableGlobalCostFunction();
     DecomposableGlobalCostFunction(unsigned int _arity, int* _scope);
     virtual ~DecomposableGlobalCostFunction();
-    static DecomposableGlobalCostFunction* FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file, bool mult = true);
+    static std::unique_ptr<DecomposableGlobalCostFunction> FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file, bool mult = true);
 
     int getArity() { return arity; }
     int getVarIndex(int i) { return scope[i]; }
