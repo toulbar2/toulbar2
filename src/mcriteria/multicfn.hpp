@@ -6,9 +6,6 @@
 #ifndef MULTI_CFN_HPP
 #define MULTI_CFN_HPP
 
-#include <string>
-#include <memory>
-
 #include "toulbar2lib.hpp"
 
 #ifdef ILOGCPLEX
