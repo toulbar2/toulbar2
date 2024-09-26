@@ -26,37 +26,37 @@ DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction()
     delete[] scope;
 }
 
-DecomposableGlobalCostFunction*
+std::unique_ptr<DecomposableGlobalCostFunction>
 DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, int* _scope, istream& file, bool mult)
 {
     // cout << "Creating a " << type << " global cost function " << endl;
     if (type == "wamong")
-        return new WeightedAmong(_arity, _scope, file, mult);
+        return std::make_unique<WeightedAmong>(_arity, _scope, file, mult);
     if (type == "wvaramong")
-        return new WeightedVarAmong(_arity, _scope, file, mult);
+        return std::make_unique<WeightedVarAmong>(_arity, _scope, file, mult);
     if (type == "wsum")
-        return new WeightedSum(_arity, _scope, file, mult);
+        return std::make_unique<WeightedSum>(_arity, _scope, file, mult);
     if (type == "wvarsum")
-        return new WeightedVarSum(_arity, _scope, file, mult);
+        return std::make_unique<WeightedVarSum>(_arity, _scope, file, mult);
     if (type == "woverlap")
-        return new WeightedOverlap(_arity, _scope, file, mult);
+        return std::make_unique<WeightedOverlap>(_arity, _scope, file, mult);
 
     if (type == "walldifferent" || type == "walldiff")
-        return new WeightedAllDifferent(_arity, _scope, file, mult);
+        return std::make_unique<WeightedAllDifferent>(_arity, _scope, file, mult);
     if (type == "wgcc")
-        return new WeightedGcc(_arity, _scope, file, mult);
+        return std::make_unique<WeightedGcc>(_arity, _scope, file, mult);    
     if (type == "wregular")
-        return new WeightedRegular(_arity, _scope, file, mult);
+        return std::make_unique<WeightedRegular>(_arity, _scope, file, mult);    
     if (type == "wsame")
-        return new WeightedSame(_arity, _scope, file, mult);
+        return std::make_unique<WeightedSame>(_arity, _scope, file, mult);    
     if (type == "wsamegcc")
-        return new WeightedSameGcc(_arity, _scope, file, mult);
+        return std::make_unique<WeightedSameGcc>(_arity, _scope, file, mult);    
     if (type == "wdiverse")
-        return new WeightedDiverse(_arity, _scope, file, 0, mult);
+        return std::make_unique<WeightedDiverse>(_arity, _scope, file, 0, mult);    
     if (type == "whdiverse")
-        return new WeightedDiverse(_arity, _scope, file, 1, mult);
+        return std::make_unique<WeightedDiverse>(_arity, _scope, file, 1, mult);
     if (type == "wtdiverse")
-        return new WeightedDiverse(_arity, _scope, file, 2, mult);
+        return std::make_unique<WeightedDiverse>(_arity, _scope, file, 2, mult);
 
     cout << type << " unknown decomposable global cost function" << endl;
     return 0;

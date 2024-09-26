@@ -2495,7 +2495,7 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         vector<int> scope(scopeIndex, scopeIndex + arity);
         postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicate, duality);
     } else if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
-        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
+        std::unique_ptr<DecomposableGlobalCostFunction> decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
         decomposableGCF->addToCostFunctionNetwork(this);
     } else if (gcname == "clique") {
         postCliqueConstraint(scopeIndex, arity, file);
