@@ -2386,6 +2386,12 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             baseCost *= ToulBar2::costMultiplier;
         postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
         return -1;
+    } else if (gcname == "salldiffkp") {
+        string semantics;
+        Cost baseCost;
+        file >> semantics >> baseCost;
+        postWAllDiff(scopeIndex, arity, "hard", "knapsack", getUb());
+        return -1;
     } else if (gcname == "sgccdp") {
         string semantics;
         Cost baseCost;

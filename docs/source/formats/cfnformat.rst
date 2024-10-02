@@ -498,6 +498,18 @@ Global cost functions using a dedicated propagator:
                     }
                 }
 
+  - :code:`"salldiffkp"` with parameters array :code:`[metric: "hard" cost: inf]` to express a hard alldifferent constraint (decomposes into :code:`knapsackv` cost functions) 
+
+    - example: ::
+
+        name: {scope: [v1 v2 v3 v4]
+               type: salldiffkp
+               params: {
+                  metric: hard
+                  cost: inf
+                  }
+              }
+
   - :code:`"clique"` with parameters :code:`rhs: 1 values: [([(value)*])*]` to express a hard global clique constraint to restrict the number of variables taking their value into a given set of values (one set per variable) to at most 1 occurrence for all the variables. A clique of binary constraints must also be added to forbid any two variables from using both the restricted values.  
 
     - example: ::

@@ -404,13 +404,13 @@ public:
             }
             assert(MaxWeight == Sumw);
 #endif
-            if (universal()) {
+            if (fastuniversal()) {
                 deconnect();
             } else {
                 queueKnapsack();
             }
         } else {
-            if (!verify()) {
+            if (!fastverifyAMO()) {
                 THROWCONTRADICTION;
             }
             deconnect();
@@ -1197,7 +1197,7 @@ public:
                     Constraint::incConflictWeight(1);
                 } else {
                     //get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
-                    if (!verify()) {
+                    if (!fastverifyAMO()) {
                         vector<int> varorder;
                         for (unsigned int i = 0; i < weights.size(); ++i) {
                             varorder.push_back(i);
@@ -1360,10 +1360,10 @@ public:
         return y_cc;
     }
 
-    /// \warning This function does not check nonzero finite costs inside the constraint!
-    bool universal(Cost zero = MIN_COST) override
+    /// \brief returns true if constraint always satisfied
+    /// \warning this function does not check nonzero finite costs inside the constraint!
+    bool fastuniversal()
     {
-        // returns true if constraint always satisfied
         if (AMO.empty() && capacity <= 0)
             return true;
         Long minweight = 0;
@@ -1382,6 +1382,53 @@ public:
             return true;
         else
             return false;
+    }
+
+    /// \brief returns true if constraint always satisfied and has (less than) zero cost only
+    bool universal(Cost zero = MIN_COST) override
+    {
+        if (zero > MIN_COST) {
+            return false;
+        }
+        if (!AMO.empty() && *max_element(nbVirtualVar.begin(), nbVirtualVar.end()) > 1) {
+            return false;
+        }
+        if (lb != MIN_COST) {
+            return false;
+        }
+
+        Long summinweight = 0;
+        for (int i = 0; i < arity_; i++) {
+            Long minweight = LONGLONG_MAX;
+            for (unsigned int j = 0; j < VarVal[i].size() - 1; j++) {
+                if (scope[i]->canbe(VarVal[i][j]) && weights[i][j] < minweight) {
+                    minweight = weights[i][j];
+                }
+                if (scope[i]->canbe(VarVal[i][j]) && deltaCosts[i][j] != MIN_COST) {
+                    return false;
+                }
+            }
+            if (weights[i].back() < minweight) {
+                for (unsigned int j = 0; j < NotVarVal[i].size(); j++) {
+                    if (scope[i]->canbe(NotVarVal[i][j])) {
+                        minweight = weights[i].back();
+                        if (deltaCosts[i].back() != MIN_COST) {
+                            return false;
+                        }
+                        break;
+                    }
+                }
+            }
+            assert(minweight >= 0);
+            assert(minweight < LONGLONG_MAX);
+            summinweight += minweight;
+        }
+
+        if (summinweight >= Original_capacity) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     Cost eval(const Tuple& s) override
@@ -1780,7 +1827,10 @@ public:
 
     void assign(int varIndex) override
     {
-        if (!verify()) {
+        if (ToulBar2::verbose >= 7) {
+            cout << "assign " << scope[varIndex]->getName() << " in " << *this << endl;
+        }
+        if (!fastverifyAMO()) {
             THROWCONTRADICTION;
         } else {
             if (assigned[varIndex] == 0) {
@@ -1867,7 +1917,7 @@ public:
                     THROWCONTRADICTION;
                 }
                 if (connected()) {
-                    if (universal()) {
+                    if (fastuniversal()) {
                         deconnect();
                         //unqueueKnapsack();
                         if (!wcsp->vac && lb == MIN_COST) {
@@ -1915,11 +1965,9 @@ public:
                         Constraint::projectLB(TobeProjected);
                         lb = MIN_COST;
                     } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
-                        if (connected()) {
-                            deconnect(); // this constraint is removed from the current WCSP problem
-                            //unqueueKnapsack();
-                            projectNary();
-                        }
+                        deconnect(); // this constraint is removed from the current WCSP problem
+                        //unqueueKnapsack();
+                        projectNary();
                     } else if (AlwaysSatisfied) {
                         capacity = 0;
                         Cost mindelta, temp0, temp1;
@@ -2078,12 +2126,12 @@ public:
             } else {
                 if (assigned[varIndex] == 1 && scope[varIndex]->assigned()) {
                     assigned[varIndex] = 2;
+                    assert(connected(varIndex));
+                    deconnect(varIndex);
                     if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
-                        if (connected()) {
-                            deconnect(); // this constraint is removed from the current WCSP problem
-                            //unqueueKnapsack();
-                            projectNary();
-                        }
+                        deconnect(); // this constraint is removed from the current WCSP problem
+                        //unqueueKnapsack();
+                        projectNary();
                     }
                 }
             }
@@ -2737,6 +2785,9 @@ public:
         }
         // propagates from scratch the constraint
         if (connected()) {
+            if (ToulBar2::verbose >= 7) {
+                cout << "propagate " << *this << endl;
+            }
             bool b = false;
             for (int i = 0; !b && connected() && i < arity_; i++) { // SdG: do not continue to assign if one assign already done
                 if (CorrAMO[i] == 0) {
@@ -3050,7 +3101,7 @@ public:
                     }
                 } else {
                     get_current_scope();
-                    if (universal() && connected()) {
+                    if (fastuniversal() && connected()) {
                         deconnect();
                         //unqueueKnapsack();
                         wcsp->revise(this);
@@ -3098,7 +3149,130 @@ public:
 
     bool verify() override
     {
-        // checks that propagation has been done correctly such that  there exists at least one valid tuple with zero cost (called by WCSP::verify in Debug mode at each search node)
+        // checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
+        Long summaxweight = 0;
+        vector<int> posmaxweight(arity_, -1);
+        for (int i = 0; i < arity_; i++) {
+            Long maxweight = -1;
+            for (unsigned int j = 0; j < VarVal[i].size() - 1; j++) {
+                if (scope[i]->canbe(VarVal[i][j]) && weights[i][j] > maxweight) {
+                    maxweight = weights[i][j];
+                    posmaxweight[i] = j;
+                }
+            }
+            if (weights[i].back() > maxweight) {
+                for (unsigned int j = 0; j < NotVarVal[i].size(); j++) {
+                    if (scope[i]->canbe(NotVarVal[i][j])) {
+                        maxweight = weights[i].back();
+                        posmaxweight[i] = VarVal[i].size() - 1;
+                        break;
+                    }
+                }
+            }
+            assert(maxweight >= 0);
+            assert(posmaxweight[i] >= 0);
+            summaxweight += maxweight;
+        }
+
+        if (summaxweight < Original_capacity) {
+            return false;
+        }
+
+        if (ToulBar2::LcLevel >= LC_AC) {
+            // checks bound consistency
+            for (int i = 0; i < arity_; i++) {
+                for (unsigned int j = 0; j < VarVal[i].size() - 1; j++) {
+                    if (scope[i]->canbe(VarVal[i][j]) && summaxweight + weights[i][j] - weights[i][posmaxweight[i]] < Original_capacity) {
+                        return false;
+                    }
+                }
+                if (weights[i].back() > 0) {
+                    for (unsigned int j = 0; j < NotVarVal[i].size(); j++) {
+                        if (scope[i]->canbe(NotVarVal[i][j]) && summaxweight + weights[i].back() - weights[i][posmaxweight[i]] < Original_capacity) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            if (ToulBar2::LcLevel >= LC_FDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST))) {
+                // checks the minimum cost of the relaxed multiple-choice knapsack problem is zero
+                // sort list of slopes and greedily takes the minimum such that the constraint is satisfied
+                vector< tuple<int, Value, Long, Cost, Value, Long, Cost, Double>> slopes;
+                Long sumweight = 0;
+                Double totalcost = -lb + assigneddeltas;
+                for (int i = 0; i < arity_; i++) {
+                    vector<tuple<Value, Long, Cost>> values;
+                    for (unsigned int j = 0; j < VarVal[i].size() - 1; j++) {
+                        if (scope[i]->canbe(VarVal[i][j]) && weights[i][j] >= 0) {
+                            values.push_back(make_tuple(VarVal[i][j], weights[i][j], scope[i]->getCost(VarVal[i][j]) + deltaCosts[i][j]));
+                        }
+                    }
+                    if (weights[i].back() >= 0) {
+                        for (unsigned int j = 0; j < NotVarVal[i].size(); j++) {
+                            if (scope[i]->canbe(NotVarVal[i][j])) {
+                                values.push_back(make_tuple(NotVarVal[i][j], weights[i].back(), scope[i]->getCost(NotVarVal[i][j]) + deltaCosts[i].back()));
+                            }
+                        }
+                    }
+                    assert(values.size() > 0);
+                    // sort available values in ascending weights and if equal in decreasing (unary) cost
+                    sort(values.begin(), values.end(), [&](auto& x, auto& y) {return get<1>(x) < get<1>(y) || (get<1>(x) == get<1>(y) && get<2>(x) > get<2>(y));});
+                    if (ToulBar2::verbose >= 7) {
+                        cout << i << " " << scope[i]->getName();
+                        for (auto e : values) {
+                            cout << " {" << get<0>(e) << "," << get<1>(e) << "," << get<2>(e) << "}";
+                        }
+                        cout << endl;
+                    }
+                    int prev = values.size() - 1;
+                    for (int j = values.size() - 2; j >= 0 ; j--) {
+                        assert(get<1>(values[j]) <= get<1>(values[prev]));
+                        assert(get<1>(values[j]) < get<1>(values[prev]) || get<2>(values[j]) >= get<2>(values[prev]));
+                        if (get<1>(values[j]) < get<1>(values[prev]) && get<2>(values[j]) < get<2>(values[prev])) {
+                            auto tuple = make_tuple(i, get<0>(values[j]), get<1>(values[j]), get<2>(values[j]), get<0>(values[prev]), get<1>(values[prev]), get<2>(values[prev]), (Double)(get<2>(values[prev]) - get<2>(values[j])) / (get<1>(values[prev]) - get<1>(values[j])));
+                            while (slopes.size() > 0 && get<0>(slopes.back())==get<0>(tuple) && get<7>(slopes.back()) < get<7>(tuple)) {
+                                tuple = make_tuple(i, get<0>(values[j]), get<1>(values[j]), get<2>(values[j]), get<4>(slopes.back()), get<5>(slopes.back()), get<6>(slopes.back()), (Double)(get<6>(slopes.back()) - get<2>(values[j])) / (get<5>(slopes.back()) - get<1>(values[j])));
+                                slopes.pop_back();
+                            }
+                            slopes.push_back(tuple);
+                            prev = j;
+                        }
+                    }
+                    sumweight += get<1>(values[prev]);
+                    totalcost += get<2>(values[prev]);
+                }
+                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return get<7>(x) < get<7>(y) || (get<7>(x) == get<7>(y) && (get<0>(x) != get<0>(y) || get<1>(x) < get<1>(y)));});
+                if (ToulBar2::verbose >= 7) {
+                    cout << "weight0: " << sumweight << " cost0: " << totalcost << " slopes:";
+                    for (auto e : slopes) {
+                        cout << " {" << get<0>(e) << "," << get<1>(e) << "," << get<2>(e) << "," << get<3>(e) << "," << get<4>(e) << "," << get<5>(e) << "," << get<6>(e) << "," << get<7>(e) << "}";
+                    }
+                    cout << endl;
+                }
+                unsigned int i = 0;
+                while (sumweight < Original_capacity && i < slopes.size()) {
+                    sumweight += get<5>(slopes[i]) - get<2>(slopes[i]);
+                    totalcost += get<6>(slopes[i]) - get<3>(slopes[i]);
+                    i++;
+                }
+                assert(sumweight >= Original_capacity);
+                assert(i > 0 || totalcost == 0.);
+                if (i > 0 && sumweight > Original_capacity) {
+                    totalcost -= (Double)(sumweight - Original_capacity) * get<7>(slopes[i - 1]);
+                }
+                if (ToulBar2::verbose >= 7) {
+                    cout << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
+                }
+                return Ceil(totalcost) == 0.; // totalcost <= ToulBar2::epsilon;
+            }
+        }
+
+        return true;
+    }
+
+    bool fastverifyAMO()
+    {
         wcsp->revise(this);
         int breakamo;
         for (unsigned int i = 0; i < AMO.size(); ++i) {
@@ -3118,7 +3292,6 @@ public:
     }
     bool fastverify()
     {
-        // checks that propagation has been done correctly such that  there exists at least one valid tuple with zero cost (called by WCSP::verify in Debug mode at each search node)
         wcsp->revise(this);
         if (capacity <= MaxWeight)
             return true;
@@ -3205,7 +3378,7 @@ public:
         }
         os << ") "
            << " >= " << capacity << " <= " << MaxWeight << " (ratio: " << (Double)capacity / MaxWeight << ")"
-           << " \\ " << lb << " - " << assigneddeltas << " (";
+           << " cost: " << -lb << " + " << assigneddeltas << " + (";
         for (int i = 0; i < arity_; i++) {
             if (AMO.empty()) {
                 for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
