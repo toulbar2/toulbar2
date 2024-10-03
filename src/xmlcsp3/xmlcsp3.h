@@ -306,7 +306,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 pos = 0;
             }
         } while (pos < vars.size());
-        string extravarname = IMPLICIT_VAR_TAG + "expr" + to_string(problem->numberOfVariables());
+        string extravarname = IMPLICIT_VAR_TAG + to_string("expr") + to_string(problem->numberOfVariables());
         vector<int> vvalues(values.begin(), values.end());
         int extravar = problem->makeEnumeratedVariable(extravarname, vvalues);
         mapping[extravarname] = extravar;
@@ -665,7 +665,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     string params = to_string(-1);
                     for (unsigned int i = 0; i < vars.size(); i++) {
                         if (problem->canbe(vars[i], value)) {
-                            params += " 1 " + to_string(value) + " -1";
+                            params += to_string(" 1 ") + to_string(value) + to_string(" -1");
                         } else {
                             params += " 0";
                         }
@@ -728,10 +728,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params = to_string(-rightcoef);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(-coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -740,10 +740,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params = to_string(-rightcoef + 1);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(-coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -752,10 +752,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params = to_string(rightcoef);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -764,16 +764,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params = to_string(rightcoef + 1);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
                 break;
             case OrderType::NE:
-                extravarname = IMPLICIT_VAR_TAG + "sum" + to_string(problem->numberOfVariables());
+                extravarname = IMPLICIT_VAR_TAG + to_string("sum") + to_string(problem->numberOfVariables());
                 extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
                 mapping[extravarname] = extravar;
                 vars.push_back(extravar);
@@ -781,20 +781,20 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params = to_string(rightcoef + 1);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
                 params = to_string(-rightcoef + 1 - INT_MAX);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(-coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -803,20 +803,20 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params = to_string(rightcoef);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
                 params = to_string(-rightcoef);
                 for (unsigned int i=0; i < vars.size(); i++) {
                     int domsize = problem->getDomainInitSize(vars[i]);
-                    params += " " + to_string(domsize);
+                    params += to_string(" ") + to_string(domsize);
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
-                        params += " " + to_string(value) + " " + to_string(-coefs[i] * value);
+                        params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-coefs[i] * value);
                     }
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -832,10 +832,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             params = to_string((minLong<LONG_MAX)?minLong:cond.min);
             for (unsigned int i=0; i < vars.size(); i++) {
                 int domsize = problem->getDomainInitSize(vars[i]);
-                params += " " + to_string(domsize);
+                params += to_string(" ") + to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
-                    params += " " + to_string(value) + " " + to_string(coefs[i] * value);
+                    params += to_string(" ") + to_string(value) + to_string(" ") + to_string(coefs[i] * value);
                 }
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -843,10 +843,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             params = to_string(-((maxLong<LONG_MAX)?maxLong:cond.max));
             for (unsigned int i=0; i < vars.size(); i++) {
                 int domsize = problem->getDomainInitSize(vars[i]);
-                params += " " + to_string(domsize);
+                params += to_string(" ") + to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
-                    params += " " + to_string(value) + " " + to_string(-coefs[i] * value);
+                    params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-coefs[i] * value);
                 }
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -878,7 +878,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<Long> mycoefs(list.size(), 1);
         vector<int> varsprod;
         for (unsigned int i = 0; i < list.size(); i++) {
-            string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+            string prodname = IMPLICIT_VAR_TAG + to_string("prod") + to_string(problem->numberOfVariables());
             Value prodinf = min(min(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), min(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
             Value prodsup = max(max(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), max(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
             assert(prodinf <= prodsup);
@@ -922,7 +922,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -930,16 +930,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -948,7 +948,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -956,16 +956,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -974,7 +974,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -982,16 +982,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(-value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1000,7 +1000,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1008,16 +1008,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(-value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1026,7 +1026,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1034,23 +1034,23 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(-value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         params = to_string(1);
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1058,16 +1058,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1076,7 +1076,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             params2="";
@@ -1085,23 +1085,23 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(-value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         params = to_string(0);
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1109,16 +1109,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         domsize=problem->getDomainInitSize(vars.back());
-                        params += " " + to_string(domsize);
+                        params += to_string(" ") + to_string(domsize);
                         for (int idval=0; idval < domsize; idval++) {
                             int value = problem->toValue(vars.back(), idval);
-                            params += " " + to_string(value) + " " + to_string(value);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1135,7 +1135,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1143,10 +1143,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1155,7 +1155,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1163,10 +1163,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1175,7 +1175,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1183,10 +1183,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1195,7 +1195,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1203,10 +1203,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1215,7 +1215,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1223,17 +1223,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         params = to_string(-rightcoef+1);
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1241,10 +1241,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1253,7 +1253,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1261,17 +1261,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         params = to_string(-rightcoef);
                         params2="";
                         for (unsigned int i=0; i < vars.size(); i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += " " + to_string(domsize);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1279,10 +1279,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                                 auto it = find(values.begin(), values.end(), value);
                                 if (it != values.end()) {
                                     nbval+=1;
-                                    params2 += " " + to_string(value) + " " + to_string(-1);
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                                 }
                             }
-                            params+=" "+to_string(nbval)+params2;
+                            params+=to_string(" ")+to_string(nbval)+params2;
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
@@ -1298,7 +1298,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params2="";
                 for (unsigned int i=0; i < vars.size(); i++) {
                     domsize = problem->getDomainInitSize(vars[i]);
-                    //params += " " + to_string(domsize);
+                    //params += to_string(" ") + to_string(domsize);
                     nbval=0;
                     params2="";
                     for (int idval=0; idval < domsize; idval++) {
@@ -1306,10 +1306,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         auto it = find(values.begin(), values.end(), value);
                         if (it != values.end()) {
                             nbval+=1;
-                            params2 += " " + to_string(value) + " " + to_string(1);
+                            params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
                         }
                     }
-                    params+=" "+to_string(nbval)+params2;
+                    params+=to_string(" ")+to_string(nbval)+params2;
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
                 // sum <= cond.max
@@ -1317,7 +1317,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params2="";
                 for (unsigned int i=0; i < vars.size(); i++) {
                     domsize = problem->getDomainInitSize(vars[i]);
-                    //params += " " + to_string(domsize);
+                    //params += to_string(" ") + to_string(domsize);
                     nbval=0;
                     params2="";
                     for (int idval=0; idval < domsize; idval++) {
@@ -1325,10 +1325,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         auto it = find(values.begin(), values.end(), value);
                         if (it != values.end()) {
                             nbval+=1;
-                            params2 += " " + to_string(value) + " " + to_string(-1);
+                            params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-1);
                         }
                     }
-                    params+=" "+to_string(nbval)+params2;
+                    params+=to_string(" ")+to_string(nbval)+params2;
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
                 break;
@@ -1369,7 +1369,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 if (emptyExcept || currentval != except[0]){
                     auto it = find(Diffvalue.begin(), Diffvalue.end(), currentval);
                     if (it == Diffvalue.end()) {
-                        string extravarname = IMPLICIT_VAR_TAG + "Nval" + to_string(problem->numberOfVariables());
+                        string extravarname = IMPLICIT_VAR_TAG + to_string("Nval") + to_string(problem->numberOfVariables());
                         int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
                         mapping[extravarname] = extravar;
                         Bvar.push_back(extravar);
@@ -1412,12 +1412,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 if (problem->canbe(vars[j], diffvalue)) {
                     nbvar++;
                     tempvars.push_back(vars[j]);
-                    params+=" 1 "+to_string(diffvalue)+" 1";
+                    params+=to_string(" 1 ")+to_string(diffvalue)+to_string(" 1");
                 }
             }
             if (nbvar > 0) {
                 tempvars.push_back(Bvar[i]);
-                params+=" 1 1 -1";
+                params+=to_string(" 1 1 -1");
                 problem->postKnapsackConstraint(tempvars, params, false, true, false);
             } // assert(nbvar > 0);
         }
@@ -1431,10 +1431,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     params+=" 1 1 1";
                 }
                 domsize=problem->getDomainInitSize(Bvar.back());
-                params += " " + to_string(domsize);
+                params += to_string(" ") + to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(Bvar.back(), idval);
-                    params += " " + to_string(value) + " " + to_string(-value);
+                    params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
                 }
                 problem->postKnapsackConstraint(Bvar, params, false, true, false);
                 params = to_string(0);
@@ -1442,10 +1442,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     params+=" 1 1 -1";
                 }
                 domsize=problem->getDomainInitSize(Bvar.back());
-                params += " " + to_string(domsize);
+                params += to_string(" ") + to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(Bvar.back(), idval);
-                    params += " " + to_string(value) + " " + to_string(value);
+                    params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
                 }
                 problem->postKnapsackConstraint(Bvar, params, false, true, false);
                 break;
@@ -1515,11 +1515,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;
                 params2="";
-                //params +=" "+to_string(domsize);
+                //params +=to_string(" ")+to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
                     if(value==values[k]){
-                        params2 += " " + to_string(value) + " 1";
+                        params2 += to_string(" ") + to_string(value) + to_string(" 1");
                         nbval++;
                     }
                     else {
@@ -1527,25 +1527,25 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
+                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
                     }
                 }
-                params+=" "+to_string(nbval)+params2;
+                params+=to_string(" ")+to_string(nbval)+params2;
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
-            params=to_string(-occurs[k])+ " ";
+            params=to_string(-occurs[k])+ to_string(" ");
             for (int i = 0; i < (int)vars.size(); ++i) {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;
                 params2="";
-                //params +=" "+to_string(domsize);
+                //params +=to_string(" ")+to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
                     if(value==values[k]){
-                        params2 += " " + to_string(value) + " -1";
+                        params2 += to_string(" ") + to_string(value) + to_string(" -1");
                         nbval++;
                     }
                     else {
@@ -1553,13 +1553,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
+                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
                     }
                 }
-                params+=" "+to_string(nbval)+params2;
+                params+=to_string(" ")+to_string(nbval)+params2;
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
         }
@@ -1580,11 +1580,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;
                 params2="";
-                //params +=" "+to_string(domsize);
+                //params +=to_string(" ")+to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
                     if(value==values[k]){
-                        params2 += " " + to_string(value) + " 1";
+                        params2 += to_string(" ") + to_string(value) + to_string(" 1");
                         nbval++;
                     }
                     else {
@@ -1592,19 +1592,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
+                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
                     }
                 }
-                params+=" "+to_string(nbval)+params2;
+                params+=to_string(" ")+to_string(nbval)+params2;
             }
             domsize= problem->getDomainInitSize(vars.back());
-            params+=" "+to_string(domsize);
+            params+=to_string(" ")+to_string(domsize);
             for (int idval=0; idval < domsize; idval++) {
                 int value = problem->toValue(vars.back(), idval);
-                params += " " + to_string(value) + " " + to_string(-value);
+                params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
             params="0 ";
@@ -1612,11 +1612,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;
                 params2="";
-                //params +=" "+to_string(domsize);
+                //params +=to_string(" ")+to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
                     if(value==values[k]){
-                        params2 += " " + to_string(value) + " -1";
+                        params2 += to_string(" ") + to_string(value) + to_string(" -1");
                         nbval++;
                     }
                     else {
@@ -1624,19 +1624,19 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
+                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
                     }
                 }
-                params+=" "+to_string(nbval)+params2;
+                params+=to_string(" ")+to_string(nbval)+params2;
             }
             domsize= problem->getDomainInitSize(vars.back());
-            params+=" "+to_string(domsize);
+            params+=to_string(" ")+to_string(domsize);
             for (int idval=0; idval < domsize; idval++) {
                 int value = problem->toValue(vars.back(), idval);
-                params += " " + to_string(value) + " " + to_string(value);
+                params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
         }
@@ -1649,16 +1649,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         string params2="";
         int domsize,nbval;
         for (int k = 0; k < (int)values.size(); ++k) {
-            params=to_string(occurs[k].min)+ " ";
+            params=to_string(occurs[k].min)+ to_string(" ");
             for (int i = 0; i < (int)vars.size(); ++i) {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;
                 params2="";
-                //params +=" "+to_string(domsize);
+                //params +=to_string(" ")+to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
                     if(value==values[k]){
-                        params2 += " " + to_string(value) + " 1";
+                        params2 += to_string(" ") + to_string(value) + to_string(" 1");
                         nbval++;
                     }
                     else {
@@ -1666,25 +1666,25 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
+                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
                     }
                 }
-                params+=" "+to_string(nbval)+params2;
+                params+=to_string(" ")+to_string(nbval)+params2;
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
-            params=to_string(-occurs[k].max)+ " ";
+            params=to_string(-occurs[k].max)+ to_string(" ");
             for (int i = 0; i < (int)vars.size(); ++i) {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;
                 params2="";
-                //params +=" "+to_string(domsize);
+                //params +=to_string(" ")+to_string(domsize);
                 for (int idval=0; idval < domsize; idval++) {
                     int value = problem->toValue(vars[i], idval);
                     if(value==values[k]){
-                        params2 += " " + to_string(value) + " -1";
+                        params2 += to_string(" ") + to_string(value) + to_string(" -1");
                         nbval++;
                     }
                     else {
@@ -1692,13 +1692,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         {
                             auto it =find(values.begin(),values.end(),value);
                             if(it==values.end()) {
-                                params2 += " " + to_string(value) + " " + to_string(-(int)vars.size());
+                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
                                 nbval++;
                             }
                         }
                     }
                 }
-                params+=" "+to_string(nbval)+params2;
+                params+=to_string(" ")+to_string(nbval)+params2;
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
         }
@@ -1716,7 +1716,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 maxsup = problem->getSup(vars[i]);
             }
         }
-        string varmaxname = IMPLICIT_VAR_TAG + ((max)?"max":"min") + to_string(problem->numberOfVariables());
+        string varmaxname = IMPLICIT_VAR_TAG + ((max)?to_string("max"):to_string("min")) + to_string(problem->numberOfVariables());
         int varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
         mapping[varmaxname] = varmax;
         buildConstraintElement(OrderType::EQ, vars, varargmax, varmax);
@@ -1743,7 +1743,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintMaximum(string id, vector<XVariable *> &list, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmax") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMax(true, vars, varargmax, cond);
@@ -1752,7 +1752,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintMinimum(string id, vector<XVariable *> &list, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmin") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMax(false, vars, varargmax, cond);
@@ -1764,7 +1764,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmax") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMax(true, vars, varargmax, cond);
@@ -1776,7 +1776,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmin") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMax(false, vars, varargmax, cond);
@@ -1810,7 +1810,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 maxsup = problem->getSup(vars[i]);
             }
         }
-        string varmaxname = IMPLICIT_VAR_TAG + ((max)?"max":"min") + to_string(problem->numberOfVariables());
+        string varmaxname = IMPLICIT_VAR_TAG + ((max)?to_string("max"):to_string("min")) + to_string(problem->numberOfVariables());
         int varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
         mapping[varmaxname] = varmax;
         buildConstraintElement(OrderType::EQ, vars, varargmax, varmax);
@@ -1837,7 +1837,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintMaximumArg(string id, vector<XVariable*> &list, RankType rank, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmax") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMaxArg(true, vars, varargmax, cond);
@@ -1846,7 +1846,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
     void buildConstraintMinimumArg(string id, vector<XVariable*> &list, RankType rank, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmin") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMaxArg(false, vars, varargmax, cond);
@@ -1859,7 +1859,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmax" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmax") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMaxArg(true, vars, varargmax, cond);
@@ -1872,7 +1872,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             vars.push_back(buildConstraintIntensionVar(trees[i]));
         }
         assert(vars.size() == trees.size());
-        string varargmaxname = IMPLICIT_VAR_TAG + "argmin" + to_string(problem->numberOfVariables());
+        string varargmaxname = IMPLICIT_VAR_TAG + to_string("argmin") + to_string(problem->numberOfVariables());
         int varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
         mapping[varargmaxname] = varargmax;
         buildConstraintMinMaxArg(false, vars, varargmax, cond);
@@ -2173,12 +2173,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (unsigned int a=0; a < problem->getDomainInitSize(varvalue); a++) {
             string params = to_string(1);
             for (unsigned int i=0; i < vars.size()-1; i++) {
-                params += " 1 " + to_string(problem->toValue(vars[i], a)) + " 1";
+                params += to_string(" 1 ") + to_string(problem->toValue(vars[i], a)) + to_string(" 1");
             }
-            params += " " + to_string(problem->getDomainInitSize(varvalue) - 1);
+            params += to_string(" ") + to_string(problem->getDomainInitSize(varvalue) - 1);
             for (unsigned int b=0; b < problem->getDomainInitSize(varvalue); b++) {
                 if (a != b) {
-                    params += " " + to_string(problem->toValue(varvalue, b))  + " -1";
+                    params += to_string(" ") + to_string(problem->toValue(varvalue, b))  + to_string(" -1");
                 }
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
@@ -2190,7 +2190,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         string params = to_string(1);
         for (unsigned int i=0; i < vars.size(); i++) {
-            params += " 1 " + to_string(value) + " 1";
+            params += to_string(" 1 ") + to_string(value) + to_string(" 1");
         }
         problem->postKnapsackConstraint(vars, params, false, true, false);
     }
@@ -2597,7 +2597,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (Value val: values) {
             string params = to_string(-(int)vars.size() + 1);
             for (unsigned int i = 0; i < vars.size(); i++) {
-                params += " 1 " + to_string(val) + " -1";
+                params += to_string(" 1 ") + to_string(val) + to_string(" -1");
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
         }
@@ -2612,7 +2612,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         unsigned int n = succ.size();
         vector<int> order;
         for (unsigned int i = 0; i < n; i++) {
-            string extravarname = IMPLICIT_VAR_TAG + "order" + to_string(problem->numberOfVariables());
+            string extravarname = IMPLICIT_VAR_TAG + to_string("order") + to_string(problem->numberOfVariables());
             int extravar = problem->makeEnumeratedVariable(extravarname, 0, n-1);
             mapping[extravarname] = extravar;
             order.push_back(extravar);
@@ -2743,7 +2743,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     + " has different number of variables and levels");
         vector<int> statevars(lvlstates.size());
         for (size_t i = 0; i != lvlstates.size(); ++i) {
-            string varname = id + "_Q" + to_string(i);
+            string varname = id + to_string("_Q") + to_string(i);
             statevars[i] = problem->makeEnumeratedVariable(varname, 0, lvlstates[i].size());
         }
 
@@ -2948,14 +2948,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 int nbval = 0;
                 for (Value value : problem->getEnumDomain(vars[i])) {
                     if (time >= value && time < value + lengths[i]) {
-                        valparamspos += " " + to_string(value) + " " + to_string(heights[i]);
-                        valparamsneg += " " + to_string(value) + " " + to_string(-heights[i]);
+                        valparamspos += to_string(" ") + to_string(value) + to_string(" ") + to_string(heights[i]);
+                        valparamsneg += to_string(" ") + to_string(value) + to_string(" ") + to_string(-heights[i]);
                         nbval++;
                     }
                 }
                 if (nbval > 0) {
-                    paramspos += " " + to_string(nbval) + valparamspos;
-                    paramsneg += " " + to_string(nbval) + valparamsneg;
+                    paramspos += to_string(" ") + to_string(nbval) + valparamspos;
+                    paramsneg += to_string(" ") + to_string(nbval) + valparamsneg;
                     scope.push_back(vars[i]);
                     nbvar++;
                 }
@@ -3169,10 +3169,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 string params = "0";
                 for (unsigned int j = 0; j < i; j++) {
                     scope.push_back(vars[j]);
-                    params += " 1 " + to_string(values[v]) + " 1";
+                    params += to_string(" 1 ") + to_string(values[v]) + to_string(" 1");
                 }
                 scope.push_back(vars[i]);
-                params += " 1 " + to_string(values[v+1]) + " -1";
+                params += to_string(" 1 ") + to_string(values[v+1]) + to_string(" -1");
                 problem->postKnapsackConstraint(scope, params, false, true, false); // sum( x[j] = values[v] , j < i ) >= (x[i] == values[v+1])
             }
         }
@@ -3180,7 +3180,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             for (unsigned int v = 0; v < values.size(); v++) {
                 string params = "1 ";
                 for (unsigned int i = 0; i < vars.size(); i++) {
-                    params += " 1 " + to_string(values[v]) + " 1";
+                    params += to_string(" 1 ") + to_string(values[v]) + to_string(" 1");
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false); // each value must be selected at least once
             }
@@ -3378,7 +3378,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             for (unsigned int i=0; i<vars.size(); i++) {
                 int var = vars[i];
                 if (coefs[i] != 1) {
-                    string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+                    string prodname = IMPLICIT_VAR_TAG + to_string("prod") + to_string(problem->numberOfVariables());
                     int varprod = problem->makeEnumeratedVariable(prodname, min(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]), max(problem->getInf(var) * coefs[i], problem->getSup(var) * coefs[i]));
                     mapping[prodname] = varprod;
                     buildConstraintPrimitiveMult(OrderType::EQ, var, coefs[i], varprod);
@@ -3396,7 +3396,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     maxsup = problem->getSup(objvars[i]);
                 }
             }
-            varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
+            varmaxname = IMPLICIT_VAR_TAG + ((themax)?to_string("max"):to_string("min")) + to_string(problem->numberOfVariables());
             varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
             mapping[varmaxname] = varmax;
             if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
@@ -3404,7 +3404,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     buildConstraintPrimitive((themax)?OrderType::LE:OrderType::GE, objvars[i], 0, varmax);
                 }
             } else {
-                varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
+                varargmaxname = IMPLICIT_VAR_TAG + ((themax)?to_string("argmax"):to_string("argmin")) + to_string(problem->numberOfVariables());
                 varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, objvars.size()-1);
                 mapping[varargmaxname] = varargmax;
                 cond.operandType = OperandType::VARIABLE;
@@ -3440,7 +3440,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //            problem->postMaxWeight(vars.data(), vars.size(), "val", "DAG", MIN_COST, weightFunction);
 //            break;
         case ExpressionObjective::NVALUES_O:
-            varnvaluename = IMPLICIT_VAR_TAG + "nvalue" + to_string(problem->numberOfVariables());
+            varnvaluename = IMPLICIT_VAR_TAG + to_string("nvalue") + to_string(problem->numberOfVariables());
             varnvalue = problem->makeEnumeratedVariable(varnvaluename, 0, vars.size());
             mapping[varnvaluename] = varnvalue;
             cond.operandType = OperandType::VARIABLE;
@@ -3484,7 +3484,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 //        vector<int> mycoefs(list.size(), 1);
 //        vector<int> varsprod;
 //        for (unsigned int i = 0; i < list.size(); i++) {
-//            string prodname = IMPLICIT_VAR_TAG + "prod" + to_string(problem->numberOfVariables());
+//            string prodname = IMPLICIT_VAR_TAG + to_string("prod") + to_string(problem->numberOfVariables());
 //            Value prodinf = min(min(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), min(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
 //            Value prodsup = max(max(problem->getInf(vars[i]) * problem->getInf(varscoefs[i]), problem->getInf(vars[i]) * problem->getSup(varscoefs[i])), max(problem->getSup(vars[i]) * problem->getInf(varscoefs[i]), problem->getSup(vars[i]) * problem->getSup(varscoefs[i])));
 //            assert(prodinf <= prodsup);
@@ -3584,7 +3584,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     maxsup = problem->getSup(vars[i]);
                 }
             }
-            varmaxname = IMPLICIT_VAR_TAG + ((themax)?"max":"min") + to_string(problem->numberOfVariables());
+            varmaxname = IMPLICIT_VAR_TAG + ((themax)?to_string("max"):to_string("min")) + to_string(problem->numberOfVariables());
             varmax = problem->makeEnumeratedVariable(varmaxname, maxinf, maxsup);
             mapping[varmaxname] = varmax;
             if ((sign==UNIT_COST && themax) || (sign==-UNIT_COST && !themax)) {
@@ -3592,7 +3592,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     buildConstraintPrimitive((themax)?OrderType::LE:OrderType::GE, vars[i], 0, varmax);
                 }
             } else {
-                varargmaxname = IMPLICIT_VAR_TAG + ((themax)?"argmax":"argmin") + to_string(problem->numberOfVariables());
+                varargmaxname = IMPLICIT_VAR_TAG + ((themax)?to_string("argmax"):to_string("argmin")) + to_string(problem->numberOfVariables());
                 varargmax = problem->makeEnumeratedVariable(varargmaxname, 0, vars.size()-1);
                 mapping[varargmaxname] = varargmax;
                 cond.operandType = OperandType::VARIABLE;
@@ -3603,7 +3603,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             buildUnaryCostFunction(sign, varmax);
             break;
         case ExpressionObjective::NVALUES_O:
-            varnvaluename = IMPLICIT_VAR_TAG + "nvalue" + to_string(problem->numberOfVariables());
+            varnvaluename = IMPLICIT_VAR_TAG + to_string("nvalue") + to_string(problem->numberOfVariables());
             varnvalue = problem->makeEnumeratedVariable(varnvaluename, 0, trees.size());
             mapping[varnvaluename] = varnvalue;
             cond.operandType = OperandType::VARIABLE;

@@ -295,7 +295,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
         } else {
             tuple_vars[func_ind] = std::make_shared<IloNumVarArray>(env, func.tuples.size() + 1, 0., 1., ILOFLOAT);
         }
-        tuple_vars[func_ind]->setNames(string("tuples_" + to_string(func_ind)).c_str());
+        tuple_vars[func_ind]->setNames(string(to_string("tuples_") + to_string(func_ind)).c_str());
     }
 
     /////////////////////////////////////

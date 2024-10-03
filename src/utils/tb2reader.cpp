@@ -761,7 +761,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     // A domain or domain size is there: the variable has no name
     // we create an integer name that cannot clash with user names
     if (isOBrace(token) || isdigit(token[0])) {
-        varName = "x" + to_string(i);
+        varName = to_string("x") + to_string(i);
     } else {
         varName = token;
         std::tie(lineNumber, token) = this->getNextToken();
@@ -774,7 +774,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
             domainSize = stoi(token);
             if (domainSize >= 0)
                 for (int ii = 0; ii < domainSize; ii++)
-                    valueNames.push_back("v" + to_string(ii));
+                    valueNames.push_back(to_string("v") + to_string(ii));
         } catch (std::invalid_argument&) {
             cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
         }
@@ -1739,7 +1739,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     throw WrongFileFormat();
                 }
             }
-            streamContentVec.push_back(std::make_pair(GCFTemplate[i], std::to_string(cost)));
+            streamContentVec.push_back(std::make_pair(GCFTemplate[i], to_string(cost)));
         }
         // ---------- Read variable and add it to stream
         else if (GCFTemplate[i] == 'V') {
@@ -1847,7 +1847,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         if (not isdigit(token[0])) {
                             auto it = varNameToIdx.find(token);
                             if (it != varNameToIdx.end()) {
-                                token = std::to_string(it->second);
+                                token = to_string(it->second);
                             } else {
                                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
                                 throw WrongFileFormat();
@@ -1876,9 +1876,9 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                             throw WrongFileFormat();
                         }
                         if (variableRepeat)
-                            variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                            variableRepeatVec.push_back(std::make_pair(symbol, to_string(c)));
                         else
-                            repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                            repeatedContentVec.push_back(std::make_pair(symbol, to_string(c)));
                     }
 
                     repeatIndex++;
@@ -1893,7 +1893,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
                 if (variableRepeat) { // we must push the size of the repeat and its contents
-                    repeatedContentVec.push_back(std::make_pair('N', std::to_string(variableRepeatVec.size())));
+                    repeatedContentVec.push_back(std::make_pair('N', to_string(variableRepeatVec.size())));
                     repeatedContentVec.insert(repeatedContentVec.end(), variableRepeatVec.begin(), variableRepeatVec.end());
                     variableRepeatVec.clear();
                 }
@@ -1905,7 +1905,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             }
             // Add number of tuples before the list if the number of expected tuples is not known
             if (GCFTemplate[i] == '+')
-                streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
+                streamContentVec.push_back(std::make_pair('N', to_string(numberOfTuplesRead)));
             // Copy repeatedContentVec to streamContent
             for (pair<char, string> repContentPair : repeatedContentVec) {
                 streamContentVec.push_back(std::make_pair(repContentPair.first, repContentPair.second));
@@ -1951,7 +1951,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         if (streamContentVec[i].first == 'C') {
             Cost currentCost = (Cost)std::stoll(streamContentVec[i].second);
             currentCost -= minCost;
-            streamContentVec[i].second = std::to_string(currentCost);
+            streamContentVec[i].second = to_string(currentCost);
         }
         stream << streamContentVec[i].second << " ";
     }
@@ -2039,7 +2039,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 throw WrongFileFormat();
             }
-            terminal_rule += std::to_string(tcost) + " ";
+            terminal_rule += to_string(tcost) + to_string(" ");
         }
 
         terminal_rules.push_back(terminal_rule);
@@ -2076,7 +2076,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 throw WrongFileFormat();
             }
-            non_terminal_rule += std::to_string(tcost) + " ";
+            non_terminal_rule += to_string(tcost) + to_string(" ");
         }
 
         non_terminal_rules.push_back(non_terminal_rule);
@@ -2094,7 +2094,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 
     // Cost had no impact on negCost here
     stream << metric << " " << cost << " " << nb_symbols << " " << nb_values << " " << start_symbol
-           << " " << std::to_string(terminal_rules.size() + non_terminal_rules.size()) << " ";
+           << " " << to_string(terminal_rules.size() + non_terminal_rules.size()) << " ";
     if (metric == "var") {
         for (string terminal_rule : terminal_rules)
             stream << "0 " << terminal_rule;
@@ -2139,7 +2139,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
         if (not isdigit(token[0])) {
             map<string, int>::iterator it;
             if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
-                token = std::to_string(it->second);
+                token = to_string(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
                 throw WrongFileFormat();
@@ -2159,7 +2159,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
         if (not isdigit(token[0])) {
             map<string, int>::iterator it;
             if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
-                token = std::to_string(it->second);
+                token = to_string(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
                 throw WrongFileFormat();
@@ -2366,11 +2366,11 @@ Cost WCSP::read_wcsp(const char* fileName)
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_sol" + std::to_string(j) + "_" + x->getName(), 0, 2 * ToulBar2::divBound + 1);
+                    divVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + to_string("c_sol") + to_string(j) + to_string("_") + x->getName(), 0, 2 * ToulBar2::divBound + 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("q" + std::to_string(val % (ToulBar2::divBound + 1)) + "_"
-                            + std::to_string(val / (ToulBar2::divBound + 1)));
+                        theVar->addValueName(to_string("q") + to_string(val % (ToulBar2::divBound + 1)) + to_string("_")
+                            + to_string(val / (ToulBar2::divBound + 1)));
                     }
                 }
             }
@@ -2382,10 +2382,10 @@ Cost WCSP::read_wcsp(const char* fileName)
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divHVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
+                    divHVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + to_string("h_sol") + to_string(j) + to_string("_") + x->getName(), 0, ToulBar2::divBound);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("q" + std::to_string(val));
+                        theVar->addValueName(to_string("q") + to_string(val));
                     }
                 }
             }
@@ -2399,7 +2399,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     divVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_relax_" + x->getName(), 0, ToulBar2::divWidth * ToulBar2::divWidth - 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[ToulBar2::divNbSol - 1][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("Q" + std::to_string(val));
+                        theVar->addValueName(to_string("Q") + to_string(val));
                     }
                 }
             }
@@ -2409,7 +2409,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[ToulBar2::divNbSol - 1][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("q" + std::to_string(val));
+                        theVar->addValueName(to_string("q") + to_string(val));
                     }
                 }
             }
@@ -2516,8 +2516,7 @@ void WCSP::read_legacy(istream& file)
 
     // read variable domain sizes
     for (unsigned int i = 0; i < nbvar; i++) {
-        string varname;
-        varname = "x" + to_string(i);
+        string varname = to_string("x") + to_string(i);
         file >> domsize;
         if (domsize > nbvaltrue)
             nbvaltrue = domsize;
@@ -3076,7 +3075,7 @@ void WCSP::read_uai2008(const char* fileName)
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
-        varname = "x" + to_string(i);
+        varname = to_string("x") + to_string(i);
         file >> domsize;
         if (ToulBar2::verbose >= 1)
             cout << "read variable " << i << " of size " << domsize << endl;
@@ -3662,7 +3661,7 @@ void WCSP::read_wcnf(const char* fileName)
     // create Boolean variables
     for (int i = 0; i < nbvar; i++) {
         string varname;
-        varname = "x" + to_string(i);
+        varname = to_string("x") + to_string(i);
         DEBONLY(int theindex =)
         makeEnumeratedVariable(varname, 0, 1);
         assert(theindex == i);
@@ -3882,7 +3881,7 @@ void WCSP::read_qpbo(const char* fileName)
 
     // create Boolean variables
     for (int i = 0; i < n; i++) {
-        makeEnumeratedVariable("x" + to_string(i), 0, 1);
+        makeEnumeratedVariable(to_string("x") + to_string(i), 0, 1);
     }
 
     vector<Cost> unaryCosts0(n, 0);
@@ -4028,7 +4027,7 @@ void readToken(istream& file, string& token, int* keep = NULL)
         token = token + "1";
     } else if (token.size() >= 2 && (token[0] == '+' || token[0] == '-') && string("0123456789").find(token[1]) == string::npos) {
         twotokens = true;
-        token = to_string(token[0]) + "1" + token.substr(1);
+        token = to_string(token[0]) + to_string("1") + token.substr(1);
     }
     if (keep) {
         if (twotokens) {
@@ -4262,14 +4261,14 @@ void WCSP::read_opb(const char* fileName)
                 if (op == ">=" || op == "=") {
                     params = to_string(coef);
                     for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        params += " " + to_string(coefs[i]);
+                        params += to_string(" ") + to_string(coefs[i]);
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
                 if (op == "<=" || op == "=") {
                     params = to_string(-coef);
                     for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        params += " " + to_string(-coefs[i]);
+                        params += to_string(" ") + to_string(-coefs[i]);
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
@@ -4502,15 +4501,15 @@ void WCSP::read_lp(const char* fileName)
                 throw BadConfiguration();
             }
             long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
-            params += " " + to_string(max - min + 1);
+            params += to_string(" ") + to_string(max - min + 1);
             scopeIndex.push_back(x);
             for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
-                params += " " + to_string(v - min);
+                params += to_string(" ") + to_string(v - min);
 #else
-                params += " " + to_string(v);
+                params += to_string(" ") + to_string(v);
 #endif
-                params += " " + to_string(coef * v);
+                params += to_string(" ") + to_string(coef * v);
             }
         }
         postKnapsackConstraint(scopeIndex, params, false, true, false);
@@ -4535,15 +4534,15 @@ void WCSP::read_lp(const char* fileName)
                 throw BadConfiguration();
             }
             long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
-            params += " " + to_string(max - min + 1);
+            params += to_string(" ") + to_string(max - min + 1);
             scopeIndex.push_back(x);
             for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
-                params += " " + to_string(v - min);
+                params += to_string(" ") + to_string(v - min);
 #else
-                params += " " + to_string(v);
+                params += to_string(" ") + to_string(v);
 #endif
-                params += " " + to_string(-coef * v);
+                params += to_string(" ") + to_string(-coef * v);
             }
         }
         postKnapsackConstraint(scopeIndex, params, false, true, false);
@@ -4568,15 +4567,15 @@ void WCSP::read_lp(const char* fileName)
                 throw BadConfiguration();
             }
             long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
-            params += " " + to_string(max - min + 1);
+            params += to_string(" ") + to_string(max - min + 1);
             scopeIndex.push_back(x);
             for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
-                params += " " + to_string(v - min);
+                params += to_string(" ") + to_string(v - min);
 #else
-                params += " " + to_string(v);
+                params += to_string(" ") + to_string(v);
 #endif
-                params += " " + to_string(coef * v);
+                params += to_string(" ") + to_string(coef * v);
             }
         }
         postKnapsackConstraint(scopeIndex, params, false, true, false);
@@ -4590,14 +4589,14 @@ void WCSP::read_lp(const char* fileName)
                 throw BadConfiguration();
             }
             long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
-            params += " " + to_string(max - min + 1);
+            params += to_string(" ") + to_string(max - min + 1);
             for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
-                params += " " + to_string(v - min);
+                params += to_string(" ") + to_string(v - min);
 #else
-                params += " " + to_string(v);
+                params += to_string(" ") + to_string(v);
 #endif
-                params += " " + to_string(-coef * v);
+                params += to_string(" ") + to_string(-coef * v);
             }
         }
         postKnapsackConstraint(scopeIndex, params, false, true, false);

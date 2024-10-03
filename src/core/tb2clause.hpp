@@ -495,7 +495,7 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(tuple[i])) : std::to_string(tuple[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(tuple[i])) : to_string(tuple[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost));
@@ -509,7 +509,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (printed)
                             os << ",";
-                        os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : std::to_string(t[i]));
+                        os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : to_string(t[i]));
                         printed = true;
                     }
                     os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));

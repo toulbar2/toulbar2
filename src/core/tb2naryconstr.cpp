@@ -1535,7 +1535,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (unsigned int i = 0; i < t.size(); i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : std::to_string(t[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
@@ -1549,7 +1549,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (int i = 0; i < a; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : std::to_string(t[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(costs[idx]));

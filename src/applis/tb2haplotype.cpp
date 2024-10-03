@@ -483,9 +483,7 @@ void Haplotype::buildWCSP(const char* fileName, WCSP* wcsp)
         if (pedigree[i].father == 0 && pedigree[i].mother == 0)
             nbfounders++;
         if (pedigree[i].typed) {
-            string varname;
-            varname = "X" + to_string(pedigree[i].individual);
-            wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
+            wcsp->makeEnumeratedVariable(to_string("X") + to_string(pedigree[i].individual), 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
         }
@@ -617,9 +615,7 @@ void Haplotype::buildWCSP_bayesian(const char* fileName, WCSP* wcsp)
         if (pedigree[i].father == 0 && pedigree[i].mother == 0)
             nbfounders++;
         if (pedigree[i].typed) {
-            string varname;
-            varname = "X" + to_string(pedigree[i].individual);
-            wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
+            wcsp->makeEnumeratedVariable(to_string("X") + to_string(pedigree[i].individual), 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
         }

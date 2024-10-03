@@ -2496,7 +2496,7 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         // add dummy value names needed by multicfn
         for (unsigned int var_ind = 0; var_ind < problem->numberOfVariables(); var_ind++) {
             for (unsigned int val_ind = 0; val_ind < problem->getDomainInitSize(var_ind); val_ind++) {
-                problem->addValueName(var_ind, "v" + to_string(val_ind));
+                problem->addValueName(var_ind, to_string("v") + to_string(val_ind));
             }
         }
         CollectionOfWCSP[problem->getIndex()] = problem; // memorize WCSP object
@@ -3212,9 +3212,9 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
                 string params = to_string(-1);
                 for (int variable = 0; variable < arity; ++variable) {
                     if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
-                        params += " 1 " + to_string(value) + " -1";
+                        params += to_string(" 1 ") + to_string(value) + to_string(" -1");
                     } else {
-                        params += " 0";
+                        params += to_string(" 0");
                     }
                 }
                 istringstream file(params);
@@ -3807,7 +3807,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(ctr->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("t" + to_string(tuples[val]));
+                theVar->addValueName(to_string("t") + to_string(tuples[val]));
             }
             listOfDualVars.push_back(theVar);
             listOfDualDomains.push_back(tuples);
@@ -3849,7 +3849,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("t" + to_string(tuples[val]));
+                theVar->addValueName(to_string("t") + to_string(tuples[val]));
             }
             listOfDualVars.push_back(theVar);
             listOfDualDomains.push_back(tuples);
@@ -4803,7 +4803,7 @@ void WCSP::print(ostream& os)
     //    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
     if (getIndex() > 0)
         os << "WCSP: " << getIndex() << " ";
-    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb() ? " - " : "") << (getNegativeLb() ? to_string(getNegativeLb()) : "") << endl;
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb() ? " - " : "") << (getNegativeLb() ? to_string(getNegativeLb()) : to_string("")) << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -5060,7 +5060,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             for (size_t p = 0; p < s->getDomainInitSize(); p++) {
                 if (printed)
                     os << ",";
-                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(p)) : ("v" + std::to_string(s->toValue(p)))) << "\"";
+                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(p)) : (to_string("v") + to_string(s->toValue(p)))) << "\"";
                 printed = true;
             }
             os << "]";
@@ -5077,7 +5077,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             for (int p = 0; p < domsize; p++) {
                 if (printed)
                     os << ",";
-                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(values[p]))) : ("v" + std::to_string(values[p]))) << "\"";
+                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(values[p]))) : (to_string("v") + to_string(values[p]))) << "\"";
                 printed = true;
             }
             os << "]";
@@ -5087,7 +5087,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             os << "\n";
         } else {
             assert(s->assigned());
-            cout << " " << name2cfn(s->getName()) << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(s->getValue()))) : ("v" + std::to_string(s->getValue()))));
+            cout << " " << name2cfn(s->getName()) << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? to_string("*") : ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(s->getValue()))) : (to_string("v") + to_string(s->getValue()))));
         }
     }
     if (!original && nvars != vars.size()) {

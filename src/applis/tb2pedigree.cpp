@@ -780,7 +780,7 @@ void Pedigree::printCorrectSol(WCSP* wcsp)
     else if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, "_correct.sol");
     if (problemname.rfind("_correct.sol") == string::npos)
-        problemname = problemname + to_string("_correct.sol");
+        problemname += to_string("_correct.sol");
     ofstream file(problemname.c_str());
     if (!file) {
         cerr << "Could not write file "
@@ -814,7 +814,7 @@ void Pedigree::printSol(WCSP* wcsp)
     if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, ".sol");
     if (problemname.rfind(".sol") == string::npos)
-        problemname = problemname + to_string(".sol");
+        problemname += to_string(".sol");
     ofstream file(problemname.c_str());
     if (!file) {
         cerr << "Could not write file "

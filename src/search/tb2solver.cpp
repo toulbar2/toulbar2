@@ -1229,7 +1229,7 @@ void Solver::increase(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1262,7 +1262,7 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1320,7 +1320,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1353,7 +1353,7 @@ void Solver::remove(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1386,7 +1386,7 @@ void Solver::remove(int varIndex, ValueCost* array, int first, int last, bool re
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -3459,7 +3459,7 @@ bool Solver::solve(bool first)
                                                     Mdd mdd = computeMDD(&solTrie, initUb);
                                                     if (ToulBar2::verbose >= 1)
                                                         cout << "MDD computed." << endl;
-                                                    // ofstream os(to_string(this) + "-wregular.dot");
+                                                    // ofstream os(to_string(this) + to_string("-wregular.dot"));
                                                     // printLayers(os, mdd);
                                                     // os.close();
                                                     switch (ToulBar2::divMethod) {
@@ -3604,7 +3604,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << "Size of sep            :    " << tailleSep << endl;
             }
             cout << "Time                   :    " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
-            cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
+            cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << endl;
         }
         return;
     }
@@ -3666,14 +3666,14 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
             }
             if (ToulBar2::haplotype) {
-                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else if (!ToulBar2::bayesian) {
                 if (!isComplete) {
                     cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
                 }
-                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else {
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             }
         } else {
 #ifdef OPENMPI
@@ -3685,7 +3685,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
 #ifdef OPENMPI
             } else if (ToulBar2::maxsateval && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
 #else
@@ -3698,7 +3698,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         }
     } else {
         if (ToulBar2::verbose >= 0) {
-            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         }
 #ifdef OPENMPI
         if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
@@ -4114,7 +4114,7 @@ void Solver::epsDumpSubProblems(CPStore& cp, OpenList& open)
         if (nd.getCost() < wcsp->getUb()) {
             string epsSubProblem = "-x=\"";
             for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value + ((cp[idx].op == CP_INCREASE) ? -1 : 0) + ((cp[idx].op == CP_DECREASE) ? 1 : 0));
+                epsSubProblem += to_string(",") + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value + ((cp[idx].op == CP_INCREASE) ? -1 : 0) + ((cp[idx].op == CP_DECREASE) ? 1 : 0));
             }
             epsfile << epsSubProblem << "\""
                     << " -best=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(nd.getCost()) << std::setprecision(DECIMAL_POINT) << endl;

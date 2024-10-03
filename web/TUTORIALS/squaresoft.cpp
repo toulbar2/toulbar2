@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
 
     for (int i=0; i < N; i++) {
-        solver->getWCSP()->makeEnumeratedVariable("sq" + to_string(i+1), 0, (S-i)*(S-i) - 1);
+        solver->getWCSP()->makeEnumeratedVariable(to_string("sq") + to_string(i+1), 0, (S-i)*(S-i) - 1);
     }
 
     for (int i=0; i < N; i++) {

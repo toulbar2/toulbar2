@@ -156,9 +156,9 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     thescope.push_back(scope[i]->wcspIndex);
                     vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
-                    params += " " + to_string(vc.size());
+                    params += to_string(" ") + to_string(vc.size());
                     for (unsigned int j = 0; j < vc.size(); j++) {
-                        params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
+                        params += to_string(" ") + to_string(vc[j].first) + to_string(" ") + to_string(-(vc[j].second));
                     }
                 }
                 WeightedCSPConstraints.erase(problem->getIndex());
@@ -200,9 +200,9 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     thescope.push_back(scope[i]->wcspIndex);
                     vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
-                    params += " " + to_string(vc.size());
+                    params += to_string(" ") + to_string(vc.size());
                     for (unsigned int j = 0; j < vc.size(); j++) {
-                        params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
+                        params += to_string(" ") + to_string(vc[j].first) + to_string(" ") + to_string(-(vc[j].second));
                     }
                 }
                 WeightedCSPConstraints.erase(negproblem->getIndex());

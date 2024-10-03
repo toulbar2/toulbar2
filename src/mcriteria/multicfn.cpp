@@ -210,7 +210,7 @@ void MultiCFN::push_back(WCSP* wcsp, Double weight)
         mcriteria::Var* own_var = &var[var_ind];
 
         // set the name
-        costFunc->name = own_var->name + "_cost_" + to_string(networks.size() - 1);
+        costFunc->name = own_var->name + to_string("_cost_") + to_string(networks.size() - 1);
 
         cost_function_index.insert(make_pair(costFunc->name, cost_function.size() - 1));
 
@@ -829,14 +829,14 @@ void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind)
         // compute the number of value to indicate for the variable
         auto iter = find_if(lcost_func->weights[scope_ind].begin(), lcost_func->weights[scope_ind].end(), [](auto elt) { return elt.first == 0; });
         if (iter == lcost_func->weights[scope_ind].end()) {
-            args += " " + to_string(lcost_func->weights[scope_ind].size());
+            args += to_string(" ") + to_string(lcost_func->weights[scope_ind].size());
         } else {
-            args += " " + to_string(lcost_func->weights[scope_ind].size() - 1);
+            args += to_string(" ") + to_string(lcost_func->weights[scope_ind].size() - 1);
         }
         for (unsigned int val_ind = 0; val_ind < lcost_func->weights[scope_ind].size(); val_ind++) {
             if (lcost_func->weights[scope_ind][val_ind].first != 0) {
                 Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[lcost_func->weights[scope_ind][val_ind].first]));
-                args += " " + to_string(val) + " " + to_string(int(lcost_func->weights[scope_ind][val_ind].second));
+                args += to_string(" ") + to_string(val) + to_string(" ") + to_string(int(lcost_func->weights[scope_ind][val_ind].second));
             }
         }
     }

@@ -909,7 +909,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
     cout << endl;
-    cout << "   -bisupport=[float] : in bi-objective optimization with the second objective encapsulated by a bounding constraint, the value heuristic chooses between both EAC supports of first (main) and second objectives by minimum weighted regret (if parameter is non-negative, it is used as the weight for the second objective) or always chooses the EAC support of the first objective (if parameter is zero) or always chooses the second objective (if parameter is negative, -" + to_string(BISUPPORT_HEUR_LB) + ": for choosing EAC from the lower bound constraint, -" + to_string(BISUPPORT_HEUR_UB) + ": from the upper bound constraint, -" + to_string(BISUPPORT_HEUR_MINGAP) + ": to favor the smallest gap, -" + to_string(BISUPPORT_HEUR_MAXGAP) + ": to favor the largest gap) (default value is " << ToulBar2::bisupport << ")" << endl;
+    cout << "   -bisupport=[float] : in bi-objective optimization with the second objective encapsulated by a bounding constraint, the value heuristic chooses between both EAC supports of first (main) and second objectives by minimum weighted regret (if parameter is non-negative, it is used as the weight for the second objective) or always chooses the EAC support of the first objective (if parameter is zero) or always chooses the second objective (if parameter is negative, -" << to_string(BISUPPORT_HEUR_LB) << ": for choosing EAC from the lower bound constraint, -" << to_string(BISUPPORT_HEUR_UB) << ": from the upper bound constraint, -" << to_string(BISUPPORT_HEUR_MINGAP) << ": to favor the smallest gap, -" << to_string(BISUPPORT_HEUR_MAXGAP) << ": to favor the largest gap) (default value is " << ToulBar2::bisupport << ")" << endl;
     cout << "   -e=[integer] : boosting search with variable elimination of small degree (less than or equal to 3) (default value is " << ToulBar2::elimDegree << ")" << endl;
     cout << "   -p=[integer] : preprocessing only: general variable elimination of degree less than or equal to the given value (default value is " << ToulBar2::elimDegree_preprocessing << ")" << endl;
     cout << "   -t=[integer] : preprocessing only: simulates restricted path consistency by adding ternary cost functions on triangles of binary cost functions within a given maximum space limit (in MB)";
@@ -1241,21 +1241,21 @@ int _tmain(int argc, TCHAR* argv[])
     string CMD; //  command line option
     string BIN = "toulbar2";
     if (!(ToulBar2::verbose < 0)) {
-        VER = "c " + to_string(CurrentBinaryPath);
+        VER = to_string("c ") + to_string(CurrentBinaryPath);
 #ifdef MENDELSOFT
         VER.append("mendelsoft");
         BIN = "mendelsoft";
 #else
         VER.append("toulbar2");
 #endif
-        VER.append("  version : " + to_string(ToulBar2::version) + ", copyright (c) 2006-2024, toulbar2 team");
+        VER.append(to_string("  version : ") + to_string(ToulBar2::version) + to_string(", copyright (c) 2006-2024, toulbar2 team"));
     }
 
     ///////print command line /////
-    CMD = "cmd: " + to_string(CurrentBinaryPath) + BIN;
+    CMD = to_string("cmd: ") + to_string(CurrentBinaryPath) + BIN;
     int counter;
     for (counter = 1; counter < argc; counter++)
-        CMD.append(" " + to_string(argv[counter]));
+        CMD.append(to_string(" ") + to_string(argv[counter]));
 
     ////////////////
     // --------------------------simple opt ----------------------
@@ -3339,37 +3339,37 @@ int _tmain(int argc, TCHAR* argv[])
                     set_intersection(varsBLP[0].begin(), varsBLP[0].end(), varsBLP[1].begin(), varsBLP[1].end(),
                         std::inserter(intersect, intersect.begin()));
                     for (int v : intersect) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     varOrder += "\n1 0";
                     for (int v : intersect) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     set<int> difference1;
                     set_difference(varsBLP[0].begin(), varsBLP[0].end(), intersect.begin(), intersect.end(),
                         std::inserter(difference1, difference1.begin()));
                     for (int v : difference1) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     varOrder += "\n2 0";
                     for (int v : intersect) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     set<int> difference2;
                     set_difference(varsBLP[1].begin(), varsBLP[1].end(), intersect.begin(), intersect.end(),
                         std::inserter(difference2, difference2.begin()));
                     for (int v : difference2) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     varOrder += "\n3 0";
                     for (int v : intersect) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     set<int> difference3;
                     set_difference(varsBLP[2].begin(), varsBLP[2].end(), intersect.begin(), intersect.end(),
                         std::inserter(difference3, difference3.begin()));
                     for (int v : difference3) {
-                        varOrder += " " + to_string(v);
+                        varOrder += to_string(" ") + to_string(v);
                     }
                     varOrder += "\n";
                     ToulBar2::varOrder = new char[varOrder.size() + 1];
