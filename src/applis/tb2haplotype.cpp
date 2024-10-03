@@ -833,7 +833,7 @@ void Haplotype::buildWCSP_haplotype(const char* fileName, WCSP* wcsp)
 
     // create Boolean variables
     for (int i = 0; i < nbloci; i++) {
-        wcsp->makeEnumeratedVariable("X" + to_string(i), 0, 1);
+        wcsp->makeEnumeratedVariable(to_string("X") + to_string(i), 0, 1);
     }
 
     vector<Cost> unaryCosts0(nbloci, 0);

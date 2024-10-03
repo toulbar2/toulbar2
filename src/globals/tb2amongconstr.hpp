@@ -73,9 +73,9 @@ public:
     string getName()
     {
         string name = "samong";
-        name += "_" + to_string(lb) + "_" + to_string(ub) + "_" + to_string(V.size());
+        name += to_string("_") + to_string(lb) + to_string("_") + to_string(ub) + to_string("_") + to_string(V.size());
         for (set<Value>::iterator iter = V.begin(); iter != V.end(); ++iter)
-            name += "_" + to_string(*iter);
+            name += to_string("_") + to_string(*iter);
         return name;
     }
     void dump(ostream& os, bool original = true);

@@ -179,7 +179,7 @@ void WeightedAmong::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, newVariable);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         if (VERBOSE) {
             color(5);
             cout << "new variable " << addVariablesIndex[newVariable] << "(" << ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]))->getDomainInitSize() << ")";
@@ -342,7 +342,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         int varIdx = wcsp->makeEnumeratedVariable(varname, 0, domsize); // add q0 variable
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(varIdx));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         if (ToulBar2::verbose > 1)
             cout << "wregular add varname =" << varname << "=> var index " << wcsp->numberOfVariables() << " domain size = " << domsize + 1 << endl;
     } else {
@@ -372,7 +372,7 @@ void WeightedRegular::addToCostFunctionNetwork(WCSP* wcsp)
         int theindex = wcsp->makeEnumeratedVariable(varname, 0, domsize); // add qi variable
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(theindex));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         assert(theindex == v + (int)current_var_number);
         if (ToulBar2::verbose > 1)
             cout << "DEBUG>> wregular add varname =" << varname << "=> rank " << wcsp->numberOfVariables() << " domain = " << domsize + 1 << endl;
@@ -546,7 +546,7 @@ void WeightedSum::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, cumulDOWN, cumulUP);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         // cout << "\033[45m" << "new variable \033[0m" << addVariablesIndex[newVariable] << "("<< ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getInf()<< ":" << ":" << ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getSup() << ")" << "\033[0m" << endl;
         if (newVariable < arity) {
             cumulDOWN += ((EnumeratedVariable*)wcsp->getVar(scope[newVariable]))->getInf();
@@ -743,7 +743,7 @@ void WeightedVarSum::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, cumulDOWN, cumulUP);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         // cout << "\033[45m" << "new variable \033[0m" << addVariablesIndex[newVariable] << "("<< ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getInf()<< ":" << ":" << ((EnumeratedVariable *) wcsp->getVar(addVariablesIndex[newVariable]))->getSup() << ")" << "\033[0m" << endl;
         if (newVariable < arity) {
             cumulDOWN += ((EnumeratedVariable*)wcsp->getVar(scope[newVariable]))->getInf();
@@ -895,7 +895,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesOverlap[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, 1);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesOverlap[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         // cout << "add overlap " << newVariable << endl;
     }
 
@@ -941,7 +941,7 @@ void WeightedOverlap::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesAmong[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, newVariable);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesAmong[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
 
         // cout << "add among " << newVariable << endl;
     }
@@ -1167,7 +1167,7 @@ void WeightedVarAmong::addToCostFunctionNetwork(WCSP* wcsp)
         addVariablesIndex[newVariable] = wcsp->makeEnumeratedVariable(varname, 0, newVariable);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(addVariablesIndex[newVariable]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
 
         if (VERBOSE)
             cout << "\033[45m"
@@ -1491,12 +1491,12 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
         newVariable[positionVar][0] = wcsp->makeEnumeratedVariable(varnamel, 0, arity / 2);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][0]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
 
         newVariable[positionVar][1] = wcsp->makeEnumeratedVariable(varnamer, 0, arity / 2);
         theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][1]));
         for (unsigned int val = 0; val <= theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
         positionVar++;
     }
 
@@ -1641,12 +1641,12 @@ void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
         newVariable[positionVar][0] = wcsp->makeEnumeratedVariable(varnamel, 0, arity / 2);
         EnumeratedVariable* theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][0]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
 
         newVariable[positionVar][1] = wcsp->makeEnumeratedVariable(varnamer, 0, arity / 2);
         theVar = ((EnumeratedVariable*)wcsp->getVar(newVariable[positionVar][1]));
         for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++)
-            theVar->addValueName("q" + std::to_string(val));
+            theVar->addValueName(to_string("q") + to_string(val));
 
         positionVar++;
     }
@@ -1836,8 +1836,8 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, 2 * distance + 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("q" + std::to_string(val % (distance + 1)) + "_"
-                    + std::to_string(val / (distance + 1)));
+                theVar->addValueName(to_string("q") + to_string(val % (distance + 1)) + to_string("_")
+                    + to_string(val / (distance + 1)));
             }
         }
         wcsp->addDivConstraint(divVars, distance, solutionmap, divVarsIdMap);
@@ -1848,8 +1848,8 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             divVarsIdMap[xId] = wcsp->makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, 2 * distance + 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("q" + std::to_string(val % (distance + 1)) + "_"
-                    + std::to_string(val / (distance + 1)));
+                theVar->addValueName(to_string("q") + to_string(val % (distance + 1)) + to_string("_")
+                    + to_string(val / (distance + 1)));
             }
         }
         for (Variable* x : divVars) {
@@ -1857,7 +1857,7 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("q" + std::to_string(val));
+                theVar->addValueName(to_string("q") + to_string(val));
             }
         }
         wcsp->addHDivConstraint(divVars, distance, solutionmap, divVarsIdMap, divHVarsIdMap);
@@ -1868,7 +1868,7 @@ void WeightedDiverse::addToCostFunctionNetwork(WCSP* wcsp)
             divHVarsIdMap[xId] = wcsp->makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_" + to_string(nbVariableCFN) + "_" + x->getName(), 0, distance);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(wcsp->getVar(divHVarsIdMap[xId]));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("q" + std::to_string(val));
+                theVar->addValueName(to_string("q") + to_string(val));
             }
         }
         wcsp->addTDivConstraint(divVars, distance, solutionmap, divHVarsIdMap);
