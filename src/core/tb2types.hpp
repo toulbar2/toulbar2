@@ -774,8 +774,8 @@ public:
     static int elimSpaceMaxMB; ///< \brief maximum space size for generic variable elimination (in MegaByte) (related to command line option -p)
     static int minsumDiffusion; ///< \brief in preprocessing, applies Min Sum Diffusion algorithm a given number of iterations (command line option -M)
     static int preprocessTernaryRPC; ///< \brief in preprocessing, simulates restricted path consistency by adding ternary cost functions on most-promising triangles of binary cost functions (maximum space size in MegaByte) (command line option -t)
-    static int pwc; ///< \brief pairwise consistency by dual encoding into a binary WCSP
     static int hve; ///< \brief hidden variable encoding into a binary WCSP
+    static int pwc; ///< \brief pairwise consistency by dual encoding into a binary WCSP
     static bool pwcMinimalDualGraph; ///< \brief minimizes dual intersection graph by removing redundant edges
     static int preprocessFunctional; ///< \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
     static bool costfuncSeparate; ///< \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)

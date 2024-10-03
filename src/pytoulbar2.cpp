@@ -27,8 +27,8 @@
  */
 
 // How to manually extract class properties to bind in Python:
-//  awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
 //  awk '/^class /{ok=1;class=$2} go&&/static/{gsub(";.*","",$0); print "        .def_readwrite_static(\"" $NF "\", &" class "::" $NF ")"} ok&&/public/{go=1}' core/tb2types.hpp
+//  awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
 
 // How to compile Python3 pytb2 module library on Linux:
 //  apt install pybind11-dev (or else pip3 install pybind11)
@@ -414,6 +414,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("numberOfConnectedKnapsackConstraints", &WeightedCSP::numberOfConnectedKnapsackConstraints)
         .def("medianDomainSize", &WeightedCSP::medianDomainSize)
         .def("medianDegree", &WeightedCSP::medianDegree)
+        .def("medianArity", &WeightedCSP::medianArity)
         .def("getMaxDomainSize", &WeightedCSP::getMaxDomainSize)
         .def("getMaxCurrentDomainSize", &WeightedCSP::getMaxCurrentDomainSize)
         .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
@@ -426,7 +427,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("postNullaryConstraint", (void(WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
         .def(
             "postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-                return s.postUnaryConstraint(xIndex, costs, incremental);
+                s.postUnaryConstraint(xIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def(
@@ -454,7 +455,7 @@ PYBIND11_MODULE(pytb2, m)
             "postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {
                 return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
             },
-            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
+            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = 0, py::arg("conflict") = false)
         .def(
             "postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
                 return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
