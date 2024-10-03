@@ -3175,6 +3175,9 @@ public:
         }
 
         if (summaxweight < Original_capacity) {
+            if (ToulBar2::verbose >= 7) {
+                cout << this << " maximum capacity available is smaller than requested! " << summaxweight << " < " << Original_capacity << endl;
+            }
             return false;
         }
 
@@ -3183,12 +3186,18 @@ public:
             for (int i = 0; i < arity_; i++) {
                 for (unsigned int j = 0; j < VarVal[i].size() - 1; j++) {
                     if (scope[i]->canbe(VarVal[i][j]) && summaxweight + weights[i][j] - weights[i][posmaxweight[i]] < Original_capacity) {
+                        if (ToulBar2::verbose >= 7) {
+                            cout << this << " bound consistency not done for variable " << scope[i]->getName() << " and value " << VarVal[i][j] << "! " << summaxweight << " + " << weights[i][j] << " - " << weights[i][posmaxweight[i]] << " < " << Original_capacity << endl;
+                        }
                         return false;
                     }
                 }
                 if (weights[i].back() > 0) {
                     for (unsigned int j = 0; j < NotVarVal[i].size(); j++) {
                         if (scope[i]->canbe(NotVarVal[i][j]) && summaxweight + weights[i].back() - weights[i][posmaxweight[i]] < Original_capacity) {
+                            if (ToulBar2::verbose >= 7) {
+                                cout << this << " bound consistency not done for variable " << scope[i]->getName() << " and nvalue " << NotVarVal[i][j] << "! " << summaxweight << " + " << weights[i].back() << " - " << weights[i][posmaxweight[i]] << " < " << Original_capacity << endl;
+                            }
                             return false;
                         }
                     }
@@ -3231,7 +3240,7 @@ public:
                         assert(get<1>(values[j]) < get<1>(values[prev]) || get<2>(values[j]) >= get<2>(values[prev]));
                         if (get<1>(values[j]) < get<1>(values[prev]) && get<2>(values[j]) < get<2>(values[prev])) {
                             auto tuple = make_tuple(i, get<0>(values[j]), get<1>(values[j]), get<2>(values[j]), get<0>(values[prev]), get<1>(values[prev]), get<2>(values[prev]), (Double)(get<2>(values[prev]) - get<2>(values[j])) / (get<1>(values[prev]) - get<1>(values[j])));
-                            while (slopes.size() > 0 && get<0>(slopes.back())==get<0>(tuple) && get<7>(slopes.back()) < get<7>(tuple)) {
+                            while (slopes.size() > 0 && get<0>(slopes.back())==get<0>(tuple) && get<7>(slopes.back()) <= get<7>(tuple)) {
                                 tuple = make_tuple(i, get<0>(values[j]), get<1>(values[j]), get<2>(values[j]), get<4>(slopes.back()), get<5>(slopes.back()), get<6>(slopes.back()), (Double)(get<6>(slopes.back()) - get<2>(values[j])) / (get<5>(slopes.back()) - get<1>(values[j])));
                                 slopes.pop_back();
                             }
@@ -3242,7 +3251,7 @@ public:
                     sumweight += get<1>(values[prev]);
                     totalcost += get<2>(values[prev]);
                 }
-                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return get<7>(x) < get<7>(y) || (get<7>(x) == get<7>(y) && (get<0>(x) != get<0>(y) || get<1>(x) < get<1>(y)));});
+                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return get<7>(x) < get<7>(y);});
                 if (ToulBar2::verbose >= 7) {
                     cout << "weight0: " << sumweight << " cost0: " << totalcost << " slopes:";
                     for (auto e : slopes) {
