@@ -2630,9 +2630,10 @@ bool WCSP::isKnapsack()
     return false;
 }
 
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflictgraph, Tuple wcnf)
+int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, bool isclique, int kp, bool conflictgraph, Tuple wcnf)
 {
     assert(ToulBar2::bilevel <= 1);
+    vector<int> scopeIndex(scopeIndex_, scopeIndex_ + arity); // avoids modifying the original scope
     // Eliminate variable with weight 0
     vector<int> Weightzero, CorrAMO, VirtualVar;
     Long readw;
