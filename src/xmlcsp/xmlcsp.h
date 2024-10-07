@@ -618,7 +618,7 @@ public:
                     } else if (arity == 0) {
                     }
 
-                    if (ctrIndex >= 0)
+                    if (ctrIndex >= 0 && ctrIndex != INT_MAX)
                         ctr = wcsp->getCtr(ctrIndex);
                     if (ctr && ToulBar2::verbose >= 4)
                         cout << *ctr << endl;

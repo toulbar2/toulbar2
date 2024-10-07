@@ -6396,15 +6396,23 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
             }
         ctrIndex = postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs);
     }
-    assert(ctrIndex > -INT_MAX);
     delete[] scopeU;
     delete[] scopeUi;
     delete[] scopeI;
-    ctr = getCtr(ctrIndex);
-    ctr->propagate();
-    if (ToulBar2::verbose >= 1)
+    if (ctrIndex >= 0 && ctrIndex != INT_MAX) {
+        ctr = getCtr(ctrIndex);
+        ctr->propagate();
+    }
+    if (ToulBar2::verbose >= 1) {
         cout << endl
-             << "Has result: " << *ctr << endl;
+             << "Has result: ";
+        if (ctr) {
+            cout << *ctr;
+        } else {
+            cout << "Null";
+        }
+        cout << endl;
+    }
     return ctr;
 }
 

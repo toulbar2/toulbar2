@@ -60,14 +60,7 @@ for j in range(M):
 # add channeling constraints between warehouses and stores
 for i in range(N):
     for j in range(M):
-        Constraint = []
-        for a in range(2):
-            for b in range(N):
-                if a == 0 and b == i:
-                    Constraint.append(top)
-                else:
-                    Constraint.append(0)
-        Problem.AddFunction([i, N+j], Constraint)
+        Problem.AddFunction([i, N+j], [(top if (a == 0 and b == i) else 0) for a in range(2) for b in range(N)])
 
 #Problem.Dump('warehouse.cfn')
 Problem.Solve(showSolutions=3)
