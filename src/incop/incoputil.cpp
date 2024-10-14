@@ -442,7 +442,7 @@ LSAlgorithm* algo_marche(char** argv, int& narg, string& method, int gww)
 
 {
     LSAlgorithm* algo;
-    Metaheuristic* mheuristic = new Metaheuristic();
+    Metaheuristic* mheuristic = nullptr;
     NeighborhoodSearch* nbhsear;
     int taille_voisinage_min, taille_voisinage_max, fin_voisinage, var_conflit, val_conflit;
     int seuildebut = 0;
@@ -551,7 +551,7 @@ GWWAlgorithm* algo_gww(char** argv, int& narg, string& method, int& taille, list
 // lecture de l'argument method et appel selon l'argument de la cr�ation d'un des  2 principaux types d'algo (LS et GWW)
 IncompleteAlgorithm* algo_creation(char** argv, int& narg, int& taille, int& graine1, int& nbessais)
 {
-    IncompleteAlgorithm* algo = new IncompleteAlgorithm();
+    IncompleteAlgorithm* algo = nullptr;
     list<string> liste_methodes;
     string method;
     definir_liste_methodes(liste_methodes);

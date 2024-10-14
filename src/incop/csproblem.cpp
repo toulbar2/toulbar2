@@ -76,6 +76,7 @@ CSProblem::~CSProblem()
     delete currentmove;
     delete firstmove;
     delete bestmove;
+    delete best_config;
 }
 
 void CSProblem::init_population(Configuration** population, int populationsize)
