@@ -621,5 +621,12 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
         wcsp->setUb(initialUpperBound);
     }
 
+    // free the options string
+    for(int i = 0; i < argc; i ++) {
+        free(argv[i]);
+    }
+    free(argv);
+
+
     return result;
 }
