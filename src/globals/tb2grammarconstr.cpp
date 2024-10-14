@@ -12,6 +12,7 @@ GrammarConstraint::~GrammarConstraint(void)
     deleteTable(f);
     deleteTable(curf);
     deleteTable(marked);
+    deleteTable(up);
 
     for (int i = 0; i < arity(); i++) {
         delete[] u[i];
