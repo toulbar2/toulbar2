@@ -1512,14 +1512,14 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
             newScopeR[variable] = scope[variable + arity / 2];
         }
 
-        WeightedVarAmong* wamongL = new WeightedVarAmong(arity / 2 + 1, newScopeL);
+        std::unique_ptr<WeightedVarAmong> wamongL = std::make_unique<WeightedVarAmong>(arity / 2 + 1, newScopeL);
         wamongL->setSemantics("hard");
         wamongL->setBaseCost(top);
         wamongL->addValue(value);
         wamongL->addToCostFunctionNetwork(wcsp);
         delete[] newScopeL;
 
-        WeightedVarAmong* wamongR = new WeightedVarAmong(arity / 2 + 1, newScopeR);
+        std::unique_ptr<WeightedVarAmong> wamongR = std::make_unique<WeightedVarAmong>(arity / 2 + 1, newScopeR);
         wamongR->setSemantics("hard");
         wamongR->setBaseCost(top);
         wamongR->addValue(value);
@@ -1557,6 +1557,9 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
         }
 
         wcsp->postBinaryConstraint(newVariable[value][0], newVariable[value][1], binaryCosts);
+    }
+    for(int i = 0; i < nbValue; i ++) {
+        delete[] newVariable[i];
     }
     delete[] newVariable;
 }
