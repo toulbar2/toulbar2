@@ -114,7 +114,7 @@ public:
         if (ToulBar2::FullEAC && !isSep()) {
             bool res = reviseEACGreedySolution(index, a);
             if (ToulBar2::verbose >= 4 && !res)
-                cout << "Current greedy solution violates this constraint: " << *this << endl;
+                cout << "Current greedy solution with variable index " << index << " assigned to " << a << " violates this constraint: " << *this << endl;
         }
         return true;
     }

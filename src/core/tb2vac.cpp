@@ -343,6 +343,11 @@ bool VACExtension::propagate()
                 if (itThreshold > 1)
                     ToulBar2::nbTimesIsVACitThresholdMoreThanOne++;
 
+                if (ToulBar2::verbose >= 7) {
+                    cout << "End of VAC pass 1..." << endl;
+                    cout << *wcsp;
+                }
+
                 if (ToulBar2::RASPSsaveitThresholds) {
                     ToulBar2::RASPSnbStrictACVariables = wcsp->numberOfVariables() - wcsp->numberOfUnassignedVariables();
                     double ratio = (ToulBar2::RASPSnbStrictACVariables == 0) ? 0.0000000001 : (((double)ToulBar2::RASPSnbStrictACVariables / (double)wcsp->numberOfVariables()) / (double)itThreshold);

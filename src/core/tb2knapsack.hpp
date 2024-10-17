@@ -744,8 +744,24 @@ public:
                 y_cc = Slopes[iter][3];
             if (xk == 0.)
                 y_cc = 0.;
-            y_i.clear();
             assert(y_cc >= 0.);
+            if (ToulBar2::verbose >= 7) {
+                cout << this << " with opt=" << c << " and y_cc=" << y_cc;
+                for (int i = 0; i < carity; i++) {
+                    int currentvar = current_scope_idx[i];
+                    cout << " " << scope[currentvar]->getName();
+                    for (int j = 0; j < nbValue[i]; ++j) {
+                        int currentval = current_val_idx[i][j];
+                        if (OptSol[currentvar][currentval] == 1.) {
+                            cout << "=" << VarVal[currentvar][currentval];
+                        } else if (OptSol[currentvar][currentval] > 0.) {
+                            cout << ":" << VarVal[currentvar][currentval] << "(" << OptSol[currentvar][currentval] << ")";
+                        }
+                    }
+                }
+                cout << endl;
+            }
+            y_i.clear();
             for (int i = 0; i < carity; i++) {
                 int k = 0;
                 int currentvar = current_scope_idx[i];
@@ -1526,6 +1542,17 @@ public:
             evalTuple[i] = var->toIndex(var->getValue());
         }
         return eval(evalTuple);
+    }
+    Cost getCost(int index, Value val)
+    {
+        assert(index >= 0 && index < arity_);
+        auto it = find(VarVal[index].begin(), VarVal[index].end(), val);
+        if (it == VarVal[index].end()) {
+            assert(find(NotVarVal[index].begin(), NotVarVal[index].end(), val) != NotVarVal[index].end());
+            return deltaCosts[index].back();
+        } else {
+            return deltaCosts[index][distance(VarVal[index].begin(), it)];
+        }
     }
 
     double computeTightness() override
@@ -3273,7 +3300,7 @@ public:
                 if (ToulBar2::verbose >= 7) {
                     cout << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
                 }
-                return Ceil(totalcost) == 0.; // totalcost <= ToulBar2::epsilon;
+                return totalcost <= ToulBar2::epsilon; // Ceil(totalcost) == 0.;
             }
         }
 
@@ -3315,20 +3342,26 @@ public:
     {
         remove(index);
     }
-    void remove(int idx) override
+    void remove(int index) override
     {
-        if (isunassigned(idx)) {
+        if (isunassigned(index)) {
             UpdateGreatestWeight();
+            bool revise = ToulBar2::FullEAC && getVar(index)->cannotbe(getVar(index)->getSupport());
             propagate();
-        } else if (assigned[idx] < 2) {
-            assign(idx);
+            if (revise)
+                reviseEACGreedySolution();
+        } else if (assigned[index] < 2) {
+            assign(index);
         }
     }
     void projectFromZero(int index) override
     {
         // TODO: incremental cost propagation
         UpdateGreatestWeight();
+        bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) + getCost(index, getVar(index)->getSupport()) > MIN_COST);
         propagate();
+        if (revise)
+            reviseEACGreedySolution();
     }
 
     bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
