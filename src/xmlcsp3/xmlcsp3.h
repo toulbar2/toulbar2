@@ -145,8 +145,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         if (vars.size()==1) {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]), (isSupport)?MAX_COST_XML3:MIN_COST);
             for(auto& tuple:tuples) {
-                int pos = problem->toIndex(vars[0], tuple[0]);
-                if (pos < 0 || pos >= problem->getDomainInitSize(vars[0]))
+                unsigned int pos = problem->toIndex(vars[0], tuple[0]);
+                if (pos >= problem->getDomainInitSize(vars[0]))
                     continue;
                 if (isSupport) {
                     costs[pos] = MIN_COST;
@@ -158,11 +158,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else if (vars.size()==2) {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), (isSupport)?MAX_COST_XML3:MIN_COST);
             for(auto& tuple:tuples) {
-                int pos0 = problem->toIndex(vars[0], tuple[0]);
-                if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
+                unsigned int pos0 = problem->toIndex(vars[0], tuple[0]);
+                if (pos0 >= problem->getDomainInitSize(vars[0]))
                     continue;
-                int pos1 = problem->toIndex(vars[1], tuple[1]);
-                if (pos1 < 0 || pos1 >= problem->getDomainInitSize(vars[1]))
+                unsigned int pos1 = problem->toIndex(vars[1], tuple[1]);
+                if (pos1 >= problem->getDomainInitSize(vars[1]))
                     continue;
                 if (isSupport) {
                     costs[pos0 * problem->getDomainInitSize(vars[1]) + pos1] = MIN_COST;
@@ -174,14 +174,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else if (vars.size()==3) {
             vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), (isSupport)?MAX_COST_XML3:MIN_COST);
             for(auto& tuple:tuples) {
-                int pos0 = problem->toIndex(vars[0], tuple[0]);
-                if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
+                unsigned int pos0 = problem->toIndex(vars[0], tuple[0]);
+                if (pos0 >= problem->getDomainInitSize(vars[0]))
                     continue;
-                int pos1 = problem->toIndex(vars[1], tuple[1]);
-                if (pos1 < 0 || pos1 >= problem->getDomainInitSize(vars[1]))
+                unsigned int pos1 = problem->toIndex(vars[1], tuple[1]);
+                if (pos1 >= problem->getDomainInitSize(vars[1]))
                     continue;
-                int pos2 = problem->toIndex(vars[2], tuple[2]);
-                if (pos2 < 0 || pos2 >= problem->getDomainInitSize(vars[2]))
+                unsigned int pos2 = problem->toIndex(vars[2], tuple[2]);
+                if (pos2 >= problem->getDomainInitSize(vars[2]))
                     continue;
                 if (isSupport) {
 //                    costs[(size_t)problem->toIndex(vars[0], tuple[0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuple[1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuple[2])] = MIN_COST;
@@ -234,8 +234,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<Cost> costs(problem->getDomainInitSize(var), (isSupport)?MAX_COST_XML3:MIN_COST);
         for(auto value:tuples) {
             assert(value != STAR);
-            int pos = problem->toIndex(var, value);
-            if (pos < 0 || pos >= problem->getDomainInitSize(var))
+            unsigned int pos = problem->toIndex(var, value);
+            if (pos >= problem->getDomainInitSize(var))
                 continue;
             if (isSupport) {
                 costs[pos] = MIN_COST;
@@ -2765,8 +2765,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 int from = stateids[tr.from];
                 int to = stateids[tr.to];
                 int val = tr.val;
-                int pos = idx(stateval[from], val, stateval[to]);
-                if (pos < 0 || pos >= costs.size())
+                unsigned int pos = idx(stateval[from], val, stateval[to]);
+                if (pos >= costs.size())
                     continue;
                 costs[pos] = MIN_COST;
             }
@@ -3157,8 +3157,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         vector<Cost> costs(problem->getDomainInitSize(vars[0]), MIN_COST);
         for (unsigned int v = 1; v < values.size(); v++) {
-            int pos = problem->toIndex(vars[0], values[v]);
-            if (pos < 0 || pos >= costs.size())
+            unsigned int pos = problem->toIndex(vars[0], values[v]);
+            if (pos >= costs.size())
                 continue;
             costs[pos] = MAX_COST_XML3;
         }
@@ -3282,8 +3282,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         if (vars.size()==1) {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]), MAX_COST_XML3);
             for(unsigned int i=0; i<tuples.size(); i++) {
-                int pos = problem->toIndex(vars[0], tuples[i][0]);
-                if (pos < 0 || pos >= costs.size())
+                unsigned int pos = problem->toIndex(vars[0], tuples[i][0]);
+                if (pos >= costs.size())
                     continue;
                 costs[pos] = tcosts[i] - negcost;
             }
@@ -3291,11 +3291,11 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else if (vars.size()==2) {
             vector<Cost> costs(problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]), MAX_COST_XML3);
             for(unsigned int i=0; i<tuples.size(); i++) {
-                int pos0 = problem->toIndex(vars[0], tuples[i][0]);
-                if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
+                unsigned int pos0 = problem->toIndex(vars[0], tuples[i][0]);
+                if (pos0 >= problem->getDomainInitSize(vars[0]))
                     continue;
-                int pos1 = problem->toIndex(vars[1], tuples[i][1]);
-                if (pos1 < 0 || pos1 >= problem->getDomainInitSize(vars[1]))
+                unsigned int pos1 = problem->toIndex(vars[1], tuples[i][1]);
+                if (pos1 >= problem->getDomainInitSize(vars[1]))
                     continue;
                 costs[pos0 * problem->getDomainInitSize(vars[1]) + pos1] = tcosts[i] - negcost;
             }
@@ -3303,14 +3303,14 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else if (vars.size()==3) {
             vector<Cost> costs((size_t)problem->getDomainInitSize(vars[0]) * (size_t)problem->getDomainInitSize(vars[1]) * (size_t)problem->getDomainInitSize(vars[2]), MAX_COST_XML3);
             for(unsigned int i=0; i<tuples.size(); i++) {
-                int pos0 = problem->toIndex(vars[0], tuples[i][0]);
-                if (pos0 < 0 || pos0 >= problem->getDomainInitSize(vars[0]))
+                unsigned int pos0 = problem->toIndex(vars[0], tuples[i][0]);
+                if (pos0 >= problem->getDomainInitSize(vars[0]))
                     continue;
-                int pos1 = problem->toIndex(vars[1], tuples[i][1]);
-                if (pos1 < 0 || pos1 >= problem->getDomainInitSize(vars[1]))
+                unsigned int pos1 = problem->toIndex(vars[1], tuples[i][1]);
+                if (pos1 >= problem->getDomainInitSize(vars[1]))
                     continue;
-                int pos2 = problem->toIndex(vars[2], tuples[i][2]);
-                if (pos2 < 0 || pos2 >= problem->getDomainInitSize(vars[2]))
+                unsigned int pos2 = problem->toIndex(vars[2], tuples[i][2]);
+                if (pos2 >= problem->getDomainInitSize(vars[2]))
                     continue;
 //                costs[(size_t)problem->toIndex(vars[0], tuples[i][0]) * problem->getDomainInitSize(vars[1]) * problem->getDomainInitSize(vars[2]) + (size_t)problem->toIndex(vars[1], tuples[i][1]) * problem->getDomainInitSize(vars[2]) + problem->toIndex(vars[2], tuples[i][2])] = tcosts[i] - negcost;
                 costs[(size_t)pos2 * problem->getDomainInitSize(vars[0]) * problem->getDomainInitSize(vars[1]) + (size_t)pos0 * problem->getDomainInitSize(vars[1]) + pos1] = tcosts[i] - negcost;
