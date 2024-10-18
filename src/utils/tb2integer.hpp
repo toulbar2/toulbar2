@@ -137,6 +137,7 @@ struct BigInteger {
         } else
             os << mpz_get_d(integer); // p;
         // os << mpz_get_d(integer);
+        free(p);
     }
     friend ostream& operator<<(ostream& os, const BigInteger& i)
     {

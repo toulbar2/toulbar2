@@ -14,7 +14,6 @@
 #include "core/tb2clqcover.hpp"
 #include "core/tb2knapsack.hpp"
 #include "lp-parser.hpp"
-
 #ifdef BOOST
 #define BOOST_IOSTREAMS_NO_LIB
 #include <boost/version.hpp>
@@ -3892,7 +3891,7 @@ void WCSP::read_qpbo(const char* fileName)
     for (int e = 0; e < m; e++) {
         sumcost += 2. * std::abs(cost[e]);
     }
-    Double multiplier = exp10l((Double)ToulBar2::resolution); // warning! precision of costs depends on the chosen resolution but toulbar2 outputs costs as if it was always zero resolution.
+    Double multiplier = Exp10((Double)ToulBar2::resolution); // warning! precision of costs depends on the chosen resolution but toulbar2 outputs costs as if it was always zero resolution.
     ToulBar2::setCostMultiplier(multiplier);
     if (!minimize)
         ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
@@ -4119,7 +4118,7 @@ void WCSP::read_opb(const char* fileName)
     // read objective function
     bool opt = true;
     int opsize = 4;
-    Double multiplier = exp10l((Double)ToulBar2::resolution);
+    Double multiplier = Exp10((Double)ToulBar2::resolution);
     ToulBar2::setCostMultiplier(multiplier);
     if (token.substr(0, 4) == "max:") {
         ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
@@ -4425,7 +4424,7 @@ void WCSP::read_lp(const char* fileName)
         cerr << "Sorry, cannot use a negative value for precision! (see option -precision)" << endl;
         throw BadConfiguration();
     }
-    Double multiplier = exp10l((Double)min(ToulBar2::resolution, baryonyx::precision));
+    Double multiplier = Exp10((Double)min(ToulBar2::resolution, baryonyx::precision));
     ToulBar2::decimalPoint = abs(min(ToulBar2::resolution, baryonyx::precision));
 
     // read objective function
@@ -4486,7 +4485,7 @@ void WCSP::read_lp(const char* fileName)
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
-        Double multiplier = exp10l((Double)min(ToulBar2::resolution, ctr.precision));
+        Double multiplier = Exp10((Double)min(ToulBar2::resolution, ctr.precision));
         if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
             cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
             throw BadConfiguration();
@@ -4519,7 +4518,7 @@ void WCSP::read_lp(const char* fileName)
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
-        Double multiplier = exp10l((Double)min(ToulBar2::resolution, ctr.precision));
+        Double multiplier = Exp10((Double)min(ToulBar2::resolution, ctr.precision));
         if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
             cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
             throw BadConfiguration();
@@ -4552,7 +4551,7 @@ void WCSP::read_lp(const char* fileName)
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
-        Double multiplier = exp10l((Double)min(ToulBar2::resolution, ctr.precision));
+        Double multiplier = Exp10((Double)min(ToulBar2::resolution, ctr.precision));
         if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
             cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
             throw BadConfiguration();
