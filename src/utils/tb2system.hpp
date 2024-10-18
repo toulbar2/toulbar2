@@ -126,7 +126,7 @@ inline double Pow(double x, double y)
 {
     return pow(x, y);
 }
-inline double Exp10(double x) { return exp10(x); }
+inline double Exp10(double x) { return pow(10., (double)x); }
 inline double Exp(double x) { return exp(x); }
 inline double Log10(double x) { return log10(x); }
 inline double Expm1(double x) { return expm1(x); }
