@@ -145,6 +145,12 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         }
     }
 
+    // returns true if the constraint can be projected to small local cost function in extension
+    bool canbeProjectedInExtension()
+    {
+        return getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)));
+    }
+
     void Group_extendNVV(int var, Cost C)
     {
         for (unsigned int i = 0; i < NotVarVal[var].size(); i++) {
@@ -1991,7 +1997,7 @@ public:
                         assert(TobeProjected >= MIN_COST);
                         Constraint::projectLB(TobeProjected);
                         lb = MIN_COST;
-                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
+                    } else if (canbeProjectedInExtension()) {
                         deconnect(); // this constraint is removed from the current WCSP problem
                         //unqueueKnapsack();
                         projectNary();
@@ -2155,7 +2161,7 @@ public:
                     assigned[varIndex] = 2;
                     assert(connected(varIndex));
                     deconnect(varIndex);
-                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
+                    if (canbeProjectedInExtension()) {
                         deconnect(); // this constraint is removed from the current WCSP problem
                         //unqueueKnapsack();
                         projectNary();
@@ -2834,7 +2840,11 @@ public:
             if (connected() && !b && !AlwaysSatisfied) {
                 if (!fastverify()) {
                     THROWCONTRADICTION;
-                } else if (getNonAssigned() > 3 && ToulBar2::LcLevel >= LC_AC) {
+                } else if (canbeProjectedInExtension()) {
+                    deconnect(); // this constraint is removed from the current WCSP problem
+                    //unqueueKnapsack();
+                    projectNary();
+                } else if (ToulBar2::LcLevel >= LC_AC) {
                     get_current_scope();
 #ifndef NDEBUG
                     for (int i = 0; i < carity; ++i) {
@@ -2858,6 +2868,43 @@ public:
                         assert(nbValue[i] > 1);
                     }
 #endif
+                    if (fastuniversal()) {
+                        deconnect();
+                        //unqueueKnapsack();
+                        wcsp->revise(this);
+                        Cost TobeProjected = -lb + assigneddeltas;
+                        Cost mindelta;
+                        for (int i = 0; i < carity; i++) {
+                            mindelta = MAX_COST;
+                            if (VirtualVar[current_scope_idx[i]] == 0) {
+                                for (int j = 0; j < nbValue[i]; ++j) {
+                                    if (mindelta > deltaCosts[current_scope_idx[i]][current_val_idx[i][j]])
+                                        mindelta = deltaCosts[current_scope_idx[i]][current_val_idx[i][j]];
+                                }
+                                TobeProjected += mindelta;
+                                for (int j = 0; j < nbValue[i]; ++j) {
+                                    assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
+                                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
+                                        Group_projectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                                    } else
+                                        scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
+                                }
+                                scope[current_scope_idx[i]]->findSupport();
+                            } else {
+                                assert(nbValue[i] <= 2);
+                                mindelta = min(deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][0], deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][1]);
+                                TobeProjected += mindelta;
+                                scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first]->project(0, deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][0] - mindelta);
+                                scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first]->project(1, deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][1] - mindelta);
+                                scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first]->findSupport();
+                            }
+                        }
+                        assert(TobeProjected >= MIN_COST);
+                        Constraint::projectLB(TobeProjected);
+                        lb = MIN_COST;
+                        return;
+                    }
+
                     // Bound propagation, return true if a variable has been assigned
                     b = BoundConsistency();
                     if (!b && !ToulBar2::addAMOConstraints_ && (ToulBar2::LcLevel >= LC_FDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST)))) {
@@ -3124,49 +3171,6 @@ public:
                                 }
                             }
                             assert(getMaxFiniteCost() >= 0);
-                        }
-                    }
-                } else {
-                    get_current_scope();
-                    if (fastuniversal() && connected()) {
-                        deconnect();
-                        //unqueueKnapsack();
-                        wcsp->revise(this);
-                        Cost TobeProjected = -lb + assigneddeltas;
-                        Cost mindelta;
-                        for (int i = 0; i < carity; i++) {
-                            mindelta = MAX_COST;
-                            if (VirtualVar[current_scope_idx[i]] == 0) {
-                                for (int j = 0; j < nbValue[i]; ++j) {
-                                    if (mindelta > deltaCosts[current_scope_idx[i]][current_val_idx[i][j]])
-                                        mindelta = deltaCosts[current_scope_idx[i]][current_val_idx[i][j]];
-                                }
-                                TobeProjected += mindelta;
-                                for (int j = 0; j < nbValue[i]; ++j) {
-                                    assert(mindelta <= deltaCosts[current_scope_idx[i]][current_val_idx[i][j]]);
-                                    if (current_val_idx[i][j] == (int)VarVal[current_scope_idx[i]].size() - 1) {
-                                        Group_projectNVV(current_scope_idx[i], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
-                                    } else
-                                        scope[current_scope_idx[i]]->project(VarVal[current_scope_idx[i]][current_val_idx[i][j]], deltaCosts[current_scope_idx[i]][current_val_idx[i][j]] - mindelta);
-                                }
-                                scope[current_scope_idx[i]]->findSupport();
-                            } else {
-                                assert(nbValue[i] <= 2);
-                                mindelta = min(deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][0], deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][1]);
-                                TobeProjected += mindelta;
-                                scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first]->project(0, deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][0] - mindelta);
-                                scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first]->project(1, deltaCosts[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first][1] - mindelta);
-                                scope[AMO[VirtualVar[current_scope_idx[i]] - 1][current_val_idx[i][0]].first]->findSupport();
-                            }
-                        }
-                        assert(TobeProjected >= MIN_COST);
-                        Constraint::projectLB(TobeProjected);
-                        lb = MIN_COST;
-                    } else if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)))) {
-                        if (connected()) {
-                            deconnect(); // this constraint is removed from the current WCSP problem
-                            //unqueueKnapsack();
-                            projectNary();
                         }
                     }
                 }
