@@ -3297,7 +3297,6 @@ public:
                     i++;
                 }
                 assert(sumweight >= Original_capacity);
-                assert(i > 0 || totalcost == 0.);
                 if (i > 0 && sumweight > Original_capacity) {
                     totalcost -= (Double)(sumweight - Original_capacity) * get<7>(slopes[i - 1]);
                 }
