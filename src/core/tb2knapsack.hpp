@@ -2251,17 +2251,20 @@ public:
         vector<int> GreatestDeltaIdx(arity_, 0);
         Cost SumMin = MIN_COST;
         for (int i = 0; i < carity; ++i) {
-            int k2 = 0;
-            Cost mindelta = deltaCosts[current_scope_idx[i]][LowestDeltaIdx[current_scope_idx[i]]];
-            Cost maxdelta = deltaCosts[current_scope_idx[i]][GreatestDeltaIdx[current_scope_idx[i]]];
+            int currentvar = current_scope_idx[i];
+            Cost mindelta = deltaCosts[currentvar][current_val_idx[i][0]];
+            LowestDeltaIdx[currentvar] = current_val_idx[i][0];
+            Cost maxdelta = deltaCosts[currentvar][current_val_idx[i][0]];
+            GreatestDeltaIdx[currentvar] = current_val_idx[i][0];
+            int k2 = 1;
             while (k2 < nbValue[i]) {
-                Cost cost = deltaCosts[current_scope_idx[i]][current_val_idx[i][k2]];
+                Cost cost = deltaCosts[currentvar][current_val_idx[i][k2]];
                 if (cost < mindelta) {
                     mindelta = cost;
-                    LowestDeltaIdx[current_scope_idx[i]] = current_val_idx[i][k2];
+                    LowestDeltaIdx[currentvar] = current_val_idx[i][k2];
                 } else if (cost > maxdelta) {
                     maxdelta = cost;
-                    GreatestDeltaIdx[current_scope_idx[i]] = current_val_idx[i][k2];
+                    GreatestDeltaIdx[currentvar] = current_val_idx[i][k2];
                 }
                 k2++;
             }
@@ -2434,9 +2437,11 @@ public:
     {
         Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
         Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0
+        bool optsolIsValid = true;
         for (int i = 0; i < carity; i++) {
             Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
             Double storew = 0;
+            Double totalval = 0; // check if sum of OptSol is equal to 1. for each variable
             int currentvar = current_scope_idx[i];
             UnaryCost0[currentvar] = MIN_COST;
             bool diff0 = true;
@@ -2495,14 +2500,18 @@ public:
                     }
                     storew += weights[currentvar][currentval] * OptSol[currentvar][currentval];
                     storec += Profit[currentvar][currentval] * OptSol[currentvar][currentval];
+                    totalval += OptSol[currentvar][currentval];
                 }
             }
             // Compute the cost of the last optimal solution
             verifopt += Ceil(storec);
             verifweight += Ceil(storew);
             assert(*max_element(Profit[i].begin(), Profit[i].end()) < MAX_COST);
+            if (totalval < 1. - ToulBar2::epsilon) {
+                optsolIsValid = false;
+            }
         }
-        if (verifopt > MIN_COST || verifweight < capacity)
+        if (!optsolIsValid || verifopt > MIN_COST || verifweight < capacity)
             return true;
         else
             return false;
@@ -3303,7 +3312,7 @@ public:
                 if (ToulBar2::verbose >= 7) {
                     cout << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
                 }
-                return totalcost <= ToulBar2::epsilon; // Ceil(totalcost) == 0.;
+                return totalcost < 1.; // totalcost <= ToulBar2::epsilon; // Ceil(totalcost) == 0.;
             }
         }
 
