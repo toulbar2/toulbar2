@@ -459,8 +459,8 @@ class CFN:
             problem (CFN): input problem.
             lb (decimal cost): any valid solution in the input problem must have a cost greater than or equal to lb.
             ub (decimal cost): any valid solution in the input problem must have a cost strictly less than ub.
-            duplicateHard (bool): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
-            strongDuality (bool): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
+            duplicateHard (bool): if True then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+            strongDuality (bool): if True then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
             
         Note:
             If a variable in the input problem does not exist in the current problem (with the same name), it is automatically added.
@@ -917,7 +917,7 @@ class CFN:
             values (list): list of domain values.
 
         """
-        self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, false)
+        self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, False)
         
     def Remove(self, var, value):
         """Remove removes a value from the domain of a variable.
