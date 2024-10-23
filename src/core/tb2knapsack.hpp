@@ -2827,7 +2827,7 @@ public:
         }
         // propagates from scratch the constraint
         if (connected()) {
-            if (ToulBar2::verbose >= 7) {
+            if (ToulBar2::verbose >= 3) {
                 cout << "propagate " << *this << endl;
             }
             bool b = false;
@@ -3215,7 +3215,7 @@ public:
         }
 
         if (summaxweight < Original_capacity) {
-            if (ToulBar2::verbose >= 7) {
+            if (ToulBar2::verbose >= 1) {
                 cout << this << " maximum capacity available is smaller than requested! " << summaxweight << " < " << Original_capacity << endl;
             }
             return false;
@@ -3226,7 +3226,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 for (unsigned int j = 0; j < VarVal[i].size() - 1; j++) {
                     if (scope[i]->canbe(VarVal[i][j]) && summaxweight + weights[i][j] - weights[i][posmaxweight[i]] < Original_capacity) {
-                        if (ToulBar2::verbose >= 7) {
+                        if (ToulBar2::verbose >= 1) {
                             cout << this << " bound consistency not done for variable " << scope[i]->getName() << " and value " << VarVal[i][j] << "! " << summaxweight << " + " << weights[i][j] << " - " << weights[i][posmaxweight[i]] << " < " << Original_capacity << endl;
                         }
                         return false;
@@ -3235,7 +3235,7 @@ public:
                 if (weights[i].back() > 0) {
                     for (unsigned int j = 0; j < NotVarVal[i].size(); j++) {
                         if (scope[i]->canbe(NotVarVal[i][j]) && summaxweight + weights[i].back() - weights[i][posmaxweight[i]] < Original_capacity) {
-                            if (ToulBar2::verbose >= 7) {
+                            if (ToulBar2::verbose >= 1) {
                                 cout << this << " bound consistency not done for variable " << scope[i]->getName() << " and nvalue " << NotVarVal[i][j] << "! " << summaxweight << " + " << weights[i].back() << " - " << weights[i][posmaxweight[i]] << " < " << Original_capacity << endl;
                             }
                             return false;

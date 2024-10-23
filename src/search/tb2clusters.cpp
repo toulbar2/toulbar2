@@ -691,9 +691,15 @@ Cluster::~Cluster()
     id = -1;
     if (sep) {
         sep->deconnect();
-        sep->unqueueSep();
+        if (sep->isInQueueSep()) {
+            sep->unqueueSep();
+        }
+        // Notice: separators will be deleted inside ~WCSP with the other constraints
     }
-    delete cp;
+    if (cp) {
+        delete cp;
+    }
+    // Notice: do not need to delete open because it is done in ~Solver for the root cluster only (the other clusters have a pointer to nogoods'open field, an object not created by new!)
 }
 
 void Cluster::addVar(Variable* x) { vars.insert(x->wcspIndex); }
@@ -1188,6 +1194,15 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in)
     , deltaModified(vector<StoreInt>(wcsp_in->numberOfVariables(), StoreInt(false)))
     , max_depth(-1)
 {
+}
+
+TreeDecomposition::~TreeDecomposition()
+{
+    for(auto& c: clusters) {
+        if (c) {
+            delete c;
+        }
+    }
 }
 
 bool TreeDecomposition::isInCurrentClusterSubTree(int idc)
@@ -1957,8 +1972,9 @@ int TreeDecomposition::makeRooted()
             assert(oneroot->getSep() == NULL);
 
             EnumeratedVariable** scopeVars = new EnumeratedVariable*[1];
-
             oneroot->setSep(new Separator(wcsp, scopeVars, 0));
+            delete[] scopeVars;
+
             if (oneroot->getNbVars() <= 1 && oneroot->getDescendants().size() == 1) {
                 oneroot->getSep()->unqueueSep();
             }

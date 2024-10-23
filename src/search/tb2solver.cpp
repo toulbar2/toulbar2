@@ -140,8 +140,18 @@ Solver::Solver(Cost initUpperBound, WeightedCSP* wcsp)
 
 Solver::~Solver()
 {
-    delete cp;
-    delete open;
+    if (cp) {
+        delete cp;
+    }
+    if (open) {
+        delete open;
+    }
+    if (wcsp->getTreeDec()) {
+        Cluster *cluster = wcsp->getTreeDec()->getRoot();
+        if (cluster && cluster->open) {
+            delete cluster->open;
+        }
+    }
     delete unassignedVars;
     for (unsigned int i = 0; i < allVars.size(); i++) {
         delete allVars[i];
@@ -2565,9 +2575,9 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             }
         }
     }
-
     assert(clb >= initiallb && cub <= initialub);
     assert(clb <= cub);
+
     if (clb == cub) {
         vector<mpi::request> reqs;
         for (int i = 0; i < world.size(); i++)

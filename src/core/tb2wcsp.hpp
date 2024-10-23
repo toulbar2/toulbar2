@@ -816,6 +816,7 @@ public:
     void queueEliminate(DLink<VariableWithTimeStamp>* link) { Eliminate.push(link, nbNodes); }
     void queueSeparator(DLink<Separator*>* link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator*>* link) { PendingSeparator.erase(link, true); }
+    bool isInQueueSeparator(DLink<Separator*>* link) { return PendingSeparator.inBTList(link); }
     void queueKnapsack(DLink<KnapsackConstraint*>* link) { knapsackList.push_back(link, true); }
     void unqueueKnapsack(DLink<KnapsackConstraint*>* link) { knapsackList.erase(link, true); }
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }

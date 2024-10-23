@@ -106,6 +106,7 @@ public:
 
     void queueSep() { wcsp->queueSeparator(&linkSep); }
     void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
+    bool isInQueueSep() { return wcsp->isInQueueSeparator(&linkSep); }
 
     void addDelta(unsigned int posvar, Value value, Cost cost)
     {
@@ -454,6 +455,8 @@ public:
     TClusters comp;
 
     TreeDecomposition(WCSP* wcsp_in);
+
+    ~TreeDecomposition();
 
     WCSP* getWCSP() { return wcsp; }
 
