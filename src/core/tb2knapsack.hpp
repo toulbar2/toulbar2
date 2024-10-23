@@ -3266,48 +3266,48 @@ public:
                     }
                     assert(values.size() > 0);
                     // sort available values in ascending weights and if equal in decreasing (unary) cost
-                    sort(values.begin(), values.end(), [&](auto& x, auto& y) {return get<1>(x) < get<1>(y) || (get<1>(x) == get<1>(y) && get<2>(x) > get<2>(y));});
+                    sort(values.begin(), values.end(), [&](auto& x, auto& y) {return std::get<1>(x) < std::get<1>(y) || (std::get<1>(x) == std::get<1>(y) && std::get<2>(x) > std::get<2>(y));});
                     if (ToulBar2::verbose >= 7) {
                         cout << i << " " << scope[i]->getName();
                         for (auto e : values) {
-                            cout << " {" << get<0>(e) << "," << get<1>(e) << "," << get<2>(e) << "}";
+                            cout << " {" << std::get<0>(e) << "," << std::get<1>(e) << "," << std::get<2>(e) << "}";
                         }
                         cout << endl;
                     }
                     int prev = values.size() - 1;
                     for (int j = values.size() - 2; j >= 0 ; j--) {
-                        assert(get<1>(values[j]) <= get<1>(values[prev]));
-                        assert(get<1>(values[j]) < get<1>(values[prev]) || get<2>(values[j]) >= get<2>(values[prev]));
-                        if (get<1>(values[j]) < get<1>(values[prev]) && get<2>(values[j]) < get<2>(values[prev])) {
-                            auto tuple = make_tuple(i, get<0>(values[j]), get<1>(values[j]), get<2>(values[j]), get<0>(values[prev]), get<1>(values[prev]), get<2>(values[prev]), (Double)(get<2>(values[prev]) - get<2>(values[j])) / (get<1>(values[prev]) - get<1>(values[j])));
-                            while (slopes.size() > 0 && get<0>(slopes.back())==get<0>(tuple) && get<7>(slopes.back()) <= get<7>(tuple)) {
-                                tuple = make_tuple(i, get<0>(values[j]), get<1>(values[j]), get<2>(values[j]), get<4>(slopes.back()), get<5>(slopes.back()), get<6>(slopes.back()), (Double)(get<6>(slopes.back()) - get<2>(values[j])) / (get<5>(slopes.back()) - get<1>(values[j])));
+                        assert(std::get<1>(values[j]) <= std::get<1>(values[prev]));
+                        assert(std::get<1>(values[j]) < std::get<1>(values[prev]) || std::get<2>(values[j]) >= std::get<2>(values[prev]));
+                        if (std::get<1>(values[j]) < std::get<1>(values[prev]) && std::get<2>(values[j]) < std::get<2>(values[prev])) {
+                            auto tuple = make_tuple(i, std::get<0>(values[j]), std::get<1>(values[j]), std::get<2>(values[j]), std::get<0>(values[prev]), std::get<1>(values[prev]), std::get<2>(values[prev]), (Double)(std::get<2>(values[prev]) - std::get<2>(values[j])) / (std::get<1>(values[prev]) - std::get<1>(values[j])));
+                            while (slopes.size() > 0 && std::get<0>(slopes.back())==std::get<0>(tuple) && std::get<7>(slopes.back()) <= std::get<7>(tuple)) {
+                                tuple = make_tuple(i, std::get<0>(values[j]), std::get<1>(values[j]), std::get<2>(values[j]), std::get<4>(slopes.back()), std::get<5>(slopes.back()), std::get<6>(slopes.back()), (Double)(std::get<6>(slopes.back()) - std::get<2>(values[j])) / (std::get<5>(slopes.back()) - std::get<1>(values[j])));
                                 slopes.pop_back();
                             }
                             slopes.push_back(tuple);
                             prev = j;
                         }
                     }
-                    sumweight += get<1>(values[prev]);
-                    totalcost += get<2>(values[prev]);
+                    sumweight += std::get<1>(values[prev]);
+                    totalcost += std::get<2>(values[prev]);
                 }
-                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return get<7>(x) < get<7>(y);});
+                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return std::get<7>(x) < std::get<7>(y);});
                 if (ToulBar2::verbose >= 7) {
                     cout << "weight0: " << sumweight << " cost0: " << totalcost << " slopes:";
                     for (auto e : slopes) {
-                        cout << " {" << get<0>(e) << "," << get<1>(e) << "," << get<2>(e) << "," << get<3>(e) << "," << get<4>(e) << "," << get<5>(e) << "," << get<6>(e) << "," << get<7>(e) << "}";
+                        cout << " {" << std::get<0>(e) << "," << std::get<1>(e) << "," << std::get<2>(e) << "," << std::get<3>(e) << "," << std::get<4>(e) << "," << std::get<5>(e) << "," << std::get<6>(e) << "," << std::get<7>(e) << "}";
                     }
                     cout << endl;
                 }
                 unsigned int i = 0;
                 while (sumweight < Original_capacity && i < slopes.size()) {
-                    sumweight += get<5>(slopes[i]) - get<2>(slopes[i]);
-                    totalcost += get<6>(slopes[i]) - get<3>(slopes[i]);
+                    sumweight += std::get<5>(slopes[i]) - std::get<2>(slopes[i]);
+                    totalcost += std::get<6>(slopes[i]) - std::get<3>(slopes[i]);
                     i++;
                 }
                 assert(sumweight >= Original_capacity);
                 if (i > 0 && sumweight > Original_capacity) {
-                    totalcost -= (Double)(sumweight - Original_capacity) * get<7>(slopes[i - 1]);
+                    totalcost -= (Double)(sumweight - Original_capacity) * std::get<7>(slopes[i - 1]);
                 }
                 if (ToulBar2::verbose >= 7) {
                     cout << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
