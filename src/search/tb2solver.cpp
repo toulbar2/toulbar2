@@ -341,10 +341,10 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
     //    Store::store();
 
     // certif2 = index(certif2,',');
-    char* certif2;
+    char *certif2, *certif_copy;
     char sep[] = ",";
-    certif2 = strdup(certificate);
-    certif2 = strstr(certif2, sep);
+    certif_copy = strdup(certificate);
+    certif2 = strstr(certif_copy, sep);
 
     if (certif2)
         certif2++;
@@ -462,6 +462,8 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
 
     //    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     //    Store::restore(depth);
+
+    free(certif_copy);
 }
 
 void Solver::dump_wcsp(const char* fileName, bool original, ProblemFormat format)
