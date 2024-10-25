@@ -1605,7 +1605,10 @@ int _tmain(int argc, TCHAR* argv[])
                         cout << "partial assignment to be checked ..." << certificateString << endl;
                 } else {
                     certificate = true;
-                    certificateFilename = (char*)"sol";
+                    if(certificateFilename != NULL) {
+                        free(certificateFilename);
+                    }
+                    certificateFilename = strdup("sol"); // workaround for compatibility issue with the dynamical allocation of certificateFilename ("sol" would be stored in program data)
                     if (ToulBar2::debug)
                         cout << "certificate of solution read in file: ./" << certificateFilename << endl;
                 }
@@ -3118,8 +3121,10 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading solution in file: " << problem << endl;
 
                 certificate = true;
-                certificateFilename = new char[256];
-                sprintf(certificateFilename, "%s", problem.c_str());
+                if(certificateFilename) {
+                    free(certificateFilename);
+                }
+                certificateFilename = strdup(problem.c_str());
                 certificateString = (char*)""; // ensure the search will continue starting from this solution
             }
         }
@@ -3545,6 +3550,10 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
 
     clean_ToulBar2_varOrder();
+
+    if(certificateFilename != NULL) {
+        free(certificateFilename);
+    }
 
     return 0;
 }
