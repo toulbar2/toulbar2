@@ -1394,6 +1394,9 @@ void TreeDecomposition::pathFusions(vector<int>& order)
             rds[i] = NULL;
         }
     }
+    for(auto&c : clusters) {
+        delete c;
+    }
     clusters.clear();
     for (int i = 0; i < size; i++) {
         Cluster* c = rds[i];
