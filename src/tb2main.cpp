@@ -68,6 +68,13 @@ void conflict() {}
 
 extern void newsolution(int wcspId, void* solver);
 
+inline void clean_ToulBar2_varOrder() {
+    if(ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) > 8) {
+        delete[] ToulBar2::varOrder;
+        ToulBar2::varOrder = NULL;
+    }
+}
+
 #ifdef PARETOPAIR_COST
 void initCosts()
 {
@@ -1570,7 +1577,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (varElimOrder >= 0) {
                     char buf[512];
                     sprintf(buf, "%s", args.OptionArg());
-                    //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+                    clean_ToulBar2_varOrder();
                     ToulBar2::varOrder = new char[strlen(buf) + 1];
                     sprintf(ToulBar2::varOrder, "%s", buf);
                     if (ToulBar2::debug)
@@ -3065,7 +3072,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(problem, file_extension_map["order_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading variable order in file: " << problem << endl;
-                //				if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+                clean_ToulBar2_varOrder();
                 ToulBar2::varOrder = new char[problem.length() + 1];
                 sprintf(ToulBar2::varOrder, "%s", problem.c_str());
             }
@@ -3076,7 +3083,7 @@ int _tmain(int argc, TCHAR* argv[])
             if (check_file_ext(problem, file_extension_map["treedec_ext"])) {
                 if (ToulBar2::verbose >= 0)
                     cout << "loading tree decomposition in file: " << problem << endl;
-                //              if (ToulBar2::varOrder) delete [] ToulBar2::varOrder;
+                clean_ToulBar2_varOrder();
                 ToulBar2::varOrder = new char[problem.length() + 1];
                 sprintf(ToulBar2::varOrder, "%s", problem.c_str());
                 if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
@@ -3372,6 +3379,7 @@ int _tmain(int argc, TCHAR* argv[])
                         varOrder += to_string(" ") + to_string(v);
                     }
                     varOrder += "\n";
+                    clean_ToulBar2_varOrder();
                     ToulBar2::varOrder = new char[varOrder.size() + 1];
                     sprintf(ToulBar2::varOrder, "%s", varOrder.c_str());
                     if (ToulBar2::verbose >= 1)
@@ -3535,6 +3543,8 @@ int _tmain(int argc, TCHAR* argv[])
     }
 #endif
 #endif
+
+    clean_ToulBar2_varOrder();
 
     return 0;
 }
