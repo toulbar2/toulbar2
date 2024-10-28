@@ -3608,6 +3608,7 @@ void WCSP::sortConstraints()
             elimBinConstrs.push_back(bctr);
         }
     }
+
     if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
         shuffle(delayedNaryCtr.begin(), delayedNaryCtr.end(), myrandom_generator);
     } else {
@@ -3667,6 +3668,21 @@ void WCSP::sortConstraints()
     for (unsigned int i = 0; i < vars.size(); i++) {
         vars[i]->sortConstraints();
     }
+
+    vector<DLink<Constraint*>*> sorted;
+    for (KnapsackList::iterator iter = knapsackList.begin(); iter != knapsackList.end(); ++iter) {
+        sorted.push_back((DLink<Constraint*>*) iter.getElt());
+    }
+    if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
+        shuffle(sorted.begin(), sorted.end(), myrandom_generator);
+    } else {
+        stable_sort(sorted.begin(), sorted.end(), Constraint::cmpConstraintLinkPointer);
+    }
+    for (unsigned int i = 0; i < sorted.size(); i++) {
+        knapsackList.erase((DLink<KnapsackConstraint*>*) sorted[i], true);
+        knapsackList.push_back((DLink<KnapsackConstraint*>*)sorted[i], true);
+    }
+
     AC.sort(false); // sort in decreasing order to get the smallest DAC index first when doing pop() on this queue
     DAC.sort(true); // sort in increasing order to get the largest DAC index first when doing pop() on this queue
     EAC1.sort(true); // sort in increasing order to get the smallest DAC index first when doing pop() on the EAC2 queue

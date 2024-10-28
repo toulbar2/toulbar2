@@ -438,6 +438,13 @@ bool Constraint::cmpConstraintId(DLink<ConstraintLink>* c1, DLink<ConstraintLink
     return (v1 < v2);
 }
 
+bool Constraint::cmpConstraintId(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    int v1 = c1->content->getSmallestVarIndexInScope();
+    int v2 = c2->content->getSmallestVarIndexInScope();
+    return (v1 < v2);
+}
+
 bool Constraint::cmpConstraintDAC(Constraint* c1, Constraint* c2)
 {
     int v1 = c1->getDACVar(0)->getDACOrder();
@@ -452,6 +459,13 @@ bool Constraint::cmpConstraintDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLin
     return (v1 > v2);
 }
 
+bool Constraint::cmpConstraintDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    int v1 = c1->content->getDACVar(0)->getDACOrder();
+    int v2 = c2->content->getDACVar(0)->getDACOrder();
+    return (v1 > v2);
+}
+
 bool Constraint::cmpConstraintTightness(Constraint* c1, Constraint* c2)
 {
     double v1 = c1->getTightness();
@@ -463,6 +477,13 @@ bool Constraint::cmpConstraintTightness(DLink<ConstraintLink>* c1, DLink<Constra
 {
     double v1 = c1->content.constr->getTightness();
     double v2 = c2->content.constr->getTightness();
+    return (v1 > v2);
+}
+
+bool Constraint::cmpConstraintTightness(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    double v1 = c1->content->getTightness();
+    double v2 = c2->content->getTightness();
     return (v1 > v2);
 }
 
@@ -492,6 +513,19 @@ bool Constraint::cmpConstraintDACTightness(DLink<ConstraintLink>* c1, DLink<Cons
     }
 }
 
+bool Constraint::cmpConstraintDACTightness(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    int v1 = c1->content->getDACVar(0)->getDACOrder();
+    int v2 = c2->content->getDACVar(0)->getDACOrder();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        double v1 = c1->content->getTightness();
+        double v2 = c2->content->getTightness();
+        return (v1 > v2);
+    }
+}
+
 bool Constraint::cmpConstraintTightnessDAC(Constraint* c1, Constraint* c2)
 {
     double v1 = c1->getTightness();
@@ -514,6 +548,19 @@ bool Constraint::cmpConstraintTightnessDAC(DLink<ConstraintLink>* c1, DLink<Cons
     else {
         int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
         int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+        return (v1 > v2);
+    }
+}
+
+bool Constraint::cmpConstraintTightnessDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    double v1 = c1->content->getTightness();
+    double v2 = c2->content->getTightness();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        int v1 = c1->content->getDACVar(0)->getDACOrder();
+        int v2 = c2->content->getDACVar(0)->getDACOrder();
         return (v1 > v2);
     }
 }
@@ -554,6 +601,24 @@ bool Constraint::cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLin
         return cmpConstraintDAC(c1, c2);
 }
 
+bool Constraint::cmpConstraintLAG(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    auto* k = dynamic_cast<KnapsackConstraint*>(c1->content);
+    auto* k1 = dynamic_cast<KnapsackConstraint*>(c2->content);
+    if (k && !k1)
+        return false;
+    if (!k && k1)
+        return true;
+    if (k && k1) {
+        Double v1 = k->getLag();
+        Double v2 = k1->getLag();
+        if (v1 == v2)
+            return k->computeTightness() < k1->computeTightness();
+        return (v1 < v2);
+    } else
+        return cmpConstraintDAC(c1, c2);
+}
+
 bool Constraint::cmpConstraintArity(Constraint* c1, Constraint* c2)
 {
     int v1 = c1->arity();
@@ -565,6 +630,13 @@ bool Constraint::cmpConstraintArity(DLink<ConstraintLink>* c1, DLink<ConstraintL
 {
     int v1 = c1->content.constr->arity();
     int v2 = c2->content.constr->arity();
+    return (v1 < v2);
+}
+
+bool Constraint::cmpConstraintArity(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    int v1 = c1->content->arity();
+    int v2 = c2->content->arity();
     return (v1 < v2);
 }
 
@@ -590,6 +662,19 @@ bool Constraint::cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<Constrai
     else {
         int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
         int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+        return (v1 > v2);
+    }
+}
+
+bool Constraint::cmpConstraintArityDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    int v1 = c1->content->arity();
+    int v2 = c2->content->arity();
+    if (v1 != v2)
+        return (v1 < v2);
+    else {
+        int v1 = c1->content->getDACVar(0)->getDACOrder();
+        int v2 = c2->content->getDACVar(0)->getDACOrder();
         return (v1 > v2);
     }
 }
@@ -639,6 +724,47 @@ int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
 int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
 {
     assert(c1->content.constr->arity() > 0 && c2->content.constr->arity() > 0);
+    bool result = false;
+    switch (abs(ToulBar2::constrOrdering)) {
+    case CONSTR_ORDER_ID:
+        result = cmpConstraintId(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC:
+        result = cmpConstraintDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_TIGHTNESS:
+        result = cmpConstraintTightness(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC_TIGHTNESS:
+        result = cmpConstraintDACTightness(c1, c2);
+        break;
+    case CONSTR_ORDER_TIGHTNESS_DAC:
+        result = cmpConstraintTightnessDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_LAG:
+        result = cmpConstraintLAG(c1, c2);
+        break;
+    case CONSTR_ORDER_ARITY:
+        result = cmpConstraintArity(c1, c2);
+        break;
+    case CONSTR_ORDER_ARITY_DAC:
+        result = cmpConstraintArityDAC(c1, c2);
+        break;
+    default:
+        cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::constrOrdering >= 0) {
+        return result;
+    } else {
+        return (!result);
+    }
+}
+
+// sort a bactrackable list of constraints
+int Constraint::cmpConstraintLinkPointer(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    assert(c1->content->arity() > 0 && c2->content->arity() > 0);
     bool result = false;
     switch (abs(ToulBar2::constrOrdering)) {
     case CONSTR_ORDER_ID:
