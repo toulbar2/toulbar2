@@ -164,14 +164,19 @@ void EnumeratedVariable::queueFEAC()
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project " << getName() << " (" << value << ") += " << cost << endl), true));
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
     Cost newcost = oldcost + cost;
     if (value == maxCostValue || LUBTEST(maxCost, newcost))
         queueNC();
     if (DACTEST(oldcost, cost)) {
-        queueDAC();
-        queueEAC1();
+        if (ToulBar2::LcLevel >= LC_DAC) {
+            queueDAC();
+            queueEAC1();
+        } else if (ToulBar2::LcLevel == LC_AC && wcsp->vac) { // SdG: to be compatible with verify for knapsack constraints
+            queueAC();
+        }
     }
     if (CUT(newcost + wcsp->getLb(), wcsp->getUb())) {
         if (delayed)
@@ -213,6 +218,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
 
 void EnumeratedVariable::extendAll(Cost cost)
 {
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extendAll " << getName() << " -= " << cost << endl), true));
     assert(cost > MIN_COST);
     deltaCost += cost; // Warning! Possible overflow???
     queueNC();
