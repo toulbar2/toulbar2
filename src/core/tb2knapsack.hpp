@@ -6,6 +6,9 @@
  *  - enforces bound arc consistency considering the hard constraint only (AC level)
  *  - approximates full zero-inverse soft consistency (FDAC or EDAC or VAC/AC)
  *  - enforces virtual arc consistency (VAC-lin)
+ *
+ *  Note: full zero-inverse soft consistency may be not enforced because it requires propagating at every unary cost move and not only when it increases/projects from zero.
+ *
  */
 
 #ifndef TB2KNAPSACK_HPP_
@@ -857,9 +860,9 @@ public:
         int TestedVar_idx = getIndex(wcsp->getVar(TestedVal.first));
         assert(scope[TestedVar_idx]->wcspIndex == TestedVal.first);
         int TestedVal_idx = -1;
-        auto it = find(VarVal[TestedVar_idx].begin(), VarVal[TestedVar_idx].end(), TestedVal.second);
-        if (it != VarVal[TestedVar_idx].end()) {
-            TestedVal_idx = distance(VarVal[TestedVar_idx].begin(), it);
+        auto it = VarValInv[TestedVar_idx].find(TestedVal.second);
+        if (it != VarValInv[TestedVar_idx].end()) {
+            TestedVal_idx = it->second;
         } else {
             auto it2 = find(NotVarVal[TestedVar_idx].begin(), NotVarVal[TestedVar_idx].end(), TestedVal.second);
             if (it2 != NotVarVal[TestedVar_idx].end()) {
@@ -1069,9 +1072,9 @@ public:
                 if(scope[j]->canbe(PBKiller[i].second)){
                     EPT.push_back({ { PBKiller[i].first, PBKiller[i].second }, minlambda });
                 if (j < arity_) {
-                    auto it = find(VarVal[j].begin(), VarVal[j].end(), PBKiller[i].second);
-                    if (it != VarVal[j].end() && VarVal[j].back() != PBKiller[i].second) {
-                        deltaCosts[j][distance(VarVal[j].begin(), it)] += minlambda;
+                    auto it = VarValInv[j].find(PBKiller[i].second);
+                    if (it != VarValInv[j].end()) {
+                        deltaCosts[j][it->second] += minlambda;
                     } else {
                         if (!VACExtToLast[j]) {
                             deltaCosts[j].back() += minlambda;
@@ -1090,10 +1093,7 @@ public:
         int i=getIndex(wcsp->getVar(var_idx));
         assert(i >= 0 && i < arity_);
         assert(scope[i]->wcspIndex == var_idx);
-        int j=0;
-        while(VarVal[i][j]!=v && j < (int) VarVal[i].size()-1)
-            j++;
-        if(j==(int) VarVal[i].size()-1){
+        if (!VarValInv[i].contains(v)) {
             for (int k = 0; k < (int)NotVarVal[i].size(); ++k) {
                 if (scope[i]->canbe(NotVarVal[i][k]))
                     LastVal.push_back(NotVarVal[i][k]);
@@ -1130,17 +1130,15 @@ public:
                 }
             }
         }
-        int i = 0;
-        while (var != scope[i])
-            i++;
-        int j = 0;
-        while (v != VarVal[i][j] && j < (int)VarVal[i].size() - 1)
-            j++;
-        if (j < (int)VarVal[i].size() - 1) {
-            if (kTimeStamp[i][j] < timeStamp)
+        int i = getIndex(var);
+        assert(i >= 0 && i < arity_);
+        assert(scope[i]->wcspIndex == var->wcspIndex);
+        auto it = VarValInv[i].find(v);
+        if (it != VarValInv[i].end()) {
+            if (kTimeStamp[i][it->second] < timeStamp)
                 return 0;
             else
-                return kVAC[i][j];
+                return kVAC[i][it->second];
         } else {
             if (kTimeStamp[i].back() < timeStamp)
                 return 0;
@@ -1158,6 +1156,7 @@ public:
     }
     void setkVAC(Variable* var, Value v, int c, Long timeStamp)
     {
+        assert(c>=0);
         if (kVAC.empty()) {
             for (int i = 0; i < arity(); ++i) {
                 kVAC.push_back({});
@@ -1168,18 +1167,14 @@ public:
                 }
             }
         }
-        int i = 0;
-        while (var != scope[i]) {
-            i++;
-        }
-        int j = 0;
-        while (v != VarVal[i][j] && j < (int)VarVal[i].size() - 1)
-            j++;
-        assert(c>=0);
+        int i = getIndex(var);
+        assert(i >= 0 && i < arity_);
+        assert(scope[i]->wcspIndex == var->wcspIndex);
+        auto it = VarValInv[i].find(v);
         // We use VACExtToLast to be sure that we don't increase kVAC[i].back() more than one time. 
-        if (j < (int)VarVal[i].size() - 1) {
-            kVAC[i][j] = c;
-            kTimeStamp[i][j] = timeStamp;
+        if (it != VarValInv[i].end()) {
+            kVAC[i][it->second] = c;
+            kTimeStamp[i][it->second] = timeStamp;
         } else if(!VACExtToLast[i]){
             kVAC[i].back() = c;
             assert(kVAC[i].back()>=0);
@@ -1197,9 +1192,9 @@ public:
 
         int i = getIndex(x);
         assert(i >= 0 && scope[i] == x);
-        auto it = find(VarVal[i].begin(), VarVal[i].end(), v);
-        if (it != VarVal[i].end() && VarVal[i].back() != v) {
-            deltaCosts[i][distance(VarVal[i].begin(), it)] += c;
+        auto it = VarValInv[i].find(v);
+        if (it != VarValInv[i].end()) {
+            deltaCosts[i][it->second] += c;
             if (td && x->canbe(v))
                 td->addDelta(cluster, x, v, -c);
             x->VACextend(v, c);
@@ -1237,9 +1232,9 @@ public:
 
         int i = getIndex(x);
         assert(i >= 0 && scope[i] == x);
-        auto it = find(VarVal[i].begin(), VarVal[i].end(), v);
-        if (it != VarVal[i].end() && VarVal[i].back() != v) {
-            deltaCosts[i][distance(VarVal[i].begin(), it)] -= c;
+        auto it = VarValInv[i].find(v);
+        if (it != VarValInv[i].end()) {
+            deltaCosts[i][it->second] -= c;
             if (td && x->canbe(v))
                 td->addDelta(cluster, x, v, c);
             x->project(v, c, true);
@@ -1513,13 +1508,13 @@ public:
 //            if (ToulBar2::verbose >= 4)
 //                cout << var->getName() << " " << s[i] << " ";
             if (CorrAMO[i] == 0) {
-                auto it = find(VarVal[i].begin(), VarVal[i].end(), var->toValue(s[i]));
-                if (it == VarVal[i].end()) {
+                auto it = VarValInv[i].find(var->toValue(s[i]));
+                if (it == VarValInv[i].end()) {
                     res += deltaCosts[i].back();
                     W += weights[i].back();
                 } else {
-                    W += weights[i][distance(VarVal[i].begin(), it)];
-                    res += deltaCosts[i][distance(VarVal[i].begin(), it)];
+                    W += weights[i][it->second];
+                    res += deltaCosts[i][it->second];
                 }
             } else {
                 k = nbRealVar;
@@ -1596,12 +1591,12 @@ public:
     Cost getCost(int index, Value val)
     {
         assert(index >= 0 && index < arity_);
-        auto it = find(VarVal[index].begin(), VarVal[index].end(), val);
-        if (it == VarVal[index].end()) {
+        auto it = VarValInv[index].find(val);
+        if (it == VarValInv[index].end()) {
             assert(find(NotVarVal[index].begin(), NotVarVal[index].end(), val) != NotVarVal[index].end());
             return deltaCosts[index].back();
         } else {
-            return deltaCosts[index][distance(VarVal[index].begin(), it)];
+            return deltaCosts[index][it->second];
         }
     }
 
@@ -1918,13 +1913,13 @@ public:
                 }
                 // Update the problem
                 if (CorrAMO[varIndex] == 0) {
-                    auto it = find(VarVal[varIndex].begin(), VarVal[varIndex].end(), scope[varIndex]->getInf());
-                    if (it == VarVal[varIndex].end()) {
+                    auto it = VarValInv[varIndex].find(scope[varIndex]->getInf());
+                    if (it == VarValInv[varIndex].end()) {
                         capacity -= weights[varIndex].back();
                         assigneddeltas += deltaCosts[varIndex].back();
                     } else {
-                        capacity -= weights[varIndex][distance(VarVal[varIndex].begin(), it)];
-                        assigneddeltas += deltaCosts[varIndex][distance(VarVal[varIndex].begin(), it)];
+                        capacity -= weights[varIndex][it->second];
+                        assigneddeltas += deltaCosts[varIndex][it->second];
                     }
                     fill(deltaCosts[varIndex].begin(), deltaCosts[varIndex].end(), MIN_COST);
                     MaxWeight -= weights[varIndex][GreatestWeightIdx[varIndex]];
@@ -3348,7 +3343,7 @@ public:
                     cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] KP " << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
                 }
                 if (ToulBar2::verbose >= 0 && totalcost >= 1.) {
-                    cout << "Warning! knapsack constraint (" << wcspIndex << ") with capacity " << Original_capacity << " has optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost greater than 1!!! (" << totalcost << ")" << endl;
+                    cout << "Warning! knapsack constraint (" << wcspIndex << ") with capacity " << Original_capacity << " has optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost greater than 1! (" << totalcost << ")" << endl;
                 }
                 // SdG: cannot verify totalcost < 1. because we do not propagate increasing unary costs which are initially nonzero
             }
@@ -3492,13 +3487,13 @@ public:
         for (int i = 0; i < arity_; i++) {
             if (CorrAMO[i] == 0) {
                 Value support = ((i == index) ? supportValue : scope[i]->getSupport());
-                auto it = find(VarVal[i].begin(), VarVal[i].end(), support);
-                if (it == VarVal[i].end()) {
+                auto it = VarValInv[i].find(support);
+                if (it == VarValInv[i].end()) {
                     res += deltaCosts[i].back();
                     W += weights[i].back();
                 } else {
-                    W += weights[i][distance(VarVal[i].begin(), it)];
-                    res += deltaCosts[i][distance(VarVal[i].begin(), it)];
+                    W += weights[i][it->second];
+                    res += deltaCosts[i][it->second];
                 }
             }
         }

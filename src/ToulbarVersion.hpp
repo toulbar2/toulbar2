@@ -1,2 +1,2 @@
 // Cmake generated version
-#define Toulbar_VERSION "v1.2.1-188-g09d09a05-master-tainted (1730391269)"
+#define Toulbar_VERSION "v1.2.1-189-g95b0e802-master-tainted (1730826467)"
