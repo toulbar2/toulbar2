@@ -796,7 +796,7 @@ void VACExtension::enforcePass2()
                             }
                         } else {
                             if ((costij / tmpK) < minlambda) { // costij should be made infinite to avoid to decrease minlambda
-                                Cost cost = tmpK * minlambda - costij;
+                                Cost cost = (((Double)tmpK * minlambda < MAX_COST)?(tmpK * minlambda):MAX_COST) - costij;
                                 assert(cost > MIN_COST);
                                 assert(ToulBar2::verbose < 1 || ((cout << "inflate(C" << cij->getVar(0)->getName() << "," << cij->getVar(1)->getName() << ", (" << ((xi == cij->getVar(0)) ? v : w) << "," << ((xi == cij->getVar(0)) ? w : v) << "), " << cost << ")" << endl), true));
                                 cij->addcost(xi, xj, v, w, cost);
@@ -960,7 +960,8 @@ bool VACExtension::enforcePass3()
             for (EnumeratedVariable::iterator iti = xi->begin(); iti != xi->end(); ++iti) {
                 Value v = *iti;
                 if (cij->getK(xi, v, nbIterations) != 0) {
-                    Cost ecost = lambda * cij->getK(xi, v, nbIterations);
+                    int tmpK = cij->getK(xi, v, nbIterations);
+                    Cost ecost = (((Double)tmpK * lambda < MAX_COST)?(tmpK * lambda):MAX_COST);
                     cij->setK(xi, v, 0, nbIterations);
                     cij->VACextend(xi, v, ecost);
                     // extention from unary to binary cost function may break soft AC/DAC in both directions due to isNull/itThreshold
@@ -980,7 +981,8 @@ bool VACExtension::enforcePass3()
                     }
                 }
             }
-            cij->VACproject(xj, w, lambda * xj->getK(w, nbIterations));
+            int tmpK = xj->getK(w, nbIterations);
+            cij->VACproject(xj, w, ((Double)tmpK * lambda < MAX_COST)?(tmpK * lambda):MAX_COST);
             tempvars.insert(xj->wcspIndex);
         } else {
             const vector<pair<int, Value>>& PBKILLERSxj = xj->getPBkillers(w);
@@ -993,7 +995,8 @@ bool VACExtension::enforcePass3()
             for (int k = 1; k < (int)PBKILLERSxj.size(); ++k) {
                 VACVariable *xi = (VACVariable*)wcsp->getVar(PBKILLERSxj[k].first);
                 if (xi->canbe(PBKILLERSxj[k].second) && knap->getkVAC(xi, PBKILLERSxj[k].second, nbIterations) != 0) {
-                    Cost ecost = lambda * knap->getkVAC(xi, PBKILLERSxj[k].second, nbIterations);
+                    int tmpK = knap->getkVAC(xi, PBKILLERSxj[k].second, nbIterations);
+                    Cost ecost = ((Double)tmpK * lambda < MAX_COST)?(tmpK * lambda):MAX_COST;
                     knap->VACextend(xi, PBKILLERSxj[k].second, ecost);
                     if (ToulBar2::LcLevel == LC_AC) { // SdG: to be compatible with verify for knapsack constraints
                         xi->queueAC();
@@ -1016,7 +1019,7 @@ bool VACExtension::enforcePass3()
                     xj->setK(LastValues[k], 0, nbIterations);
                 }
             }
-            knap->VACproject(xj, w, lambda * xjk); // SdG: VACproject may project more than what is needed after, possibly breaking (EAC) supports and DAC
+            knap->VACproject(xj, w, ((Double)xjk * lambda < MAX_COST)?(xjk * lambda):MAX_COST); // SdG: VACproject may project more than what is needed after, possibly breaking (EAC) supports and DAC
             tempvars.insert(xj->wcspIndex);
         }
     }
@@ -1028,15 +1031,23 @@ bool VACExtension::enforcePass3()
         xi0->projectLB(lambda);
     } else {
         assert(wcsp->constrs[PBconflict]->isKnapsack());
+        TreeDecomposition* td = wcsp->getTreeDec();
         KnapsackConstraint* k2 = (KnapsackConstraint *)wcsp->constrs[PBconflict];
         k2->RestVACGroupExt();
         k2->VACPass3(EPT, minlambda, PBkillersctr);
+#ifndef NDEBUG
+        sort(EPT.begin(), EPT.end(), [&](auto& x, auto& y) {return x.second < y.second;}); // SdG: performs all projections before extensions in order to keep positive unary costs inside the sequence of EPTs
+#endif
         for (int l = 0; l < (int)EPT.size(); ++l) {
             VACVariable *xi = (VACVariable*)wcsp->getVar(EPT[l].first.first);
             if (EPT[l].second > MIN_COST) {
+                if (td && xi->canbe(EPT[l].first.second))
+                    td->addDelta(k2->getCluster(), xi, EPT[l].first.second, -EPT[l].second);
                 xi->extend(EPT[l].first.second, EPT[l].second);
                 assert(xi->getCost(EPT[l].first.second)>= MIN_COST);
             } else {
+                if (td && xi->canbe(EPT[l].first.second))
+                    td->addDelta(k2->getCluster(), xi, EPT[l].first.second, -EPT[l].second);
                 xi->project(EPT[l].first.second, -EPT[l].second);
                 tempvars.insert(xi->wcspIndex);
             }

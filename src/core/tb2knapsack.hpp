@@ -169,8 +169,11 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
     void Group_extendNVV(int var, Cost C)
     {
+        TreeDecomposition* td = wcsp->getTreeDec();
         for (unsigned int i = 0; i < NotVarVal[var].size(); i++) {
             if (scope[var]->canbe(NotVarVal[var][i])) {
+                if (td)
+                    td->addDelta(cluster, scope[var], NotVarVal[var][i], -C);
                 assert(scope[var]->getCost(NotVarVal[var][i]) >= C);
                 scope[var]->extend(NotVarVal[var][i], C);
             }
@@ -178,17 +181,24 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     }
     void Group_projectNVV(int var, Cost C)
     {
+        TreeDecomposition* td = wcsp->getTreeDec();
         for (unsigned int i = 0; i < NotVarVal[var].size(); i++) {
-            if (scope[var]->canbe(NotVarVal[var][i]))
+            if (scope[var]->canbe(NotVarVal[var][i])) {
+                if (td)
+                    td->addDelta(cluster, scope[var], NotVarVal[var][i], C);
                 scope[var]->project(NotVarVal[var][i], C, true);
+            }
         }
     }
 
     // Depending of the value and the cost, extend or project the cost on the index value of the variable var
     void ExtOrProJ(int var, int value_idx, Cost C)
     {
+        TreeDecomposition* td = wcsp->getTreeDec();
         if (C > MIN_COST) {
             if (value_idx < (int)VarVal[var].size() - 1) {
+                if (td && scope[var]->canbe(VarVal[var][value_idx]))
+                    td->addDelta(cluster, scope[var], VarVal[var][value_idx], -C);
                 deltaCosts[var][value_idx] += C;
                 assert(scope[var]->getCost(VarVal[var][value_idx]) >= C);
                 scope[var]->extend(VarVal[var][value_idx], C);
@@ -196,8 +206,10 @@ class KnapsackConstraint : public AbstractNaryConstraint {
                 deltaCosts[var].back() += C;
                 Group_extendNVV(var, C);
             }
-        } else {
+        } else if (C < MIN_COST) {
             if (value_idx < (int)VarVal[var].size() - 1) {
+                if (td && scope[var]->canbe(VarVal[var][value_idx]))
+                    td->addDelta(cluster, scope[var], VarVal[var][value_idx], -C);
                 deltaCosts[var][value_idx] += C;
                 scope[var]->project(VarVal[var][value_idx], -C, true);
             } else {
@@ -869,7 +881,10 @@ public:
                 TestedVal_idx = (int)VarVal[TestedVar_idx].size() - 1;
                 VACLastVALChecked[TestedVar_idx][distance(NotVarVal[TestedVar_idx].begin(), it2)]=true;
             } else {
-                return kia * lambda;
+                if ((Double)kia * lambda < MAX_COST)
+                    return kia * lambda;
+                else
+                    return MAX_COST;
             }
         }
         assert(TestedVar_idx >= 0 && TestedVar_idx < (int)weights.size());
@@ -928,7 +943,10 @@ public:
                     }
                 }
             }
-            return kia * lambda;
+            if ((Double)kia * lambda < MAX_COST)
+                return kia * lambda;
+            else
+                return MAX_COST;
         }
         k = 0;
         Long W = weights[TestedVar_idx][TestedVal_idx];
@@ -1093,7 +1111,7 @@ public:
         int i=getIndex(wcsp->getVar(var_idx));
         assert(i >= 0 && i < arity_);
         assert(scope[i]->wcspIndex == var_idx);
-        if (!VarValInv[i].contains(v)) {
+        if (VarValInv[i].find(v) == VarValInv[i].end()) {
             for (int k = 0; k < (int)NotVarVal[i].size(); ++k) {
                 if (scope[i]->canbe(NotVarVal[i][k]))
                     LastVal.push_back(NotVarVal[i][k]);
@@ -2428,24 +2446,33 @@ public:
                 }
             }
         }
+        TreeDecomposition* td = wcsp->getTreeDec();
         tempvars.clear();
         for (int i = 0; i < (int)tempdeltaCosts.size(); ++i) {
             if (tempdeltaCosts[i][2] > MIN_COST) {
-                if (CorrAMO[tempdeltaCosts[i][0]] > 0)
+                if (CorrAMO[tempdeltaCosts[i][0]] > 0) {
+                    if (td && scope[tempdeltaCosts[i][0]]->canbe(tempdeltaCosts[i][1]))
+                        td->addDelta(cluster, scope[tempdeltaCosts[i][0]], tempdeltaCosts[i][1], -tempdeltaCosts[i][2]);
                     scope[tempdeltaCosts[i][0]]->extend(tempdeltaCosts[i][1], tempdeltaCosts[i][2]);
-                else {
-                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
+                } else {
+                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1) {
+                        if (td && scope[tempdeltaCosts[i][0]]->canbe(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]]))
+                            td->addDelta(cluster, scope[tempdeltaCosts[i][0]], VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], -tempdeltaCosts[i][2]);
                         scope[tempdeltaCosts[i][0]]->extend(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], tempdeltaCosts[i][2]);
-                    else
+                    } else
                         Group_extendNVV(tempdeltaCosts[i][0], tempdeltaCosts[i][2]);
                 }
             } else {
-                if (CorrAMO[tempdeltaCosts[i][0]] > 0)
+                if (CorrAMO[tempdeltaCosts[i][0]] > 0) {
+                    if (td && scope[tempdeltaCosts[i][0]]->canbe(tempdeltaCosts[i][1]))
+                        td->addDelta(cluster, scope[tempdeltaCosts[i][0]], tempdeltaCosts[i][1], -tempdeltaCosts[i][2]);
                     scope[tempdeltaCosts[i][0]]->project(tempdeltaCosts[i][1], -tempdeltaCosts[i][2], true);
-                else {
-                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1)
+                } else {
+                    if (tempdeltaCosts[i][1] != (int)VarVal[tempdeltaCosts[i][0]].size() - 1) {
+                        if (td && scope[tempdeltaCosts[i][0]]->canbe(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]]))
+                            td->addDelta(cluster, scope[tempdeltaCosts[i][0]], VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], -tempdeltaCosts[i][2]);
                         scope[tempdeltaCosts[i][0]]->project(VarVal[tempdeltaCosts[i][0]][tempdeltaCosts[i][1]], -tempdeltaCosts[i][2], true);
-                    else
+                    } else
                         Group_projectNVV(tempdeltaCosts[i][0], -tempdeltaCosts[i][2]);
                 }
                 tempvars.insert(tempdeltaCosts[i][0]);
@@ -3066,21 +3093,11 @@ public:
                                                 Cost totrans;
                                                 if (current_val_idx[EDACORDER[i]][k] < (int)VarVal[current_scope_idx[EDACORDER[i]]].size() - 1) {
                                                     totrans = scope[current_scope_idx[EDACORDER[i]]]->getCost(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]]) - GAP;
-                                                    deltaCosts[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] += totrans;
-                                                    if (totrans < MIN_COST) {
-                                                        scope[current_scope_idx[EDACORDER[i]]]->project(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]], -totrans, true);
-                                                    } else if (totrans > MIN_COST) {
-                                                        scope[current_scope_idx[EDACORDER[i]]]->extend(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]], totrans);
-                                                    }
+                                                    ExtOrProJ(current_scope_idx[EDACORDER[i]], current_val_idx[EDACORDER[i]][k], totrans);
                                                     ProfforDyn[EDACORDER[i]][k] = deltaCosts[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]];
                                                 } else {
                                                     totrans = UnaryCost0[current_scope_idx[EDACORDER[i]]] - GAP;
-                                                    deltaCosts[current_scope_idx[EDACORDER[i]]].back() += totrans;
-                                                    if (totrans < MIN_COST) {
-                                                        Group_projectNVV(current_scope_idx[EDACORDER[i]], -totrans);
-                                                    } else if (totrans > MIN_COST) {
-                                                        Group_extendNVV(current_scope_idx[EDACORDER[i]], totrans);
-                                                    }
+                                                    ExtOrProJ(current_scope_idx[EDACORDER[i]], current_val_idx[EDACORDER[i]][k], totrans);
                                                     ProfforDyn[EDACORDER[i]].back() = deltaCosts[current_scope_idx[EDACORDER[i]]].back();
                                                 }
                                                 OptSol[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] = 0.;
@@ -3088,13 +3105,11 @@ public:
                                                 if (current_val_idx[EDACORDER[i]][k] < (int)VarVal[current_scope_idx[EDACORDER[i]]].size() - 1) {
                                                     Cost C = scope[current_scope_idx[EDACORDER[i]]]->getCost(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]]);
                                                     if (C > MIN_COST) {
-                                                        deltaCosts[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]] += C;
-                                                        scope[current_scope_idx[EDACORDER[i]]]->extend(VarVal[current_scope_idx[EDACORDER[i]]][current_val_idx[EDACORDER[i]][k]], C);
+                                                        ExtOrProJ(current_scope_idx[EDACORDER[i]], current_val_idx[EDACORDER[i]][k], C);
                                                     }
                                                 } else {
                                                     if (UnaryCost0[current_scope_idx[EDACORDER[i]]] > 0) {
-                                                        deltaCosts[current_scope_idx[EDACORDER[i]]].back() += UnaryCost0[current_scope_idx[EDACORDER[i]]];
-                                                        Group_extendNVV(current_scope_idx[EDACORDER[i]], UnaryCost0[current_scope_idx[EDACORDER[i]]]);
+                                                        ExtOrProJ(current_scope_idx[EDACORDER[i]], current_val_idx[EDACORDER[i]][k], UnaryCost0[current_scope_idx[EDACORDER[i]]]);
                                                     }
                                                 }
                                             }
