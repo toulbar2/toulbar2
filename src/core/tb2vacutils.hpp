@@ -134,12 +134,15 @@ public:
         wcsp->vac->queueSeekSupport(&linkSeekSupport);
     }
 
-    void VACproject(Value v, Cost c) /**< Increases unary cost */
+    void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC enforcing (maintaining maxCost and maxCostValue during VAC-lin which may create unary costs without consuming them) */
     {
         assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project " << getName() << " (" << v << ") += " << c << endl), true));
+        assert(c > MIN_COST);
         costs[toIndex(v)] += c;
+        if (ToulBar2::VAClin && !wcsp->knapsackList.empty() && (v == maxCostValue || LUBTEST(maxCost, getCost(v))))
+            queueNC();
     }
-    void VACextend(Value v, Cost c) /**< Decreases unary cost and may queue for NC enforcing */
+    void VACextend(Value v, Cost c) /**< Decreases unary cost and may queue for NC enforcing (maintaining maxCost and maxCostValue) */
     {
         assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend " << getName() << " (" << v << ") -= " << c << endl), true));
         assert(c > MIN_COST);

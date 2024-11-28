@@ -23,9 +23,8 @@ Variable::Variable(WCSP* w, string n, Value iinf, Value isup)
     , sup(isup)
     , fulleac((isup > iinf) ? 0 : 1)
     , constrs(&Store::storeConstraint)
-    ,
-    // triangles(&Store::storeConstraint),
-    maxCost(MIN_COST)
+    // ,triangles(&Store::storeConstraint)
+    , maxCost(MIN_COST)
     , maxCostValue(iinf)
     , NCBucket(-1)
 {
