@@ -17,6 +17,7 @@
 using namespace XCSP3Core;
 
 #define MAX_COST_XML3 ((Cost)INT_MAX * 1024)
+#define ALLDIFFMAXSIZEDECOMP 100
 
 class MySolverCallbacks : public XCSP3CoreCallbacks {
     public:
@@ -560,7 +561,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
-        if (vars.size() <= 50) {
+        if (vars.size() <= ALLDIFFMAXSIZEDECOMP) {
             for (unsigned int i = 0; i < vars.size(); i++) {
                 for (unsigned int j = i+1; j < vars.size(); j++) {
                     vector<Cost> costs;
@@ -643,7 +644,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
-        if (vars.size() <= 50) {
+        if (vars.size() <= ALLDIFFMAXSIZEDECOMP) {
             for (unsigned int i = 0; i < vars.size(); i++) {
                 for (unsigned int j = i+1; j < vars.size(); j++) {
                     vector<Cost> costs;
