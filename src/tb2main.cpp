@@ -1308,7 +1308,7 @@ int _tmain(int argc, TCHAR* argv[])
                 //                ToulBar2::searchMethod = VNS;
                 //                ToulBar2::vnsNeighborVarHeur = RANDOMVAR;
                 ToulBar2::lds = maxdiscrepancy;
-                ToulBar2::restart = maxrestarts;
+                ToulBar2::restart = LONGLONG_MAX;
 #ifdef OPENMPI
                 if (world.size() > 1) {
                     ToulBar2::searchMethod = RPDGVNS;

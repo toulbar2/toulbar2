@@ -323,8 +323,9 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                     }
                     lds = min(lds, ToulBar2::vnsLDSmax);
                 }
-            } else
+            } else if (nbRestart > ToulBar2::restart || ToulBar2::restart == LONGLONG_MAX) {
                 stop = true;
+            }
         }
     }
     vector<mpi::request> reqs;

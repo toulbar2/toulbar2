@@ -135,6 +135,9 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
     lastUb = MAX_COST;
     lastSolution.clear();
     ToulBar2::limited = false;
+    if (ToulBar2::backtrackLimit < LONGLONG_MAX) {
+        nbBacktracksLimit = nbBacktracks + ToulBar2::backtrackLimit;
+    }
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // HBFS not compatible with LDS
     bool solutionBasedPhaseSaving_ = ToulBar2::solutionBasedPhaseSaving;
@@ -155,10 +158,14 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
         if (ToulBar2::DEE == 4)
             ToulBar2::DEE_ = 0; // only PSNS in preprocessing
         try {
-            if (discrepancy >= 0)
-                recursiveSolveLDS(discrepancy);
-            else
-                recursiveSolve();
+            try {
+                if (discrepancy >= 0)
+                    recursiveSolveLDS(discrepancy);
+                else
+                    recursiveSolve();
+            } catch (const NbBacktracksOut&) {
+                assert(ToulBar2::limited == true);
+            }
         } catch (const TimeOut&) {
             assert(ToulBar2::limited == true);
             if (ToulBar2::interrupted)

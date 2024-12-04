@@ -2816,10 +2816,12 @@ void Solver::beginSolve(Cost ub)
         throw BadConfiguration();
     }
     if (ToulBar2::searchMethod != DFBB) {
-        if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
+        if (ToulBar2::vnsLDSmax < 0)
             ToulBar2::vnsLDSmax = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
-        if (!ToulBar2::lds)
+        if (!ToulBar2::lds) {
             ToulBar2::vnsLDSmin = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
+            ToulBar2::vnsLDSmax = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
+        }
         if (ToulBar2::vnsKmax <= 0)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }

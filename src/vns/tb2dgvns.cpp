@@ -105,8 +105,13 @@ bool VNSSolver::solve(bool first)
         Long restart = 1;
         int lds = ToulBar2::vnsLDSmin;
         while (!stop && !complete && bestUb > ToulBar2::vnsOptimum) {
-            if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1 && ToulBar2::lds)
-                cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+            if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1) {
+                if (ToulBar2::lds) {
+                    cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                } else if (ToulBar2::backtrackLimit < LONGLONG_MAX) {
+                    cout << "****** Restart " << nbRestart << " with UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                }
+            }
             Long rank = 1;
             int k = ToulBar2::vnsKmin;
             while (!complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
@@ -203,8 +208,9 @@ bool VNSSolver::solve(bool first)
                         }
                         lds = min(lds, ToulBar2::vnsLDSmax);
                     }
-                } else
+                } else if (nbRestart > ToulBar2::restart || ToulBar2::restart == LONGLONG_MAX) {
                     stop = true;
+                }
             }
         }
     } catch (const SolverOut&) {
@@ -222,6 +228,7 @@ bool VNSSolver::solve(bool first)
         ToulBar2::lds = 0;
         ToulBar2::restart = 1; // randomize variable heuristic ordering
         ToulBar2::limited = false;
+        nbBacktracksLimit = LONGLONG_MAX;
         Store::store();
         try {
             try {
