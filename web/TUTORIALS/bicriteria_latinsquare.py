@@ -1,8 +1,9 @@
 import sys
 from random import seed, randint
-seed(123456789)
+seed(12345678)
 import pytoulbar2
 from matplotlib import pyplot as plt
+
 
 N = int(sys.argv[1])
 
@@ -50,30 +51,30 @@ def create_base_cfn(cfn, N, top):
         # permutations in the columns
         cfn.AddFunction([var_indexes[index+var_ind1*N], var_indexes[index+var_ind2*N]], alldiff_costs)
 
-split_index = (N*N)//2
 
-# generation of random costs
-cell_costs = [[randint(1,N) for _ in range(N)] for _ in range(N*N)]
+# generation of two random costs matrice, one for each objective
+cell_costs_obj1 = [[randint(1,N) for _ in range(N)] for _ in range(N*N)]
+cell_costs_obj2 = [[randint(1,N) for _ in range(N)] for _ in range(N*N)]
 
 # multicfn is the main object for combining multiple cost function networks
 multicfn = pytoulbar2.MultiCFN()
 
 
-# first cfn: first half of the grid
+# first cfn: costs from the first matrix
 cfn = pytoulbar2.CFN(ubinit = top, resolution=6)
-cfn.SetName('first half')
+cfn.SetName('obj_1')
 create_base_cfn(cfn, N, top)
-for variable_index in range(split_index):
-  cfn.AddFunction([variable_index], cell_costs[variable_index])
+for variable_index in range(N*N):
+  cfn.AddFunction([variable_index], cell_costs_obj1[variable_index])
 multicfn.PushCFN(cfn)
 
 
-# second cfn: second half of the grid
+# first cfn: costs from the second matrix
 cfn = pytoulbar2.CFN(ubinit = top, resolution=6)
-cfn.SetName('second half')
+cfn.SetName('obj_2')
 create_base_cfn(cfn, N, top)
-for variable_index in range(split_index+1, N*N):
-  cfn.AddFunction([variable_index], cell_costs[variable_index])
+for variable_index in range(N*N):
+  cfn.AddFunction([variable_index], cell_costs_obj2[variable_index])
 multicfn.PushCFN(cfn)
 
 
@@ -86,6 +87,7 @@ multicfn.SetWeight(1, weights[1])
 cfn = pytoulbar2.CFN()
 cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined cfn
 
+# optionaly dumping a weighted sum of the two problems with chosen weights
 # cfn.Dump('python_latin_square_bicriteria.cfn')
 
 result = cfn.Solve()
@@ -130,8 +132,8 @@ for index in range(len(costs)-1):
   ax.plot([costs[index][0], costs[index+1][0]], [costs[index][1],costs[index][1]], '--', c='red')
   ax.plot([costs[index+1][0], costs[index+1][0]], [costs[index][1],costs[index+1][1]], '--', c='red')
 
-ax.set_xlabel('first half cost')
-ax.set_ylabel('second half cost')
+ax.set_xlabel('first objective')
+ax.set_ylabel('second objective')
 ax.set_title('approximation of the pareto front')
 ax.set_aspect('equal')
 
