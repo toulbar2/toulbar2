@@ -5,9 +5,9 @@
 
    presentation.rst
    downloads.rst
-   benchmarks.rst
    examples/tutorials.rst
    Use cases <examples/usecases.rst>
+   benchmarks.rst
    All examples <examples/examples_toc.rst>
    userdoc.rst
    refman.rst
