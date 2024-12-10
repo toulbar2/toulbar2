@@ -1,5 +1,7 @@
 .. _ref_modules:
 
+.. highlight:: c++
+
 =======
 Modules
 =======
