@@ -39,9 +39,13 @@ Detailed Content
    :titlesonly:
 
    reference_manual/ref_modules.rst
-   reference_manual/ref_cpp.rst
-   reference_manual/ref_python.rst
+   reference_manual/library.rst
    reference_manual/command_line_options.rst
+
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+
    reference_manual/formats.rst
 
 .. toctree::

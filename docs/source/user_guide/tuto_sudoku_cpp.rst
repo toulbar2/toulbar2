@@ -177,8 +177,8 @@ This function helps to visualize the variables values as a real sudoku grid, as 
    -------------------------
 
 
-Adding initial values
-=================
+Assignment to input values
+=====================
 
 The next step consists in initializing the variables that correspond to cells for which the value is known.
 We will use the values in the grid example above, define as a two dimensional vector (where 0 means the value is unspecified) :
@@ -196,23 +196,27 @@ We will use the values in the grid example above, define as a two dimensional ve
                                                    {0, 0, 0, 4, 1, 9, 0, 0, 5},
                                                    {0, 0, 0, 0, 8, 0, 0, 7, 9} };
 
-Variables can be assigned with the :code:`Assign` function.
+Variables can be assigned with the :code:`WeightedCSP::assign` function.
 The variable and its value can be specified as integers indexes or as strings.
 
-.. code-block:: python
+.. code-block:: c++
 
-   var_index = 0
-   for row in range(9):
-    for col in range(9):
-        if initial_values[row][col] != 0:
-            cfn.Assign(var_index, initial_values[row][col]-1)
-        var_index += 1
+   // input values initialisation
+   size_t var_ind = 0;
+   for(size_t row = 0; row < 9; row ++) {
+      for(size_t col = 0; col < 9; col ++) {
+            
+         if(input_grid[row][col] != 0) {
+            wcsp->assign(var_ind, input_grid[row][col]-1);
+         }
 
-   result = cfn.Solve(showSolutions = 3)
-   print_grid(result[0])
+         var_ind ++;
+
+      }
+   }
 
 .. CAUTION::
-   Although we already solve the problem once, a cfn object cannot execute its :code:`Solve` function twice in a row. The object must be recreated or the function must be called only once. 
+   Although we already solve the problem once, a cfn object cannot execute its :code:`WeightedCSPSolver::solve` function twice in a row. The object must be recreated or the function must be called only once.
 
 The solution returned by the algorithm this time lookes like this :
 
