@@ -110,7 +110,7 @@ We then define a function to print the solutions as a grid :
 
 Which helps to display the first solution:
 
-.. code-block:: raw
+.. code-block:: text
 
    -------------------------
    | 1 1 1 | 1 1 1 | 1 1 1 |
@@ -166,7 +166,7 @@ The variable and its value can be specified as integers indexes or as strings.
 
 The solution returned by the algorithm this time lookes like this :
 
-.. code-block:: raw
+.. code-block:: text
 
    -------------------------
    | 5 3 1 | 1 7 1 | 1 1 1 |
@@ -199,7 +199,7 @@ The constraint on the first row is obtained via :
 
 Which generates the following first row in the solution :
 
-.. code-block:: raw
+.. code-block:: text
 
    -------------------------
    | 5 3 1 | 2 7 4 | 9 8 6 |
@@ -222,7 +222,7 @@ Constraints for each columns are obtained similarly :
 
 At this point, the solution is not correct yet since sub-grids of size 3x3 may contain duplicates, such as the values :code:`9`` and :code:`3` in the example bellow :
 
-.. code-block:: raw
+.. code-block:: text
 
    ---------
    | 5 3 9 |
@@ -241,7 +241,7 @@ The constraint will be decomposed **pairwise**, meaning that a cost function wil
 
 These last constraints allow to finally obtain a consistent solution to the sudoku puzzle :
 
-.. code-block:: raw
+.. code-block:: text
 
    -------------------------
    | 5 3 4 | 6 7 8 | 9 1 2 |
