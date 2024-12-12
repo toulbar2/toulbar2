@@ -1,5 +1,6 @@
 .. _tuto_sudoku_cpp:
 
+.. https://devicon.dev/
 .. |cpp_logo| image::  https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg
    :width: 50
 
@@ -32,24 +33,44 @@ The goal is to deduce the other values while verifying the different constraints
 Getting started
 =================
 
-Before starting, make sure pytoulbar2 is present in your environment. It can be installed via the command:
+Before starting, make sure the ToulBar2 C++ library binares are installed in your system (:code:`libtb2.so`, see :ref:`installation` section for more instructions). 
 
-.. code-block:: bash
+We first create a :code:`WeightedCSPSolver` object.
+This object is in charge of executing the algorithm to solve the sudoku grid and internally creates a :code:`WeightedCSP` object to store the problem.
 
-   pip install pytoulbar2
+:code:`WeightedCSP` objects are used in ToulBar2 to define the optimization or decision problems.
+The problem is expressed as a set of discrete variables that are connected to each other through cost functions (or constraints).
 
-We first create a CFN object. CFN, which stands for Cost Function Network, is the main object that is manipulated in pytoulbar2.
-It represent a problem to solve expressed as a network of cost function, i.e a set of variables that are connected to each other through discret cost functions (or constraints).
-
-As ToulBar2 is an optimization framework, an optional upper bound can be provided to the cfn object in order to exclude any solution which value exceed this bound.
+As ToulBar2 is an optimization framework, an optional upper bound can be provided to the solver object in order to exclude any solution which value exceed this bound.
 In the case of a sudoku puzzle, since the problem does not contain a numerical objective, an upper bound of 1 can be chosen.
 
-.. code-block:: python
+.. highlight:: c++
+   
+.. code-block:: c++
 
-   import pytoulbar2
+   #include <iostream>
+   #include <toulbar2lib.hpp>
 
-   top = 1 # upper bound value of the problem
-   cfn = pytb2.CFN(top)
+   using namespace std;
+
+   int main() {
+
+      // initialisation
+      tb2init();
+      initCosts();
+
+      Cost top = 1;
+      
+      // creation of the solver object
+      WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(top);
+
+      // access to the wcsp object created by the solver
+      WeightedCSP* wcsp = solver->getWCSP();
+
+      delete solver;
+
+      return 0;
+   }
 
 Representing the grid in ToulBar2
 =================
@@ -60,12 +81,14 @@ In the sudoku puzzle, decision variables are typically the different cells of th
 Their values would be the possible integers they can be assigned to, from 1 to 9.
 We use the AddVariable function of the cfn object to make the variables.
 
-.. code-block:: python
+.. code-block:: c++
 
-   # variable creation
-   for row in range(9):
-      for col in range(9):
-         cfn.AddVariable('cell_'+str(row)+'_'+str(col), range(9))
+   // variable creation
+   for(size_t row = 0; row < 9; row ++) {
+      for(size_t col = 0; col < 9; col ++) {
+         wcsp->makeEnumeratedVariable("Cell_" + to_string(row) + "," + to_string(col), 0, 8);
+      }
+   }
 
 Solving first the grid
 =================
@@ -73,47 +96,69 @@ Solving first the grid
 It is already possible to "solve" the puzzle with ToulBar2 as the cfn object contains the variables of the problem.
 The :code:`Solve` function is used to run the solving algorithm.
 
-.. code-block:: python
+.. code-block:: c++
 
-   result = cfn.Solve(showSolutions = 3)
+   bool hasSolution = solver->solve();
 
-If ToulBar2 finds a solution, it will return an array containing the chosen values for each variable:
 
-.. code-block:: python
+When ToulBar2 returns a solution, the solution can be accessed as a std::vector of Value, specifying the domain value taht is assigned to each variable of the problem (in the same order they were defined).  :
 
-   print(result[0][0])
+.. code-block:: c++
+
+   if(hasSolution) {
+   
+        std::vector<Value> solution = solver->getSolution();
+        cout << "the first value is " << solution[0] << endl;
+    
+    }
 
 Would return :code:`0`, meaning the chosen value of the first variable (upper left cell) is 1 (first value of the list).
 We then define a function to print the solutions as a grid :
 
-.. code-block:: python
+.. code-block:: c++
 
-   # print a solution as a sudoku grid
-   def print_grid(solution):
+   // print a solution as a grid
+   void printSolution(const std::vector<Value>& solution) {
 
-      print('-------------------------')
+      cout << "-------------------------" << endl;
 
-      var_index = 0
+      size_t var_index = 0;
 
-      for row in range(9):
-         line = ''
-         for col in range(9):
-            if col % 3 == 0:
-                  line += '|'
-            line += ' ' 
-            line += str(solution[var_index]+1)
-            if col % 3 == 2:
-                  line += ' '
-            var_index += 1
-         line += '|'
-         print(line)
-         if row % 3 == 2:
-            print('-------------------------')
+      for(size_t row = 0; row < 9; row ++) {
 
-   # print the first solution
-   print_grid(result)
+         for(size_t col = 0; col < 9; col ++) {
+            
+            if(col % 3 == 0) {
+                  cout << "|";
+            }
+            cout << " " << to_string(solution[var_index]+1);
+            if(col % 3 == 2) {
+                  cout << " ";
+            }
 
-Which helps to display the first solution:
+            var_index += 1;
+            }
+            cout << "|" << endl;
+
+            if(row % 3 == 2) {
+               cout << "-------------------------" << endl;
+            }
+
+         }
+
+   }
+
+This function helps to visualize the variables values as a real sudoku grid, as follows :
+
+.. code-block:: c++
+
+   // print the first solution
+   if(hasSolution) {
+        std::vector<Value> solution = solver->getSolution();
+        printSolution(solution)
+    }
+
+   Which helps to display the first solution:
 
 .. code-block:: text
 
@@ -136,20 +181,20 @@ Adding initial values
 =================
 
 The next step consists in initializing the variables that correspond to cells for which the value is known.
-We will use the values in the grid example above, define as a double array (where 0 means the value is unspecified) :
+We will use the values in the grid example above, define as a two dimensional vector (where 0 means the value is unspecified) :
 
-.. code-block:: python
+.. code-block:: c++
 
-   # define known values
-   initial_values = [[5,3,0,0,7,0,0,0,0],
-                  [6,0,0,1,9,5,0,0,0],
-                  [0,9,8,0,0,0,0,6,0],
-                  [8,0,0,0,6,0,0,0,3],
-                  [4,0,0,8,0,3,0,0,1],
-                  [7,0,0,0,2,0,0,0,6],
-                  [0,6,0,0,0,0,2,8,0],
-                  [0,0,0,4,1,9,0,0,5],
-                  [0,0,0,0,8,0,0,7,9]]
+   // grid data
+   std::vector<std::vector<Value> > input_grid {   {5, 3, 0, 0, 7, 0, 0, 0, 0},
+                                                   {6, 0, 0, 1, 9, 5, 0, 0, 0},
+                                                   {0, 9, 8, 0, 0, 0, 0, 6, 0},
+                                                   {8, 0, 0, 0, 6, 0, 0, 0, 3},
+                                                   {4, 0, 0, 8, 0, 3, 0, 0, 1},
+                                                   {7, 0, 0, 0, 2, 0, 0, 0, 6},
+                                                   {0, 6, 0, 0, 0, 0, 2, 8, 0},
+                                                   {0, 0, 0, 4, 1, 9, 0, 0, 5},
+                                                   {0, 0, 0, 0, 8, 0, 0, 7, 9} };
 
 Variables can be assigned with the :code:`Assign` function.
 The variable and its value can be specified as integers indexes or as strings.
