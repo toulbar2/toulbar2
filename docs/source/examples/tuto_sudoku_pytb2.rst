@@ -16,12 +16,14 @@ Finally, each sub square of size 3x3 located every 3 cells must also not contain
 The image bellow show an example of a Sudoku grid given with its initial values.
 The goal is to deduce the other values while verifying the different constraints.
 
-.. figure:: ../../../web/IMAGES/sudoku_cst.svg
-   :height: 270px
-   :align: center
-   :alt: A Sudoku grid with its constraints.
+.. only:: html
 
-   A Sudoku grid partially filled where some of its constraints have been highlighted. Grid source: `Wikipedia <https://en.wikipedia.org/wiki/Sudoku/>`_
+   .. figure:: ../../../web/IMAGES/sudoku_cst.svg
+      :height: 270px
+      :align: center
+      :alt: A Sudoku grid with its constraints.
+
+      A Sudoku grid partially filled where some of its constraints have been highlighted. Grid source: `Wikipedia <https://en.wikipedia.org/wiki/Sudoku/>`_
 
 
 Getting started

@@ -5,23 +5,38 @@
 
 .. _home:
 
-.. _index:
-
 .. include:: presentation.rst
 
 Detailed Content
 ----------------
 
+.. _index:
+
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    presentation.rst
    downloads.rst
+
+.. toctree::
+   :caption: User Guide
+
    examples/tutorials.rst
    Use cases <examples/usecases.rst>
-   benchmarks.rst
    userdoc.rst
+
+.. toctree::
+   :caption: Advanced guide
+   :maxdepth: 2
+
    refman.rst
+   
+
+.. toctree::
+   :caption: Additional resources
+   :maxdepth: 2
+
+   benchmarks.rst
    pdfmanuals.rst
    publications.rst
 

@@ -353,3 +353,149 @@ Other publications mentioning toulbar2
   Martin Bresler, Daniel Prusa, Václav Hlavác,
   In Proc. of International Conference on Document Analysis and Recognition, Washington, DC, USA, 1215-1219, 2013.
 
+
+
+References
+==========
+
+.. only:: latex
+
+   See 'BIBLIOGRAPHY' at the end of the document.
+
+.. [Beldjilali22] A Beldjilali, P Montalbano, D Allouche, G Katsirelos and S de Givry.
+    Parallel Hybrid Best-First Search.
+    In *Proc. of CP-22*, Haifa, Israel, 2022.
+
+.. [Schiex2020b] Céline Brouard and Simon de Givry and Thomas Schiex.
+    Pushing Data in CP Models Using Graphical Model Learning and Solving.
+    In *Proc. of CP-20*, Louvain-la-neuve, Belgium, 2020.
+
+.. [Trosser2020a] Fulya Trösser, Simon de Givry and George Katsirelos.
+    Relaxation-Aware Heuristics for Exact Optimization in Graphical Models.
+    In *Proc.of CP-AI-OR'2020*, Vienna, Austria, 2020.
+
+.. [Ruffini2019a] M. Ruffini, J. Vucinic, S. de Givry, G. Katsirelos, S. Barbe and T. Schiex.
+    Guaranteed Diversity & Quality for the Weighted CSP.
+    In *Proc. of ICTAI-19*, pages 18-25, Portland, OR, USA, 2019.
+
+.. [Ouali2017] Abdelkader Ouali, David Allouche, Simon de Givry, Samir Loudni, Yahia Lebbah, Francisco Eckhardt, Lakhdar Loukil.
+    Iterative Decomposition Guided Variable Neighborhood Search for Graphical Model Energy Minimization.
+    In *Proc. of UAI-17*, pages 550-559, Sydney, Australia, 2017.
+
+.. [Schiex2016a] David Allouche, Christian Bessière, Patrice Boizumault, Simon de Givry, Patricia Gutierrez, Jimmy H.M. Lee, Ka Lun Leung, Samir Loudni, Jean-Philippe Métivier, Thomas Schiex and Yi Wu.
+   Tractability-preserving transformations of global cost functions.
+   *Artificial Intelligence*, 238:166-189, 2016.
+
+.. [Hurley2016b] B Hurley, B O'Sullivan, D Allouche, G Katsirelos, T Schiex, M Zytnicki and S de Givry.
+    Multi-Language Evaluation of Exact Solvers in Graphical Model Discrete Optimization.
+    *Constraints*, 21(3):413-434, 2016.
+    Presentation at CPAIOR’16, Banff, Canada,
+    http://www.inra.fr/mia/T/degivry/cpaior16sdg.pdf.
+
+.. [Katsirelos2015a] D Allouche, S de Givry, G Katsirelos, T Schiex and M Zytnicki.
+    Anytime Hybrid Best-First Search with Tree Decomposition for Weighted CSP.
+    In *Proc. of CP-15*, pages 12-28, Cork, Ireland, 2015.
+
+.. [Schiex2014a] David Allouche, Jessica Davies, Simon de Givry, George Katsirelos, Thomas Schiex, Seydou Traoré, Isabelle André, Sophie Barbe, Steve Prestwich and Barry O'Sullivan.
+    Computational Protein Design as an Optimization Problem.
+    *Artificial Intelligence*, 212:59-79, 2014.
+
+.. [Givry2013a] S de Givry, S Prestwich and B O'Sullivan.
+    Dead-End Elimination for Weighted CSP.
+    In *Proc. of CP-13*, pages 263-272, Uppsala, Sweden, 2013.
+
+.. [Ficolofo2012] D Allouche, C Bessiere, P Boizumault, S de Givry, P Gutierrez, S Loudni, JP Métivier and T Schiex.
+    Decomposing Global Cost Functions.
+    In *Proc. of AAAI-12*, Toronto, Canada, 2012.
+    http://www.inra.fr/mia/T/degivry/Ficolofo2012poster.pdf (poster).
+
+.. [Favier2011a] A Favier, S de Givry, A Legarra and T Schiex.
+    Pairwise decomposition for combinatorial optimization in graphical models.
+    In *Proc. of IJCAI-11*, Barcelona, Spain, 2011.
+    Video demonstration at http://www.inra.fr/mia/T/degivry/Favier11.mov.
+
+.. [Cooper2010a] M. Cooper, S. de Givry, M. Sanchez, T. Schiex, M. Zytnicki and T. Werner.
+    Soft arc consistency revisited.
+    *Artificial Intelligence*, 174(7-8):449-478, 2010.
+
+.. [Favier2009a] A. Favier, S. de Givry and P. Jégou.
+    Exploiting Problem Structure for Solution Counting.
+    In *Proc. of CP-09*, pages 335-343, Lisbon, Portugal, 2009.
+
+.. [Sanchez2009a] M Sanchez, D Allouche, S de Givry and T Schiex.
+    Russian Doll Search with Tree Decomposition.
+    In *Proc. of IJCAI'09*, Pasadena (CA), USA, 2009.
+    http://www.inra.fr/mia/T/degivry/rdsbtd\_ijcai09\_sdg.ppt.
+
+.. [Cooper2008] M. Cooper, S. de Givry, M. Sanchez, T. Schiex and M. Zytnicki.
+    Virtual Arc Consistency for Weighted CSP.
+    In *Proc. of AAAI-08*, Chicago, IL, 2008.
+
+.. [Schiex2006a] S. de Givry, T. Schiex and G. Verfaillie.
+    Exploiting Tree Decomposition and Soft Local Consistency in Weighted CSP.
+    In *Proc. of AAAI-06*, Boston, MA, 2006.
+    http://www.inra.fr/mia/T/degivry/VerfaillieAAAI06pres.pdf (slides).
+
+.. [Heras2005] S. de Givry, M. Zytnicki, F. Heras and J. Larrosa.
+    Existential arc consistency: Getting closer to full arc consistency in weighted CSPs.
+    In *Proc. of IJCAI-05*, pages 84-89, Edinburgh, Scotland, 2005.
+
+.. [Larrosa2000] J. Larrosa.
+    Boosting search with variable elimination.
+    In *Principles and Practice of Constraint Programming - CP 2000*,
+    volume 1894 of LNCS, pages 291-305, Singapore, September 2000.
+
+.. [koller2009] D Koller and N Friedman.
+    Probabilistic graphical models: principles and techniques.
+    The MIT Press, 2009.
+
+.. [Ginsberg1995] W. D. Harvey and M. L. Ginsberg.
+    Limited Discrepency Search.
+    In *Proc. of IJCAI-95*, Montréal, Canada, 1995.
+
+.. [Lecoutre2009] C. Lecoutre, L. Saïs, S. Tabary and V. Vidal.
+    Reasoning from last conflict(s) in constraint programming.
+    *Artificial Intelligence*, 173:1592,1614, 2009.
+
+.. [boussemart2004] Frédéric Boussemart, Fred Hemery, Christophe Lecoutre and Lakhdar Sais.
+    Boosting systematic search by weighting constraints.
+    In *ECAI*, volume 16, page 146, 2004.  
+
+.. [idwalk:cp04] Bertrand Neveu, Gilles Trombettoni and Fred Glover.
+    ID Walk: A Candidate List Strategy with a Simple Diversification Device.
+    In *Proc. of CP*, pages 423-437, Toronto, Canada, 2004.
+
+.. [Verfaillie1996] G. Verfaillie, M. Lemaître and T. Schiex.
+    Russian Doll Search.
+    In *Proc. of AAAI-96*, pages 181-187, Portland, OR, 1996.
+	
+.. [LL2009] J. H. M. Lee and K. L. Leung.
+    Towards Efficient Consistency Enforcement for Global Constraints in Weighted Constraint Satisfaction.
+    In *Proceedings of IJCAI'09*, pages 559-565, 2009.
+
+.. [LL2010] J. H. M. Lee and K. L. Leung.
+    A Stronger Consistency for Soft Global Constraints in Weighted Constraint Satisfaction.
+    In *Proceedings of AAAI'10*, pages 121-127, 2010.
+
+.. [LL2012asa] J. H. M. Lee and K. L. Leung.
+    Consistency Techniques for Global Cost Functions in Weighted Constraint Satisfaction.
+    *Journal of Artificial Intelligence Research*, 43:257-292, 2012.
+
+.. [Larrosa2002] J. Larrosa.
+    On Arc and Node Consistency in weighted {CSP}.
+    In *Proc. AAAI'02*, pages 48-53, Edmondton, (CA), 2002.
+
+.. [Larrosa2003] J. Larrosa and T. Schiex.
+    In the quest of the best form of local consistency for Weighted CSP.
+    In *Proc. of the 18th IJCAI*, pages 239-244, Acapulco, Mexico, August 2003.
+
+.. [Schiex2000b] T. Schiex.
+    Arc consistency for soft constraints.
+    In *Principles and Practice of Constraint Programming - CP 2000*,
+    volume 1894 of *LNCS*, pages 411-424, Singapore, September 2000.
+
+.. [CooperFCSP] M.C. Cooper.
+    Reduction operations in fuzzy or valued constraint satisfaction.
+    *Fuzzy Sets and Systems*, 134(3):311-342, 2003.
+
+
