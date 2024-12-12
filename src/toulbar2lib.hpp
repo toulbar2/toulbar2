@@ -242,15 +242,15 @@ public:
     ///
     /// Note : A decomposable version exists for each monolithic global cost function, except grammar and MST. The decomposable ones may propagate less than their monolithic counterpart and they introduce extra variables but they can be much faster in practice
     ///
-    /// Warning : Each global cost function may have less than three propagators implemented
+    /// \warning : Each global cost function may have less than three propagators implemented
     ///
-    /// Warning : Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
+    /// \warning : Current implementation of toulbar2 has limited solving facilities for monolithic global cost functions (no BTD-like methods nor variable elimination)
     ///
-    /// Warning : Current implementation of toulbar2 disallows global cost functions with less than or equal to three variables in their scope (use cost functions in extension instead)
+    /// \warning : Current implementation of toulbar2 disallows global cost functions with less than or equal to three variables in their scope (use cost functions in extension instead)
     ///
-    /// Warning : Before modeling the problem using make and post, call ::tb2init method to initialize toulbar2 global variables
+    /// \warning : Before modeling the problem using make and post, call ::tb2init method to initialize toulbar2 global variables
     ///
-    /// Warning : After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
+    /// \warning : After modeling the problem using make and post, call WeightedCSP::sortConstraints method to initialize correctly the model before solving it
 
     virtual int makeEnumeratedVariable(string n, Value iinf, Value isup) = 0; ///< \brief create an enumerated variable with its domain bounds
     virtual int makeEnumeratedVariable(string n, vector<Value>& dom) = 0; ///< \brief create an enumerated variable with its domain values

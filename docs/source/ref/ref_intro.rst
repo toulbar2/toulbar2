@@ -15,10 +15,10 @@ toulbar2 can be used as a stand-alone solver reading various problem file format
 This document describes the WCSP native file format and the toulbar2 C++ library API.
 
 Note
-  Use cmake flags LIBTB2=ON and TOULBAR2_ONLY=OFF to get the toulbar2 C++
+  Use cmake flags :code:`LIBTB2=ON` and :code:`TOULBAR2_ONLY=OFF` to get the toulbar2 C++
   library libtb2.so and toulbar2test executable example.
 
-**See also** : :download:`src/toulbar2test.cpp<../../../src/toulbar2test.cpp>`.
+**See also** : :download:`src/toulbar2test.cpp<../../src/toulbar2test.cpp>`.
 
 
 .. warning : '@mainpage' text (from src/toulbar2lib.hpp) has been copied there

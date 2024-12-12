@@ -1,7 +1,10 @@
 .. _tuto_sudoku_pytb2:
 
+.. |python_logo| image::  https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg
+   :width: 50
+
 ========================================
-Sudoku puzzle
+Sudoku puzzle in Pytoulbar2 |python_logo|
 ========================================
 
 .. include:: menu_backto.rst

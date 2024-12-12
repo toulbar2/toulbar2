@@ -38,10 +38,9 @@ Detailed Content
    :maxdepth: 1
    :titlesonly:
 
-   refman.rst
    reference_manual/ref_modules.rst
-   reference_manual/ref_python.rst
    reference_manual/ref_cpp.rst
+   reference_manual/ref_python.rst
    reference_manual/command_line_options.rst
    reference_manual/formats.rst
 
