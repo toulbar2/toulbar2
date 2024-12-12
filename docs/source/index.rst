@@ -17,24 +17,33 @@ Detailed Content
 
    presentation.rst
    downloads.rst
+   installation.rst
 
 .. toctree::
    :caption: User Guide
    :maxdepth: 1
+   :titlesonly:
 
-   examples/tutorials.rst
+   user_guide/tutorials.rst
+   user_guide/command_line_interface.rst
    Use cases <examples/usecases.rst>
-   userdoc.rst
 
 .. toctree::
-   :caption: Advanced guide
+   :caption: Advanced topics
+   :maxdepth: 1
+   :titlesonly:
+
+.. toctree::
+   :caption: Reference manual
    :maxdepth: 1
    :titlesonly:
 
    refman.rst
-   ref/ref_modules.rst
-   ref/ref_python.rst
-   ref/ref_cpp.rst
+   reference_manual/ref_modules.rst
+   reference_manual/ref_python.rst
+   reference_manual/ref_cpp.rst
+   reference_manual/command_line_options.rst
+   reference_manual/formats.rst
 
 .. toctree::
    :caption: Additional resources
