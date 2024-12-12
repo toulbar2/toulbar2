@@ -1,7 +1,7 @@
 .. _ref_python:
 
 ==============
-Python Library
+Python API
 ==============
 
 pytoulbar2 software is the Python interface of toulbar2.

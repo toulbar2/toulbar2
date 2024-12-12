@@ -1,7 +1,7 @@
 .. _ref_cpp:
 
 ===========
-C++ Library
+C++ API
 ===========
 
 Introduction

@@ -20,6 +20,7 @@ Detailed Content
 
 .. toctree::
    :caption: User Guide
+   :maxdepth: 1
 
    examples/tutorials.rst
    Use cases <examples/usecases.rst>
@@ -27,10 +28,13 @@ Detailed Content
 
 .. toctree::
    :caption: Advanced guide
-   :maxdepth: 2
+   :maxdepth: 1
+   :titlesonly:
 
    refman.rst
-   
+   ref/ref_modules.rst
+   ref/ref_python.rst
+   ref/ref_cpp.rst
 
 .. toctree::
    :caption: Additional resources
