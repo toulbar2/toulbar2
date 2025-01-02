@@ -356,8 +356,10 @@ Preprocessing
 
 -mst    find a maximum spanning tree ordering for DAC
 
--S      preprocessing only: performs singleton consistency (only in
-        conjunction with option -A)
+-S=[integer]
+        preprocessing only: performs singleton consistency restricted 
+        to the first variables following the DAC ordering (or all the
+        variables if no parameter is given).
 
 -M=[integer]
         preprocessing only: 
@@ -511,6 +513,7 @@ Tree search algorithms and tree decomposition selection
           * (-6) approximate minimum degree ordering,
           * (-7) default file ordering
           * (-8) lexicographic ordering of variable names
+          * (-9) topological ordering (for Bayesian networks only)
 
         If not specified, then use the variable order in which variables appear in the problem file.
         
@@ -552,6 +555,11 @@ Variable neighborhood search algorithms
         given as \*.dec, \*.cov, or \*.order input files or using tree
         decomposition options such as -O. For a parallel version (UPDGVNS),
         use "mpirun -n [NbOfProcess] toulbar2 -vns problem.wcsp".
+        For doing large neighborhood search (LNS) instead of VNS, and
+        bounded backtrack search instead of LDS, use e.g.,
+        "toulbar2 -vns -l: -bt=1000 -kmin=50 -kmax=50 -L=100 problem.wcsp",
+        for exploring 100 random neighborhoods of size 50 variables with
+        at most 1000 backtracks per neighborhood search.
 
 -vnsini=[integer]
         initial solution for VNS-like methods found: (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default)
@@ -603,7 +611,7 @@ Node processing \& bounding options
         multiplies all costs internally by this number when loading the problem (cannot be done with cfn format and probabilistic graphical models in uai/LG formats) (default value is 1)
 
 -vaclin
-        automatic threshold cost value selection for VAC during search (must be combined with option -A)
+        VAC applied on linear constraints (must be combined with option -A)
 
 -vacthr
         automatic threshold cost value selection for VAC during search (must be combined with option -A)
@@ -738,7 +746,7 @@ Probability representation and numerical control
 -precision=[integer]
         probability/real precision is a conversion
         factor (a power of ten) for representing fixed point numbers
-        (default value is 7). It is used by CFN/UAI/QPBO/OPB/Pedigree formats.
+        (default value is 7). It is used by CFN/UAI/LP/QPBO/OPB/Pedigree formats.
         Note that in CFN format the number of significant digits is given in the problem description by default. This option allows to overwrite this default value. 
 
 -epsilon=[float]
@@ -825,7 +833,7 @@ The available **file formats** (possibly compressed by gzip or bzip2 or xz, e.g.
   - Weighted Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
   - Quadratic Unconstrained Pseudo-Boolean Optimization (:ref:`.qpbo<qpbo_format>` file extension)
   - Pseudo-Boolean Optimization (`.opb <http://www.cril.univ-artois.fr/PB16/format.pdf>`_ file extension)
-  - Integer Linear Programming (`.lp <https://www.ibm.com/docs/en/SSSA5P_22.1.1/ilog.odms.cplex.help/CPLEX/FileFormats/topics/LP.html>`_ file extension)
+  - Integer Linear Programming (`.lp <https://www.ibm.com/docs/en/icos/22.1.2?topic=cplex-lp-file-format-algebraic-representation>`_ file extension)
   - Constraint Satisfaction and Optimization Problem (`.xml <https://xcsp.org>`_ file extension)
 
 **Some examples** :
