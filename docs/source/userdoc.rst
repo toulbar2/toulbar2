@@ -869,6 +869,7 @@ Formats details
    Partial Weighted MaxSAT format <formats/cnfwcnfformat.rst>
    QPBO format (.qpbo) <formats/qpboformat.rst>
    OPB format (.opb) <formats/opbformat.rst>
+   CPLEX format (.lp) <formats/lpformat.rst>
    XCSP2.1 and XCSP3 formats (.xml) <formats/xmlformat.rst>
    Linkage format (.pre) <formats/preformat.rst>
 
