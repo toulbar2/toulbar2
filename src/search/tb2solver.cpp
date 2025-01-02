@@ -1809,7 +1809,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 #endif
 }
 
-void Solver::singletonConsistency()
+void Solver::singletonConsistency(int restricted)
 {
     bool deadend;
     bool done = false;
@@ -1817,42 +1817,107 @@ void Solver::singletonConsistency()
     if (ToulBar2::vac) {
         ToulBar2::vac = Store::getDepth() + 2; // make sure VAC is performed if requested
     }
-    while (!done) {
+    vector<int> revelimorder(wcsp->numberOfVariables(), -1);
+    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+        revelimorder[wcsp->getDACOrder(i)] = i;
+    }
+    while (!done && restricted) {
         done = true;
-        for (unsigned int varIndex = 0; varIndex < ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : wcsp->numberOfVariables()); varIndex++) {
-            int size = wcsp->getDomainSize(varIndex);
-            ValueCost sorted[size];
-            // ValueCost* sorted = new ValueCost [size];
-            // wcsp->iniSingleton(); //Warning! constructive disjunction is not compatible with variable elimination
-            wcsp->getEnumDomainAndCost(varIndex, sorted);
-            qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
-            for (int a = 0; a < size; a++) {
-                deadend = false;
-                int storedepth = Store::getDepth();
-                try {
-                    Store::store();
-                    wcsp->assign(varIndex, sorted[a].value);
-                    wcsp->propagate();
-                } catch (const Contradiction&) {
-                    wcsp->whenContradiction();
-                    deadend = true;
-                    done = false;
-                }
-                Store::restore(storedepth);
-                // wcsp->updateSingleton();
-                // cout << "(" << varIndex << "," << a <<  ")" << endl;
-                if (deadend) {
-                    wcsp->remove(varIndex, sorted[a].value);
-                    wcsp->propagate();
-                    if (ToulBar2::verbose >= 0) {
-                        cout << ".";
-                        flush(cout);
+        unsigned int revelimpos = 0;
+        while (revelimpos < wcsp->numberOfVariables() && restricted) {
+            assert(revelimorder[revelimpos] >= 0 && revelimorder[revelimpos] < (int)wcsp->numberOfVariables());
+            unsigned int varIndex = revelimorder[revelimpos++];
+            unsigned int size = wcsp->getDomainSize(varIndex);
+            if (size > 1 && (ToulBar2::nbDecisionVars <= 0 || varIndex < (unsigned int)ToulBar2::nbDecisionVars)) {
+                restricted--;
+                ValueCost sorted[size];
+                // ValueCost* sorted = new ValueCost [size];
+                // wcsp->iniSingleton(); //Warning! constructive disjunction is not compatible with variable elimination
+                wcsp->getEnumDomainAndCost(varIndex, sorted);
+                qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+                Cost initlb = wcsp->getLb();
+                Cost minlambda = MAX_COST;
+                for (int a = size - 1; a >= 0; --a) {
+                    if (wcsp->canbe(varIndex, sorted[a].value)) {
+                        deadend = false;
+                        int storedepth = Store::getDepth();
+                        try {
+                            Store::store();
+                            wcsp->assign(varIndex, sorted[a].value);
+                            wcsp->propagate();
+                            if (wcsp->getLb() - initlb < minlambda) {
+                                minlambda = wcsp->getLb() - initlb;
+                            }
+                            if (ToulBar2::verbose >= 1 && wcsp->getLb() - initlb > sorted[a].cost) {
+                                cout << "singleton consistency may increase unary cost of variable " << wcsp->getName(varIndex) << " value " << sorted[a].value << " from " << sorted[a].cost  << " to " << wcsp->getLb() - initlb << endl;
+                            }
+                        } catch (const Contradiction&) {
+                            wcsp->whenContradiction();
+                            deadend = true;
+                            done = false;
+                        }
+                        Store::restore(storedepth);
+                        // wcsp->updateSingleton();
+                        // cout << "(" << varIndex << "," << a <<  ")" << endl;
+                        if (deadend) {
+                            wcsp->remove(varIndex, sorted[a].value);
+                            wcsp->propagate();
+                            if (ToulBar2::verbose >= 0) {
+                                cout << ".";
+                                flush(cout);
+                            }
+                            // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
+                        }
                     }
-                    // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
                 }
+//                if (minlambda > MIN_COST) {
+//                    if (ToulBar2::verbose >= 0) {
+//                        cout << "singleton consistency may increase lower bound by " << minlambda << " from variable " << wcsp->getName(varIndex) << endl;
+//                    }
+//                    initlb = wcsp->getLb();
+//                    deadend = false;
+//                    unsigned int initsize = wcsp->getDomainInitSize(varIndex);
+//                    vector<Cost> costs(initsize, minlambda);
+//                    Value support = wcsp->getSupport(varIndex);
+//                    unsigned int supportIndex = wcsp->toIndex(varIndex, support);
+//                    int storedepth = Store::getDepth();
+//                    bool stealing = false;
+//                    try {
+//                        Store::store();
+//                        costs[supportIndex] = MIN_COST;
+//                        wcsp->postUnaryConstraint(varIndex, costs);
+//                        wcsp->propagate();
+//                        assert(wcsp->getUnaryCost(varIndex, support) == MIN_COST);
+//                        for (unsigned int a = 0; a < size; a++) {
+//                            Value value = sorted[a].value;
+//                            Cost ucost = wcsp->getUnaryCost(varIndex, value);
+//                            if (value != support && wcsp->canbe(varIndex, value) && ucost < minlambda && minlambda - ucost > sorted[a].cost) {
+//                                if (ToulBar2::verbose >= 0) {
+//                                    cout << "singleton consistency has stealing cost " << (minlambda - ucost - sorted[a].cost) << " from value " << value << endl;
+//                                }
+//                                stealing = true;
+//                            }
+//                        }
+//                        if (ToulBar2::verbose >= 0 && wcsp->getLb() > initlb && !stealing) {
+//                            cout << "singleton consistency should increase unary cost of variable " << wcsp->getName(varIndex) << " value " << support << " from 0 to " << (wcsp->getLb() - initlb) << endl;
+//                        }
+//                    } catch (const Contradiction&) {
+//                        wcsp->whenContradiction();
+//                        deadend = true;
+//                    }
+//                    Store::restore(storedepth);
+//                    // wcsp->updateSingleton();
+//                    // cout << "(" << varIndex << "," << a <<  ")" << endl;
+//                    if (!deadend) {
+//                        if (ToulBar2::verbose >= 0) {
+//                            cout << "singleton consistency will increase unary cost of variable " << wcsp->getName(varIndex) << endl;
+//                        }
+//                        // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
+//                    }
+//                }
+                // wcsp->removeSingleton();
+                // delete [] sorted;
             }
-            // wcsp->removeSingleton();
-            // delete [] sorted;
         }
     }
     ToulBar2::vac = vac;
@@ -2980,7 +3045,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 else
                     cout << "Reverse original DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
             }
-        } while (wcsp->getLb() > previouslb && 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > 0.5);
+        } while (wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.5);
     }
     wcsp->preprocessing(); // preprocessing after initial propagation
     initGap(wcsp->getLb(), wcsp->getUb());
@@ -3042,7 +3107,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 #endif
 
     if (ToulBar2::singletonConsistency) {
-        singletonConsistency();
+        singletonConsistency(ToulBar2::singletonConsistency);
         wcsp->propagate();
         wcsp->resetTightnessAndWeightedDegree();
     }

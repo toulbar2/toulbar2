@@ -552,7 +552,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
-    { OPT_singletonConsistency, (char*)"-S", SO_NONE },
+    { OPT_singletonConsistency, (char*)"-S", SO_OPT },
     { OPT_GenAMOforPB, (char*)"-amo", SO_OPT },
     { OPT_DynPB, (char*)"-kpdp", SO_OPT },
     { OPT_preprocessTernary, (char*)"-t", SO_OPT },
@@ -1009,9 +1009,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
     cout << "   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
     cout << "   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
-    cout << "   -S : preprocessing only: performs singleton consistency (only in conjunction with option \"-A\")";
+    cout << "   -S=[integer] : preprocessing only: performs restricted singleton consistency on at-most a given number of variables (all variables if no integer value is given)";
     if (ToulBar2::singletonConsistency)
-        cout << " (default option)";
+        cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables)";
     cout << endl;
     cout << "   -V : VAC-based value ordering heuristic";
     if (ToulBar2::vacValueHeuristic)
@@ -1891,8 +1891,20 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::qpboQuadraticCoefMultiplier = co;
             }
 
-            if (args.OptionId() == OPT_singletonConsistency)
-                ToulBar2::singletonConsistency = true;
+            if (args.OptionId() == OPT_singletonConsistency) {
+                if (args.OptionArg() != NULL) {
+                    int size = atol(args.OptionArg());
+                    if (size >= 0)
+                        ToulBar2::singletonConsistency = size;
+                } else
+                    ToulBar2::singletonConsistency = INT_MAX;
+                if (ToulBar2::debug && ToulBar2::singletonConsistency > 0)
+                    cout << "singleton consistency ON" << endl;
+            } else if (args.OptionId() == NO_OPT_singletonConsistency) {
+                if (ToulBar2::debug)
+                    cout << "singleton consistency OFF" << endl;
+                ToulBar2::singletonConsistency = 0;
+            }
 
 #ifdef BOOST
             if (args.OptionId() == OPT_GenAMOforPB) {

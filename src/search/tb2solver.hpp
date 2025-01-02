@@ -449,7 +449,7 @@ protected:
     void remove(int varIndex, ValueCost* array, int first, int last, bool reverse = false);
     void conflict() {}
     void enforceUb();
-    void singletonConsistency();
+    void singletonConsistency(int restricted = INT_MAX);
     void binaryChoicePoint(int xIndex, Value value, Cost lb = MIN_COST);
     void binaryChoicePointLDS(int xIndex, Value value, int discrepancy);
     void narySortedChoicePoint(int xIndex, Cost lb = MIN_COST);

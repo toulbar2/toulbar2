@@ -129,7 +129,7 @@ bool VNSSolver::solve(bool first)
                 values.reserve(unassignedVars->getSize());
                 for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
                     int v = *iter;
-                    if (neighborhood.find(v) == neighborhood.end()) {
+                    if (wcsp->canbe(v, bestSolution[v]) && neighborhood.find(v) == neighborhood.end()) {
                         variables.push_back(v);
                         values.push_back(bestSolution[v]);
                     }
@@ -185,6 +185,25 @@ bool VNSSolver::solve(bool first)
                     }
                     if (ToulBar2::verbose >= 1)
                         cout << "VNS: new solution with cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
+                    try {
+                        wcsp->updateUb(bestUb);
+                        wcsp->enforceUb();
+                        wcsp->propagate();
+                        if (unassignedVars->getSize() == 0) {
+                            lastUb = MAX_COST;
+                            lastSolution.clear();
+                            ToulBar2::lds = 0;
+                            newSolution();
+                            if (lastUb < MAX_COST)
+                                wcsp->setSolution(lastUb, &lastSolution);
+                            endSolve(lastUb < MAX_COST, lastUb, true);
+                            return (lastUb < MAX_COST);
+                        }
+                    } catch (const Contradiction&) {
+                        wcsp->whenContradiction();
+                        endSolve(bestUb < MAX_COST, bestUb, true);
+                        return (bestUb < MAX_COST);
+                    }
                 }
             }
             if (!complete && bestUb > ToulBar2::vnsOptimum) {

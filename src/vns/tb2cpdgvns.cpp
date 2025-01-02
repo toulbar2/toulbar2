@@ -263,7 +263,7 @@ void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, P
         values.reserve(unassignedVars->getSize());
         for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
             int v = *iter;
-            if (neighborhood.find(v) == neighborhood.end()) {
+            if (wcsp->canbe(v, lastSolution[v]) && neighborhood.find(v) == neighborhood.end()) {
                 variables.push_back(v);
                 values.push_back(lastSolution[v]);
             }
@@ -285,6 +285,28 @@ void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, P
             for (uint v = 0; v < wcsp->numberOfVariables(); v++) {
                 bestSolution[v] = lastSolution[v];
             }
+            try {
+                wcsp->updateUb(bestUb);
+                wcsp->enforceUb();
+                wcsp->propagate();
+                if (unassignedVars->getSize() == 0) {
+                    lastUb = MAX_COST;
+                    lastSolution.clear();
+                    ToulBar2::lds = 0;
+                    newSolution();
+                    if (lastUb < MAX_COST)
+                        wcsp->setSolution(lastUb, &lastSolution);
+                    bestUb = lastUb;
+                    for (uint v = 0; v < wcsp->numberOfVariables(); v++) {
+                        bestSolution[v] = lastSolution[v];
+                    }
+                    break;
+                }
+            } catch (const Contradiction&) {
+                wcsp->whenContradiction();
+                break;
+            }
+
         }
     }
     // cout << env0.myrank <<" slave 2" << endl ;

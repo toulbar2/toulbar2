@@ -163,7 +163,7 @@ bool ToulBar2::MSTDAC;
 int ToulBar2::DEE;
 int ToulBar2::DEE_;
 int ToulBar2::nbDecisionVars;
-bool ToulBar2::singletonConsistency;
+int ToulBar2::singletonConsistency;
 bool ToulBar2::vacValueHeuristic;
 
 externalevent ToulBar2::setvalue;
@@ -438,7 +438,7 @@ void tb2init()
     ToulBar2::preprocessFunctional = 1;
     ToulBar2::costfuncSeparate = true;
     ToulBar2::preprocessNary = 10;
-    ToulBar2::singletonConsistency = false;
+    ToulBar2::singletonConsistency = 0;
     ToulBar2::minsumDiffusion = 0;
 
     ToulBar2::trwsAccuracy = -1; // 0.001;
@@ -4265,7 +4265,7 @@ void WCSP::preprocessing()
             else
                 cout << "Reverse DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
         }
-    } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
+    } while (getLb() > previouslb && (Double)100. * (getLb() - previouslb) / getLb() > (Double)0.5);
 
     if (ToulBar2::trwsAccuracy >= 0)
         propagateTRWS();
@@ -4342,7 +4342,7 @@ void WCSP::preprocessing()
                 else
                     cout << "PIC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
             }
-        } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
+        } while (getLb() > previouslb && (Double)100. * (getLb() - previouslb) / getLb() > (Double)0.5);
     } else if (ToulBar2::preprocessNary > 0) {
         processTernary();
         propagate();
