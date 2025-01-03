@@ -132,7 +132,7 @@ Commands for statically compiling toulbar2 on Linux in directory toulbar2/src wi
      -I. -I./pils/src tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -lbz2 -llzma
 
-Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
+Use OPENMPI flag and MPI compiler for a parallel version of toulbar2 (must be run with mpirun, use mpirun -n 1 for the sequential version of HBFS or VNS):
 
     bash
     cd src
