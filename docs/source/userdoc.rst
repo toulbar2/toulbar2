@@ -464,6 +464,7 @@ Tree search algorithms and tree decomposition selection
 -hbfs=[integer]
         hybrid best-first search [Katsirelos2015a]_, restarting from the
         root after a given number of backtracks (default value is 16384)
+        (usage for parallel version: "mpirun -n [NbOfProcess] toulbar2 -hbfs problem.wcsp")
 
 -hbfsmin=[integer]
         hybrid best-first search compromise between BFS and DFS minimum node redundancy
