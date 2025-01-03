@@ -1,42 +1,31 @@
 Read 240 variables, with 4 values at most, and 2242 cost functions, with maximum arity 3.
-Cost function decomposition time : 0.002201 seconds.
-Reverse DAC dual bound: 11120 (+81.403%)
-Reverse DAC dual bound: 11128 (+0.072%)
-Preprocessing time: 0.079 seconds.
-233 unassigned variables, 666 values in all current domains (med. size:2, max size:4) and 1966 non-unary cost functions (med. arity:2, med. degree:16)
-Initial lower and upper bounds: [11128, 34354] 67.608%
-Tree decomposition time: 0.017 seconds.
+Reverse original DAC dual bound: 5086 (+59.339%)
+Reverse original DAC dual bound: 5089 (+0.059%)
+Cost function decomposition time : 0.014 seconds.
+Preprocessing time: 0.137 seconds.
+233 unassigned variables, 666 values in all current domains (med. size:2, max size:4) and 1969 non-unary cost functions (med. arity:2, med. degree:16)
+Initial lower and upper bounds: [5089, 34354] 85.187%
+Tree decomposition time: 0.018 seconds.
 Problem decomposition in 89 clusters with size distribution: min: 4 median: 11 mean: 11.831 max: 23
-New solution: 26266 (0 backtracks, 59 nodes, depth 60)
-New solution: 26265 in 0.038 seconds.
-New solution: 26264 in 0.046 seconds.
-New solution: 25266 in 0.047 seconds.
-New solution: 25265 in 0.060 seconds.
-New solution: 25260 in 0.071 seconds.
-New solution: 24262 in 0.080 seconds.
-New solution: 23262 in 0.090 seconds.
-New solution: 23260 in 0.098 seconds.
-New solution: 23259 in 0.108 seconds.
-New solution: 22262 in 0.108 seconds.
-New solution: 22261 in 0.110 seconds.
-New solution: 22260 in 0.113 seconds.
-New solution: 22259 in 0.118 seconds.
-New solution: 22258 in 0.128 seconds.
-New solution: 22257 in 0.138 seconds.
-New solution: 22255 in 0.154 seconds.
-New solution: 22254 in 0.170 seconds.
-New solution: 22252 in 0.206 seconds.
-New solution: 21257 in 0.227 seconds.
-New solution: 21256 in 0.256 seconds.
-New solution: 21254 in 0.380 seconds.
-New solution: 21253 in 0.478 seconds.
---------------------------------------------------------------------------
-MPI_ABORT was invoked on rank 1 in communicator MPI_COMM_WORLD
-with errorcode 0.
-
-NOTE: invoking MPI_ABORT causes Open MPI to kill all MPI processes.
-You may or may not see output from other processes, depending on
-exactly when Open MPI kills them.
---------------------------------------------------------------------------
-
-Time limit expired... Aborting...
+New solution: 26266 (0 backtracks, 55 nodes, depth 56, 0.167 seconds)
+New solution: 26264 in 0.182 seconds.
+New solution: 26263 in 0.187 seconds.
+New solution: 26262 in 0.188 seconds.
+New solution: 26261 in 0.207 seconds.
+New solution: 26260 in 0.221 seconds.
+New solution: 25261 in 0.228 seconds.
+New solution: 25257 in 0.239 seconds.
+New solution: 24262 in 0.243 seconds.
+New solution: 23262 in 0.258 seconds.
+New solution: 23261 in 0.266 seconds.
+New solution: 23259 in 0.270 seconds.
+New solution: 22260 in 0.307 seconds.
+New solution: 21262 in 0.328 seconds.
+New solution: 21261 in 0.334 seconds.
+New solution: 21260 in 0.347 seconds.
+New solution: 21258 in 0.452 seconds.
+New solution: 21257 in 0.554 seconds.
+New solution: 21256 in 0.625 seconds.
+New solution: 21255 in 0.640 seconds.
+New solution: 21254 in 0.649 seconds.
+New solution: 21253 in 1.060 seconds.

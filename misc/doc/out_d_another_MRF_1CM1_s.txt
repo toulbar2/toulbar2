@@ -1,53 +1,52 @@
 Read 37 variables, with 350 values at most, and 703 cost functions, with maximum arity 2.
-No evidence file specified. Trying EXAMPLES/1CM1.uai.xz.evid
-No evidence file.
-Cost function decomposition time : 0.000679 seconds.
-Reverse DAC dual bound: 103988236701 energy: -12486.138 (+0.000%)
-VAC dual bound: 103988236701 energy: -12486.138 (iter:4068)
-Number of VAC iterations: 4389
-Number of times is VAC: 189 Number of times isvac and itThreshold > 1: 186
-Threshold: 2326139858 NbAssignedVar: 0 Ratio: 0.0000000
-Threshold: 2320178814 NbAssignedVar: 0 Ratio: 0.0000000
-Threshold: 21288438 NbAssignedVar: 19 Ratio: 0.0000000
-Threshold: 11823689 NbAssignedVar: 20 Ratio: 0.0000000
-Threshold: 8187968 NbAssignedVar: 21 Ratio: 0.0000001
-Threshold: 6858739 NbAssignedVar: 22 Ratio: 0.0000001
-Threshold: 6058812 NbAssignedVar: 22 Ratio: 0.0000001
-Threshold: 5504560 NbAssignedVar: 22 Ratio: 0.0000001
-Threshold: 3972336 NbAssignedVar: 23 Ratio: 0.0000002
-Threshold: 3655432 NbAssignedVar: 23 Ratio: 0.0000002
-Threshold: 3067825 NbAssignedVar: 23 Ratio: 0.0000002
-Threshold: 2174446 NbAssignedVar: 24 Ratio: 0.0000003
-Threshold: 1641827 NbAssignedVar: 24 Ratio: 0.0000004
-Threshold: 1376213 NbAssignedVar: 24 Ratio: 0.0000005
-Threshold: 208082 NbAssignedVar: 24 Ratio: 0.0000031
-Threshold: 104041 NbAssignedVar: 26 Ratio: 0.0000068
-Threshold: 52020 NbAssignedVar: 27 Ratio: 0.0000140
-Threshold: 26010 NbAssignedVar: 27 Ratio: 0.0000281
-Threshold: 13005 NbAssignedVar: 27 Ratio: 0.0000561
-Threshold: 6502 NbAssignedVar: 27 Ratio: 0.0001122
-Threshold: 3251 NbAssignedVar: 27 Ratio: 0.0002245
-Threshold: 1625 NbAssignedVar: 27 Ratio: 0.0004491
-Threshold: 812 NbAssignedVar: 27 Ratio: 0.0008987
-Threshold: 406 NbAssignedVar: 27 Ratio: 0.0017974
-Threshold: 203 NbAssignedVar: 27 Ratio: 0.0035947
-Threshold: 101 NbAssignedVar: 27 Ratio: 0.0072250
-Threshold: 50 NbAssignedVar: 27 Ratio: 0.0145946
-Threshold: 25 NbAssignedVar: 27 Ratio: 0.0291892
-Threshold: 12 NbAssignedVar: 27 Ratio: 0.0608108
-Threshold: 6 NbAssignedVar: 27 Ratio: 0.1216216
-Threshold: 3 NbAssignedVar: 27 Ratio: 0.2432432
-Threshold: 1 NbAssignedVar: 27 Ratio: 0.7297297
-RASPS/VAC threshold: 203
-Preprocessing time: 41.340 seconds.
-37 unassigned variables, 3366 values in all current domains (med. size:38, max size:331) and 626 non-unary cost functions (med. arity:2, med. degree:35)
-Initial lower and upper bounds: [103988236701, 239074057808] 56.504%
-New solution: 104206588216 energy: -12464.303 prob: inf (0 backtracks, 3 nodes, depth 6)
-RASPS done in preprocessing (backtrack: 4 nodes: 8)
-New solution: 104174014744 energy: -12467.560 prob: inf (4 backtracks, 12 nodes, depth 6)
-Optimality gap: [104174014744, 104174014744] 0.000 % (7 backtracks, 15 nodes)
-Number of VAC iterations: 4695
-Number of times is VAC: 458 Number of times isvac and itThreshold > 1: 451
-Node redundancy during HBFS: 0.000 %
-Optimum: 104174014744 energy: -12467.560 prob: inf in 7 backtracks and 15 nodes ( 937 removals by DEE) and 41.354 seconds.
+No evidence file specified. Trying EXAMPLES/1CM1.uai.evid
+No evidence file. 
+Reverse original DAC dual bound: 103967050722 energy: -12488.257 (+0.000%)
+Cost function decomposition time : 0.001 seconds.
+Number of VAC iterations: 3936
+Number of times is VAC: 316 Number of times isvac and itThreshold > 1: 310
+Threshold: 2326140792 NbAssignedVar: 0 Ratio: 0.0000000 SumOfDomainSize: 1783
+Threshold: 2320180664 NbAssignedVar: 0 Ratio: 0.0000000 SumOfDomainSize: 1775
+Threshold: 21288438 NbAssignedVar: 16 Ratio: 0.0000000 SumOfDomainSize: 84
+Threshold: 11824293 NbAssignedVar: 17 Ratio: 0.0000000 SumOfDomainSize: 65
+Threshold: 8188677 NbAssignedVar: 18 Ratio: 0.0000001 SumOfDomainSize: 52
+Threshold: 6858840 NbAssignedVar: 19 Ratio: 0.0000001 SumOfDomainSize: 46
+Threshold: 6060563 NbAssignedVar: 20 Ratio: 0.0000001 SumOfDomainSize: 42
+Threshold: 5504852 NbAssignedVar: 20 Ratio: 0.0000001 SumOfDomainSize: 42
+Threshold: 3972364 NbAssignedVar: 21 Ratio: 0.0000001 SumOfDomainSize: 37
+Threshold: 3655432 NbAssignedVar: 21 Ratio: 0.0000002 SumOfDomainSize: 37
+Threshold: 3067826 NbAssignedVar: 21 Ratio: 0.0000002 SumOfDomainSize: 37
+Threshold: 2174446 NbAssignedVar: 22 Ratio: 0.0000003 SumOfDomainSize: 35
+Threshold: 1641827 NbAssignedVar: 22 Ratio: 0.0000004 SumOfDomainSize: 35
+Threshold: 1374852 NbAssignedVar: 22 Ratio: 0.0000004 SumOfDomainSize: 35
+Threshold: 206113 NbAssignedVar: 23 Ratio: 0.0000030 SumOfDomainSize: 31
+Threshold: 103056 NbAssignedVar: 24 Ratio: 0.0000063 SumOfDomainSize: 29
+Threshold: 51528 NbAssignedVar: 25 Ratio: 0.0000131 SumOfDomainSize: 27
+Threshold: 25764 NbAssignedVar: 25 Ratio: 0.0000262 SumOfDomainSize: 26
+Threshold: 12882 NbAssignedVar: 25 Ratio: 0.0000525 SumOfDomainSize: 26
+Threshold: 6441 NbAssignedVar: 25 Ratio: 0.0001049 SumOfDomainSize: 26
+Threshold: 3220 NbAssignedVar: 25 Ratio: 0.0002098 SumOfDomainSize: 26
+Threshold: 1610 NbAssignedVar: 25 Ratio: 0.0004197 SumOfDomainSize: 26
+Threshold: 805 NbAssignedVar: 25 Ratio: 0.0008393 SumOfDomainSize: 26
+Threshold: 402 NbAssignedVar: 25 Ratio: 0.0016808 SumOfDomainSize: 26
+Threshold: 201 NbAssignedVar: 25 Ratio: 0.0033616 SumOfDomainSize: 26
+Threshold: 100 NbAssignedVar: 25 Ratio: 0.0067568 SumOfDomainSize: 26
+Threshold: 50 NbAssignedVar: 25 Ratio: 0.0135135 SumOfDomainSize: 26
+Threshold: 25 NbAssignedVar: 25 Ratio: 0.0270270 SumOfDomainSize: 26
+Threshold: 12 NbAssignedVar: 25 Ratio: 0.0563063 SumOfDomainSize: 26
+Threshold: 6 NbAssignedVar: 25 Ratio: 0.1126126 SumOfDomainSize: 26
+Threshold: 3 NbAssignedVar: 25 Ratio: 0.2252252 SumOfDomainSize: 26
+Threshold: 1 NbAssignedVar: 25 Ratio: 0.6756757 SumOfDomainSize: 26
+RASPS/VAC threshold: 201
+Preprocessing time: 42.878 seconds.
+37 unassigned variables, 3387 values in all current domains (med. size:38, max size:322) and 627 non-unary cost functions (med. arity:2, med. degree:35)
+Initial lower and upper bounds: [103967050722, 239074058140] 56.513%
+New solution: 104206588507 energy: -12464.303 prob: inf (0 backtracks, 4 nodes, depth 7, 42.886 seconds)
+RASPS done in preprocessing at threshold 201 (backtrack: 2 nodes: 6)
+New solution: 104174015034 energy: -12467.560 prob: inf (2 backtracks, 9 nodes, depth 5, 42.910 seconds)
+Optimality gap: [104174015034, 104174015034] 0.000 % (4 backtracks, 11 nodes, 42.910 seconds)
+Number of VAC iterations: 4279
+Number of times is VAC: 617 Number of times isvac and itThreshold > 1: 606
+Node redundancy during HBFS: 0.000
+Optimum: 104174015034 energy: -12467.560 prob: inf in 4 backtracks and 11 nodes ( 921 removals by DEE) and 42.911 seconds.
 end.

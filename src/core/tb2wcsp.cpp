@@ -857,8 +857,12 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #ifdef OPENMPI
-    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
-        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+//    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
+//        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+//        throw BadConfiguration();
+//    }
+    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::btdMode >= 1) {
+        cout << "Sorry: parallel hybrid best-first search does not work with exploiting tree decomposition (remove option -B)." << endl;
         throw BadConfiguration();
     }
 #endif

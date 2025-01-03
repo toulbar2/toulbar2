@@ -1,150 +1,190 @@
 Read 16 variables, with 4 values at most, and 24 cost functions, with maximum arity 4.
-Cost function decomposition time : 3e-06 seconds.
-Reverse DAC dual bound: 48 (+2.083%)
-Preprocessing time: 0.009 seconds.
+Reverse original DAC dual bound: 48 (+2.083%)
+Cost function decomposition time : 0.000 seconds.
+Preprocessing time: 0.018 seconds.
 320 unassigned variables, 7968 values in all current domains (med. size:26, max size:26) and 8 non-unary cost functions (med. arity:4, med. degree:0)
 Initial lower and upper bounds: [48, 1000] 95.200%
 +++++++++ Search for solution 1 +++++++++
-New solution: 49 (0 backtracks, 7 nodes, depth 10)
-New solution: 48 (2 backtracks, 11 nodes, depth 3)
-Node redundancy during HBFS: 18.182 %
-Optimum: 48 in 2 backtracks and 11 nodes ( 0 removals by DEE) and 0.017 seconds.
+New solution: 49 (0 backtracks, 7 nodes, depth 10, 0.023 seconds)
+New solution: 48 (2 backtracks, 11 nodes, depth 3, 0.024 seconds)
+Node redundancy during HBFS: 18.182
+Optimum: 48 in 2 backtracks and 11 nodes ( 0 removals by DEE) and 0.024 seconds.
 +++++++++ Search for solution 2 +++++++++
-New solution: 52 (2 backtracks, 879 nodes, depth 871)
-Optimality gap: [50, 49] -2.000 % (5 backtracks, 882 nodes)
-New solution: 51 (5 backtracks, 1748 nodes, depth 868)
-Optimality gap: [51, 49] -3.922 % (6 backtracks, 1749 nodes)
-Node redundancy during HBFS: 0.172 %
-Optimum: 51 in 6 backtracks and 1749 nodes ( 0 removals by DEE) and 0.046 seconds.
+New solution: 67 (2 backtracks, 15 nodes, depth 7, 0.029 seconds)
+New solution: 65 (3 backtracks, 20 nodes, depth 9, 0.032 seconds)
+Optimality gap: [49, 65] 24.615 % (9 backtracks, 26 nodes, 0.035 seconds)
+New solution: 58 (9 backtracks, 31 nodes, depth 4, 0.038 seconds)
+Optimality gap: [50, 58] 13.793 % (10 backtracks, 32 nodes, 0.038 seconds)
+New solution: 52 (16 backtracks, 53 nodes, depth 4, 0.046 seconds)
+New solution: 51 (17 backtracks, 54 nodes, depth 3, 0.046 seconds)
+Optimality gap: [51, 51] 0.000 % (17 backtracks, 54 nodes, 0.046 seconds)
+Node redundancy during HBFS: 25.926
+Optimum: 51 in 17 backtracks and 54 nodes ( 0 removals by DEE) and 0.046 seconds.
 +++++++++ Search for solution 3 +++++++++
-New solution: 74 (6 backtracks, 2569 nodes, depth 823)
-New solution: 62 (14 backtracks, 3407 nodes, depth 824)
-New solution: 58 (21 backtracks, 4245 nodes, depth 821)
-Optimality gap: [53, 49] -7.547 % (29 backtracks, 4270 nodes)
-Optimality gap: [56, 49] -12.500 % (30 backtracks, 4276 nodes)
-Optimality gap: [57, 49] -14.035 % (31 backtracks, 4292 nodes)
-New solution: 57 (31 backtracks, 5114 nodes, depth 819)
-Node redundancy during HBFS: 1.017 %
-Optimum: 57 in 31 backtracks and 5114 nodes ( 0 removals by DEE) and 0.146 seconds.
++++++++++ predictive bounding: 57.000
+Optimality gap: [51, 57] 10.526 % (36 backtracks, 92 nodes, 0.074 seconds)
+Optimality gap: [57, 57] 0.000 % (37 backtracks, 98 nodes, 0.078 seconds)
+Node redundancy during HBFS: 18.367
+No solution in 37 backtracks and 98 nodes ( 1 removals by DEE) and 0.078 seconds.
++++++++++ Search for solution 3 +++++++++
+New solution: 64 (37 backtracks, 102 nodes, depth 7, 0.083 seconds)
+New solution: 57 (38 backtracks, 105 nodes, depth 7, 0.085 seconds)
+Optimality gap: [57, 57] 0.000 % (60 backtracks, 145 nodes, 0.111 seconds)
+Node redundancy during HBFS: 12.414
+Optimum: 57 in 60 backtracks and 145 nodes ( 2 removals by DEE) and 0.111 seconds.
 +++++++++ Search for solution 4 +++++++++
-New solution: 73 (44 backtracks, 5923 nodes, depth 773)
-New solution: 72 (46 backtracks, 6702 nodes, depth 778)
-New solution: 58 (53 backtracks, 7485 nodes, depth 773)
-Optimality gap: [58, 49] -15.517 % (70 backtracks, 7584 nodes)
-Node redundancy during HBFS: 1.846 %
-Optimum: 58 in 70 backtracks and 7584 nodes ( 0 removals by DEE) and 0.256 seconds.
++++++++++ predictive bounding: 69.000
+New solution: 65 (66 backtracks, 159 nodes, depth 5, 0.121 seconds)
+New solution: 61 (80 backtracks, 188 nodes, depth 6, 0.137 seconds)
+New solution: 58 (96 backtracks, 219 nodes, depth 5, 0.156 seconds)
+Optimality gap: [58, 58] 0.000 % (110 backtracks, 245 nodes, 0.172 seconds)
+Node redundancy during HBFS: 7.347
+Optimum: 58 in 110 backtracks and 245 nodes ( 9 removals by DEE) and 0.173 seconds.
 +++++++++ Search for solution 5 +++++++++
-New solution: 80 (70 backtracks, 8307 nodes, depth 726)
-New solution: 74 (100 backtracks, 9139 nodes, depth 728)
-New solution: 66 (112 backtracks, 9896 nodes, depth 724)
-New solution: 64 (116 backtracks, 10636 nodes, depth 725)
-New solution: 58 (171 backtracks, 11654 nodes, depth 725)
-Node redundancy during HBFS: 3.484 %
-Optimum: 58 in 171 backtracks and 11654 nodes ( 0 removals by DEE) and 0.474 seconds.
++++++++++ predictive bounding: 70.000
+New solution: 62 (116 backtracks, 260 nodes, depth 6, 0.182 seconds)
+New solution: 58 (146 backtracks, 320 nodes, depth 6, 0.221 seconds)
+Node redundancy during HBFS: 5.625
+Optimum: 58 in 146 backtracks and 320 nodes ( 11 removals by DEE) and 0.221 seconds.
 +++++++++ Search for solution 6 +++++++++
-New solution: 79 (178 backtracks, 12347 nodes, depth 677)
-New solution: 76 (207 backtracks, 13102 nodes, depth 677)
-New solution: 65 (212 backtracks, 13804 nodes, depth 680)
-Optimality gap: [59, 49] -16.949 % (251 backtracks, 14053 nodes)
-Optimality gap: [60, 49] -18.333 % (256 backtracks, 14093 nodes)
-Optimality gap: [61, 49] -19.672 % (259 backtracks, 14126 nodes)
-Optimality gap: [62, 49] -20.968 % (260 backtracks, 14165 nodes)
-New solution: 62 (260 backtracks, 14849 nodes, depth 675)
-Node redundancy during HBFS: 4.936 %
-Optimum: 62 in 260 backtracks and 14849 nodes ( 0 removals by DEE) and 0.688 seconds.
++++++++++ predictive bounding: 70.000
+New solution: 65 (176 backtracks, 382 nodes, depth 5, 0.253 seconds)
+New solution: 62 (233 backtracks, 495 nodes, depth 4, 0.323 seconds)
+Optimality gap: [62, 62] 0.000 % (238 backtracks, 504 nodes, 0.331 seconds)
+Node redundancy during HBFS: 3.571
+Optimum: 62 in 238 backtracks and 504 nodes ( 13 removals by DEE) and 0.331 seconds.
 +++++++++ Search for solution 7 +++++++++
++++++++++ predictive bounding: 74.000
 c 2097152 Bytes allocated for long long stack.
-New solution: 77 (267 backtracks, 15495 nodes, depth 630)
-New solution: 76 (283 backtracks, 16160 nodes, depth 629)
-New solution: 75 (334 backtracks, 16982 nodes, depth 628)
-New solution: 68 (335 backtracks, 17615 nodes, depth 628)
-Optimality gap: [64, 49] -23.438 % (383 backtracks, 17946 nodes)
-New solution: 65 (383 backtracks, 18577 nodes, depth 627)
-Optimality gap: [65, 49] -24.615 % (383 backtracks, 18581 nodes)
-Node redundancy during HBFS: 5.915 %
-Optimum: 65 in 383 backtracks and 18581 nodes ( 0 removals by DEE) and 0.963 seconds.
+New solution: 68 (246 backtracks, 523 nodes, depth 6, 0.345 seconds)
+New solution: 65 (254 backtracks, 539 nodes, depth 6, 0.354 seconds)
+Optimality gap: [49, 65] 24.615 % (304 backtracks, 636 nodes, 0.416 seconds)
+Optimality gap: [58, 65] 10.769 % (324 backtracks, 682 nodes, 0.442 seconds)
+Optimality gap: [65, 65] 0.000 % (325 backtracks, 692 nodes, 0.444 seconds)
+Node redundancy during HBFS: 4.624
+Optimum: 65 in 325 backtracks and 692 nodes ( 22 removals by DEE) and 0.444 seconds.
 +++++++++ Search for solution 8 +++++++++
-New solution: 81 (383 backtracks, 19161 nodes, depth 583)
-New solution: 80 (425 backtracks, 19865 nodes, depth 583)
-New solution: 69 (471 backtracks, 20646 nodes, depth 585)
-New solution: 68 (479 backtracks, 21273 nodes, depth 581)
-New solution: 65 (483 backtracks, 21881 nodes, depth 580)
-Node redundancy during HBFS: 6.014 %
-Optimum: 65 in 483 backtracks and 21881 nodes ( 0 removals by DEE) and 1.175 seconds.
++++++++++ predictive bounding: 77.000
+Optimality gap: [49, 77] 36.364 % (380 backtracks, 835 nodes, 0.524 seconds)
+Optimality gap: [50, 77] 35.065 % (389 backtracks, 874 nodes, 0.538 seconds)
+Optimality gap: [51, 77] 33.766 % (392 backtracks, 887 nodes, 0.542 seconds)
+Optimality gap: [52, 77] 32.468 % (397 backtracks, 905 nodes, 0.547 seconds)
+New solution: 72 (403 backtracks, 923 nodes, depth 4, 0.555 seconds)
+Optimality gap: [53, 72] 26.389 % (407 backtracks, 930 nodes, 0.559 seconds)
+Optimality gap: [54, 72] 25.000 % (413 backtracks, 960 nodes, 0.567 seconds)
+Optimality gap: [57, 72] 20.833 % (419 backtracks, 977 nodes, 0.572 seconds)
+New solution: 71 (425 backtracks, 1004 nodes, depth 6, 0.582 seconds)
+New solution: 70 (427 backtracks, 1009 nodes, depth 7, 0.584 seconds)
+New solution: 65 (435 backtracks, 1022 nodes, depth 4, 0.591 seconds)
+Node redundancy during HBFS: 13.796
+Optimum: 65 in 435 backtracks and 1022 nodes ( 34 removals by DEE) and 0.591 seconds.
 +++++++++ Search for solution 9 +++++++++
-New solution: 68 (483 backtracks, 22413 nodes, depth 535)
-Optimality gap: [66, 49] -25.758 % (581 backtracks, 22902 nodes)
-New solution: 66 (581 backtracks, 23434 nodes, depth 531)
-Node redundancy during HBFS: 6.900 %
-Optimum: 66 in 581 backtracks and 23434 nodes ( 0 removals by DEE) and 1.379 seconds.
++++++++++ predictive bounding: 77.000
+New solution: 73 (452 backtracks, 1059 nodes, depth 6, 0.614 seconds)
+New solution: 68 (472 backtracks, 1101 nodes, depth 8, 0.637 seconds)
+New solution: 66 (488 backtracks, 1130 nodes, depth 5, 0.652 seconds)
+Optimality gap: [66, 66] 0.000 % (537 backtracks, 1226 nodes, 0.713 seconds)
+Node redundancy during HBFS: 11.501
+Optimum: 66 in 537 backtracks and 1226 nodes ( 51 removals by DEE) and 0.713 seconds.
 +++++++++ Search for solution 10 +++++++++
-New solution: 68 (619 backtracks, 24035 nodes, depth 484)
-Optimality gap: [67, 49] -26.866 % (686 backtracks, 24436 nodes)
-Optimality gap: [68, 49] -27.941 % (686 backtracks, 24444 nodes)
-Node redundancy during HBFS: 7.924 %
-Optimum: 68 in 686 backtracks and 24444 nodes ( 0 removals by DEE) and 1.597 seconds.
++++++++++ predictive bounding: 74.000
+New solution: 70 (546 backtracks, 1248 nodes, depth 7, 0.729 seconds)
+New solution: 68 (560 backtracks, 1275 nodes, depth 6, 0.743 seconds)
+Optimality gap: [68, 68] 0.000 % (637 backtracks, 1426 nodes, 0.835 seconds)
+Node redundancy during HBFS: 9.888
+Optimum: 68 in 637 backtracks and 1426 nodes ( 63 removals by DEE) and 0.835 seconds.
 +++++++++ Search for solution 11 +++++++++
-New solution: 72 (714 backtracks, 24958 nodes, depth 436)
-New solution: 68 (739 backtracks, 25534 nodes, depth 436)
-Node redundancy during HBFS: 8.052 %
-Optimum: 68 in 739 backtracks and 25534 nodes ( 0 removals by DEE) and 1.712 seconds.
++++++++++ predictive bounding: 76.000
+New solution: 72 (638 backtracks, 1431 nodes, depth 6, 0.842 seconds)
+New solution: 71 (648 backtracks, 1453 nodes, depth 8, 0.855 seconds)
+New solution: 68 (703 backtracks, 1560 nodes, depth 5, 0.918 seconds)
+Node redundancy during HBFS: 9.038
+Optimum: 68 in 703 backtracks and 1560 nodes ( 71 removals by DEE) and 0.918 seconds.
 +++++++++ Search for solution 12 +++++++++
-c 4194304 Bytes allocated for long long stack.
-New solution: 81 (770 backtracks, 26006 nodes, depth 389)
-New solution: 78 (772 backtracks, 26399 nodes, depth 389)
-New solution: 77 (779 backtracks, 26818 nodes, depth 389)
-New solution: 76 (809 backtracks, 27354 nodes, depth 390)
-New solution: 72 (858 backtracks, 28065 nodes, depth 389)
-Optimality gap: [69, 49] -28.986 % (863 backtracks, 28122 nodes)
-Optimality gap: [70, 49] -30.000 % (864 backtracks, 28130 nodes)
-Optimality gap: [71, 49] -30.986 % (864 backtracks, 28140 nodes)
-New solution: 71 (864 backtracks, 28532 nodes, depth 387)
-Node redundancy during HBFS: 8.762 %
-Optimum: 71 in 864 backtracks and 28532 nodes ( 0 removals by DEE) and 1.981 seconds.
++++++++++ predictive bounding: 76.000
+New solution: 74 (740 backtracks, 1636 nodes, depth 5, 0.966 seconds)
+New solution: 72 (770 backtracks, 1696 nodes, depth 5, 1.002 seconds)
+New solution: 71 (781 backtracks, 1718 nodes, depth 5, 1.016 seconds)
+Optimality gap: [71, 71] 0.000 % (835 backtracks, 1824 nodes, 1.077 seconds)
+Node redundancy during HBFS: 7.730
+Optimum: 71 in 835 backtracks and 1824 nodes ( 81 removals by DEE) and 1.077 seconds.
 +++++++++ Search for solution 13 +++++++++
-New solution: 76 (898 backtracks, 28974 nodes, depth 343)
-New solution: 72 (906 backtracks, 29334 nodes, depth 340)
-Optimality gap: [72, 49] -31.944 % (979 backtracks, 29782 nodes)
-Node redundancy during HBFS: 9.563 %
-Optimum: 72 in 979 backtracks and 29782 nodes ( 0 removals by DEE) and 2.212 seconds.
++++++++++ predictive bounding: 77.000
+c 4194304 Bytes allocated for long long stack.
+New solution: 76 (881 backtracks, 1919 nodes, depth 6, 1.144 seconds)
+New solution: 72 (950 backtracks, 2056 nodes, depth 5, 1.220 seconds)
+Optimality gap: [72, 72] 0.000 % (978 backtracks, 2110 nodes, 1.258 seconds)
+Node redundancy during HBFS: 6.682
+Optimum: 72 in 978 backtracks and 2110 nodes ( 88 removals by DEE) and 1.258 seconds.
 +++++++++ Search for solution 14 +++++++++
-New solution: 86 (1062 backtracks, 30429 nodes, depth 292)
-New solution: 80 (1078 backtracks, 30768 nodes, depth 292)
-New solution: 74 (1085 backtracks, 31080 nodes, depth 292)
-Optimality gap: [74, 49] -33.784 % (1102 backtracks, 31203 nodes)
-Node redundancy during HBFS: 10.124 %
-Optimum: 74 in 1102 backtracks and 31203 nodes ( 0 removals by DEE) and 2.441 seconds.
++++++++++ predictive bounding: 78.000
+New solution: 77 (1030 backtracks, 2217 nodes, depth 6, 1.321 seconds)
+New solution: 76 (1050 backtracks, 2256 nodes, depth 5, 1.345 seconds)
+New solution: 74 (1077 backtracks, 2312 nodes, depth 7, 1.384 seconds)
+Optimality gap: [74, 74] 0.000 % (1109 backtracks, 2372 nodes, 1.418 seconds)
+Node redundancy during HBFS: 5.944
+Optimum: 74 in 1109 backtracks and 2372 nodes ( 103 removals by DEE) and 1.418 seconds.
 +++++++++ Search for solution 15 +++++++++
-New solution: 79 (1103 backtracks, 31448 nodes, depth 246)
-New solution: 78 (1122 backtracks, 31726 nodes, depth 246)
-New solution: 76 (1183 backtracks, 32087 nodes, depth 245)
-Optimality gap: [76, 49] -35.526 % (1231 backtracks, 32181 nodes)
-Node redundancy during HBFS: 9.816 %
-Optimum: 76 in 1231 backtracks and 32181 nodes ( 0 removals by DEE) and 2.603 seconds.
++++++++++ predictive bounding: 80.000
+New solution: 79 (1109 backtracks, 2376 nodes, depth 7, 1.427 seconds)
+New solution: 78 (1163 backtracks, 2483 nodes, depth 6, 1.483 seconds)
+New solution: 76 (1204 backtracks, 2564 nodes, depth 5, 1.533 seconds)
+Optimality gap: [76, 76] 0.000 % (1248 backtracks, 2650 nodes, 1.588 seconds)
+Node redundancy during HBFS: 5.321
+Optimum: 76 in 1248 backtracks and 2650 nodes ( 116 removals by DEE) and 1.588 seconds.
 +++++++++ Search for solution 16 +++++++++
-New solution: 80 (1253 backtracks, 32419 nodes, depth 197)
-New solution: 79 (1315 backtracks, 32735 nodes, depth 197)
-New solution: 78 (1336 backtracks, 32968 nodes, depth 196)
-Optimality gap: [78, 49] -37.179 % (1349 backtracks, 32993 nodes)
-Node redundancy during HBFS: 9.575 %
-Optimum: 78 in 1349 backtracks and 32993 nodes ( 0 removals by DEE) and 2.760 seconds.
++++++++++ predictive bounding: 82.000
+New solution: 80 (1266 backtracks, 2688 nodes, depth 5, 1.615 seconds)
+New solution: 79 (1283 backtracks, 2722 nodes, depth 5, 1.636 seconds)
+New solution: 78 (1328 backtracks, 2813 nodes, depth 6, 1.691 seconds)
+Optimality gap: [78, 78] 0.000 % (1371 backtracks, 2896 nodes, 1.744 seconds)
+Node redundancy during HBFS: 4.869
+Optimum: 78 in 1371 backtracks and 2896 nodes ( 128 removals by DEE) and 1.744 seconds.
 +++++++++ Search for solution 17 +++++++++
-New solution: 80 (1349 backtracks, 33141 nodes, depth 151)
-New solution: 79 (1374 backtracks, 33334 nodes, depth 149)
-Optimality gap: [79, 49] -37.975 % (1474 backtracks, 33532 nodes)
-Node redundancy during HBFS: 9.421 %
-Optimum: 79 in 1474 backtracks and 33532 nodes ( 0 removals by DEE) and 2.924 seconds.
++++++++++ predictive bounding: 84.000
+New solution: 80 (1371 backtracks, 2900 nodes, depth 7, 1.753 seconds)
+New solution: 79 (1413 backtracks, 2983 nodes, depth 6, 1.798 seconds)
+Optimality gap: [79, 79] 0.000 % (1482 backtracks, 3118 nodes, 1.883 seconds)
+Node redundancy during HBFS: 4.522
+Optimum: 79 in 1482 backtracks and 3118 nodes ( 135 removals by DEE) and 1.883 seconds.
 +++++++++ Search for solution 18 +++++++++
-New solution: 80 (1546 backtracks, 33775 nodes, depth 102)
-Optimality gap: [80, 49] -38.750 % (1592 backtracks, 33864 nodes)
-Node redundancy during HBFS: 9.328 %
-Optimum: 80 in 1592 backtracks and 33864 nodes ( 0 removals by DEE) and 3.085 seconds.
++++++++++ predictive bounding: 85.000
+New solution: 80 (1488 backtracks, 3133 nodes, depth 6, 1.898 seconds)
+Optimality gap: [59, 80] 26.250 % (1610 backtracks, 3374 nodes, 2.039 seconds)
+Optimality gap: [80, 80] 0.000 % (1621 backtracks, 3404 nodes, 2.057 seconds)
+Node redundancy during HBFS: 4.377
+Optimum: 80 in 1621 backtracks and 3404 nodes ( 136 removals by DEE) and 2.057 seconds.
 +++++++++ Search for solution 19 +++++++++
-New solution: 80 (1687 backtracks, 34105 nodes, depth 54)
-Node redundancy during HBFS: 9.263 %
-Optimum: 80 in 1687 backtracks and 34105 nodes ( 0 removals by DEE) and 3.219 seconds.
++++++++++ predictive bounding: 84.000
+New solution: 80 (1665 backtracks, 3496 nodes, depth 5, 2.122 seconds)
+Node redundancy during HBFS: 4.319
+Optimum: 80 in 1665 backtracks and 3496 nodes ( 138 removals by DEE) and 2.122 seconds.
 +++++++++ Search for solution 20 +++++++++
-Optimality gap: [1000, 49] -95.100 % (1809 backtracks, 34349 nodes)
-Node redundancy during HBFS: 9.197 %
-No solution in 1809 backtracks and 34349 nodes ( 0 removals by DEE) and 3.377 seconds.
++++++++++ predictive bounding: 84.000
+Optimality gap: [49, 84] 41.667 % (1705 backtracks, 3586 nodes, 2.190 seconds)
+Optimality gap: [51, 84] 39.286 % (1708 backtracks, 3597 nodes, 2.198 seconds)
+Optimality gap: [52, 84] 38.095 % (1716 backtracks, 3640 nodes, 2.219 seconds)
+Optimality gap: [53, 84] 36.905 % (1717 backtracks, 3650 nodes, 2.222 seconds)
+Optimality gap: [54, 84] 35.714 % (1724 backtracks, 3687 nodes, 2.237 seconds)
+Optimality gap: [55, 84] 34.524 % (1725 backtracks, 3694 nodes, 2.242 seconds)
+Optimality gap: [56, 84] 33.333 % (1728 backtracks, 3715 nodes, 2.248 seconds)
+Optimality gap: [57, 84] 32.143 % (1733 backtracks, 3751 nodes, 2.260 seconds)
+Optimality gap: [58, 84] 30.952 % (1734 backtracks, 3760 nodes, 2.263 seconds)
+Optimality gap: [60, 84] 28.571 % (1745 backtracks, 3816 nodes, 2.288 seconds)
+Optimality gap: [61, 84] 27.381 % (1746 backtracks, 3824 nodes, 2.291 seconds)
+Optimality gap: [62, 84] 26.190 % (1747 backtracks, 3834 nodes, 2.293 seconds)
+Optimality gap: [63, 84] 25.000 % (1752 backtracks, 3866 nodes, 2.305 seconds)
+Optimality gap: [64, 84] 23.810 % (1753 backtracks, 3880 nodes, 2.308 seconds)
+Optimality gap: [65, 84] 22.619 % (1758 backtracks, 3908 nodes, 2.320 seconds)
+Optimality gap: [66, 84] 21.429 % (1761 backtracks, 3930 nodes, 2.324 seconds)
+Optimality gap: [67, 84] 20.238 % (1765 backtracks, 3961 nodes, 2.333 seconds)
+Optimality gap: [68, 84] 19.048 % (1767 backtracks, 3987 nodes, 2.336 seconds)
+Optimality gap: [71, 84] 15.476 % (1769 backtracks, 3999 nodes, 2.339 seconds)
+Optimality gap: [84, 84] 0.000 % (1770 backtracks, 4006 nodes, 2.341 seconds)
+Node redundancy during HBFS: 11.258
+No solution in 1770 backtracks and 4006 nodes ( 141 removals by DEE) and 2.341 seconds.
++++++++++ Search for solution 20 +++++++++
+Optimality gap: [1000, 1000] 0.000 % (1863 backtracks, 4192 nodes, 2.479 seconds)
+Node redundancy during HBFS: 10.759
+No solution in 1863 backtracks and 4192 nodes ( 146 removals by DEE) and 2.479 seconds.
 end.

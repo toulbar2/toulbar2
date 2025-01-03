@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#!/bin/bash
 
 ### Automatic generation of tutorial examples into out_*.txt files
 # Usage: cd web ; ../misc/doc/ToulBar2_out.sh
@@ -44,7 +44,7 @@ toulbar2 EXAMPLES/505.wcsp.xz -B=3 -j=1 -svo -k=1 | awk '/^Read /{ok=1} /Solving
 
 #------------
 #title "Solve the same WCSP using a parallel variable neighborhood search algorithm (UPDGVNS) with min-fill cluster decomposition~\\cite{Ouali17} using 4 cores during 5 seconds:"
-mpirun -n 4 toulbar2 EXAMPLES/505.wcsp.xz -vns -O=-3 -time=5 | awk '/^Read /{ok=1} ok{print $0}' > ../misc/doc/out_s_same_WCSP_505_UPDGVNS_minfill_cluster_decomp.txt
+mpirun --oversubscribe -n 4 toulbar2mpi EXAMPLES/505.wcsp.xz -vns -O=-3 -time=5 | awk '/^Read /{ok=1} ok{print $0}' > ../misc/doc/out_s_same_WCSP_505_UPDGVNS_minfill_cluster_decomp.txt
 
 #------------
 #title "Download a cluster decomposition file {\\em example.dec} (each line corresponds to a cluster of variables, clusters may overlap). Solve a WCSP using a variable neighborhood search algorithm (UDGVNS) with a given cluster decomposition:"
@@ -52,7 +52,7 @@ toulbar2 EXAMPLES/example.wcsp.xz EXAMPLES/example.dec -vns | awk '/^Read /{ok=1
 
 #------------
 #title "Solve a WCSP using a parallel variable neighborhood search algorithm (UPDGVNS) with the same cluster decomposition:"
-mpirun -n 4 toulbar2 EXAMPLES/example.wcsp.xz EXAMPLES/example.dec -vns | awk '/^Read /{ok=1} ok{print $0}' > ../misc/doc/out_s_WCSP_parallel_UPDGVNS_same_exampledec.txt
+mpirun --oversubscribe -n 4 toulbar2mpi EXAMPLES/example.wcsp.xz EXAMPLES/example.dec -vns | awk '/^Read /{ok=1} ok{print $0}' > ../misc/doc/out_s_WCSP_parallel_UPDGVNS_same_exampledec.txt
 
 #------------
 #title "Download file {\\em example.order}. Solve a WCSP using BTD-HBFS based on a given (min-fill) reverse variable elimination ordering:"
@@ -60,7 +60,7 @@ toulbar2 EXAMPLES/example.wcsp.xz EXAMPLES/example.order -B=1 | awk '/^Read /{ok
 
 #------------
 #title "Download file {\\em example.cov}. Solve a WCSP using BTD-HBFS based on a given explicit (min-fill path-) tree-decomposition:"
-toulbar2 EXAMPLES/example.wcsp.xz EXAMPLES/example.cov -B=1 | awk '/^Read /{ok=1} ok{print $0}' > ../misc/doc/out_d_examplecov_s_BTD_HBFS_tree_decomp.txt
+mpirun -n 1 toulbar2 EXAMPLES/example.wcsp.xz EXAMPLES/example.cov -B=1 | awk '/^Read /{ok=1} ok{print $0}' > ../misc/doc/out_d_examplecov_s_BTD_HBFS_tree_decomp.txt
 
 #------------
 #title "Download a Markov Random Field (MRF) file {\\em pedigree9.uai.xz} in UAI format from the toulbar2's Documentation Web page. Solve it using bounded (of degree at most 8) variable elimination enhanced by cost function decomposition in preprocessing~\\cite{Favier11a} followed by BTD-HBFS exploiting only small-size (less than four variables) separators:"
