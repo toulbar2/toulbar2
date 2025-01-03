@@ -1,0 +1,3 @@
+valgrind --gen-suppressions=yes --vgdb-error=1 --error-exitcode=1 --exit-on-first-error=yes toulbar2 problem.wcsp
+gdb toulbar2
+target remote | /usr/bin/vgdb
