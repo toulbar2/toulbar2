@@ -229,6 +229,10 @@ toulbar2 for Combinatorial Optimization in Life Sciences
 
 - **Genetics**
 
+  `The Genetic Architecture of Recombination Rates is Polygenic and Differs Between the Sexes in Wild House Sparrows (Passer domesticus)<https://doi.org/10.1093/molbev/msae179>`_,
+  McAuley JB, Servin B, Burnett HA, Brekke C, Peters L, Hagen IJ, Niskanen AK, Ringsby TH, Husby A, Jensen H, Johnston SE,
+  Molecular Biology and Evolution, Volume 41, Issue 9, September 2024, msae179.
+
   `Optimal haplotype reconstruction in half-sib families <http://miat.inrae.fr/degivry/Favier10a.pdf>`_,
   Aurélie Favier, Jean-Michel Elsen, Simon de Givry, and Andrès Legarra,
   ICLP-10 workshop on Constraint Based Methods for Bioinformatics, Edinburgh, UK, 2010.
