@@ -3,6 +3,10 @@
 
 #include "multicfn.hpp"
 
+#include <thread>
+#include <mutex>
+
+
 /*!
  * \class Bicriteria
  * \brief functions to compute supported points in bi-criteria problem
@@ -40,9 +44,23 @@ private: /* static members to store solutions and points */
 
     static std::vector<MultiCFN::Solution> _solutions; // solutions computed
 
+    static std::vector<Double> _lower_bounds; // lower_bounds returned for each solution, equals sol_cost[0]*sol_weight[0]+sol_cost[1]*sol_weight[1]
+
     static unsigned int _first_cfn_index;
 
     static unsigned int _second_cfn_index;
+
+
+    static std::mutex _interruption_mutex;
+    static bool _global_interruption;
+
+private: /* static members to for parameters */
+
+    static int _sol_timeout; // timeout in seconds for each solution
+
+    static int _global_timeout; // timeout in seconds for the resolution
+
+    static int _nsol_max; // limit on number of compute solutions
 
 private: /* static functions */
     /*!
@@ -81,9 +99,27 @@ private: /* static functions */
      * \param weights the weights applied to the two networks
      * \param solution the solution returned by the solver, if not null
      * \param point the point in the objective space computed by the solver, if not null
+     * \param lb the lower bound returned by the solver, if not null
      * \return true if a solution has beend found, false otherwise
      */
-    static bool solveScalarization(MultiCFN* multicfn, pair<Double, Double> weights, MultiCFN::Solution* solution = nullptr, Point* point = nullptr);
+    static bool solveScalarization(MultiCFN* multicfn, pair<Double, Double> weights, MultiCFN::Solution* solution = nullptr, Point* point = nullptr, Double* lb = nullptr);
+
+    /*!
+     * \brief run a global timer in a thread
+     * \param timeout the timeout in seconds
+     */
+    static void global_timer(int timeout) {
+
+        std::this_thread::sleep_for(std::chrono::seconds(timeout));
+
+        std::lock_guard<std::mutex> guard(Bicriteria::_interruption_mutex);
+        Bicriteria::_global_interruption = true;
+
+        /* toulbar2 timeout function */
+        timeOut(0);
+
+    }
+
 
 public: /* static functions */
     /*!
@@ -139,6 +175,37 @@ public: /* static functions */
      * \return a vector of the pairs of weights
      */
     static std::vector<Weights> getWeights();
+
+    /*!
+     * \brief get the list of lower bounds returned for each solution (lb = weight_1 * cost_1 + weight_2*cost_2)
+     * \return a vector of the lower bounds as Double
+     */
+    static std::vector<Double> getLowerBounds();
+
+    /*!
+     * \brief set a CPU timeout for the computation of each solution
+     * \param timeout the timeout in seconds 
+     */
+    static void setSolutionTimeout(int timeout) {
+        _sol_timeout = timeout;
+    }
+
+    /*!
+     * \brief set a global CPU timeout
+     * \param timeout the timeout in seconds 
+     */
+    static void getGlobalTimeout(int timeout) {
+        _global_timeout = timeout;
+    }
+
+    /*!
+     * \brief set the maximum number of solution to compute
+     * \param solCount maxiumum number of solution
+     */
+    static void setMaxSolutionCount(int solCount) {
+        _nsol_max = solCount;
+    }
+
 };
 
 #endif // BI_CRITERIA_HPP
