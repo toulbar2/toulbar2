@@ -184,7 +184,7 @@ public: /* static functions */
 
     /*!
      * \brief set a CPU timeout for the computation of each solution
-     * \param timeout the timeout in seconds 
+     * \param timeout the timeout in seconds, 0 by default, meaning no timeout
      */
     static void setSolutionTimeout(int timeout) {
         _sol_timeout = timeout;
@@ -192,7 +192,7 @@ public: /* static functions */
 
     /*!
      * \brief set a global CPU timeout
-     * \param timeout the timeout in seconds 
+     * \param timeout the timeout in seconds, 0 by default, meaning no timeout
      */
     static void getGlobalTimeout(int timeout) {
         _global_timeout = timeout;
@@ -200,7 +200,7 @@ public: /* static functions */
 
     /*!
      * \brief set the maximum number of solution to compute
-     * \param solCount maxiumum number of solution
+     * \param solCount maxiumum number of solution, 0 by default, meaning no limit
      */
     static void setMaxSolutionCount(int solCount) {
         _nsol_max = solCount;
