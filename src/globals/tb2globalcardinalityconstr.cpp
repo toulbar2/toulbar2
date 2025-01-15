@@ -262,7 +262,7 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original)
         for (int i = 0; i < arity_; i++)
             os << " " << scope[i]->wcspIndex;
     } else {
-        os << nonassigned;
+        os << getNonAssigned();
         for (int i = 0; i < arity_; i++)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();
@@ -292,11 +292,11 @@ string GlobalCardinalityConstraint::getName()
     int nvalues = 0;
     for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++)
         nvalues++;
-    name += "[" + to_string(nvalues);
+    name += to_string("[") + to_string(nvalues);
     for (map<Value, pair<int, int>>::iterator i = bound.begin(); i != bound.end(); i++) {
-        name += "," + to_string(i->first) + "," + to_string(i->second.lower_bound) + "," + to_string(i->second.upper_bound);
+        name += to_string(",") + to_string(i->first) + to_string(",") + to_string(i->second.lower_bound) + to_string(",") + to_string(i->second.upper_bound);
         if (mode == WVALUE)
-            name += "," + to_string(weights[i->first].first) + "," + to_string(weights[i->first].second);
+            name += to_string(",") + to_string(weights[i->first].first) + to_string(",") + to_string(weights[i->first].second);
     }
     name += "]";
     return name;

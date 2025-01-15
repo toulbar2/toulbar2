@@ -113,7 +113,7 @@ PBO or Linkage **.pre** file and executing: ::
 
   toulbar2 [option parameters] <file>
 
-and toulbar2 will start solving the optimization problem described in its file argument. By default, the extension of the file (either **.cfn**, **.cfn.gz**, **.cfn.bz2**, **.cfn.xz**, **.wcsp**, **.wcsp.gz**, **.wcsp.bz2**, **.wcsp.xz**, **.wcnf**, **.wcnf.gz**, **.wcnf.bz2**, **.wcnf.xz**, **.cnf**, **.cnf.gz**, **.cnf.bz2**, **.cnf.xz**, **.qpbo**, **.qpbo.gz**, **.qpbo.bz2**, **.qpbo.xz**, **.opb**, **.opb.gz**, **.opb.bz2**, **.opb.xz**, **.uai**, **.uai.gz**, **.uai.bz2**, **.uai.xz**, **.LG**, **.LG.gz**, **.LG.bz2**, **.LG.xz**, **.xml**, **.xml.gz**, **.xml.bz2**, **.xml.xz**, **.pre** or **.bep**) is used to determine the nature of the file (see :ref:`input_formats`).
+and toulbar2 will start solving the optimization problem described in its file argument. By default, the extension of the file (either **.cfn**, **.cfn.gz**, **.cfn.bz2**, **.cfn.xz**, **.wcsp**, **.wcsp.gz**, **.wcsp.bz2**, **.wcsp.xz**, **.wcnf**, **.wcnf.gz**, **.wcnf.bz2**, **.wcnf.xz**, **.cnf**, **.cnf.gz**, **.cnf.bz2**, **.cnf.xz**, **.qpbo**, **.qpbo.gz**, **.qpbo.bz2**, **.qpbo.xz**, **.opb**, **.opb.gz**, **.opb.bz2**, **.opb.xz**, **.lp**, **.lp.gz**, **.lp.bz2**, **.lp.xz**, **.uai**, **.uai.gz**, **.uai.bz2**, **.uai.xz**, **.LG**, **.LG.gz**, **.LG.bz2**, **.LG.xz**, **.xml**, **.xml.gz**, **.xml.bz2**, **.xml.xz**, **.pre** or **.bep**) is used to determine the nature of the file (see :ref:`input_formats`).
 There is no specific order for the options or problem file. toulbar2 comes with decently optimized default option parameters. It is however often possible to set it up for different target than pure optimization or tune it for faster action using specific command line options.
 
 Quick start
@@ -351,12 +351,15 @@ Preprocessing
 
 -amo
         automatically detects at-most-one constraints and adds them to existing
-        knapsack/linear/pseudo-boolean constraints.
+        knapsack constraints (positive value) and/or directly in the cost function network
+        up to a given absolute number (non-zero value except -1)
 
 -mst    find a maximum spanning tree ordering for DAC
 
--S      preprocessing only: performs singleton consistency (only in
-        conjunction with option -A)
+-S=[integer]
+        preprocessing only: performs singleton consistency restricted 
+        to the first variables following the DAC ordering (or all the
+        variables if no parameter is given).
 
 -M=[integer]
         preprocessing only: 
@@ -419,6 +422,13 @@ Initial upper bounding
         *nbruns perturb_mode perturb_strength flatMaxIter nbEvalHC 
         nbEvalMax strengthMin strengthMax incrFactor decrFactor*.
 
+-lrbcd=["string"]
+        initial upperbound found by LR-BCD local search solver.
+        The string parameter is optional, using "5 -2 3" by default with the
+        following meaning:
+        *maxiter rank nbroundings*.
+        (a negative rank means dividing the theoretical rank by the given absolute value)
+
 -x=[(,i[:math:`=\#<>`]a)*]
         performs an elementary operation (':math:`=`':assign,
         ':math:`\#`':remove, ':math:`<`':decrease, ':math:`>`':increase) with
@@ -454,6 +464,7 @@ Tree search algorithms and tree decomposition selection
 -hbfs=[integer]
         hybrid best-first search [Katsirelos2015a]_, restarting from the
         root after a given number of backtracks (default value is 16384)
+        (usage for parallel version: "mpirun -n [NbOfProcess] toulbar2 -hbfs problem.wcsp")
 
 -hbfsmin=[integer]
         hybrid best-first search compromise between BFS and DFS minimum node redundancy
@@ -466,6 +477,9 @@ Tree search algorithms and tree decomposition selection
 -open=[integer]
         hybrid best-first search limit on the number
         of stored open nodes (default value is -1, i.e., no limit)
+
+-sopen=[integer]
+        number of visited open nodes before sorting the remaining open nodes based on weighted degree heuristics (double this limit for the next sorting) (see also option -q) (default value is 0, i.e., no sorting)
 
 -burst
         in parallel HBFS, workers send their solutions and open nodes as soon as possible (by default)
@@ -500,6 +514,7 @@ Tree search algorithms and tree decomposition selection
           * (-6) approximate minimum degree ordering,
           * (-7) default file ordering
           * (-8) lexicographic ordering of variable names
+          * (-9) topological ordering (for Bayesian networks only)
 
         If not specified, then use the variable order in which variables appear in the problem file.
         
@@ -541,6 +556,11 @@ Variable neighborhood search algorithms
         given as \*.dec, \*.cov, or \*.order input files or using tree
         decomposition options such as -O. For a parallel version (UPDGVNS),
         use "mpirun -n [NbOfProcess] toulbar2 -vns problem.wcsp".
+        For doing large neighborhood search (LNS) instead of VNS, and
+        bounded backtrack search instead of LDS, use e.g.,
+        "toulbar2 -vns -l: -bt=1000 -kmin=50 -kmax=50 -L=100 problem.wcsp",
+        for exploring 100 random neighborhoods of size 50 variables with
+        at most 1000 backtracks per neighborhood search.
 
 -vnsini=[integer]
         initial solution for VNS-like methods found: (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (-4 by default)
@@ -583,13 +603,16 @@ Node processing \& bounding options
 -V      VAC-based value ordering heuristic (default option)
 
 -T=[decimal]
-        threshold cost value for VAC (any decimal cost below this threshold is considered as null by VAC thus speeding-up its convergence, default value is 1)
+        threshold cost value for VAC (any decimal cost below this threshold is considered as null by VAC thus speeding-up its convergence, default value is 1, except for the cfn format where it is equal to the decimal cost precision, e.g. 0.001 if 3 digits of precision)
 
 -P=[decimal]
-        threshold cost value for VAC during the preprocessing phase only (default value is 1)
+        threshold cost value for VAC during the preprocessing phase only (default value is 1, except for the cfn format where it is equal to the decimal cost precision, e.g. 0.001 if 3 digits of precision)
 
 -C=[float]
         multiplies all costs internally by this number when loading the problem (cannot be done with cfn format and probabilistic graphical models in uai/LG formats) (default value is 1)
+
+-vaclin
+        VAC applied on linear constraints (must be combined with option -A)
 
 -vacthr
         automatic threshold cost value selection for VAC during search (must be combined with option -A)
@@ -724,12 +747,13 @@ Probability representation and numerical control
 -precision=[integer]
         probability/real precision is a conversion
         factor (a power of ten) for representing fixed point numbers
-        (default value is 7). It is used by CFN/UAI/QPBO/OPB/Pedigree formats.
+        (default value is 7). It is used by CFN/UAI/LP/QPBO/OPB/Pedigree formats.
         Note that in CFN format the number of significant digits is given in the problem description by default. This option allows to overwrite this default value. 
 
 -epsilon=[float]
         approximation factor for computing the partition
-        function (greater than 1, default value is infinity)
+        function (if greater than 1, default value is infinity)
+        or floating-point precision (if smaller than 1, default value is 1e-9)
 
 Note that in CFN format, costs are given as decimal numbers (the same for giving an initial upper bound, an absolute optimality gap or VAC threshold values)
 whereas in WCSP format costs are non-negative integers only.
@@ -807,9 +831,10 @@ The available **file formats** (possibly compressed by gzip or bzip2 or xz, e.g.
   - Cost Function Network format (:ref:`.cfn<cfn_format>` file extension)
   - Weighted Constraint Satisfaction Problem (:ref:`.wcsp<wcsp_format>` file extension)
   - Probabilistic Graphical Model (`.uai <http://www.cs.huji.ac.il/project/PASCAL/fileFormat.php>`_ / .LG file extension ; the file format .LG is identical to .UAI except that we expect log-potentials)
-  - Weigthed Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
+  - Weighted Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
   - Quadratic Unconstrained Pseudo-Boolean Optimization (:ref:`.qpbo<qpbo_format>` file extension)
   - Pseudo-Boolean Optimization (`.opb <http://www.cril.univ-artois.fr/PB16/format.pdf>`_ file extension)
+  - Integer Linear Programming (`.lp <https://www.ibm.com/docs/en/icos/22.1.2?topic=cplex-lp-file-format-algebraic-representation>`_ file extension)
   - Constraint Satisfaction and Optimization Problem (`.xml <https://xcsp.org>`_ file extension)
 
 **Some examples** :
@@ -853,6 +878,7 @@ Formats details
    Partial Weighted MaxSAT format <formats/cnfwcnfformat.rst>
    QPBO format (.qpbo) <formats/qpboformat.rst>
    OPB format (.opb) <formats/opbformat.rst>
+   CPLEX format (.lp) <formats/lpformat.rst>
    XCSP2.1 and XCSP3 formats (.xml) <formats/xmlformat.rst>
    Linkage format (.pre) <formats/preformat.rst>
 

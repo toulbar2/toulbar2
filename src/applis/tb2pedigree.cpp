@@ -76,7 +76,7 @@ void Pedigree::iniProb(WCSP* wcsp)
         cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
         throw BadConfiguration();
     }
-    wcsp->updateUb((Cost)((Long)TopProb));
+    wcsp->updateUb((Cost)Round(TopProb));
 }
 
 typedef struct {
@@ -431,9 +431,7 @@ void Pedigree::buildWCSP(const char* fileName, WCSP* wcsp)
         if (pedigree[i].father == 0 && pedigree[i].mother == 0)
             nbfounders++;
         if (pedigree[i].typed) {
-            string varname;
-            varname = "X" + to_string(pedigree[i].individual);
-            wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
+            wcsp->makeEnumeratedVariable(to_string("X") + to_string(pedigree[i].individual), 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
         }
@@ -562,9 +560,7 @@ void Pedigree::buildWCSP_bayesian(const char* fileName, WCSP* wcsp)
         if (pedigree[i].father == 0 && pedigree[i].mother == 0)
             nbfounders++;
         if (pedigree[i].typed) {
-            string varname;
-            varname = "X" + to_string(pedigree[i].individual);
-            wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
+            wcsp->makeEnumeratedVariable(to_string("X") + to_string(pedigree[i].individual), 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
         }
@@ -784,7 +780,7 @@ void Pedigree::printCorrectSol(WCSP* wcsp)
     else if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, "_correct.sol");
     if (problemname.rfind("_correct.sol") == string::npos)
-        problemname = problemname + to_string("_correct.sol");
+        problemname += to_string("_correct.sol");
     ofstream file(problemname.c_str());
     if (!file) {
         cerr << "Could not write file "
@@ -818,7 +814,7 @@ void Pedigree::printSol(WCSP* wcsp)
     if (problemname.rfind(".pre") != string::npos)
         problemname.replace(problemname.rfind(".pre"), 4, ".sol");
     if (problemname.rfind(".sol") == string::npos)
-        problemname = problemname + to_string(".sol");
+        problemname += to_string(".sol");
     ofstream file(problemname.c_str());
     if (!file) {
         cerr << "Could not write file "

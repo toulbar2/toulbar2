@@ -16,7 +16,6 @@ class WeightedClause : public AbstractNaryConstraint {
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
-    StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<Long> conflictWeights; // used by weighted degree heuristics
     bool zeros; // true if all deltaCosts are zero (temporally used by first/next)
     bool done; // should be true after one call to next
@@ -49,7 +48,6 @@ class WeightedClause : public AbstractNaryConstraint {
     // assignment of varIndex satisfies the clause
     void satisfied(int varIndex)
     {
-        nonassigned = 0;
         assert(scope[varIndex]->assigned());
         assert(scope[varIndex]->getValue() == getClause(varIndex));
         assert(deltaCosts[varIndex] == lb);
@@ -87,7 +85,6 @@ public:
         , tuple(tuple_in)
         , lb(MIN_COST)
         , support(0)
-        , nonassigned(arity_in)
         , zeros(true)
         , done(false)
     {
@@ -117,15 +114,6 @@ public:
         return getDomainSizeProduct();
     }
 
-    void reconnect() override
-    {
-        if (deconnected()) {
-            nonassigned = arity_;
-            AbstractNaryConstraint::reconnect();
-        }
-    }
-    int getNonAssigned() const { return nonassigned; }
-
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
     Long getConflictWeight(int varIndex) const override
     {
@@ -137,7 +125,7 @@ public:
     {
         assert(from != NULL);
         if (from == this) {
-            if (deconnected() || nonassigned == arity_) {
+            if (getNonAssigned() == arity_ || deconnected()) {
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {
@@ -162,12 +150,12 @@ public:
         Constraint::resetConflictWeight();
     }
 
-    bool universal() override
+    bool universal(Cost zero = MIN_COST) override
     {
-        if (cost != MIN_COST || lb != MIN_COST)
+        if (cost > zero || lb > zero)
             return false;
         for (int i = 0; i < arity_; i++)
-            if (deltaCosts[i] != MIN_COST)
+            if (deltaCosts[i] > zero)
                 return false;
         return true;
     }
@@ -276,8 +264,7 @@ public:
     {
         if (connected(varIndex)) {
             deconnect(varIndex);
-            nonassigned = nonassigned - 1;
-            assert(nonassigned >= 0);
+            assert(getNonAssigned() >= 0);
 
             if (scope[varIndex]->getValue() == getClause(varIndex)) {
                 deconnect();
@@ -286,7 +273,7 @@ public:
                 return;
             }
 
-            if (nonassigned <= 3) {
+            if (getNonAssigned() <= 3) {
                 deconnect();
                 projectNary();
             } else {
@@ -412,7 +399,7 @@ public:
             }
         }
         os << " arity: " << arity_;
-        os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
+        os << " unassigned: " << getNonAssigned() << "/" << unassigned_ << endl;
     }
 
     void dump(ostream& os, bool original = true) override
@@ -446,7 +433,7 @@ public:
                 }
             }
         } else {
-            os << nonassigned;
+            os << getNonAssigned();
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned())
                     os << " " << scope[i]->getCurrentVarId();
@@ -498,7 +485,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
             os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(MIN_COST)) << ",\n\"costs\":[";
@@ -508,7 +495,7 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(tuple[i]) : std::to_string(tuple[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(tuple[i])) : to_string(tuple[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(cost));
@@ -522,7 +509,7 @@ public:
                     for (int i = 0; i < arity_; i++) {
                         if (printed)
                             os << ",";
-                        os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                        os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : to_string(t[i]));
                         printed = true;
                     }
                     os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
@@ -542,7 +529,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << "\"" << scope[i]->getName() << "\"";
+                    os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
             os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(MIN_COST)) << ",\n\"costs\":[";

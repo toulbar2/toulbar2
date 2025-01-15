@@ -149,13 +149,18 @@ bool ReplicatedParallelDGVNS::radgvns()
     }
     Cost pbestUb = MAX_COST;
     map<int, Value> pbestSolution;
+    Long nbRestart = 1;
     while (npr && !complete && bestUb > ToulBar2::vnsOptimum) {
         SolMsg2 solmsg;
         mpi::status status = world.recv(mpi::any_source, mpi::any_tag, solmsg);
         int pindex = status.source() - 1;
         complete = (status.tag() == WORKTAG);
-        if ((vecPR[pindex].lds >= ToulBar2::vnsLDSmax || ToulBar2::restart == 1) && vecPR[pindex].k >= ToulBar2::vnsKmax)
-            npr = 0;
+        if ((vecPR[pindex].lds >= ToulBar2::vnsLDSmax || ToulBar2::restart == 1) && vecPR[pindex].k >= ToulBar2::vnsKmax) {
+            nbRestart++;
+            if (nbRestart > ToulBar2::restart || ToulBar2::restart == LONGLONG_MAX) {
+                npr = 0;
+            }
+        }
         solmsg.get(pbestUb, pbestSolution);
         NeighborhoodChange(ToulBar2::vnsNeighborChange, pindex, c, ToulBar2::vnsKmin, ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1, ToulBar2::vnsKmax, ToulBar2::vnsLDSmin, ToulBar2::vnsLDSmax, ToulBar2::vnsNeighborSizeSync, pbestUb, pbestSolution);
         //        if (ToulBar2::restart==1 && find(clusterKmax.begin(), clusterKmax.end(), false) == clusterKmax.end()) npr = 0;
@@ -234,8 +239,13 @@ bool ReplicatedParallelDGVNS::rsdgvns()
     Long restart = 1;
     int lds = ToulBar2::vnsLDSmin;
     while (npr && !stop && !complete && bestUb > ToulBar2::vnsOptimum) {
-        if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1 && ToulBar2::lds)
-            cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+        if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1) {
+            if (ToulBar2::lds) {
+                cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+            } else if (ToulBar2::backtrackLimit < LONGLONG_MAX) {
+                cout << "****** Restart " << nbRestart << " with UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+            }
+        }
         Long rank = 1;
         int k = ToulBar2::vnsKmin;
         while (npr && !complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
@@ -323,8 +333,9 @@ bool ReplicatedParallelDGVNS::rsdgvns()
                     }
                     lds = min(lds, ToulBar2::vnsLDSmax);
                 }
-            } else
+            } else if (nbRestart > ToulBar2::restart || ToulBar2::restart == LONGLONG_MAX) {
                 stop = true;
+            }
         }
     }
     vector<mpi::request> reqs;
@@ -366,6 +377,27 @@ bool ReplicatedParallelDGVNS::VnsLdsCP(SolMsg& solmsg, ParallelRandomClusterChoi
 {
     int cluster, k, discrepancy;
     solmsg.get(cluster, k, discrepancy, bestUb, bestSolution);
+    if (bestUb < lastUb) {
+        try {
+            wcsp->updateUb(bestUb);
+            wcsp->enforceUb();
+            wcsp->propagate();
+            if (unassignedVars->getSize() == 0) {
+                lastUb = MAX_COST;
+                lastSolution.clear();
+                ToulBar2::lds = 0;
+                newSolution();
+                if (lastUb < MAX_COST)
+                    wcsp->setSolution(lastUb, &lastSolution);
+                solmsg2 = SolMsg2(lastUb, lastSolution);
+                return (lastUb < MAX_COST);
+            }
+        } catch (const Contradiction&) {
+            wcsp->whenContradiction();
+            solmsg2 = SolMsg2(bestUb, bestSolution);
+            return (bestUb < MAX_COST);
+        }
+    }
     for (map<int, Value>::iterator it = bestSolution.begin();
          it != bestSolution.end(); ++it)
         lastSolution[(*it).first] = (*it).second;
@@ -378,7 +410,7 @@ bool ReplicatedParallelDGVNS::VnsLdsCP(SolMsg& solmsg, ParallelRandomClusterChoi
     values.reserve(unassignedVars->getSize());
     for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
         int v = *iter;
-        if (neighborhood.find(v) == neighborhood.end()) {
+        if (wcsp->canbe(v, lastSolution[v]) && neighborhood.find(v) == neighborhood.end()) {
             variables.push_back(v);
             values.push_back(lastSolution[v]);
         }

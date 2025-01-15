@@ -379,7 +379,7 @@ public:
                     varindex = wcsp->makeEnumeratedVariable(varname, 0, domsize - 1);
                     for (int idx = 0; idx < domsize; idx++) {
                         int v = wcsp->Doms[wcsp->varsDom[varindex]][idx];
-                        ((EnumeratedVariable *) wcsp->getVar(varindex))->addValueName("v" + to_string(v));
+                        ((EnumeratedVariable *) wcsp->getVar(varindex))->addValueName(to_string("v") + to_string(v));
                     }
                 } else {
                     varindex = wcsp->makeIntervalVariable(varname, 0, -domsize - 1);
@@ -393,7 +393,7 @@ public:
                     }
                     for (int idx = 0; idx < domsize; idx++) {
                         int v = wcsp->Doms[wcsp->varsDom[varindex]][idx];
-                        string vname = "v" + to_string(v);
+                        string vname = to_string("v") + to_string(v);
                         if (((EnumeratedVariable *) wcsp->getVar(varindex))->getValueName(idx) != vname) {
                             cerr << "wrong domain value name " << vname << " compared to previous one " << ((EnumeratedVariable *) wcsp->getVar(varindex))->getValueName(idx) << endl;
                             throw WrongFileFormat();
@@ -618,7 +618,7 @@ public:
                     } else if (arity == 0) {
                     }
 
-                    if (ctrIndex >= 0)
+                    if (ctrIndex >= 0 && ctrIndex != INT_MAX)
                         ctr = wcsp->getCtr(ctrIndex);
                     if (ctr && ToulBar2::verbose >= 4)
                         cout << *ctr << endl;

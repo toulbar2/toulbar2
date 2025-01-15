@@ -1,17 +1,17 @@
 c Read 200 variables, with 2 values at most, and 7011 clauses, with maximum arity 2.
-Cost function decomposition time : 0.000485 seconds.
-Reverse DAC dual bound: 91 (+86.813%)
-Reverse DAC dual bound: 92 (+1.087%)
-Preprocessing time: 0.040 seconds.
+Reverse original DAC dual bound: 91 (+86.813%)
+Reverse original DAC dual bound: 92 (+1.087%)
+Cost function decomposition time : 0.000 seconds.
+Preprocessing time: 0.061 seconds.
 200 unassigned variables, 400 values in all current domains (med. size:2, max size:2) and 6811 non-unary cost functions (med. arity:2, med. degree:68)
 Initial lower and upper bounds: [92, 200] 54.000%
-New solution: 189 (0 backtracks, 9 nodes, depth 11)
-New solution: 188 (45 backtracks, 143 nodes, depth 37)
-New solution: 187 (155 backtracks, 473 nodes, depth 47)
-New solution: 186 (892 backtracks, 2247 nodes, depth 19)
-New solution: 185 (3874 backtracks, 8393 nodes, depth 70)
-New solution: 184 (29475 backtracks, 62393 nodes, depth 40)
-New solution: 183 (221446 backtracks, 522724 nodes, depth 11)
-Node redundancy during HBFS: 37.221 %
-Optimum: 183 in 281307 backtracks and 896184 nodes ( 9478 removals by DEE) and 25.977 seconds.
+New solution: 189 (0 backtracks, 9 nodes, depth 11, 0.066 seconds)
+New solution: 188 (45 backtracks, 143 nodes, depth 37, 0.103 seconds)
+New solution: 187 (155 backtracks, 473 nodes, depth 47, 0.144 seconds)
+New solution: 186 (273 backtracks, 802 nodes, depth 37, 0.170 seconds)
+New solution: 185 (1870 backtracks, 4112 nodes, depth 63, 0.279 seconds)
+New solution: 184 (19563 backtracks, 41433 nodes, depth 19, 1.430 seconds)
+New solution: 183 (207409 backtracks, 459653 nodes, depth 12, 12.669 seconds)
+Node redundancy during HBFS: 25.824
+Optimum: 183 in 268922 backtracks and 725087 nodes ( 8484 removals by DEE) and 20.814 seconds.
 end.

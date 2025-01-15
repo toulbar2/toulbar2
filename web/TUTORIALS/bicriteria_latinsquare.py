@@ -95,7 +95,7 @@ if result:
   sol_costs = multicfn.GetSolutionCosts()
   solution = multicfn.GetSolution()
   print_solution(solution, N)
-  print('with costs:', sol_costs, '(sum=', result[1], ')')
+  print('with costs:', sol_costs, '(weighted sum=', result[1], ')')
 
 print('\n')
 
@@ -117,7 +117,7 @@ if result:
   sol_costs = multicfn.GetSolutionCosts()
   solution = multicfn.GetSolution()
   print_solution(solution, N)
-  print('with costs:', sol_costs, '(sum=', result[1], ')')
+  print('with costs:', sol_costs, '(weighted sum=', result[1], ')')
 
 
 # approximate the pareto front

@@ -46,6 +46,7 @@ namespace mpi = boost::mpi;
 #include <algorithm>
 #include <numeric>
 #include <chrono>
+#include <memory>
 using std::ostream;
 using std::pair;
 using std::vector;
@@ -178,6 +179,21 @@ void free_all(T& t)
 {
     T tmp;
     t.swap(tmp);
+}
+
+// warning! forbidden characters /#[]{}:, and spaces in cfn format for object names
+static inline std::string name2cfn(std::string s)
+{
+    for(auto it = s.begin(); it != s.end(); it ++) {
+        if(*it == '[' || *it == '{') {
+            *it = '(';
+        } else if(*it == ']' || *it == '}') {
+            *it = ')';
+        } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+            *it = '_';
+        }
+    }
+    return s;
 }
 
 #include "tb2system.hpp"

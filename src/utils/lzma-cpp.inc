@@ -20,7 +20,7 @@
 #include <boost/iostreams/filter/lzma.hpp>
 
 #ifndef BOOST_IOSTREAMS_LZMA_NO_MULTITHREADED
-    #if LZMA_VERSION < 50020002
+    #if LZMA_VERSION < 50020002 | __APPLE__
         #define BOOST_IOSTREAMS_LZMA_NO_MULTITHREADED
     #endif
 #endif

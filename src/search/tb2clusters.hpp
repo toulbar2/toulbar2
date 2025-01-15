@@ -59,7 +59,6 @@ private:
     Cluster* cluster;
     TVars vars;
     vector<vector<StoreCost>> delta; // structure to record the costs that leave the cluster
-    StoreInt nonassigned; // number of non assigned variables during search
     StoreInt isUsed;
     StoreCost lbPrevious;
     StoreInt optPrevious;
@@ -107,6 +106,7 @@ public:
 
     void queueSep() { wcsp->queueSeparator(&linkSep); }
     void unqueueSep() { wcsp->unqueueSeparator(&linkSep); }
+    bool isInQueueSep() { return wcsp->isInQueueSeparator(&linkSep); }
 
     void addDelta(unsigned int posvar, Value value, Cost cost)
     {
@@ -456,6 +456,8 @@ public:
 
     TreeDecomposition(WCSP* wcsp_in);
 
+    ~TreeDecomposition();
+
     WCSP* getWCSP() { return wcsp; }
 
     int getNbOfClusters() { return clusters.size(); }
@@ -464,7 +466,6 @@ public:
         assert(0 <= i && i < (int)clusters.size());
         return clusters[i];
     }
-    Cluster* var2Cluster(int v);
 
     void setCurrentCluster(Cluster* c) { currentCluster = c->getId(); }
     Cluster* getCurrentCluster() { return getCluster(currentCluster); }

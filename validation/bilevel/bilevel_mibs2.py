@@ -1,4 +1,8 @@
 
+# Example taken from two sources:
+# MibS solver https://github.com/coin-or/MibS 
+# Input Files https://coin-or.github.io/MibS/input.html
+
 import pytoulbar2 as tb2
 
 cfn = tb2.CFN(ubinit = 1000, verbose = 0)
@@ -64,4 +68,6 @@ cfn.CFN.wcsp.decreaseLb(cfn.Option.negCostBLP[0] + cfn.Option.negCostBLP[2])
 
 cfn.Option.setVarOrder('0 -1 0 1 2\n1 0 0 1 2\n2 0 0 1 2 3 4 5\n3 0 0 1 2 6 7 8\n')
 
+# Test Solution:
+# Optimum = 24 (x0=v0 x1=v1 x2=v1 C0=v3 C1=v0 C2=v0 C0neg=v0 C1neg=v0 C2neg=v0)
 cfn.Solve(showSolutions=3)

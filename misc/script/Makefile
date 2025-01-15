@@ -1,4 +1,4 @@
-SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
+SRCSFULL = $(wildcard tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp)
 
 # Comment the following line if BOOST Graph library uninstalled
 BOOST = -DBOOST
@@ -43,7 +43,7 @@ CC = g++
 ##CPLEXFLAGS = -DILOGCPLEX -DIL_STD -fPIC -fexceptions -fno-strict-aliasing -pthread -I$(CPLEX_LOCATION)/cplex/include/ilcplex -I$(CPLEX_LOCATION)/cplex/include -I$(CPLEX_LOCATION)/concert/include
 ##CPLEXLIB =  -L$(CPLEX_LOCATION)/cplex/lib/x86-64_linux/static_pic -L$(CPLEX_LOCATION)/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -lm -lpthread -ldl -rdynamic 
 
-CFLAGS = -std=c++17 -g -Wall -I. -I./pils/src $(ILOGFLAGS) $(BOOST) $(XMLI) -DLONGLONG_COST -DLONGDOUBLE_PROB -DWCSPFORMATONLY
+CFLAGS = -std=c++20 -g -Wall -I. -I./pils/src $(ILOGFLAGS) $(BOOST) $(XMLI) -DLONGLONG_COST -DLONGDOUBLE_PROB -DWCSPFORMATONLY
 # -DLONGLONG_COST # uses type long long for encoding costs, to be replaced by -DINT_COST if memory is an issue (but costs are limited to 119304647)
 # -DLONGDOUBLE_PROB # uses type long double for encoding (log) probabilities instead of type double if using -DDOUBLE_PROB
 # -DWCSPFORMATONLY # assumes positive domains starting at value 0 (as in the wcsp format file) *** Incompatible with Numberjack ***
@@ -83,6 +83,6 @@ iloglue: iloglue.cpp libtb2.so
 	$(CC) $(OFLAGS) $(CFLAGS) -o $@ $< $(ILOGLIBS) -L. -ltb2 -lboost_graph -lboost_iostreams -lgmp -lz -lbz2 -llzma
 
 clean:
-	-rm -f *.o applis/*.o core/*.o globals/*.o incop/*.o pils/src/exe/*.o mcriteria/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
+	-rm -f *.o applis/*.o convex/*.o core/*.o globals/*.o incop/*.o mcriteria/*.o pils/src/exe/*.o search/*.o utils/*.o vns/*.o toulbar2 libtb2.so iloglue toulbar2test
 
 all: toulbar2

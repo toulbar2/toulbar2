@@ -391,7 +391,8 @@ Global cost functions using a cost function network-based propagator (decompose 
                type: woverlap
                params: {
                   metric: hard
-                  cost: 2.01comparator: >
+                  cost: 2.01
+                  comparator: ">"
                   to: 1
                   }
               }
@@ -496,6 +497,18 @@ Global cost functions using a dedicated propagator:
                     weightedvalues: [[v1 1 1] [v2 1 1] [v3 1 1] [v4 1 1]]
                     }
                 }
+
+  - :code:`"salldiffkp"` with parameters array :code:`[metric: "hard" cost: inf]` to express a hard alldifferent constraint (decomposes into :code:`knapsackv` cost functions) 
+
+    - example: ::
+
+        name: {scope: [v1 v2 v3 v4]
+               type: salldiffkp
+               params: {
+                  metric: hard
+                  cost: inf
+                  }
+              }
 
   - :code:`"clique"` with parameters :code:`rhs: 1 values: [([(value)*])*]` to express a hard global clique constraint to restrict the number of variables taking their value into a given set of values (one set per variable) to at most 1 occurrence for all the variables. A clique of binary constraints must also be added to forbid any two variables from using both the restricted values.  
 

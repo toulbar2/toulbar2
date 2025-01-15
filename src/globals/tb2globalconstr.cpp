@@ -6,7 +6,6 @@ GlobalConstraint::GlobalConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, in
     : AbstractGlobalConstraint(wcsp, scope_in, arity_in)
     , extendedCost(NULL)
     , projectedCost(0)
-    , nonassigned(arity_in)
     , currentVar(-1)
     , needPropagateAC(false)
     , needPropagateDAC(false)
@@ -81,7 +80,7 @@ void GlobalConstraint::print(ostream& os)
     // 	}
     // }
     os << ") mode: " << mode << ",defcost: " << def << ",";
-    os << " unassigned: " << unassigned_ << "/" << nonassigned << "/" << arity();
+    os << " unassigned: " << unassigned_ << "/" << getNonAssigned() << "/" << arity();
     os << endl;
     if (ToulBar2::verbose >= 4)
         showCostProvidingPartition();
@@ -124,8 +123,7 @@ void GlobalConstraint::assign(int varIndex)
 
     if (connected(varIndex)) {
         deconnect(varIndex);
-        nonassigned = nonassigned - 1;
-        if (nonassigned == 0) {
+        if (getNonAssigned() == 0) {
             deconnect();
             Tuple t(arity_, 0);
             for (int i = 0; i < arity_; i++) {

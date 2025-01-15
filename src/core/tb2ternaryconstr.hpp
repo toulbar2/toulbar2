@@ -342,7 +342,7 @@ public:
     BinaryConstraint* xz;
     BinaryConstraint* yz;
 
-    ~TernaryConstraint() {}
+    virtual ~TernaryConstraint() {}
 
     bool extension() const FINAL { return true; }
     bool isTernary() const FINAL { return true; }

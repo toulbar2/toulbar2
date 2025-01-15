@@ -67,6 +67,7 @@ StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
 StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
 StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
 StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
+StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> Store::storeKnapsack(STORE_SIZE);
 
 int WCSP::wcspCounter = 0;
 
@@ -137,6 +138,7 @@ int ToulBar2::preprocessFunctional;
 bool ToulBar2::costfuncSeparate;
 int ToulBar2::preprocessNary;
 LcLevelType ToulBar2::LcLevel;
+LcLevelType ToulBar2::LcLevel_prev;
 int ToulBar2::maxEACIter;
 bool ToulBar2::QueueComplexity;
 bool ToulBar2::binaryBranching;
@@ -161,7 +163,7 @@ bool ToulBar2::MSTDAC;
 int ToulBar2::DEE;
 int ToulBar2::DEE_;
 int ToulBar2::nbDecisionVars;
-bool ToulBar2::singletonConsistency;
+int ToulBar2::singletonConsistency;
 bool ToulBar2::vacValueHeuristic;
 
 externalevent ToulBar2::setvalue;
@@ -206,6 +208,7 @@ int ToulBar2::pedigreeCorrectionMode;
 int ToulBar2::pedigreePenalty;
 
 int ToulBar2::vac;
+int ToulBar2::vac_prev;
 Cost ToulBar2::costThreshold;
 Cost ToulBar2::costThresholdPre;
 string ToulBar2::costThresholdS;
@@ -216,6 +219,7 @@ unsigned int ToulBar2::trwsNIter;
 unsigned int ToulBar2::trwsNIterNoChange;
 unsigned int ToulBar2::trwsNIterComputeUb;
 Double ToulBar2::costMultiplier;
+Cost ToulBar2::costMultiplier_;
 unsigned int ToulBar2::decimalPoint;
 string ToulBar2::deltaUbS;
 Cost ToulBar2::deltaUb;
@@ -233,10 +237,12 @@ bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
 Double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
+bool ToulBar2::lp;
 
-bool ToulBar2::addAMOConstraints;
+int ToulBar2::addAMOConstraints;
 bool ToulBar2::addAMOConstraints_;
 int ToulBar2::knapsackDP;
+bool ToulBar2::VAClin;
 
 char* ToulBar2::varOrder;
 int ToulBar2::btdMode;
@@ -261,6 +267,7 @@ bool ToulBar2::isZ;
 TLogProb ToulBar2::logZ;
 TLogProb ToulBar2::logU;
 TLogProb ToulBar2::logepsilon;
+Double ToulBar2::epsilon;
 bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 
 externalfunc ToulBar2::timeOut;
@@ -273,6 +280,7 @@ Double ToulBar2::sigma;
 
 string ToulBar2::incop_cmd;
 string ToulBar2::pils_cmd;
+string ToulBar2::lrBCD_cmd;
 
 string ToulBar2::clusterFile;
 ofstream ToulBar2::vnsOutput;
@@ -304,6 +312,7 @@ Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
 Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
 ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
 ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
+Long ToulBar2::sortBFS; // number of visited open nodes before sorting the remaining open nodes
 #ifdef OPENMPI
 bool ToulBar2::burst;
 #endif
@@ -323,16 +332,125 @@ vector<Cost> ToulBar2::initialUbBLP;
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
+    // backtrack trailing mechanism
     Store::depth = 0;
 
+    // input file format
     ToulBar2::stdin_format = "";
+    ToulBar2::cfn = false;
+    ToulBar2::gz = false;
+    ToulBar2::bz2 = false;
+    ToulBar2::xz = false;
+    ToulBar2::bayesian = false;
+    ToulBar2::uai = 0;
+    ToulBar2::markov_log = 0;
+    ToulBar2::xmlflag = false;
+    ToulBar2::xmlcop = false;
+    ToulBar2::maxsateval = false;
+    ToulBar2::uaieval = false;
+    ToulBar2::wcnf = false;
+    ToulBar2::qpbo = false;
+    ToulBar2::qpboQuadraticCoefMultiplier = 2.;
+    ToulBar2::opb = false;
+    ToulBar2::lp = false;
+
+    // specific options for bep/pedigree/haplotype problems
+    ToulBar2::errorg = 0.05;
+    ToulBar2::foundersprob_class = 0;
+    ToulBar2::consecutiveAllele = false;
+    ToulBar2::pedigreeCorrectionMode = 0;
+    ToulBar2::pedigreePenalty = 0;
+    ToulBar2::allelefreqdistrib.clear();
+    ToulBar2::pedigree = NULL;
+    ToulBar2::haplotype = NULL;
+    ToulBar2::bep = NULL;
+
+    // initial upperbound in decimal cost and more
     ToulBar2::externalUB = "";
+    ToulBar2::decimalPoint = 0;
+    ToulBar2::deltaUbS = "0";
+    ToulBar2::deltaUb = MIN_COST;
+    ToulBar2::deltaUbAbsolute = MIN_COST;
+    ToulBar2::deltaUbRelativeGap = 0.;
+    ToulBar2::setCostMultiplier(1.0);
+
+    // main floating-point precision and resolution for probabilistic graphical models and integer programs
+    ToulBar2::epsilon = 1e-9;
+    ToulBar2::resolution = 7;
+    ToulBar2::resolution_Update = false;
+    ToulBar2::NormFactor = 1;
+
+    // verbosity, debugging, and solution output
     ToulBar2::verbose = 0;
 
-    ToulBar2::FullEAC = false;
-    ToulBar2::VACthreshold = false;
-    ToulBar2::nbTimesIsVAC = 0;
-    ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
+    ToulBar2::debug = 0;
+    ToulBar2::verifyOpt = false;
+    ToulBar2::verifiedOptimum = MAX_COST;
+
+    ToulBar2::showSolutions = 0;
+    ToulBar2::showHidden = false;
+    ToulBar2::writeSolution = 0;
+    ToulBar2::solutionFile = NULL;
+    ToulBar2::solutionFileRewindPos = 0L;
+    ToulBar2::solution_uai_file = NULL;
+    ToulBar2::solution_uai_filename = "sol";
+    ToulBar2::problemsaved_filename = "";
+
+    // dump problem into a file
+    ToulBar2::dumpWCSP = 0;
+    ToulBar2::dumpOriginalAfterPreprocessing = false;
+
+    // find/count all/diverse solutions
+    ToulBar2::allSolutions = 0;
+    ToulBar2::approximateCountingBTD = false;
+    ToulBar2::divNbSol = 0;
+    ToulBar2::divBound = 0;
+    ToulBar2::divWidth = 0;
+    ToulBar2::divMethod = 0;
+    ToulBar2::divRelax = 0;
+
+    // compute partition function
+    ToulBar2::isZ = false;
+    ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+    ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
+
+    // bi-level optimization
+    ToulBar2::bilevel = 0;
+    ToulBar2::decimalPointBLP.clear();
+    ToulBar2::costMultiplierBLP.clear();
+    ToulBar2::negCostBLP.clear();
+    ToulBar2::initialLbBLP.clear();
+    ToulBar2::initialUbBLP.clear();
+
+    // preprocessing
+#ifdef NO_STORE_BINARY_COSTS
+    ToulBar2::elimDegree = 1;
+#else
+    ToulBar2::elimDegree = 3;
+#endif
+    ToulBar2::elimDegree_preprocessing = -1;
+    ToulBar2::elimDegree_ = -1;
+    ToulBar2::elimDegree_preprocessing_ = -1;
+    ToulBar2::elimSpaceMaxMB = 0;
+
+    ToulBar2::preprocessTernaryRPC = 0;
+    ToulBar2::preprocessFunctional = 1;
+    ToulBar2::costfuncSeparate = true;
+    ToulBar2::preprocessNary = 10;
+    ToulBar2::singletonConsistency = 0;
+    ToulBar2::minsumDiffusion = 0;
+
+    ToulBar2::trwsAccuracy = -1; // 0.001;
+    ToulBar2::trwsOrder = false;
+    ToulBar2::trwsNIter = 1000;
+    ToulBar2::trwsNIterNoChange = 5;
+    ToulBar2::trwsNIterComputeUb = 100;
+
+    ToulBar2::hve = 0;
+    ToulBar2::pwc = 0;
+    ToulBar2::pwcMinimalDualGraph = true;
+
     ToulBar2::RASPS = false;
     ToulBar2::useRASPS = 0;
     ToulBar2::RASPSreset = false;
@@ -343,167 +461,71 @@ void tb2init()
     ToulBar2::RASPSnbBacktracks = 1000;
     ToulBar2::RASPSitThresholds.clear();
 
-    ToulBar2::debug = 0;
-    ToulBar2::showSolutions = 0;
-    ToulBar2::showHidden = false;
-    ToulBar2::writeSolution = 0;
-    ToulBar2::solutionFile = NULL;
-    ToulBar2::solutionFileRewindPos = 0L;
-    ToulBar2::allSolutions = 0;
-    ToulBar2::dumpWCSP = 0;
-    ToulBar2::dumpOriginalAfterPreprocessing = false;
-    ToulBar2::approximateCountingBTD = false;
-#ifdef NO_STORE_BINARY_COSTS
-    ToulBar2::elimDegree = 1;
-#else
-    ToulBar2::elimDegree = 3;
-#endif
-    ToulBar2::elimDegree_preprocessing = -1;
-    ToulBar2::elimDegree_ = -1;
-    ToulBar2::elimDegree_preprocessing_ = -1;
-    ToulBar2::elimSpaceMaxMB = 0;
-    ToulBar2::preprocessTernaryRPC = 0;
-    ToulBar2::hve = 0;
-    ToulBar2::pwc = 0;
-    ToulBar2::pwcMinimalDualGraph = true;
-    ToulBar2::preprocessFunctional = 1;
-    ToulBar2::costfuncSeparate = true;
-    ToulBar2::preprocessNary = 10;
-    ToulBar2::LcLevel = LC_EDAC;
-    ToulBar2::maxEACIter = MAX_EAC_ITER;
-    ToulBar2::QueueComplexity = false;
-    ToulBar2::binaryBranching = true;
-    ToulBar2::lastConflict = true;
-    ToulBar2::dichotomicBranching = 1;
-    ToulBar2::dichotomicBranchingSize = 10;
-    ToulBar2::sortDomains = false;
-    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
-    ToulBar2::solutionBasedPhaseSaving = true;
-    ToulBar2::bisupport = 0.;
-    ToulBar2::lds = 0;
-    ToulBar2::limited = false;
-    ToulBar2::restart = -1;
-    ToulBar2::backtrackLimit = LONGLONG_MAX;
-    ToulBar2::generation = false;
-    ToulBar2::minsumDiffusion = 0;
-    ToulBar2::Static_variable_ordering = false;
-    ToulBar2::weightedDegree = 1000000;
-    ToulBar2::weightedTightness = 0;
-    ToulBar2::MSTDAC = false;
+    ToulBar2::addAMOConstraints = -1;
+    ToulBar2::addAMOConstraints_ = false;
+    ToulBar2::knapsackDP = -2;
+
+    // dead-end elimination dominance pruning
     ToulBar2::DEE = 1;
     ToulBar2::DEE_ = 0;
-    ToulBar2::nbDecisionVars = 0;
-    ToulBar2::singletonConsistency = false;
-    ToulBar2::vacValueHeuristic = true;
 
-    ToulBar2::setvalue = NULL;
-    ToulBar2::setmin = NULL;
-    ToulBar2::setmax = NULL;
-    ToulBar2::removevalue = NULL;
-    ToulBar2::setminobj = NULL;
-    ToulBar2::newsolution = NULL;
-    ToulBar2::pedigree = NULL;
-    ToulBar2::haplotype = NULL;
+    // level of local consistency during search
+    ToulBar2::LcLevel = LC_EDAC;
+    ToulBar2::LcLevel_prev = LC_EDAC;
+    ToulBar2::maxEACIter = MAX_EAC_ITER;
 
-    ToulBar2::cfn = false;
-    ToulBar2::gz = false;
-    ToulBar2::bz2 = false;
-    ToulBar2::xz = false;
-    ToulBar2::bayesian = false;
-    ToulBar2::uai = 0;
-    ToulBar2::solution_uai_file = NULL;
-    ToulBar2::solution_uai_filename = "sol";
-    ToulBar2::problemsaved_filename = "";
-    ToulBar2::markov_log = 0;
-    ToulBar2::xmlflag = false;
-    ToulBar2::xmlcop = false;
-    ToulBar2::maxsateval = false;
-    ToulBar2::uaieval = false;
-
-    ToulBar2::resolution = 7;
-    ToulBar2::resolution_Update = false;
-    ToulBar2::errorg = 0.05;
-    ToulBar2::NormFactor = 1;
-    ToulBar2::foundersprob_class = 0;
-    ToulBar2::consecutiveAllele = false;
-    ToulBar2::pedigreeCorrectionMode = 0;
-    ToulBar2::pedigreePenalty = 0;
-    ToulBar2::allelefreqdistrib.clear();
+    ToulBar2::FullEAC = false;
 
     ToulBar2::vac = 0;
+    ToulBar2::vac_prev = 0;
     ToulBar2::costThresholdS = "";
     ToulBar2::costThresholdPreS = "";
     ToulBar2::costThreshold = UNIT_COST;
     ToulBar2::costThresholdPre = UNIT_COST;
-    ToulBar2::trwsAccuracy = -1; // 0.001;
-    ToulBar2::trwsOrder = false;
-    ToulBar2::trwsNIter = 1000;
-    ToulBar2::trwsNIterNoChange = 5;
-    ToulBar2::trwsNIterComputeUb = 100;
-    ToulBar2::costMultiplier = UNIT_COST;
-    ToulBar2::decimalPoint = 0;
-    ToulBar2::deltaUbS = "0";
-    ToulBar2::deltaUb = MIN_COST;
-    ToulBar2::deltaUbAbsolute = MIN_COST;
-    ToulBar2::deltaUbRelativeGap = 0.;
+    ToulBar2::VACthreshold = false;
+    ToulBar2::nbTimesIsVAC = 0;
+    ToulBar2::nbTimesIsVACitThresholdMoreThanOne = 0;
+    ToulBar2::VAClin = true;
 
-    ToulBar2::divNbSol = 0;
-    ToulBar2::divBound = 0;
-    ToulBar2::divWidth = 0;
-    ToulBar2::divMethod = 0;
-    ToulBar2::divRelax = 0;
+    // branching heuristics
+    ToulBar2::binaryBranching = true;
+    ToulBar2::dichotomicBranching = 1;
+    ToulBar2::dichotomicBranchingSize = 10;
 
-    ToulBar2::bep = NULL;
-    ToulBar2::wcnf = false;
-    ToulBar2::qpbo = false;
-    ToulBar2::qpboQuadraticCoefMultiplier = 2.;
-    ToulBar2::opb = false;
+    // variable ordering heuristics
+    ToulBar2::Static_variable_ordering = false;
+    ToulBar2::weightedDegree = 1000000;
+    ToulBar2::weightedTightness = 0;
+    ToulBar2::lastConflict = true;
+    ToulBar2::nbDecisionVars = 0;
 
-    ToulBar2::addAMOConstraints = false;
-    ToulBar2::addAMOConstraints_ = false;
-    ToulBar2::knapsackDP = -2;
+    // value ordering heuristics
+    ToulBar2::sortDomains = false;
+    ToulBar2::vacValueHeuristic = true;
+    ToulBar2::solutionBasedPhaseSaving = true;
+    ToulBar2::bisupport = 0.;
 
+    // constraint/propagation ordering heuristics
+    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
+    ToulBar2::MSTDAC = false;
+    ToulBar2::generation = false;
+    ToulBar2::QueueComplexity = false;
     ToulBar2::varOrder = NULL;
-    ToulBar2::btdMode = 0;
-    ToulBar2::btdSubTree = -1;
-    ToulBar2::btdRootCluster = -1;
-    ToulBar2::rootHeuristic = 0;
-    ToulBar2::reduceHeight = false;
 
-    ToulBar2::startCpuTime = 0;
-    ToulBar2::startRealTime = 0;
-    ToulBar2::startRealTimeAfterPreProcessing = 0;
-
-    ToulBar2::splitClusterMaxSize = 0;
-    ToulBar2::boostingBTD = 0.;
-    ToulBar2::maxSeparatorSize = -1;
-    ToulBar2::minProperVarSize = 0;
-
-    ToulBar2::heuristicFreedom = false;
-    ToulBar2::heuristicFreedomLimit = 5;
-
-    ToulBar2::isZ = false;
-    ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::logepsilon = -numeric_limits<TLogProb>::infinity();
-    ToulBar2::Berge_Dec = false;
-
-    ToulBar2::timeOut = NULL;
-    ToulBar2::interrupted = false;
-
-    ToulBar2::learning = false;
-
+    // random generator
     ToulBar2::seed = 1;
     ToulBar2::sigma = 0.;
 
+    // local search methods in preprocessing
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
+    ToulBar2::lrBCD_cmd = "";
 
+    // VNS and/or branch-and-bound methods using parallelism or not
     ToulBar2::searchMethod = DFBB;
+    ToulBar2::parallel = false;
 
-    ToulBar2::clusterFile = "";
-    ToulBar2::vnsOutput.setstate(std::ios::failbit);
-
+    // VNS heuristics
     ToulBar2::vnsInitSol = LS_INIT_DFBB;
     ToulBar2::vnsLDSmin = 1;
     ToulBar2::vnsLDSmax = -1;
@@ -521,31 +543,68 @@ void tb2init()
     ToulBar2::vnsParallelSync = false;
     ToulBar2::vnsOptimumS = "";
     ToulBar2::vnsOptimum = MIN_COST;
-    ToulBar2::parallel = false;
 
+    ToulBar2::clusterFile = "";
+    ToulBar2::vnsOutput.setstate(std::ios::failbit);
+
+    // partial search heuristics
+    ToulBar2::lds = 0;
+    ToulBar2::limited = false;
+    ToulBar2::restart = -1;
+    ToulBar2::backtrackLimit = LONGLONG_MAX;
+
+    // (parallel) hybrid best-first search
     ToulBar2::hbfs = 1;
     ToulBar2::hbfsGlobalLimit = 16384;
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
     ToulBar2::hbfsOpenNodeLimit = OPEN_NODE_LIMIT;
+    ToulBar2::sortBFS = 0LL;
 #ifdef OPENMPI
     ToulBar2::burst = true;
 #endif
     ToulBar2::eps = 0;
     ToulBar2::epsFilename = "subproblems.txt";
 
-    ToulBar2::verifyOpt = false;
-    ToulBar2::verifiedOptimum = MAX_COST;
+    // backtrack with tree decomposition methods
+    ToulBar2::btdMode = 0;
+    ToulBar2::btdSubTree = -1;
+    ToulBar2::btdRootCluster = -1;
+    ToulBar2::rootHeuristic = 0;
+    ToulBar2::reduceHeight = false;
+    ToulBar2::Berge_Dec = false;
+    ToulBar2::splitClusterMaxSize = 0;
+    ToulBar2::boostingBTD = 0.;
+    ToulBar2::maxSeparatorSize = -1;
+    ToulBar2::minProperVarSize = 0;
 
-    ToulBar2::bilevel = 0;
-    ToulBar2::decimalPointBLP.clear();
-    ToulBar2::costMultiplierBLP.clear();
-    ToulBar2::negCostBLP.clear();
-    ToulBar2::initialLbBLP.clear();
-    ToulBar2::initialUbBLP.clear();
+    ToulBar2::heuristicFreedom = false;
+    ToulBar2::heuristicFreedomLimit = 5;
 
-    WCSP::CollectionOfWCSP.clear();
+    //TODO: backtrack with conflict-free learning
+    ToulBar2::learning = false;
+
+    // solver statistics
+    ToulBar2::startCpuTime = 0;
+    ToulBar2::startRealTime = 0;
+    ToulBar2::startRealTimeAfterPreProcessing = 0;
+
+    tb2reinit();
+}
+
+/// \brief initialization of ToulBar2 global variables before next call to solving methods
+void tb2reinit()
+{
+    ToulBar2::setvalue = NULL;
+    ToulBar2::setmin = NULL;
+    ToulBar2::setmax = NULL;
+    ToulBar2::removevalue = NULL;
+    ToulBar2::setminobj = NULL;
+    ToulBar2::newsolution = NULL;
+    ToulBar2::timeOut = NULL;
+
+    ToulBar2::interrupted = false;
 
     WeightedCSPConstraint::MasterWeightedCSP = NULL;
     WeightedCSPConstraint::WeightedCSPConstraints.clear();
@@ -560,6 +619,8 @@ void tb2init()
     WeightedCSPConstraint::FullEAC = false;
     WeightedCSPConstraint::RASPS = false;
     WeightedCSPConstraint::useRASPS = 0;
+
+    Solver::CurrentSolver = NULL;
 }
 
 /// \brief checks compatibility between selected options of ToulBar2 needed by numberjack/toulbar2
@@ -575,8 +636,8 @@ void tb2checkOptions()
         ToulBar2::divNbSol = min((Long)ToulBar2::divNbSol, ToulBar2::allSolutions);
         ToulBar2::allSolutions = 0;
     }
-    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb)) {
-        cerr << "Error: cost multiplier cannot be used with UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
+    if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::uai || ToulBar2::qpbo || ToulBar2::opb || ToulBar2::lp)) {
+        cerr << "Error: cost multiplier cannot be used with LP, UAI, PBO, and QPBO formats. Use option -precision instead." << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::costMultiplier != UNIT_COST && (ToulBar2::haplotype || ToulBar2::pedigree || ToulBar2::bep || ToulBar2::xmlflag)) {
@@ -591,12 +652,26 @@ void tb2checkOptions()
         ToulBar2::heuristicFreedom = false;
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::btdMode >= 1) {
-        cerr << "Error: BTD-like search methods are compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
+        cerr << "Error: BTD-like search methods are not compatible with VNS. Deactivate either '-B' or '-vns'" << endl;
         throw BadConfiguration();
     }
     if (ToulBar2::searchMethod != DFBB && ToulBar2::restart < 1) {
         ToulBar2::restart = 1; // Force random variable selection during (LDS) search within variable neighborhood search methods
     }
+    if (ToulBar2::sortBFS && !ToulBar2::weightedDegree) {
+        cerr << "Error: sorting open nodes requires weighted degree heuristics (add -q or remove -sopen option)." << endl;
+        throw BadConfiguration();
+    }
+    if (ToulBar2::sortBFS && ToulBar2::btdMode >= 1) {
+        cerr << "Error: sorting open nodes is not implemented with BTD-like search methods (use '-B=0' or remove -sopen option)." << endl;
+        throw BadConfiguration();
+    }
+#ifdef OPENMPI
+    if (ToulBar2::sortBFS && ToulBar2::weightedDegree && ToulBar2::parallel) {
+        cerr << "Error: sorting open nodes using weighted degree heuristics not implemented with parallel search methods (remove -sopen option)." << endl;
+        throw BadConfiguration();
+    }
+#endif
     if ((ToulBar2::allSolutions || ToulBar2::isZ) && ToulBar2::searchMethod != DFBB) {
         cerr << "Error: cannot find all solutions or compute a partition function with VNS. Deactivate either option." << endl;
         throw BadConfiguration();
@@ -687,6 +762,11 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #endif
+    if (ToulBar2::vac && !ToulBar2::cfn && !ToulBar2::lp && string2Cost(ToulBar2::externalUB.c_str())==UNIT_COST) {
+        cout << "Warning! Do not need VAC in satisfaction (with option -ub=1)." << endl;
+        ToulBar2::vac = 0;
+    }
+
     if (ToulBar2::FullEAC && ToulBar2::btdMode >= 1) {
         cerr << "Error: VAC-based variable ordering heuristic not implemented with BTD-like search methods (remove -vacint option)." << endl;
         throw BadConfiguration();
@@ -725,6 +805,10 @@ void tb2checkOptions()
         cerr << "Error: VAC requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::addAMOConstraints != -1 && ToulBar2::vac && ToulBar2::VAClin) {
+        cerr << "Error: VAC on linear constraints with additionnal At-Most-One (AMO) constraints is not implemented!" << endl;
+        throw BadConfiguration();
+    }
     if ((ToulBar2::pwc < 0 || ToulBar2::hve < 0) && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) { /// \warning PWC assumes AC supports
         cerr << "Error: HVE/PWC requires at least AC local consistency to dedualize nary cost functions (select AC, FDAC, or EDAC using -k option)." << endl;
         throw BadConfiguration();
@@ -752,6 +836,10 @@ void tb2checkOptions()
         cout << "Error: Cannot use PILS local search for (weighted) counting (remove -i option)." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::lrBCD_cmd.size() > 0 && (ToulBar2::allSolutions || ToulBar2::isZ)) {
+        cout << "Error: Cannot use LR BCD local search for (weighted) counting (remove -i option)." << endl;
+        throw BadConfiguration();
+    }
     if (!ToulBar2::binaryBranching && ToulBar2::hbfs) {
         cout << "Error: hybrid best-first search restricted to binary branching (remove -b: or add -hbfs: options)." << endl;
         throw BadConfiguration();
@@ -769,8 +857,12 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #ifdef OPENMPI
-    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
-        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+//    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
+//        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+//        throw BadConfiguration();
+//    }
+    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::btdMode >= 1) {
+        cout << "Sorry: parallel hybrid best-first search does not work with exploiting tree decomposition (remove option -B)." << endl;
         throw BadConfiguration();
     }
 #endif
@@ -845,8 +937,11 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
     , elimTernOrder(0)
     , maxDegree(-1)
     , elimSpace(0)
+    , knapsackList(&Store::storeKnapsack)
 {
     instance = wcspCounter++;
+    if (ToulBar2::debug)
+        cout << "--- create WCSP " << getIndex() << " ---" << endl;
     if (ToulBar2::vac)
         vac = new VACExtension(this);
     else
@@ -859,8 +954,12 @@ WCSP::WCSP(Cost upperBound, void* _solver_)
 
 WCSP::~WCSP()
 {
+    if (ToulBar2::debug)
+        cout << "--- delete WCSP " << getIndex() << " ---" << endl;
     if (vac)
         delete vac;
+    if (td)
+        delete td;
     if (vars.size())
         for (unsigned int i = 0; i < vars.size(); i++)
             delete vars[i];
@@ -961,7 +1060,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
 
-    if (ToulBar2::bilevel == 5) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
         return INT_MAX;
     }
 
@@ -989,7 +1088,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
         ctr->addCosts(x, y, costs);
         ctr->propagate();
     } else {
-        if (!ToulBar2::vac) {
+        if (!ToulBar2::vac && !ToulBar2::vac_prev) {
             ctr
                 = new BinaryConstraint(this, (EnumeratedVariable*)vars[xIndex], (EnumeratedVariable*)vars[yIndex], costs);
         } else {
@@ -1162,7 +1261,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
 
-    if (ToulBar2::bilevel == 5) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
         return INT_MAX;
     }
 
@@ -1231,7 +1330,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
         BinaryConstraint* xz = x->getConstr(z);
         BinaryConstraint* yz = y->getConstr(z);
 
-        if (!ToulBar2::vac) {
+        if (!ToulBar2::vac && !ToulBar2::vac_prev) {
             if (!xy) {
                 xy = new BinaryConstraint(this, x, y, zerocostsxy);
                 xy->deconnect(true);
@@ -1386,7 +1485,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
             TernaryConstraint* tctr = new TernaryConstraint(this);
             elimTernConstrs.push_back(tctr);
             for (int j = 0; j < 3; j++) {
-                if (!ToulBar2::vac)
+                if (!ToulBar2::vac && !ToulBar2::vac_prev)
                     bctr = new BinaryConstraint(this);
                 else
                     bctr = new VACBinaryConstraint(this);
@@ -1484,6 +1583,7 @@ int WCSP::postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& 
     } else {
 #endif
         xy = xynew;
+        xy->assignCluster();
         xy->reconnect();
 #ifndef NO_STORE_BINARY_COSTS
     }
@@ -1530,7 +1630,7 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
     TernaryConstraint* xyz = new TernaryConstraint(this);
     elimTernConstrs.push_back(xyz);
     for (int j = 0; j < 3; j++) {
-        if (!ToulBar2::vac)
+        if (!ToulBar2::vac && !ToulBar2::vac_prev)
             bctr = new BinaryConstraint(this);
         else
             bctr = new VACBinaryConstraint(this);
@@ -1551,6 +1651,7 @@ int WCSP::postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, v
     TernaryConstraint* ctr = x->getConstr(y, z);
     if (!ctr) {
 #endif
+        xyz->assignCluster();
         xyz->fillElimConstrBinaries();
         xyz->reconnect();
 #ifndef NO_STORE_TERNARY_COSTS
@@ -2241,7 +2342,7 @@ void WCSP::postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseC
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
-void WCSP::postWDivConstraint(vector<int>& scopeIndex, unsigned int distance, vector<Value>& values, int method)
+void WCSP::postWDivConstraint(vector<int> scopeIndex, unsigned int distance, vector<Value>& values, int method)
 {
     assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
@@ -2288,6 +2389,12 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         if (mult)
             baseCost *= ToulBar2::costMultiplier;
         postWAllDiff(scopeIndex, arity, semantics, "DAG", baseCost);
+        return -1;
+    } else if (gcname == "salldiffkp") {
+        string semantics;
+        Cost baseCost;
+        file >> semantics >> baseCost;
+        postWAllDiff(scopeIndex, arity, "hard", "knapsack", getUb());
         return -1;
     } else if (gcname == "sgccdp") {
         string semantics;
@@ -2393,7 +2500,7 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         // add dummy value names needed by multicfn
         for (unsigned int var_ind = 0; var_ind < problem->numberOfVariables(); var_ind++) {
             for (unsigned int val_ind = 0; val_ind < problem->getDomainInitSize(var_ind); val_ind++) {
-                problem->addValueName(var_ind, "v" + to_string(val_ind));
+                problem->addValueName(var_ind, to_string("v") + to_string(val_ind));
             }
         }
         CollectionOfWCSP[problem->getIndex()] = problem; // memorize WCSP object
@@ -2405,18 +2512,18 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         vector<int> scope(scopeIndex, scopeIndex + arity);
         postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicate, duality);
     } else if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
-        DecomposableGlobalCostFunction* decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
+        std::unique_ptr<DecomposableGlobalCostFunction> decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
         decomposableGCF->addToCostFunctionNetwork(this);
     } else if (gcname == "clique") {
         postCliqueConstraint(scopeIndex, arity, file);
     } else if (gcname == "knapsackc") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, true, true);
+        postKnapsackConstraint(scopeIndex, arity, file, false, true, true, {});
     } else if (gcname == "knapsackp") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+        postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
     } else if (gcname == "knapsackv") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, 2, false);
+        postKnapsackConstraint(scopeIndex, arity, file, false, 2, false, {});
     } else if (gcname == "knapsack") {
-        postKnapsackConstraint(scopeIndex, arity, file, false, false, false);
+        postKnapsackConstraint(scopeIndex, arity, file, false, false, false, {});
     } else if (gcname == "cfnconstraint") {
         int wcspind;
         file >> wcspind;
@@ -2473,7 +2580,7 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, Wei
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac)
+            if (!ToulBar2::vac && !ToulBar2::vac_prev)
                 bctr = new BinaryConstraint(this);
             else
                 bctr = new VACBinaryConstraint(this);
@@ -2493,7 +2600,7 @@ int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)
             assert(scopeIndex[i] != scopeIndex[j]);
 #endif
 #ifdef CLIQUE2KNAPSACK
-    return postKnapsackConstraint(scopeIndex, arity, file, true, true, false);
+    return postKnapsackConstraint(scopeIndex, arity, file, true, true, false, {});
 #else
     vector<EnumeratedVariable*> scopeVars(arity);
     for (int i = 0; i < arity; i++)
@@ -2527,10 +2634,12 @@ bool WCSP::isKnapsack()
     return false;
 }
 
-int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict)
+int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, bool isclique, int kp, bool conflictgraph, Tuple wcnf)
 {
     assert(ToulBar2::bilevel <= 1);
+    vector<int> scopeIndex(scopeIndex_, scopeIndex_ + arity); // avoids modifying the original scope
     // Eliminate variable with weight 0
+    vector<int> Weightzero, CorrAMO, VirtualVar;
     Long readw;
     Value readv1;
     Long capacity;
@@ -2539,277 +2648,335 @@ int WCSP::postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool
     unsigned int size;
     int readnbval;
     Long minweight;
-    //    vector<tValue> clausetuple(arity, 0);
-    //    bool isclause = 0;
-    vector<EnumeratedVariable*> scopeVars;
     int ar = arity;
-    if (!isclique) {
-        file >> capacity;
-    } else {
-        capacity = -1;
-        file >> skip;
-    }
-    vector<int> tobedel;
-    vector<int> VarIdx;
-    map<int, int> InvVarIdx;
-    vector<int> RealScopeIdx; // Remove redundant var from scopeIndex
-    for (int i = 0; i < arity; ++i) {
-        auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
-        if (it == scopeVars.end()) {
-            scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
-            VarIdx.push_back(scopeVars.size() - 1);
-            InvVarIdx[scopeIndex[i]] = scopeVars.size() - 1;
-            RealScopeIdx.push_back(scopeIndex[i]);
-        } else {
-            ar -= 1;
-            VarIdx.push_back(distance(scopeVars.begin(), it));
-        }
-    }
-    vector<int> CorrAMO(ar), VirtualVar(ar);
+    vector<EnumeratedVariable*> scopeVars;
+    vector<vector<pair<int, Value>>> AMO;
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
-    int CurrentVarIdx;
-    for (int i = 0; i < ((kp > 1) ? 1 : arity); ++i) {
-        CurrentVarIdx = VarIdx[i];
-        if (!kp) {
-            file >> readw;
-            if (readw != 0) {
-                if (scopeVars[CurrentVarIdx]->canbe(1)) {
-                    auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), 1);
-                    if (it == VarVal[CurrentVarIdx].end()) {
-                        weights[CurrentVarIdx].push_back(readw);
-                        VarVal[CurrentVarIdx].push_back(1);
-                    } else
-                        weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
-                }
-            }
+    if (wcnf.empty()) {
+        if (!isclique) {
+            file >> capacity;
         } else {
-            file >> readnbval;
-            for (int j = 0; j < readnbval; ++j) {
-                if (kp > 1) {
-                    file >> CurrentVarIdx;
-                    assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
-                    CurrentVarIdx = InvVarIdx[CurrentVarIdx];
+            capacity = -1;
+            file >> skip;
+        }
+        vector<int> tobedel;
+        vector<int> VarIdx;
+        map<int, int> InvVarIdx;
+        for (int i = 0; i < arity; ++i) {
+            auto it = find(scopeVars.begin(), scopeVars.end(), (EnumeratedVariable*)vars[scopeIndex[i]]);
+            if (it == scopeVars.end()) {
+                assert((int)vars.size() > scopeIndex[i]);
+                scopeVars.push_back((EnumeratedVariable*)vars[scopeIndex[i]]);
+                VarIdx.push_back(scopeVars.size() - 1);
+                InvVarIdx[scopeIndex[i]] = scopeVars.size() - 1;
+            } else {
+                ar -= 1;
+                VarIdx.push_back(distance(scopeVars.begin(), it));
+            }
+        }
+        int CurrentVarIdx;
+        for (int i = 0; i < ((kp > 1) ? 1 : arity); ++i) {
+            CurrentVarIdx = VarIdx[i];
+            if (!kp) {
+                file >> readw;
+                if (readw != 0) {
+                    if (scopeVars[CurrentVarIdx]->canbe(1)) {
+                        auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), 1);
+                        if (it == VarVal[CurrentVarIdx].end()) {
+                            weights[CurrentVarIdx].push_back(readw);
+                            VarVal[CurrentVarIdx].push_back(1);
+                        } else
+                            weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
+                    }
                 }
-                file >> readv1;
-                if (scopeVars[CurrentVarIdx]->canbe(readv1)) {
-                    if (!isclique) {
-                        file >> readw;
-                        if (readw != 0) {
-                            auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), readv1);
-                            if (it == VarVal[CurrentVarIdx].end()) {
-                                VarVal[CurrentVarIdx].push_back(readv1);
-                                weights[CurrentVarIdx].push_back(readw);
-                            } else
-                                weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
+            } else {
+                file >> readnbval;
+                for (int j = 0; j < readnbval; ++j) {
+                    if (kp > 1) {
+                        file >> CurrentVarIdx;
+                        assert(InvVarIdx.find(CurrentVarIdx) != InvVarIdx.end());
+                        CurrentVarIdx = InvVarIdx[CurrentVarIdx];
+                    }
+                    file >> readv1;
+                    if (scopeVars[CurrentVarIdx]->canbe(readv1)) {
+                        if (!isclique) {
+                            file >> readw;
+                            if (readw != 0) {
+                                auto it = find(VarVal[CurrentVarIdx].begin(), VarVal[CurrentVarIdx].end(), readv1);
+                                if (it == VarVal[CurrentVarIdx].end()) {
+                                    VarVal[CurrentVarIdx].push_back(readv1);
+                                    weights[CurrentVarIdx].push_back(readw);
+                                } else
+                                    weights[CurrentVarIdx][distance(VarVal[CurrentVarIdx].begin(), it)] += readw;
+                            }
+                        } else {
+                            VarVal[CurrentVarIdx].push_back(readv1);
+                            weights[CurrentVarIdx].push_back(-1);
                         }
                     } else {
-                        VarVal[CurrentVarIdx].push_back(readv1);
-                        weights[CurrentVarIdx].push_back(-1);
-                    }
-                } else {
-                    if (!isclique) {
-                        file >> skip;
+                        if (!isclique) {
+                            file >> skip;
+                        }
                     }
                 }
             }
         }
-    }
-    for (int i = 0; i < ar; ++i) {
-        if (!weights[i].empty()) {
-            CurrentVarIdx = VarIdx[i];
-            minweight = *min_element(weights[i].begin(), weights[i].end());
-            size = scopeVars[i]->getDomainSize();
-            if (size != VarVal[i].size()) {
-                weights[i].push_back(0);
-                auto* VV = new Value[size];
-                scopeVars[i]->getDomain(VV);
-                for (unsigned int j = 0; j < size; j++) {
-                    if (find(VarVal[i].begin(), VarVal[i].end(), VV[j]) == VarVal[i].end())
-                        NotVarVal[i].push_back(VV[j]);
-                }
-                VarVal[i].push_back(NotVarVal[i][0]);
-                if (minweight < 0) {
-                    for (unsigned int j = 0; j < weights[i].size(); j++)
+        assert((int)weights.size() == ar);
+        assert((int)scopeVars.size() == ar);
+        assert((int)VarVal.size() == ar);
+        for (int i = 0; i < ar; ++i) {
+            if (!weights[i].empty()) {
+                minweight = *min_element(weights[i].begin(), weights[i].end());
+                size = scopeVars[i]->getDomainSize();
+                assert(size >= VarVal[i].size());
+                if (size != VarVal[i].size()) {
+                    weights[i].push_back(0);
+                    auto* VV = new Value[size];
+                    scopeVars[i]->getDomain(VV);
+                    for (unsigned int j = 0; j < size; j++) {
+                        if (find(VarVal[i].begin(), VarVal[i].end(), VV[j]) == VarVal[i].end())
+                            NotVarVal[i].push_back(VV[j]);
+                    }
+                    assert(NotVarVal[i].size() >= 1);
+                    VarVal[i].push_back(NotVarVal[i][0]);
+                    if (minweight < 0) {
+                        for (unsigned int j = 0; j < weights[i].size(); j++)
+                            weights[i][j] -= minweight;
+                        capacity -= minweight;
+                    }
+                    delete[] VV;
+                } else {
+                    for (unsigned int j = 0; j < weights[i].size(); j++) {
                         weights[i][j] -= minweight;
+                    }
                     capacity -= minweight;
+                    int wsize = weights[i].size();
+                    for (int j = wsize - 1; j >= 0; j--) { // move all zero-weight elements at the end of VarVal and push them into NotVarVal
+                        if (weights[i][j] == 0) {
+                            NotVarVal[i].push_back(VarVal[i][j]);
+                            if (j < wsize - 1) { // swap with last nonzero element of weights
+                                weights[i][j] = weights[i][wsize - 1];
+                                weights[i][wsize - 1] = 0;
+                                Value value = VarVal[i][j];
+                                VarVal[i][j] = VarVal[i][wsize - 1];
+                                VarVal[i][wsize - 1] = value;
+                            }
+                            wsize--;
+                        }
+                    }
+                    assert(NotVarVal[i].size() >= 1);
+                    assert(wsize + NotVarVal[i].size() == weights[i].size());
+                    VarVal[i].resize(wsize+1);
+                    weights[i].resize(wsize+1);
+                    assert(weights[i].back() == 0);
                 }
-                delete[] VV;
-            } else {
-                for (unsigned int j = 0; j < weights[i].size(); j++)
-                    weights[i][j] -= minweight;
-                capacity -= minweight;
             }
-            if (weights[i].size() == 1) {
+            if (weights[i].size() > 1) {
+                CorrAMO.push_back(0);
+                VirtualVar.push_back(0);
+            } else {
                 tobedel.push_back(i);
             }
-        } else
-            tobedel.push_back(i);
-    }
-    sort(tobedel.begin(), tobedel.end(), greater<int>());
-    for (unsigned int i = 0; i < tobedel.size(); ++i) {
-        scopeVars.erase(scopeVars.begin() + tobedel[i]);
-        RealScopeIdx[tobedel[i]] = -1;
-        weights.erase(weights.begin() + tobedel[i]);
-        VarVal.erase(VarVal.begin() + tobedel[i]);
-        NotVarVal.erase(NotVarVal.begin() + tobedel[i]);
-        CorrAMO.pop_back();
-        VirtualVar.pop_back();
-        ar--;
-    }
-    assert(ar >= 0);
-    if (ar == 0) {
-        return -INT_MAX;
-    }
-    if (capacity > 0) {
-        for (unsigned int i = 0; i < weights.size(); ++i) {
-            for (unsigned int j = 0; j < weights[i].size(); ++j) {
-                if (weights[i][j] > capacity) {
-                    weights[i][j] = capacity;
+        }
+        sort(tobedel.begin(), tobedel.end(), greater<int>());
+        for (unsigned int i = 0; i < tobedel.size(); ++i) {
+            scopeVars.erase(scopeVars.begin() + tobedel[i]);
+            VarVal.erase(VarVal.begin() + tobedel[i]);
+            weights.erase(weights.begin() + tobedel[i]);
+            NotVarVal.erase(NotVarVal.begin() + tobedel[i]);
+            scopeIndex[tobedel[i]] = -1;
+            ar--;
+        }
+        assert(ar >= 0);
+        if (ar == 0) {
+            if (capacity > 0) {
+                THROWCONTRADICTION;
+            }
+            return INT_MAX;
+        }
+        if (capacity > 0) {
+            for (unsigned int i = 0; i < weights.size(); ++i) {
+                for (unsigned int j = 0; j < weights[i].size(); ++j) {
+                    if (weights[i][j] > capacity) {
+                        weights[i][j] = capacity;
+                    }
                 }
             }
         }
-    }
-    vector<vector<pair<int, int>>> AMO;
-    if (conflict) {
-        for (unsigned int i = 0; i < VarVal.size(); ++i) {
-            if (VarVal[i][0] == 1) {
-                reverse(VarVal[i].begin(), VarVal[i].end());
-                reverse(weights[i].begin(), weights[i].end());
-                if ((int)NotVarVal[i].size() > 0)
-                    NotVarVal[i][0] = 1;
-                else
-                    NotVarVal[i].push_back(1);
+        if (conflictgraph) {
+            for (unsigned int i = 0; i < VarVal.size(); ++i) {
+                if (VarVal[i][0] == 1) {
+                    reverse(VarVal[i].begin(), VarVal[i].end());
+                    reverse(weights[i].begin(), weights[i].end());
+                    if ((int)NotVarVal[i].size() > 0)
+                        NotVarVal[i][0] = 1;
+                    else
+                        NotVarVal[i].push_back(1);
+                }
             }
-        }
-        Original_weights = weights;
-        vector<int> TempScopeIdx, ScopeIdx;
-        int nbAMO, readvar, k, k1, w;
-        bool ok;
-        vector<vector<pair<EnumeratedVariable*, int>>> VarAMO;
-        vector<pair<int, int>> TempAMO;
-        vector<pair<EnumeratedVariable*, int>> TempVarAMO;
-        file >> nbAMO;
-        vector<Value> TempVarVal, TempNotVarVal;
-        vector<Long> TempWeights;
-        for (int i = 0; i < nbAMO; ++i) {
-            file >> readnbval;
-            if (readnbval > 1) {
-                TempVarAMO.clear();
-                TempAMO.clear();
-                TempScopeIdx.clear();
-                TempVarVal.clear();
-                TempWeights.clear();
-                TempNotVarVal.clear();
-                for (int j = 0; j < readnbval; ++j) {
-                    file >> readvar;
-                    assert(getDomainSize(readvar) <= 2 && getInf(readvar) >= 0 && getSup(readvar) <= 1);
-                    file >> readv1;
+            Original_weights = weights;
+            vector<int> TempScopeIdx, ScopeIdx;
+            int nbAMO, readvar, k, k1, w;
+            bool ok;
+            vector<vector<pair<EnumeratedVariable*, int>>> VarAMO;
+            vector<pair<int, Value>> TempAMO;
+            vector<pair<EnumeratedVariable*, int>> TempVarAMO;
+            file >> nbAMO;
+            for (int i = 0; i < nbAMO; ++i) {
+                file >> readnbval;
+                if (readnbval > 1) {
+                    TempVarAMO.clear();
+                    TempAMO.clear();
+                    TempScopeIdx.clear();
+                    for (int j = 0; j < readnbval; ++j) {
+                        file >> readvar;
+                        file >> readv1;
+                        ok = false;
+                        k = 0;
+                        k1 = 0;
+                        while (!ok && k < (int)scopeVars.size()) {
+                            if (readvar == scopeIndex[k]) {
+                                ok = true;
+                                TempVarAMO.push_back(pair(scopeVars[k1], readv1));
+                                TempScopeIdx.push_back(k1);
+                                ScopeIdx.push_back(k1);
+                                TempAMO.push_back(pair(k1, readv1));
+                            }
+                            k++;
+                            if (!ok && scopeIndex[k] != -1) {
+                                k1++;
+                            }
+                        }
+                    }
+                    if (TempAMO.size() > 1) {
+                        VarVal.push_back({});
+                        weights.push_back({});
+                        NotVarVal.push_back({});
+                        for (unsigned int j = 0; j <= TempScopeIdx.size(); ++j) {
+                            w = 0;
+                            VarVal.back().push_back(j);
+                            for (unsigned int l = 0; l < TempScopeIdx.size(); ++l) {
+                                if (l == j)
+                                    w += weights[TempScopeIdx[l]][TempVarAMO[l].second];
+                                else
+                                    w += weights[TempScopeIdx[l]][!TempVarAMO[l].second];
+                            }
+                            weights.back().push_back(w);
+                        }
+                        NotVarVal.back().push_back(VarVal.back().back());
+                        VarAMO.push_back(TempVarAMO);
+                        AMO.push_back(TempAMO);
+                        VirtualVar.push_back((int)AMO.size());
+                        for (unsigned int j = 0; j < TempScopeIdx.size(); ++j) {
+                            scopeVars.push_back(TempVarAMO[j].first);
+                            CorrAMO.push_back((int)AMO.size());
+                            Original_weights.push_back(weights[TempScopeIdx[j]]);
+                        }
+                    } else if (TempAMO.size() == 1)
+                        ScopeIdx.pop_back();
+                } else if (readnbval == 1) {
+                    file >> skip;
+                    file >> skip;
+                }
+            }
+            sort(ScopeIdx.begin(), ScopeIdx.end(), greater<int>());
+            for (unsigned int j = 0; j < ScopeIdx.size(); ++j) {
+                VarVal.erase(VarVal.begin() + ScopeIdx[j]);
+                weights.erase(weights.begin() + ScopeIdx[j]);
+                VirtualVar.erase(VirtualVar.begin() + ScopeIdx[j]);
+                scopeVars.erase(scopeVars.begin() + ScopeIdx[j]);
+                CorrAMO.erase(CorrAMO.begin() + ScopeIdx[j]);
+                NotVarVal.erase(NotVarVal.begin() + ScopeIdx[j]);
+                Original_weights.erase(Original_weights.begin() + ScopeIdx[j]);
+            }
+            for (unsigned int i = 0; i < AMO.size(); ++i) {
+                for (unsigned int j = 0; j < AMO[i].size(); ++j) {
                     ok = false;
                     k = 0;
-                    k1 = 0;
-                    while (!ok && k < (int)scopeVars.size()) {
-                        if (readvar == RealScopeIdx[k]) {
+                    while (!ok) {
+                        if (VarAMO[i][j].first == scopeVars[k]) {
+                            AMO[i][j].first = k;
                             ok = true;
-                            TempVarAMO.push_back(make_pair(scopeVars[k1], readv1));
-                            TempScopeIdx.push_back(k1);
-                            ScopeIdx.push_back(k1);
-                            TempAMO.push_back(make_pair(k1, readv1));
                         }
                         k++;
-                        if (!ok && RealScopeIdx[k] != -1) {
-                            k1++;
-                        }
                     }
                 }
-                if (TempAMO.size() > 1) {
-                    for (unsigned int j = 0; j <= TempScopeIdx.size(); ++j) {
-                        w = 0;
-                        TempVarVal.push_back(j);
-                        for (unsigned int l = 0; l < TempScopeIdx.size(); ++l) {
-                            if (l == j)
-                                w += weights[TempScopeIdx[l]][TempVarAMO[l].second];
-                            else
-                                w += weights[TempScopeIdx[l]][1 - TempVarAMO[l].second];
-                        }
-                        TempWeights.push_back(w);
-                    }
-                    TempNotVarVal.push_back(TempVarVal.back());
-                    weights.push_back(TempWeights);
-                    VarVal.push_back(TempVarVal);
-                    NotVarVal.push_back(TempNotVarVal);
-                    VarAMO.push_back(TempVarAMO);
-                    AMO.push_back(TempAMO);
-                    VirtualVar.push_back((int)AMO.size());
-                    for (unsigned int j = 0; j < TempScopeIdx.size(); ++j) {
-                        scopeVars.push_back(TempVarAMO[j].first);
-                        CorrAMO.push_back((int)AMO.size());
-                        Original_weights.push_back(weights[TempScopeIdx[j]]);
-                    }
-                } else if (TempAMO.size() == 1)
-                    ScopeIdx.pop_back();
-            } else if (readnbval == 1) {
-                file >> skip;
-                file >> skip;
             }
+            TempVarAMO.clear();
+            TempScopeIdx.clear();
+            VarAMO.clear();
+            ScopeIdx.clear();
+            TempScopeIdx.clear();
         }
-        sort(ScopeIdx.begin(), ScopeIdx.end(), greater<int>());
-        for (unsigned int j = 0; j < ScopeIdx.size(); ++j) {
-            VarVal.erase(VarVal.begin() + ScopeIdx[j]);
-            weights.erase(weights.begin() + ScopeIdx[j]);
-            VirtualVar.erase(VirtualVar.begin() + ScopeIdx[j]);
-            scopeVars.erase(scopeVars.begin() + ScopeIdx[j]);
-            CorrAMO.erase(CorrAMO.begin() + ScopeIdx[j]);
-            NotVarVal.erase(NotVarVal.begin() + ScopeIdx[j]);
-            Original_weights.erase(Original_weights.begin() + ScopeIdx[j]);
+        for (unsigned int i = 0; i < weights.size(); ++i) {
+            MaxWeight += *max_element(weights[i].begin(), weights[i].end());
         }
-        for (unsigned int i = 0; i < AMO.size(); ++i) {
-            for (unsigned int j = 0; j < AMO[i].size(); ++j) {
-                ok = false;
-                k = 0;
-                while (!ok) {
-                    if (VarAMO[i][j].first == scopeVars[k]) {
-                        AMO[i][j].first = k;
-                        ok = true;
-                    }
-                    k++;
-                }
-            }
+    } else {
+        assert((int)scopeVars.size() == ar);
+        for (int i = 0; i < ar; i++) {
+            scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+            weights.push_back({ 1, 0 });
+            MaxWeight = ar;
+            VarVal.push_back({ !wcnf[i], wcnf[i] });
+            NotVarVal.push_back({ wcnf[i] });
+            CorrAMO.push_back(0);
+            VirtualVar.push_back(0);
         }
-        TempVarAMO.clear();
-        TempScopeIdx.clear();
-        VarAMO.clear();
-        ScopeIdx.clear();
-        TempScopeIdx.clear();
+        Original_weights = weights;
+        capacity = 1;
     }
-    for (unsigned int i = 0; i < weights.size(); ++i) {
-        MaxWeight += *max_element(weights[i].begin(), weights[i].end());
-    }
+
     AbstractNaryConstraint* cc = NULL;
-    // #ifdef UNITKNAPSACK2CLAUSE
-    //     if (isclause) {
-    //         assert(ar == (int)clausetuple.size());
-    //         if (ToulBar2::verbose >= 3)
-    //             cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
-    //         cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
-    //     } else {
-    // #endif
-    cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
-    // #ifdef UNITKNAPSACK2CLAUSE
-    //     }
-    // #endif
-    if (isDelayedNaryCtr)
+#ifdef UNITKNAPSACK2CLAUSE
+    vector<tValue> clausetuple(ar, 0);
+    bool isclause = 0;
+    if (isclause) {
+        assert(ar == (int)clausetuple.size());
+        if (ToulBar2::verbose >= 3)
+            cout << "Knapsack constraint of arity " << ar << " transformed into clause!" << endl;
+        cc = new WeightedClause(this, scopeVars.data(), ar, getUb(), clausetuple);
+    } else {
+#endif
+        assert((int)scopeVars.size() == ar);
+        assert(ar == (int)weights.size());
+        assert((int)VarVal.size() == ar);
+        assert((int)CorrAMO.size() == ar);
+        assert((int)NotVarVal.size() == ar);
+        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
+#ifdef UNITKNAPSACK2CLAUSE
+    }
+#endif
+    if (isDelayedNaryCtr) {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr;
+        if (!AMO.empty()) {
+            for (int i = 0; i < (int)AMO.size(); ++i) {
+                tctr = new TernaryConstraint(this);
+                elimTernConstrs.push_back(tctr);
+                bctr = new BinaryConstraint(this);
+                elimBinConstrs.push_back(bctr);
+            }
+        }
         delayedNaryCtr.push_back(cc->wcspIndex);
-    else {
+    } else {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac)
+            if (!ToulBar2::vac && !ToulBar2::vac_prev)
                 bctr = new BinaryConstraint(this);
             else
                 bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
+        }
+        if (!AMO.empty()) {
+            for (int i = 0; i < (int)AMO.size(); ++i) {
+                tctr = new TernaryConstraint(this);
+                elimTernConstrs.push_back(tctr);
+                bctr = new BinaryConstraint(this);
+                elimBinConstrs.push_back(bctr);
+            }
         }
         cc->propagate();
     }
@@ -3050,13 +3217,13 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
                 string params = to_string(-1);
                 for (int variable = 0; variable < arity; ++variable) {
                     if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
-                        params += " 1 " + to_string(value) + " -1";
+                        params += to_string(" 1 ") + to_string(value) + to_string(" -1");
                     } else {
-                        params += " 0";
+                        params += to_string(" 0");
                     }
                 }
                 istringstream file(params);
-                postKnapsackConstraint(scopeIndex, arity, file, false, true, false);
+                postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
             }
             return INT_MIN;
         } else {
@@ -3438,13 +3605,14 @@ void WCSP::sortConstraints()
         TernaryConstraint* tctr = new TernaryConstraint(this);
         elimTernConstrs.push_back(tctr);
         for (int j = 0; j < 3; j++) {
-            if (!ToulBar2::vac)
+            if (!ToulBar2::vac && !ToulBar2::vac_prev)
                 bctr = new BinaryConstraint(this);
             else
                 bctr = new VACBinaryConstraint(this);
             elimBinConstrs.push_back(bctr);
         }
     }
+
     if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
         shuffle(delayedNaryCtr.begin(), delayedNaryCtr.end(), myrandom_generator);
     } else {
@@ -3477,6 +3645,15 @@ void WCSP::sortConstraints()
         }
     }
 
+    if (ToulBar2::isZ) {
+        ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
+        ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+        // Temporally deactivate normal propagation and keep Node Consistency only (it allows better variable elimination with normalized conditional probabilty tables in the case of Bayesian networks)
+        ToulBar2::LcLevel_prev = ToulBar2::LcLevel;
+        ToulBar2::LcLevel = LC_NC;
+        ToulBar2::vac_prev = ToulBar2::vac;
+        ToulBar2::vac = 0;
+    }
     if (ToulBar2::Berge_Dec) {
         vector<int> revdac = getBergeDecElimOrder();
         setDACOrder(revdac);
@@ -3490,10 +3667,26 @@ void WCSP::sortConstraints()
             elimOrderFile2Vector(ToulBar2::varOrder, order);
         setDACOrder(order);
     }
+
     resetTightness();
     for (unsigned int i = 0; i < vars.size(); i++) {
         vars[i]->sortConstraints();
     }
+
+    vector<DLink<Constraint*>*> sorted;
+    for (KnapsackList::iterator iter = knapsackList.begin(); iter != knapsackList.end(); ++iter) {
+        sorted.push_back((DLink<Constraint*>*) iter.getElt());
+    }
+    if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
+        shuffle(sorted.begin(), sorted.end(), myrandom_generator);
+    } else {
+        stable_sort(sorted.begin(), sorted.end(), Constraint::cmpConstraintLinkPointer);
+    }
+    for (unsigned int i = 0; i < sorted.size(); i++) {
+        knapsackList.erase((DLink<KnapsackConstraint*>*) sorted[i], true);
+        knapsackList.push_back((DLink<KnapsackConstraint*>*)sorted[i], true);
+    }
+
     AC.sort(false); // sort in decreasing order to get the smallest DAC index first when doing pop() on this queue
     DAC.sort(true); // sort in increasing order to get the largest DAC index first when doing pop() on this queue
     EAC1.sort(true); // sort in increasing order to get the smallest DAC index first when doing pop() on the EAC2 queue
@@ -3604,7 +3797,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint* ctr = constrs[i];
-        if (ctr->connected() && !ctr->isSep() && ctr->extension() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary)) {
+        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= MAX_NB_TUPLES) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3635,7 +3828,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(ctr->wcspIndex), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("t" + to_string(tuples[val]));
+                theVar->addValueName(to_string("t") + to_string(tuples[val]));
             }
             listOfDualVars.push_back(theVar);
             listOfDualDomains.push_back(tuples);
@@ -3677,7 +3870,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
             EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
             for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName("t" + to_string(tuples[val]));
+                theVar->addValueName(to_string("t") + to_string(tuples[val]));
             }
             listOfDualVars.push_back(theVar);
             listOfDualDomains.push_back(tuples);
@@ -3704,7 +3897,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             EnumeratedVariable* neighbor = static_cast<EnumeratedVariable*>(getVar(var.first));
             for (ConstraintList::iterator iter = neighbor->getConstrs()->begin(); iter != neighbor->getConstrs()->end(); ++iter) {
                 Constraint* ctr = (*iter).constr;
-                if (!ctr->isSep() && ctr->extension() && ctr->arity() >= 2 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
+                if (!ctr->isSep() && ctr->arity() >= 2 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
                     neighborCtrs.insert(ctr);
                 }
             }
@@ -3779,7 +3972,9 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             listOfDualCosts[j][valj] += ctrextend->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
         }
         //        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
-        ctrextend->clearFiniteCosts();
+        if (ctrextend->extension() && ctrextend->arity() <= 3) { //TODO: clear only arity 2?
+            ctrextend->clearFiniteCosts();
+        }
         ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
         //        ctrincluding->propagate();
     }
@@ -3904,8 +4099,10 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                 }
             }
             int ctri = postBinaryConstraint(listOfDualVars[i]->wcspIndex, listOfDualVars[j]->wcspIndex, costs);
-            channelingPWC.push_back((BinaryConstraint*)getCtr(ctri));
-            nbintersections++;
+            if (ctri != INT_MAX) {
+                channelingPWC.push_back((BinaryConstraint*)getCtr(ctri));
+                nbintersections++;
+            }
         }
     }
 
@@ -3965,7 +4162,7 @@ void WCSP::preprocessing()
     if (ToulBar2::elimDegree_preprocessing <= -3) {
         int deg = medianDegree();
         Double domsize = medianDomainSize();
-        Double size = (Double)numberOfUnassignedVariables() * (sizeof(tValue) * deg + sizeof(Cost)) * Pow(domsize, deg + 1);
+        Double size = (Double)numberOfUnassignedVariables() * (sizeof(tValue) * deg + sizeof(Cost)) * powl(domsize, deg + 1);
         if (ToulBar2::debug >= 2)
             cout << "MAX ESTIMATED ELIM SIZE: " << size << endl;
         assert(ToulBar2::elimSpaceMaxMB > 0);
@@ -3993,6 +4190,18 @@ void WCSP::preprocessing()
         } else if (ToulBar2::elimDegree >= 0) {
             ToulBar2::elimDegree_ = ToulBar2::elimDegree;
         }
+    }
+    if (ToulBar2::isZ) {
+        // Reactivate normal propagation
+        ToulBar2::LcLevel = ToulBar2::LcLevel_prev;
+        ToulBar2::vac = ToulBar2::vac_prev;
+        vector<int> revDACorder(numberOfVariables(), 0);
+        for (unsigned int i = 0; i < numberOfVariables(); ++i) {
+            assert(numberOfVariables() - getDACOrder(i) - 1 >= 0);
+            assert(numberOfVariables() - getDACOrder(i) - 1 < numberOfVariables());
+            revDACorder[numberOfVariables() - getDACOrder(i) - 1] = i;
+        }
+        setDACOrder(revDACorder); // repropagate everything
     }
 
     int posConstrs = 0;
@@ -4060,7 +4269,7 @@ void WCSP::preprocessing()
             else
                 cout << "Reverse DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
         }
-    } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
+    } while (getLb() > previouslb && (Double)100. * (getLb() - previouslb) / getLb() > (Double)0.5);
 
     if (ToulBar2::trwsAccuracy >= 0)
         propagateTRWS();
@@ -4137,7 +4346,7 @@ void WCSP::preprocessing()
                 else
                     cout << "PIC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%, " << numberOfConstraints() << " cost functions)" << endl;
             }
-        } while (getLb() > previouslb && 100. * (getLb() - previouslb) / getLb() > 0.5);
+        } while (getLb() > previouslb && (Double)100. * (getLb() - previouslb) / getLb() > (Double)0.5);
     } else if (ToulBar2::preprocessNary > 0) {
         processTernary();
         propagate();
@@ -4212,9 +4421,9 @@ void WCSP::preprocessing()
                 propagate();
             }
         }
-        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > numberOfConnectedBinaryConstraints()) {
+        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin)?numberOfConnectedKnapsackConstraints():0) + numberOfConnectedBinaryConstraints()) {
             if (ToulBar2::verbose) {
-                cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
+                cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
             }
             ToulBar2::FullEAC = false;
         }
@@ -4510,10 +4719,19 @@ unsigned int WCSP::numberOfConnectedBinaryConstraints() const
 {
     unsigned int res = 0;
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected() && constrs[i]->arity() == 2 && !constrs[i]->isSep())
+        if (constrs[i]->connected() && constrs[i]->isBinary() && !constrs[i]->isSep())
             res++;
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep())
+            res++;
+    return res;
+}
+
+unsigned int WCSP::numberOfConnectedKnapsackConstraints() const
+{
+    unsigned int res = 0;
+    for (unsigned int i = 0; i < constrs.size(); i++)
+        if (constrs[i]->connected() && constrs[i]->isKnapsack())
             res++;
     return res;
 }
@@ -4606,7 +4824,7 @@ void WCSP::print(ostream& os)
     //    os << "Objective: [" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDLb() << "," << getDUb() << "]" << std::setprecision(DECIMAL_POINT) << endl;
     if (getIndex() > 0)
         os << "WCSP: " << getIndex() << " ";
-    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb() ? " - " : "") << (getNegativeLb() ? to_string(getNegativeLb()) : "") << endl;
+    os << "Objective: [" << getLb() << "," << getUb() << "]" << (getNegativeLb() ? " - " : "") << (getNegativeLb() ? to_string(getNegativeLb()) : to_string("")) << endl;
     os << "Variables:" << endl;
     for (unsigned int i = 0; i < vars.size(); i++)
         os << *vars[i] << endl;
@@ -4726,7 +4944,7 @@ void WCSP::dump(ostream& os, bool original)
     }
     if (getLb() > MIN_COST || getNegativeLb() != MIN_COST) {
         if (getLb() < getNegativeLb()) {
-            cerr << "Warning! Negative problem lower bound cannot be represented in wcsp format! (fixed to zero)" << endl;
+            cerr << "Warning! Negative problem lower bound cannot be represented in wcsp format! (fixed to zero instead of " << getLb() - getNegativeLb() << ")" << endl;
         }
         os << "0 " << max(MIN_COST, getLb() - getNegativeLb()) << " 0" << endl;
     }
@@ -4825,8 +5043,8 @@ void WCSP::dump_CFN(ostream& os, bool original)
     // dump filename in ToulBar2::problemsaved_filename
 
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (vars[i]->getInf() < 0 || !vars[i]->enumerated()) {
-            cerr << "Error: cannot save domain of variable " << vars[i]->getName() << " (negative values or not enumerated)" << endl;
+        if (!vars[i]->enumerated()) {
+            cerr << "Error: cannot save domain of non-enumerated variable " << vars[i]->getName() << endl;
             throw InternalError();
         }
     }
@@ -4857,13 +5075,13 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (s->getName().rfind(HIDDEN_VAR_TAG_HVE_PRE, 0) == 0)
             continue;
         if (original) {
-            os << "\"" << s->getName() << "\":";
+            os << "\"" << name2cfn(s->getName()) << "\":";
             os << "[";
             printed = false;
             for (size_t p = 0; p < s->getDomainInitSize(); p++) {
                 if (printed)
                     os << ",";
-                os << "\"" << ((s->isValueNames()) ? s->getValueName(p) : ("v" + std::to_string(s->toValue(p)))) << "\"";
+                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(p)) : (to_string("v") + to_string(s->toValue(p)))) << "\"";
                 printed = true;
             }
             os << "]";
@@ -4871,7 +5089,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
                 os << ",";
             os << "\n";
         } else if (s->unassigned()) {
-            os << "\"" << s->getName() << "\":";
+            os << "\"" << name2cfn(s->getName()) << "\":";
             int domsize = s->getDomainSize();
             Value* values = new Value[domsize];
             s->getDomain(values);
@@ -4880,7 +5098,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             for (int p = 0; p < domsize; p++) {
                 if (printed)
                     os << ",";
-                os << "\"" << ((s->isValueNames()) ? s->getValueName(s->toIndex(values[p])) : ("v" + std::to_string(values[p]))) << "\"";
+                os << "\"" << ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(values[p]))) : (to_string("v") + to_string(values[p]))) << "\"";
                 printed = true;
             }
             os << "]";
@@ -4890,7 +5108,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             os << "\n";
         } else {
             assert(s->assigned());
-            cout << " " << s->getName() << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? "*" : ((s->isValueNames()) ? s->getValueName(s->toIndex(s->getValue())) : ("v" + std::to_string(s->getValue()))));
+            cout << " " << name2cfn(s->getName()) << "=" << ((elimvars.find(s->wcspIndex) != elimvars.end()) ? to_string("*") : ((s->isValueNames()) ? name2cfn(s->getValueName(s->toIndex(s->getValue()))) : (to_string("v") + to_string(s->getValue()))));
         }
     }
     if (!original && nvars != vars.size()) {
@@ -4914,7 +5132,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
             ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
             getEnumDomainAndCost(i, domcost);
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
-            os << vars[i]->getName() << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
+            os << name2cfn(vars[i]->getName()) << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
             os << "\"costs\":[";
             Cost failed = MIN_COST;
             for (int v = 0; v < size; v++) {
@@ -5149,7 +5367,7 @@ void WCSP::propagateAC()
     if (Store::getDepth() == 0)
         AC.sort(false);
     while (!AC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? AC.pop_min() : AC.pop());
         if (x->unassigned())
@@ -5166,7 +5384,7 @@ void WCSP::propagateDAC()
     if (Store::getDepth() == 0)
         DAC.sort(true);
     while (!DAC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? DAC.pop_max() : DAC.pop());
         if (x->unassigned())
@@ -5337,7 +5555,7 @@ void WCSP::propagateTRWS()
                                 tmpM[k] = numeric_limits<Cost>::max();
                                 for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
                                     unsigned int j = s->toIndex(*sIter);
-                                    tmpM[k] = min<Cost>(tmpM[k], static_cast<Cost>(trunc(s->getTRWSGamma() * thetaHat[j])) - binctr->trwsM[j] + getCost(j, k));
+                                    tmpM[k] = min<Cost>(tmpM[k], (Cost)(truncl(s->getTRWSGamma() * thetaHat[j])) - binctr->trwsM[j] + getCost(j, k));
                                 }
                                 delta = min<Cost>(delta, tmpM[k]);
                             }
@@ -5443,7 +5661,7 @@ void WCSP::propagateTRWS()
                 Cost c = s->normalizeTRWS();
                 delta += c;
                 for (EnumeratedVariable::iterator sIter = s->begin(); sIter != s->end(); ++sIter) {
-                    Cost availableCost = static_cast<Cost>(trunc(s->getTRWSGamma() * s->getCost(*sIter)));
+                    Cost availableCost = (Cost)(truncl(s->getTRWSGamma() * s->getCost(*sIter)));
                     for (ConstraintList::iterator iter = s->getConstrs()->begin(); iter != s->getConstrs()->end(); ++iter) {
                         Constraint* constraint = (*iter).constr;
                         if (constraint->isBinary()) {
@@ -5514,7 +5732,7 @@ void WCSP::propagateEAC()
     if (Store::getDepth() == 0)
         EAC2.sort(false);
     while (!EAC2.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)((ToulBar2::QueueComplexity) ? EAC2.pop_min() : EAC2.pop());
         if (x->unassigned())
@@ -5538,7 +5756,7 @@ void WCSP::propagateDEE()
         cout << "DEEQueue size: " << DEE.getSize() << endl;
     assert(NC.empty());
     while (!DEE.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)DEE.pop();
         if (x->unassigned() && !((ToulBar2::divNbSol > 1) && Store::getDepth() == 0)) {
@@ -5578,7 +5796,7 @@ void WCSP::propagateFEAC()
     if (ToulBar2::verbose >= 2)
         cout << "FEACQueue size: " << FEAC.getSize() << endl;
     while (!FEAC.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)FEAC.pop();
         if (x->unassigned())
@@ -5608,7 +5826,7 @@ void WCSP::propagateFEAC()
 void WCSP::eliminate()
 {
     while (!Eliminate.empty()) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         EnumeratedVariable* x = (EnumeratedVariable*)Eliminate.pop();
         if (x->unassigned()) {
@@ -5659,12 +5877,12 @@ bool WCSP::propagated()
 {
     return (!objectiveChanged && NC.empty() && IncDec.empty() && (!(ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) || AC.empty())
         && (ToulBar2::LcLevel < LC_DAC || DAC.empty()) && (ToulBar2::LcLevel != LC_EDAC || CSP(getLb(), getUb()) || EAC1.empty())
-        && Eliminate.empty() && (!ToulBar2::vac || CSP(getLb(), getUb()) || vac->isVAC()));
+        && Eliminate.empty() && (!ToulBar2::vac || (CSP(getLb(), getUb()) && knapsackList.empty()) || vac->isVAC()));
 }
 
 void WCSP::propagate(bool fromscratch)
 {
-    if (ToulBar2::interrupted)
+    if (ToulBar2::interrupted && !ToulBar2::isZ)
         throw TimeOut();
     if (!isactivatePropagate()) {
         if (ToulBar2::verbose >= 3)
@@ -5736,7 +5954,7 @@ void WCSP::propagate(bool fromscratch)
                             oldLb = getLb();
                             cont = false;
                             for (vector<GlobalConstraint*>::iterator it = globalconstrs.begin(); it != globalconstrs.end(); it++) {
-                                if (ToulBar2::interrupted)
+                                if (ToulBar2::interrupted && !ToulBar2::isZ)
                                     throw TimeOut();
                                 (*(it))->propagate();
                                 if (ToulBar2::LcLevel == LC_SNIC)
@@ -5769,16 +5987,16 @@ void WCSP::propagate(bool fromscratch)
 
                 if (ToulBar2::LcLevel < LC_EDAC || CSP(getLb(), getUb()))
                     EAC1.clear();
-                if (ToulBar2::vac && (ToulBar2::trwsAccuracy < 0) && !CSP(getLb(), getUb())) {
+                if (ToulBar2::vac && (ToulBar2::trwsAccuracy < 0) && (!CSP(getLb(), getUb()) || !knapsackList.empty())) {
                     vac->propagate(); // VAC requires soft AC
                 }
-            } while (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC());
+            } while (ToulBar2::vac && (!CSP(getLb(), getUb()) || !knapsackList.empty()) && !vac->isVAC());
         } while (objectiveChanged || !NC.empty() || !IncDec.empty()
             || ((ToulBar2::LcLevel == LC_AC || ToulBar2::LcLevel >= LC_FDAC) && !AC.empty())
             || (ToulBar2::LcLevel >= LC_DAC && !DAC.empty())
             || (ToulBar2::LcLevel == LC_EDAC && !CSP(getLb(), getUb()) && !EAC1.empty())
             || !Eliminate.empty()
-            || (ToulBar2::vac && !CSP(getLb(), getUb()) && !vac->isVAC()));
+            || (ToulBar2::vac && (!CSP(getLb(), getUb()) || !knapsackList.empty()) && !vac->isVAC()));
         // TO BE DONE AFTER NORMAL PROPAGATION
         if (td)
             propagateSeparator();
@@ -5894,7 +6112,7 @@ void WCSP::restoreSolution(Cluster* c)
 void WCSP::initElimConstr()
 {
     BinaryConstraint* xy = NULL;
-    if (!ToulBar2::vac)
+    if (!ToulBar2::vac && !ToulBar2::vac_prev)
         xy = new BinaryConstraint(this);
     else
         xy = new VACBinaryConstraint(this);
@@ -5926,7 +6144,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
     assert(newIndex < elimBinConstrs.size());
     BinaryConstraint* ctr = (BinaryConstraint*)elimBinConstrs[newIndex];
     ctr->fillElimConstr(x, y, from1, from2);
-    if (ToulBar2::vac)
+    if (ToulBar2::vac || ToulBar2::vac_prev)
         ((VACBinaryConstraint*)ctr)->VACfillElimConstr();
     ctr->isDuplicate_ = false;
     ctr->cluster = -1;
@@ -5936,7 +6154,7 @@ BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariabl
 // warning! Do not propagate this new binary cost function
 BinaryConstraint* WCSP::newBinaryConstr(EnumeratedVariable* x, EnumeratedVariable* y, vector<Cost>& costs)
 {
-    if (!ToulBar2::vac) {
+    if (!ToulBar2::vac && !ToulBar2::vac_prev) {
         return new BinaryConstraint(this, x, y, costs);
     } else {
         return new VACBinaryConstraint(this, x, y, costs);
@@ -5985,7 +6203,7 @@ TernaryConstraint* WCSP::newTernaryConstr(EnumeratedVariable* x, EnumeratedVaria
     BinaryConstraint* xz = x->getConstr(z);
     BinaryConstraint* yz = y->getConstr(z);
 
-    if (!ToulBar2::vac) {
+    if (!ToulBar2::vac && !ToulBar2::vac_prev) {
         if (!xy) {
             xy = new BinaryConstraint(this, x, y, zerocostsxy);
             xy->deconnect(true);
@@ -6198,15 +6416,23 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
             }
         ctrIndex = postBinaryConstraint(x->wcspIndex, y->wcspIndex, costs);
     }
-    assert(ctrIndex > -INT_MAX);
     delete[] scopeU;
     delete[] scopeUi;
     delete[] scopeI;
-    ctr = getCtr(ctrIndex);
-    ctr->propagate();
-    if (ToulBar2::verbose >= 1)
+    if (ctrIndex >= 0 && ctrIndex != INT_MAX) {
+        ctr = getCtr(ctrIndex);
+        ctr->propagate();
+    }
+    if (ToulBar2::verbose >= 1) {
         cout << endl
-             << "Has result: " << *ctr << endl;
+             << "Has result: ";
+        if (ctr) {
+            cout << *ctr;
+        } else {
+            cout << "Null";
+        }
+        cout << endl;
+    }
     return ctr;
 }
 
@@ -6238,11 +6464,24 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             ctr_inout->reconnect();
         }
         assert(ctr_inout->isNary());
+        Cost prevNegCost = getNegativeLb();
         ((NaryConstraint*)ctr_inout)->project(var);
-        ctr_inout->propagate();
-        if (ToulBar2::verbose >= 1)
-            cout << endl
-                 << "   has result*: " << *ctr_inout << endl;
+        if (ctr_inout->universal((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST)) {
+            if (ToulBar2::isZ) {
+                Cost afterNegCost = getNegativeLb();
+                if (abs( afterNegCost - prevNegCost ) <= var->getDomainInitSize()) {
+                    decreaseLb( prevNegCost - afterNegCost );
+                    assert(getNegativeLb() == prevNegCost);
+                }
+            }
+            ctr_inout->deconnect();
+            ctr_inout = NULL;
+        } else {
+            ctr_inout->propagate();
+            if (ToulBar2::verbose >= 1)
+                cout << endl
+                << "   has result*: " << *ctr_inout << endl;
+        }
         return;
     }
     ctr_inout->deconnect();
@@ -6313,10 +6552,14 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
                     }
                 }
             }
-            decreaseLb(negcost);
+            if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
+                decreaseLb(negcost);
         }
-        ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
-        ctr = getCtr(ctrIndex);
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        if (!zeros) {
+            ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
+            ctr = getCtr(ctrIndex);
+        }
     } break;
     case 2: {
         TernaryConstraint* tctr = (TernaryConstraint*)ctr_inout;
@@ -6345,10 +6588,14 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
                     costs[vxi * evars[1]->getDomainInitSize() + vyi] -= negcost;
                 }
             }
-            decreaseLb(negcost);
+            if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
+                decreaseLb(negcost);
         }
-        ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
-        ctr = getCtr(ctrIndex);
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        if (!zeros) {
+            ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
+            ctr = getCtr(ctrIndex);
+        }
     } break;
     case 1: {
         BinaryConstraint* bctr = ((BinaryConstraint*)ctr_inout);
@@ -6369,14 +6616,22 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             costs.push_back(mincost);
         }
         assert(negcost <= 0);
-        for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
-            vxi = evars[0]->toIndex(*itv0);
-            if (costs[vxi] - negcost > MIN_COST)
-                evars[0]->project(*itv0, costs[vxi] - negcost);
+        if (negcost < 0) {
+            for (vxi = 0; vxi < evars[0]->getDomainInitSize(); vxi++) {
+                costs[vxi] -= negcost;
+            }
+            if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
+                decreaseLb(negcost);
         }
-        evars[0]->findSupport();
-        if (negcost < 0)
-            decreaseLb(negcost);
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        if (!zeros) {
+            for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
+                vxi = evars[0]->toIndex(*itv0);
+                if (costs[vxi] > MIN_COST)
+                    evars[0]->project(*itv0, costs[vxi]);
+            }
+            evars[0]->findSupport();
+        }
     } break;
     default: {
         cerr << "Bad resulting cost function arity during generic variable elimination!";
@@ -6778,6 +7033,9 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
                 order.push_back(i);
             sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
             break;
+        case ELIM_DAG_ORDER:
+            DAGOrdering(order);
+            break;
         default: {
             cerr << "Variable elimination order " << reinterpret_cast<uintptr_t>(elimVarOrder) << " not implemented yet!" << endl;
             throw BadConfiguration();
@@ -7007,7 +7265,7 @@ Cost WCSP::Prob2Cost(TProb p) const
         cerr << "Overflow when converting probability to cost." << endl;
         throw InternalError();
     }
-    Cost c = (Cost)res;
+    Cost c = (Cost)Round(res);
     if (c > MAX_COST / 2)
         return (MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST;
     return c;
@@ -7023,7 +7281,7 @@ Cost WCSP::LogProb2Cost(TLogProb p) const
         //            cout << "Warning: converting energy " << -p << " to Top\n";
         //        }
     } else
-        c = (Cost)res;
+        c = (Cost)Round(res);
     return c;
 }
 

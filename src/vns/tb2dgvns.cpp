@@ -105,8 +105,13 @@ bool VNSSolver::solve(bool first)
         Long restart = 1;
         int lds = ToulBar2::vnsLDSmin;
         while (!stop && !complete && bestUb > ToulBar2::vnsOptimum) {
-            if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1 && ToulBar2::lds)
-                cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+            if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1) {
+                if (ToulBar2::lds) {
+                    cout << "****** Restart " << nbRestart << " with " << lds << " discrepancies and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                } else if (ToulBar2::backtrackLimit < LONGLONG_MAX) {
+                    cout << "****** Restart " << nbRestart << " with UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
+                }
+            }
             Long rank = 1;
             int k = ToulBar2::vnsKmin;
             while (!complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
@@ -124,7 +129,7 @@ bool VNSSolver::solve(bool first)
                 values.reserve(unassignedVars->getSize());
                 for (BTList<Value>::iterator iter = unassignedVars->begin(); iter != unassignedVars->end(); ++iter) {
                     int v = *iter;
-                    if (neighborhood.find(v) == neighborhood.end()) {
+                    if (wcsp->canbe(v, bestSolution[v]) && neighborhood.find(v) == neighborhood.end()) {
                         variables.push_back(v);
                         values.push_back(bestSolution[v]);
                     }
@@ -180,6 +185,25 @@ bool VNSSolver::solve(bool first)
                     }
                     if (ToulBar2::verbose >= 1)
                         cout << "VNS: new solution with cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
+                    try {
+                        wcsp->updateUb(bestUb);
+                        wcsp->enforceUb();
+                        wcsp->propagate();
+                        if (unassignedVars->getSize() == 0) {
+                            lastUb = MAX_COST;
+                            lastSolution.clear();
+                            ToulBar2::lds = 0;
+                            newSolution();
+                            if (lastUb < MAX_COST)
+                                wcsp->setSolution(lastUb, &lastSolution);
+                            endSolve(lastUb < MAX_COST, lastUb, true);
+                            return (lastUb < MAX_COST);
+                        }
+                    } catch (const Contradiction&) {
+                        wcsp->whenContradiction();
+                        endSolve(bestUb < MAX_COST, bestUb, true);
+                        return (bestUb < MAX_COST);
+                    }
                 }
             }
             if (!complete && bestUb > ToulBar2::vnsOptimum) {
@@ -203,8 +227,9 @@ bool VNSSolver::solve(bool first)
                         }
                         lds = min(lds, ToulBar2::vnsLDSmax);
                     }
-                } else
+                } else if (nbRestart > ToulBar2::restart || ToulBar2::restart == LONGLONG_MAX) {
                     stop = true;
+                }
             }
         }
     } catch (const SolverOut&) {
@@ -222,6 +247,7 @@ bool VNSSolver::solve(bool first)
         ToulBar2::lds = 0;
         ToulBar2::restart = 1; // randomize variable heuristic ordering
         ToulBar2::limited = false;
+        nbBacktracksLimit = LONGLONG_MAX;
         Store::store();
         try {
             try {
@@ -235,7 +261,13 @@ bool VNSSolver::solve(bool first)
                 wcsp->enforceUb();
                 wcsp->propagate();
                 ToulBar2::vac = vac;
-                hybridSolve();
+                wcsp->resetWeightedDegree();
+                for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                    heuristics[i] = wcsp->getDegree(i);
+                }
+                initialDepth = Store::getDepth();
+                pair<Cost, Cost> res = hybridSolve();
+                globalLowerBound = res.first;
             } catch (const Contradiction&) {
                 wcsp->whenContradiction();
             }

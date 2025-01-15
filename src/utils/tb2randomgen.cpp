@@ -60,13 +60,12 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
                     if (prevweight == weight)
                         weight++;
                     prevweight = weight;
-                    kparguments.append(" " + to_string(weight));
+                    kparguments.append(to_string(" ") + to_string(weight));
                     countone++;
                 }
             }
-            arguments.append(" " + to_string(countone) + kparguments);
+            arguments.append(to_string(" ") + to_string(countone) + kparguments);
         }
-        cout << arguments << endl;
         if (globalname == "knapsackc") {
             vector<int> AMO1;
             vector<int> AMO2;
@@ -88,34 +87,33 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             else
                 arguments.append(" 1");
             if (AMO1.size() > 1) {
-                kparguments = " " + to_string(AMO1.size());
+                kparguments = to_string(" ") + to_string(AMO1.size());
                 for (unsigned int j = 0; j < AMO1.size(); ++j) {
-                    kparguments.append(" " + to_string(AMO1[j]) + " 1");
+                    kparguments.append(to_string(" ") + to_string(AMO1[j]) + to_string(" 1"));
                 }
             }
             arguments.append(kparguments);
             if (AMO2.size() > 1) {
-                kparguments = " " + to_string(AMO2.size());
+                kparguments = to_string(" ") + to_string(AMO2.size());
                 for (unsigned int j = 0; j < AMO2.size(); ++j) {
-                    kparguments.append(" " + to_string(AMO2[j]) + " 1");
+                    kparguments.append(to_string(" ") + to_string(AMO2[j]) + to_string(" 1"));
                 }
             }
             arguments.append(kparguments);
 
             if (AMO3.size() > 1) {
-                kparguments = " " + to_string(AMO3.size());
+                kparguments = to_string(" ") + to_string(AMO3.size());
                 for (unsigned int j = 0; j < AMO3.size(); ++j) {
-                    kparguments.append(" " + to_string(AMO3[j]) + " 1");
+                    kparguments.append(to_string(" ") + to_string(AMO3[j]) + to_string(" 1"));
                 }
             }
             arguments.append(kparguments);
         }
         istringstream file(arguments);
-        cout << "arguments" << arguments << endl;
         if (globalname == "knapsackc")
-            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, true);
+            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, true, {});
         else
-            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, false);
+            wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, true, false, {});
     } else if (globalname == "knapsack") {
         string arguments;
         Long capacity = (myrandln() % (Long)150);
@@ -133,7 +131,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             }
         }
         istringstream file(arguments);
-        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false);
+        wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false, {});
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
@@ -415,10 +413,9 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
     }
 
     for (i = 0; i < n; i++) {
-        string varname = "X" + to_string(i);
-        wcsp.makeEnumeratedVariable(varname, 0, m - 1);
+        wcsp.makeEnumeratedVariable(to_string("X") + to_string(i), 0, m - 1);
         for (int j = 0; j < m; j++) {
-            wcsp.addValueName(i, "v" + to_string(j));
+            wcsp.addValueName(i, to_string("v") + to_string(j));
         }
     }
 
@@ -508,17 +505,17 @@ void naryRandom::Input(int in_n, int in_m, vector<int>& p, bool forceSubModular,
         string parameters = to_string(-p[3] + UNIT_COST);
         for (i = 0; i < n; i++) {
             scope.push_back(i);
-            parameters += " " + to_string(-ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]));
+            parameters += to_string(" ") + to_string(-ToulBar2::costMultiplier * randomCost(MIN_COST, p[2]));
         }
         wcsp.postKnapsackConstraint(scope, parameters, false, false, false);
     } else if (globalname == "bivertexcover") {
         vector<int> scope;
         WCSP* wcsp2 = (WCSP*)WeightedCSP::makeWeightedCSP(p[3]);
         for (i = 0; i < n; i++) {
-            string varname = "X" + to_string(i);
+            string varname = to_string("X") + to_string(i);
             wcsp2->makeEnumeratedVariable(varname, 0, m - 1);
             for (int j = 0; j < m; j++) {
-                wcsp2->addValueName(i, "v" + to_string(j));
+                wcsp2->addValueName(i, to_string("v") + to_string(j));
             }
         }
         for (i = 0; i < n; i++) {

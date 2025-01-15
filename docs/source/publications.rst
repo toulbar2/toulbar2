@@ -147,11 +147,24 @@ What are the algorithms inside toulbar2 ?
   A Beldjilali, P Montalbano, D Allouche, G Katsirelos, and S de Givry,
   In Proc. of CP-22, volume 235, pages 7:1-7:10, Haifa, Israel, 2022.
   
+- **Low rank block coordinate descent (LR-BCD)**
+
+  `Efficient Low Rank Convex Bounds for Pairwise Discrete Graphical Models <https://proceedings.mlr.press/v162/durante22a/durante22a.pdf>`_,
+  V Durante, G Katsirelos, and T Schiex,
+  In Proc. of the 39th International Conference on Machine Learning (ICML), PMLR 162:5726-5741, 2022. 
+ 
 - **Virtual Pairwise Consistency (pwc, hve)**
 
   `Virtual Pairwise Consistency in Cost Function Networks <https://miat.inrae.fr/degivry/Montalbano23a.pdf>`_,
-  P Montalbano, D Allouche, S de Givry, G Katsirelos, and Tomas Werner
+  P Montalbano, D Allouche, S de Givry, G Katsirelos, and T Werner
   In Proc. of CP-AI-OR'2023, Nice, France, 2023.
+ 
+- **Bi-Objective Combinatorial Optimization (global bounding constraint)**
+
+  `Bi-Objective Discrete Graphical Model Optimization <https://miat.inrae.fr/degivry/Buchet24a.pdf>`_,
+  S Buchet, D Allouche, S de Givry, and T Schiex
+  In Proc. of CP-AI-OR'2024, Uppsala, Sweden, 2024.
+  
    
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------
@@ -215,6 +228,10 @@ toulbar2 for Combinatorial Optimization in Life Sciences
   Bioinformatics, 29(17):2129-2136, 2013.
 
 - **Genetics**
+
+  `The Genetic Architecture of Recombination Rates is Polygenic and Differs Between the Sexes in Wild House Sparrows (Passer domesticus) <https://doi.org/10.1093/molbev/msae179>`_,
+  McAuley JB, Servin B, Burnett HA, Brekke C, Peters L, Hagen IJ, Niskanen AK, Ringsby TH, Husby A, Jensen H, Johnston SE,
+  Molecular Biology and Evolution, Volume 41, Issue 9, September 2024, msae179.
 
   `Optimal haplotype reconstruction in half-sib families <http://miat.inrae.fr/degivry/Favier10a.pdf>`_,
   Aurélie Favier, Jean-Michel Elsen, Simon de Givry, and Andrès Legarra,

@@ -11,7 +11,7 @@ tctr=0
 nary=1
 tight=80
 n=5
-d=2
+d=3
 K=1
 
 while (( $n < $nend )) ; do
@@ -22,15 +22,16 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="knapsack-$n-$d-$tight-$bctr-$tctr-0-$nary-$seed"
+    randomfile="knapsack-$n-$d-$tight-$bctr-$tctr-0-$nary"
 #    echo $randomfile
-    ./toulbar2 -random=$randomfile -C=$K -nopre -k=0 -ub=1000000 -z=1 > /dev/null
+    ./toulbar2 -random=$randomfile -seed=$seed -C=$K -nopre -k=0 -ub=1000000 -z=1 > /dev/null
     python2 ./misc/script/wcsp2lp-support.py problem.wcsp problem.lp > /dev/null
     ./toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /No solution/{opt=-2} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
-    ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$4;} END{printf("%d",opt);}' > toulbar2_verif
-    ub1b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`	
     if [[ $ub1 -gt -2 ]] ; then
+    ub=`expr $ub1 + 2`
+    ./toulbar2 problem.wcsp "${@:1}" -ub=$ub -w | awk 'BEGIN{opt=-1;} /No solution/{opt=-2} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     if [[ $ub1 -lt 0 ]] ; then
       echo "error $nerr found negative toulbar2 optimum! $ub1"
       mv problem.wcsp error$nerr.wcsp
@@ -38,6 +39,8 @@ while (( $n < $nend )) ; do
       seed=`expr $seed + 1`
 	  continue
     fi
+    ./toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$4;} END{printf("%d",opt);}' > toulbar2_verif
+    ub1b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`	
     if [[ $ub1b -lt 0 ]] ; then
       echo "error $nerr found negative certificate upperbound! $ub1b"
       mv problem.wcsp error$nerr.wcsp

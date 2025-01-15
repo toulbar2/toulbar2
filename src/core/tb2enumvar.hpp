@@ -52,6 +52,13 @@ public:
         else
             return None;
     }
+    string getValueNameOrGenerate(int index) const
+    {
+        if (isValueNames())
+            return valueNames[index];
+        else
+            return to_string("v") + to_string(toValue((unsigned int)index));
+    }
     unsigned int toIndex(const string& vname)
     {
         vector<string>::iterator iter = find_if(valueNames.begin(), valueNames.end(), [&vname](const string& val) { return (val == vname); });

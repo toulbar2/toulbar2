@@ -24,7 +24,6 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     WCSP* negproblem; // encapsulated slave problem in negative form (should be equivalent to -problem)
     WCSP* original_problem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
     WCSP* original_negproblem; // pointer to the wcsp given as input, necessary to compute the cost of a solution
-    StoreInt nonassigned; // number of non-assigned variables during search, must be backtrackable!
     vector<int> varIndexes; // copy of scope using integer identifiers inside slave problem (should be equal to [0, 1, 2, ..., arity-1])
     vector<Value> newValues; // used to convert Tuples into variable assignments
     vector<Long> conflictWeights; // used by weighted degree heuristics
@@ -101,7 +100,6 @@ public:
         , negproblem(negproblem_in)
         , original_problem(problem_in)
         , original_negproblem(negproblem_in)
-        , nonassigned(arity_in)
     {
         assert(problem);
         assert(!problem || arity_ == (int)problem->numberOfVariables());
@@ -158,9 +156,9 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     thescope.push_back(scope[i]->wcspIndex);
                     vector<pair<Value, Cost>> vc = problem->getEnumDomainAndCost(i);
-                    params += " " + to_string(vc.size());
+                    params += to_string(" ") + to_string(vc.size());
                     for (unsigned int j = 0; j < vc.size(); j++) {
-                        params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
+                        params += to_string(" ") + to_string(vc[j].first) + to_string(" ") + to_string(-(vc[j].second));
                     }
                 }
                 WeightedCSPConstraints.erase(problem->getIndex());
@@ -202,9 +200,9 @@ public:
                 for (int i = 0; i < arity_; i++) {
                     thescope.push_back(scope[i]->wcspIndex);
                     vector<pair<Value, Cost>> vc = negproblem->getEnumDomainAndCost(i);
-                    params += " " + to_string(vc.size());
+                    params += to_string(" ") + to_string(vc.size());
                     for (unsigned int j = 0; j < vc.size(); j++) {
-                        params += " " + to_string(vc[j].first) + " " + to_string(-(vc[j].second));
+                        params += to_string(" ") + to_string(vc[j].first) + to_string(" ") + to_string(-(vc[j].second));
                     }
                 }
                 WeightedCSPConstraints.erase(negproblem->getIndex());
@@ -229,6 +227,19 @@ public:
             if (problem) {
                 protect(true);
                 try {
+                    for (int i = 0; i < arity_in && connected(); i++) {
+                        for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                            Value a = scope_in[i]->toValue(j);
+                            EnumeratedVariable* vari = ((EnumeratedVariable*)problem->getVar(i));
+#ifndef NDEBUG
+                            Value b = vari->toValue(j);
+                            assert(a == b);
+#endif
+                            if (scope_in[i]->cannotbe(a) && vari->canbe(a)) {
+                                problem->remove(i, a);
+                            }
+                        }
+                    }
                     problem->propagate(true); // preprocessing();
                 } catch (const Contradiction&) {
                     deconnect();
@@ -236,10 +247,32 @@ public:
                     throw;
                 }
                 unprotect();
+                for (int i = 0; i < arity_in && connected(); i++) {
+                    for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                        Value a = scope_in[i]->toValue(j);
+                        EnumeratedVariable* vari = ((EnumeratedVariable*)problem->getVar(i));
+                        if (scope_in[i]->canbe(a) && vari->cannotbe(a)) {
+                            scope_in[i]->remove(a);
+                        }
+                    }
+                }
             }
             if (connected() && negproblem) {
                 protect(true);
                 try {
+                    for (int i = 0; i < arity_in && connected(); i++) {
+                        for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                            Value a = scope_in[i]->toValue(j);
+                            EnumeratedVariable* vari = ((EnumeratedVariable*)negproblem->getVar(i));
+#ifndef NDEBUG
+                            Value b = vari->toValue(j);
+                            assert(a == b);
+#endif
+                            if (scope_in[i]->cannotbe(a) && vari->canbe(a)) {
+                                negproblem->remove(i, a);
+                            }
+                        }
+                    }
                     negproblem->propagate(true); // preprocessing();
                 } catch (const Contradiction&) {
                     deconnect();
@@ -247,6 +280,15 @@ public:
                     throw;
                 }
                 unprotect();
+                for (int i = 0; i < arity_in && connected(); i++) {
+                    for (unsigned int j = 0; j < scope_in[i]->getDomainInitSize() && connected(); j++) {
+                        Value a = scope_in[i]->toValue(j);
+                        EnumeratedVariable* vari = ((EnumeratedVariable*)negproblem->getVar(i));
+                        if (scope_in[i]->canbe(a) && vari->cannotbe(a)) {
+                            scope_in[i]->remove(a);
+                        }
+                    }
+                }
             }
         }
     }
@@ -257,15 +299,6 @@ public:
     }
 
     bool extension() const FINAL { return false; } // this is not a cost function represented by an exhaustive table of costs
-
-    void reconnect() override
-    {
-        if (deconnected()) {
-            nonassigned = arity_;
-            AbstractNaryConstraint::reconnect();
-        }
-    }
-    int getNonAssigned() const { return nonassigned; }
 
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
     Long getConflictWeight(int varIndex) const override
@@ -278,7 +311,7 @@ public:
     {
         assert(from != NULL);
         if (from == this) {
-            if (deconnected() || nonassigned == arity_) {
+            if (getNonAssigned() == arity_ || deconnected()) {
                 Constraint::incConflictWeight(1);
             } else {
                 for (int i = 0; i < arity_; i++) {
@@ -349,7 +382,7 @@ public:
         }
     }
 
-    bool universal() override
+    bool universal(Cost zero = MIN_COST) override
     {
         if (isfinite && problem && negproblem && problem->getLb() >= lb && negproblem->getLb() > -ub + negCost) {
             return true;
@@ -520,18 +553,42 @@ public:
 
     double computeTightness() override
     {
-        double res = 0.; // FIXME: take into account elimBinConstr and elimTernConstr
-        if (problem) {
+        double res = 0.;
+        if (problem && problem->numberOfConnectedConstraints() > 0) {
             for (unsigned int c = 0; c < problem->numberOfConstraints(); c++) {
-                if (problem->getCtr(c)->connected()) {
+                if (problem->getCtr(c)->connected() && !problem->getCtr(c)->isSep()) {
                     res += problem->getCtr(c)->getTightness();
                 }
             }
+            for (int i = 0; i < problem->getElimBinOrder(); i++) {
+                BinaryConstraint *c = (BinaryConstraint *)problem->getElimBinCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
+                }
+            }
+            for (int i = 0; i < problem->getElimTernOrder(); i++) {
+                TernaryConstraint *c = (TernaryConstraint *)problem->getElimTernCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
+                }
+            }
             return res / problem->numberOfConnectedConstraints();
-        } else if (negproblem) {
+        } else if (negproblem && negproblem->numberOfConnectedConstraints() > 0) {
             for (unsigned int c = 0; c < negproblem->numberOfConstraints(); c++) {
-                if (negproblem->getCtr(c)->connected()) {
+                if (negproblem->getCtr(c)->connected() && !negproblem->getCtr(c)->isSep()) {
                     res += negproblem->getCtr(c)->getTightness();
+                }
+            }
+            for (int i = 0; i < negproblem->getElimBinOrder(); i++) {
+                BinaryConstraint *c = (BinaryConstraint *)negproblem->getElimBinCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
+                }
+            }
+            for (int i = 0; i < negproblem->getElimTernOrder(); i++) {
+                TernaryConstraint *c = (TernaryConstraint *)negproblem->getElimTernCtr(i);
+                if (c->connected() && !c->isSep()) {
+                    res += c->getTightness();
                 }
             }
             return res / negproblem->numberOfConnectedConstraints();
@@ -558,15 +615,14 @@ public:
             return; // wait until propagation is done for each subproblem before trying to deconnect or project
         if (connected(varIndex)) {
             deconnect(varIndex);
-            nonassigned = nonassigned - 1;
-            assert(nonassigned >= 0);
+            assert(getNonAssigned() >= 0);
 
             if (universal()) {
                 deconnect();
                 return;
             }
 
-            if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE) && (!strongDuality || nonassigned == 0)) {
+            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE) && (!strongDuality || getNonAssigned() == 0)) {
                 deconnect();
                 projectNary();
             } else {
@@ -706,7 +762,7 @@ public:
         os << " isfinite: " << isfinite;
         os << " strongDuality: " << strongDuality;
         os << " arity: " << arity_;
-        os << " unassigned: " << (int)nonassigned << "/" << unassigned_ << endl;
+        os << " unassigned: " << getNonAssigned() << "/" << unassigned_ << endl;
         if (problem)
             os << *problem << endl;
         if (negproblem)
@@ -722,7 +778,7 @@ public:
             for (int i = 0; i < arity_; i++)
                 os << " " << scope[i]->wcspIndex;
         } else {
-            os << nonassigned;
+            os << getNonAssigned();
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned())
                     os << " " << scope[i]->getCurrentVarId();
@@ -757,7 +813,7 @@ public:
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
         } else {
@@ -774,7 +830,7 @@ public:
                 if (scope[i]->unassigned()) {
                     if (printed)
                         os << ",";
-                    os << "\"" << scope[i]->getName() << "\"";
+                    os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
         }

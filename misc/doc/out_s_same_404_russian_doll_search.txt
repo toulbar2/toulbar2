@@ -1,21 +1,23 @@
 Read 100 variables, with 4 values at most, and 710 cost functions, with maximum arity 3.
-Cost function decomposition time : 6.6e-05 seconds.
-Reverse DAC dual bound: 64 (+35.938%)
-Reverse DAC dual bound: 66 (+3.030%)
-Reverse DAC dual bound: 67 (+1.493%)
-Preprocessing time: 0.008 seconds.
+Reverse original DAC dual bound: 51 (+19.608%)
+Reverse original DAC dual bound: 53 (+3.774%)
+Reverse original DAC dual bound: 54 (+1.852%)
+Cost function decomposition time : 0.000 seconds.
+Preprocessing time: 0.011 seconds.
 88 unassigned variables, 228 values in all current domains (med. size:2, max size:4) and 591 non-unary cost functions (med. arity:2, med. degree:13)
-Initial lower and upper bounds: [67, 155] 56.774%
+Initial lower and upper bounds: [54, 164] 67.073%
+Get root cluster C44 with max. size: 20
+Get root cluster C27 with max. size: 14
 Tree decomposition width  : 19
 Tree decomposition height : 43
 Number of clusters        : 47
-Tree decomposition time: 0.002 seconds.
+Tree decomposition time: 0.003 seconds.
 --- Solving cluster subtree 5 ...
-New solution: 0 (0 backtracks, 0 nodes, depth 2)
+New solution: 0 (0 backtracks, 0 nodes, depth 2, 0.014 seconds)
 ---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 2)
 
 --- Solving cluster subtree 6 ...
-New solution: 0 (0 backtracks, 0 nodes, depth 2)
+New solution: 0 (0 backtracks, 0 nodes, depth 2, 0.014 seconds)
 ---  done  cost = [0,0] (0 backtracks, 0 nodes, depth 2)
 
 --- Solving cluster subtree 7 ...
@@ -23,14 +25,14 @@ New solution: 0 (0 backtracks, 0 nodes, depth 2)
 ...
 
 --- Solving cluster subtree 44 ...
-New solution: 42 (420 backtracks, 723 nodes, depth 7)
-New solution: 39 (431 backtracks, 743 nodes, depth 9)
-New solution: 35 (447 backtracks, 785 nodes, depth 22)
----  done  cost = [35,35] (557 backtracks, 960 nodes, depth 2)
+New solution: 53 (493 backtracks, 921 nodes, depth 7, 0.026 seconds)
+New solution: 52 (504 backtracks, 938 nodes, depth 7, 0.027 seconds)
+New solution: 48 (515 backtracks, 973 nodes, depth 22, 0.027 seconds)
+---  done  cost = [48,48] (636 backtracks, 1160 nodes, depth 2)
 
 --- Solving cluster subtree 46 ...
-New solution: 114 (557 backtracks, 960 nodes, depth 2)
----  done  cost = [114,114] (557 backtracks, 960 nodes, depth 2)
+New solution: 114 (636 backtracks, 1160 nodes, depth 2, 0.031 seconds)
+---  done  cost = [114,114] (636 backtracks, 1160 nodes, depth 2)
 
-Optimum: 114 in 557 backtracks and 960 nodes ( 50 removals by DEE) and 0.026 seconds.
+Optimum: 114 in 636 backtracks and 1160 nodes ( 80 removals by DEE) and 0.031 seconds.
 end.

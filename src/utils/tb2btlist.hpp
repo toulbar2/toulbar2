@@ -28,7 +28,7 @@ public:
     T content;
 
 public:
-    DLink<T>()
+    DLink()
         : removed(true)
         , next(NULL)
         , prev(NULL)
@@ -306,6 +306,7 @@ public:
 typedef BTList<ConstraintLink> ConstraintList;
 typedef BTList<Variable*> VariableList;
 typedef BTList<Separator*> SeparatorList;
+typedef BTList<KnapsackConstraint*> KnapsackList;
 
 /*
  * For internal use only! Interaction between tb2store and tb2btlist

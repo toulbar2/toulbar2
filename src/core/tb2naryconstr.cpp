@@ -8,7 +8,6 @@ NaryConstraint::NaryConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int ar
     , costs(NULL)
     , costSize(0)
     , default_cost(defval)
-    , nonassigned(arity_in)
     , filters(NULL)
 {
     for (int i = 0; i < arity_in; i++) {
@@ -37,7 +36,6 @@ NaryConstraint::NaryConstraint(WCSP* wcsp)
     , costs(NULL)
     , costSize(0)
     , default_cost(wcsp->getUb())
-    , nonassigned(0)
     , filters(NULL)
 {
     pf = new TUPLES;
@@ -58,7 +56,6 @@ void NaryConstraint::assign(int varIndex)
 {
     if (connected(varIndex)) {
         deconnect(varIndex);
-        nonassigned = nonassigned - 1;
 
         if (size() <= NARYDECONNECTSIZE && universal()) { // check if it is satisfied (clause)
             //	  cout << "nary cost function satisfied: " << this << endl;
@@ -66,7 +63,7 @@ void NaryConstraint::assign(int varIndex)
             return;
         }
 
-        if (nonassigned <= NARYPROJECTIONSIZE && (nonassigned < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE)) {
+        if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)) {
             //	  cout << "Assign var " << *getVar(varIndex) << "  in  " << *this;
             deconnect();
             projectNary();
@@ -1125,8 +1122,7 @@ void NaryConstraint::project(EnumeratedVariable* x)
     }
 
     if (x->unassigned()) {
-        x->deconnect(links[arity_ - 1]);
-        nonassigned = nonassigned - 1;
+        deconnect(arity_ - 1);
     }
     scope_inv.erase(x->wcspIndex);
     arity_--;
@@ -1388,9 +1384,9 @@ void NaryConstraint::print(ostream& os)
         os << " |f| = " << size();
     os << "   default_cost: " << default_cost;
     os << "   arity: " << arity_;
-    os << "   unassigned: " << (int)nonassigned << "/" << unassigned_ << "         ";
+    os << "   unassigned: " << getNonAssigned() << "/" << unassigned_ << "         ";
 
-    //	assert(nonassigned == unassigned_); // not valid when used with assignLS
+    //	assert(getNonAssigned() == unassigned_); // not valid when used with assignLS
 
     /*TSCOPE::iterator it = scope_inv.begin();
         while(it != scope_inv.end()) {
@@ -1481,7 +1477,7 @@ void NaryConstraint::dump(ostream& os, bool original)
             }
         }
     } else {
-        os << nonassigned;
+        os << getNonAssigned();
         for (int i = 0; i < arity_; i++)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();
@@ -1524,7 +1520,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
         for (int i = 0; i < arity_; i++) {
             if (printed)
                 os << ",";
-            os << "\"" << scope[i]->getName() << "\"";
+            os << "\"" << name2cfn(scope[i]->getName()) << "\"";
             printed = true;
         }
         os << "],\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) << ",\n\"costs\":[";
@@ -1539,7 +1535,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (unsigned int i = 0; i < t.size(); i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
@@ -1553,7 +1549,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
                 for (int i = 0; i < a; i++) {
                     if (printed)
                         os << ",";
-                    os << ((scope[i]->isValueNames()) ? scope[i]->getValueName(t[i]) : std::to_string(t[i]));
+                    os << ((scope[i]->isValueNames()) ? name2cfn(scope[i]->getValueName(t[i])) : to_string(t[i]));
                     printed = true;
                 }
                 os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(costs[idx]));
@@ -1580,7 +1576,7 @@ void NaryConstraint::dump_CFN(ostream& os, bool original)
             if (scope[i]->unassigned()) {
                 if (printed)
                     os << ",";
-                os << "\"" << scope[i]->getName() << "\"";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
         os << "],\"defaultcost\":" << ((wcsp->getUb() > default_cost) ? wcsp->DCost2Decimal(wcsp->Cost2RDCost(default_cost)) : "inf") << ",\n\"costs\":[";

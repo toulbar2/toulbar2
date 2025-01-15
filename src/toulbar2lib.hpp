@@ -190,12 +190,15 @@ public:
     virtual void reactivatePropagate() = 0; ///< \brief re-authorizes propagate calls
     virtual void propagate(bool fromscratch = false) = 0; ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction). If fromscratch is true then propagates every cost function at least once.
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
-
+#ifdef BOOST
+    virtual void addAMOConstraints() = 0;
+#endif
     virtual unsigned int numberOfVariables() const = 0; ///< \brief number of created variables
     virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \brief current number of unassigned variables
     virtual unsigned int numberOfConstraints() const = 0; ///< \brief initial number of cost functions (before variable elimination)
     virtual unsigned int numberOfConnectedConstraints() const = 0; ///< \brief current number of cost functions
     virtual unsigned int numberOfConnectedBinaryConstraints() const = 0; ///< \brief current number of binary cost functions
+    virtual unsigned int numberOfConnectedKnapsackConstraints() const = 0; ///< \brief current number of knapsack cost functions
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables
     virtual unsigned int medianDegree() const = 0; ///< \brief median current degree of variables
     virtual unsigned int medianArity() const = 0; ///< \brief median arity of current cost functions
@@ -268,7 +271,7 @@ public:
     virtual int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
-    virtual int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(vector<int> scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
     virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \deprecated
     virtual void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) = 0;
     virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0; /// \deprecated
@@ -280,8 +283,8 @@ public:
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
     virtual int postCliqueConstraint(vector<int> scope, const string& arguments) = 0;
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
-    virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false) = 0;
-    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, int kp = 0, bool conflict = false) = 0; /// \deprecated
+    virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0;
+    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0; /// \deprecated
     virtual int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false) = 0; ///< \brief create a hard constraint such that the input cost function network (problem) must have its optimum cost in [lb,ub[ interval. \warning The input scope must contain all variables in problem in the same order. \warning if duplicateHard is true it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model). \warning if strongDuality is true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum on the remaining variables is between lb and ub.
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
     virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; ///< \brief generic function to post any global cost function
@@ -295,10 +298,10 @@ public:
     /// \param values a vector of values to be restricted
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
-    virtual int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
+    virtual int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
     virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    virtual void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \deprecated
 
     /// \brief post a soft or weighted regular cost function
@@ -312,7 +315,7 @@ public:
     /// \param accepting_States a vector of WeightedObjInt specifying the final states
     /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
-    virtual int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
+    virtual int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
     virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< \deprecated
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 
@@ -322,7 +325,7 @@ public:
     /// \param semantics the semantics of the global cost function: for flow-based propagator: "var" or "dec" or "decbi" (decomposed into a binary cost function complete network), for DAG-based propagator: "var", for network-based propagator: "hard" or "lin" or "quad" (decomposed based on wamong)
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
-    virtual int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< post a soft alldifferent cost function
+    virtual int postWAllDiff(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< post a soft alldifferent cost function
     virtual int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost) = 0; ///< \deprecated
     virtual void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost) = 0; ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
 
@@ -416,7 +419,7 @@ public:
     /// \param values a vector of values (same size as scope)
     /// \param method the network decomposition method (0:Dual, 1:Hidden, 2:Ternary)
     /// \note depending on the decomposition method, it adds dual and/or hidden variables
-    virtual void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
+    virtual void postWDivConstraint(vector<int> scope, unsigned int distance, vector<Value>& values, int method = 0) = 0;
 
     virtual vector<vector<int>>* getListSuccessors() = 0; ///< \brief generating additional variables vector created when berge decomposition are included in the WCSP
     virtual vector<int> getBergeDecElimOrder() = 0; ///< \brief return an elimination order compatible with Berge acyclic decomposition of global decomposable cost functions (if possible keep reverse of previous DAC order)
@@ -435,6 +438,7 @@ public:
     virtual void read_wcnf(const char* fileName) = 0; ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     virtual void read_qpbo(const char* fileName) = 0; ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
     virtual void read_opb(const char* fileName) = 0; ///< \brief load pseudo-Boolean optimization problem
+    virtual void read_lp(const char* fileName) = 0; ///< \brief load integer linear programming problem
 
     virtual const vector<Value> getSolution() = 0; ///< \brief after solving the problem, return the optimal solution (warning! do not use it if doing solution counting or if there is no solution, see WeightedCSPSolver::solve output for that)
     virtual Double getSolutionValue() const = 0; ///< \brief returns current best solution cost or MAX_COST if no solution found
@@ -609,6 +613,13 @@ public:
     /// \warning cannot solve problems with non-binary cost functions
     virtual Cost pils(string cmd, vector<Value>& solution) = 0;
 
+    // LR-BCD local search
+    /// \brief solves the current problem using LR-BCD local search @ Valentin Durante, George Katsirelos, Thomas Schiex
+    /// \return best solution cost found
+    /// \param cmd command line argument for LR-BCD local search solver (cmd format: maxiter rank nbroundings)
+    /// \warning cannot solve problems with non-binary cost functions
+    virtual Cost lrBCD(string cmd, vector<Value>& solution) = 0;
+
     /// \brief quadratic unconstrained pseudo-Boolean optimization
     /// Maximize \f$h' \times W \times h\f$ where \f$W\f$ is expressed by all its
     /// non-zero half squared matrix costs (can be positive or negative, with \f$\forall i, posx[i] \leq posy[i]\f$)
@@ -639,6 +650,8 @@ public:
 
 /// \brief initialization of ToulBar2 global variables (needed by numberjack/toulbar2)
 extern void tb2init();
+/// \brief reinitialization of ToulBar2 global variables before next call to solving methods
+extern void tb2reinit();
 /// \brief checks compatibility between selected options of ToulBar2 (needed by numberjack/toulbar2)
 extern void tb2checkOptions();
 #endif /*TOULBAR2LIB_HPP_*/

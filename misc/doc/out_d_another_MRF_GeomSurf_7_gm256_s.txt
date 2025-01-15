@@ -1,21 +1,18 @@
 Read 787 variables, with 7 values at most, and 3527 cost functions, with maximum arity 3.
-No evidence file specified. Trying EXAMPLES/GeomSurf-7-gm256.uai.xz.evid
-No evidence file.
-Cost function decomposition time : 0.001227 seconds.
-Reverse DAC dual bound: 5879065363 energy: 1074.088 (+0.082%)
-VAC dual bound: 5906374927 energy: 1076.819 (iter:486)
-Number of VAC iterations: 726
-Number of times is VAC: 240 Number of times isvac and itThreshold > 1: 234
-Preprocessing time: 1.872 seconds.
-729 unassigned variables, 4819 values in all current domains (med. size:7, max size:7) and 3128 non-unary cost functions (med. arity:2, med. degree:6)
-Initial lower and upper bounds: [5906374927, 111615200815] 94.708%
-c 2097152 Bytes allocated for long long stack.
-New solution: 5968997522 energy: 1083.081 prob: 4.204e-471 (0 backtracks, 19 nodes, depth 21)
-Optimality gap: [5920086558, 5968997522] 0.819 % (17 backtracks, 36 nodes)
-New solution: 5922481881 energy: 1078.430 prob: 4.404e-469 (17 backtracks, 48 nodes, depth 8)
-Optimality gap: [5922481881, 5922481881] 0.000 % (21 backtracks, 52 nodes)
-Number of VAC iterations: 846
+No evidence file specified. Trying EXAMPLES/GeomSurf-7-gm256.uai.evid
+No evidence file. 
+Reverse original DAC dual bound: 5874975174 energy: 1073.679 (+0.003%)
+Cost function decomposition time : 0.005 seconds.
+Number of VAC iterations: 768
 Number of times is VAC: 360 Number of times isvac and itThreshold > 1: 351
-Node redundancy during HBFS: 11.538 %
-Optimum: 5922481881 energy: 1078.430 prob: 4.404e-469 in 21 backtracks and 52 nodes ( 2749 removals by DEE) and 1.980 seconds.
+Preprocessing time: 2.085 seconds.
+729 unassigned variables, 4818 values in all current domains (med. size:7, max size:7) and 3132 non-unary cost functions (med. arity:2, med. degree:6)
+Initial lower and upper bounds: [5899313907, 111615203929] 94.715%
+New solution: 5926230227 energy: 1078.805 prob: 3.027e-469 (0 backtracks, 1 nodes, depth 3, 2.088 seconds)
+New solution: 5922482579 energy: 1078.430 prob: 4.404e-469 (0 backtracks, 1 nodes, depth 2, 2.092 seconds)
+Optimality gap: [5922482579, 5922482579] 0.000 % (0 backtracks, 1 nodes, 2.093 seconds)
+Number of VAC iterations: 928
+Number of times is VAC: 520 Number of times isvac and itThreshold > 1: 507
+Node redundancy during HBFS: 0.000
+Optimum: 5922482579 energy: 1078.430 prob: 4.404e-469 in 0 backtracks and 1 nodes ( 481 removals by DEE) and 2.093 seconds.
 end.

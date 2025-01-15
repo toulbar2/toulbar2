@@ -171,7 +171,7 @@ void AllDiffConstraint::decompose()
                 ctr->addCosts(x, y, costs);
                 ctr->propagate();
             } else {
-                if (!ToulBar2::vac) {
+                if (!ToulBar2::vac && !ToulBar2::vac_prev) {
                     ctr = new BinaryConstraint(wcsp, x, y, costs);
                 } else {
                     ctr = new VACBinaryConstraint(wcsp, x, y, costs);
@@ -188,7 +188,7 @@ void AllDiffConstraint::dump(ostream& os, bool original)
         for (int i = 0; i < arity_; i++)
             os << " " << scope[i]->wcspIndex;
     } else {
-        os << nonassigned;
+        os << getNonAssigned();
         for (int i = 0; i < arity_; i++)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();

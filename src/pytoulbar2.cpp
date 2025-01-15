@@ -27,8 +27,8 @@
  */
 
 // How to manually extract class properties to bind in Python:
-//  awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
 //  awk '/^class /{ok=1;class=$2} go&&/static/{gsub(";.*","",$0); print "        .def_readwrite_static(\"" $NF "\", &" class "::" $NF ")"} ok&&/public/{go=1}' core/tb2types.hpp
+//  awk '/^class/{class=$2} /virtual/{gsub("//.*","",$0);gsub("[(].*[)].*","",$0); print "        .def(\"" $NF "\", &" class "::" $NF ")"}' toulbar2lib.hpp
 
 // How to compile Python3 pytb2 module library on Linux:
 //  apt install pybind11-dev (or else pip3 install pybind11)
@@ -66,6 +66,7 @@ extern void newsolution(int wcspId, void* solver);
 PYBIND11_MODULE(pytb2, m)
 {
     m.def("init", []() { tb2init(); }); // must be called at the very beginning
+    m.def("reinit", []() { tb2reinit(); }); // must be called before solving again
     m.attr("MAX_COST") = py::int_(MAX_COST);
     m.attr("MIN_COST") = py::int_(MIN_COST);
 
@@ -150,7 +151,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("trwsNIter", &ToulBar2::trwsNIter)
         .def_readwrite_static("trwsNIterNoChange", &ToulBar2::trwsNIterNoChange)
         .def_readwrite_static("trwsNIterComputeUb", &ToulBar2::trwsNIterComputeUb)
-        .def_readwrite_static("costMultiplier", &ToulBar2::costMultiplier)
+        .def_property_static("costMultiplier", &ToulBar2::getCostMultiplier, &ToulBar2::setCostMultiplier)
         .def_readwrite_static("decimalPoint", &ToulBar2::decimalPoint)
         .def_readwrite_static("absgapstr", &ToulBar2::deltaUbS)
         .def_readwrite_static("deltaUb", &ToulBar2::deltaUb)
@@ -164,10 +165,12 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("qpbo", &ToulBar2::qpbo)
         .def_readwrite_static("qpboQuadraticCoefMultiplier", &ToulBar2::qpboQuadraticCoefMultiplier)
         .def_readwrite_static("opb", &ToulBar2::opb)
+        .def_readwrite_static("lp", &ToulBar2::lp)
 #ifdef BOOST
         .def_readwrite_static("addAMOConstraints", &ToulBar2::addAMOConstraints)
 #endif
         .def_readwrite_static("knapsackDP", &ToulBar2::knapsackDP)
+        .def_readwrite_static("VAClin", &ToulBar2::VAClin)
         .def_readwrite_static("divNbSol", &ToulBar2::divNbSol)
         .def_readwrite_static("divBound", &ToulBar2::divBound)
         .def_readwrite_static("divWidth", &ToulBar2::divWidth)
@@ -202,6 +205,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("logZ", &ToulBar2::logZ)
         .def_readwrite_static("logU", &ToulBar2::logU)
         .def_readwrite_static("logepsilon", &ToulBar2::logepsilon)
+        .def_readwrite_static("epsilon", &ToulBar2::epsilon)
         .def_readwrite_static("uaieval", &ToulBar2::uaieval)
         .def_readwrite_static("stdin_format", &ToulBar2::stdin_format)
         .def_readwrite_static("startCpuTime", &ToulBar2::startCpuTime)
@@ -217,6 +221,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("seed", &ToulBar2::seed)
         .def_readwrite_static("incop_cmd", &ToulBar2::incop_cmd)
         .def_readwrite_static("pils_cmd", &ToulBar2::pils_cmd)
+        .def_readwrite_static("lrBCD_cmd", &ToulBar2::lrBCD_cmd)
         .def_readwrite_static("searchMethod", (int*)&ToulBar2::searchMethod)
         .def_readwrite_static("clusterFile", &ToulBar2::clusterFile)
         .def_readwrite_static("vnsInitSol", (int*)&ToulBar2::vnsInitSol)
@@ -250,6 +255,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("hbfsBeta", &ToulBar2::hbfsBeta)
         .def_readwrite_static("hbfsCPLimit", &ToulBar2::hbfsCPLimit)
         .def_readwrite_static("hbfsOpenNodeLimit", &ToulBar2::hbfsOpenNodeLimit)
+        .def_readwrite_static("sortBFS", &ToulBar2::sortBFS)
         .def_readwrite_static("eps", &ToulBar2::eps)
 #ifdef OPENMPI
         .def_readwrite_static("burst", &ToulBar2::burst)
@@ -295,10 +301,16 @@ PYBIND11_MODULE(pytb2, m)
         .def("setWeight", &MultiCFN::setWeight)
         .def("nbNetworks", &MultiCFN::nbNetworks)
         .def("nbVariables", &MultiCFN::nbVariables)
+        .def("nbCostFunctions", &MultiCFN::nbCostFunctions)
         .def("getNetworkName", &MultiCFN::getNetworkName)
+        .def("getVariableIndex", &MultiCFN::getVariableIndex)
+        .def("nbValues", &MultiCFN::nbValues)
+        .def("getScope", &MultiCFN::getScope)
+        .def("getType", &MultiCFN::getType)
+        .def("getCost", &MultiCFN::getCost)
         .def("print", [](MultiCFN& multicfn) { multicfn.print(cout); })
-        .def("makeWeightedCSP", [](MultiCFN& multicfn) { return multicfn.makeWeightedCSP(); })
-        .def("makeWeightedCSP", [](MultiCFN& multicfn, WeightedCSP* wcsp) { multicfn.makeWeightedCSP(wcsp); })
+        .def("makeWeightedCSP", [](MultiCFN& multicfn, const set<unsigned int>& vars, const vector<set<unsigned int>>& scopes, const vector<unsigned int>& constrs) { return multicfn.makeWeightedCSP(vars, scopes, constrs); }, py::arg("vars") = py::set(), py::arg("scopes") = py::list(), py::arg("constrs") = py::list())
+        .def("makeWeightedCSP", [](MultiCFN& multicfn, WeightedCSP* wcsp, const set<unsigned int>& vars, const vector<set<unsigned int>>& scopes, const vector<unsigned int>& constrs) { multicfn.makeWeightedCSP(wcsp, vars, scopes, constrs); }, py::arg("wcsp"), py::arg("vars") = py::set(), py::arg("scopes") = py::list(), py::arg("constrs") = py::list())
         .def("getSolution", &MultiCFN::getSolution)
         .def("getSolutionValues", &MultiCFN::getSolutionValues)
         .def("computeSolutionValues", &MultiCFN::computeSolutionValues)
@@ -309,7 +321,7 @@ PYBIND11_MODULE(pytb2, m)
     py::class_<Bicriteria> bcrit(m, "Bicriteria");
 
     bcrit.def(
-             "computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"), py::arg("optim_dir"), py::arg("delta") = 1e-3)
+             "computeSupportedPoints", [](MultiCFN* multicfn, int first_cfn_index, int second_cfn_index, py::tuple optim_dir, Double delta) { Bicriteria::computeSupportedPoints(multicfn, first_cfn_index, second_cfn_index, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), delta); }, py::arg("first_cfn_index"), py::arg("second_cfn_index"), py::arg("optim_dir"), py::arg("delta") = Bicriteria::Delta)
         .def(
             "computeAdditionalSolutions", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int solIndex, unsigned int nbLimit, Double pct) { Bicriteria::computeAdditionalSolutions(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), solIndex, nbLimit, pct); }, py::arg("optim_dir"), py::arg("solIndex"), py::arg("nbLimit") = 100, py::arg("pct") = 1.)
         .def(
@@ -399,8 +411,10 @@ PYBIND11_MODULE(pytb2, m)
         .def("numberOfConstraints", &WeightedCSP::numberOfConstraints)
         .def("numberOfConnectedConstraints", &WeightedCSP::numberOfConnectedConstraints)
         .def("numberOfConnectedBinaryConstraints", &WeightedCSP::numberOfConnectedBinaryConstraints)
+        .def("numberOfConnectedKnapsackConstraints", &WeightedCSP::numberOfConnectedKnapsackConstraints)
         .def("medianDomainSize", &WeightedCSP::medianDomainSize)
         .def("medianDegree", &WeightedCSP::medianDegree)
+        .def("medianArity", &WeightedCSP::medianArity)
         .def("getMaxDomainSize", &WeightedCSP::getMaxDomainSize)
         .def("getMaxCurrentDomainSize", &WeightedCSP::getMaxCurrentDomainSize)
         .def("getDomainSizeSum", &WeightedCSP::getDomainSizeSum)
@@ -413,7 +427,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("postNullaryConstraint", (void(WeightedCSP::*)(Double cost)) & WeightedCSP::postNullaryConstraint)
         .def(
             "postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-                return s.postUnaryConstraint(xIndex, costs, incremental);
+                s.postUnaryConstraint(xIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def(
@@ -427,7 +441,7 @@ PYBIND11_MODULE(pytb2, m)
             },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
         .def(
-            "postNaryConstraintBegin", [](WeightedCSP& s, vector<int>& scope, Cost defval, Long nbtuples, bool forcenary) {
+            "postNaryConstraintBegin", [](WeightedCSP& s, vector<int> scope, Cost defval, Long nbtuples, bool forcenary) {
                 return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
             },
             py::arg("scope"), py::arg("defval"), py::arg("nbtuples"), py::arg("forcenary") = !NARY2CLAUSE)
@@ -441,16 +455,16 @@ PYBIND11_MODULE(pytb2, m)
             "postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {
                 return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
             },
-            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = false, py::arg("conflict") = false)
+            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = 0, py::arg("conflict") = false)
         .def(
             "postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
                 return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
             },
             py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
-        .def("postWAmong", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
-        .def("postWVarAmong", (void(WeightedCSP::*)(vector<int> & scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
-        .def("postWRegular", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
-        .def("postWAllDiff", (int(WeightedCSP::*)(vector<int> & scope, const string& semantics, const string& propagator, Cost baseCost)) & WeightedCSP::postWAllDiff)
+        .def("postWAmong", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
+        .def("postWVarAmong", (void(WeightedCSP::*)(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex)) & WeightedCSP::postWVarAmong)
+        .def("postWRegular", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
+        .def("postWAllDiff", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost)) & WeightedCSP::postWAllDiff)
         //        .def("postWGcc", (int (WeightedCSP::*)(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values)) &WeightedCSP::postWGcc)
         //        .def("postWSame", (int (WeightedCSP::*)(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost)) &WeightedCSP::postWSame)
         //        .def("postWSameGcc", &WeightedCSP::postWSameGcc)
@@ -501,6 +515,8 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::qpbo = true;
             if (strstr(fileName, ".opb"))
                 ToulBar2::opb = true;
+            if (strstr(fileName, ".lp"))
+                ToulBar2::lp = true;
             if (strstr(fileName, ".uai")) {
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;
@@ -553,6 +569,8 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::qpbo = true;
             if (strstr(fileName, ".opb"))
                 ToulBar2::opb = true;
+            if (strstr(fileName, ".lp"))
+                ToulBar2::lp = true;
             if (strstr(fileName, ".uai")) {
                 ToulBar2::uai = 1;
                 ToulBar2::bayesian = true;

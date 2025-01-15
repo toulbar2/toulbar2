@@ -12,6 +12,7 @@ file(
   GLOB
   LIBTB2FILES
   ${My_Source}/applis/*.*pp
+  ${My_Source}/convex/*.*pp
   ${My_Source}/core/*.*pp
   ${My_Source}/globals/tb2graph.*pp
   ${My_Source}/globals/tb2globalconstr.*pp
@@ -28,11 +29,11 @@ file(
   ${My_Source}/globals/tb2maxconstr.*pp
   ${My_Source}/globals/tb2treeconstr.*pp
   ${My_Source}/incop/*.cpp 
+  ${My_Source}/mcriteria/*.*pp
   ${My_Source}/pils/src/exe/*.cpp 
   ${My_Source}/search/*.*pp
   ${My_Source}/utils/*.*pp
   ${My_Source}/vns/*.*pp 
-  ${My_Source}/mcriteria/*.*pp
   ${My_Source}/ToulbarVersion.*pp
   )
 

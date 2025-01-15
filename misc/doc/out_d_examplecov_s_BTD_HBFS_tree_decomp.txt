@@ -1,26 +1,26 @@
 Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
 Warning! Cannot apply variable elimination during search with a given tree decomposition file.
 Warning! Cannot apply functional variable elimination with a given tree decomposition file.
-Cost function decomposition time : 1.6e-05 seconds.
-Reverse DAC dual bound: 20 (+15.000%)
-Reverse DAC dual bound: 22 (+9.091%)
+Reverse original DAC dual bound: 19 (+10.526%)
+Reverse original DAC dual bound: 20 (+5.000%)
+Cost function decomposition time : 0.000 seconds.
 Preprocessing time: 0.001 seconds.
 25 unassigned variables, 120 values in all current domains (med. size:5, max size:5) and 63 non-unary cost functions (med. arity:2, med. degree:5)
-Initial lower and upper bounds: [22, 64] 65.625%
+Initial lower and upper bounds: [20, 64] 68.750%
 Tree decomposition width  : 16
 Tree decomposition height : 24
 Number of clusters         : 9
-Tree decomposition time: 0.000 seconds.
-New solution: 29 (23 backtracks, 29 nodes, depth 3)
-New solution: 28 (32 backtracks, 46 nodes, depth 3)
-Optimality gap: [23, 28] 17.857 % (37 backtracks, 58 nodes)
-New solution: 27 (61 backtracks, 122 nodes, depth 3)
-Optimality gap: [23, 27] 14.815 % (61 backtracks, 122 nodes)
-Optimality gap: [24, 27] 11.111 % (132 backtracks, 269 nodes)
-Optimality gap: [25, 27] 7.407 % (177 backtracks, 395 nodes)
-Optimality gap: [26, 27] 3.704 % (189 backtracks, 467 nodes)
-Optimality gap: [27, 27] 0.000 % (189 backtracks, 482 nodes)
-HBFS open list restarts: 0.000 % and reuse: 25.926 % of 27
-Node redundancy during HBFS: 25.519 %
-Optimum: 27 in 189 backtracks and 482 nodes ( 95 removals by DEE) and 0.010 seconds.
+Tree decomposition time: 0.001 seconds.
+New solution: 28 (23 backtracks, 29 nodes, depth 3, 0.003 seconds)
+Optimality gap: [21, 28] 25.000 % (61 backtracks, 124 nodes, 0.005 seconds)
+Optimality gap: [22, 28] 21.429 % (154 backtracks, 321 nodes, 0.009 seconds)
+New solution: 27 (390 backtracks, 814 nodes, depth 3, 0.018 seconds)
+Optimality gap: [23, 27] 14.815 % (390 backtracks, 814 nodes, 0.018 seconds)
+Optimality gap: [24, 27] 11.111 % (417 backtracks, 884 nodes, 0.020 seconds)
+Optimality gap: [25, 27] 7.407 % (435 backtracks, 966 nodes, 0.021 seconds)
+Optimality gap: [26, 27] 3.704 % (450 backtracks, 1044 nodes, 0.021 seconds)
+Optimality gap: [27, 27] 0.000 % (450 backtracks, 1072 nodes, 0.022 seconds)
+HBFS open list restarts: 0.000 % and reuse: 33.333 % of 21
+Node redundancy during HBFS: 17.724
+Optimum: 27 in 450 backtracks and 1072 nodes ( 248 removals by DEE) and 0.022 seconds.
 end.

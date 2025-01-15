@@ -7,7 +7,7 @@
 
 #include "tb2enumvar.hpp"
 #include "tb2binconstr.hpp"
-// #include "tb2ternaryconstr.hpp"
+//#include "tb2ternaryconstr.hpp"
 #include "tb2vac.hpp"
 
 class VACVariable : public EnumeratedVariable {
@@ -20,7 +20,7 @@ private:
     vector<Long> k_timeStamp; /**< timestamp for the counter k (one per value) */
     vector<int> k; /**< Number of cost requests per value for all cost functions */
     vector<int> killer; /**< The killer of each value : the other variable index (binary case)*/
-
+    vector<vector<pair<int, Value>>> PBkillers;
     int maxk; /**< The Max number of cost requests seen on this variable, used for stats */
     Long maxk_timeStamp; /**< timestamp for maxk */
 
@@ -104,6 +104,8 @@ public:
 
     int getKiller(Value v) { return killer[toIndex(v)]; }
     void setKiller(Value v, int i) { killer[toIndex(v)] = i; }
+    const vector<pair<int, Value>>& getPBkillers(Value v) const { return PBkillers[toIndex(v)]; }
+    void setPBkillers(Value v, const vector<pair<int, Value>> & i) { PBkillers[toIndex(v)] = i; }
 
     Cost getVACCost(Value v)
     {
@@ -132,12 +134,17 @@ public:
         wcsp->vac->queueSeekSupport(&linkSeekSupport);
     }
 
-    void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC enforcing */
+    void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC enforcing (maintaining maxCost and maxCostValue during VAC-lin which may create unary costs without consuming them) */
     {
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project " << getName() << " (" << v << ") += " << c << endl), true));
+        assert(c > MIN_COST);
         costs[toIndex(v)] += c;
+        if (ToulBar2::VAClin && !wcsp->knapsackList.empty() && (v == maxCostValue || LUBTEST(maxCost, getCost(v))))
+            queueNC();
     }
-    void VACextend(Value v, Cost c) /**< Decreases unary cost and may queue for NC enforcing */
+    void VACextend(Value v, Cost c) /**< Decreases unary cost and may queue for NC enforcing (maintaining maxCost and maxCostValue) */
     {
+        assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extend " << getName() << " (" << v << ") -= " << c << endl), true));
         assert(c > MIN_COST);
         costs[toIndex(v)] -= c;
         if (v == maxCostValue || PARTIALORDER) {

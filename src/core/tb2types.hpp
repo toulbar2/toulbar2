@@ -31,7 +31,8 @@
 // Must be included after tb2utils.hpp
 #include "utils/tb2integer.hpp"
 #ifdef QUAD_PROB
-#include <quadmath.h> // only with gcc/g++
+#include <boost/multiprecision/float128.hpp>
+//#include <quadmath.h> // only with gcc/g++
 #endif
 
 using std::cerr;
@@ -94,6 +95,7 @@ typedef vector<tValue> Tuple;
 // For very large domains with ternary cost functions, use NARYPROJECTIONSIZE=2 instead of 3
 const int NARYPROJECTIONSIZE = 3; // limit on the number of unassigned variables before nary constraints are projected to smaller-arity constraint (should be between 1 and 3)
 const unsigned int NARYPROJECTION3MAXDOMSIZE = 30; // limit on the maximum initial domain size for nary to ternary projection
+const Long NARYPROJECTION3PRODDOMSIZE = 10000; // limit on the cartesian product of initial domain sizes for nary to ternary projection
 const Long NARYDECONNECTSIZE = 4; // maximum number of initial tuples in nary constraints in order to check for its removal (if it is always satisfied by current domains)
 
 const int MAX_BRANCH_SIZE = 1000000;
@@ -436,9 +438,9 @@ const Cost MAX_COST = PARETOPAIR_MAX;
 #endif
 
 #ifdef QUAD_PROB
-typedef __float128 TProb;
-typedef __float128 TLogProb;
-inline Cost Round(TLogProb f) { return (Cost)roundq(f); }
+typedef boost::multiprecision::float128 TProb;
+typedef boost::multiprecision::float128 TLogProb;
+inline Cost Round(TLogProb f) { return (Cost)round(f); }
 #endif
 
 #ifdef DOUBLE_PROB
@@ -611,6 +613,7 @@ typedef enum {
     APPROX_MIN_DEGREE = 6,
     ELIM_FILE_ORDER = 7,
     ELIM_LEXICOGRAPHIC_ORDER = 8,
+    ELIM_DAG_ORDER = 9,
     ELIM_MAX
 } ElimOrderType;
 
@@ -771,8 +774,8 @@ public:
     static int elimSpaceMaxMB; ///< \brief maximum space size for generic variable elimination (in MegaByte) (related to command line option -p)
     static int minsumDiffusion; ///< \brief in preprocessing, applies Min Sum Diffusion algorithm a given number of iterations (command line option -M)
     static int preprocessTernaryRPC; ///< \brief in preprocessing, simulates restricted path consistency by adding ternary cost functions on most-promising triangles of binary cost functions (maximum space size in MegaByte) (command line option -t)
-    static int pwc; ///< \brief pairwise consistency by dual encoding into a binary WCSP
     static int hve; ///< \brief hidden variable encoding into a binary WCSP
+    static int pwc; ///< \brief pairwise consistency by dual encoding into a binary WCSP
     static bool pwcMinimalDualGraph; ///< \brief minimizes dual intersection graph by removing redundant edges
     static int preprocessFunctional; ///< \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
     static bool costfuncSeparate; ///< \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
@@ -817,6 +820,7 @@ public:
     static int pedigreeCorrectionMode; ///< \internal do not use
     static int pedigreePenalty; ///< \internal do not use
     static int vac; ///< \brief enforces VAC at each search node having a search depth less than the absolute value of a given value (0: no VAC, 1: VAC in preprocessing, >1: VAC during search up to a given search depth), if given a negative value then VAC is not performed inside depth-first search of hybrid best-first search method (command line option -A and possibly -hbfs)
+    static int vac_prev; // allows to disconnect soft local consistency temporally
     static string costThresholdS; ///< \brief threshold cost value for VAC in CFN format (command line option -T)
     static string costThresholdPreS; ///< \brief in preprocessing, threshold cost value for VAC in CFN format (command line option -P)
     static Cost costThreshold; ///< \brief threshold cost value for VAC (command line option -T)
@@ -827,24 +831,28 @@ public:
     static unsigned int trwsNIterNoChange; ///< \brief stops TRW-S when n iterations did not change the lower bound (command line option --trws-n-iters-no-change)
     static unsigned int trwsNIterComputeUb; ///< \brief computes an upper bound every n steps in TRW-S (command line option --trws-n-iters-compute-ub)
     static Double costMultiplier; ///< \brief multiplies all costs internally by this number when loading a problem in WCSP format (command line option -C)
+    static Cost costMultiplier_; ///< \internal do not use (should be set by setCostMultiplier)
     static unsigned int decimalPoint; ///< \internal do not use
     static string deltaUbS; ///< \brief stops search if the absolute optimality gap reduces below a given value in CFN format (command line option -agap)
     static Cost deltaUb; ///< \internal do not use
     static Cost deltaUbAbsolute; ///< \brief stops search if the absolute optimality gap reduces below a given value (command line option -agap)
     static Double deltaUbRelativeGap; ///< \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
-    static bool singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
+    static int singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
     static bool vacValueHeuristic; ///< \brief VAC-based value ordering heuristic (command line options -V and -A)
     static BEP* bep; ///< \internal do not use
     static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
+    static LcLevelType LcLevel_prev; // allows to disconnect soft local consistency temporally
     static int maxEACIter; ///< \brief maximum number of iterations in EDAC before switching to FDAC
     static bool wcnf; ///< \internal do not use
     static bool qpbo; ///< \internal do not use
     static Double qpboQuadraticCoefMultiplier; ///< \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
     static bool opb; ///< \internal do not use
+    static bool lp; ///< \internal do not use
 
-    static bool addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
+    static int addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
     static bool addAMOConstraints_; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints
     static int knapsackDP; ///< \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
+    static bool VAClin; ///< \brief solves exactly knapsack constraints using dynamic programming (at every search node or less often)
 
     static unsigned int divNbSol; ///< \brief upper bound on the number of diverse solutions (0: no diverse solution) (keep it small as it controls model size)
     static unsigned int divBound; ///< \brief minimum Hamming distance between diverse solutions (command line options -div and -a)
@@ -871,8 +879,9 @@ public:
     static TLogProb logZ; ///< \internal do not use (lower bound on log-partition function)
     static TLogProb logU; ///< \internal do not use (upper bound on rejected potentials)
     static TLogProb logepsilon; ///< \brief approximation factor for computing the log-partition function (command line option -epsilon)
+    static Double epsilon; ///< \brief floating-point epsilon
     static bool uaieval; ///< \internal do not use
-    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb") (command line option --stdin)
+    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb", "lp") (command line option --stdin)
 
     static double startCpuTime; ///< \internal do not use
     static double startRealTime; ///< \internal do not use
@@ -895,6 +904,7 @@ public:
 
     static string incop_cmd; ///< \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
     static string pils_cmd; ///< \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)
+    static string lrBCD_cmd; ///< \brief in preprocessing, executes LR-BCD to produce a better initial upper bound (default parameter string value "5 -2 3") (command line option -lrBCD)
 
     static SearchMethod searchMethod; ///< \brief chooses between tree search and variable neighborhood search methods (0: tree search, 1: sequential unified VNS, 2: sequential unified decomposition guided VNS, 3: synchronous parallel UDGVNS, 4: asynchronous parallel UDGVNS, 5: tree decomposition heuristic) (command line option -vns)
 
@@ -927,6 +937,7 @@ public:
     static Long hbfsBeta; ///< \brief  maximum recomputation node redundancy percentage threshold value (command line option -hbfsmax)
     static ptrdiff_t hbfsCPLimit; ///< \brief maximum number of stored choice points before switching to normal DFS (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
     static ptrdiff_t hbfsOpenNodeLimit; ///< \brief maximum number of stored open nodes before switching to normal DFS (command line option -open) (warning! should always be cast to std::size_t when used, so that -1 is equivalent to +infinity)
+    static Long sortBFS; ///< \brief number of visited open nodes before sorting the remaining open nodes (command line option -sopen)
 #ifdef OPENMPI
     static bool burst; ///< \brief in parallel HBFS, workers send open nodes as soon as possible to the master (command line option -burst)
 #endif
@@ -942,21 +953,30 @@ public:
     static vector<Cost> negCostBLP;
     static vector<Cost> initialLbBLP;
     static vector<Cost> initialUbBLP;
+
+    static Double getCostMultiplier() {
+        assert(costMultiplier_ == max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier))));
+        return costMultiplier;
+    }
+    static Cost getCostMultiplierInt() {
+        assert(costMultiplier_ == max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier))));
+        return costMultiplier_;
+    }
+    static void setCostMultiplier(Double mult) {
+        costMultiplier = mult;
+        costMultiplier_ = max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier)));
+        assert(costMultiplier_ >= 1);
+    }
 };
 
-#if defined(INT_COST) || defined(SHORT_COST)
+#if defined(INT_COST) || defined(SHORT_COST) || defined(LONGLONG_COST)
 inline Cost rounding(Cost lb)
 {
-    return (((lb % max(UNIT_COST, (Cost)floorl(ToulBar2::costMultiplier))) != MIN_COST) ? (lb + (Cost)floorl(ToulBar2::costMultiplier)) : lb);
-}
-inline bool CUT(Cost lb, Cost ub) { return rounding(lb) >= ub; }
-inline bool CSP(Cost lb, Cost ub) { return CUT(lb + UNIT_COST, ub); }
-#endif
-
-#ifdef LONGLONG_COST
-inline Cost rounding(Cost lb)
-{
-    return (((lb % max(UNIT_COST, (Cost)floorl(std::abs(ToulBar2::costMultiplier)))) != MIN_COST) ? (lb + (Cost)floorl(std::abs(ToulBar2::costMultiplier))) : lb);
+    if (ToulBar2::costMultiplier_ > 1 && ((lb % ToulBar2::costMultiplier_) != MIN_COST)) {
+        return lb + ToulBar2::costMultiplier_;
+    } else {
+        return lb;
+    }
 }
 inline bool CUT(Cost lb, Cost ub)
 {

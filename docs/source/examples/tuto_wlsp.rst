@@ -71,3 +71,13 @@ The following code using the pytoulbar2 library solves the weighted latin square
 
 .. literalinclude:: ../../../web/TUTORIALS/latinsquare.py
 
+C++ model
+============
+
+The following code using the C++ toulbar2 library API solves the weighted latin square problem.
+
+:download:`latinsquare.cpp<../../../web/TUTORIALS/latinsquare.cpp>`
+
+.. highlight:: c++
+
+.. literalinclude:: ../../../web/TUTORIALS/latinsquare.cpp

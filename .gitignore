@@ -1,6 +1,7 @@
 .vscode
 .pc
 build
+pytoulbar2/*.so
 src/ToulbarVersion.hpp
 src/MyCPackConf.cmake
 __pycache__

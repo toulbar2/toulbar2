@@ -13,7 +13,7 @@
 #include "core/tb2globaldecomposable.hpp"
 #include "core/tb2clqcover.hpp"
 #include "core/tb2knapsack.hpp"
-
+#include "lp-parser.hpp"
 #ifdef BOOST
 #define BOOST_IOSTREAMS_NO_LIB
 #include <boost/version.hpp>
@@ -149,6 +149,7 @@ typedef struct {
  *     - knapsackc \e capacity (\e weight)* \e nb_AMO (\e nb_variables (\e variable \e value)*)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) combined with a list of non-overlapping at-most-one constraints
  *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
  *     - knapsackv \e capacity \e nb_triplets (\e variable \e value \e weight)* to express a reverse knapsack constraint with a list of triplets variable, value, and its corresponding weight
+ *     - salldiffkp hard \e UB to express a hard alldifferent constraint (decomposes into knapsack cost functions)
  *     - wcsp \e lb \e ub \e duplicatehard \e strongduality \e wcsp to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in wcsp format such that its valid solutions must have a cost value in [lb,ub[.
  *
  * - Global cost functions using a flow-based propagator:
@@ -673,11 +674,9 @@ Cost CFNStreamReader::readHeader()
                         cout << " changed to " << decimalPart.size() << " digits";
                         // cout << " (new primal bound: " << integerPart << decimalPart << ")";
                     }
-                } else if (ToulBar2::resolution < 0) {
-                    if (ToulBar2::verbose >= 0) {
-                        cout << endl
-                             << "Sorry, cannot use a negative value for precision! (see option -precision)";
-                    }
+                } else {
+                    cerr << "Sorry, cannot use a negative value for precision! (see option -precision)" << endl;
+                    throw BadConfiguration();
                 }
             }
             if (ToulBar2::verbose >= 0) {
@@ -703,10 +702,10 @@ Cost CFNStreamReader::readHeader()
     }
 
     if (token[0] == '>') {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     }
     if (ToulBar2::bilevel == 3) {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     }
 
     if (ToulBar2::verbose >= 1)
@@ -761,7 +760,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
     // A domain or domain size is there: the variable has no name
     // we create an integer name that cannot clash with user names
     if (isOBrace(token) || isdigit(token[0])) {
-        varName = "x" + to_string(i);
+        varName = to_string("x") + to_string(i);
     } else {
         varName = token;
         std::tie(lineNumber, token) = this->getNextToken();
@@ -774,7 +773,7 @@ unsigned CFNStreamReader::readVariable(unsigned i)
             domainSize = stoi(token);
             if (domainSize >= 0)
                 for (int ii = 0; ii < domainSize; ii++)
-                    valueNames.push_back("v" + to_string(ii));
+                    valueNames.push_back(to_string("v") + to_string(ii));
         } catch (std::invalid_argument&) {
             cerr << "Error: expected domain or domain size instead of '" << token << "' at line " << lineNumber << endl;
         }
@@ -1514,6 +1513,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "samong", ":metric:K:cost:c:min:N:max:N:values:[v]+" },
         { "samongdp", ":metric:K:cost:c:min:N:max:N:values:[v]+" },
         { "salldiffdp", ":metric:K:cost:c" },
+        { "salldiffkp", ":metric:K:cost:c" },
         { "sgccdp", ":metric:K:cost:c:bounds:[vNN]+" },
         { "max", ":defaultcost:c:tuples:[Vvc]+" },
         { "smaxdp", ":defaultcost:c:tuples:[Vvc]+" },
@@ -1738,7 +1738,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                     throw WrongFileFormat();
                 }
             }
-            streamContentVec.push_back(std::make_pair(GCFTemplate[i], std::to_string(cost)));
+            streamContentVec.push_back(std::make_pair(GCFTemplate[i], to_string(cost)));
         }
         // ---------- Read variable and add it to stream
         else if (GCFTemplate[i] == 'V') {
@@ -1846,7 +1846,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         if (not isdigit(token[0])) {
                             auto it = varNameToIdx.find(token);
                             if (it != varNameToIdx.end()) {
-                                token = std::to_string(it->second);
+                                token = to_string(it->second);
                             } else {
                                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
                                 throw WrongFileFormat();
@@ -1875,9 +1875,9 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                             throw WrongFileFormat();
                         }
                         if (variableRepeat)
-                            variableRepeatVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                            variableRepeatVec.push_back(std::make_pair(symbol, to_string(c)));
                         else
-                            repeatedContentVec.push_back(std::make_pair(symbol, std::to_string(c)));
+                            repeatedContentVec.push_back(std::make_pair(symbol, to_string(c)));
                     }
 
                     repeatIndex++;
@@ -1892,7 +1892,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
                         std::tie(lineNumber, token) = this->getNextToken();
                 }
                 if (variableRepeat) { // we must push the size of the repeat and its contents
-                    repeatedContentVec.push_back(std::make_pair('N', std::to_string(variableRepeatVec.size())));
+                    repeatedContentVec.push_back(std::make_pair('N', to_string(variableRepeatVec.size())));
                     repeatedContentVec.insert(repeatedContentVec.end(), variableRepeatVec.begin(), variableRepeatVec.end());
                     variableRepeatVec.clear();
                 }
@@ -1904,7 +1904,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             }
             // Add number of tuples before the list if the number of expected tuples is not known
             if (GCFTemplate[i] == '+')
-                streamContentVec.push_back(std::make_pair('N', std::to_string(numberOfTuplesRead)));
+                streamContentVec.push_back(std::make_pair('N', to_string(numberOfTuplesRead)));
             // Copy repeatedContentVec to streamContent
             for (pair<char, string> repContentPair : repeatedContentVec) {
                 streamContentVec.push_back(std::make_pair(repContentPair.first, repContentPair.second));
@@ -1950,7 +1950,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
         if (streamContentVec[i].first == 'C') {
             Cost currentCost = (Cost)std::stoll(streamContentVec[i].second);
             currentCost -= minCost;
-            streamContentVec[i].second = std::to_string(currentCost);
+            streamContentVec[i].second = to_string(currentCost);
         }
         stream << streamContentVec[i].second << " ";
     }
@@ -2038,7 +2038,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 throw WrongFileFormat();
             }
-            terminal_rule += std::to_string(tcost) + " ";
+            terminal_rule += to_string(tcost) + to_string(" ");
         }
 
         terminal_rules.push_back(terminal_rule);
@@ -2075,7 +2075,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
                 cerr << "Error: sgrammar at line " << lineNumber << "uses a negative cost." << endl;
                 throw WrongFileFormat();
             }
-            non_terminal_rule += std::to_string(tcost) + " ";
+            non_terminal_rule += to_string(tcost) + to_string(" ");
         }
 
         non_terminal_rules.push_back(non_terminal_rule);
@@ -2093,7 +2093,7 @@ void CFNStreamReader::generateGCFStreamSgrammar(vector<int>& scope, stringstream
 
     // Cost had no impact on negCost here
     stream << metric << " " << cost << " " << nb_symbols << " " << nb_values << " " << start_symbol
-           << " " << std::to_string(terminal_rules.size() + non_terminal_rules.size()) << " ";
+           << " " << to_string(terminal_rules.size() + non_terminal_rules.size()) << " ";
     if (metric == "var") {
         for (string terminal_rule : terminal_rules)
             stream << "0 " << terminal_rule;
@@ -2138,7 +2138,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
         if (not isdigit(token[0])) {
             map<string, int>::iterator it;
             if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
-                token = std::to_string(it->second);
+                token = to_string(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
                 throw WrongFileFormat();
@@ -2158,7 +2158,7 @@ void CFNStreamReader::generateGCFStreamSsame(vector<int>& scope, stringstream& s
         if (not isdigit(token[0])) {
             map<string, int>::iterator it;
             if ((it = varNameToIdx.find(token)) != varNameToIdx.end()) {
-                token = std::to_string(it->second);
+                token = to_string(it->second);
             } else {
                 cerr << "Error: unknown variable with name '" << token << "' at line " << lineNumber << endl;
                 throw WrongFileFormat();
@@ -2199,7 +2199,7 @@ Cost WCSP::read_wcsp(const char* fileName)
     free(Nfile2);
 
     // Done internally by the CFN reader
-    if (!ToulBar2::cfn) {
+    if (!ToulBar2::cfn && !ToulBar2::lp) {
         if (ToulBar2::deltaUbS.length() != 0) {
             ToulBar2::deltaUbAbsolute = string2Cost(ToulBar2::deltaUbS.c_str());
             ToulBar2::deltaUb = ToulBar2::deltaUbAbsolute;
@@ -2338,18 +2338,23 @@ Cost WCSP::read_wcsp(const char* fileName)
         read_qpbo(fileName);
     } else if (ToulBar2::opb) {
         read_opb(fileName);
+    } else if (ToulBar2::lp) {
+        read_lp(fileName);
     } else {
         read_legacy(fileName);
     }
 
     // common ending section for all readers
 
-#ifdef BOOST
-    if (ToulBar2::addAMOConstraints) {
-        addAMOConstraints();
-        ToulBar2::addAMOConstraints_ = false;
-    }
-#endif
+    //#ifdef BOOST
+    //    if (ToulBar2::addAMOConstraints!=-1) {
+    //        propagate(); // CHOOSE: initial propagation must be done beforehand (with full propagation for knapsack constraints)
+    //        ToulBar2::addAMOConstraints_ = true;
+    //        propagate(); // OR CHOOSE: initial propagation must be done beforehand (but only bound propagation for knapsack constraints)
+    //        addAMOConstraints();
+    //        ToulBar2::addAMOConstraints_ = false;
+    //    }
+    //#endif
 
     // Diverse variables structure and variables allocation and initialization
     if (ToulBar2::divNbSol > 1) {
@@ -2360,11 +2365,11 @@ Cost WCSP::read_wcsp(const char* fileName)
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_sol" + std::to_string(j) + "_" + x->getName(), 0, 2 * ToulBar2::divBound + 1);
+                    divVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + to_string("c_sol") + to_string(j) + to_string("_") + x->getName(), 0, 2 * ToulBar2::divBound + 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("q" + std::to_string(val % (ToulBar2::divBound + 1)) + "_"
-                            + std::to_string(val / (ToulBar2::divBound + 1)));
+                        theVar->addValueName(to_string("q") + to_string(val % (ToulBar2::divBound + 1)) + to_string("_")
+                            + to_string(val / (ToulBar2::divBound + 1)));
                     }
                 }
             }
@@ -2376,10 +2381,10 @@ Cost WCSP::read_wcsp(const char* fileName)
             for (unsigned int j = 0; j < ToulBar2::divNbSol - 1; j++) {
                 for (Variable* x : divVariables) {
                     int xId = x->wcspIndex;
-                    divHVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_sol" + std::to_string(j) + "_" + x->getName(), 0, ToulBar2::divBound);
+                    divHVarsId[j][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + to_string("h_sol") + to_string(j) + to_string("_") + x->getName(), 0, ToulBar2::divBound);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[j][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("q" + std::to_string(val));
+                        theVar->addValueName(to_string("q") + to_string(val));
                     }
                 }
             }
@@ -2393,7 +2398,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     divVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "c_relax_" + x->getName(), 0, ToulBar2::divWidth * ToulBar2::divWidth - 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divVarsId[ToulBar2::divNbSol - 1][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("Q" + std::to_string(val));
+                        theVar->addValueName(to_string("Q") + to_string(val));
                     }
                 }
             }
@@ -2403,7 +2408,7 @@ Cost WCSP::read_wcsp(const char* fileName)
                     divHVarsId[ToulBar2::divNbSol - 1][xId] = makeEnumeratedVariable(HIDDEN_VAR_TAG + "h_relax_" + x->getName(), 0, ToulBar2::divWidth - 1);
                     EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(divHVarsId[ToulBar2::divNbSol - 1][xId]));
                     for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                        theVar->addValueName("q" + std::to_string(val));
+                        theVar->addValueName(to_string("q") + to_string(val));
                     }
                 }
             }
@@ -2510,8 +2515,7 @@ void WCSP::read_legacy(istream& file)
 
     // read variable domain sizes
     for (unsigned int i = 0; i < nbvar; i++) {
-        string varname;
-        varname = "x" + to_string(i);
+        string varname = to_string("x") + to_string(i);
         file >> domsize;
         if (domsize > nbvaltrue)
             nbvaltrue = domsize;
@@ -3070,7 +3074,7 @@ void WCSP::read_uai2008(const char* fileName)
     // read variable domain sizes
     for (i = 0; i < nbvar; i++) {
         string varname;
-        varname = "x" + to_string(i);
+        varname = to_string("x") + to_string(i);
         file >> domsize;
         if (ToulBar2::verbose >= 1)
             cout << "read variable " << i << " of size " << domsize << endl;
@@ -3142,6 +3146,12 @@ void WCSP::read_uai2008(const char* fileName)
         } else if (arity == 0) {
             scopes.push_back({});
         }
+        // prepare directed constraint graph used for finding a topological order
+        if (!markov) {
+            for (i = 0; i < arity - 1; i++) {
+                getListSuccessors()->at(scopes.back()[i]).push_back(scopes.back().back());
+            }
+        }
     }
 
     ToulBar2::markov_log = 0; // for the MARKOV Case
@@ -3150,6 +3160,7 @@ void WCSP::read_uai2008(const char* fileName)
     vector<vector<Cost>> costs(scopes.size());
     int iunaryctr = 0;
     int ictr = 0;
+    bool errorp = false;
     vector<vector<int>>::iterator it = scopes.begin();
     while (it != scopes.end()) {
         file >> ntuples;
@@ -3165,13 +3176,13 @@ void WCSP::read_uai2008(const char* fileName)
         TProb maxp = 0.;
         for (k = 0; k < ntuples; k++) {
             file >> p;
-            if (ToulBar2::sigma > 0.0) {
+            if (ToulBar2::sigma > 0.) {
                 Double noise = aleaGaussNoise(ToulBar2::sigma);
                 if (ToulBar2::verbose >= 1)
                     cout << "add noise " << noise << " to " << p << endl;
-                p = max(0.0L, p + noise); // can create forbidden tuples
+                p = max((TProb)0., p + noise); // can create forbidden tuples
                 if (!markov)
-                    p = min(p, 1.0L); // in Bayesian networks probability cannot be greater than 1
+                    p = min(p, (TProb)1.); // in Bayesian networks probability cannot be greater than 1
             }
             assert(ToulBar2::uai > 1 || (p >= 0. && (markov || p <= 1.)));
             costsProb.push_back(p);
@@ -3181,6 +3192,28 @@ void WCSP::read_uai2008(const char* fileName)
             THROWCONTRADICTION;
         if (ToulBar2::uai == 2 && maxp < -1e38)
             THROWCONTRADICTION;
+        // ensures conditional probabilities sum to 1 in the case of a Bayesian network
+        if (!markov) {
+            int domsize = getDomainInitSize((*it).back());
+            for (k = 0; k < ntuples; k += domsize) {
+                TProb cumul = 0.;
+                int k2 = 0;
+                for (; k2 < domsize - 1 && cumul + costsProb[k + k2] <= 1.; k2++) {
+                    cumul += costsProb[k + k2];
+                }
+                assert(cumul <= 1.);
+                for (; k2 < domsize ; k2++) {
+                    if (!errorp && abs( cumul + costsProb[k + k2] - (TProb)1. ) > (TProb)ToulBar2::epsilon) {
+                        cout << "Warning! Conditional probability table for variable " << getName((*it).back()) << " must have been normalized. Try option -epsilon with less precision to remove this warning (e.g., -epsilon=1e-4)." << endl;
+                        errorp = true;
+                    }
+                    costsProb[k + k2] = 1. - cumul;
+                    cumul = 1.;
+                }
+                // Do not need to update maxp because it is only used for Markov network!
+            }
+            assert(k == ntuples);
+        }
 
         Cost minc = MAX_COST;
         Cost maxc = MIN_COST;
@@ -3502,7 +3535,7 @@ void WCSP::solution_XML(bool opt)
         cout << "<instantiation type=\"solution\"> <list>";
     }
     for (unsigned int i = 0; i < vars.size(); i++) {
-        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0 && getName(i).rfind(HIDDEN_VAR_TAG, 0) != 0) {
             cout << " " << getName(i);
         }
     }
@@ -3516,7 +3549,7 @@ void WCSP::solution_XML(bool opt)
         int index = ((EnumeratedVariable*)getVar(i))->toIndex(value);
         cout << Doms[varsDom[i]][index] << " ";
 #else // XCSP3
-        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0) {
+        if (getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0 && getName(i).rfind(HIDDEN_VAR_TAG, 0) != 0) {
             cout << " " << value;
         }
 #endif
@@ -3627,7 +3660,7 @@ void WCSP::read_wcnf(const char* fileName)
     // create Boolean variables
     for (int i = 0; i < nbvar; i++) {
         string varname;
-        varname = "x" + to_string(i);
+        varname = to_string("x") + to_string(i);
         DEBONLY(int theindex =)
         makeEnumeratedVariable(varname, 0, 1);
         assert(theindex == i);
@@ -3847,7 +3880,7 @@ void WCSP::read_qpbo(const char* fileName)
 
     // create Boolean variables
     for (int i = 0; i < n; i++) {
-        makeEnumeratedVariable("x" + to_string(i), 0, 1);
+        makeEnumeratedVariable(to_string("x") + to_string(i), 0, 1);
     }
 
     vector<Cost> unaryCosts0(n, 0);
@@ -3858,15 +3891,15 @@ void WCSP::read_qpbo(const char* fileName)
     for (int e = 0; e < m; e++) {
         sumcost += 2. * std::abs(cost[e]);
     }
-    Double multiplier = Exp10((Double)ToulBar2::resolution);
-    ToulBar2::costMultiplier = multiplier;
+    Double multiplier = Exp10((Double)ToulBar2::resolution); // warning! precision of costs depends on the chosen resolution but toulbar2 outputs costs as if it was always zero resolution.
+    ToulBar2::setCostMultiplier(multiplier);
     if (!minimize)
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     if (multiplier * sumcost >= (Double)MAX_COST) {
         cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
         throw BadConfiguration();
     }
-    Cost top = (Cost)multiplier * sumcost + 1;
+    Cost top = (Cost)roundl(multiplier * sumcost) + UNIT_COST;
     ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
     updateUb(top + ToulBar2::deltaUb);
 
@@ -3877,43 +3910,43 @@ void WCSP::read_qpbo(const char* fileName)
             if (booldom) {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        costs[3] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
                         negCost += costs[0];
                     }
                 } else {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                         costs[1] = costs[0];
                         costs[2] = costs[0];
                         negCost += costs[0];
                     } else {
-                        costs[3] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        costs[3] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[3] = costs[0];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     } else {
-                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
+                        costs[1] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * 2. * cost[e]);
                         costs[2] = costs[1];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        costs[1] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
+                        costs[1] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[2] = costs[1];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     } else {
-                        costs[0] = (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
+                        costs[0] = (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -2. * cost[e]);
                         costs[3] = costs[0];
-                        negCost += (Cost)(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
+                        negCost += (Cost)roundl(multiplier * ToulBar2::qpboQuadraticCoefMultiplier * -cost[e]);
                     }
                 }
             }
@@ -3922,35 +3955,35 @@ void WCSP::read_qpbo(const char* fileName)
             if (booldom) {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * cost[e]);
                     } else {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * cost[e]);
-                        negCost += (Cost)(multiplier * cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * cost[e]);
+                        negCost += (Cost)roundl(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
-                        negCost += (Cost)(multiplier * -cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * -cost[e]);
+                        negCost += (Cost)roundl(multiplier * -cost[e]);
                     } else {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * -cost[e]);
                     }
                 }
             } else {
                 if (cost[e] > 0) {
                     if (minimize) {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
-                        negCost += (Cost)(multiplier * cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * 2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * cost[e]);
                     } else {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * 2. * cost[e]);
-                        negCost += (Cost)(multiplier * cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * 2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * cost[e]);
                     }
                 } else {
                     if (minimize) {
-                        unaryCosts1[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
-                        negCost += (Cost)(multiplier * -cost[e]);
+                        unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * -2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * -cost[e]);
                     } else {
-                        unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -2. * cost[e]);
-                        negCost += (Cost)(multiplier * -cost[e]);
+                        unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * -2. * cost[e]);
+                        negCost += (Cost)roundl(multiplier * -cost[e]);
                     }
                 }
             }
@@ -3993,7 +4026,7 @@ void readToken(istream& file, string& token, int* keep = NULL)
         token = token + "1";
     } else if (token.size() >= 2 && (token[0] == '+' || token[0] == '-') && string("0123456789").find(token[1]) == string::npos) {
         twotokens = true;
-        token = to_string(token[0]) + "1" + token.substr(1);
+        token = to_string(token[0]) + to_string("1") + token.substr(1);
     }
     if (keep) {
         if (twotokens) {
@@ -4018,7 +4051,7 @@ void WCSP::read_opb(const char* fileName)
 #ifndef NO_BZ2
         zfile.push(boost::iostreams::bzip2_decompressor());
 #else
-        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed wcsp format files." << endl;
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed opb format files." << endl;
         throw WrongFileFormat();
 #endif
     } else if (ToulBar2::xz) {
@@ -4086,9 +4119,9 @@ void WCSP::read_opb(const char* fileName)
     bool opt = true;
     int opsize = 4;
     Double multiplier = Exp10((Double)ToulBar2::resolution);
-    ToulBar2::costMultiplier = multiplier;
+    ToulBar2::setCostMultiplier(multiplier);
     if (token.substr(0, 4) == "max:") {
-        ToulBar2::costMultiplier *= -1.0;
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
     } else if (token.substr(0, 4) != "min:") {
         opt = false;
         opsize = 0;
@@ -4227,14 +4260,14 @@ void WCSP::read_opb(const char* fileName)
                 if (op == ">=" || op == "=") {
                     params = to_string(coef);
                     for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        params += " " + to_string(coefs[i]);
+                        params += to_string(" ") + to_string(coefs[i]);
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
                 if (op == "<=" || op == "=") {
                     params = to_string(-coef);
                     for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        params += " " + to_string(-coefs[i]);
+                        params += to_string(" ") + to_string(-coefs[i]);
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
@@ -4290,6 +4323,320 @@ void WCSP::read_opb(const char* fileName)
     sortConstraints();
     if (ToulBar2::verbose >= 0)
         cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
+}
+
+void WCSP::read_lp(const char* fileName)
+{
+    ifstream rfile(fileName, (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) ? (std::ios_base::in | std::ios_base::binary) : (std::ios_base::in));
+#ifdef BOOST
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> zfile;
+    if (ToulBar2::gz) {
+        zfile.push(boost::iostreams::gzip_decompressor());
+    } else if (ToulBar2::bz2) {
+#ifndef NO_BZ2
+        zfile.push(boost::iostreams::bzip2_decompressor());
+#else
+        cerr << "Error: Boost requires the bzip2 library to read bz2 compressed lp format files." << endl;
+        throw WrongFileFormat();
+#endif
+    } else if (ToulBar2::xz) {
+#ifndef NO_LZMA
+        zfile.push(boost::iostreams::lzma_decompressor());
+#else
+        cerr << "Error: compiling with Boost version 1.65 or higher is needed to allow to read xz compressed lp format files." << endl;
+        throw WrongFileFormat();
+#endif
+    }
+    zfile.push(rfile);
+    istream ifile(&zfile);
+
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open lp file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : ifile;
+#else
+    if (ToulBar2::gz || ToulBar2::bz2 || ToulBar2::xz) {
+        cerr << "Error: compiling with Boost iostreams library is needed to allow to read compressed lp format files." << endl;
+        throw WrongFileFormat();
+    }
+    if (ToulBar2::stdin_format.length() == 0 && !rfile) {
+        cerr << "Could not open lp file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    istream& file = (ToulBar2::stdin_format.length() > 0) ? cin : rfile;
+#endif
+
+    auto pb = baryonyx::make_problem(file);
+    if (!pb) {
+        cerr << "Could not read lp file : " << fileName << endl;
+        throw WrongFileFormat();
+    }
+    if (pb.status != baryonyx::file_format_error_tag::success) {
+        cerr << "Wrong lp format : " << pb.status << endl;
+        throw WrongFileFormat();
+    }
+
+    updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
+
+    int maxarity = 0;
+    int maxdom = 0;
+    int nbvar = 0;
+    int nblinear = 0;
+    vector<TemporaryUnaryConstraint> unaryconstrs;
+
+    map<string, int> varnames;
+    assert(pb.vars.names.size() == pb.vars.values.size());
+    for (unsigned int i = 0; i < pb.vars.names.size(); i++) {
+        if (!pb.vars.values[i].touched) {
+            assert(pb.vars.values[i].min == std::numeric_limits<int>::min());
+            pb.vars.values[i].min = 0;
+        }
+        // assert(pb.vars.values[i].type == baryonyx::variable_type::binary || pb.vars.values[i].type == baryonyx::variable_type::general || (pb.vars.values[i].type == baryonyx::variable_type::real && pb.vars.values[i].min == pb.vars.values[i].max));
+        if (pb.vars.values[i].max == std::numeric_limits<int>::max()) {
+            cerr << "Sorry, cannot represent unbounded variable domain for " << pb.vars.names[i] << " (must add a valid upper bound)" << endl;
+            throw BadConfiguration();
+        }
+        if (pb.vars.values[i].min == std::numeric_limits<int>::min()) {
+            cerr << "Sorry, cannot represent unbounded variable domain for " << pb.vars.names[i] << " (must add a valid lower bound)" << endl;
+            throw BadConfiguration();
+        }
+        if (pb.vars.values[i].min > pb.vars.values[i].max) {
+            cerr << "Infeasible problem! " << pb.vars.names[i] << " has a lower bound " << pb.vars.values[i].min << " greater than its upper bound " << pb.vars.values[i].max << endl;
+            throw Contradiction();
+        }
+#ifdef WCSPFORMATONLY
+        int var = makeEnumeratedVariable(to_string(pb.vars.names[i]), 0, pb.vars.values[i].max - pb.vars.values[i].min);
+#else
+        int var = makeEnumeratedVariable(to_string(pb.vars.names[i]), pb.vars.values[i].min, pb.vars.values[i].max);
+#endif
+        varnames[to_string(pb.vars.names[i])] = var;
+        for (int v = pb.vars.values[i].min; v <= pb.vars.values[i].max; v++) {
+            string valname = "v";
+            valname += to_string(v);
+            addValueName(var, valname);
+        }
+        nbvar++;
+        maxdom = max(maxdom, pb.vars.values[i].max - pb.vars.values[i].min + 1);
+    }
+
+    if (ToulBar2::resolution < 0) {
+        cerr << "Sorry, cannot use a negative value for precision! (see option -precision)" << endl;
+        throw BadConfiguration();
+    }
+    Double multiplier = Exp10((Double)min(ToulBar2::resolution, baryonyx::precision));
+    ToulBar2::decimalPoint = abs(min(ToulBar2::resolution, baryonyx::precision));
+
+    // read objective function
+    ToulBar2::setCostMultiplier(1.0);
+    if (pb.type == baryonyx::objective_function_type::maximize) {
+        ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
+    }
+
+    Double totalShiftCost = 0.0;
+    for (auto& elem : pb.objective.elements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier;
+        if (multiplier * std::abs(mult) * max(abs(pb.vars.values[elem.variable_index].min), abs(pb.vars.values[elem.variable_index].max)) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
+            cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        mult = multiplier * min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
+        totalShiftCost += mult;
+    }
+    for (auto& elem : pb.objective.qelements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier;
+        if (multiplier * std::abs(mult) * max(abs(pb.vars.values[elem.variable_index_a].min), abs(pb.vars.values[elem.variable_index_a].max)) * max(abs(pb.vars.values[elem.variable_index_b].min), abs(pb.vars.values[elem.variable_index_b].max)) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
+            cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        mult = multiplier * min(min(mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].max), min(mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].max));
+        totalShiftCost += mult;
+    }
+    negCost -= (Cost)roundl(totalShiftCost);
+
+    // linear objective
+    for (auto& elem : pb.objective.elements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
+        EnumeratedVariable* x = (EnumeratedVariable*)vars[elem.variable_index];
+        TemporaryUnaryConstraint unaryconstr;
+        unaryconstr.var = x;
+        Double shiftCost = min(mult * pb.vars.values[elem.variable_index].min, mult * pb.vars.values[elem.variable_index].max);
+        for (int v = pb.vars.values[elem.variable_index].min; v <= pb.vars.values[elem.variable_index].max; v++) {
+            unaryconstr.costs.push_back((Cost)roundl(mult * v - shiftCost));
+        }
+        unaryconstrs.push_back(unaryconstr);
+    }
+    // quadratic objective
+    for (auto& elem : pb.objective.qelements) {
+        Double mult = elem.factor * ToulBar2::costMultiplier * multiplier;
+        vector<Cost> costs;
+        Double shiftCost = min(min(mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].min * pb.vars.values[elem.variable_index_b].max), min(mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].min, mult * pb.vars.values[elem.variable_index_a].max * pb.vars.values[elem.variable_index_b].max));
+        for (int v = pb.vars.values[elem.variable_index_a].min; v <= pb.vars.values[elem.variable_index_a].max; v++) {
+            for (int w = pb.vars.values[elem.variable_index_b].min; w <= pb.vars.values[elem.variable_index_b].max; w++) {
+                costs.push_back((Cost)roundl(mult * v * w - shiftCost));
+            }
+        }
+        postBinaryConstraint(elem.variable_index_a, elem.variable_index_b, costs);
+    }
+
+    // read linear constraints
+    for (auto& ctr : pb.greater_constraints) {
+        vector<int> scopeIndex;
+        string params;
+        maxarity = max(maxarity, (int)ctr.elements.size());
+        nblinear++;
+        Double multiplier = Exp10((Double)min(ToulBar2::resolution, ctr.precision));
+        if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
+            cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        params = to_string(static_cast<long long int>(baryonyx::Floor(ctr.value * multiplier)));
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min = pb.vars.values[x].min;
+            int max = pb.vars.values[x].max;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
+            params += to_string(" ") + to_string(max - min + 1);
+            scopeIndex.push_back(x);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += to_string(" ") + to_string(v - min);
+#else
+                params += to_string(" ") + to_string(v);
+#endif
+                params += to_string(" ") + to_string(coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+    }
+    for (auto& ctr : pb.less_constraints) {
+        vector<int> scopeIndex;
+        string params;
+        maxarity = max(maxarity, (int)ctr.elements.size());
+        nblinear++;
+        Double multiplier = Exp10((Double)min(ToulBar2::resolution, ctr.precision));
+        if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
+            cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min = pb.vars.values[x].min;
+            int max = pb.vars.values[x].max;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
+            params += to_string(" ") + to_string(max - min + 1);
+            scopeIndex.push_back(x);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += to_string(" ") + to_string(v - min);
+#else
+                params += to_string(" ") + to_string(v);
+#endif
+                params += to_string(" ") + to_string(-coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+    }
+    for (auto& ctr : pb.equal_constraints) {
+        vector<int> scopeIndex;
+        string params;
+        maxarity = max(maxarity, (int)ctr.elements.size());
+        nblinear++;
+        Double multiplier = Exp10((Double)min(ToulBar2::resolution, ctr.precision));
+        if (multiplier * std::abs(ctr.value) >= (Double)(std::numeric_limits<long long int>::max())) {
+            cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+            throw BadConfiguration();
+        }
+        params = to_string(static_cast<long long int>(baryonyx::Floor(ctr.value * multiplier)));
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min = pb.vars.values[x].min;
+            int max = pb.vars.values[x].max;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
+            params += to_string(" ") + to_string(max - min + 1);
+            scopeIndex.push_back(x);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += to_string(" ") + to_string(v - min);
+#else
+                params += to_string(" ") + to_string(v);
+#endif
+                params += to_string(" ") + to_string(coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+        params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            int min = pb.vars.values[x].min;
+            int max = pb.vars.values[x].max;
+            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                throw BadConfiguration();
+            }
+            long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
+            params += to_string(" ") + to_string(max - min + 1);
+            for (int v = min; v <= max; v++) {
+#ifdef WCSPFORMATONLY
+                params += to_string(" ") + to_string(v - min);
+#else
+                params += to_string(" ") + to_string(v);
+#endif
+                params += to_string(" ") + to_string(-coef * v);
+            }
+        }
+        postKnapsackConstraint(scopeIndex, params, false, true, false);
+    }
+
+    ToulBar2::resolution = min(ToulBar2::resolution, baryonyx::precision);
+
+    Cost upperBound = getUb();
+    if (ToulBar2::externalUB.length() != 0) {
+        upperBound = min(upperBound, decimalToCost(ToulBar2::externalUB, 0) + negCost);
+    }
+    if (ToulBar2::deltaUbS.length() != 0) {
+        ToulBar2::deltaUbAbsolute = max(MIN_COST, decimalToCost(ToulBar2::deltaUbS, 0));
+        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)upperBound));
+        if (ToulBar2::deltaUb > MIN_COST) {
+            // as long as a true certificate as not been found we must compensate for the deltaUb in CUT
+            upperBound += ToulBar2::deltaUb;
+        }
+    }
+    updateUb(upperBound);
+
+    if (ToulBar2::costThresholdS.size())
+        ToulBar2::costThreshold = decimalToCost(ToulBar2::costThresholdS, 0);
+    if (ToulBar2::costThresholdPreS.size())
+        ToulBar2::costThresholdPre = decimalToCost(ToulBar2::costThresholdPreS, 0);
+    if (ToulBar2::vnsOptimumS.size())
+        ToulBar2::vnsOptimum = decimalToCost(ToulBar2::vnsOptimumS, 0) + negCost;
+
+    // apply basic initial propagation AFTER complete network loading
+    if (multiplier * std::abs(pb.objective.value) >= (Double)(MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST / MEDIUM_COST) {
+        cerr << "This resolution cannot be ensured on the data type used to represent costs! (see option -precision)" << endl;
+        throw BadConfiguration();
+    }
+    postNullaryConstraint((Cost)roundl(pb.objective.value * ToulBar2::costMultiplier * multiplier));
+
+    for (unsigned int u = 0; u < unaryconstrs.size(); u++) {
+        postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
+    }
+    sortConstraints();
+    if (ToulBar2::verbose >= 0)
+        cout << "c Read " << nbvar << " variables, with " << maxdom << " values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (precision: " << ToulBar2::decimalPoint << ", shifting value: " << -negCost << ")" << endl;
 }
 
 /* Local Variables: */

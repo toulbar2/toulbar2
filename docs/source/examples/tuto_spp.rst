@@ -45,5 +45,7 @@ The following code uses the C++ toulbar2 library. Compile toulbar2 with "cmake -
 
 :download:`square.cpp<../../../web/TUTORIALS/square.cpp>`
 
+.. highlight:: c++
+
 .. literalinclude:: ../../../web/TUTORIALS/square.cpp
 

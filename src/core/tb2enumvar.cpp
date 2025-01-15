@@ -164,14 +164,19 @@ void EnumeratedVariable::queueFEAC()
 void EnumeratedVariable::project(Value value, Cost cost, bool delayed)
 {
     assert(cost >= MIN_COST);
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project " << getName() << " (" << value << ") += " << cost << endl), true));
     Cost oldcost = getCost(value);
     costs[toIndex(value)] += cost;
     Cost newcost = oldcost + cost;
     if (value == maxCostValue || LUBTEST(maxCost, newcost))
         queueNC();
     if (DACTEST(oldcost, cost)) {
-        queueDAC();
-        queueEAC1();
+        if (ToulBar2::LcLevel >= LC_DAC) {
+            queueDAC();
+            queueEAC1();
+        } else if (ToulBar2::LcLevel == LC_AC && wcsp->vac) { // SdG: to be compatible with verify for knapsack constraints
+            queueAC();
+        }
     }
     if (CUT(newcost + wcsp->getLb(), wcsp->getUb())) {
         if (delayed)
@@ -213,6 +218,7 @@ void EnumeratedVariable::extend(Value value, Cost cost)
 
 void EnumeratedVariable::extendAll(Cost cost)
 {
+    assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] extendAll " << getName() << " -= " << cost << endl), true));
     assert(cost > MIN_COST);
     deltaCost += cost; // Warning! Possible overflow???
     queueNC();
@@ -1092,7 +1098,8 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
     BinaryConstraint* yznew = wcsp->newBinaryConstr(y, z, xylink.constr, xzlink.constr);
     wcsp->elimBinOrderInc();
 
-    Cost negcost = MIN_COST;
+    bool flag = false;
+    Cost negcost = MAX_COST;
     for (iterator itery = y->begin(); itery != y->end(); ++itery) {
         for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
             Cost mincost = MAX_COST;
@@ -1105,45 +1112,59 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
                 else if (curcost < mincost)
                     mincost = curcost;
             }
-            if (mincost < negcost)
+            if (mincost < negcost) {
+                if (negcost < MAX_COST) {
+                    flag = true;
+                }
                 negcost = mincost;
+            } else if (mincost > negcost) {
+                flag = true;
+            }
             yznew->setcost(*itery, *iterz, mincost); // Warning! it can set a negative cost temporally
         }
     }
-    assert(negcost <= MIN_COST);
-    if (negcost < MIN_COST) {
+    assert(negcost <= MAX_COST);
+    if (negcost != MIN_COST) {
         for (iterator itery = y->begin(); itery != y->end(); ++itery) {
             for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
                 yznew->addcost(*itery, *iterz, -negcost);
             }
         }
-        wcsp->decreaseLb(negcost);
-    }
-
-    if (yz) {
-        if (td && !td->isSameCluster(yz->getCluster(), cluster)) {
-            yz = yznew;
-            yz->reconnect();
-            yz->setCluster(getCluster());
-            yz->setDuplicate();
+        if (negcost < MIN_COST) {
+            wcsp->decreaseLb(negcost);
         } else {
-            yz->addCosts(yznew);
-            if (y->unassigned() && z->unassigned())
-                yz->reconnect();
+            wcsp->increaseLb(negcost);
         }
-    } else {
-        yz = yznew;
-        yz->setCluster(getCluster());
-        yz->reconnect();
     }
 
-    assert(!td || td->isSameCluster(yz->getCluster(), cluster));
+    assert(flag == !yznew->universal());
+    if (flag) {
+        if (yz) {
+            if (td && !td->isSameCluster(yz->getCluster(), cluster)) {
+                yz = yznew;
+                yz->reconnect();
+                yz->setCluster(getCluster());
+                yz->setDuplicate();
+            } else {
+                yz->addCosts(yznew);
+                if (y->unassigned() && z->unassigned())
+                    yz->reconnect();
+            }
+        } else {
+            yz = yznew;
+            yz->setCluster(getCluster());
+            yz->reconnect();
+        }
+
+        assert(!td || td->isSameCluster(yz->getCluster(), cluster));
+    }
 
     // to be done before propagation
     WCSP::elimInfo ei = { this, y, z, (BinaryConstraint*)xylink.constr, (BinaryConstraint*)xzlink.constr, NULL, NULL };
     wcsp->elimInfos[wcsp->getElimOrder()] = ei;
     wcsp->elimOrderInc();
-    yz->propagate();
+    if (flag)
+        yz->propagate();
     return true;
 }
 
@@ -1222,7 +1243,8 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
         }
     }
 
-    Cost negcost = MIN_COST;
+    bool flag = false;
+    Cost negcost = MAX_COST;
     for (iterator itery = y->begin(); itery != y->end(); ++itery) {
         for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
             Cost mincost = MAX_COST;
@@ -1263,31 +1285,45 @@ bool EnumeratedVariable::elimVar(TernaryConstraint* xyz)
                 else if (curcost < mincost)
                     mincost = curcost;
             }
-            if (mincost < negcost)
+            if (mincost < negcost) {
+                if (negcost < MAX_COST) {
+                    flag = true;
+                }
                 negcost = mincost;
+            } else if (mincost > negcost) {
+                flag = true;
+            }
             yz->addcost(*itery, *iterz, mincost); // Warning! it can add a negative cost temporally
         }
     }
-    assert(negcost <= MIN_COST);
-    if (negcost < MIN_COST) {
+    assert(negcost <= MAX_COST);
+    if (negcost != MIN_COST) {
         for (iterator itery = y->begin(); itery != y->end(); ++itery) {
             for (iterator iterz = z->begin(); iterz != z->end(); ++iterz) {
                 yz->addcost(*itery, *iterz, -negcost);
             }
         }
-        wcsp->decreaseLb(negcost);
+        if (negcost < MIN_COST) {
+            wcsp->decreaseLb(negcost);
+        } else {
+            wcsp->increaseLb(negcost);
+        }
     }
 
-    if (y->unassigned() && z->unassigned())
-        yz->reconnect();
+    assert(yz->connected() || flag == !yz->universal());
+    if (flag) {
+        if (y->unassigned() && z->unassigned())
+            yz->reconnect();
 
-    assert(!td || td->isSameCluster(yz->getCluster(), cluster));
+        assert(!td || td->isSameCluster(yz->getCluster(), cluster));
+    }
 
     // to be done before propagation
     WCSP::elimInfo ei = { this, y, z, (BinaryConstraint*)links[(flag_rev) ? 1 : 0].constr, (BinaryConstraint*)links[(flag_rev) ? 0 : 1].constr, xyz, NULL };
     wcsp->elimInfos[wcsp->getElimOrder()] = ei;
     wcsp->elimOrderInc();
-    yz->propagate();
+    if (flag)
+        yz->propagate();
     return true;
 }
 

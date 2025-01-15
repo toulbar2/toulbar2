@@ -52,13 +52,13 @@ void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)
 //--------------------------------------------------------------------------------------------
 bool Bicriteria::notEqual(Bicriteria::Point p1, Bicriteria::Point p2)
 {
-    return fabs(p1.first - p2.first) >= MultiCFN::epsilon || fabs(p1.second - p2.second) >= MultiCFN::epsilon;
+    return fabs(p1.first - p2.first) >= ToulBar2::epsilon || fabs(p1.second - p2.second) >= ToulBar2::epsilon;
 }
 
 //--------------------------------------------------------------------------------------------
 bool Bicriteria::equal(Point p1, Point p2)
 {
-    return fabs(p1.first - p2.first) <= MultiCFN::epsilon && fabs(p1.second - p2.second) <= MultiCFN::epsilon;
+    return fabs(p1.first - p2.first) <= ToulBar2::epsilon && fabs(p1.second - p2.second) <= ToulBar2::epsilon;
 }
 
 //--------------------------------------------------------------------------------------------
@@ -68,14 +68,14 @@ bool Bicriteria::dominates(Point p1, Point p2, pair<OptimDir, OptimDir> optim_di
     unsigned int obj_1 = 0;
     if ((optim_dir.first == Optim_Min && p1.first < p2.first) || (optim_dir.first == Optim_Max && p1.first > p2.first)) {
         obj_1 = 2;
-    } else if (fabs(p1.first - p2.first) <= MultiCFN::epsilon) {
+    } else if (fabs(p1.first - p2.first) <= ToulBar2::epsilon) {
         obj_1 = 1;
     }
 
     unsigned int obj_2 = 0;
     if ((optim_dir.second == Optim_Min && p1.second < p2.second) || (optim_dir.second == Optim_Max && p1.second > p2.second)) {
         obj_2 = 2;
-    } else if (fabs(p1.second - p2.second) <= MultiCFN::epsilon) {
+    } else if (fabs(p1.second - p2.second) <= ToulBar2::epsilon) {
         obj_2 = 1;
     }
 
@@ -99,7 +99,7 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
     // WeightedCSPSolver* solver = WeightedCSPSolver::makeWeightedCSPSolver(MAX_COST);
 
     // WCSP* pb = dynamic_cast<WCSP*>(solver->getWCSP());
-    // combiner.exportToWCSP(pb);
+    // combiner.exportToWCSP(pb, {}, {}, {});
 
     /* debug */
     // ofstream file("latin_combined.cfn");
@@ -178,7 +178,7 @@ void Bicriteria::computeAdditionalSolutions(MultiCFN* multicfn, pair<Bicriteria:
     Double new_lb = _points[solIndex].first * weights.first + _points[solIndex].second * weights.second;
 
     // lower the upper bound if the percentage is not one
-    if (fabs(1. - pct) > MultiCFN::epsilon) {
+    if (fabs(1. - pct) > ToulBar2::epsilon) {
         new_ub -= (new_ub - new_lb) * (1. - pct);
     }
 
@@ -293,10 +293,10 @@ void Bicriteria::computeNonSupported(MultiCFN* multicfn, pair<Bicriteria::OptimD
     vector<bool> isTriangle(_solutions.size() - 1, true); // false if the triangle is flat
     for (unsigned int ind = 0; ind < corners.size(); ind++) {
 
-        if (fabs(_points[ind].first - _points[ind + 1].first) <= MultiCFN::epsilon) {
+        if (fabs(_points[ind].first - _points[ind + 1].first) <= ToulBar2::epsilon) {
             isTriangle[ind] = false;
             continue;
-        } else if (fabs(_points[ind].second - _points[ind + 1].second) <= MultiCFN::epsilon) {
+        } else if (fabs(_points[ind].second - _points[ind + 1].second) <= ToulBar2::epsilon) {
             isTriangle[ind] = false;
             continue;
         }
@@ -718,10 +718,10 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
             _solutions.push_back(new_sol);
 
             // add two new scalarizations
-            if (fabs(top.first.first - new_point.first) >= MultiCFN::epsilon && fabs(top.first.second - new_point.second) >= MultiCFN::epsilon) {
+            if (fabs(top.first.first - new_point.first) >= ToulBar2::epsilon && fabs(top.first.second - new_point.second) >= ToulBar2::epsilon) {
                 pending.push(make_pair(top.first, new_point));
             }
-            if (fabs(top.second.first - new_point.first) >= MultiCFN::epsilon && fabs(top.second.second - new_point.second) >= MultiCFN::epsilon) {
+            if (fabs(top.second.first - new_point.first) >= ToulBar2::epsilon && fabs(top.second.second - new_point.second) >= ToulBar2::epsilon) {
                 pending.push(make_pair(new_point, top.second));
             }
         }

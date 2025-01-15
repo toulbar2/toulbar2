@@ -21,7 +21,7 @@ protected:
 
 public:
     LocalSearch(Cost initUpperBound);
-    ~LocalSearch();
+    virtual ~LocalSearch();
 
     Cost generateInitSolution(VNSSolutionInitMethod mode, map<int, Value>& solutionInit, bool& complete);
     Cost evaluate_partialInstantiation(vector<int>& variables, vector<Value>& values);

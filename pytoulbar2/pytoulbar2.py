@@ -10,6 +10,7 @@ DESCRIPTION
 from math import isinf
 try :
     import pytoulbar2.pytb2 as tb2
+    tb2.init()
 except :
     pass
 
@@ -26,6 +27,7 @@ class CFN:
                             -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies).
         seed (int): random seed.
         verbose (int): verbosity control (-1: no message, 0: search statistics, 1: search tree, 2-7: propagation information).
+        init (bool): starts from scratch, forgets previous CFNs (default value is True). Must be set to False if this CFN depends on a previous CFN (e.g. this CFN is given as input to a AddWeightedCSPConstraint). 
     
     Members:
         CFN (WeightedCSPSolver): python interface to C++ class WeightedCSPSolver.
@@ -40,6 +42,8 @@ class CFN:
         
         Top (decimal cost): maximum decimal cost (it can be used to represent a forbidden cost).
         
+        Variables (dict): associative array returning the original domain (list or iterable) associated to a given variable name (str).
+        
         VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).
         
         VariableNames (list): array of created variable names (str) sorted by their index number.
@@ -47,9 +51,9 @@ class CFN:
     See pytoulbar2test.py example in src repository.
     
     """
-    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1):
-        tb2.init()
-        
+    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, init=True):
+        if init:
+            tb2.reinit();
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.seed = seed    # random seed number (use -1 if a pseudo-randomly generated seed is wanted)
@@ -84,18 +88,14 @@ class CFN:
         self.Contradiction = tb2.Contradiction
         self.SolverOut = tb2.SolverOut
         self.Option = tb2.option
-        self.Top = tb2.MAX_COST // 10**resolution    # can be used to represent forbidden assignments
+        self.Top = float('inf') # can be used to represent forbidden assignments
         self.Limit = None
         tb2.check()    # checks compatibility between selected options
 
-    def __del__(self):
-        del self.Variables
-        del self.VariableIndices
-        del self.VariableNames
-        del self.CFN
-
     @staticmethod
     def flatten(S):
+        """Warning: this recursive method might exceed maximum recursion depth
+        """
         if S == []:
             return S
         if isinstance(S[0], list):
@@ -140,7 +140,7 @@ class CFN:
 
     def AddFunction(self, scope, costs, incremental = False):
         """AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
-        The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable). 
+        The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable and also GetDomainInitSize). 
      
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
@@ -260,9 +260,9 @@ class CFN:
                 raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
             
             self.CFN.wcsp.postNullaryConstraint(mincost)
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
+            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, tb2.MAX_COST if isinf(defcost) else int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
-                self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
+                self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], tb2.MAX_COST if isinf(tcosts[i]) else int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
             self.CFN.wcsp.postNaryConstraintEnd(idx)
         
     def AddLinearConstraint(self, coefs, scope, operand = '==', rightcoef = 0):
@@ -284,9 +284,6 @@ class CFN:
         if (isinstance(coefs, int)):
             coefs = [coefs for v in scope]
         assert(len(coefs) == len(scope))
-        sscope = set(scope)
-        if len(scope) != len(sscope):
-            raise RuntimeError("Duplicate variable in scope: "+str(scope))
         if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddLinearConstraint: "+str(operand))
         iscope = []
@@ -296,12 +293,36 @@ class CFN:
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v))
             iscope.append(v) 
-
+        sscope = set(iscope)
+        if len(iscope) != len(sscope):
+            coefs_ = []
+            iscope_ = []
+            sscope = set()
+            index = {}
+            for i, v in enumerate(iscope):
+                if v in sscope:
+                    coefs_[index[v]] += coefs[i]
+                else:
+                	index[v] = len(iscope_)
+                	coefs_.append(coefs[i])
+                	iscope_.append(v)
+                	sscope.add(v)
+            assert(len(iscope_) == len(sscope))
+            coefs = coefs_
+            iscope = iscope_
         if operand == '>=' or operand == '>' or operand == '==':
-            params = str((rightcoef + 1) if (operand == '>') else rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+            params = str((rightcoef + 1) if (operand == '>') else rightcoef)
+            for i,v in enumerate(iscope):
+                params += ' ' + str(self.CFN.wcsp.getDomainInitSize(v))
+                for valindex in range(self.CFN.wcsp.getDomainInitSize(v)):
+                    params += ' ' + str(self.CFN.wcsp.toValue(v, valindex)) + ' ' + str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
         if operand == '<=' or operand == '<' or operand == '==':
-            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef) + ' ' + ' '.join(self.flatten([[str(self.CFN.wcsp.getDomainInitSize(v)), [[str(self.CFN.wcsp.toValue(v, valindex)), str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))] for valindex in range(self.CFN.wcsp.getDomainInitSize(v))]] for i,v in enumerate(iscope)]))
+            params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
+            for i,v in enumerate(iscope):
+                params += ' ' + str(self.CFN.wcsp.getDomainInitSize(v))
+                for valindex in range(self.CFN.wcsp.getDomainInitSize(v)):
+                    params += ' ' + str(self.CFN.wcsp.toValue(v, valindex)) + ' ' + str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
     def AddSumConstraint(self, scope, operand = '==', rightcoef = 0):
@@ -354,14 +375,16 @@ class CFN:
             for v in iscope:
                 vtuples = [[str(val), str(coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
-                params += ' ' + ' '.join(self.flatten(vtuples))
+                for e in vtuples:
+                    params += ' ' + str(e[0]) + ' ' + str(e[1])
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
         if operand == '<=' or operand == '<' or operand == '==':
             params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
             for v in iscope:
                 vtuples = [[str(val), str(-coef)] for (var, val, coef) in tuples if (isinstance(var, str) and self.VariableIndices[var]==v) or (not isinstance(var, str) and var==v)]
                 params += ' ' + str(len(vtuples))
-                params += ' ' + ' '.join(self.flatten(vtuples))
+                for e in vtuples:
+                    params += ' ' + str(e[0]) + ' ' + str(e[1])
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
     def AddAllDifferent(self, scope, encoding = 'binary', excepted = None, incremental = False):
@@ -402,6 +425,8 @@ class CFN:
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST);
             elif (encoding=='walldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
+            else:
+                raise RuntimeError("Unknown encoding for AllDifferent: "+encoding)
 
     def AddGlobalFunction(self, scope, gcname, *parameters):
         """AddGlobalFunction creates a soft global cost function. 
@@ -434,8 +459,8 @@ class CFN:
             problem (CFN): input problem.
             lb (decimal cost): any valid solution in the input problem must have a cost greater than or equal to lb.
             ub (decimal cost): any valid solution in the input problem must have a cost strictly less than ub.
-            duplicateHard (bool): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
-            strongDuality (bool): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
+            duplicateHard (bool): if True then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).
+            strongDuality (bool): if True then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.
             
         Note:
             If a variable in the input problem does not exist in the current problem (with the same name), it is automatically added.
@@ -455,7 +480,7 @@ class CFN:
             iscope.append(v)
         multicfn = MultiCFN()
         multicfn.PushCFN(problem, -1)
-        negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose)
+        negproblem = CFN(vac = self.Option.vac, seed = self.Option.seed, verbose = self.Option.verbose, init = False)
         negproblem.InitFromMultiCFN(multicfn)
         negproblem.UpdateUB(1. - problem.GetLB())
         # keep alive both problem and negproblem
@@ -473,10 +498,12 @@ class CFN:
         self.CFN.read(filename)
         self.VariableIndices = {}
         self.VariableNames = []
+        self.Variables = {}
         for i in range(self.CFN.wcsp.numberOfVariables()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
             self.VariableNames.append(name)
+            self.Variables[name] = self.Domain(name)
 
     def Parse(self, certificate):
         """Parse performs a list of elementary reduction operations on domains of variables.
@@ -538,6 +565,57 @@ class CFN:
 
         """
         return self.CFN.wcsp.getEnumDomain(self.VariableIndices[var] if isinstance(var, str) else var)
+
+    def GetDomainInitSize(self, var):
+        """GetDomainInitSize returns the initial domain size of a given variable.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+
+        Returns:
+            Initial domain size (int). See also GetValue, GetValueName, and GetValueIndex.
+
+        """
+        return self.CFN.wcsp.getDomainInitSize(self.VariableIndices[var] if isinstance(var, str) else var)
+
+    def GetValue(self, var, index):
+        """GetValue returns the value at position index in the initial domain of a given variable.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+            index (int): index of the value in the initial domain of the variable (see also GetDomainInitSize).
+
+        Returns:
+            domain value (int). In symbolic domains, the returned value is equal to index (see note in AddVariable).
+
+        """
+        return self.CFN.wcsp.toValue(self.VariableIndices[var] if isinstance(var, str) else var, index)
+
+    def GetValueName(self, var, index):
+        """GetValueName returns the symbolic value at position index in the initial domain of a given variable.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+            index (int): index of the value in the initial domain of the variable (see also GetDomainInitSize).
+
+        Returns:
+            symbolic name corresponding to a domain value (str).
+
+        """
+        return self.CFN.wcsp.getValueName(self.VariableIndices[var] if isinstance(var, str) else var, self.GetValue(var, index))
+
+    def GetValueIndex(self, var, value):
+        """GetValueIndex returns the position index in the initial domain of a given variable which corresponds to the given value.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+            value (int|str): domain value (or its symbolic name).
+
+        Returns:
+            Index of the value in the initial domain of the variable (int).
+
+        """
+        return self.CFN.wcsp.toIndex(self.VariableIndices[var] if isinstance(var, str) else var, value)
 
     def GetNbConstrs(self):
         """GetNbConstrs returns the number of non-unary cost functions.
@@ -839,7 +917,7 @@ class CFN:
             values (list): list of domain values.
 
         """
-        self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, false)
+        self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, False)
         
     def Remove(self, var, value):
         """Remove removes a value from the domain of a variable.
@@ -900,26 +978,42 @@ class CFN:
         """
         self.CFN.wcsp.whenContradiction()
 
-    def InitFromMultiCFN(self, multicfn):
-        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFN).
+    def InitFromMultiCFN(self, multicfn, vars=[], scopes=[], constrs=[]):
+        """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFNs).
 
         Args:
             multicfn (MultiCFN): the instance containing the CFNs.
+            vars (list<int|str>): the list of variable indexes to extract the induced graph (if empty then no restriction)
+            scopes (list<set<int|str>>): the list of allowed scopes to extract the partial graph (if empty then no restriction)
+            constrs (list<int>): the list of allowed cost function indexes (same index as stored in MultiCFN) to extract the partial graph (if empty then no restriction)
             
         Note:
             After beeing initialized, it is possible to add cost functions to the CFN but the upper bound may be inconsistent.
+            The problem lower bound of multicfn is exported only if no restrictions are given (or if scopes contains the emptyset).
 
         """
 
-        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp)
-
+        multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), [set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in scope]) for scope in scopes], list(constrs))
+        
+        self.VariableIndices = {}
+        self.VariableNames = []
+        self.Variables = {}
+        for i in range(self.CFN.wcsp.numberOfVariables()):
+            name = self.CFN.wcsp.getName(i)
+            self.VariableIndices[name] = i
+            self.VariableNames.append(name)
+            self.Variables[name] = self.Domain(name)
+        
         return
 
 class MultiCFN:
-    """pytoulbar2 base class used to combine linearly multiple CFN.
+    """pytoulbar2 base class used to combine linearly multiple CFNs. See (InitFromMultiCFN) to extract and solve it.
     
     Members:
         MultiCFN: python interface to C++ class MultiCFN.
+            
+    Note:
+        It is important to set the parameter (resolution) to the same ***nonzero*** value when creating every CFN to be pushed in a MultiCFN object.
     
     """
     def __init__(self):
@@ -927,7 +1021,6 @@ class MultiCFN:
         self.MultiCFN = tb2.MultiCFN()
 
         return
-
     
     def PushCFN(self, CFN, weight=1.0):
         """PushCFN add a CFN to the instance.
@@ -960,8 +1053,23 @@ class MultiCFN:
 
         self.MultiCFN.setWeight(cfn_index, weight)
 
+
+    def GetVariableIndex(self, name):
+        """GetVariableIndex returns the index of the variable in the combined cfn
+
+        Args:
+            name (str): name of the variable.
+
+        Returns:
+            The index of the variable or -1 if not found (int).
+
+        """
+
+        return self.MultiCFN.getVariableIndex(name)
+
+
     def GetSolution(self):
-        """GetSolution returns the solution of a the combined cfn after being solved.
+        """GetSolution returns the solution of the combined cfn after being solved.
 
         Returns:
             The solution of the cfn (dic).

@@ -44,7 +44,7 @@ class Haplotype {
     map<int, vector<int>> transmission; // pair <individual id, transmission vector>
     map<pair<int, int>, Double, classcomp> W;
     int sire;
-    Double K;
+    TLogProb K;
     // Double multiplier; // for conversion in integer cost
 
     void typeAscendants(int individual);
@@ -84,8 +84,8 @@ public:
     void initTransmission();
     void sparse_matrix();
     Double haldane(Double x) { return 0.5 * (1 - exp(-2.0 * std::abs(x))); }
-    Double getK() { return K; }
-    Double Cost2LogProb(Cost c) const { return K - 4 * to_double(c) / ToulBar2::NormFactor; }
+    TLogProb getK() { return K; }
+    TLogProb Cost2LogProb(Cost c) const { return K - 4 * to_double(c) / ToulBar2::NormFactor; }
 };
 
 #endif /*TB2HAPLOTYPE_HPP_*/

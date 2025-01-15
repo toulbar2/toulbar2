@@ -25,7 +25,6 @@ protected:
     vector<StoreCost>* deltaCost; // the cost transferred from/to nary-constraint, must be backtractable
     vector<StoreCost>* extendedCost; // the cost extended nary-constraint, must be backtractable
     StoreCost projectedCost; // the cost projected to the C_null constraint, must be backtractable
-    StoreInt nonassigned; // nonassigned variables during search, must be backtrackable (storeint) !
 
     set<int>* fullySupportedSet;
 
@@ -155,7 +154,7 @@ public:
     // return the minimum cost of the tuples
     virtual Cost getMinCost() { return 0; }
 
-    virtual bool universal() { return false; }
+    virtual bool universal(Cost zero = MIN_COST) { return false; }
 
     /*virtual void valueRemoved(int index, Value value) {
           if (ToulBar2::consistencyLevel == FINE_IC) {

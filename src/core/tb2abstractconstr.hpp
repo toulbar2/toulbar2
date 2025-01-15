@@ -462,6 +462,8 @@ class AbstractNaryConstraint : public Constraint {
 protected:
     int arity_;
     unsigned int maxInitDomSize;
+    Long prodInitDomSize;
+    StoreInt nonassigned; // nonassigned variables during search, must be backtrackable (StoreInt)!
 
     EnumeratedVariable** scope;
     EnumeratedVariable** scope_dac; // scope sorted by increasing DAC order
@@ -477,6 +479,8 @@ public:
         : Constraint(wcsp)
         , arity_(arity_in)
         , maxInitDomSize(0)
+        , prodInitDomSize(0)
+        , nonassigned(arity_in)
     {
 #if defined(NO_STORE_BINARY_COSTS) || defined(NO_STORE_TERNARY_COSTS)
         cerr << "Sorry, no " << arity_in << "-ary cost functions!" << endl;
@@ -497,12 +501,16 @@ public:
             links[i] = var->link(this, i);
             evalTuple.push_back(0);
         }
+        prodInitDomSize = getDomainInitSizeProduct();
         setDACScopeIndex();
     }
 
     AbstractNaryConstraint(WCSP* wcsp)
         : Constraint(wcsp)
+        , arity_(0)
         , maxInitDomSize(0)
+        , prodInitDomSize(0)
+        , nonassigned(0)
     {
     }
 
@@ -517,6 +525,7 @@ public:
     }
 
     int arity() const FINAL { return arity_; }
+    int getNonAssigned() const { return nonassigned; }
     Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
 
     Variable* getVar(int varCtrIndex) const FINAL
@@ -540,22 +549,37 @@ public:
 
     bool connected() const FINAL
     {
+#ifndef NDEBUG
+        bool res = false;
         for (int i = 0; i < arity_; i++)
-            if (!links[i]->removed)
-                return true;
-        return false;
+            if (!links[i]->removed) {
+                res = true;
+                break;
+            }
+        assert(res == (nonassigned > 0));
+#endif
+        return nonassigned > 0;
     }
 
     bool deconnected() const FINAL
     {
+#ifndef NDEBUG
+        bool res = true;
         for (int i = 0; i < arity_; i++)
-            if (!links[i]->removed)
-                return false;
-        return true;
+            if (!links[i]->removed) {
+                res = false;
+                break;
+            }
+        assert(res == (nonassigned == 0));
+#endif
+        return nonassigned == 0;
     }
 
     void deconnect(int varIndex, bool reuse = false)
     {
+        if (connected(varIndex)) {
+            nonassigned = nonassigned - 1;
+        }
         scope[varIndex]->deconnect(links[varIndex], reuse);
     }
 
@@ -574,6 +598,7 @@ public:
         if (deconnected()) {
             if (ToulBar2::verbose >= 3)
                 cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] reconnect " << this << endl;
+            nonassigned = arity_;
             for (int i = 0; i < arity_; i++) {
                 assert(links[i]->prev == NULL && links[i]->next == NULL);
                 scope[i]->getConstrs()->push_back(links[i], true);

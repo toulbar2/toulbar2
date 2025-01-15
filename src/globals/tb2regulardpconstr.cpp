@@ -212,7 +212,7 @@ void RegularDPConstraint::dump(ostream& os, bool original)
         for (int i = 0; i < arity_; i++)
             os << " " << scope[i]->wcspIndex;
     } else {
-        os << nonassigned;
+        os << getNonAssigned();
         for (int i = 0; i < arity_; i++)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();

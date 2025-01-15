@@ -28,6 +28,12 @@ private:
     Queue SeekSupport; /**< Non backtrackable list; collect all variables with a deletion caused by binary constraints during Pass1 */
     Long nbIterations; /**< Incremented at each pass, used as a TimeStamp */
     int inconsistentVariable; /**< WipeOut variable, Used also to check after enforcePass1() if the network is VAC */
+    int PBconflict;
+    vector<tuple<VACVariable*, Value, bool>> acSupport;
+    vector<pair<int, Value>> PBkillersctr;
+    vector<pair<int, Value>> killers;
+    vector<pair<int, Value>> killed;
+    vector<pair<pair<int, Value>, Cost>> EPT;
 
     Cost prevItThreshold; /**< The previous cost threshold (theta) for the iterative threshold descent */
     Cost itThreshold; /**< The cost threshold (theta) for the iterative threshold descent */
@@ -60,6 +66,8 @@ private:
     int bneckVar;
     VACBinaryConstraint* bneckCF;
     Cost bneckCost;
+
+    set<int> tempvars;
 
 public:
     VACExtension(WCSP* w);

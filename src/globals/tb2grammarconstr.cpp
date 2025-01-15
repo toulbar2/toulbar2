@@ -12,7 +12,7 @@ GrammarConstraint::~GrammarConstraint(void)
     deleteTable(f);
     deleteTable(curf);
     deleteTable(marked);
-    deleteTable(curf);
+    deleteTable(up);
 
     for (int i = 0; i < arity(); i++) {
         delete[] u[i];
@@ -100,7 +100,7 @@ void GrammarConstraint::dump(ostream& os, bool original)
         for (int i = 0; i < arity_; i++)
             os << " " << scope[i]->wcspIndex;
     } else {
-        os << nonassigned;
+        os << getNonAssigned();
         for (int i = 0; i < arity_; i++)
             if (scope[i]->unassigned())
                 os << " " << scope[i]->getCurrentVarId();

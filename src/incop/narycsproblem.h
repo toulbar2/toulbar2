@@ -32,7 +32,7 @@ public:
 };
 
 /* Contrainte N-aire en extension avec poids sur les n-uplets qui violent la contrainte */
-/** Nary constraint in extension with weigths defined on the tuples */
+/** Nary constraint in extension with weights defined on the tuples */
 class NaryConstraint {
 public:
     int arity;

@@ -609,9 +609,25 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
         Statistiques->current_try++;
         //      ecriture_stat_probleme();
     }
+   
+    for(size_t pop_id = 0; pop_id < static_cast<size_t>(taille); pop_id ++) {
+        delete population[pop_id];
+    }
+
     delete problem;
     delete[] tabdomaines;
     delete[] connexions;
+
+    for(auto& cst: constraints) {
+        delete cst;
+    }
+    for(auto& var: variables) {
+        delete var;
+    }
+
+    delete Statistiques;
+
+    delete algo;
 
     if (wcsp->getUb() < initialUpperBound) {
         wcsp->enforceUb();
@@ -620,6 +636,13 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
         assert(wcsp->getUb() == initialUpperBound || wcsp->isKnapsack() || wcsp->isGlobal());
         wcsp->setUb(initialUpperBound);
     }
+
+    // free the options string
+    for(int i = 0; i < argc; i ++) {
+        free(argv[i]);
+    }
+    free(argv);
+
 
     return result;
 }

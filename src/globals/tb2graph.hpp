@@ -41,7 +41,7 @@ public:
     {
         for (vector<DLink<int>*>::iterator it = blockStore.begin();
              it != blockStore.end(); it++) {
-            delete[] *it;
+            delete[] * it;
         }
         blockStore.clear();
     }
@@ -187,7 +187,7 @@ public:
     Graph(int n, int depth);
 
     // destructor
-    ~Graph();
+    virtual ~Graph();
 
     // connect the node from u to v with weight w, capacity c and a tag tag
     // if tag = -1, multiple edge allowed

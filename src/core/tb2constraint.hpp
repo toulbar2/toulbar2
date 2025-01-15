@@ -114,7 +114,7 @@ public:
         if (ToulBar2::FullEAC && !isSep()) {
             bool res = reviseEACGreedySolution(index, a);
             if (ToulBar2::verbose >= 4 && !res)
-                cout << "Current greedy solution violates this constraint: " << *this << endl;
+                cout << "Current greedy solution with variable index " << index << " assigned to " << a << " violates this constraint: " << *this << endl;
         }
         return true;
     }
@@ -200,7 +200,7 @@ public:
     virtual Cost getDefCost() { return MIN_COST; }
     virtual Cost getCost(); /// \warning all variables must be properly assigned and the returned cost might be different than the original cost due to propagation
 
-    virtual bool universal();
+    virtual bool universal(Cost zero = MIN_COST);
     virtual bool ishard(); ///< \brief returns true if all valid tuples have costs either zero or greater than the current upper bound
     virtual bool isfinite(); ///< \brief returns true if all valid tuples have costs strictly lower than the current upper bound minus the current lower bound
 
@@ -325,26 +325,37 @@ public:
 
     static bool cmpConstraintId(Constraint* c1, Constraint* c2);
     static bool cmpConstraintId(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintId(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintDAC(Constraint* c1, Constraint* c2);
     static bool cmpConstraintDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintTightness(Constraint* c1, Constraint* c2);
     static bool cmpConstraintTightness(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintTightness(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintDACTightness(Constraint* c1, Constraint* c2);
     static bool cmpConstraintDACTightness(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintDACTightness(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintTightnessDAC(Constraint* c1, Constraint* c2);
     static bool cmpConstraintTightnessDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintTightnessDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintLAG(Constraint* c1, Constraint* c2);
     static bool cmpConstraintLAG(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintLAG(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintArity(Constraint* c1, Constraint* c2);
     static bool cmpConstraintArity(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintArity(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
     static bool cmpConstraintArityDAC(Constraint* c1, Constraint* c2);
     static bool cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintArityDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
 
     // sort a list of constraints
     static int cmpConstraint(Constraint* c1, Constraint* c2);
 
     // sort a list of constraints related to a given variable
     static int cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+
+    // sort a backtrackable list of constraints
+    static int cmpConstraintLinkPointer(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
 };
 
 #endif /*TB2CONSTRAINT_HPP_*/

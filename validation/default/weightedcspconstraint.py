@@ -1,6 +1,6 @@
 VERBOSE=0
-PROBLEM1="../../validation/bilevel/bilevel1b.cfn"
-PROBLEM2="../../validation/bilevel/bilevel2.cfn"
+PROBLEM1="../validation/bilevel/bilevel1b.cfn"
+PROBLEM2="../validation/bilevel/bilevel2.cfn"
 LB=11
 UB=20
 

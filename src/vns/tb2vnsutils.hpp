@@ -141,7 +141,7 @@ public:
 
     //
     void print_dec_satistics();
-    double ecart_type(vector<int> data);
+    double ecart_type(vector<int>& data);
 };
 
 #endif

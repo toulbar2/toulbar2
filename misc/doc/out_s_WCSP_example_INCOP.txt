@@ -1,17 +1,17 @@
 Read 25 variables, with 5 values at most, and 63 cost functions, with maximum arity 2.
-Cost function decomposition time : 1.6e-05 seconds.
-Reverse DAC dual bound: 20 (+10.000%)
-Preprocessing time: 0.001 seconds.
-New solution: 27 (0 backtracks, 0 nodes, depth 1)
-INCOP solving time: 0.254 seconds.
+Reverse original DAC dual bound: 20 (+10.000%)
+Cost function decomposition time : 0.000 seconds.
+New solution: 27 (0 backtracks, 0 nodes, depth 1, 0.120 seconds)
+INCOP solving time: 0.326 seconds.
+Preprocessing time: 0.328 seconds.
 24 unassigned variables, 116 values in all current domains (med. size:5, max size:5) and 62 non-unary cost functions (med. arity:2, med. degree:5)
 Initial lower and upper bounds: [20, 27] 25.926%
-Optimality gap: [21, 27] 22.222 % (4 backtracks, 8 nodes)
-Optimality gap: [22, 27] 18.519 % (42 backtracks, 95 nodes)
-Optimality gap: [23, 27] 14.815 % (93 backtracks, 209 nodes)
-Optimality gap: [24, 27] 11.111 % (111 backtracks, 253 nodes)
-Optimality gap: [25, 27] 7.407 % (121 backtracks, 280 nodes)
-Optimality gap: [27, 27] 0.000 % (128 backtracks, 307 nodes)
-Node redundancy during HBFS: 16.612 %
-Optimum: 27 in 128 backtracks and 307 nodes ( 647 removals by DEE) and 0.263 seconds.
+Optimality gap: [21, 27] 22.222 % (14 backtracks, 34 nodes, 0.328 seconds)
+Optimality gap: [22, 27] 18.519 % (19 backtracks, 48 nodes, 0.329 seconds)
+Optimality gap: [23, 27] 14.815 % (79 backtracks, 189 nodes, 0.332 seconds)
+Optimality gap: [24, 27] 11.111 % (82 backtracks, 201 nodes, 0.332 seconds)
+Optimality gap: [25, 27] 7.407 % (87 backtracks, 222 nodes, 0.333 seconds)
+Optimality gap: [27, 27] 0.000 % (99 backtracks, 258 nodes, 0.333 seconds)
+Node redundancy during HBFS: 23.256
+Optimum: 27 in 99 backtracks and 258 nodes ( 539 removals by DEE) and 0.333 seconds.
 end.

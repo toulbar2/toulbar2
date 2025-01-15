@@ -77,7 +77,7 @@ public:
 
     BinaryConstraint(WCSP* wcsp);
 
-    ~BinaryConstraint() {}
+    virtual ~BinaryConstraint() {}
 
     bool extension() const FINAL { return true; }
     bool isBinary() const FINAL { return true; }

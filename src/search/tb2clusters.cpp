@@ -49,7 +49,6 @@ bool CmpVarStruct::operator()(const int lhs, const int rhs) const
 Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : AbstractNaryConstraint(wcsp, scope_in, arity_in)
     , cluster(NULL)
-    , nonassigned(arity_in)
     , isUsed(false)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
@@ -79,7 +78,6 @@ Separator::Separator(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
 
 Separator::Separator(WCSP* wcsp)
     : AbstractNaryConstraint(wcsp)
-    , nonassigned(0)
     , isUsed(false)
     , lbPrevious(MIN_COST)
     , optPrevious(false)
@@ -110,9 +108,8 @@ void Separator::assign(int varIndex)
 {
     if (connected(varIndex)) {
         deconnect(varIndex);
-        nonassigned = nonassigned - 1;
-        assert(nonassigned >= 0);
-        if (nonassigned == 0) {
+        assert(getNonAssigned() >= 0);
+        if (getNonAssigned() == 0) {
             if (ToulBar2::bilevel && (!cluster || cluster->getParent() == wcsp->getTreeDec()->getRoot()))
                 return; // TODO: how to reuse Problem2 nogood if it exists? (but should never collect NegProblem2 separator)
             assert(!cluster || cluster->isActive());
@@ -124,12 +121,12 @@ void Separator::assign(int varIndex)
 void Separator::propagate()
 {
     if (ToulBar2::verbose >= 3)
-        cout << this << " propagate C" << cluster->getId() << " " << nonassigned << " " << cluster->getParent()->getId() << " " << connected() << endl;
+        cout << this << " propagate C" << cluster->getId() << " " << getNonAssigned() << " " << cluster->getParent()->getId() << " " << connected() << endl;
     for (int i = 0; connected() && i < arity_; i++) {
         if (getVar(i)->assigned())
             assign(i);
     }
-    if (cluster->getIsCurrInTD() && nonassigned == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
+    if (cluster->getIsCurrInTD() && getNonAssigned() == 0 && wcsp->getTreeDec()->isInCurrentClusterSubTree(cluster->getParent()->getId())) {
         wcsp->revise(this);
         if (ToulBar2::allSolutions) {
             Cost res = MIN_COST;
@@ -694,9 +691,15 @@ Cluster::~Cluster()
     id = -1;
     if (sep) {
         sep->deconnect();
-        sep->unqueueSep();
+        if (sep->isInQueueSep()) {
+            sep->unqueueSep();
+        }
+        // Notice: separators will be deleted inside ~WCSP with the other constraints
     }
-    delete cp;
+    if (cp) {
+        delete cp;
+    }
+    // Notice: do not need to delete open because it is done in ~Solver for the root cluster only (the other clusters have a pointer to nogoods'open field, an object not created by new!)
 }
 
 void Cluster::addVar(Variable* x) { vars.insert(x->wcspIndex); }
@@ -1193,6 +1196,15 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in)
 {
 }
 
+TreeDecomposition::~TreeDecomposition()
+{
+    for(auto& c: clusters) {
+        if (c) {
+            delete c;
+        }
+    }
+}
+
 bool TreeDecomposition::isInCurrentClusterSubTree(int idc)
 {
     if (idc < 0)
@@ -1382,6 +1394,9 @@ void TreeDecomposition::pathFusions(vector<int>& order)
             rds[i] = NULL;
         }
     }
+    for(auto&c : clusters) {
+        delete c;
+    }
     clusters.clear();
     for (int i = 0; i < size; i++) {
         Cluster* c = rds[i];
@@ -1459,8 +1474,8 @@ int TreeDecomposition::getVarMinDomainDivMaxWeightedDegree(TVars* vars)
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1960,8 +1975,9 @@ int TreeDecomposition::makeRooted()
             assert(oneroot->getSep() == NULL);
 
             EnumeratedVariable** scopeVars = new EnumeratedVariable*[1];
-
             oneroot->setSep(new Separator(wcsp, scopeVars, 0));
+            delete[] scopeVars;
+
             if (oneroot->getNbVars() <= 1 && oneroot->getDescendants().size() == 1) {
                 oneroot->getSep()->unqueueSep();
             }

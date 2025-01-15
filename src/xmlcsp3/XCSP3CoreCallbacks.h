@@ -1504,6 +1504,13 @@ namespace XCSP3Core {
             throw runtime_error("Element value constraint is not yet supported");
         }
 
+        virtual void buildConstraintElement(string id, vector<int> &list, XVariable *index, int startIndex, XCondition &xc) {
+            (void)id; (void)list;(void)index;(void)startIndex;(void)xc;
+            throw runtime_error("Element constraint with list of int and condition is not yet supported");
+
+        }
+
+
 
         virtual void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *index, int startIndex, XCondition &xc) {
             (void)id; (void)list;(void)index;(void)startIndex;(void)xc;

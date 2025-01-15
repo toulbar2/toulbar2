@@ -79,7 +79,7 @@ void Haplotype::iniProb(WCSP* wcsp)
         cerr << "Overflow: product of min probabilities < size of used datatype." << endl;
         throw BadConfiguration();
     }
-    wcsp->updateUb((Cost)((Long)TopProb));
+    wcsp->updateUb((Cost)Round(TopProb));
 }
 
 typedef struct {
@@ -483,9 +483,7 @@ void Haplotype::buildWCSP(const char* fileName, WCSP* wcsp)
         if (pedigree[i].father == 0 && pedigree[i].mother == 0)
             nbfounders++;
         if (pedigree[i].typed) {
-            string varname;
-            varname = "X" + to_string(pedigree[i].individual);
-            wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
+            wcsp->makeEnumeratedVariable(to_string("X") + to_string(pedigree[i].individual), 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
         }
@@ -617,9 +615,7 @@ void Haplotype::buildWCSP_bayesian(const char* fileName, WCSP* wcsp)
         if (pedigree[i].father == 0 && pedigree[i].mother == 0)
             nbfounders++;
         if (pedigree[i].typed) {
-            string varname;
-            varname = "X" + to_string(pedigree[i].individual);
-            wcsp->makeEnumeratedVariable(varname, 0, nballeles * (nballeles + 1) / 2 - 1);
+            wcsp->makeEnumeratedVariable(to_string("X") + to_string(pedigree[i].individual), 0, nballeles * (nballeles + 1) / 2 - 1);
             pedigree[i].varindex = nbvar;
             nbvar++;
         }
@@ -833,7 +829,7 @@ void Haplotype::buildWCSP_haplotype(const char* fileName, WCSP* wcsp)
 
     // create Boolean variables
     for (int i = 0; i < nbloci; i++) {
-        wcsp->makeEnumeratedVariable("X" + to_string(i), 0, 1);
+        wcsp->makeEnumeratedVariable(to_string("X") + to_string(i), 0, 1);
     }
 
     vector<Cost> unaryCosts0(nbloci, 0);
@@ -845,18 +841,18 @@ void Haplotype::buildWCSP_haplotype(const char* fileName, WCSP* wcsp)
     for (map<pair<int, int>, Double, classcomp>::iterator w = W.begin(); w != W.end(); ++w)
         sumcost += std::abs(w->second);
     ToulBar2::NormFactor = (-1.0 / Log1p(-Exp10(-(TProb)ToulBar2::resolution)));
-    wcsp->updateUb((Cost)(ToulBar2::NormFactor * sumcost));
+    wcsp->updateUb((Cost)Round(ToulBar2::NormFactor * sumcost));
     //	  Double constante = 0.;
     for (map<pair<int, int>, Double, classcomp>::iterator w = W.begin(); w != W.end(); ++w) {
         if (w->first.first != w->first.second) {
             vector<Cost> costs(4, 0);
             if (w->second > 0) {
-                costs[1] = (Cost)(ToulBar2::NormFactor * w->second);
+                costs[1] = (Cost)Round(ToulBar2::NormFactor * w->second);
                 costs[2] = costs[1];
                 K += 2. * w->second;
                 //				  constante += 2. * w->second;
             } else {
-                costs[0] = (Cost)(-ToulBar2::NormFactor * w->second);
+                costs[0] = (Cost)Round(-ToulBar2::NormFactor * w->second);
                 costs[3] = costs[0];
                 K += -2. * w->second;
                 //				  constante += -2. * w->second;
@@ -1176,8 +1172,8 @@ void Haplotype::sparse_matrix()
                     locus_prec = locus;
                 } else if (!first && transmission.find(fils->individual)->second[locus] != 0) {
                     Double recombination_frac = haldane(maplocus[locus] - maplocus[locus_prec]);
-                    Double coef = 0.25 * log((1 - recombination_frac) / recombination_frac);
-                    K += log((1 - recombination_frac) * recombination_frac);
+                    Double coef = 0.25 * log((1. - recombination_frac) / recombination_frac);
+                    K += Log((TProb)(1. - recombination_frac) * recombination_frac);
                     if (transmission.find(fils->individual)->second[locus] == transmission.find(fils->individual)->second[locus_prec]) {
                         if (W.count(pair<int, int>(locus_prec, locus)) == 0)
                             W.insert(pair<pair<int, int>, Double>(pair<int, int>(locus_prec, locus), coef));

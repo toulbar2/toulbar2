@@ -93,10 +93,18 @@ IF(NOT CMAKE_BUILD_TYPE)
     FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17" )
+IF(QUAD_PROBABILITY)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++20" )
+ELSE(QUAD_PROBABILITY)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++20" )
+ENDIF(QUAD_PROBABILITY)
 # -fsanitize=address -fsanitize=undefined -Wconversion -Wsign-conversion
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
-#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto" )
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftrapping-math -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native" ) #  -flto
+
+IF(QUAD_PROBABILITY)
+  SET (all_depends  ${all_depends} "quadmath") 
+ENDIF(QUAD_PROBABILITY)
 
 IF(CPLEX)
   MESSAGE("CPLEX location: ${CPLEX_LOCATION}")
@@ -146,14 +154,14 @@ IF(STATIC)
   SET(BUILD_SHARED_LIBS OFF)
   set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --disable-shared --enable-static -static-libgcc -static-libstdc++")   # -flto 
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static --disable-shared --enable-static -static-libgcc -static-libstdc++")
   SET (all_depends  ${all_depends} "z") 
   SET (all_depends  ${all_depends} "m") 
   SET (all_depends  ${all_depends} "pthread") 
   SET (all_depends  ${all_depends} "dl") # it should be present at the end of library ordering (checks manually no dynamic flags occur in the final link command)
 ELSE(STATIC)
   SET(BUILD_SHARED_LIBS ON) #shared library building
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")   # -flto
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")
 ENDIF(STATIC)
 
 ##########################################
@@ -206,7 +214,6 @@ include(${My_cmake_script}/source_files.cmake)
 IF(PYTB2)
   SET(WITH_MEM_JEMALLOC OFF)
   SET(MPI OFF)
-  SET(XCSP3 OFF)
   SET(LIBTB2 ON)
   SET(Python3_FIND_STRATEGY LOCATION)
   SET(Python3_FIND_FRAMEWORK NEVER)
@@ -232,7 +239,14 @@ IF(PYTB2)
   EXECUTE_PROCESS(
     COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
     OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+  
+    IF ("${Pybind11_INCLUDES}" STREQUAL "" )
+      MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
+    ELSE()
+      MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+    ENDIF()
+
+    
 ### New cmake and python and pybind11
 #  FIND_PACKAGE(pybind11 CONFIG)
 ###
@@ -333,10 +347,12 @@ IF(LIBTB2)
   LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
   
   ADD_LIBRARY(tb2-PIC-objects OBJECT ${LIBTB2FILES})
-  IF(WIN64)
-  ELSE(WIN64)
+  IF(NOT WIN64)
     SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
-  ENDIF(WIN64)
+  ENDIF(NOT WIN64)
+  IF(XML)
+    MESSAGE(STATUS "Warning! Recompile libxcsp3parser.a with option -fPIC")
+  ENDIF(XML)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
@@ -353,6 +369,24 @@ IF(LIBTB2)
 ### New cmake, python and pybind11
 #    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
 ###
+
+  ### Create a copy of the pytoulbar2 library
+  ADD_CUSTOM_TARGET(copy_pytb2 ALL
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/pytoulbar2 ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2 BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2)
+  ADD_DEPENDENCIES(copy_pytb2 pytb2)
+
+  ### Create symbolic link of the pytb2 binary into the pytoulbar2 copy directory
+  GET_TARGET_PROPERTY(PYTB2_BINARY_NAME pytb2 OUTPUT_NAME)
+  GET_TARGET_PROPERTY(PYTB2_BINARY_SUFFIX pytb2 SUFFIX)
+
+  # name of the pytb2 binary library
+  SET(PYTB2_BINARY ${PYTB2_BINARY_NAME}${PYTB2_BINARY_SUFFIX})
+
+  ADD_CUSTOM_TARGET(link_pytb2_ex ALL
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_OUTPUT_PATH}/${PYTB2_BINARY} ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2/${PYTB2_BINARY} BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/pytoulbar2/${PYTB2_BINARY})
+  ADD_DEPENDENCIES(link_pytb2_ex copy_pytb2)
+
+  ###
   ENDIF(PYTB2)
   
   IF(MPI)
@@ -399,16 +433,27 @@ include(${My_cmake_script}/toulbar2test.cmake)
 ##########################################
 # Unit tests
 ##########################################
-IF(COVER_TEST) 
-include(${My_cmake_script}/test.cmake)
+IF(COVER_TEST)
 
-MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
-MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
+  include(${My_cmake_script}/test.cmake)
 
-##########################################
-# Cover tests
-##########################################
-include(${My_cmake_script}/cover-test.cmake)
+  MESSAGE(STATUS "######## test.cmake ==> tests script generated #########################")
+  MESSAGE(STATUS "######## CTEST : toulbar2 default option = ${TOPT}  (-DTOPT= ...to change it) #########")
+
+  # pytoulbar2 unit tests
+  IF(PYTB2)
+    include(${My_cmake_script}/test_pytb2.cmake)
+  ENDIF(PYTB2)
+
+  ##########################################
+  # Cover tests
+  ##########################################
+  include(${My_cmake_script}/cover-test.cmake)
+
+
+  # necessary for memory checking
+  include (CTest)
+
 ENDIF(COVER_TEST)
 
 IF(BENCH)

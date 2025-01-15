@@ -28,6 +28,8 @@ extern void newsolution(int wcspId, void* solver);
 
 const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
+Solver* Solver::CurrentSolver;
+
 /*
  * Solver constructors
  *
@@ -133,12 +135,23 @@ Solver::Solver(Cost initUpperBound, WeightedCSP* wcsp)
         this->wcsp = wcsp;
         dynamic_cast<WCSP*>(wcsp)->setSolver((void*)this);
     }
+    CurrentSolver = this;
 }
 
 Solver::~Solver()
 {
-    delete cp;
-    delete open;
+    if (cp) {
+        delete cp;
+    }
+    if (open) {
+        delete open;
+    }
+    if (wcsp->getTreeDec()) {
+        Cluster *cluster = wcsp->getTreeDec()->getRoot();
+        if (cluster && cluster->open) {
+            delete cluster->open;
+        }
+    }
     delete unassignedVars;
     for (unsigned int i = 0; i < allVars.size(); i++) {
         delete allVars[i];
@@ -167,7 +180,9 @@ void Solver::initVarHeuristic()
         unsigned int i = wcsp->getDACOrder(j);
         allVars[i]->content = j;
     }
+    heuristics.clear();
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+        heuristics.push_back(wcsp->getDegree(i));
         unassignedVars->push_back(allVars[i], false);
         if (wcsp->assigned(allVars[i]->content) || (ToulBar2::nbDecisionVars > 0 && allVars[i]->content >= ToulBar2::nbDecisionVars))
             unassignedVars->erase(allVars[i], false);
@@ -326,10 +341,10 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
     //    Store::store();
 
     // certif2 = index(certif2,',');
-    char* certif2;
+    char *certif2, *certif_copy;
     char sep[] = ",";
-    certif2 = strdup(certificate);
-    certif2 = strstr(certif2, sep);
+    certif_copy = strdup(certificate);
+    certif2 = strstr(certif_copy, sep);
 
     if (certif2)
         certif2++;
@@ -373,7 +388,7 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
         if (not isdigit(svar[0])) {
             var = wcsp->getVarIndex(to_string(svar));
             if ((unsigned int)var >= wcsp->numberOfVariables()) {
-                cerr << "Certificate " << certif2 << " incorrect!" << endl;
+                cerr << "Certificate " << svar << " incorrect!" << endl;
                 throw WrongFileFormat();
             }
         } else {
@@ -383,7 +398,7 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
         if (not isdigit(svalue[0])) {
             unsigned int idx = wcsp->toIndex(var, to_string(svalue));
             if (idx >= wcsp->getDomainInitSize(var)) {
-                cerr << "Certificate " << certif2 << " incorrect!" << endl;
+                cerr << "Certificate " << svalue << " incorrect!" << endl;
                 throw WrongFileFormat();
             }
             value = wcsp->toValue(var, idx);
@@ -447,6 +462,8 @@ void Solver::parse_solution(const char* certificate, bool updateValueHeuristic)
 
     //    if (ToulBar2::btdMode>=2) wcsp->updateUb(wcsp->getLb()+UNIT_COST);
     //    Store::restore(depth);
+
+    free(certif_copy);
 }
 
 void Solver::dump_wcsp(const char* fileName, bool original, ProblemFormat format)
@@ -846,8 +863,8 @@ int Solver::getVarMinDomainDivMaxDegree()
             }
         }
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -878,14 +895,14 @@ int Solver::getVarMinDomainDivMaxDegreeRandomized()
             }
         }
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-        } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -918,8 +935,8 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflict()
         }
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -953,15 +970,15 @@ int Solver::getVarMinDomainDivMaxDegreeLastConflictRandomized()
         }
         // remove following "+1" when isolated variables are automatically assigned
         double heuristic = (double)wcsp->getDomainSize(*iter) / (double)(wcsp->getDegree(*iter) + 1);
-        if (varIndex < 0 || heuristic < epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        if (varIndex < 0 || heuristic < (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            //        } else if ((heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
-        } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            //        } else if ((heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -998,9 +1015,11 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
             wcsp->getEnumDomainAndCost(*iter, array);
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
-        double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
+        double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1036,15 +1055,17 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
             wcsp->getEnumDomainAndCost(*iter, array);
             unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
-        double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
-        if (varIndex < 0 || heuristic < best - epsilon * best
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+        Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
+        double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
+        if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-        } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -1084,11 +1105,12 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         // double heuristic = 1. / (double) (wcsp->getMaxUnaryCost(*iter) + 1);
         if ((varIndex < 0)
-            || (heuristic < best - epsilon * best)
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            || (heuristic < best - (double)ToulBar2::epsilon * best)
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
@@ -1129,17 +1151,18 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
+        heuristics[*iter] = max(wdeg, heuristics[*iter]); //cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
         double heuristic = (double)domsize / (double)(wdeg + 1 + unarymediancost);
         if ((varIndex < 0)
-            || (heuristic < best - epsilon * best)
-            || (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
+            || (heuristic < best - (double)ToulBar2::epsilon * best)
+            || (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) > worstUnaryCost)) {
             best = heuristic;
             varIndex = *iter;
             nbties = 1;
             ties[0] = varIndex;
             worstUnaryCost = wcsp->getMaxUnaryCost(*iter);
-            //       } else if ((heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
-        } else if (heuristic < best + epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
+            //       } else if ((heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) || ((myrand()%100)==0)) {
+        } else if (heuristic < best + (double)ToulBar2::epsilon * best && wcsp->getMaxUnaryCost(*iter) == worstUnaryCost) {
             ties[nbties] = *iter;
             nbties++;
         }
@@ -1177,25 +1200,30 @@ int Solver::getMostUrgent()
  *
  */
 
+Cost Solver::logZCurrentEstimate()
+{
+    Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
+    for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) {
+        if (wcsp->enumerated(*iter_variable)) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter_variable);
+            Cost sumUnaryCosts = MAX_COST;
+            for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) {
+                sumUnaryCosts = wcsp->LogSumExp(sumUnaryCosts, var->getCost(*iter_value));
+            }
+            newCost += sumUnaryCosts;
+        } else {
+            newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
+        }
+    }
+    return newCost;
+}
+
 /// \brief Enforce WCSP upper-bound and backtrack if ub <= lb or in the case of probabilistic inference if the contribution is too small
 void Solver::enforceUb()
 {
     wcsp->enforceUb();
-    if (ToulBar2::isZ) {
-        Cost newCost = wcsp->getLb() + wcsp->getNegativeLb();
-        for (BTList<Value>::iterator iter_variable = unassignedVars->begin(); iter_variable != unassignedVars->end(); ++iter_variable) {
-            if (wcsp->enumerated(*iter_variable)) {
-                EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(*iter_variable);
-                Cost sumUnaryCosts = MAX_COST;
-                for (EnumeratedVariable::iterator iter_value = var->begin(); iter_value != var->end(); ++iter_value) {
-                    sumUnaryCosts = wcsp->LogSumExp(sumUnaryCosts, var->getCost(*iter_value));
-                }
-                newCost += sumUnaryCosts;
-            } else {
-                newCost += wcsp->LogProb2Cost(Log(wcsp->getDomainSize(*iter_variable)));
-            }
-        }
-        TLogProb newlogU = wcsp->LogSumExp(ToulBar2::logU, newCost);
+    if (ToulBar2::isZ && ToulBar2::logepsilon != -numeric_limits<TLogProb>::infinity()) {
+        TLogProb newlogU = wcsp->LogSumExp(ToulBar2::logU, logZCurrentEstimate());
         if (newlogU < ToulBar2::logepsilon + ToulBar2::logZ) {
             if (ToulBar2::verbose >= 1)
                 cout << "ZCUT " << newlogU << " " << ToulBar2::logZ << " " << Store::getDepth() << endl;
@@ -1213,7 +1241,7 @@ void Solver::increase(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1246,7 +1274,7 @@ void Solver::decrease(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1304,7 +1332,7 @@ void Solver::assign(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1337,7 +1365,7 @@ void Solver::remove(int varIndex, Value value, bool reverse)
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1370,7 +1398,7 @@ void Solver::remove(int varIndex, ValueCost* array, int first, int last, bool re
         if (ToulBar2::verbose >= 2)
             cout << *wcsp;
         if (ToulBar2::debug >= 3) {
-            string pbname = "problem" + to_string(nbNodes) + ".wcsp";
+            string pbname = to_string("problem") + to_string(nbNodes) + to_string(".wcsp");
             ofstream pb(pbname.c_str());
             wcsp->dump(pb);
             cout << " #" << nbNodes;
@@ -1449,7 +1477,7 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
 {
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex, value));
-    if (ToulBar2::interrupted)
+    if (ToulBar2::interrupted && !ToulBar2::isZ)
         throw TimeOut();
     unsigned int domsize = wcsp->getDomainSize(varIndex);
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < domsize);
@@ -1525,29 +1553,33 @@ void Solver::binaryChoicePoint(int varIndex, Value value, Cost lb)
         remove(varIndex, value, nbBacktracks >= hbfsLimit);
     if (!ToulBar2::hbfs)
         showGap(wcsp->getLb(), wcsp->getUb());
-    if (nbBacktracks >= hbfsLimit) {
-        assert(ToulBar2::hbfs);
-        addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
-#ifdef OPENMPI
-        if (ToulBar2::parallel && ToulBar2::burst && world.rank() != MASTER) {
-            vector<Value> emptySol;
-            Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, MAX_COST, emptySol);
-            if (ToulBar2::verbose >= 1)
-                cout << ">>> worker " << world.rank() << " send open-node message to master " << work2 << endl;
-            double beginWaiting = realTime();
-            mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
-            while (!req.test().is_initialized() && !MPI_interrupted())
-                ;
-            hbfsWaitingTime += realTime() - beginWaiting;
-            assert(open->empty());
-            initWorkerNbNodes = nbNodes;
-            initWorkerNbBacktracks = nbBacktracks;
-            initWorkerNbDEE = wcsp->getNbDEE();
-            initWorkerNbRecomputationNodes = nbRecomputationNodes;
-        }
-#endif
+    if (ToulBar2::interrupted && ToulBar2::isZ) {
+        ToulBar2::logU = wcsp->LogSumExp(ToulBar2::logU, logZCurrentEstimate());
     } else {
-        recursiveSolve(lb);
+        if (nbBacktracks >= hbfsLimit) {
+            assert(ToulBar2::hbfs);
+            addOpenNode(*cp, *open, MAX(lb, wcsp->getLb()));
+#ifdef OPENMPI
+            if (ToulBar2::parallel && ToulBar2::burst && world.rank() != MASTER) {
+                vector<Value> emptySol;
+                Work work2(*cp, *open, nbNodes - initWorkerNbNodes, nbBacktracks - initWorkerNbBacktracks, wcsp->getNbDEE() - initWorkerNbDEE, nbRecomputationNodes - initWorkerNbRecomputationNodes, MIN_COST, MAX_COST, emptySol);
+                if (ToulBar2::verbose >= 1)
+                    cout << ">>> worker " << world.rank() << " send open-node message to master " << work2 << endl;
+                double beginWaiting = realTime();
+                mpi::request req = world.isend(MASTER, WORKTAG, work2); // non-blocking send to master
+                while (!req.test().is_initialized() && !MPI_interrupted())
+                    ;
+                hbfsWaitingTime += realTime() - beginWaiting;
+                assert(open->empty());
+                initWorkerNbNodes = nbNodes;
+                initWorkerNbBacktracks = nbBacktracks;
+                initWorkerNbDEE = wcsp->getNbDEE();
+                initWorkerNbRecomputationNodes = nbRecomputationNodes;
+            }
+#endif
+        } else {
+            recursiveSolve(lb);
+        }
     }
 }
 
@@ -1555,7 +1587,7 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
 {
     assert(wcsp->unassigned(varIndex));
     assert(wcsp->canbe(varIndex, value));
-    if (ToulBar2::interrupted)
+    if (ToulBar2::interrupted && !ToulBar2::isZ)
         throw TimeOut();
     unsigned int domsize = wcsp->getDomainSize(varIndex);
     bool dichotomic = (ToulBar2::dichotomicBranching && ToulBar2::dichotomicBranchingSize < domsize);
@@ -1623,7 +1655,11 @@ void Solver::binaryChoicePointLDS(int varIndex, Value value, int discrepancy)
             assign(varIndex, value);
         if (!ToulBar2::limited)
             showGap(wcsp->getLb(), wcsp->getUb());
-        recursiveSolveLDS(discrepancy);
+        if (ToulBar2::interrupted && ToulBar2::isZ) {
+            ToulBar2::logU = wcsp->LogSumExp(ToulBar2::logU, logZCurrentEstimate());
+        } else {
+            recursiveSolveLDS(discrepancy);
+        }
     } else {
         ToulBar2::limited = true;
         lastConflictVar = varIndex;
@@ -1708,13 +1744,17 @@ void Solver::narySortedChoicePoint(int varIndex, Cost lb)
     wcsp->getEnumDomainAndCost(varIndex, sorted);
     qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
     for (int v = 0; wcsp->getLb() < wcsp->getUb() && v < size; v++) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         int storedepth = Store::getDepth();
         try {
             Store::store();
             assign(varIndex, sorted[v].value);
-            recursiveSolve(lb);
+            if (ToulBar2::interrupted && ToulBar2::isZ) {
+                ToulBar2::logU = wcsp->LogSumExp(ToulBar2::logU, logZCurrentEstimate());
+            } else {
+                recursiveSolve(lb);
+            }
         } catch (const Contradiction&) {
             wcsp->whenContradiction();
         }
@@ -1742,13 +1782,17 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
     if (discrepancy < size - 1)
         ToulBar2::limited = true;
     for (int v = min(size - 1, discrepancy); wcsp->getLb() < wcsp->getUb() && v >= 0; v--) {
-        if (ToulBar2::interrupted)
+        if (ToulBar2::interrupted && !ToulBar2::isZ)
             throw TimeOut();
         int storedepth = Store::getDepth();
         try {
             Store::store();
             assign(varIndex, sorted[v].value);
-            recursiveSolveLDS(discrepancy - v);
+            if (ToulBar2::interrupted && ToulBar2::isZ) {
+                ToulBar2::logU = wcsp->LogSumExp(ToulBar2::logU, logZCurrentEstimate());
+            } else {
+                recursiveSolveLDS(discrepancy - v);
+            }
         } catch (const Contradiction&) {
             wcsp->whenContradiction();
         }
@@ -1765,48 +1809,118 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 #endif
 }
 
-void Solver::singletonConsistency()
+void Solver::singletonConsistency(int restricted)
 {
     bool deadend;
     bool done = false;
-    while (!done) {
+    int vac = ToulBar2::vac;
+    if (ToulBar2::vac) {
+        ToulBar2::vac = Store::getDepth() + 2; // make sure VAC is performed if requested
+    }
+    vector<int> revelimorder(wcsp->numberOfVariables(), -1);
+    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+        revelimorder[wcsp->getDACOrder(i)] = i;
+    }
+    while (!done && restricted) {
         done = true;
-        for (unsigned int varIndex = 0; varIndex < ((ToulBar2::nbDecisionVars > 0) ? ToulBar2::nbDecisionVars : wcsp->numberOfVariables()); varIndex++) {
-            int size = wcsp->getDomainSize(varIndex);
-            ValueCost sorted[size];
-            // ValueCost* sorted = new ValueCost [size];
-            wcsp->iniSingleton();
-            wcsp->getEnumDomainAndCost(varIndex, sorted);
-            qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
-            for (int a = 0; a < size; a++) {
-                deadend = false;
-                int storedepth = Store::getDepth();
-                try {
-                    Store::store();
-                    wcsp->assign(varIndex, sorted[a].value);
-                    wcsp->propagate();
-                } catch (const Contradiction&) {
-                    wcsp->whenContradiction();
-                    deadend = true;
-                    done = false;
-                }
-                Store::restore(storedepth);
-                wcsp->updateSingleton();
-                // cout << "(" << varIndex << "," << a <<  ")" << endl;
-                if (deadend) {
-                    wcsp->remove(varIndex, sorted[a].value);
-                    wcsp->propagate();
-                    if (ToulBar2::verbose >= 0) {
-                        cout << ".";
-                        flush(cout);
+        unsigned int revelimpos = 0;
+        while (revelimpos < wcsp->numberOfVariables() && restricted) {
+            assert(revelimorder[revelimpos] >= 0 && revelimorder[revelimpos] < (int)wcsp->numberOfVariables());
+            unsigned int varIndex = revelimorder[revelimpos++];
+            unsigned int size = wcsp->getDomainSize(varIndex);
+            if (size > 1 && (ToulBar2::nbDecisionVars <= 0 || varIndex < (unsigned int)ToulBar2::nbDecisionVars)) {
+                restricted--;
+                ValueCost sorted[size];
+                // ValueCost* sorted = new ValueCost [size];
+                // wcsp->iniSingleton(); //Warning! constructive disjunction is not compatible with variable elimination
+                wcsp->getEnumDomainAndCost(varIndex, sorted);
+                qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+                Cost initlb = wcsp->getLb();
+                Cost minlambda = MAX_COST;
+                for (int a = size - 1; a >= 0; --a) {
+                    if (wcsp->canbe(varIndex, sorted[a].value)) {
+                        deadend = false;
+                        int storedepth = Store::getDepth();
+                        try {
+                            Store::store();
+                            wcsp->assign(varIndex, sorted[a].value);
+                            wcsp->propagate();
+                            if (wcsp->getLb() - initlb < minlambda) {
+                                minlambda = wcsp->getLb() - initlb;
+                            }
+                            if (ToulBar2::verbose >= 1 && wcsp->getLb() - initlb > sorted[a].cost) {
+                                cout << "singleton consistency may increase unary cost of variable " << wcsp->getName(varIndex) << " value " << sorted[a].value << " from " << sorted[a].cost  << " to " << wcsp->getLb() - initlb << endl;
+                            }
+                        } catch (const Contradiction&) {
+                            wcsp->whenContradiction();
+                            deadend = true;
+                            done = false;
+                        }
+                        Store::restore(storedepth);
+                        // wcsp->updateSingleton();
+                        // cout << "(" << varIndex << "," << a <<  ")" << endl;
+                        if (deadend) {
+                            wcsp->remove(varIndex, sorted[a].value);
+                            wcsp->propagate();
+                            if (ToulBar2::verbose >= 0) {
+                                cout << ".";
+                                flush(cout);
+                            }
+                            // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
+                        }
                     }
-                    // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
                 }
+//                if (minlambda > MIN_COST) {
+//                    if (ToulBar2::verbose >= 0) {
+//                        cout << "singleton consistency may increase lower bound by " << minlambda << " from variable " << wcsp->getName(varIndex) << endl;
+//                    }
+//                    initlb = wcsp->getLb();
+//                    deadend = false;
+//                    unsigned int initsize = wcsp->getDomainInitSize(varIndex);
+//                    vector<Cost> costs(initsize, minlambda);
+//                    Value support = wcsp->getSupport(varIndex);
+//                    unsigned int supportIndex = wcsp->toIndex(varIndex, support);
+//                    int storedepth = Store::getDepth();
+//                    bool stealing = false;
+//                    try {
+//                        Store::store();
+//                        costs[supportIndex] = MIN_COST;
+//                        wcsp->postUnaryConstraint(varIndex, costs);
+//                        wcsp->propagate();
+//                        assert(wcsp->getUnaryCost(varIndex, support) == MIN_COST);
+//                        for (unsigned int a = 0; a < size; a++) {
+//                            Value value = sorted[a].value;
+//                            Cost ucost = wcsp->getUnaryCost(varIndex, value);
+//                            if (value != support && wcsp->canbe(varIndex, value) && ucost < minlambda && minlambda - ucost > sorted[a].cost) {
+//                                if (ToulBar2::verbose >= 0) {
+//                                    cout << "singleton consistency has stealing cost " << (minlambda - ucost - sorted[a].cost) << " from value " << value << endl;
+//                                }
+//                                stealing = true;
+//                            }
+//                        }
+//                        if (ToulBar2::verbose >= 0 && wcsp->getLb() > initlb && !stealing) {
+//                            cout << "singleton consistency should increase unary cost of variable " << wcsp->getName(varIndex) << " value " << support << " from 0 to " << (wcsp->getLb() - initlb) << endl;
+//                        }
+//                    } catch (const Contradiction&) {
+//                        wcsp->whenContradiction();
+//                        deadend = true;
+//                    }
+//                    Store::restore(storedepth);
+//                    // wcsp->updateSingleton();
+//                    // cout << "(" << varIndex << "," << a <<  ")" << endl;
+//                    if (!deadend) {
+//                        if (ToulBar2::verbose >= 0) {
+//                            cout << "singleton consistency will increase unary cost of variable " << wcsp->getName(varIndex) << endl;
+//                        }
+//                        // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
+//                    }
+//                }
+                // wcsp->removeSingleton();
+                // delete [] sorted;
             }
-            wcsp->removeSingleton();
-            // delete [] sorted;
         }
     }
+    ToulBar2::vac = vac;
     if (ToulBar2::verbose >= 0)
         cout << "Done Singleton Consistency" << endl;
 }
@@ -1835,8 +1949,8 @@ void Solver::newSolution()
         nbSol += 1.;
     if (ToulBar2::isZ) {
         ToulBar2::logZ = wcsp->LogSumExp(ToulBar2::logZ, (Cost)(wcsp->getLb() + wcsp->getNegativeLb()));
-        if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon > -numeric_limits<TLogProb>::infinity())
-            cout << (ToulBar2::logZ + ToulBar2::markov_log) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        if (ToulBar2::debug && (nbBacktracks % 10000LL) == 0 && ToulBar2::logepsilon != -numeric_limits<TLogProb>::infinity())
+            cout << (ToulBar2::logZ + ToulBar2::markov_log - (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) << " , " << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log + (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) << " in " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
     }
     if ((!ToulBar2::allSolutions && !ToulBar2::isZ) || ToulBar2::debug >= 2) {
         if (ToulBar2::verbose >= 0 || (!ToulBar2::parallel && ToulBar2::showSolutions)) {
@@ -2152,7 +2266,10 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
         if (ToulBar2::verbose >= 1 && cluster)
             cout << "hybridSolve-2 C" << cluster->getId() << " " << clb << " " << cub << " " << delta << " " << open_->size() << " " << open_->top().getCost(delta) << " " << open_->getClosedNodesLb(delta) << " " << open_->getUb(delta) << endl;
         Cost lastUb = MAX_COST;
+        Long iterBFS = 0;
+        Long sortBFS = ToulBar2::sortBFS;
         while (clb < cub && !open_->finished() && (!cluster || (clb == initiallb && cub == initialub && nbBacktracks <= cluster->hbfsGlobalLimit))) {
+            iterBFS++;
             if (cluster) {
                 cluster->hbfsLimit = ((ToulBar2::hbfs > 0) ? (cluster->nbBacktracks + ToulBar2::hbfs) : LONGLONG_MAX);
                 assert(wcsp->getTreeDec()->getCurrentCluster() == cluster);
@@ -2179,6 +2296,37 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                         ((WCSP*)wcsp)->getVar(i)->queueEliminate();
                         ((WCSP*)wcsp)->getVar(i)->queueDEE();
                     }
+                }
+                if (ToulBar2::sortBFS) {
+                    //re-sort open nodes at every new solution
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "Sort open nodes using heuristics.." << endl;
+                    }
+                    OpenList *resort = new OpenList;
+                    for (auto iter = open_->begin(); iter != open_->end(); ++iter) {
+                        resort->push(*iter);
+                    }
+                    delete open_;
+                    open_ = resort;
+                    open = resort;
+                }
+            } else if (ToulBar2::sortBFS && iterBFS >= sortBFS) {
+                //re-sort open nodes
+                if (ToulBar2::verbose >= 1) {
+                    cout << "Sort open nodes using heuristics.." << endl;
+                }
+                OpenList *resort = new OpenList;
+                for (auto iter = open_->begin(); iter != open_->end(); ++iter) {
+                   resort->push(*iter);
+                }
+                delete open_;
+                open_ = resort;
+                open = resort;
+                while (sortBFS <= iterBFS) {
+                    sortBFS *= 2;
+                }
+                if (ToulBar2::verbose >= 1) {
+                    cout << "Limit before next sorting: " << sortBFS << " (" << nbNodes << ")" << endl;
                 }
             }
             int storedepthBFS = Store::getDepth();
@@ -2210,7 +2358,11 @@ pair<Cost, Cost> Solver::hybridSolve(Cluster* cluster, Cost clb, Cost cub)
                 } else {
                     if (ToulBar2::vac < 0)
                         ToulBar2::vac = 0;
-                    recursiveSolve(bestlb);
+                    if (ToulBar2::interrupted && ToulBar2::isZ) {
+                        ToulBar2::logU = wcsp->LogSumExp(ToulBar2::logU, logZCurrentEstimate());
+                    } else {
+                        recursiveSolve(bestlb);
+                    }
                 }
             } catch (const Contradiction&) {
                 wcsp->whenContradiction();
@@ -2490,9 +2642,9 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
             }
         }
     }
-
     assert(clb >= initiallb && cub <= initialub);
     assert(clb <= cub);
+
     if (clb == cub) {
         vector<mpi::request> reqs;
         for (int i = 0; i < world.size(); i++)
@@ -2724,16 +2876,17 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: Hybrid best-first search cannot currently look for all solutions when BTD mode is activated. Shift to DFS (use -hbfs:)." << endl;
         throw BadConfiguration();
     }
-    if ((ToulBar2::hve <= 0 || ToulBar2::pwc < 0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
-        cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions (remove -vacint option)." << endl;
+    if ((ToulBar2::hve <= 0 || ToulBar2::pwc < 0) && ToulBar2::FullEAC && ToulBar2::vac > 1 && (wcsp->numberOfConnectedConstraints() > ((ToulBar2::VAClin)?wcsp->numberOfConnectedKnapsackConstraints():0) + wcsp->numberOfConnectedBinaryConstraints() || ToulBar2::elimDegree_preprocessing >= 3 || ToulBar2::preprocessTernaryRPC != 0)) {
+        cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
-
     if (ToulBar2::searchMethod != DFBB) {
-        if (!ToulBar2::lds || ToulBar2::vnsLDSmax < 0)
+        if (ToulBar2::vnsLDSmax < 0)
             ToulBar2::vnsLDSmax = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
-        if (!ToulBar2::lds)
+        if (!ToulBar2::lds) {
             ToulBar2::vnsLDSmin = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
+            ToulBar2::vnsLDSmax = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
+        }
         if (ToulBar2::vnsKmax <= 0)
             ToulBar2::vnsKmax = wcsp->numberOfUnassignedVariables();
     }
@@ -2760,6 +2913,15 @@ void Solver::beginSolve(Cost ub)
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
             if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
                 cout << "Warning! Cannot use PILS local search with bounds arc propagation (non enumerated variable domains)." << endl;
+                ToulBar2::pils_cmd = "";
+                break;
+            }
+        }
+    }
+    if (ToulBar2::lrBCD_cmd.size() > 0) {
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+            if (wcsp->unassigned(i) && !wcsp->enumerated(i)) {
+                cout << "Warning! Cannot use LR-BCD local search with bounds arc propagation (non enumerated variable domains)." << endl;
                 ToulBar2::pils_cmd = "";
                 break;
             }
@@ -2813,13 +2975,13 @@ void Solver::beginSolve(Cost ub)
     if (ToulBar2::DEE)
         ToulBar2::DEE_ = ToulBar2::DEE; // enforces PSNS after closing the model
 
-    if (CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted csp constraints
-        ToulBar2::LcLevel = LC_AC;
-    }
+    //    if (ToulBar2::addAMOConstraints != -1)
+    //        ToulBar2::addAMOConstraints_ = true; // only bound propagation for knapsack constraints before adding them AMO constraints
 
-    if (ToulBar2::isZ) {
-        ToulBar2::logZ = -numeric_limits<TLogProb>::infinity();
-        ToulBar2::logU = -numeric_limits<TLogProb>::infinity();
+    if (!ToulBar2::isZ && CSP(wcsp->getLb(), wcsp->getUb()) && ToulBar2::setvalue != tb2setvalue) { // do not modify (weakening) local consistency if there are global weighted CSP constraints
+        ToulBar2::LcLevel = LC_AC;
+        ToulBar2::vac = 0;
+        ToulBar2::useRASPS = 0;
     }
 
     // reactivate on-the-fly variable elimination and dead-end elimination if needed
@@ -2883,7 +3045,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 else
                     cout << "Reverse original DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
             }
-        } while (wcsp->getLb() > previouslb && 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > 0.5);
+        } while (wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.5);
     }
     wcsp->preprocessing(); // preprocessing after initial propagation
     initGap(wcsp->getLb(), wcsp->getUb());
@@ -2916,7 +3078,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         if (ToulBar2::verbose >= 0)
             cout << "INCOP solving time: " << cpuTime() - incopStartTime << " seconds." << endl;
     }
-    if (ToulBar2::pils_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 0) {
+    if (ToulBar2::pils_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 2 && getWCSP()->numberOfConnectedBinaryConstraints() > 1) {
         double pilsStartTime = cpuTime();
         vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
         for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
@@ -2925,10 +3087,27 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         if (ToulBar2::verbose >= 0)
             cout << "PILS solving time: " << cpuTime() - pilsStartTime << " seconds." << endl;
     }
+    if (ToulBar2::lrBCD_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 2 && getWCSP()->numberOfConnectedBinaryConstraints() > 1) {
+        double lrBCDStartTime = cpuTime();
+        vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
+            bestsol[i] = (wcsp->canbe(i, wcsp->getBestValue(i)) ? wcsp->getBestValue(i) : wcsp->getSupport(i));
+        lrBCD(ToulBar2::lrBCD_cmd, bestsol);
+        if (ToulBar2::verbose >= 0)
+            cout << "LR-BCD solving time: " << cpuTime() - lrBCDStartTime << " seconds." << endl;
+    }
     ToulBar2::lds = lds;
 
+#ifdef BOOST
+    if (ToulBar2::addAMOConstraints != -1) {
+        ToulBar2::addAMOConstraints_ = true;
+        wcsp->addAMOConstraints();
+        ToulBar2::addAMOConstraints_ = false;
+    }
+#endif
+
     if (ToulBar2::singletonConsistency) {
-        singletonConsistency();
+        singletonConsistency(ToulBar2::singletonConsistency);
         wcsp->propagate();
         wcsp->resetTightnessAndWeightedDegree();
     }
@@ -3158,7 +3337,7 @@ bool Solver::solve(bool first)
                                         throw WrongFileFormat();
                                     }
                                     // incCtr->sumScopeIncluded(ctr);
-                                    incCtr->assignCluster();
+                                    // incCtr->assignCluster(); //SdG: done before inside postIncrementalXXXConstraint
                                     incCtr->propagate();
                                 }
                             }
@@ -3271,6 +3450,7 @@ bool Solver::solve(bool first)
                                     wcsp->resetWeightedDegree();
                                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                                         wcsp->setBestValue(i, wcsp->getSup(i) + 1);
+                                        heuristics[i] = wcsp->getDegree(i);
                                     }
                                 }
                             }
@@ -3358,7 +3538,7 @@ bool Solver::solve(bool first)
                                                     Mdd mdd = computeMDD(&solTrie, initUb);
                                                     if (ToulBar2::verbose >= 1)
                                                         cout << "MDD computed." << endl;
-                                                    // ofstream os(to_string(this) + "-wregular.dot");
+                                                    // ofstream os(to_string(this) + to_string("-wregular.dot"));
                                                     // printLayers(os, mdd);
                                                     // os.close();
                                                     switch (ToulBar2::divMethod) {
@@ -3479,10 +3659,12 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, PrintFormatProb, (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.));
             fprintf((ToulBar2::writeSolution) ? ToulBar2::solutionFile : ToulBar2::solution_uai_file, "\n");
         }
-        cout << (ToulBar2::logZ + ToulBar2::markov_log) << " <= Log(Z) <= ";
-        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
-        cout << (ToulBar2::logZ + ToulBar2::markov_log) / Log(10.) << " <= Log10(Z) <= ";
-        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        cout << std::setprecision(ToulBar2::resolution);
+        cout << (ToulBar2::logZ + ToulBar2::markov_log - (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) << " <= Log(Z) <= ";
+        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log + (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        cout << (ToulBar2::logZ + ToulBar2::markov_log - (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) / Log(10.) << " <= Log10(Z) <= ";
+        cout << (wcsp->LogSumExp(ToulBar2::logZ, ToulBar2::logU) + ToulBar2::markov_log + (TLogProb)wcsp->getMaxDomainSize() * Exp10(-(TLogProb)ToulBar2::resolution)) / Log(10.) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
+        cout << std::setprecision(DECIMAL_POINT);
         return;
     }
     if (ToulBar2::allSolutions) {
@@ -3501,7 +3683,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << "Size of sep            :    " << tailleSep << endl;
             }
             cout << "Time                   :    " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds" << endl;
-            cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << endl;
+            cout << "... in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << endl;
         }
         return;
     }
@@ -3563,14 +3745,14 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
             }
             if (ToulBar2::haplotype) {
-                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else if (!ToulBar2::bayesian) {
                 if (!isComplete) {
                     cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
                 }
-                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else {
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             }
         } else {
 #ifdef OPENMPI
@@ -3582,7 +3764,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (isLimited == 2)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
-                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+                cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
 #ifdef OPENMPI
             } else if (ToulBar2::maxsateval && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
 #else
@@ -3595,7 +3777,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         }
     } else {
         if (ToulBar2::verbose >= 0) {
-            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (" ( " + to_string(wcsp->getNbDEE()) + " removals by DEE)") : "") << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
+            cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         }
 #ifdef OPENMPI
         if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
@@ -3676,18 +3858,18 @@ bool Solver::solve_symmax2sat(int n, int m, int* posx, int* posy, double* cost, 
         if (posx[e] != posy[e]) {
             vector<Cost> costs(4, 0);
             if (cost[e] > 0) {
-                costs[1] = (Cost)(multiplier * 2. * cost[e]);
+                costs[1] = (Cost)roundl(multiplier * 2. * cost[e]);
                 costs[2] = costs[1];
             } else {
-                costs[0] = (Cost)(multiplier * -2. * cost[e]);
+                costs[0] = (Cost)roundl(multiplier * -2. * cost[e]);
                 costs[3] = costs[0];
             }
             wcsp->postBinaryConstraint(posx[e] - 1, posy[e] - 1, costs);
         } else {
             if (cost[e] > 0) {
-                unaryCosts1[posx[e] - 1] += (Cost)(multiplier * cost[e]);
+                unaryCosts1[posx[e] - 1] += (Cost)roundl(multiplier * cost[e]);
             } else {
-                unaryCosts0[posx[e] - 1] += (Cost)(multiplier * -cost[e]);
+                unaryCosts0[posx[e] - 1] += (Cost)roundl(multiplier * -cost[e]);
             }
         }
     }
@@ -4011,7 +4193,7 @@ void Solver::epsDumpSubProblems(CPStore& cp, OpenList& open)
         if (nd.getCost() < wcsp->getUb()) {
             string epsSubProblem = "-x=\"";
             for (ptrdiff_t idx = nd.first; idx < nd.last; ++idx) {
-                epsSubProblem += "," + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value + ((cp[idx].op == CP_INCREASE) ? -1 : 0) + ((cp[idx].op == CP_DECREASE) ? 1 : 0));
+                epsSubProblem += to_string(",") + to_string(cp[idx].varIndex) + opSymbol(cp, idx, nd) + to_string(cp[idx].value + ((cp[idx].op == CP_INCREASE) ? -1 : 0) + ((cp[idx].op == CP_DECREASE) ? 1 : 0));
             }
             epsfile << epsSubProblem << "\""
                     << " -best=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(nd.getCost()) << std::setprecision(DECIMAL_POINT) << endl;

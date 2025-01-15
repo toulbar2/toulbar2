@@ -20,6 +20,7 @@ class AllDiffConstraint;
 class GlobalCardinalityConstraint;
 class SameConstraint;
 class RegularFlowConstraint;
+class KnapsackConstraint;
 
 /** Concrete class WCSP containing a weighted constraint satisfaction problem
  *	- problem lower and upper bound
@@ -69,7 +70,7 @@ class WCSP FINAL : public WeightedCSP {
     vector<GlobalConstraint*> globalconstrs; ///< a list of all original global constraints (also inserted in constrs)
     vector<int> delayedNaryCtr; ///< a list of all original nary constraints in extension (also inserted in constrs)
     bool isDelayedNaryCtr; ///< postpone naryctr propagation after all variables have been created
-    vector<vector<int>> listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic)
+    vector<vector<int>> listofsuccessors; ///< list of topologic order of var used when q variables are  added for decomposing global constraint (berge acyclic) or used by UAI Bayesian network topological order heuristic
     StoreInt isPartOfOptimalSolution; ///< true if the current assignment belongs to an optimal solution recorded into bestValues
 
     // make it private because we don't want copy nor assignment
@@ -119,6 +120,8 @@ public:
 
     vector<set<int>> varsBLP; ///< internal sets of variables inside problems (Problem1, Problem2, NegProblem2) waiting for tree decomposition initialization in bilevel optimization
     vector<vector<int>> delayedCtrBLP; ///< internal lists of deconnected ternary constraints between clusters waiting for tree decomposition initialization in bilevel optimization
+
+    KnapsackList knapsackList; ///< List of KnapsackConstraint (backtrackable list)
 
 #ifdef XMLFLAG
     map<int, int> varsDom; ///< structures for solution translation: we don't have to parse the XML file again
@@ -435,6 +438,7 @@ public:
     unsigned int numberOfConstraints() const { return constrs.size(); } ///< \brief initial number of cost functions
     unsigned int numberOfConnectedConstraints() const; ///< \brief current number of cost functions
     unsigned int numberOfConnectedBinaryConstraints() const; ///< \brief current number of binary cost functions
+    unsigned int numberOfConnectedKnapsackConstraints() const; ///< \brief current number of knapsack cost functions
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
     unsigned int medianDegree() const; ///< \brief median current degree of variables
     unsigned int medianArity() const; ///< \brief median arity of current cost functions
@@ -456,6 +460,7 @@ public:
     int biConnectedComponents();
     void minimumDegreeOrderingBGL(vector<int>& order);
     void spanningTreeOrderingBGL(vector<int>& order);
+    void DAGOrdering(vector<int>& order);
     void reverseCuthillMcKeeOrderingBGL(vector<int>& order);
     void maximumCardinalitySearch(vector<int>& order);
     void minimumFillInOrdering(vector<int>& order);
@@ -487,7 +492,7 @@ public:
     int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs);
     int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
     int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs);
-    int postNaryConstraintBegin(vector<int>& scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
+    int postNaryConstraintBegin(vector<int> scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) { return postNaryConstraintBegin(scope.data(), scope.size(), defval, nbtuples, forcenary); }
     int postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE); /// \warning must call postNaryConstraintEnd after giving cost tuples ; \warning it may create a WeightedClause instead of NaryConstraint
     void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) { postNaryConstraintTuple(ctrindex, tuple.data(), tuple.size(), cost); }
     void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost);
@@ -538,12 +543,12 @@ public:
     void addAMOConstraints();
 #endif
 
-    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false)
+    int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {})
     {
         istringstream file(arguments);
-        return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict);
+        return postKnapsackConstraint(scope.data(), scope.size(), file, isclique, kp, conflict, wcnf);
     }
-    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict); // warning! scopeIndex may be modified internally.
+    int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique, int kp, bool conflict, Tuple wcnf); // warning! scopeIndex may be modified internally.
 
     int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false);
 
@@ -556,12 +561,12 @@ public:
     }
     void postGlobalFunction(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true);
 
-    int postWAmong(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
+    int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
     int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub); ///< \deprecated
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    void postWVarAmong(vector<int>& scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex); } ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
+    void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex); } ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
     void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \deprecated
-    int postWRegular(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost,
+    int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
         const vector<WeightedObjInt>& initial_States,
         const vector<WeightedObjInt>& accepting_States,
@@ -572,7 +577,7 @@ public:
         const vector<WeightedObjInt>& accepting_States,
         const vector<DFATransition>& Wtransitions); ///< \deprecated
     void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts); ///< \deprecated post a weighted regular cost function decomposed as a cost function network
-    int postWAllDiff(vector<int>& scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
+    int postWAllDiff(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \deprecated
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
     int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
@@ -591,7 +596,7 @@ public:
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
     void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
-    void postWDivConstraint(vector<int>& scope, unsigned int distance, vector<Value>& values, int method = 0);
+    void postWDivConstraint(vector<int> scope, unsigned int distance, vector<Value>& values, int method = 0);
 
     bool isKnapsack(); ///< \brief true if there are knapsack constraints defined in the problem
     bool isGlobal() { return (globalconstrs.size() > 0); } ///< \brief true if there are soft global cost functions defined in the problem
@@ -605,6 +610,7 @@ public:
     void read_wcnf(const char* fileName); ///< \brief load problem in (w)cnf format (see http://www.maxsat.udl.cat/08/index.php?disp=requirements)
     void read_qpbo(const char* fileName); ///< \brief load quadratic pseudo-Boolean optimization problem in unconstrained quadratic programming text format (first text line with n, number of variables and m, number of triplets, followed by the m triplets (x,y,cost) describing the sparse symmetric nXn cost matrix with variable indexes such that x <= y and any positive or negative real numbers for costs)
     void read_opb(const char* fileName); ///< \brief load pseudo-Boolean optimization problem
+    void read_lp(const char* fileName); ///< \brief load integer linear programming problem
     void read_legacy(const char* fileName); ///< \brief load problem in wcsp format
     void read_legacy(istream& file); ///< \brief load problem in wcsp format (internal use)
 
@@ -810,6 +816,9 @@ public:
     void queueEliminate(DLink<VariableWithTimeStamp>* link) { Eliminate.push(link, nbNodes); }
     void queueSeparator(DLink<Separator*>* link) { PendingSeparator.push_back(link, true); }
     void unqueueSeparator(DLink<Separator*>* link) { PendingSeparator.erase(link, true); }
+    bool isInQueueSeparator(DLink<Separator*>* link) { return PendingSeparator.inBTList(link); }
+    void queueKnapsack(DLink<KnapsackConstraint*>* link) { knapsackList.push_back(link, true); }
+    void unqueueKnapsack(DLink<KnapsackConstraint*>* link) { knapsackList.erase(link, true); }
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
     void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 

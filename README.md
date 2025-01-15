@@ -24,14 +24,14 @@ graphical models:
 * 2010 UAI APPROXIMATE INFERENCE CHALLENGE [UAI 2010][uai2010] (winner on 1200-second MPE task)
 * The Probabilistic Inference Challenge [PIC 2011][pic2011] (second place by ficolofo on 1-hour MAP task)
 * UAI 2014 Inference Competition [UAI 2014][uai2014] (winner on all MAP task categories, see Proteus, Robin, and IncTb entries)
-* [XCSP3][xcsp] Competitions (second place on Mini COP and Parallel COP tracks in 2022, first place on Mini COP in 2023)
+* [XCSP3][xcsp] Competitions (second place on Mini COP and Parallel COP tracks in 2022, first place on Mini COP in 2023, third place in 2024)
 * UAI 2022 Inference Competition [UAI 2022][uai2022] (winner on all MPE and MMAP task categories)
 
 [cpai08]: http://www.cril.univ-artois.fr/CPAI08/
 [uai2008]: http://graphmod.ics.uci.edu/uai08/Evaluation/Report
 [uai2010]: http://www.cs.huji.ac.il/project/UAI10/summary.php
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
-[uai2014]: http://www.hlt.utdallas.edu/~vgogate/uai14-competition/leaders.html 
+[uai2014]: https://personal.utdallas.edu/~vibhav.gogate/uai14-competition/leaders.html 
 [xcsp]: https://xcsp.org/competitions
 [uai2022]: https://uaicompetition.github.io/uci-2022/results/final-leader-board
 
@@ -88,10 +88,11 @@ e.g.:
 <!-- (_README_5)= -->
 ## Installation from sources
 
-Compilation requires git, cmake and a C++-11 capable compiler (in C++11 mode). 
+Compilation requires git, cmake and a C++-20 capable compiler (in C++20 mode). 
 
 Required library:
 * libgmp-dev
+* bc (used during cmake)
 
 Recommended libraries (default use):
 * libboost-graph-dev
@@ -100,6 +101,7 @@ Recommended libraries (default use):
 * zlib1g-dev
 * liblzma-dev
 * libbz2-dev
+* libeigen3-dev
 
 Optional libraries:
 * libjemalloc-dev
@@ -126,17 +128,17 @@ Commands for statically compiling toulbar2 on Linux in directory toulbar2/src wi
     bash
     cd src
     echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -std=c++17 -O3 -DNDEBUG -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
-     -I. -I./pils/src tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+    g++ -o toulbar2 -std=c++20 -O3 -DNDEBUG -march=native -flto -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
+     -I. -I./pils/src tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -lbz2 -llzma
 
-Use OPENMPI flag and MPI compiler for a parallel version of toulbar2:
+Use OPENMPI flag and MPI compiler for a parallel version of toulbar2 (must be run with mpirun, use mpirun -n 1 for the sequential version of HBFS or VNS):
 
     bash
     cd src
     echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
-    mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
-     -I. -I./pils/src tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+    mpicxx -o toulbar2 -std=c++20 -O3 -DNDEBUG -march=native -flto -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
+     -I. -I./pils/src tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lgmp -lz -lbz2 -llzma
 
 Replace LONGLONG_COST by INT_COST to reduce memory usage by two and reduced cost range (costs must be smaller than 10^8).
@@ -146,11 +148,11 @@ Replace WCSPFORMATONLY by XMLFLAG3 and add libxcsp3parser.a from xcsp.org in you
     bash
     cd src
     echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
-    mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
-     -I/usr/include/libxml2 -I. -I./pils/src -I./xmlcsp3 tb2*.cpp applis/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
+    mpicxx -o toulbar2 -std=c++20 -O3 -DNDEBUG -march=native -flto -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
+     -I/usr/include/libxml2 -I. -I./pils/src -I./xmlcsp3 tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lxml2 -licuuc -licui18n -licudata libxcsp3parser.a -lgmp -lz -lbz2 -llzma -lm -lpthread -ldl
 
-Copyright (C) 2006-2022, toulbar2 team.
+Copyright (C) 2006-2024, toulbar2 team.
 toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)
 
 
