@@ -1007,10 +1007,13 @@ class CFN:
         return
 
 class MultiCFN:
-    """pytoulbar2 base class used to combine linearly multiple CFN.
+    """pytoulbar2 base class used to combine linearly multiple CFNs. See (InitFromMultiCFN) to extract and solve it.
     
     Members:
         MultiCFN: python interface to C++ class MultiCFN.
+            
+    Note:
+        It is important to set the parameter (resolution) to the same ***nonzero*** value when creating every CFN to be pushed in a MultiCFN object.
     
     """
     def __init__(self):
