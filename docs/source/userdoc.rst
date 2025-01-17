@@ -23,8 +23,8 @@ Using on the fly translation, toulbar2 can also directly solve
 optimization problems on other graphical models such as Maximum
 probability Explanation (MPE) on Bayesian networks [koller2009]_, and
 Maximum A Posteriori (MAP) on Markov random field [koller2009]_. It can also
-read partial weighted MaxSAT problems, Quadratic Pseudo Boolean
-problems (MAXCUT) as well as Linkage **.pre** pedigree files for
+read partial weighted MaxSAT problems, (Quadratic) Pseudo Boolean Optimization
+problems, linear programs as well as Linkage **.pre** pedigree files for
 genotyping error detection and correction.
 
 toulbar2 is exact. It will only report an optimal solution when it
@@ -833,7 +833,7 @@ The available **file formats** (possibly compressed by gzip or bzip2 or xz, e.g.
   - Probabilistic Graphical Model (`.uai <http://www.cs.huji.ac.il/project/PASCAL/fileFormat.php>`_ / .LG file extension ; the file format .LG is identical to .UAI except that we expect log-potentials)
   - Weighted Partial Max-SAT (`.cnf/.wcnf <http://www.maxsat.udl.cat/08/index.php?disp=requirements>`_ file extension)
   - Quadratic Unconstrained Pseudo-Boolean Optimization (:ref:`.qpbo<qpbo_format>` file extension)
-  - Pseudo-Boolean Optimization (`.opb <http://www.cril.univ-artois.fr/PB16/format.pdf>`_ file extension)
+  - Pseudo-Boolean Optimization (`.opb <https://www.cril.univ-artois.fr/PB16/format.pdf>`_ and `.wbo <https://www.cril.univ-artois.fr/PB24/OPBcompetition.pdf>`_ file extensions)
   - Integer Linear Programming (`.lp <https://www.ibm.com/docs/en/icos/22.1.2?topic=cplex-lp-file-format-algebraic-representation>`_ file extension)
   - Constraint Satisfaction and Optimization Problem (`.xml <https://xcsp.org>`_ file extension)
 
