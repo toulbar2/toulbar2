@@ -4295,7 +4295,7 @@ void WCSP::preprocessing()
         merged = false;
         for (unsigned int i = 0; i < constrs.size(); i++)
             if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isBinary()
-                && (ToulBar2::preprocessFunctional == 1 || constrs[i]->getVar(0)->getDomainSize() == constrs[i]->getVar(1)->getDomainSize())) {
+                && (ToulBar2::preprocessFunctional & 1 || constrs[i]->getVar(0)->getDomainSize() == constrs[i]->getVar(1)->getDomainSize())) {
                 BinaryConstraint* xy = (BinaryConstraint*)constrs[i];
                 EnumeratedVariable* x = (EnumeratedVariable*)xy->getVar(0);
                 EnumeratedVariable* y = (EnumeratedVariable*)xy->getVar(1);
@@ -4419,6 +4419,46 @@ void WCSP::preprocessing()
                 }
 
                 propagate();
+            } else {
+                // Merge functional original variables in PWC variables if requested
+                bool merged = (ToulBar2::preprocessFunctional == 3);
+                while (merged) {
+                    merged = false;
+                    for (unsigned int i = 0; i < constrs.size(); i++)
+                        if (constrs[i]->connected() && !constrs[i]->isSep() && constrs[i]->isBinary()) {
+                            BinaryConstraint* xy = (BinaryConstraint*)constrs[i];
+                            EnumeratedVariable* x = (EnumeratedVariable*)xy->getVar(0);
+                            EnumeratedVariable* y = (EnumeratedVariable*)xy->getVar(1);
+                            map<Value, Value> functional;
+                            if (xy->isFunctional(x, y, functional) && y->canbeMerged(x)) {
+                                y->mergeTo(xy, functional);
+                                merged = true;
+                                propagate();
+                            } else if (xy->isFunctional(y, x, functional) && x->canbeMerged(y)) {
+                                x->mergeTo(xy, functional);
+                                merged = true;
+                                propagate();
+                            }
+                        }
+                    for (int i = 0; i < elimBinOrder; i++)
+                        if (elimBinConstrs[i]->connected() && !elimBinConstrs[i]->isSep()
+                            && elimBinConstrs[i]->getVar(0)->getDomainSize() == elimBinConstrs[i]->getVar(1)->getDomainSize()) {
+                            assert(elimBinConstrs[i]->isBinary());
+                            BinaryConstraint* xy = (BinaryConstraint*)elimBinConstrs[i];
+                            EnumeratedVariable* x = (EnumeratedVariable*)xy->getVar(0);
+                            EnumeratedVariable* y = (EnumeratedVariable*)xy->getVar(1);
+                            map<Value, Value> functional;
+                            if (xy->isFunctional(x, y, functional) && y->canbeMerged(x)) {
+                                y->mergeTo(xy, functional);
+                                merged = true;
+                                propagate();
+                            } else if (xy->isFunctional(y, x, functional) && x->canbeMerged(y)) {
+                                x->mergeTo(xy, functional);
+                                merged = true;
+                                propagate();
+                            }
+                        }
+                }
             }
         }
         if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin)?numberOfConnectedKnapsackConstraints():0) + numberOfConnectedBinaryConstraints()) {

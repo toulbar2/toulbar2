@@ -944,7 +944,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::pwcMinimalDualGraph)
         cout << " (default option)";
     cout << endl;
-    cout << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
+    cout << "   -f=[integer] : preprocessing only: variable elimination of functional (f=1, or f=3 before and after PWC) (resp. bijective (f=2)) variables (default value is " << ToulBar2::preprocessFunctional << ")" << endl;
     cout << "   -dec : preprocessing only: pairwise decomposition of cost functions with arity >=3 into smaller arity cost functions";
     if (ToulBar2::costfuncSeparate)
         cout << " (default option)";
