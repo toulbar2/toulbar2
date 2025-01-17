@@ -175,6 +175,10 @@ enum {
     OPT_opbgz_ext,
     OPT_opbbz2_ext,
     OPT_opbxz_ext,
+    OPT_wbo_ext,
+    OPT_wbogz_ext,
+    OPT_wbobz2_ext,
+    OPT_wboxz_ext,
     OPT_lp_ext,
     OPT_lpgz_ext,
     OPT_lpbz2_ext,
@@ -431,6 +435,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_opbgz_ext, (char*)"--opbgz_ext", SO_REQ_SEP },
     { OPT_opbbz2_ext, (char*)"--opbbz2_ext", SO_REQ_SEP },
     { OPT_opbxz_ext, (char*)"--opbxz_ext", SO_REQ_SEP },
+    { OPT_wbo_ext, (char*)"--wbo_ext", SO_REQ_SEP },
+    { OPT_wbogz_ext, (char*)"--wbogz_ext", SO_REQ_SEP },
+    { OPT_wbobz2_ext, (char*)"--wbobz2_ext", SO_REQ_SEP },
+    { OPT_wboxz_ext, (char*)"--wboxz_ext", SO_REQ_SEP },
     { OPT_lp_ext, (char*)"--lp_ext", SO_REQ_SEP },
     { OPT_lpgz_ext, (char*)"--lpgz_ext", SO_REQ_SEP },
     { OPT_lpbz2_ext, (char*)"--lpbz2_ext", SO_REQ_SEP },
@@ -819,6 +827,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.cnf : (Max-)SAT format" << endl;
     cout << "   *.qpbo : quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format (see also option -qpmult)" << endl;
     cout << "   *.opb : pseudo-Boolean optimization format" << endl;
+    cout << "   *.wbo : Weighted Boolean Optimization format" << endl;
     cout << "   *.lp : integer linear programming format" << endl;
     cout << "   *.uai : Bayesian network and Markov Random Field format (see UAI'08 Evaluation) followed by an optional evidence filename (performs MPE task, see -logz for PR task, and write its solution in file .MPE or .PR using the same directory as toulbar2)" << endl;
     cout << "   *.LG : Bayesian network and Markov Random Field format using logarithms instead of probabilities" << endl;
@@ -843,7 +852,7 @@ void help_msg(char* toulbar2filename)
     cout << "   *.sol  : initial solution for the problem (given as initial upperbound plus one and as default value heuristic, or only as initial upperbound if option -x: is added)" << endl
          << endl;
 #ifdef BOOST
-    cout << "Note: cfn, cnf, lp, LG, qpbo, opb, uai, wcnf, wcsp";
+    cout << "Note: cfn, cnf, lp, LG, qpbo, opb, uai, wcnf, wcsp, wbo";
 #if defined(XMLFLAG) || defined(XMLFLAG3)
     cout << ", xml";
 #endif
@@ -862,7 +871,7 @@ void help_msg(char* toulbar2filename)
 #ifndef MENDELSOFT
     cout << "   -w=[filename] : writes last/all solutions in filename (or \"sol\" if no parameter is given)" << endl;
     cout << "   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)" << endl;
-    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or costs in cfn/lp/opb/qpbo files resp. (default value is " << ToulBar2::resolution << " except for cfn)" << endl;
+    cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or costs in cfn/lp/opb/qpbo/wbo files resp. (default value is " << ToulBar2::resolution << " except for cfn)" << endl;
     cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
@@ -1235,6 +1244,10 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["opbgz_ext"] = ".opb.gz";
     file_extension_map["opbbz2_ext"] = ".opb.bz2";
     file_extension_map["opbxz_ext"] = ".opb.xz";
+    file_extension_map["wbo_ext"] = ".wbo";
+    file_extension_map["wbogz_ext"] = ".wbo.gz";
+    file_extension_map["wbobz2_ext"] = ".wbo.bz2";
+    file_extension_map["wboxz_ext"] = ".wbo.xz";
     file_extension_map["lp_ext"] = ".lp";
     file_extension_map["lpgz_ext"] = ".lp.gz";
     file_extension_map["lpbz2_ext"] = ".lp.bz2";
@@ -2991,6 +3004,39 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading xz compressed pseudo-Boolean optimization file:" << problem << endl;
                 ToulBar2::opb = true;
                 strext.insert(".opb.xz");
+                strfile.push_back(problem);
+                ToulBar2::xz = true;
+            }
+
+            // Weighted Boolean Optimization file
+            if (check_file_ext(problem, file_extension_map["wbo_ext"]) || ToulBar2::stdin_format.compare("wbo") == 0) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading Weighted Boolean Optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".wbo");
+                strfile.push_back(problem);
+            }
+            if (check_file_ext(problem, file_extension_map["wbogz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading gzip'd Weighted Boolean Optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".wbo.gz");
+                strfile.push_back(problem);
+                ToulBar2::gz = true;
+            }
+            if (check_file_ext(problem, file_extension_map["wbobz2_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading bzip2'd Weighted Boolean Optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".wbo.bz2");
+                strfile.push_back(problem);
+                ToulBar2::bz2 = true;
+            }
+            if (check_file_ext(problem, file_extension_map["wboxz_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading xz compressed Weighted Boolean Optimization file:" << problem << endl;
+                ToulBar2::opb = true;
+                strext.insert(".wbo.xz");
                 strfile.push_back(problem);
                 ToulBar2::xz = true;
             }

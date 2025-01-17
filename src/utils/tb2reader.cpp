@@ -4088,6 +4088,8 @@ void WCSP::read_opb(const char* fileName)
     int maxarity = 0;
     int nbvar = 0;
     int nblinear = 0;
+    int nbsoft = 0;
+    int cursoft = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
 
     map<string, int> varnames;
@@ -4112,6 +4114,20 @@ void WCSP::read_opb(const char* fileName)
                 }
             }
         }
+        if (dummy.find("#soft=") != string::npos) {
+            int n = atoi(dummy.substr(dummy.find("#soft=") + 6).c_str());
+            if (n > 0) {
+                for (int i = 1; i <= n; i++) {
+                    string varname = "s";
+                    varname += to_string(i);
+                    int var = makeEnumeratedVariable(varname, 0, 1);
+                    addValueName(var, "v0");
+                    addValueName(var, "v1");
+                    varnames[varname] = var;
+                    nbsoft++;
+                }
+            }
+        }
         readToken(file, token);
     }
 
@@ -4122,6 +4138,22 @@ void WCSP::read_opb(const char* fileName)
     ToulBar2::setCostMultiplier(multiplier);
     if (token.substr(0, 4) == "max:") {
         ToulBar2::setCostMultiplier(ToulBar2::costMultiplier * -1.0);
+    } else if (token.substr(0, 5) == "soft:") {
+        opt = false;
+        opsize = 0;
+        multiplier = 1.;
+        ToulBar2::setCostMultiplier(1.);
+        if (token.back() == ':') {
+            readToken(file, token);
+        }
+        Cost top = string2Cost(token.substr((token[0]=='s')?5:0).c_str());
+        if (top > MIN_COST) {
+            updateUb(top);
+        }
+        if (token.back() != ';') {
+            readToken(file, token);
+        }
+        assert(token.back() == ';');
     } else if (token.substr(0, 4) != "min:") {
         opt = false;
         opsize = 0;
@@ -4236,6 +4268,9 @@ void WCSP::read_opb(const char* fileName)
         string params;
         Cost coef; // allows long long coefficients inside linear constraints
         bool first = true;
+        bool soft = false;
+        Cost poscoef = MIN_COST;
+        Cost negcoef = MIN_COST;
         do {
             readToken(file, token, &opsize); // read coefficient or operator or comments
             // skip comments
@@ -4245,7 +4280,45 @@ void WCSP::read_opb(const char* fileName)
             }
             if (!file || token == ";")
                 break;
-            if (token.substr(0, 2) == "<=" || token.substr(0, 1) == "=" || token.substr(0, 2) == ">=") {
+            if (token[0] == '[') {
+                cursoft++;
+                if (token.size() == 1) {
+                    readToken(file, token, &opsize);
+                }
+                Cost cost = string2Cost((char*)token.substr((token[0] == '[')? 1 : 0).c_str());
+                assert(cost >= MIN_COST);
+                if (token.back() != ']') {
+                    readToken(file, token, &opsize);
+                }
+                assert(token.back() == ']'); // TODO: allows no space after bracket
+                if (cost > MIN_COST && cost < getUb()) {
+                    soft = true;
+                    string varname = "s" + to_string(cursoft);
+                    int var = 0;
+                    if (varnames.find(varname) != varnames.end()) {
+                        var = varnames[varname];
+                    } else {
+                        var = makeEnumeratedVariable(varname, 0, 1);
+                        addValueName(var, "v0");
+                        addValueName(var, "v1");
+                        varnames[varname] = var;
+                        nbsoft++;
+                    }
+                    if (scopeIndex.size() == 0) {
+                        scopeIndex.push_back(var);
+                        coefs.push_back(0); // to be updated later
+                    } else {
+                        cerr << "Wrong soft constraint definition with more than one cost block! " << token << endl;
+                        throw WrongFileFormat();
+                    }
+                    EnumeratedVariable* x = (EnumeratedVariable*)vars[var];
+                    TemporaryUnaryConstraint unaryconstr;
+                    unaryconstr.var = x;
+                    unaryconstr.costs.push_back(MIN_COST);
+                    unaryconstr.costs.push_back(cost);
+                    unaryconstrs.push_back(unaryconstr);
+                }
+            } else if (token.substr(0, 2) == "<=" || token.substr(0, 1) == "=" || token.substr(0, 2) == ">=") {
                 if (first) {
                     cerr << "Wrong constraint definition with empty left-hand side! " << token << endl;
                     throw WrongFileFormat();
@@ -4260,17 +4333,26 @@ void WCSP::read_opb(const char* fileName)
                 if (op == ">=" || op == "=") {
                     params = to_string(coef);
                     for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        params += to_string(" ") + to_string(coefs[i]);
+                        if (soft && i == 0) {
+                            params += to_string(" ") + to_string(-negcoef + coef);
+                        } else {
+                            params += to_string(" ") + to_string(coefs[i]);
+                        }
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
                 if (op == "<=" || op == "=") {
                     params = to_string(-coef);
                     for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        params += to_string(" ") + to_string(-coefs[i]);
+                        if (soft && i == 0) {
+                            params += to_string(" ") + to_string(poscoef - coef);
+                        } else {
+                            params += to_string(" ") + to_string(-coefs[i]);
+                        }
                     }
                     postKnapsackConstraint(scopeIndex, params);
                 }
+                first = false;
             } else {
                 assert(token.back() != ';');
                 if (isInteger(token)) {
@@ -4282,6 +4364,11 @@ void WCSP::read_opb(const char* fileName)
                         throw WrongFileFormat();
                     }
                     coef = 1;
+                }
+                if (coef < MIN_COST) {
+                    negcoef += coef;
+                } else {
+                    poscoef += coef;
                 }
                 assert(token.back() != ';');
                 assert(!isInteger(token));
@@ -4309,10 +4396,11 @@ void WCSP::read_opb(const char* fileName)
                 } else {
                     coefs[find(scopeIndex.begin(), scopeIndex.end(), var) - scopeIndex.begin()] += coef;
                 }
+                first = false;
             }
-            first = false;
         } while (token.back() != ';');
     }
+    assert(cursoft == nbsoft);
 
     // apply basic initial propagation AFTER complete network loading
     postNullaryConstraint(inclowerbound);
@@ -4321,8 +4409,13 @@ void WCSP::read_opb(const char* fileName)
         postUnaryConstraint(unaryconstrs[u].var->wcspIndex, unaryconstrs[u].costs);
     }
     sortConstraints();
-    if (ToulBar2::verbose >= 0)
-        cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
+    if (ToulBar2::verbose >= 0) {
+        if (nbsoft > 0) {
+            cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, including " << nbsoft << " soft constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
+        } else {
+            cout << "c Read " << nbvar << " variables, with 2 values at most, and " << nblinear << " linear constraints, with maximum arity " << maxarity << " (cost multiplier: " << ToulBar2::costMultiplier << ", shifting value: " << -negCost << ")" << endl;
+        }
+    }
 }
 
 void WCSP::read_lp(const char* fileName)

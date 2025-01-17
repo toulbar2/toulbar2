@@ -194,6 +194,8 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("btdMode", &ToulBar2::btdMode)
         .def_readwrite_static("btdSubTree", &ToulBar2::btdSubTree)
         .def_readwrite_static("btdRootCluster", &ToulBar2::btdRootCluster)
+        .def_readwrite_static("rootHeuristic", &ToulBar2::rootHeuristic)
+        .def_readwrite_static("reduceHeight", &ToulBar2::reduceHeight)
         //        .def_readwrite_static("maxsateval", &ToulBar2::maxsateval)
         .def_readwrite_static("xmlflag", &ToulBar2::xmlflag)
         .def_readwrite_static("xmlcop", &ToulBar2::xmlcop)
@@ -219,6 +221,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("learning", &ToulBar2::learning)
         //        .def_readwrite_static("interrupted", &ToulBar2::interrupted) // pybind11 not compatible with type atomic<bool>?
         .def_readwrite_static("seed", &ToulBar2::seed)
+        .def_readwrite_static("sigma", &ToulBar2::sigma)
         .def_readwrite_static("incop_cmd", &ToulBar2::incop_cmd)
         .def_readwrite_static("pils_cmd", &ToulBar2::pils_cmd)
         .def_readwrite_static("lrBCD_cmd", &ToulBar2::lrBCD_cmd)
@@ -515,6 +518,8 @@ PYBIND11_MODULE(pytb2, m)
                 ToulBar2::qpbo = true;
             if (strstr(fileName, ".opb"))
                 ToulBar2::opb = true;
+            if (strstr(fileName, ".wbo"))
+                ToulBar2::opb = true;
             if (strstr(fileName, ".lp"))
                 ToulBar2::lp = true;
             if (strstr(fileName, ".uai")) {
@@ -568,6 +573,8 @@ PYBIND11_MODULE(pytb2, m)
             if (strstr(fileName, ".qpbo"))
                 ToulBar2::qpbo = true;
             if (strstr(fileName, ".opb"))
+                ToulBar2::opb = true;
+            if (strstr(fileName, ".wbo"))
                 ToulBar2::opb = true;
             if (strstr(fileName, ".lp"))
                 ToulBar2::lp = true;

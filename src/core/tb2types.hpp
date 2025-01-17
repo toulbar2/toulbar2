@@ -710,6 +710,7 @@ typedef enum {
     PRE_FORMAT,
     QPBO_FORMAT,
     UAI_FORMAT,
+    WBO_FORMAT,
     XCSP2_FORMAT
 } ProblemFormat;
 
@@ -809,7 +810,7 @@ public:
     static bool xz; ///< \internal do not use
     static bool bayesian; ///< \internal do not use
     static int uai; ///< \internal do not use
-    static int resolution; ///< \brief defines the number of digits that should be representable in UAI/OPB/QPBO formats (command line option -precision)
+    static int resolution; ///< \brief defines the number of digits that should be representable in UAI/OPB/QPBO/WBO formats (command line option -precision)
     static bool resolution_Update; ///< \internal flag true when default cfn precision is modified
     static TProb errorg; ///< \internal do not use
     static TLogProb NormFactor; ///< \internal do not use
@@ -881,7 +882,7 @@ public:
     static TLogProb logepsilon; ///< \brief approximation factor for computing the log-partition function (command line option -epsilon)
     static Double epsilon; ///< \brief floating-point epsilon
     static bool uaieval; ///< \internal do not use
-    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb", "lp") (command line option --stdin)
+    static string stdin_format; ///< \brief file format used when reading a problem from a Unix pipe ("cfn", "wcsp", "uai", "LG", "cnf", "wcnf", "qpbo", "opb", "wbo", "lp") (command line option --stdin)
 
     static double startCpuTime; ///< \internal do not use
     static double startRealTime; ///< \internal do not use
