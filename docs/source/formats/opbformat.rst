@@ -26,3 +26,18 @@ An example with a quadratic objective and 7 linear constraints is: ::
 Internally, all integer costs are multiplied by a power of ten depending on the -precision option. 
 For problems with big integers, try to reduce the precision (*e.g.*, use option -precision 0).
 
+=================
+WBO format (.wbo)
+=================
+
+The WBO file format is used to express pseudo-Boolean optimization models with hard and soft constraints. It should contain no objective function. Instead a first line with the keyword **soft:** followed by a positive integer cost corresponding to a forbidden assignment and **;**. Each soft constraint starts with **[cost]** where **cost** is a positive integer representing the violation cost of the constraint. The precision is forced to be 0.
+
+An example with 4 soft linear constraints and 2 hard linear constraints is: ::
+
+  soft: 8 ;
+  [2] +1 x1 >= 1 ;
+  [3] +1 x2 >= 1 ;
+  [4] +1 x3 >= 1 ;
+  [5] +1 x4 >= 1 ;
+  -1 x1 -1 x2 >= -1 ;
+  -1 x3 -1 x4 >= -1 ;
