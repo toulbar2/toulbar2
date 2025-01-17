@@ -14,7 +14,7 @@ networks can be simply described by a set of discrete variables each
 having a specific finite domain and a set of integer cost functions,
 each involving some of the variables. The WCSP is to find an
 assignment of all variables such that the sum of all cost functions is
-minimum and lest than a given upper bound often denoted as :math:`k` or
+minimum and less than a given upper bound often denoted as :math:`k` or
 :math:`\top`. Functions can be typically specified by sparse or full tables
 but also more concisely as specific functions called "global cost
 functions" [Schiex2016a]_.
