@@ -338,7 +338,7 @@ Preprocessing
 
 -f=[integer]
         preprocessing only: variable elimination of
-        functional (f=1) (resp. bijective (f=2)) variables (default value is 1)
+        functional (f=1, or f=3 to do it before and after PWC) (resp. bijective (f=2)) variables (default value is 1)
 
 -dec    preprocessing only: pairwise decomposition [Favier2011a]_ of cost
         functions with arity :math:`>=3` into smaller arity cost functions
