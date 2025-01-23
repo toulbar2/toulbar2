@@ -88,7 +88,7 @@ cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined 
 
 # cfn.Dump('python_latin_square_bicriteria.cfn')
 
-result = cfn.Solve()
+result = cfn.Solve(timeLimit = 60)
 
 if result:
   print('Solution found with weights', weights, ':')
@@ -110,7 +110,7 @@ cfn.InitFromMultiCFN(multicfn) # the final cfn is initialized from the combined 
 
 # cfn.Dump('python_latin_square_bicriteria.cfn')
 
-result = cfn.Solve()
+result = cfn.Solve(timeLimit = 60)
 
 if result:
   print('Solution found with weights', weights, ':')
@@ -121,7 +121,7 @@ if result:
 
 
 # approximate the pareto front
-(solutions, costs) = multicfn.ApproximateParetoFront(0, 'min', 1, 'min')
+(solutions, costs) = multicfn.ApproximateParetoFront(0, 'min', 1, 'min', showSolutions = 0, timeLimit = 300, timeLimit_per_solution = 60)
 
 fig, ax = plt.subplots()
 ax.scatter([c[0] for c in costs], [c[1] for c in costs], marker='x')
@@ -130,9 +130,9 @@ for index in range(len(costs)-1):
   ax.plot([costs[index][0], costs[index+1][0]], [costs[index][1],costs[index][1]], '--', c='red')
   ax.plot([costs[index+1][0], costs[index+1][0]], [costs[index][1],costs[index+1][1]], '--', c='red')
 
-ax.set_xlabel('first half cost')
-ax.set_ylabel('second half cost')
-ax.set_title('approximation of the pareto front')
+ax.set_xlabel('First half cost')
+ax.set_ylabel('Second half cost')
+ax.set_title('Approximation of the Pareto front')
 ax.set_aspect('equal')
 
 plt.grid()

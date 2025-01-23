@@ -331,7 +331,15 @@ PYBIND11_MODULE(pytb2, m)
             "computeNonSupported", [](MultiCFN* multicfn, py::tuple optim_dir, unsigned int nbLimit) { Bicriteria::computeNonSupported(multicfn, std::make_pair(optim_dir[0].cast<Bicriteria::OptimDir>(), optim_dir[1].cast<Bicriteria::OptimDir>()), nbLimit); }, py::arg("optim_dir"), py::arg("nbLimit") = 100)
         .def("getSolutions", &Bicriteria::getSolutions)
         .def("getPoints", &Bicriteria::getPoints)
-        .def("getWeights", &Bicriteria::getWeights);
+        .def("getWeights", &Bicriteria::getWeights)
+        .def("getLowerBounds", &Bicriteria::getLowerBounds)
+        .def("setShowSolutions", &Bicriteria::setShowSolutions)
+        .def("setVAC", &Bicriteria::setVAC)
+        .def("setSeed", &Bicriteria::setSeed)
+        .def("setVerbose", &Bicriteria::setVerbose)
+        .def("setSolutionTimeout", &Bicriteria::setSolutionTimeout)
+        .def("setGlobalTimeout", &Bicriteria::setGlobalTimeout)
+        .def("setMaxSolutionCount", &Bicriteria::setMaxSolutionCount);
 
     py::enum_<Bicriteria::OptimDir>(bcrit, "OptimDir")
         .value("Min", Bicriteria::OptimDir::Optim_Min)

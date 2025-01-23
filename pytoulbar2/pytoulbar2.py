@@ -1089,7 +1089,7 @@ class MultiCFN:
 
         return self.MultiCFN.getSolutionValues()
 
-    def ApproximateParetoFront(self, first_criterion, first_direction, second_criterion, second_direction):
+    def ApproximateParetoFront(self, first_criterion, first_direction, second_criterion, second_direction, showSolutions = 0, timeLimit = 0, timeLimit_per_solution = 0, max_sol_count = 0):
         """ApproximateParetoFront returns the set of supported solutions of the problem on two criteria (on the convex hull of the non dominated solutions).
         
         Args:
@@ -1097,6 +1097,12 @@ class MultiCFN:
             first_direction (str): direction of the first criterion: 'min' or 'max'.
             second_criterion (int): index of the second CFN to optimize.
             second_direction (str): direction of the second criterion: 'min' or 'max'.
+            showSolutions (int): prints all intermediate (dominated and nondominated) solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
+                                                               3: variable and value names).  
+            timeLimit (int): CPU-time limit in seconds for the whole method (0 by default, meaning no time limit)
+            timeLimit_per_solution (int): CPU-time limit in seconds for the computation of each solution (0 by default, meaning no time limit)
+            max_sol_count (int): limit the maximum number of solutions to compute (0 by default, meaning no limit)
+
 
         Returns:
             The non dominated solutions belonging to the convex hull of the pareto front and their costs (tuple).
@@ -1106,7 +1112,14 @@ class MultiCFN:
         optim_dir_first = (tb2.Bicriteria.OptimDir.Min if first_direction == 'min'  else tb2.Bicriteria.OptimDir.Max)
         optim_dir_second = (tb2.Bicriteria.OptimDir.Min if second_direction == 'min' else tb2.Bicriteria.OptimDir.Max)
 
-        tb2.option.verbose = -1
+        # parameters
+        tb2.Bicriteria.setGlobalTimeout(timeLimit)
+        tb2.Bicriteria.setSolutionTimeout(timeLimit_per_solution)
+        tb2.Bicriteria.setMaxSolutionCount(max_sol_count)
+        tb2.Bicriteria.setShowSolutions(showSolutions)
+        tb2.Bicriteria.setVAC(tb2.option.vac)
+        tb2.Bicriteria.setSeed(tb2.option.seed)
+        tb2.Bicriteria.setVerbose(tb2.option.verbose)
 
         tb2.Bicriteria.computeSupportedPoints(self.MultiCFN, first_criterion, second_criterion, (optim_dir_first,optim_dir_second))
         # tb2.Bicriteria.computeNonSupported(self.MultiCFN, (optim_dir_first,optim_dir_second), 500)

@@ -3797,6 +3797,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint* ctr = constrs[i];
+        //TODO: allows tight nary/knapsack constraints with a few valid tuples
         if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= MAX_NB_TUPLES) {
             Tuple tuple;
             Cost cost;
@@ -3804,7 +3805,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             vector<Cost> costs;
             Long nbtuples = 0;
             ctr->firstlex();
-            while (ctr->nextlex(tuple, cost)) {
+            while (ctr->nextlex(tuple, cost)) { //TODO: speed-up tight nary/knapsack constraints enumeration of valid tuples
                 if (cost + getLb() < getUb()) {
                     tuples.push_back(tuple);
                     costs.push_back(cost);
