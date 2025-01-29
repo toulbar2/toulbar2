@@ -606,6 +606,19 @@ public:
         }
     }
 
+    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL;
+    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL;
+    template <class T> Cost evalsubstrAny(const Tuple& s, T* ctr);
+    Cost getCost() FINAL
+    {
+        for (int i = 0; i < arity_; i++) {
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
+            assert(var->assigned());
+            evalTuple[i] = var->toIndex(var->getValue());
+        }
+        return eval(evalTuple);
+    }
+
     virtual Cost eval(const Tuple& t)
     {
         if (ToulBar2::verbose >= 0)
@@ -690,8 +703,8 @@ public:
         return subcstr;
     }
 
-    void firstlex();
-    bool nextlex(Tuple& t, Cost& c);
+    virtual void firstlex();
+    virtual bool nextlex(Tuple& t, Cost& c);
 
     void projectNaryBeforeSearch();
     // USE ONLY DURING SEARCH when less than three unassigned variables remain:

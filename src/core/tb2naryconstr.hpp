@@ -81,40 +81,9 @@ public:
     void expand();
 
     bool consistent(const Tuple& t);
-    Cost eval(const Tuple& s);
+
+    Cost eval(const Tuple& s) FINAL;
     Cost eval(const Tuple& s, EnumeratedVariable** scope_in);
-    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    template <class T>
-    Cost evalsubstrAny(const Tuple& s, T* ctr)
-    {
-        int count = 0;
-
-        for (int i = 0; i < arity_; i++) {
-            int ind = ctr->getIndex(getVar(i));
-            if (ind >= 0) {
-                evalTuple[i] = s[ind];
-                count++;
-            }
-        }
-        assert(count <= arity_);
-
-        Cost cost;
-        if (count == arity_)
-            cost = eval(evalTuple);
-        else
-            cost = MIN_COST;
-
-        return cost;
-    }
-    Cost getCost() FINAL
-    {
-        for (int i = 0; i < arity_; i++) {
-            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            evalTuple[i] = var->toIndex(var->getValue());
-        }
-        return eval(evalTuple);
-    }
 
     Cost getDefCost() { return default_cost; }
     void keepAllowedTuples(Cost df);
@@ -128,6 +97,8 @@ public:
 
     void first();
     bool next(Tuple& t, Cost& c);
+    void firstlex() {if (CUT(default_cost, wcsp->getUb())) first(); else AbstractNaryConstraint::firstlex();}
+    bool nextlex(Tuple& t, Cost& c) {if (CUT(default_cost, wcsp->getUb())) return next(t, c); else return AbstractNaryConstraint::nextlex(t, c);}
 
     void first(EnumeratedVariable* a, EnumeratedVariable* b);
     bool separability(EnumeratedVariable* a, EnumeratedVariable* b) FINAL;

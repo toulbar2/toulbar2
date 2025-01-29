@@ -287,7 +287,7 @@ void NaryConstraint::first()
     if (pf)
         tuple_it = pf->begin();
     else
-        firstlex();
+        AbstractNaryConstraint::firstlex();
 }
 
 bool NaryConstraint::next(Tuple& t, Cost& c)
@@ -301,7 +301,7 @@ bool NaryConstraint::next(Tuple& t, Cost& c)
             tuple_it++;
         }
     } else {
-        while (!ok && nextlex(t, c)) {
+        while (!ok && AbstractNaryConstraint::nextlex(t, c)) {
             ok = (c != default_cost);
         }
     }

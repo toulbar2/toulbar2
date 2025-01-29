@@ -180,38 +180,6 @@ public:
             return res;
         }
     }
-    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    template <class T>
-    Cost evalsubstrAny(const Tuple& s, T* ctr)
-    {
-        int count = 0;
-
-        for (int i = 0; i < arity_; i++) {
-            int ind = ctr->getIndex(getVar(i));
-            if (ind >= 0) {
-                evalTuple[i] = s[ind];
-                count++;
-            }
-        }
-        assert(count <= arity_);
-
-        Cost cost;
-        if (count == arity_)
-            cost = eval(evalTuple);
-        else
-            cost = MIN_COST;
-
-        return cost;
-    }
-    Cost getCost() FINAL
-    {
-        for (int i = 0; i < arity_; i++) {
-            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            evalTuple[i] = var->toIndex(var->getValue());
-        }
-        return eval(evalTuple);
-    }
 
     double computeTightness() override { return 1.0 * cost / getDomainSizeProduct(); }
 

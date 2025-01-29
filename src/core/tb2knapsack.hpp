@@ -75,6 +75,15 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<bool> VACExtToLast; //Indicates if some cost has already been extended to values in NotVarVal. It is necessary to avoid extending the same cost multiple time. 
     int kConstraintVAC; //Number of time a constraint is involved in a conflict resolution.
     vector<vector<bool>> VACLastVALChecked; //Store for each value in Notvarval if the given value has already been processed by phase 2.
+    bool istight = false;
+    Tuple it_tuple; // temporary structure for firstlex/nextlex containing the current tuple (size of original scope)
+    vector<int> it_iterators; // temporary structure for firstlex/nextlex containing basic iterator index inside each it_sortedValuesIdx vector
+    vector<int> it_sortedVariables; // temporary structure for firstlex/nextlex containing the list of unassigned variables in its scope sorted by decreasing greatest weights
+    vector<vector<pair<Long, tValue>>> it_sortedValuesIdx; // temporary structure for firstlex/nextlex containing for each unassigned variable a sorted list of valid domain values sorted by decreasing weights
+    Long it_assignedWeight = 0; // temporary structure for firstlex/nextlex containing the weight of the assigned variables
+    Long it_leftWeight = 0; // temporary structure for firstlex/nextlex containing the weight of the left part of the current tuple
+    vector<Long> it_rightWeights; // temporary structure for firstlex/nextlex containing an overestimate of the weight of the right part of the current tuple
+
     void projectLB(Cost c)
     {
         if (c > MIN_COST) {
@@ -341,6 +350,114 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         assert(current_scope_idx.size() == current_val_idx.size());
     }
 
+    void firstlex()
+    {
+        it_tuple.clear();
+        it_tuple.resize(arity_, 0);
+        it_assignedWeight = 0;
+        it_sortedVariables.clear();
+        it_sortedValuesIdx.resize(arity_);
+        for (int i = 0; i < arity_; i++) {
+            EnumeratedVariable *var = (EnumeratedVariable *)getVar(i);
+            if (var->unassigned()) {
+                it_sortedVariables.push_back(i);
+            } else {
+                Value val = var->getValue();
+                tValue idx = var->toIndex(val);
+                it_tuple[i] = idx;
+                auto iter = VarValInv[i].find(val);
+                if (iter != VarValInv[i].end()) {
+                    it_assignedWeight += weights[i][iter->second];
+                } else {
+                    it_assignedWeight += weights[i].back();
+                }
+            }
+        }
+        sort(it_sortedVariables.begin(), it_sortedVariables.end(),
+                [&](int& x, int& y) {
+                    if (InitLargestWeight[x] == InitLargestWeight[y]) {
+                        return scope[x]->getDACOrder() < scope[y]->getDACOrder();
+                    } else {
+                        return InitLargestWeight[x] > InitLargestWeight[y];
+                    }
+             });
+        assert((int)it_sortedVariables.size() == getNonAssigned());
+        assert(it_sortedVariables.size() < 2 || InitLargestWeight[it_sortedVariables[0]] >= InitLargestWeight[it_sortedVariables[1]]);
+        it_iterators.clear();
+        it_sortedValuesIdx.resize(it_sortedVariables.size());
+        for (unsigned int j = 0; j < it_sortedVariables.size(); j++) {
+            int i = it_sortedVariables[j];
+            EnumeratedVariable *var = (EnumeratedVariable*)getVar(i);
+            assert(var->unassigned());
+            it_sortedValuesIdx[j].clear();
+            for (unsigned int v = 0; v < VarVal[i].size() - 1; v++){
+                Value val = VarVal[i][v];
+                if (var->canbe(val)) {
+                    it_sortedValuesIdx[j].push_back(make_pair(weights[i][v], var->toIndex(val)));
+                }
+            }
+            for (unsigned int v = 0; v < NotVarVal[i].size(); v++){
+                Value val = NotVarVal[i][v];
+                if (var->canbe(val)) {
+                    it_sortedValuesIdx[j].push_back(make_pair(weights[i].back(), var->toIndex(val)));
+                }
+            }
+            sort(it_sortedValuesIdx[j].begin(), it_sortedValuesIdx[j].end(),
+                    [&](pair<Long, tValue>& x, pair<Long, tValue>& y) {
+                        if (x.first == y.first) {
+                            return x.second < y.second;
+                        } else {
+                            return x.first > y.first;
+                        }
+                 });
+            assert(it_sortedValuesIdx[j].size() == var->getDomainSize());
+            assert(it_sortedValuesIdx[j][0].first >= it_sortedValuesIdx[j][1].first);
+            it_iterators.push_back(0);
+        }
+        assert(it_iterators.size() == it_sortedVariables.size());
+        it_leftWeight = 0;
+        it_rightWeights.clear();
+        it_rightWeights.resize(it_sortedVariables.size() + 1, 0); // extra element with a zero weight
+        for (int j = it_sortedVariables.size() - 1; j >= 0; --j) {
+            it_rightWeights[j] = it_rightWeights[j+1] + it_sortedValuesIdx[j][0].first;
+        }
+        assert(it_assignedWeight + it_rightWeights[0] >= capacity);
+    }
+
+    bool nextlex(Tuple& t, Cost& c)
+    {
+        if (it_iterators[0] >= (int)it_sortedValuesIdx[0].size())
+            return false;
+
+        it_leftWeight = it_assignedWeight;
+        for (unsigned int j = 0; j < it_sortedVariables.size(); j++) {
+            it_leftWeight += it_sortedValuesIdx[j][it_iterators[j]].first;
+            it_tuple[it_sortedVariables[j]] = it_sortedValuesIdx[j][it_iterators[j]].second;
+        }
+        t = it_tuple;
+        c = eval(t);
+
+        // and now increment
+        bool finished = false;
+        int a = it_iterators.size();
+        int j = a - 1;
+        while (!finished) {
+            it_leftWeight -= it_sortedValuesIdx[j][it_iterators[j]].first;
+            ++it_iterators[j];
+            finished = it_iterators[j] < (int)it_sortedValuesIdx[j].size();
+            if (!finished || it_leftWeight + it_sortedValuesIdx[j][it_iterators[j]].first + it_rightWeights[j+1] < capacity) {
+                if (j > 0) {
+                    it_iterators[j] = 0;
+                    j--;
+                    finished = false;
+                } else {
+                    finished = true;
+                }
+            }
+        }
+        return true;
+    }
+
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
         vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in,
@@ -460,6 +577,9 @@ public:
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     bool isKnapsack() const FINAL { return true; }
+
+    bool isPseudoBoolean() const {return maxInitDomSize == 2;}
+    bool isTight() const {return istight;}
 
     void queueKnapsack() { wcsp->queueKnapsack(&linkKnapsack); }
     void unqueueKnapsack() { wcsp->unqueueKnapsack(&linkKnapsack); }
@@ -1575,37 +1695,7 @@ public:
         assert(res >= MIN_COST);
         return res;
     }
-    Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL { return evalsubstrAny(s, ctr); }
-    template <class T>
-    Cost evalsubstrAny(const Tuple& s, T* ctr)
-    {
-        int count = 0;
-        for (int i = 0; i < arity_; i++) {
-            int ind = ctr->getIndex(getVar(i));
-            if (ind >= 0) {
-                evalTuple[i] = s[ind];
-                count++;
-            }
-        }
-        assert(count <= arity_);
-        Cost cost;
-        if (count == arity_)
-            cost = eval(evalTuple);
-        else
-            cost = MIN_COST;
 
-        return cost;
-    }
-    Cost getCost() FINAL
-    {
-        for (int i = 0; i < arity_; i++) {
-            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
-            assert(var->assigned());
-            evalTuple[i] = var->toIndex(var->getValue());
-        }
-        return eval(evalTuple);
-    }
     Cost getCost(int index, Value val)
     {
         assert(index >= 0 && index < arity_);
@@ -2228,11 +2318,12 @@ public:
         }
     }
     // Return True if a value has been deleted else return False
-    bool BoundConsistency()
+    bool BoundConsistency(bool &tight)
     {
         int k = 0, k2;
         bool b = false;
         int currentvar, currentval;
+        tight = true;
         while (k < carity && !b) {
             currentvar = current_scope_idx[k];
             // Determine if at least one value of the current variable can be erased.
@@ -2281,8 +2372,14 @@ public:
                     }
                     k2++;
                 }
+            } else if (MaxWeight - weights[currentvar][GreatestWeightIdx[currentvar]] + weights[currentvar][LowestWeightIdx[currentvar]] > capacity) {
+                tight = false;
             }
+
             k++;
+        }
+        if (b && k < carity) {
+            tight = false;
         }
         return b;
     }
@@ -2972,7 +3069,7 @@ public:
                     }
 
                     // Bound propagation, return true if a variable has been assigned
-                    b = BoundConsistency();
+                    b = BoundConsistency(istight);
                     if (!b && !ToulBar2::addAMOConstraints_ && (ToulBar2::LcLevel >= LC_FDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST)))) {
 #ifndef NDEBUG
                         for (int i = 0; i < carity; ++i) {

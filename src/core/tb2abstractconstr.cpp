@@ -86,6 +86,31 @@ bool AbstractNaryConstraint::nextlex(Tuple& t, Cost& c)
     return true;
 }
 
+template <class T>
+Cost AbstractNaryConstraint::evalsubstrAny(const Tuple& s, T* ctr)
+{
+    int count = 0;
+
+    for (int i = 0; i < arity_; i++) {
+        int ind = ctr->getIndex(getVar(i));
+        if (ind >= 0) {
+            evalTuple[i] = s[ind];
+            count++;
+        }
+    }
+    assert(count <= arity_);
+
+    Cost cost;
+    if (count == arity_)
+        cost = eval(evalTuple);
+    else
+        cost = MIN_COST;
+
+    return cost;
+}
+Cost AbstractNaryConstraint::evalsubstr(const Tuple& s, Constraint* ctr) { return evalsubstrAny(s, ctr); }
+Cost AbstractNaryConstraint::evalsubstr(const Tuple& s, NaryConstraint* ctr) { return evalsubstrAny(s, ctr); }
+
 // projects n-ary cost function of arity less than 3 into a unary/binary/ternary cost function in extension before the search
 void AbstractNaryConstraint::projectNaryBeforeSearch()
 {

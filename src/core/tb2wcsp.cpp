@@ -3797,15 +3797,18 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
     // identifies all dualized constraints
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint* ctr = constrs[i];
-        //TODO: allows tight nary/knapsack constraints with a few valid tuples
-        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= MAX_NB_TUPLES) {
+        // allows tight nary/knapsack constraints with a few valid tuples
+        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 &&
+            ((ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight())
+             || (ctr->isNary() && CUT(((NaryConstraint *)ctr)->getDefCost(), getUb()) && ((NaryConstraint *)ctr)->size() <= abs(ToulBar2::hve))
+             || (ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= MAX_NB_TUPLES))) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
             vector<Cost> costs;
             Long nbtuples = 0;
             ctr->firstlex();
-            while (ctr->nextlex(tuple, cost)) { //TODO: speed-up tight nary/knapsack constraints enumeration of valid tuples
+            while (ctr->nextlex(tuple, cost)) {
                 if (cost + getLb() < getUb()) {
                     tuples.push_back(tuple);
                     costs.push_back(cost);
@@ -3898,7 +3901,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             EnumeratedVariable* neighbor = static_cast<EnumeratedVariable*>(getVar(var.first));
             for (ConstraintList::iterator iter = neighbor->getConstrs()->begin(); iter != neighbor->getConstrs()->end(); ++iter) {
                 Constraint* ctr = (*iter).constr;
-                if (!ctr->isSep() && ctr->arity() >= 2 && ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr != listOfCtrs[i]) {
+                if (!ctr->isSep() && ctr != listOfCtrs[i]) {
                     neighborCtrs.insert(ctr);
                 }
             }
@@ -3921,7 +3924,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                         }
                         included[ctr] = listOfCtrs[i];
                     }
-                } else if (ctr->isBinary() && included.find(ctr) == included.end()) {
+                } else if (included.find(ctr) == included.end()) {
                     if (ToulBar2::verbose >= 1) {
                         cout << "Constraint " << ctr << " is included in dualized constraint of index " << i << endl;
                         cout << *ctr;
