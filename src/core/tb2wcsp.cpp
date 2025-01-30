@@ -817,6 +817,10 @@ void tb2checkOptions()
         cerr << "Error: PWC requires HVE (selection -hve option)." << endl;
         throw BadConfiguration();
     }
+    if (ToulBar2::preprocessFunctional == 3 && (ToulBar2::pwc < 0 || ToulBar2::hve < 0)) {
+        cerr << "Error: HVE/PWC cannot dedualize nary cost functions if functional elimination is applied after PWC (remove -f=3 option)." << endl;
+        throw BadConfiguration();
+    }
     if (ToulBar2::vac && ToulBar2::FullEAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports in order to make new FullEAC supports based on VAC-integrality
         ToulBar2::vacValueHeuristic = true;
     }
@@ -3798,17 +3802,21 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
     for (unsigned int i = 0; i < constrs.size(); i++) {
         Constraint* ctr = constrs[i];
         // allows tight nary/knapsack constraints with a few valid tuples
+        bool fast = CUT(ctr->getDefCost(), getUb()) && ctr->size() <= abs(ToulBar2::hve);
         if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 &&
-            ((ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight())
-             || (ctr->isNary() && CUT(((NaryConstraint *)ctr)->getDefCost(), getUb()) && ((NaryConstraint *)ctr)->size() <= abs(ToulBar2::hve))
-             || (ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= MAX_NB_TUPLES))) {
+            (fast
+             || (ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= 2 * abs(ToulBar2::hve))
+             || (ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight()))) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
             vector<Cost> costs;
             Long nbtuples = 0;
-            ctr->firstlex();
-            while (ctr->nextlex(tuple, cost)) {
+            if (fast)
+                ctr->first();
+            else
+                ctr->firstlex();
+            while ((fast)?ctr->next(tuple, cost):ctr->nextlex(tuple, cost)) {
                 if (cost + getLb() < getUb()) {
                     tuples.push_back(tuple);
                     costs.push_back(cost);

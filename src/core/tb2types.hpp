@@ -778,7 +778,7 @@ public:
     static int hve; ///< \brief hidden variable encoding into a binary WCSP
     static int pwc; ///< \brief pairwise consistency by dual encoding into a binary WCSP
     static bool pwcMinimalDualGraph; ///< \brief minimizes dual intersection graph by removing redundant edges
-    static int preprocessFunctional; ///< \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables (command line option -f)
+    static int preprocessFunctional; ///< \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables, or 3:functional before and after PWC (command line option -f)
     static bool costfuncSeparate; ///< \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
     static int preprocessNary; ///< \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)
     static bool QueueComplexity; ///< \brief ensures optimal worst-case time complexity of DAC and EAC (command line option -o)

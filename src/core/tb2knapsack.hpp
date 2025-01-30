@@ -584,6 +584,8 @@ public:
     void queueKnapsack() { wcsp->queueKnapsack(&linkKnapsack); }
     void unqueueKnapsack() { wcsp->unqueueKnapsack(&linkKnapsack); }
 
+    Cost getDefCost() FINAL { return MAX_COST; }
+
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
     Long getConflictWeight(int varIndex) const override
     {

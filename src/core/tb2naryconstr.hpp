@@ -97,8 +97,6 @@ public:
 
     void first();
     bool next(Tuple& t, Cost& c);
-    void firstlex() {if (CUT(default_cost, wcsp->getUb())) first(); else AbstractNaryConstraint::firstlex();}
-    bool nextlex(Tuple& t, Cost& c) {if (CUT(default_cost, wcsp->getUb())) return next(t, c); else return AbstractNaryConstraint::nextlex(t, c);}
 
     void first(EnumeratedVariable* a, EnumeratedVariable* b);
     bool separability(EnumeratedVariable* a, EnumeratedVariable* b) FINAL;
@@ -143,10 +141,16 @@ public:
             }
             cout << "], " << c << ")" << endl;
         }
-        if (pf)
-            (*pf)[tin] += c;
-        else
+        if (pf) {
+            auto iter = pf->find(tin);
+            if (iter == pf->end()) { // if tin not found then it is created with its default cost and its final cost is incremented by c
+                (*pf)[tin] = getDefCost() + c;
+            } else {
+                iter->second += c;
+            }
+        } else {
             costs[getCostsIndex(tin)] += c;
+        }
     }
     //    void setTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in );
     //    void addtoTuple( const Tuple& tin, Cost c, EnumeratedVariable** scope_in );
