@@ -130,8 +130,8 @@ for index in range(len(costs)-1):
   ax.plot([costs[index][0], costs[index+1][0]], [costs[index][1],costs[index][1]], '--', c='red')
   ax.plot([costs[index+1][0], costs[index+1][0]], [costs[index][1],costs[index+1][1]], '--', c='red')
 
-ax.set_xlabel('First half cost')
-ax.set_ylabel('Second half cost')
+ax.set_xlabel('First objective')
+ax.set_ylabel('Second objective')
 ax.set_title('Approximation of the Pareto front')
 ax.set_aspect('equal')
 

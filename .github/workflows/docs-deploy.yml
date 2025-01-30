@@ -39,7 +39,8 @@ jobs:
       - name: "Python setup"
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
+          check-latest: true
 
       - name: "Sphinx install"
         run: |
