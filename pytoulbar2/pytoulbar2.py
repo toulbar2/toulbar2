@@ -825,6 +825,7 @@ class CFN:
         """
         icost = self.CFN.wcsp.DoubletoCost(cost)
         self.Limit = None
+        self.CFN.timerStop()
         self.CFN.wcsp.setUb(icost)  # must be done after problem loading
         self.CFN.wcsp.initSolutionCost()  # important to notify previous best found solution is no more valid
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception

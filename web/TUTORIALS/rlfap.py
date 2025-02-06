@@ -78,7 +78,7 @@ for e in data.var:
 				ListConstraints.append(data.cost.get('b' + str(e[3]),top))
 		Problem.AddFunction(['link' + str(e[0])], ListConstraints)
 
-#Problem.Dump('Rflap.cfn')
+Problem.Dump('rlfap.cfn')
 Problem.CFN.timer(300)
 res = Problem.Solve(showSolutions=3)
 if res:

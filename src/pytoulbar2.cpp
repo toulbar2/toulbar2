@@ -608,6 +608,9 @@ PYBIND11_MODULE(pytb2, m)
             if (timeout > 0)
                 timer(timeout);
         })
+        .def("timerStop", [](WeightedCSPSolver& s) {
+            timerStop();
+        })
 #endif
         .def(
             "solve", [](WeightedCSPSolver& s, bool first) {
