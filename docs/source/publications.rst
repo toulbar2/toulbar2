@@ -7,9 +7,13 @@ Publications
 Conference talks
 ================
 
+- ANITI 2025 webinar on toulbar2 and related libraries (bi-objective and model learning):
+  `slides <web/TUTORIALS/SchiexANITI2025.pdf>`_  |
+  `script <web/TUTORIALS/tutorialANITI20250207.txt>`_ 
+
 - talk on toulbar2 at `ROADEF 2023 <http://miat.inrae.fr/degivry/Givry23d.pdf>`_, Rennes, France, February 21, 2023.
 
-- ANITI webinar on toulbar2 for industrial applications :
+- ANITI 2025 webinar on toulbar2 for industrial applications:
   `slides <https://miat.inrae.fr/degivry/GivryANITI2021.pdf>`_ in English |
   `talk <https://youtu.be/lH04asuheo8>`_ in French
 
