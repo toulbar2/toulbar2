@@ -8,8 +8,8 @@ Conference talks
 ================
 
 - ANITI 2025 webinar on toulbar2 and related libraries (bi-objective and model learning):
-  `slides <../../web/TUTORIALS/SchiexANITI2025.pdf>`_  |
-  `script <../../web/TUTORIALS/tutorialANITI20250207.txt>`_ 
+  `slides <https://github.com/toulbar2/toulbar2/blob/master/web/TUTORIALS/SchiexANITI2025.pdf>`_  |
+  `script <https://github.com/toulbar2/toulbar2/blob/master/web/TUTORIALS/tutorialANITI20250207.txt>`_ 
 
 - talk on toulbar2 at `ROADEF 2023 <http://miat.inrae.fr/degivry/Givry23d.pdf>`_, Rennes, France, February 21, 2023.
 
