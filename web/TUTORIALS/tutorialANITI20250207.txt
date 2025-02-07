@@ -1,0 +1,92 @@
+
+#########################
+### TOULBAR2 TUTORIAL ###
+### ANITI 2025-02-07  ###
+#########################
+
+# start from github
+# https://github.com/toulbar2/toulbar2
+
+# see toulbar2 documentation
+# http://miat.inrae.fr/toulbar2
+
+# install toulbar2
+# pip3 install pytoulbar2   # from python
+# apt-get install toulbar2  # from debian
+# git clone https://github.com/toulbar2/toulbar2.git   # from source code (MIT licence)
+
+#######################
+### PYTHON TUTORIAL ###
+#######################
+# tutorial on Radio Link Frequency Assignment Problem (RLFAP)
+# solve a small instance in python
+cd toulbar2/web/TUTORIALS
+python3 rlfap.py var.txt dom.txt ctr.txt cst.txt
+
+# find all solutions using toulbar2 (see User documentation command line options)
+toulbar2 rlfap.py -ub=2670 -a=10000
+
+# or using python (see Reference manual Python library)
+# CFN(ubinit=2670) ; Solve(allSolutions=10000)
+
+# see User documentation Quick Start for solving larger RLFAP instances
+# if you have a multicore server and toulbar2 compiled with MPI flag ON
+cd ../..
+mpirun -n 40 build/bin/Linux/toulbar2 web/EXAMPLES/scen06.wcsp.xz
+
+#############################
+### BI-OBJECTIVE TUTORIAL ###
+#############################
+# tutorial on Warehouse/Facility Location Problem (Warehouse)
+cd toulbar2/web/TUTORIALS
+python3 warehouse.py cap44.txt 1
+python3 warehouse.py cap41.txt 1
+
+# TB2_TWOPHASE
+# https://forgemia.inra.fr/samuel.buchet/tb2_twophase
+
+# install tb2_twophase
+# git clone https://forgemia.inra.fr/samuel.buchet/tb2_twophase.git
+cd tb2_twophase
+bash ./install.sh -cplex -cplex_dir CPLEX_Studio2211
+
+# solve a bi-objective Warehouse with 6 warehouses and 30 stores
+./main -cfn1 instances/FLP/6_30_0_1.cfn -cfn2 instances/FLP/6_30_0_2.cfn -fcosts costs.txt -flb lb.txt -ftriangles triangles.txt -fsol sols.txt
+
+# solve again replacing the global constraint in the second phase by a knapsack/linear constraint
+./main -cfn1 instances/FLP/6_30_0_1.cfn -cfn2 instances/FLP/6_30_0_2.cfn -fcosts costs.txt -flb lb.txt -ftriangles triangles.txt -fsol sols.txt -knapsack
+
+# compare the CPU-time with cplex instead of toulbar2
+./main -cfn1 instances/FLP/6_30_0_1.cfn -cfn2 instances/FLP/6_30_0_2.cfn -fcosts costs.txt -flb lb.txt -ftriangles triangles.txt -fsol sols.txt -solver cplex
+
+# Visualize the Pareto front
+python utils/visualisation.py -c costs.txt -lb lb.txt -t triangles.txt -i
+
+# Solve a larger bi-objective Warehouse with 16 warehouses and 50 stores
+./main -cfn1 cap41.cfn -cfn2 cap44.cfn -fcosts costs.txt -flb lb.txt -ftriangles triangles.txt -fsol sols.txt
+
+# Solve a bigger bi-objective Warehouse with 100 warehouses and 100 stores
+./main -cfn1 capmo1.cfn -cfn2 capmo2.cfn -fcosts costs.txt -flb lb.txt -ftriangles triangles.txt -fsol sols.txt -t 30 -knapsack -vac -v 1
+
+# Visualize the approximate Pareto front
+python utils/visualisation.py -c costs.txt -lb lb.txt -t triangles.txt -i
+
+#############################
+### LEARNING SUDOKU RULES ###
+#############################
+
+# install form
+# https://forgemia.inra.fr/marianne.defresne/emmental-pll
+# git clone https://forgemia.inra.fr/marianne.defresne/emmental-pll.git
+# install all required python library in local environnement venv using venv/bin/pip3
+cd emmental-pll
+mkdir venv
+python3 -m venv venv
+
+# train a medium size deep neural network (~180K parameters) for symbolic sudoku using GPU if available
+cd Scripts
+../venv/bin/python3 Main_PLL.py --filename PLL_1 --seed 1 --k 10 --train_size 200 --epoch_max 201
+
+# try a lighter DNN (~20K parameters)
+../venv/bin/python3 Main_PLL.py --filename E_param --seed 9 --k 10 --nblocks 2 --lr 0.01 --reg_term 0.0001 --weight_decay 0 --hidden_size 64
+
