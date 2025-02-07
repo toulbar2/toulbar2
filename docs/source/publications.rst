@@ -13,7 +13,7 @@ Conference talks
 
 - talk on toulbar2 at `ROADEF 2023 <http://miat.inrae.fr/degivry/Givry23d.pdf>`_, Rennes, France, February 21, 2023.
 
-- ANITI 2025 webinar on toulbar2 for industrial applications:
+- ANITI 2021 webinar on toulbar2 for industrial applications:
   `slides <https://miat.inrae.fr/degivry/GivryANITI2021.pdf>`_ in English |
   `talk <https://youtu.be/lH04asuheo8>`_ in French
 
