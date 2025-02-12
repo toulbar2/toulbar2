@@ -3805,7 +3805,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
         bool fast = CUT(ctr->getDefCost(), getUb()) && ctr->size() <= abs(ToulBar2::hve);
         if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 &&
             (fast
-             || (ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= 2 * abs(ToulBar2::hve))
+             || (ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve))
              || (ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight()))) {
             Tuple tuple;
             Cost cost;

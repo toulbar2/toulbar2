@@ -1995,7 +1995,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "preprocess pairwise consistency ON" << endl;
                 if (ToulBar2::hve == 0) {
                     ToulBar2::hve = std::numeric_limits<tValue>::max();
-                    if (ToulBar2::debug && ToulBar2::hve == 0)
+                    if (ToulBar2::debug && ToulBar2::hve != 0)
                         cout << "preprocess hidden variable encoding ON" << endl;
                 }
             } else if (args.OptionId() == NO_OPT_preprocessPWC) {
