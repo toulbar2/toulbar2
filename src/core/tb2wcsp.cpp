@@ -237,6 +237,7 @@ bool ToulBar2::wcnf;
 bool ToulBar2::qpbo;
 Double ToulBar2::qpboQuadraticCoefMultiplier;
 bool ToulBar2::opb;
+bool ToulBar2::cardinality;
 bool ToulBar2::lp;
 
 int ToulBar2::addAMOConstraints;
@@ -352,6 +353,7 @@ void tb2init()
     ToulBar2::qpbo = false;
     ToulBar2::qpboQuadraticCoefMultiplier = 2.;
     ToulBar2::opb = false;
+    ToulBar2::cardinality = false;
     ToulBar2::lp = false;
 
     // specific options for bep/pedigree/haplotype problems
@@ -2162,7 +2164,7 @@ void WCSP::postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost,
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
-void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex)
+void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator)
 {
     assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
@@ -2175,7 +2177,6 @@ void WCSP::postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCo
     decomposableGCF->setSemantics(semantics);
     decomposableGCF->setBaseCost(baseCost);
     decomposableGCF->setComparator(comparator);
-    decomposableGCF->setIndex(varIndex);
     decomposableGCF->addToCostFunctionNetwork(this);
 }
 
@@ -2199,7 +2200,7 @@ void WCSP::postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCos
     // delete [] decomposableGCF;
 }
 
-void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex)
+void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues)
 {
     assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
@@ -2213,7 +2214,6 @@ void WCSP::postWVarAmong(int* scopeIndex, int arity, const string& semantics, Co
     for (int i = 0; i < nbValues; i++) {
         decomposableGCF->addValue(values[i]);
     }
-    decomposableGCF->setIndex(varIndex);
     decomposableGCF->addToCostFunctionNetwork(this);
     delete[] values;
 }

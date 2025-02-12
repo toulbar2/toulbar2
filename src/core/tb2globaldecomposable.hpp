@@ -134,7 +134,6 @@ private:
     set<Value> values;
     string semantics;
     Cost baseCost;
-    unsigned int index;
 
 public:
     WeightedVarAmong();
@@ -145,7 +144,6 @@ public:
     inline void addValue(Value _value) { values.insert(_value); }
     inline void setSemantics(string _semantics) { semantics = _semantics; }
     inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
-    inline void setIndex(unsigned int _index) { index = _index; }
 
     Cost evaluate(Value* tuple)
     {
@@ -159,7 +157,6 @@ public:
 class WeightedVarSum : public DecomposableGlobalCostFunction {
 private:
     string comparator;
-    unsigned int index;
     string semantics;
     Cost baseCost;
 
@@ -172,7 +169,6 @@ public:
     inline void setSemantics(string _semantics) { semantics = _semantics; }
     inline void setBaseCost(Cost _baseCost) { baseCost = _baseCost; }
     inline void setComparator(string _comparator) { comparator = _comparator; }
-    inline void setIndex(unsigned int _index) { index = _index; }
 
     Cost evaluate(Value* tuple)
     {

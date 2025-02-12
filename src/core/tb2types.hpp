@@ -848,6 +848,7 @@ public:
     static bool qpbo; ///< \internal do not use
     static Double qpboQuadraticCoefMultiplier; ///< \brief defines coefficient multiplier for quadratic terms in QPBO format (command line option -qpmult)
     static bool opb; ///< \internal do not use
+    static bool cardinality; ///< \brief decomposes cardinality equality constraints into a network of binary and ternary constraints (using wsum and wvarsum)
     static bool lp; ///< \internal do not use
 
     static int addAMOConstraints; ///< \brief automatically detects and adds at-most-one constraints to existing knapsack constraints

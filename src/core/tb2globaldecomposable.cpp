@@ -1145,7 +1145,6 @@ WeightedVarAmong::WeightedVarAmong(unsigned int _arity, int* _scope, istream& fi
         values.insert(valueRead);
     }
     // file >> lb >> ub;
-    index = scope[arity - 1];
 }
 
 WeightedVarAmong::~WeightedVarAmong()

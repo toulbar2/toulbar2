@@ -301,8 +301,8 @@ public:
     virtual int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
     virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
     virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    virtual void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) = 0; ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
-    virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex) = 0; ///< \deprecated
+    virtual void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values) = 0; ///< \brief post a weighted among cost function with the number of values encoded as the last variable with index \a varIndex (\e network-based propagator only)
+    virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues) = 0; ///< \deprecated
 
     /// \brief post a soft or weighted regular cost function
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable
@@ -401,7 +401,7 @@ public:
     /// \param comparator the comparison operator of the linear constraint ("==", "!=", "<", "<=", ">,", ">=")
     /// \param rightRes right-hand side value of the linear constraint
     virtual void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes) = 0;
-    virtual void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex) = 0; ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
+    virtual void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator) = 0; ///< \brief post a soft linear constraint with unit coefficients and last variable as right-hand side
 
     /// \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
     /// \param scopeIndex an array of variable indexes as returned by WeightedCSP::makeEnumeratedVariable

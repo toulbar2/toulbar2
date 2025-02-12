@@ -564,8 +564,8 @@ public:
     int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) { return postWAmong(scope.data(), scope.size(), semantics, propagator, baseCost, values, lb, ub); } ///< \brief post a soft among cost function
     int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub); ///< \deprecated
     void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub); ///< \deprecated post a weighted among cost function decomposed as a cost function network
-    void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values, int varIndex) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size(), varIndex); } ///< \brief post a weighted among cost function with the number of values encoded as a variable with index \a varIndex (\e network-based propagator only)
-    void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues, int varIndex); ///< \deprecated
+    void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values) { postWVarAmong(scope.data(), scope.size(), semantics, baseCost, values.data(), values.size()); } ///< \brief post a weighted among cost function with the number of values encoded as the last variable (\e network-based propagator only)
+    void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues); ///< \deprecated
     int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost,
         int nbStates,
         const vector<WeightedObjInt>& initial_States,
@@ -594,7 +594,7 @@ public:
     int postMaxWeight(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
         const vector<WeightedVarValPair> weightFunction); ///< \brief post a weighted max cost function (maximum cost of a set of unary cost functions associated to a set of variables)
     void postWSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft linear constraint with unit coefficients
-    void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int varIndex); ///< \brief post a soft linear constraint with unit coefficients and variable right-hand side
+    void postWVarSum(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator); ///< \brief post a soft linear constraint with unit coefficients and last variable as right-hand side
     void postWOverlap(int* scopeIndex, int arity, string semantics, Cost baseCost, string comparator, int rightRes); ///< \brief post a soft overlap cost function (a group of variables being point-wise equivalent -- and not equal to zero -- to another group with the same size)
     void postWDivConstraint(vector<int> scope, unsigned int distance, vector<Value>& values, int method = 0);
 

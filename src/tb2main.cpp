@@ -187,6 +187,8 @@ enum {
     OPT_clusterdec_ext,
 
     OPT_qpbo_mult,
+    OPT_card,
+    NO_OPT_card,
     // search option
     OPT_SEARCH_METHOD,
     OPT_btdRootCluster,
@@ -447,6 +449,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_clusterdec_ext, (char*)"--clusterdec_ext", SO_REQ_SEP },
 
     { OPT_qpbo_mult, (char*)"-qpmult", SO_REQ_SEP },
+    { OPT_card, (char*)"-card", SO_NONE },
+    { NO_OPT_card, (char*)"-card:", SO_NONE },
     { OPT_SEARCH_METHOD, (char*)"-B", SO_REQ_SEP }, // -B [0,1,2] search method
     { OPT_SEARCH_METHOD, (char*)"--search", SO_REQ_SEP },
     { OPT_btdRootCluster, (char*)"-R", SO_REQ_SEP }, // root cluster used in BTD
@@ -873,6 +877,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -w=[integer] : 1 writes value numbers, 2 writes value names, 3 writes also variable names (default 1)" << endl;
     cout << "   -precision=[integer] defines the number of digits that should be representable on probabilities or energies in uai/pre or costs in cfn/lp/opb/qpbo/wbo files resp. (default value is " << ToulBar2::resolution << " except for cfn)" << endl;
     cout << "   -qpmult=[double] defines coefficient multiplier for quadratic terms (default value is " << ToulBar2::qpboQuadraticCoefMultiplier << ")" << endl;
+    cout << "   -card : when reading opb or lp format, decomposes cardinality equality constraints into a network of binary and ternary constraints (default value is " << ToulBar2::cardinality << ")" << endl;
 #else
     cout << "   -w=[mode] : writes last solution found" << endl;
     cout << "               mode=0: saves pedigree with erroneous genotypings removed" << endl;
@@ -1902,6 +1907,12 @@ int _tmain(int argc, TCHAR* argv[])
                 double co = atof(args.OptionArg());
                 if (co != 0.)
                     ToulBar2::qpboQuadraticCoefMultiplier = co;
+            }
+
+            if (args.OptionId() == OPT_card) {
+                ToulBar2::cardinality = true;
+            } else if (args.OptionId() == NO_OPT_card) {
+                ToulBar2::cardinality = false;
             }
 
             if (args.OptionId() == OPT_singletonConsistency) {

@@ -4330,27 +4330,33 @@ void WCSP::read_opb(const char* fileName)
                 coef = string2Cost((char*)token.c_str());
                 maxarity = max(maxarity, (int)scopeIndex.size());
                 nblinear++;
-                if (op == "<=" || op == "=") {
-                    params = to_string(-coef);
-                    for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        if (soft && i == 0) {
-                            params += to_string(" ") + to_string(poscoef - coef);
-                        } else {
-                            params += to_string(" ") + to_string(-coefs[i]);
+                if (ToulBar2::cardinality && !soft && op == "=" && all_of(coefs.begin(), coefs.end(), [](Cost c) { return c==1;})) {
+                    postWSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==", coef);
+                } else if (ToulBar2::cardinality && !soft && op == "=" && coef == 0 && coefs.back() == -1 && all_of(coefs.begin(), coefs.begin() + coefs.size() - 1, [](Cost c) { return c==1;})) {
+                    postWVarSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==");
+                } else {
+                    if (op == "<=" || op == "=") {
+                        params = to_string(-coef);
+                        for (unsigned int i = 0; i < scopeIndex.size(); i++) {
+                            if (soft && i == 0) {
+                                params += to_string(" ") + to_string(poscoef - coef);
+                            } else {
+                                params += to_string(" ") + to_string(-coefs[i]);
+                            }
                         }
+                        postKnapsackConstraint(scopeIndex, params); // create <= before >= in case of equality because the first constraint may be more tight than the second one.
                     }
-                    postKnapsackConstraint(scopeIndex, params); // create <= before >= in case of equality because the first constraint may be more tight than the second one.
-                }
-                if (op == ">=" || op == "=") {
-                    params = to_string(coef);
-                    for (unsigned int i = 0; i < scopeIndex.size(); i++) {
-                        if (soft && i == 0) {
-                            params += to_string(" ") + to_string(-negcoef + coef);
-                        } else {
-                            params += to_string(" ") + to_string(coefs[i]);
+                    if (op == ">=" || op == "=") {
+                        params = to_string(coef);
+                        for (unsigned int i = 0; i < scopeIndex.size(); i++) {
+                            if (soft && i == 0) {
+                                params += to_string(" ") + to_string(-negcoef + coef);
+                            } else {
+                                params += to_string(" ") + to_string(coefs[i]);
+                            }
                         }
+                        postKnapsackConstraint(scopeIndex, params);
                     }
-                    postKnapsackConstraint(scopeIndex, params);
                 }
                 first = false;
             } else {
@@ -4616,49 +4622,55 @@ void WCSP::read_lp(const char* fileName)
             cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
             throw BadConfiguration();
         }
-        params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));
-        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
-            int x = ctr.elements[i].variable_index;
-            int min = pb.vars.values[x].min;
-            int max = pb.vars.values[x].max;
-            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
-                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
-                throw BadConfiguration();
-            }
-            long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
-            params += to_string(" ") + to_string(max - min + 1);
-            for (int v = min; v <= max; v++) {
+        if (ToulBar2::cardinality && multiplier==1. && baryonyx::Floor(ctr.value)==baryonyx::Ceil(ctr.value) && all_of(ctr.elements.begin(), ctr.elements.end(), [](baryonyx::function_element &e) { return baryonyx::Floor(e.factor)==baryonyx::Ceil(e.factor) && baryonyx::Floor(e.factor)==1.;})) {
+            postWSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==", baryonyx::Floor(ctr.value));
+        } else if (ToulBar2::cardinality && multiplier==1. && baryonyx::Floor(ctr.value)==baryonyx::Ceil(ctr.value) && baryonyx::Floor(ctr.value)==0. && baryonyx::Floor(ctr.elements.back().factor)==baryonyx::Ceil(ctr.elements.back().factor) && baryonyx::Floor(ctr.elements.back().factor)==-1. && all_of(ctr.elements.begin(), ctr.elements.begin() + ctr.elements.size() - 1, [](baryonyx::function_element &e) { return baryonyx::Floor(e.factor)==baryonyx::Ceil(e.factor) && baryonyx::Floor(e.factor)==1.;})) {
+            postWVarSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==");
+        } else {
+            params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));
+            for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+                int x = ctr.elements[i].variable_index;
+                int min = pb.vars.values[x].min;
+                int max = pb.vars.values[x].max;
+                if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                    cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                    throw BadConfiguration();
+                }
+                long long int coef = static_cast<long long int>(baryonyx::Floor(ctr.elements[i].factor * multiplier));
+                params += to_string(" ") + to_string(max - min + 1);
+                for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
-                params += to_string(" ") + to_string(v - min);
+                    params += to_string(" ") + to_string(v - min);
 #else
-                params += to_string(" ") + to_string(v);
+                    params += to_string(" ") + to_string(v);
 #endif
-                params += to_string(" ") + to_string(-coef * v);
+                    params += to_string(" ") + to_string(-coef * v);
+                }
             }
-        }
-        postKnapsackConstraint(scopeIndex, params, false, true, false);
-        params = to_string(static_cast<long long int>(baryonyx::Floor(ctr.value * multiplier)));
-        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
-            int x = ctr.elements[i].variable_index;
-            int min = pb.vars.values[x].min;
-            int max = pb.vars.values[x].max;
-            if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
-                cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
-                throw BadConfiguration();
-            }
-            long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
-            params += to_string(" ") + to_string(max - min + 1);
-            scopeIndex.push_back(x);
-            for (int v = min; v <= max; v++) {
+            postKnapsackConstraint(scopeIndex, params, false, true, false);
+            params = to_string(static_cast<long long int>(baryonyx::Floor(ctr.value * multiplier)));
+            for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+                int x = ctr.elements[i].variable_index;
+                int min = pb.vars.values[x].min;
+                int max = pb.vars.values[x].max;
+                if (multiplier * std::abs(ctr.elements[i].factor) * std::max(abs(min), abs(max)) * ctr.elements.size() >= (Double)(std::numeric_limits<long long int>::max())) {
+                    cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
+                    throw BadConfiguration();
+                }
+                long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
+                params += to_string(" ") + to_string(max - min + 1);
+                scopeIndex.push_back(x);
+                for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
-                params += to_string(" ") + to_string(v - min);
+                    params += to_string(" ") + to_string(v - min);
 #else
-                params += to_string(" ") + to_string(v);
+                    params += to_string(" ") + to_string(v);
 #endif
-                params += to_string(" ") + to_string(coef * v);
+                    params += to_string(" ") + to_string(coef * v);
+                }
             }
+            postKnapsackConstraint(scopeIndex, params, false, true, false);
         }
-        postKnapsackConstraint(scopeIndex, params, false, true, false);
     }
     for (auto& ctr : pb.greater_constraints) {
         vector<int> scopeIndex;
