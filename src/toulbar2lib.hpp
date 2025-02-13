@@ -194,9 +194,9 @@ public:
     virtual void addAMOConstraints() = 0;
 #endif
     virtual unsigned int numberOfVariables() const = 0; ///< \brief number of created variables
-    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \brief current number of unassigned variables
+    virtual unsigned int numberOfUnassignedVariables() const = 0; ///< \brief current number of unassigned variables (warning! linear time complexity)
     virtual unsigned int numberOfConstraints() const = 0; ///< \brief initial number of cost functions (before variable elimination)
-    virtual unsigned int numberOfConnectedConstraints() const = 0; ///< \brief current number of cost functions
+    virtual unsigned int numberOfConnectedConstraints() const = 0; ///< \brief current number of cost functions (warning! linear time complexity)
     virtual unsigned int numberOfConnectedBinaryConstraints() const = 0; ///< \brief current number of binary cost functions
     virtual unsigned int numberOfConnectedKnapsackConstraints() const = 0; ///< \brief current number of knapsack cost functions
     virtual unsigned int medianDomainSize() const = 0; ///< \brief median current domain size of variables

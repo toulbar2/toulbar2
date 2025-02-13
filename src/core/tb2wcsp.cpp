@@ -4950,7 +4950,8 @@ void WCSP::dump(ostream& os, bool original)
         //              throw InternalError();
         //          }
     }
-    os << "wcsp " << ((original) ? numberOfVariables() : numberOfUnassignedVariables()) << " "
+    unsigned int nbunvar = numberOfUnassignedVariables();
+    os << "wcsp " << ((original) ? numberOfVariables() : nbunvar) << " "
        << ((original) ? maxdomsize : maxdomsizeUI) << " " << numberOfConnectedConstraints() + xcosts << " "
        << getUb() << endl;
     unsigned int nbvar = 0;
@@ -4967,11 +4968,11 @@ void WCSP::dump(ostream& os, bool original)
             if (!vars[i]->enumerated())
                 os << "-";
             os << vars[i]->getDomainSize();
-            if (nbvar < numberOfUnassignedVariables())
+            if (nbvar < nbunvar)
                 os << " ";
         }
     }
-    if (((original) ? numberOfVariables() : numberOfUnassignedVariables()) > 0)
+    if (((original) ? numberOfVariables() : nbunvar) > 0)
         os << endl;
     for (unsigned int i = 0; i < constrs.size(); i++)
         if (constrs[i]->connected() && !constrs[i]->isSep())
@@ -6844,10 +6845,10 @@ bool WCSP::kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy
 // TODO: add dummy binary cost functions to make the constraint graph chordal before creating dummy ternary cost functions
 void WCSP::ternaryCompletion()
 {
-    if (numberOfUnassignedVariables() < 3)
+    Double nbunvars = numberOfUnassignedVariables();
+    if (nbunvars < 3.)
         return;
 
-    Double nbunvars = numberOfUnassignedVariables();
     Double connectivity = 2. * numberOfConnectedBinaryConstraints() / (nbunvars * (nbunvars - 1));
     Double domsize = getMaxCurrentDomainSize(); // medianDomainSize();
     Double size = domsize;

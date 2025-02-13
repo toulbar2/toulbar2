@@ -419,6 +419,7 @@ public:
 
     unsigned int numberOfVariables() const { return vars.size(); } ///< \brief current number of created variables
     /// \brief returns current number of unassigned variables
+    /// \warning linear time complexity!
     unsigned int numberOfUnassignedVariables() const
     {
         unsigned int res = 0;
@@ -436,7 +437,7 @@ public:
         return res;
     }
     unsigned int numberOfConstraints() const { return constrs.size(); } ///< \brief initial number of cost functions
-    unsigned int numberOfConnectedConstraints() const; ///< \brief current number of cost functions
+    unsigned int numberOfConnectedConstraints() const; ///< \brief current number of cost functions (warning! linear time complexity)
     unsigned int numberOfConnectedBinaryConstraints() const; ///< \brief current number of binary cost functions
     unsigned int numberOfConnectedKnapsackConstraints() const; ///< \brief current number of knapsack cost functions
     unsigned int medianDomainSize() const; ///< \brief median current domain size of variables
