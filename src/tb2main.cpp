@@ -1010,7 +1010,7 @@ void help_msg(char* toulbar2filename)
     cout << endl;
 #endif
     cout << "   -z=[filename] : saves problem in wcsp (by default) or cfn format (see below) in filename (or \"problem.wcsp/.cfn\"  if no parameter is given)" << endl;
-    cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem (wcsp format only)" << endl;
+    cout << "                   writes also the  graphviz dot file  and the degree distribution of the input problem (wcsp format only and non-negative verbosity)" << endl;
     cout << "   -z=[integer] : 1 or 3: saves original instance in 1-wcsp or 3-cfn format (1 by default), 2 or 4: saves after preprocessing in 2-wcsp or 4-cfn format, -2 or -4: saves after preprocessing using initial domains (this option can be combined with the previous one giving a filename)" << endl;
     cout << "   -Z=[integer] : debug mode (save problem at each node if verbosity option -v=num >= 1 and -Z=num >=3)" << endl;
 #ifndef NDEBUG
