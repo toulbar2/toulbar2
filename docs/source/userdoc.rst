@@ -325,7 +325,7 @@ Preprocessing
         filename with ".sol" extension)
 
 -nopre  deactivates all preprocessing options (equivalent to -e:
-        -p: -t: -f: -dec: -n: -mst: -dee: -trws:)
+        -p: -t: -f: -dec: -n: -mst: -dee: -trws: -pwc: -hve:)
 
 -p=[integer]
         preprocessing only: general variable elimination
@@ -343,6 +343,8 @@ Preprocessing
 -dec    preprocessing only: pairwise decomposition [Favier2011a]_ of cost
         functions with arity :math:`>=3` into smaller arity cost functions
         (default option)
+
+-card   preprocessing only: when reading opb or lp format, decomposes cardinality equality constraints into a network of binary and ternary constraints (option deactivated by default)
 
 -n=[integer]
         preprocessing only: projects n-ary cost functions
@@ -732,7 +734,7 @@ File output
 -z=[filename]
         saves problem in wcsp or cfn format in filename (or
         "problem.wcsp"/"problem.cfn" if no parameter is given) writes also
-        the graphviz dot file and the degree distribution of the input problem
+        the graphviz dot file and the degree distribution of the input problem (except if using a negative verbosity -v=-1)
 
 -z=[integer]
         1 or 3: saves original instance in 1-wcsp or 3-cfn format
