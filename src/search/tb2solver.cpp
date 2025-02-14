@@ -3748,7 +3748,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else if (!ToulBar2::bayesian) {
                 if (!isComplete) {
-                    cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+                    cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << ((Store::getDepth()==0)?((ToulBar2::costMultiplier < 0)?min(wcsp->getDDualBound(),getDDualBound()):max(wcsp->getDDualBound(),getDDualBound())):getDDualBound()) << std::setprecision(DECIMAL_POINT) << endl;
                 }
                 cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else {
@@ -3778,7 +3778,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     } else {
         if (ToulBar2::verbose >= 0) {
             if (!ToulBar2::haplotype && !ToulBar2::bayesian && !isComplete) {
-                cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+                cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << ((Store::getDepth()==0)?((ToulBar2::costMultiplier < 0)?min(wcsp->getDDualBound(),getDDualBound()):max(wcsp->getDDualBound(),getDDualBound())):getDDualBound()) << std::setprecision(DECIMAL_POINT) << endl;
             }
             cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         }
