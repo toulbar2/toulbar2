@@ -3777,6 +3777,9 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         }
     } else {
         if (ToulBar2::verbose >= 0) {
+            if (!ToulBar2::haplotype && !ToulBar2::bayesian && !isComplete) {
+                cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+            }
             cout << "No solution" << ((!isLimited) ? "" : " found") << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
         }
 #ifdef OPENMPI
