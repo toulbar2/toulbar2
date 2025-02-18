@@ -849,7 +849,7 @@ Cost Solver::lrBCD(size_t maxiter, int k, size_t nbR, vector<Value>& solution)
     Double lb = evalFun(Q, V) + bias(wcsp);
     assert(lb <= wcsp->getUb());
     if (ToulBar2::verbose >= 1) {
-        cout << "LR-BCD approximate dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(lb) << std::setprecision(DECIMAL_POINT) << endl;
+        cout << "LR-BCD putative dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(lb) << std::setprecision(DECIMAL_POINT) << endl;
     }
 
     // compute upper bound with GW heuristic

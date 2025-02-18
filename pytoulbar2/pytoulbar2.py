@@ -423,6 +423,10 @@ class CFN:
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "DAG", tb2.MAX_COST);
             elif (encoding=='salldiffkp'):
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST);
+            elif (encoding=='salldiffeq'):
+                self.CFN.wcsp.postWAllDiff(iscope, "hardeq", "knapsack", tb2.MAX_COST);
+            elif (encoding=='salldiffge'):
+                self.CFN.wcsp.postWAllDiff(iscope, "hardge", "knapsack", tb2.MAX_COST);
             elif (encoding=='walldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
             else:

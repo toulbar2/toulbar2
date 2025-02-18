@@ -2398,7 +2398,9 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
         string semantics;
         Cost baseCost;
         file >> semantics >> baseCost;
-        postWAllDiff(scopeIndex, arity, "hard", "knapsack", getUb());
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
+        postWAllDiff(scopeIndex, arity, semantics, "knapsack", baseCost);
         return -1;
     } else if (gcname == "sgccdp") {
         string semantics;
@@ -3212,26 +3214,43 @@ int WCSP::postWAllDiff(int* scopeIndex, int arity, const string& semantics, cons
     }
 
     if (propagator == "knapsack") {
-        if (semantics == "hard") {
+        if (CUT(baseCost, getUb()) && (semantics == "hard" || semantics == "hardeq" || semantics == "hardge")) {
             set<Value> values;
             for (int variable = 0; variable < arity; ++variable) {
                 ((EnumeratedVariable*)getVar(scopeIndex[variable]))->getDomain(values);
             }
+            if ((int)values.size() < arity) {
+                THROWCONTRADICTION;
+            }
             for (Value value : values) {
-                string params = to_string(-1);
-                for (int variable = 0; variable < arity; ++variable) {
-                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
-                        params += to_string(" 1 ") + to_string(value) + to_string(" -1");
-                    } else {
-                        params += to_string(" 0");
+                if ((int)values.size() > arity || semantics != "hardge") {
+                    string params = to_string(-1);
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
+                            params += to_string(" 1 ") + to_string(value) + to_string(" -1");
+                        } else {
+                            params += to_string(" 0");
+                        }
                     }
+                    istringstream file(params);
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
                 }
-                istringstream file(params);
-                postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
+                if ((int)values.size() == arity && (semantics == "hardeq" || semantics == "hardge")) {
+                    string params = to_string(1);
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
+                            params += to_string(" 1 ") + to_string(value) + to_string(" 1");
+                        } else {
+                            params += to_string(" 0");
+                        }
+                    }
+                    istringstream file(params);
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
+                }
             }
             return INT_MIN;
         } else {
-            cerr << "Error: post AllDifferent with knapsack propagator cannot be a soft constraint! (use instead semantics=\"hard\")" << endl;
+            cerr << "Error: post AllDifferent with knapsack propagator cannot be a soft constraint! (use instead semantics=\"hard\" and baseCost=" << getUb() << ")" << endl;
             throw WrongFileFormat();
         }
     }
