@@ -258,6 +258,15 @@ Quick start
 
   .. literalinclude:: ../../misc/doc/out_g_quick_approximation_GEOM40_6_cns.txt
 
+
+Potential issues
+================
+
+Toulbar2 implements tree search methods using a recursive procedure. It may overcome the current stack memory on very-large problems. On Linux, you can control stacksize limit (in bash, *'ulimit -s unlimited'*).
+
+If your problem is huge, you may also consider recompiling toulbar2 with some specific cmake options depending on your needs: BINARYWCSP (restricted to binary cost functions only, without on-the-fly variable elimination nor VAC), TERNARYWCSP (restricted to binary and ternary cost functions only), INT_COSTS (32-bit integers for representing costs instead of 64-bit by default), SHORT_COSTS (16-bit integers for representing costs), SHORT_VALUES (16-bit integers for representing domain values instead of 32-bit by default).
+
+
 Command line options
 ====================
 
