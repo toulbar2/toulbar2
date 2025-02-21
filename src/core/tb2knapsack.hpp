@@ -1377,14 +1377,14 @@ public:
             deltaCosts[i][it->second] -= c;
             if (td && x->canbe(v))
                 td->addDelta(cluster, x, v, c);
-            x->project(v, c, true);
+            x->VACproject(v, c);
         } else {
             deltaCosts[i].back() -= c;
             for (int j = 0; j < (int)NotVarVal[i].size(); ++j) {
                 if (x->canbe(NotVarVal[i][j])) {
                     if (td)
                         td->addDelta(cluster, x, NotVarVal[i][j], c);
-                    x->project(NotVarVal[i][j], c, true);
+                    x->VACproject(NotVarVal[i][j], c);
                 }
             }
         }

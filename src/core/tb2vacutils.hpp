@@ -138,9 +138,22 @@ public:
     {
         assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project " << getName() << " (" << v << ") += " << c << endl), true));
         assert(c > MIN_COST);
+        Cost oldcost = getCost(v);
         costs[toIndex(v)] += c;
-        if (ToulBar2::VAClin && !wcsp->knapsackList.empty() && (v == maxCostValue || LUBTEST(maxCost, getCost(v))))
-            queueNC();
+        if (ToulBar2::VAClin && !wcsp->knapsackList.empty()) {
+            Cost newcost = oldcost + c;
+            if (v == maxCostValue || LUBTEST(maxCost, newcost)) {
+                queueNC();
+            }
+            if (oldcost <= MIN_COST && c > MIN_COST) { // DACTEST not valid because costs can be negative temporally
+                if (ToulBar2::LcLevel >= LC_DAC) {
+                    queueDAC();
+                    queueEAC1();
+                } else if (ToulBar2::LcLevel == LC_AC && wcsp->vac) { // SdG: to be compatible with verify for knapsack constraints
+                    queueAC();
+                }
+            }
+        }
     }
     void VACextend(Value v, Cost c) /**< Decreases unary cost and may queue for NC enforcing (maintaining maxCost and maxCostValue) */
     {

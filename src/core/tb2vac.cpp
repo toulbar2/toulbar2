@@ -1043,12 +1043,12 @@ bool VACExtension::enforcePass3()
             if (EPT[l].second > MIN_COST) {
                 if (td && xi->canbe(EPT[l].first.second))
                     td->addDelta(k2->getCluster(), xi, EPT[l].first.second, -EPT[l].second);
-                xi->extend(EPT[l].first.second, EPT[l].second);
+                xi->VACextend(EPT[l].first.second, EPT[l].second);
                 assert(xi->getCost(EPT[l].first.second)>= MIN_COST);
             } else {
                 if (td && xi->canbe(EPT[l].first.second))
                     td->addDelta(k2->getCluster(), xi, EPT[l].first.second, -EPT[l].second);
-                xi->project(EPT[l].first.second, -EPT[l].second);
+                xi->VACproject(EPT[l].first.second, -EPT[l].second);
                 tempvars.insert(xi->wcspIndex);
             }
         }
