@@ -134,7 +134,7 @@ public:
         wcsp->vac->queueSeekSupport(&linkSeekSupport);
     }
 
-    void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC enforcing (maintaining maxCost and maxCostValue during VAC-lin which may create unary costs without consuming them) */
+    void VACproject(Value v, Cost c) /**< Increases unary cost and may queue for NC and DAC, EAC enforcing (maintaining maxCost and maxCostValue during VAC-lin which may create unary costs without consuming them) */
     {
         assert(ToulBar2::verbose < 4 || ((cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] project " << getName() << " (" << v << ") += " << c << endl), true));
         assert(c > MIN_COST);

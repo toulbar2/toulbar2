@@ -5201,20 +5201,22 @@ void WCSP::dump_CFN(ostream& os, bool original)
             continue;
         if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
-            ValueCost domcost[size]; // replace size by MAX_DOMAIN_SIZE in case of compilation problem
-            getEnumDomainAndCost(i, domcost);
+            vector<pair<Value, Cost>> domcost = getEnumDomainAndCost(i);
+            if ((!original || size == (int)static_cast<EnumeratedVariable*>(vars[i])->getDomainInitSize()) &&
+                all_of(domcost.begin(), domcost.end(), [](auto e) { return e.second == MIN_COST; }))
+                continue; // skip (original) domain with zero cost
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
             os << name2cfn(vars[i]->getName()) << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
             os << "\"costs\":[";
             Cost failed = MIN_COST;
             for (int v = 0; v < size; v++) {
-                os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].value)) : v) << ","
-                   << ((original) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : ((ub > domcost[v].cost) ? DCost2Decimal(Cost2RDCost(domcost[v].cost)) : "inf"));
+                os << ((original) ? (((EnumeratedVariable*)vars[i])->toIndex(domcost[v].first)) : v) << ","
+                   << ((original) ? DCost2Decimal(Cost2RDCost(domcost[v].second)) : ((ub > domcost[v].second) ? DCost2Decimal(Cost2RDCost(domcost[v].second)) : "inf"));
                 if (v != (size - 1)) {
                     os << ",";
                 }
-                if (elimvars.find(vars[i]->wcspIndex) != elimvars.end() && domcost[v].cost < ub && domcost[v].cost > MIN_COST) {
-                    failed = domcost[v].cost;
+                if (elimvars.find(vars[i]->wcspIndex) != elimvars.end() && domcost[v].second < ub && domcost[v].second > MIN_COST) {
+                    failed = domcost[v].second;
                 }
             }
             os << "]},\n";
