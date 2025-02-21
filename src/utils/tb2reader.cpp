@@ -4614,6 +4614,10 @@ void WCSP::read_lp(const char* fileName)
     }
     for (auto& ctr : pb.equal_constraints) {
         vector<int> scopeIndex;
+        for (unsigned int i = 0; i < ctr.elements.size(); i++) {
+            int x = ctr.elements[i].variable_index;
+            scopeIndex.push_back(x);
+        }
         string params;
         maxarity = max(maxarity, (int)ctr.elements.size());
         nblinear++;
@@ -4659,7 +4663,6 @@ void WCSP::read_lp(const char* fileName)
                 }
                 long long int coef = static_cast<long long int>(baryonyx::Ceil(ctr.elements[i].factor * multiplier));
                 params += to_string(" ") + to_string(max - min + 1);
-                scopeIndex.push_back(x);
                 for (int v = min; v <= max; v++) {
 #ifdef WCSPFORMATONLY
                     params += to_string(" ") + to_string(v - min);
