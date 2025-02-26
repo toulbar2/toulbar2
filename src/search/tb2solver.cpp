@@ -187,7 +187,7 @@ void Solver::initVarHeuristic()
         if (wcsp->assigned(allVars[i]->content) || (ToulBar2::nbDecisionVars > 0 && allVars[i]->content >= ToulBar2::nbDecisionVars))
             unassignedVars->erase(allVars[i], false);
     }
-    wcsp->resetTightnessAndWeightedDegree();
+    wcsp->resetTightness(); // but no resetWeightedDegree() to keep propagation information (e.g., fractional knapsack solution)
     // Now function setvalue can be called safely!
     if (ToulBar2::setvalue == NULL) {
         ToulBar2::setvalue = setvalue;
@@ -2880,6 +2880,7 @@ void Solver::beginSolve(Cost ub)
         cerr << "Error: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension (remove -vacint option)." << endl;
         throw BadConfiguration();
     }
+
     if (ToulBar2::searchMethod != DFBB) {
         if (ToulBar2::vnsLDSmax < 0)
             ToulBar2::vnsLDSmax = wcsp->getDomainSizeSum() - wcsp->numberOfUnassignedVariables();
@@ -3108,8 +3109,9 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 
     if (ToulBar2::singletonConsistency) {
         singletonConsistency(ToulBar2::singletonConsistency);
+        wcsp->resetWeightedDegree();
         wcsp->propagate();
-        wcsp->resetTightnessAndWeightedDegree();
+        wcsp->resetTightness();
     }
 
     ToulBar2::hbfs = hbfs_; // do not perform hbfs operations in preprocessing except for building tree decomposition
@@ -3172,6 +3174,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
         if (ToulBar2::verbose >= 0)
             cout << "Weighted degree heuristic disabled (#costfunctions=" << wcsp->numberOfConnectedConstraints() << " >= " << abs(ToulBar2::weightedDegree) << ")" << endl;
         ToulBar2::weightedDegree = 0;
+        ToulBar2::vacValueHeuristic &= ~KNAPSACK_FRACTIONAL_HEUR;
     }
 
     if (ToulBar2::dumpWCSP) {

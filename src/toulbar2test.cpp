@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
     // uncomment if Virtual Arc Consistency (equivalent to Augmented DAG algorithm) enable
     //	ToulBar2::vac = 1; // option -A
-    //	ToulBar2::vacValueHeuristic = true; // option -V
+    //	ToulBar2::vacValueHeuristic = VAC_SUPPORT_HEUR; // option -V
     // uncomment if partial Limited Discrepancy Search enable
     //	ToulBar2::lds = 1;  // option -l=1
     // uncomment if INCOP local search enable

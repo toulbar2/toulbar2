@@ -164,7 +164,7 @@ int ToulBar2::DEE;
 int ToulBar2::DEE_;
 int ToulBar2::nbDecisionVars;
 int ToulBar2::singletonConsistency;
-bool ToulBar2::vacValueHeuristic;
+int ToulBar2::vacValueHeuristic;
 
 externalevent ToulBar2::setvalue;
 externalevent ToulBar2::setmin;
@@ -503,7 +503,7 @@ void tb2init()
 
     // value ordering heuristics
     ToulBar2::sortDomains = false;
-    ToulBar2::vacValueHeuristic = true;
+    ToulBar2::vacValueHeuristic = VAC_SUPPORT_HEUR;
     ToulBar2::solutionBasedPhaseSaving = true;
     ToulBar2::bisupport = 0.;
 
@@ -823,8 +823,12 @@ void tb2checkOptions()
         cerr << "Error: HVE/PWC cannot dedualize nary cost functions if functional elimination is applied after PWC (remove -f=3 option)." << endl;
         throw BadConfiguration();
     }
-    if (ToulBar2::vac && ToulBar2::FullEAC && !ToulBar2::vacValueHeuristic) { /// \warning VAC must update EAC supports in order to make new FullEAC supports based on VAC-integrality
-        ToulBar2::vacValueHeuristic = true;
+    if (ToulBar2::vac && ToulBar2::FullEAC && !(ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR)) { /// \warning VAC must update EAC supports in order to make new FullEAC supports based on VAC-integrality
+        ToulBar2::vacValueHeuristic |= VAC_SUPPORT_HEUR;
+    }
+    if ((ToulBar2::vacValueHeuristic & KNAPSACK_FRACTIONAL_HEUR) && !ToulBar2::weightedDegree) {
+        cerr << "Error: Knapsack fractional variable heuristic requires weighted degree heuristic (add -q option)." << endl;
+        throw BadConfiguration();
     }
     if (ToulBar2::preprocessFunctional > 0 && (ToulBar2::LcLevel == LC_NC || ToulBar2::LcLevel == LC_DAC)) {
         cerr << "Error: functional elimination requires at least AC local consistency (select AC, FDAC, or EDAC using -k option)." << endl;
@@ -3623,6 +3627,8 @@ void WCSP::resetTightnessAndWeightedDegree()
 
 void WCSP::sortConstraints()
 {
+    resetWeightedDegree();
+
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);
@@ -3824,7 +3830,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
         bool fast = CUT(ctr->getDefCost(), getUb()) && ctr->size() <= abs(ToulBar2::hve);
         if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 &&
             (fast
-             || (ctr->arity() <= max(3, ToulBar2::preprocessNary) && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve))
+             || (ctr->arity() <= ToulBar2::preprocessNary && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve))
              || (ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight()))) {
             Tuple tuple;
             Cost cost;
@@ -3868,46 +3874,48 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             indexOfCtrs[ctr] = nbdual++;
         }
     }
-    for (int i = 0; i < elimTernOrder; i++) {
-        if (elimTernConstrs[i]->connected()) {
-            TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[i];
-            Tuple tuple;
-            Cost cost;
-            vector<Tuple> tuples;
-            vector<Cost> costs;
-            Long nbtuples = 0;
-            ctr->firstlex();
-            while (ctr->nextlex(tuple, cost)) {
-                if (cost + getLb() < getUb()) {
-                    tuples.push_back(tuple);
-                    costs.push_back(cost);
-                    nbtuples++;
-                    if (nbtuples > abs(ToulBar2::hve)) {
-                        break;
+    if (ToulBar2::preprocessNary >= 3) {
+        for (int i = 0; i < elimTernOrder; i++) {
+            if (elimTernConstrs[i]->connected() && elimTernConstrs[i]->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve)) {
+                TernaryConstraint* ctr = (TernaryConstraint*)elimTernConstrs[i];
+                Tuple tuple;
+                Cost cost;
+                vector<Tuple> tuples;
+                vector<Cost> costs;
+                Long nbtuples = 0;
+                ctr->firstlex();
+                while (ctr->nextlex(tuple, cost)) {
+                    if (cost + getLb() < getUb()) {
+                        tuples.push_back(tuple);
+                        costs.push_back(cost);
+                        nbtuples++;
+                        if (nbtuples > abs(ToulBar2::hve)) {
+                            break;
+                        }
                     }
                 }
-            }
-            if (nbtuples > abs(ToulBar2::hve)) {
-                if (ToulBar2::verbose >= 1) {
-                    cout << "Warning! Cannot dualize this constraint with too many tuples! " << endl;
-                    cout << *ctr << endl;
+                if (nbtuples > abs(ToulBar2::hve)) {
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "Warning! Cannot dualize this constraint with too many tuples! " << endl;
+                        cout << *ctr << endl;
+                    }
+                    continue;
                 }
-                continue;
+                if (nbtuples > maxdomsize) {
+                    maxdomsize = nbtuples;
+                }
+                initElimConstr(); // needed for boosting search by variable elimination
+                int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
+                EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
+                for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
+                    theVar->addValueName(to_string("t") + to_string(tuples[val]));
+                }
+                listOfDualVars.push_back(theVar);
+                listOfDualDomains.push_back(tuples);
+                listOfDualCosts.push_back(costs);
+                listOfCtrs.push_back(ctr);
+                indexOfCtrs[ctr] = nbdual++;
             }
-            if (nbtuples > maxdomsize) {
-                maxdomsize = nbtuples;
-            }
-            initElimConstr(); // needed for boosting search by variable elimination
-            int var = makeEnumeratedVariable(((ToulBar2::hve >= 0 && ToulBar2::pwc >= 0) ? HIDDEN_VAR_TAG_HVE : HIDDEN_VAR_TAG_HVE_PRE) + to_string(abs(ctr->wcspIndex)), 0, nbtuples - 1);
-            EnumeratedVariable* theVar = static_cast<EnumeratedVariable*>(getVar(var));
-            for (unsigned int val = 0; val < theVar->getDomainInitSize(); val++) {
-                theVar->addValueName(to_string("t") + to_string(tuples[val]));
-            }
-            listOfDualVars.push_back(theVar);
-            listOfDualDomains.push_back(tuples);
-            listOfDualCosts.push_back(costs);
-            listOfCtrs.push_back(ctr);
-            indexOfCtrs[ctr] = nbdual++;
         }
     }
     assert(nbdual == listOfCtrs.size());
@@ -5313,7 +5321,7 @@ bool WCSP::verify()
                      << *this;
             if (ToulBar2::verbose >= 1)
                 cout << "warning! support of variable " << vars[i]->getName() << " not EAC!" << endl;
-            if (!ToulBar2::vacValueHeuristic)
+            if (!(ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR))
                 return false;
         }
         if (ToulBar2::FullEAC && vars[i]->unassigned() && old_fulleac && old_fulleac != vars[i]->isFullEAC()) {

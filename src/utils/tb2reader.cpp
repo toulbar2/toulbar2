@@ -4118,7 +4118,7 @@ void WCSP::read_opb(const char* fileName)
             int n = atoi(dummy.substr(dummy.find("#soft=") + 6).c_str());
             if (n > 0) {
                 for (int i = 1; i <= n; i++) {
-                    string varname = "s";
+                    string varname = HIDDEN_VAR_TAG + "s";
                     varname += to_string(i);
                     int var = makeEnumeratedVariable(varname, 0, 1);
                     addValueName(var, "v0");
@@ -4293,7 +4293,7 @@ void WCSP::read_opb(const char* fileName)
                 assert(token.back() == ']'); // TODO: allows no space after bracket
                 if (cost > MIN_COST && cost < getUb()) {
                     soft = true;
-                    string varname = "s" + to_string(cursoft);
+                    string varname = HIDDEN_VAR_TAG + "s" + to_string(cursoft);
                     int var = 0;
                     if (varnames.find(varname) != varnames.end()) {
                         var = varnames[varname];

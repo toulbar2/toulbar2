@@ -32,7 +32,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     StoreCost assigneddeltas;
     DLink<KnapsackConstraint*> linkKnapsack; // link to insert the constraint in knapsacks list
-    vector<Long> conflictWeights; // used by weighted degree heuristics
+    vector<Double> conflictWeights; // used by weighted degree heuristics
     vector<StoreInt> LowestWeightIdx;
     vector<Long> InitLargestWeight;
     vector<StoreInt> GreatestWeightIdx;
@@ -591,7 +591,7 @@ public:
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
-        return conflictWeights[varIndex] + Constraint::getConflictWeight();
+        return (Long) conflictWeights[varIndex] + Constraint::getConflictWeight(); //TODO: Ceil(conflictWeights[varIndex]) might be too slow
     }
 
     //-----------------------------------------------------------------
@@ -1808,7 +1808,7 @@ public:
 
         vector<vector<StoreCost>> sortdel = deltaCosts;
         vector<vector<Long>> sortOW = Original_weights;
-        vector<Long> sortconfW = conflictWeights;
+        vector<Double> sortconfW = conflictWeights;
         vector<StoreInt> sortass = assigned;
         for (int i = 0; i < arity_; ++i) {
             deltaCosts[i] = sortdel[SortedVec[i]];
@@ -2750,10 +2750,22 @@ public:
                 *W += weights[currentvar][item1];
                 *c += Profit[currentvar][item1];
                 OptSol[currentvar][item1] = 1.;
+                if ((ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) && *c > MIN_COST + ToulBar2::epsilon) {
+                    Value support = VarVal[currentvar][item1];
+                    if (scope[currentvar]->getCost(support) > MIN_COST) {
+                        ((EnumeratedVariable *)scope[currentvar])->setSupport(support);
+                    }
+                }
             } else {
                 *W += weights[currentvar][Slopes.back()[1]];
                 *c += Profit[currentvar][Slopes.back()[1]];
                 OptSol[currentvar][Slopes.back()[1]] = 1.;
+                if ((ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) && *c > MIN_COST + ToulBar2::epsilon) {
+                    Value support = VarVal[currentvar][Slopes.back()[1]];
+                    if (scope[currentvar]->getCost(support) > MIN_COST) {
+                        ((EnumeratedVariable *)scope[currentvar])->setSupport(support);
+                    }
+                }
             }
         }
     }
@@ -2792,12 +2804,37 @@ public:
                     *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
                     *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
                     assert(capacityLeft > 0);
+                    if (ToulBar2::vacValueHeuristic && *c > MIN_COST + ToulBar2::epsilon) {
+                        Value support = VarVal[currentVar][Slopes[*iter][2]];
+                        if (ToulBar2::weightedDegree && (ToulBar2::vacValueHeuristic & KNAPSACK_FRACTIONAL_HEUR) &&
+                            *xk > ToulBar2::epsilon && *xk < 1. - ToulBar2::epsilon &&
+                            scope[currentVar]->getCost(support) > MIN_COST) {
+                            if (ToulBar2::verbose >= 1) {
+                                cout << "Fractional KP variable found: " <<  scope[currentVar]->getName() << " weightedDegree: " << conflictWeights[currentVar] << " + " << 0.5 - abs(*xk - 0.5) << endl;
+                                cout << *scope[currentVar] << endl;
+                            }
+                            conflictWeights[currentVar] += 0.5 - abs(*xk - 0.5);
+                        }
+                        if (ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) {
+                            Value oldsupport = scope[currentVar]->getSupport();
+                            if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
+                                ((EnumeratedVariable *)scope[currentVar])->setSupport(support);
+                            }
+                        }
+                    }
                 } else {
                     assert(OptSol[currentVar][Slopes[*iter][1]] == 1.);
                     OptSol[currentVar][Slopes[*iter][1]] = 0.;
                     OptSol[currentVar][Slopes[*iter][2]] = 1.;
                     *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
                     *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
+                    if ((ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) && *c > MIN_COST + ToulBar2::epsilon) {
+                        Value support = VarVal[currentVar][Slopes[*iter][2]];
+                        Value oldsupport = scope[currentVar]->getSupport();
+                        if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
+                            ((EnumeratedVariable *)scope[currentVar])->setSupport(support);
+                        }
+                    }
                     *iter = *iter + 1;
                 }
 //            } else {

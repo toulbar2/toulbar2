@@ -310,7 +310,7 @@ bool VACExtension::propagate()
                 Store::restore(storedepth);
                 throw Contradiction();
             }
-            if (ToulBar2::vacValueHeuristic && isvac) {
+            if ((ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR) && isvac) {
                 acSupportOK = true;
                 acSupport.clear();
                 // fill SeekSupport with ALL variables if in preprocessing (i.e. before the search)
@@ -539,7 +539,7 @@ bool VACExtension::propagate()
         }
     }
 
-    if (ToulBar2::vacValueHeuristic && acSupportOK && isVAC()) {
+    if ((ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR) && acSupportOK && isVAC()) {
         // update current unary support if possible && needed
         for (vector<tuple<VACVariable*, Value, bool>>::iterator iter = acSupport.begin(); iter != acSupport.end(); ++iter) {
             VACVariable* x = std::get<0>(*iter);
@@ -590,7 +590,7 @@ bool VACExtension::enforcePass1(VACVariable* xj, VACBinaryConstraint* cij)
 #ifdef INCREMENTALVAC
             xi->queueVAC2();
 #endif
-            if (ToulBar2::vacValueHeuristic)
+            if (ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR)
                 xi->queueSeekSupport();
         }
     }
@@ -666,7 +666,7 @@ void VACExtension::enforcePass1()
 #ifdef INCREMENTALVAC
                         xi->queueVAC2();
 #endif
-                        if (ToulBar2::vacValueHeuristic)
+                        if (ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR)
                             xi->queueSeekSupport();
                     }
                 }
@@ -1137,7 +1137,7 @@ void VACExtension::clear()
     while (!VAC2.empty())
         VAC2.pop();
 #endif
-    if (ToulBar2::vacValueHeuristic)
+    if (ToulBar2::vacValueHeuristic & VAC_SUPPORT_HEUR)
         while (!SeekSupport.empty())
             SeekSupport.pop();
 }

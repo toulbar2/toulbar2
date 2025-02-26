@@ -519,7 +519,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // vac option
     { OPT_vac, (char*)"-A", SO_OPT },
     { NO_OPT_vac, (char*)"-A:", SO_NONE },
-    { OPT_vacValueHeuristic, (char*)"-V", SO_NONE },
+    { OPT_vacValueHeuristic, (char*)"-V", SO_OPT },
     { NO_OPT_vacValueHeuristic, (char*)"-V:", SO_NONE },
     { OPT_costThreshold, (char*)"-T", SO_REQ_SEP },
     { OPT_costThresholdPre, (char*)"-P", SO_REQ_SEP },
@@ -1027,10 +1027,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::singletonConsistency)
         cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables)";
     cout << endl;
-    cout << "   -V : VAC-based value ordering heuristic";
-    if (ToulBar2::vacValueHeuristic)
-        cout << " (default option)";
-    cout << endl;
+    cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
     if (ToulBar2::FullEAC)
         cout << " (default option)";
@@ -1948,10 +1945,20 @@ int _tmain(int argc, TCHAR* argv[])
                 }
             }
 
-            if (args.OptionId() == OPT_vacValueHeuristic)
-                ToulBar2::vacValueHeuristic = true;
-            else if (args.OptionId() == NO_OPT_vacValueHeuristic)
-                ToulBar2::vacValueHeuristic = false;
+            if (args.OptionId() == OPT_vacValueHeuristic) {
+                if (args.OptionArg() != NULL) {
+                    int heur = atol(args.OptionArg());
+                    if (heur >= 0 && heur < VARVAL_HEUR_THEMAX)
+                        ToulBar2::vacValueHeuristic = heur;
+                } else
+                    ToulBar2::vacValueHeuristic = VAC_SUPPORT_HEUR;
+                if (ToulBar2::debug && ToulBar2::vacValueHeuristic)
+                    cout << "VAC-based and Knapsack value (and variable) ordering heuristic ON" << endl;
+            } else if (args.OptionId() == NO_OPT_vacValueHeuristic) {
+                if (ToulBar2::debug)
+                    cout << "VAC-based and Knapsack value (and variable) ordering heuristics OFF" << endl;
+                ToulBar2::vacValueHeuristic = NO_VARVAL_HEUR;
+            }
 
             if (args.OptionId() == OPT_preprocessTernary) {
                 if (args.OptionArg() != NULL) {

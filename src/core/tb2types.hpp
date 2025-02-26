@@ -638,6 +638,14 @@ typedef enum {
     BISUPPORT_HEUR_THEMAX
 } BiSupportHeur;
 
+typedef enum {
+    NO_VARVAL_HEUR = 0,
+    VAC_SUPPORT_HEUR = 1,
+    KNAPSACK_SUPPORT_HEUR = 2,
+    KNAPSACK_FRACTIONAL_HEUR = 4,
+    VARVAL_HEUR_THEMAX = 8
+} VarValHeur;
+
 class Pedigree;
 class Haplotype;
 class BEP;
@@ -839,7 +847,7 @@ public:
     static Cost deltaUbAbsolute; ///< \brief stops search if the absolute optimality gap reduces below a given value (command line option -agap)
     static Double deltaUbRelativeGap; ///< \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
     static int singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
-    static bool vacValueHeuristic; ///< \brief VAC-based value ordering heuristic (command line options -V and -A)
+    static int vacValueHeuristic; ///< \brief VAC-based and Knapsack value (and variable) ordering heuristics (command line options -V and -A)
     static BEP* bep; ///< \internal do not use
     static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
     static LcLevelType LcLevel_prev; // allows to disconnect soft local consistency temporally
