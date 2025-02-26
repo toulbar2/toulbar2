@@ -3627,8 +3627,6 @@ void WCSP::resetTightnessAndWeightedDegree()
 
 void WCSP::sortConstraints()
 {
-    resetWeightedDegree();
-
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         BinaryConstraint* bctr;
         TernaryConstraint* tctr = new TernaryConstraint(this);

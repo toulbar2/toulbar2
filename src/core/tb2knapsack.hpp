@@ -591,7 +591,7 @@ public:
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
-        return (Long) conflictWeights[varIndex] + Constraint::getConflictWeight(); //TODO: Ceil(conflictWeights[varIndex]) might be too slow
+        return (Long) (0.5 + conflictWeights[varIndex]) + Constraint::getConflictWeight(); //TODO: Ceil(conflictWeights[varIndex]) might be too slow
     }
 
     //-----------------------------------------------------------------
