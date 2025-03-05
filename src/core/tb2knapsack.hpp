@@ -83,6 +83,8 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     Long it_assignedWeight = 0; // temporary structure for firstlex/nextlex containing the weight of the assigned variables
     Long it_leftWeight = 0; // temporary structure for firstlex/nextlex containing the weight of the left part of the current tuple
     vector<Long> it_rightWeights; // temporary structure for firstlex/nextlex containing an overestimate of the weight of the right part of the current tuple
+    map<int, Value> kpSupport; // keep a list of support changes based on OptSol (if option ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR)
+    bool kpSupportOK; // flag to decide when support changes are managed (only during normal propagate)
 
     void projectLB(Cost c)
     {
@@ -480,6 +482,7 @@ public:
         , VirtualVar(std::move(VirtualVar_in))
         , CorrAMO(std::move(CorrAMO_in))
         , AlwaysSatisfied(0)
+        , kpSupportOK(false)
     {
         linkKnapsack.content = this;
         elimFrom(fromElim1_in);
@@ -2750,20 +2753,20 @@ public:
                 *W += weights[currentvar][item1];
                 *c += Profit[currentvar][item1];
                 OptSol[currentvar][item1] = 1.;
-                if ((ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) && *c > MIN_COST + ToulBar2::epsilon) {
+                if (kpSupportOK && *c > MIN_COST + ToulBar2::epsilon) {
                     Value support = VarVal[currentvar][item1];
                     if (scope[currentvar]->getCost(support) > MIN_COST) {
-                        ((EnumeratedVariable *)scope[currentvar])->setSupport(support);
+                        kpSupport[currentvar] = support;
                     }
                 }
             } else {
                 *W += weights[currentvar][Slopes.back()[1]];
                 *c += Profit[currentvar][Slopes.back()[1]];
                 OptSol[currentvar][Slopes.back()[1]] = 1.;
-                if ((ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) && *c > MIN_COST + ToulBar2::epsilon) {
+                if (kpSupportOK && *c > MIN_COST + ToulBar2::epsilon) {
                     Value support = VarVal[currentvar][Slopes.back()[1]];
                     if (scope[currentvar]->getCost(support) > MIN_COST) {
-                        ((EnumeratedVariable *)scope[currentvar])->setSupport(support);
+                        kpSupport[currentvar] = support;
                     }
                 }
             }
@@ -2815,10 +2818,10 @@ public:
                             }
                             conflictWeights[currentVar] += 0.5 - abs(*xk - 0.5);
                         }
-                        if (ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) {
+                        if (kpSupportOK) {
                             Value oldsupport = scope[currentVar]->getSupport();
                             if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
-                                ((EnumeratedVariable *)scope[currentVar])->setSupport(support);
+                                kpSupport[currentVar] = support;
                             }
                         }
                     }
@@ -2828,11 +2831,11 @@ public:
                     OptSol[currentVar][Slopes[*iter][2]] = 1.;
                     *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
                     *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
-                    if ((ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR) && *c > MIN_COST + ToulBar2::epsilon) {
+                    if (kpSupportOK && *c > MIN_COST + ToulBar2::epsilon) {
                         Value support = VarVal[currentVar][Slopes[*iter][2]];
                         Value oldsupport = scope[currentVar]->getSupport();
                         if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
-                            ((EnumeratedVariable *)scope[currentVar])->setSupport(support);
+                            kpSupport[currentVar] = support;
                         }
                     }
                     *iter = *iter + 1;
@@ -3023,6 +3026,7 @@ public:
             if (ToulBar2::verbose >= 3) {
                 cout << "propagate " << *this << endl;
             }
+            kpSupportOK = false;
             bool b = false;
             for (int i = 0; !b && connected() && i < arity_; i++) { // SdG: do not continue to assign if one assign already done
                 if (CorrAMO[i] == 0) {
@@ -3143,6 +3147,8 @@ public:
                         if (connected() && (b || DoDyn)) {
                             Long W = 0;
                             Cost c = -lb + assigneddeltas;
+                            kpSupportOK = ToulBar2::vacValueHeuristic & KNAPSACK_SUPPORT_HEUR;
+                            kpSupport.clear();
                             ComputeSlopes(&W, &c); // temporary data structure for propagate
                             if (ToulBar2::verbose >= 4) {
                                 cout << "cap is " << capacity << endl;
@@ -3346,6 +3352,28 @@ public:
                                     assert(c > MIN_COST);
                                     projectLB(c);
                                     ObjConsistency();
+                                    // update supports if needed
+                                    if (kpSupportOK) {
+                                        for (const auto & [xid, val] : kpSupport) {
+                                            EnumeratedVariable *x = scope[xid];
+                                            if (x->canbe(val)) {
+                                                if (x->getCost(val) == MIN_COST) {
+                                                    if (ToulBar2::verbose > 0 && x->getSupport() != val)
+                                                        cout << "CHANGE KP SUPPORT " << x->getName() << " from " << x->getSupport() << " to " << val << endl;
+#ifndef NDEBUG
+                                                    if (val != x->getSupport()) {
+                                                        x->queueEAC1(); // EAC support may have been lost
+                                                    }
+#endif
+                                                    x->setSupport(val);
+                                                }
+                                            } else {
+                                                if (ToulBar2::verbose > 0)
+                                                    cout << "WARNING: BAD KNAPSACK SUPPORT " << val << " FOR VARIABLE " << *x << endl;
+                                            }
+                                        }
+                                        kpSupportOK = false;
+                                    }
                                 }
                             }
                             if (ToulBar2::verbose >= 4) {
