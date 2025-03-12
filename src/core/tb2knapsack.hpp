@@ -1408,7 +1408,7 @@ public:
                         }
                         sort(varorder.begin(), varorder.end(),
                             [&](int& x, int& y) {
-                                if (InitLargestWeight[x] == InitLargestWeight[y]) {
+                                if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
                                     return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
                                 } else {
                                     return InitLargestWeight[x] < InitLargestWeight[y];
