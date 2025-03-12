@@ -107,7 +107,7 @@ void BinaryConstraint::dump(ostream& os, bool original)
     unsigned int tuples = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX) {
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
-            if (getCost(*iterX, *iterY) > MIN_COST) {
+            if (ToulBar2::debug || getCost(*iterX, *iterY) > MIN_COST) {
                 tuples++;
             }
         }
@@ -117,7 +117,7 @@ void BinaryConstraint::dump(ostream& os, bool original)
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY, j++) {
-            if (getCost(*iterX, *iterY) > MIN_COST) {
+            if (ToulBar2::debug || getCost(*iterX, *iterY) > MIN_COST) {
                 os << ((original) ? *iterX : i) << " " << ((original) ? *iterY : j) << " " << ((original) ? getCost(*iterX, *iterY) : min(wcsp->getUb(), getCost(*iterX, *iterY))) << endl;
             }
         }

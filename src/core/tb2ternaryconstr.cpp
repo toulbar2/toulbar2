@@ -291,7 +291,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
         for (EnumeratedVariable::iterator iterY = y->begin(); iterY != y->end(); ++iterY) {
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ) {
                 Cost cost = getCost(*iterX, *iterY, *iterZ);
-                if (cost > MIN_COST) {
+                if (ToulBar2::debug || cost > MIN_COST) {
                     tuples++;
                 }
                 if (cost != top) {
@@ -301,7 +301,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
         }
     }
     Cost defaultCost = MIN_COST;
-    if (tuplesNotTop < tuples) {
+    if (!ToulBar2::debug && tuplesNotTop < tuples) {
         defaultCost = top;
         tuples = tuplesNotTop;
     }
@@ -313,7 +313,7 @@ void TernaryConstraint::dump(ostream& os, bool original)
             int k = 0;
             for (EnumeratedVariable::iterator iterZ = z->begin(); iterZ != z->end(); ++iterZ, k++) {
                 Cost cost = getCost(*iterX, *iterY, *iterZ);
-                if (cost != defaultCost) {
+                if (ToulBar2::debug || cost != defaultCost) {
                     os << ((original) ? *iterX : i) << " " << ((original) ? *iterY : j) << " " << ((original) ? *iterZ : k) << " " << ((original) ? cost : min(wcsp->getUb(), cost)) << endl;
                 }
             }
