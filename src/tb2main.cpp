@@ -954,7 +954,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::costfuncSeparate)
         cout << " (default option)";
     cout << endl;
-    cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions on all binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ") (see also option -hve and -pwc)" << endl;
+    cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions defined in extension to the global lower bound if n is nonzero (only when reading wcsp/cfn/uai format) and to all scope-included binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ") (see also option -hve and -pwc)" << endl;
 #ifdef BOOST
     cout << "   -mst : maximum spanning tree DAC ordering";
     if (ToulBar2::MSTDAC)

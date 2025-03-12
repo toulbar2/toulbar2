@@ -2614,13 +2614,13 @@ void WCSP::read_legacy(istream& file)
                         sharedTuples.push_back(tuples);
                     }
 
-                    if (ToulBar2::preprocessNary > 0) {
+                    if (ToulBar2::preprocessNary) {
                         Cost minc = nary->getMinCost();
                         if (minc > MIN_COST) {
                             nary->addtoTuples(-minc);
+                            inclowerbound += minc;
                             if (ToulBar2::verbose >= 2)
                                 cout << "IC0 performed for cost function " << nary << " with initial minimum cost " << minc << endl;
-                            inclowerbound += minc;
                         }
                     }
                     postNaryConstraintEnd(naryIndex);
@@ -2655,8 +2655,27 @@ void WCSP::read_legacy(istream& file)
                     }
                     ntuples = sharedSize[reusedconstr];
                     assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize() * z->getDomainInitSize()));
-                    if ((defval != MIN_COST) || (ntuples > 0))
-                        postTernaryConstraint(i, j, k, sharedCosts[reusedconstr]);
+                    if ((defval != MIN_COST) || (ntuples > 0)) {
+                        Cost minCost = MIN_COST;
+                        if (ToulBar2::preprocessNary) {
+                            auto result = min_element(sharedCosts[reusedconstr].begin(), sharedCosts[reusedconstr].end());
+                            if (result != sharedCosts[reusedconstr].end()) {
+                                minCost = *result;
+                            }
+                        }
+                        assert(minCost >= MIN_COST);
+                        if (minCost > MIN_COST) {
+                            vector<Cost> newCosts(sharedCosts[reusedconstr]);
+                            for (auto& element : newCosts)
+                                element -= minCost;
+                            inclowerbound += minCost;
+                            if (ToulBar2::verbose >= 2)
+                                cout << "IC0 performed for ternary cost function " << ic << " with initial minimum cost " << minCost << endl;
+                            postTernaryConstraint(i, j, k, newCosts);
+                        } else {
+                            postTernaryConstraint(i, j, k, sharedCosts[reusedconstr]);
+                        }
+                    }
                     continue;
                 }
                 vector<Cost> costs;
@@ -2688,8 +2707,27 @@ void WCSP::read_legacy(istream& file)
                     sharedCosts.push_back(costs);
                     sharedTuples.push_back(emptyTuples);
                 }
-                if ((defval != MIN_COST) || (ntuples > 0))
-                    postTernaryConstraint(i, j, k, costs);
+                if ((defval != MIN_COST) || (ntuples > 0)) {
+                    Cost minCost = MIN_COST;
+                    if (ToulBar2::preprocessNary) {
+                        auto result = min_element(costs.begin(), costs.end());
+                        if (result != costs.end()) {
+                            minCost = *result;
+                        }
+                    }
+                    assert(minCost >= MIN_COST);
+                    if (minCost > MIN_COST) {
+                        vector<Cost> newCosts(costs);
+                        for (auto& element : newCosts)
+                            element -= minCost;
+                        inclowerbound += minCost;
+                        if (ToulBar2::verbose >= 2)
+                            cout << "IC0 performed for ternary cost function " << ic << " with initial minimum cost " << minCost << endl;
+                        postTernaryConstraint(i, j, k, newCosts);
+                    } else {
+                        postTernaryConstraint(i, j, k, costs);
+                    }
+                }
             } else if (defval == -1) {
                 int scopeIndex[3];
                 scopeIndex[0] = i;
@@ -2744,8 +2782,27 @@ void WCSP::read_legacy(istream& file)
                     }
                     ntuples = sharedSize[reusedconstr];
                     assert(ntuples == (int)(x->getDomainInitSize() * y->getDomainInitSize()));
-                    if ((defval != MIN_COST) || (ntuples > 0))
-                        postBinaryConstraint(i, j, sharedCosts[reusedconstr]);
+                    if ((defval != MIN_COST) || (ntuples > 0)) {
+                        Cost minCost = MIN_COST;
+                        if (ToulBar2::preprocessNary) {
+                            auto result = min_element(sharedCosts[reusedconstr].begin(), sharedCosts[reusedconstr].end());
+                            if (result != sharedCosts[reusedconstr].end()) {
+                                minCost = *result;
+                            }
+                        }
+                        assert(minCost >= MIN_COST);
+                        if (minCost > MIN_COST) {
+                            vector<Cost> newCosts(sharedCosts[reusedconstr]);
+                            for (auto& element : newCosts)
+                                element -= minCost;
+                            inclowerbound += minCost;
+                            if (ToulBar2::verbose >= 2)
+                                cout << "IC0 performed for binary cost function " << ic << " with initial minimum cost " << minCost << endl;
+                            postBinaryConstraint(i, j, newCosts);
+                        } else {
+                            postBinaryConstraint(i, j, sharedCosts[reusedconstr]);
+                        }
+                    }
                     continue;
                 }
                 vector<Cost> costs;
@@ -2773,8 +2830,27 @@ void WCSP::read_legacy(istream& file)
                     sharedCosts.push_back(costs);
                     sharedTuples.push_back(emptyTuples);
                 }
-                if ((defval != MIN_COST) || (ntuples > 0))
-                    postBinaryConstraint(i, j, costs);
+                if ((defval != MIN_COST) || (ntuples > 0)) {
+                    Cost minCost = MIN_COST;
+                    if (ToulBar2::preprocessNary) {
+                        auto result = min_element(costs.begin(), costs.end());
+                        if (result != costs.end()) {
+                            minCost = *result;
+                        }
+                    }
+                    assert(minCost >= MIN_COST);
+                    if (minCost > MIN_COST) {
+                        vector<Cost> newCosts(costs);
+                        for (auto& element : newCosts)
+                            element -= minCost;
+                        inclowerbound += minCost;
+                        if (ToulBar2::verbose >= 2)
+                            cout << "IC0 performed for binary cost function " << ic << " with initial minimum cost " << minCost << endl;
+                        postBinaryConstraint(i, j, newCosts);
+                    } else {
+                        postBinaryConstraint(i, j, costs);
+                    }
+                }
             } else {
                 file >> funcname;
                 if (funcname == ">=") {
@@ -3242,7 +3318,7 @@ void WCSP::read_uai2008(const char* fileName)
         }
         upperbound += maxc;
 
-        if (ToulBar2::preprocessNary > 0 && minc > MIN_COST) {
+        if (ToulBar2::preprocessNary && minc > MIN_COST) {
             for (k = 0; k < ntuples; k++) {
                 costs[ictr][k] -= minc;
             }
