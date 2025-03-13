@@ -452,7 +452,7 @@ struct problem_parser {
         if (auto it = m_cache_variable.find(value); it != m_cache_variable.end())
             return it->second;
 
-        if (std::cmp_greater(m_cache_variable.size(), INT_MAX))
+        if (m_cache_variable.size() > static_cast<size_t>(INT_MAX))
             return -1;
 
         auto size = static_cast<int>(m_cache_variable.size());
@@ -1223,8 +1223,8 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p)
             }
         }
 
-        if (std::cmp_greater(p.m_problem.equal_constraints.size() + p.m_problem.greater_constraints.size() + p.m_problem.less_constraints.size(),
-                INT_MAX))
+        if (p.m_problem.equal_constraints.size() + p.m_problem.greater_constraints.size() + p.m_problem.less_constraints.size() > 
+                static_cast<size_t>(INT_MAX))
             return baryonyx::file_format_error_tag::too_many_constraints;
     }
 
