@@ -533,6 +533,13 @@ public:
         }
     }
 
+    int postAllDifferentConstraint(vector<int> scope, const string& arguments)
+    {
+        std::istringstream file(arguments);
+        return postAllDifferentConstraint(scope.data(), scope.size(), file);
+    }
+    int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file);
+
     int postCliqueConstraint(vector<int> scope, const string& arguments)
     {
         std::istringstream file(arguments);

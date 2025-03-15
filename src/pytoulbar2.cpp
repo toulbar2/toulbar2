@@ -462,6 +462,7 @@ PYBIND11_MODULE(pytb2, m)
         .def("postSupxyc", &WeightedCSP::postSupxyc)
         .def("postDisjunction", &WeightedCSP::postDisjunction)
         .def("postSpecialDisjunction", &WeightedCSP::postSpecialDisjunction)
+        .def("postAllDifferentConstraint", (int(WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postAllDifferentConstraint)
         .def("postCliqueConstraint", (int(WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
         .def(
             "postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {

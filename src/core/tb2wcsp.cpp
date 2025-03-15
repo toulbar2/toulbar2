@@ -32,6 +32,7 @@
 #include "globals/tb2treeconstr.hpp"
 #include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
+#include "tb2alldifferent.hpp"
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
 #include "tb2globalwcsp.hpp"
@@ -2524,6 +2525,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
     } else if (gcname.substr(0, 1) == "w") { // global cost functions decomposed into a cost function network
         std::unique_ptr<DecomposableGlobalCostFunction> decomposableGCF = DecomposableGlobalCostFunction::FactoryDGCF(gcname, arity, scopeIndex, file, mult);
         decomposableGCF->addToCostFunctionNetwork(this);
+    } else if (gcname == "alldiff") {
+        postAllDifferentConstraint(scopeIndex, arity, file);
     } else if (gcname == "clique") {
         postCliqueConstraint(scopeIndex, arity, file);
     } else if (gcname == "knapsackc") {
@@ -2599,6 +2602,37 @@ int WCSP::postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, Wei
         ctr->propagate();
     }
     return ctr->wcspIndex;
+}
+
+int WCSP::postAllDifferentConstraint(int* scopeIndex, int arity, istream& file)
+{
+    assert(ToulBar2::bilevel <= 1);
+#ifndef NDEBUG
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    vector<EnumeratedVariable*> scopeVars(arity);
+    for (int i = 0; i < arity; i++)
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+    auto cc = new AllDifferentConstraint(this, scopeVars.data(), arity);
+    cc->read(file);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        cc->propagate();
+    }
+    return cc->wcspIndex;
 }
 
 int WCSP::postCliqueConstraint(int* scopeIndex, int arity, istream& file)

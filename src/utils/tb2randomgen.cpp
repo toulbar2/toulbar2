@@ -132,6 +132,9 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         }
         istringstream file(arguments);
         wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false, {});
+    } else if (globalname == "alldiff") {
+        istringstream file("");
+        wcsp.postAllDifferentConstraint(scopeIndexs, arity, file);
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {

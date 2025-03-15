@@ -281,6 +281,8 @@ public:
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL) = 0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
+    virtual int postAllDifferentConstraint(vector<int> scope, const string& arguments) = 0;
+    virtual int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
     virtual int postCliqueConstraint(vector<int> scope, const string& arguments) = 0;
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0;

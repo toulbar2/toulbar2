@@ -999,6 +999,8 @@ void help_msg(char* toulbar2filename)
     cout << " (usage for parallel version: \"mpirun -n [NbOfProcess] toulbar2 -vns problem.wcsp\")";
 #endif
     cout << endl;
+    cout << "       by default DGVNS explores its neighborhoods using restricted LDS, use options -l: -bt to rather use DFS with a fixed backtrack limit." << endl;
+    cout << "       and add a fixed neighborhood size repeated a given maximum number of times to perform Large Neighborhood Search, e.g. -vns -vnsini=-1 -l: -bt=1000 -kmin=50 -kmax=50 -L=10000" << endl;
     cout << "   -vnsini=[integer] : initial solution for VNS-like methods found (-1) at random, (-2) min domain values, (-3) max domain values, (-4) first solution found by a complete method, (k=0 or more) tree search with k discrepancy max (" << ToulBar2::vnsInitSol << " by default)" << endl;
     cout << "   -ldsmin=[integer] : minimum discrepancy for VNS-like methods (" << ToulBar2::vnsLDSmin << " by default)" << endl;
     cout << "   -ldsmax=[integer] : maximum discrepancy for VNS-like methods (number of problem variables multiplied by maximum domain size -1 by default)" << endl;
