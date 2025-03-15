@@ -8,10 +8,12 @@ DESCRIPTION
 
 """
 from math import isinf
+import traceback
 try :
     import pytoulbar2.pytb2 as tb2
     tb2.init()
-except :
+except Exception:
+    traceback.print_exc()
     pass
 
 class CFN:
