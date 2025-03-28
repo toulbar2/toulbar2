@@ -22,17 +22,23 @@
 #include "tb2wcsp.hpp"
 //#include "tb2vacutils.hpp"
 #include "search/tb2clusters.hpp"
+#include "utils/tb2hungarian.hpp"
 
-class AllDifferentConstraint : public AbstractNaryConstraint {
+#include <algorithm>
+#include <limits>
+
+class AllDifferentConstraint : public AbstractNaryConstraint {    
     Cost Original_ub; // initial upper bound when creating the constraint
     StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
     StoreCost assigneddeltas;
     vector<Long> conflictWeights; // used by weighted degree heuristics
     vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs to values in the cost function
+	vector<int> storeResults; // Hungarian solution
+
 
     void projectLB(Cost c)
     {
-        if (c > MIN_COST) {
+        if (c > MIN_COST ) {
             lb += c;
             Constraint::projectLB(c);
         }
@@ -128,8 +134,10 @@ public:
 
     Cost eval(const Tuple& s) override
     {
+		
         // returns the cost of the corresponding assignment s
         Cost res = -lb + assigneddeltas;
+
         Cost nbsame = 0;
         vector<bool> alreadyUsed(arity_, false);
         for (int i = 0; i < arity_; i++) {
@@ -226,10 +234,85 @@ public:
             }
             if (!b && connected()) {
                 //TODO: compute a lower bound and prune forbidden domain values
-                Cost hungarian = MIN_COST;
-                //TODO: modify unary costs by a set of EPTs using ExtOrProj
-                projectLB(hungarian);
-            }
+				// Determine whether propagation should be skipped
+				bool skipPropagation = false;
+				if (!storeResults.empty()) {
+					skipPropagation = true;
+					for (int var = 0; var < arity_; var++) {
+						if (scope[var]->getCost(scope[var]->toValue(storeResults[var])) > 0) {
+							skipPropagation = false;
+							break;
+						}
+					}
+				}
+							
+				if(!skipPropagation) {
+					// Initialize cost matrix for the Hungarian algorithm
+					
+					vector<vector<int>> cost_matrix(arity_, vector<int>(arity_));
+					for (int var = 0; var < arity_; var++) { 
+						//int compt = 0;
+						for (int index_val = 0; index_val < arity_; index_val++) {
+							if(scope[var]->canbe(scope[var]->toValue(index_val))){
+								cost_matrix[index_val][var] = (int)(scope[var]->getCost(scope[var]->toValue(index_val)));
+							}
+							else {
+								cost_matrix[index_val][var] = (int)MAX_COST;
+								//compt++; 
+							}	
+						}
+					}
+					
+
+
+
+					/* Initialisation des valeurs min et max
+					int min_val = std::numeric_limits<int>::max();
+					int max_val = std::numeric_limits<int>::min();
+
+					// Parcourir chaque sous-vecteur
+					for (const auto& row : cost_matrix) {
+						if (!row.empty()) {
+							int row_min = *std::min_element(row.begin(), row.end());
+							int row_max = *std::max_element(row.begin(), row.end());
+							min_val = std::min(min_val, row_min);
+							max_val = std::max(max_val, row_max);
+						}
+					}
+					if(min_val == max_val)
+						cout<<"ok"<<endl;*/
+					
+					// Solve the LAP using the Hungarian algorithm
+					Hungarian solver;
+					storeResults = solver.compute(cost_matrix);
+					vector<int> ReduceCostRow = solver.getReduceCostRow();
+					vector<int> ReduceCostCol = solver.getReduceCostCol();
+					int TotalCost = solver.getTotalCost();
+					Cost hungarian = TotalCost;
+					
+					//TODO: modify unary costs by a set of EPTs using ExtOrProj
+					 // Check contradiction
+					if (TotalCost >= MAX_COST){
+						THROWCONTRADICTION;
+					}
+					
+					else if (TotalCost > 0){
+						for (int var = 0; var < arity_; var++) {
+								for (int index_val = 0; index_val < arity_; index_val++){
+									if(scope[var]->canbe(scope[var]->toValue(index_val)))
+										ExtOrProJ(var, scope[var]->toValue(index_val), -(ReduceCostCol[var] + ReduceCostRow[index_val]));
+								}
+						}
+						// Update lower bound
+						projectLB(hungarian);
+						for (int var = 0; var < arity_; var++) {
+							if(scope[var]->getCost(scope[var]->getSupport()) > MIN_COST){
+								scope[var]->setSupport(scope[var]->toValue(storeResults[var]));
+							}
+						}
+					}
+				}
+			}	
         }
     }
 
