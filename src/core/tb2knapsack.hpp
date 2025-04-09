@@ -64,7 +64,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     StoreInt AlwaysSatisfied;
     bool DoDyn = false;
     Long NbNodes = -1;
-    bool sameweight;
+    bool sameweights = false;
     vector<vector<Cost>> tempdeltaCosts;
     set<int> tempvars;
     vector<bool> Booleanvar; // true if initial domain is {0,1}
@@ -492,7 +492,7 @@ public:
             if (Original_capacity_in != 0)
                 Original_capacity = Original_capacity_in;
             unsigned int maxdom = VarVal[0].size();
-            sameweight = true;
+            sameweights = true;
             for (int i = 0; i < (int)weights.size(); i++) {
                 assert(VarVal[i].size() > 1);
                 assert(NotVarVal[i].size() >= 1);
@@ -523,8 +523,8 @@ public:
                 assert(VarVal[i].size() == weights[i].size());
                 if (maxdom < VarVal[i].size())
                     maxdom = VarVal[i].size();
-                if (sameweight && weights[0] != weights[i])
-                    sameweight = false;
+                if (sameweights && weights[0] != weights[i])
+                    sameweights = false;
                 if (VarVal[i].size() + NotVarVal[i].size() <= 3) {
                     Booleanvar.push_back(true);
                 } else
@@ -1364,7 +1364,7 @@ public:
     }
 
     /// \brief projects from a knapsack constraint to a variable (possibly several values impacted!)
-    /// \warning this function may project more than what is needed after, possibly breaking (EAC) supports and DAC, so we use EnumeratedVariable::project instead of VACVariable::VACproject
+    /// \warning this function may project more than what is needed after, possibly breaking (EAC) supports and DAC
     void VACproject(VACVariable* x, Value v, Cost c)
     {
         if (c == MIN_COST)
@@ -1395,117 +1395,108 @@ public:
     void incConflictWeight(Constraint* from) override
     {
         assert(from != NULL);
-        if (!sameweight) {
-            if (from == this) {
-                if (getNonAssigned() == arity_ || deconnected()) {
+        if (from == this) {
+            //get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
+            if (sameweights || getNonAssigned() == arity_ || deconnected() || fastverifyAMO()) {
+                if (arity_ < (int)wcsp->numberOfVariables()) { // SdG: no need to increase weightedDegree of all problem variables
                     Constraint::incConflictWeight(1);
-                } else {
-                    //get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
-                    if (!fastverifyAMO()) {
-                        vector<int> varorder;
-                        for (unsigned int i = 0; i < weights.size(); ++i) {
-                            varorder.push_back(i);
-                        }
-                        sort(varorder.begin(), varorder.end(),
-                            [&](int& x, int& y) {
-                                if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
-                                    return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
-                                } else {
-                                    return InitLargestWeight[x] < InitLargestWeight[y];
-                                }
-                            });
-                        Long SumW = 0;
-                        for (unsigned int i = 0; i < weights.size(); ++i) {
-                            if (scope[i]->cannotbe(VarVal[i][GreatestWeightIdx[i]])) {
-                                Long MaxW = -1;
-                                for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
-                                    if (scope[i]->canbe(VarVal[i][j]) && MaxW < weights[i][j]) {
-                                        GreatestWeightIdx[i] = j;
-                                        MaxW = weights[i][j];
-                                    }
-                                }
-                                if (scope[i]->cannotbe(VarVal[i].back())) {
-                                    unsigned int k = 0;
-                                    while (k < NotVarVal[i].size() && scope[i]->cannotbe(NotVarVal[i][k])) {
-                                        k = k + 1;
-                                    }
-                                    if (k < NotVarVal[i].size() && MaxW < weights[i].back()) {
-                                        GreatestWeightIdx[i] = VarVal[i].size() - 1;
-                                        MaxW = weights[i].back();
-                                    }
-                                } else if (MaxW < weights[i].back()) {
-                                    GreatestWeightIdx[i] = VarVal[i].size() - 1;
-                                    MaxW = weights[i].back();
-                                }
-                            }
-                            SumW += weights[i][GreatestWeightIdx[i]];
-                        }
-                        int breakamo = 0;
-                        for (unsigned int i = 0; i < AMO.size(); ++i) {
-                            Long MaxW = -1;
-                            if (lastval0ok[nbRealVar + i])
-                                MaxW = weights[nbRealVar + i].back();
-                            breakamo = 0;
-                            for (unsigned int j = 0; j < AMO[i].size(); ++j) {
-
-                                if (breakamo == 0 && scope[AMO[i][j].first]->canbe(AMO[i][j].second) && weights[nbRealVar + i][j] > MaxW) {
-                                    GreatestWeightIdx[nbRealVar + i] = j;
-                                    MaxW = weights[nbRealVar + i][j];
-                                }
-                                if (scope[AMO[i][j].first]->assigned() && scope[AMO[i][j].first]->getValue() == AMO[i][j].second) {
-                                    breakamo++;
-                                    GreatestWeightIdx[nbRealVar + i] = j;
-                                    MaxW = weights[nbRealVar + i][j];
-                                }
-                            }
-                            SumW += MaxW;
-                            if (breakamo > 1) {
-                                for (unsigned int j = 0; j < AMO[i].size(); ++j) {
-                                    if (scope[AMO[i][j].first]->assigned() && scope[AMO[i][j].first]->getValue() == AMO[i][j].second)
-                                        conflictWeights[AMO[i][j].first]++;
-                                }
-                                break;
-                            }
-                        }
-                        if (breakamo <= 1) {
-                            assert(SumW < Original_capacity);
-                            //cout << "#" << wcspIndex << "# " << SumW;
-                            for (unsigned int i = 0; i < weights.size(); ++i) {
-                                if (VirtualVar[varorder[i]] == 0) {
-                                    if (SumW - weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]] >= Original_capacity) {
-                                        conflictWeights[varorder[i]]++;
-                                        //cout << " " << SumW << ":" << scope[EDACORDER[i]]->wcspIndex << ":" << conflictWeights[EDACORDER[i]];
-                                    } else
-                                        SumW += -weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]];
-                                } else {
-                                    if (SumW - weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]] >= Original_capacity) {
-                                        for (unsigned int j = 0; j < AMO[VirtualVar[varorder[i]] - 1].size(); ++j) {
-                                            if (scope[AMO[VirtualVar[varorder[i]] - 1][j].first]->assigned())
-                                                conflictWeights[AMO[VirtualVar[varorder[i]] - 1][j].first]++;
-                                        }
-                                    } else
-                                        SumW += -weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]];
-                                }
-                            }
-                            //cout << endl;
-                        }
+                }
+            } else { // find a minimal explanation for a hard conflict (i.e. MaxWeight < capacity). See (Hebrard & Siala, CPAIOR 2017)
+                vector<int> varorder;
+                for (unsigned int i = 0; i < weights.size(); ++i) {
+                    varorder.push_back(i);
+                }
+                sort(varorder.begin(), varorder.end(),
+                        [&](int& x, int& y) {
+                    if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
+                        return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
                     } else {
-                        Constraint::incConflictWeight(1); // Increase ConflictWeight of the constraint or the conflict weight of each assigned variables ?
+                        return InitLargestWeight[x] < InitLargestWeight[y];
+                    }
+                });
+                Long SumW = 0;
+                for (unsigned int i = 0; i < weights.size(); ++i) {
+                    if (scope[i]->cannotbe(VarVal[i][GreatestWeightIdx[i]])) {
+                        Long MaxW = -1;
+                        for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                            if (scope[i]->canbe(VarVal[i][j]) && MaxW < weights[i][j]) {
+                                GreatestWeightIdx[i] = j;
+                                MaxW = weights[i][j];
+                            }
+                        }
+                        if (scope[i]->cannotbe(VarVal[i].back())) {
+                            unsigned int k = 0;
+                            while (k < NotVarVal[i].size() && scope[i]->cannotbe(NotVarVal[i][k])) {
+                                k = k + 1;
+                            }
+                            if (k < NotVarVal[i].size() && MaxW < weights[i].back()) {
+                                GreatestWeightIdx[i] = VarVal[i].size() - 1;
+                                MaxW = weights[i].back();
+                            }
+                        } else if (MaxW < weights[i].back()) {
+                            GreatestWeightIdx[i] = VarVal[i].size() - 1;
+                            MaxW = weights[i].back();
+                        }
+                    }
+                    SumW += weights[i][GreatestWeightIdx[i]];
+                }
+                int breakamo = 0;
+                for (unsigned int i = 0; i < AMO.size(); ++i) {
+                    Long MaxW = -1;
+                    if (lastval0ok[nbRealVar + i])
+                        MaxW = weights[nbRealVar + i].back();
+                    breakamo = 0;
+                    for (unsigned int j = 0; j < AMO[i].size(); ++j) {
+
+                        if (breakamo == 0 && scope[AMO[i][j].first]->canbe(AMO[i][j].second) && weights[nbRealVar + i][j] > MaxW) {
+                            GreatestWeightIdx[nbRealVar + i] = j;
+                            MaxW = weights[nbRealVar + i][j];
+                        }
+                        if (scope[AMO[i][j].first]->assigned() && scope[AMO[i][j].first]->getValue() == AMO[i][j].second) {
+                            breakamo++;
+                            GreatestWeightIdx[nbRealVar + i] = j;
+                            MaxW = weights[nbRealVar + i][j];
+                        }
+                    }
+                    SumW += MaxW;
+                    if (breakamo > 1) {
+                        for (unsigned int j = 0; j < AMO[i].size(); ++j) {
+                            if (scope[AMO[i][j].first]->assigned() && scope[AMO[i][j].first]->getValue() == AMO[i][j].second)
+                                conflictWeights[AMO[i][j].first]++;
+                        }
+                        break;
                     }
                 }
-            } else if (deconnected()) {
-                for (int i = 0; i < from->arity(); i++) {
-                    if (from->getVar(i)->unassigned()) {
-                        int index = getIndex(from->getVar(i));
-                        if (index >= 0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one derived from an n-ary constraint with a scope which does not include parameter constraint from
-                            assert(index < arity_);
-                            conflictWeights[index]++;
+                if (breakamo <= 1) {
+                    assert(SumW < Original_capacity);
+                    for (unsigned int i = 0; i < weights.size(); ++i) {
+                        if (VirtualVar[varorder[i]] == 0) {
+                            if (SumW - weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]] >= Original_capacity) {
+                                conflictWeights[varorder[i]]++;
+                            } else
+                                SumW += -weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]];
+                        } else {
+                            if (SumW - weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]] >= Original_capacity) {
+                                for (unsigned int j = 0; j < AMO[VirtualVar[varorder[i]] - 1].size(); ++j) {
+                                    if (scope[AMO[VirtualVar[varorder[i]] - 1][j].first]->assigned())
+                                        conflictWeights[AMO[VirtualVar[varorder[i]] - 1][j].first]++;
+                                }
+                            } else
+                                SumW += -weights[varorder[i]][GreatestWeightIdx[varorder[i]]] + InitLargestWeight[varorder[i]];
                         }
                     }
                 }
             }
-        } else {
-            Constraint::incConflictWeight(from);
+        } else if (deconnected()) {
+            for (int i = 0; i < from->arity(); i++) {
+                //if (from->getVar(i)->unassigned()) { //TODO: compare if it is better to add this test or not
+                int index = getIndex(from->getVar(i));
+                if (index >= 0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one derived from an n-ary constraint with a scope which does not include parameter constraint from
+                    assert(index < arity_);
+                    conflictWeights[index]++;
+                }
+                //}
+            }
         }
     }
     void resetConflictWeight() override
@@ -2015,6 +2006,7 @@ public:
         if (ToulBar2::verbose >= 7) {
             cout << "assign " << scope[varIndex]->getName() << " in " << *this << endl;
         }
+        wcsp->revise(this);
         if (!fastverifyAMO()) {
             THROWCONTRADICTION;
         } else {
@@ -2118,7 +2110,6 @@ public:
 #endif
                             return;
                         }
-                        wcsp->revise(this);
                         Cost TobeProjected = -lb + assigneddeltas;
                         Cost mindelta;
                         for (int i = 0; i < carity; i++) {
@@ -3044,6 +3035,7 @@ public:
                 }
             }
             if (connected() && !b && !AlwaysSatisfied) {
+                wcsp->revise(this);
                 if (!fastverify()) {
                     THROWCONTRADICTION;
                 } else if (canbeProjectedInExtension()) {
@@ -3077,7 +3069,6 @@ public:
                     if (fastuniversal()) {
                         deconnect();
                         //unqueueKnapsack();
-                        wcsp->revise(this);
                         Cost TobeProjected = -lb + assigneddeltas;
                         Cost mindelta;
                         for (int i = 0; i < carity; i++) {
@@ -3604,7 +3595,6 @@ public:
 
     bool fastverifyAMO()
     {
-        wcsp->revise(this);
         int breakamo;
         for (unsigned int i = 0; i < AMO.size(); ++i) {
             breakamo = 0;
@@ -3623,7 +3613,6 @@ public:
     }
     bool fastverify()
     {
-        wcsp->revise(this);
         if (capacity <= MaxWeight)
             return true;
         else
