@@ -25,15 +25,11 @@
 
 class AllDifferentConstraint : public AbstractNaryConstraint {
     Cost Original_ub; // initial upper bound when creating the constraint
-    StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
-    StoreCost assigneddeltas;
     vector<Long> conflictWeights; // used by weighted degree heuristics
-    vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs to values in the cost function
 
     void projectLB(Cost c)
     {
         if (c > MIN_COST) {
-            lb += c;
             Constraint::projectLB(c);
         }
     }
@@ -44,18 +40,10 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     // Depending of the value and the cost, extend or project the cost on the index value of the variable var
     void ExtOrProJ(int var, Value value, Cost C)
     {
-        int value_idx = scope[var]->toIndex(value);
-        TreeDecomposition* td = wcsp->getTreeDec();
         if (C > MIN_COST) {
-                if (td && scope[var]->canbe(value))
-                    td->addDelta(cluster, scope[var], value, -C);
-                deltaCosts[var][value_idx] += C;
                 assert(scope[var]->getCost(value) >= C);
                 scope[var]->extend(value, C);
         } else if (C < MIN_COST) {
-                if (td && scope[var]->canbe(value))
-                    td->addDelta(cluster, scope[var], value, -C);
-                deltaCosts[var][value_idx] += C;
                 scope[var]->project(value, -C, true);
         }
     }
@@ -64,14 +52,11 @@ public:
     AllDifferentConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
         , Original_ub(wcsp->getUb())
-        , lb(0)
-        , assigneddeltas(0)
     {
         if (arity_in > 0) {
             for (int i = 0; i < arity_in; i++) {
                 conflictWeights.push_back(0);
                 assert((int)scope[i]->getDomainInitSize() == arity_in); //TODO: do not assume identical initial domain size equal to the arity
-                deltaCosts.emplace_back(arity_in, MIN_COST);
             }
             propagate();
         } else {
@@ -129,19 +114,18 @@ public:
     Cost eval(const Tuple& s) override
     {
         // returns the cost of the corresponding assignment s
-        Cost res = -lb + assigneddeltas;
+        Cost res = MIN_COST;
         Cost nbsame = 0;
         vector<bool> alreadyUsed(arity_, false);
         for (int i = 0; i < arity_; i++) {
             assert(s[i] < arity_);
-            res += deltaCosts[i][s[i]];
             if (alreadyUsed[s[i]]) {
                 nbsame++;
             } else {
                 alreadyUsed[s[i]] = true;
             }
         }
-        if (nbsame > 0 || res > wcsp->getUb()) {
+        if (nbsame > 0) {
             if (nbsame > 0 && Original_ub < wcsp->getUb() && 1.0L * Original_ub * nbsame < wcsp->getUb()) {
                 res = Original_ub * nbsame; // VNS-like methods may exploit a relaxation of the constraint
             } else {
@@ -153,12 +137,6 @@ public:
         return res;
     }
 
-    Cost getCost(int index, Value val)
-    {
-        assert(index >= 0 && index < arity_);
-        return deltaCosts[index][scope[index]->toIndex(val)];
-    }
-
     double computeTightness() override { return 0; } // TODO: compute factorial(n)/(n**n)?
 
     // TODO: needed for dominance test by DEE
@@ -166,16 +144,7 @@ public:
 
     Cost getMaxFiniteCost() override ///< \brief returns the maximum finite cost for any valid tuple less than wcsp->getUb()
     {
-        Cost sumdelta = - lb + assigneddeltas;
-        for (int i = 0; i < arity_; i++) {
-            Cost m = *max_element(deltaCosts[i].begin(), deltaCosts[i].end());
-            if (m > MIN_COST)
-                sumdelta += m;
-        }
-        if (CUT(sumdelta, wcsp->getUb()))
-            return MAX_COST;
-        else
-            return sumdelta;
+        return MIN_COST;
     }
 
     // void setInfiniteCost(Cost ub)
@@ -258,7 +227,7 @@ public:
     void projectFromZero(int index) override
     {
         // TODO: incremental cost propagation
-        bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) + getCost(index, getVar(index)->getSupport()) > MIN_COST);
+        bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) > MIN_COST);
         propagate();
         if (revise)
             reviseEACGreedySolution();
@@ -294,19 +263,7 @@ public:
             if (i < arity_ - 1)
                 os << ",";
         }
-        os << ") "
-           << " cost: " << -lb << " + " << assigneddeltas << " + (";
-        for (int i = 0; i < arity_; i++) {
-            for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
-                os << deltaCosts[i][j];
-                if (j < deltaCosts[i].size() - 1)
-                    os << "|";
-            }
-            if (i < arity_ - 1)
-                os << ",";
-        }
-        os << ") ";
-        os << "/" << getTightness();
+        os << ")/" << getTightness();
         if (ToulBar2::weightedDegree) {
             os << "/" << getConflictWeight();
             for (int i = 0; i < arity_; i++) {
