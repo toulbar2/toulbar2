@@ -135,8 +135,8 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
     } else if (globalname == "alldiff") {
         istringstream file("");
         wcsp.postAllDifferentConstraint(scopeIndexs, arity, file);
-    } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "walldiff") {
-        wcsp.postWAllDiff(scopeIndexs, arity, "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : "DAG"), Top);
+    } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "salldiffkp" || globalname == "walldiff") {
+        wcsp.postWAllDiff(scopeIndexs, arity, (globalname == "salldiffkp") ? "hardeq" : "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : ((globalname == "salldiffdp") ? "DAG" : "knapsack")), Top);
     } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
         // soft alldiff
         vector<BoundedObjValue> values;

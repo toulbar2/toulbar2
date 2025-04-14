@@ -317,9 +317,67 @@ public:
         os << " unassigned: " << getNonAssigned() << "/" << unassigned_ << endl;
     }
 
-    //void dump(ostream& os, bool original = true) override //TODO
+    void dump(ostream& os, bool original = true) override
+    {
+        if (original) {
+            os << arity_;
+            for (int i = 0; i < arity_; i++)
+                os << " " << scope[i]->wcspIndex;
+            os << " -1 alldiff" << endl;
+        } else {
+            os << getNonAssigned();
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned())
+                    os << " " << scope[i]->getCurrentVarId();
+            os << " -1 alldiff" << endl;
+        }
+    }
 
-    //void dump_CFN(ostream& os, bool original = true) override //TODO
+    void dump_CFN(ostream& os, bool original = true) override
+    {
+        bool printed = false;
+        os << "\"F_";
+
+        if (original) {
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << "_";
+                os << scope[i]->wcspIndex;
+                printed = true;
+            }
+
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (printed)
+                    os << ",";
+                os << "\"" << name2cfn(scope[i]->getName()) << "\"";
+                printed = true;
+            }
+            os << "],\"type\":\"alldiff\",\"params\":{}";
+        } else {
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << "_";
+                    os << scope[i]->getCurrentVarId();
+                    printed = true;
+                }
+            os << "\":{\"scope\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned()) {
+                    if (printed)
+                        os << ",";
+                    os << "\"" << name2cfn(scope[i]->getName()) << "\"";
+                    printed = true;
+                }
+            os << "],\"type\":\"alldiff\",\"params\":{}";
+        }
+        os << "},\n";
+    }
+
 };
 #endif /*TB2ALLDIFFERENT_HPP_*/
 
