@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage:
-# rungeneratealldiff.sh "options"
+# rungeneratealldiff.sh "options"
 
 nerr=0
 ninstances=100
@@ -22,7 +22,7 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    # tests hungarian-based propagation
+    # tests hungarian-based propagation
     randomfile="alldiff-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
     ./Debug/bin/Linux/toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z -v=-1 > /dev/null
     cp problem.wcsp problemHUN.wcsp
@@ -46,7 +46,7 @@ while (( $n < $nend )) ; do
       nerr=`expr $nerr + 1`
     fi
 
-    # tests knapsack-based propagation
+    # tests knapsack-based propagation
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
