@@ -22,10 +22,13 @@
 #include "tb2wcsp.hpp"
 //#include "tb2vacutils.hpp"
 #include "search/tb2clusters.hpp"
+#include "utils/tb2hungarian.hpp"
+
 
 class AllDifferentConstraint : public AbstractNaryConstraint {
     Cost Original_ub; // initial upper bound when creating the constraint
     vector<Long> conflictWeights; // used by weighted degree heuristics
+    vector<int> storeResults; // store the last optimal assignment
 
     void projectLB(Cost c)
     {
@@ -173,7 +176,6 @@ public:
             }
         }
     }
-
     void propagate() override
     {
         if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
@@ -195,14 +197,72 @@ public:
             }
             if (!b && connected()) {
                 //TODO: compute a lower bound and prune forbidden domain values
-                Cost hungarian = MIN_COST;
-                //TODO: modify unary costs by a set of EPTs using ExtOrProj
-                projectLB(hungarian);
-            }
+				// Determine whether propagation should be skipped
+				bool skipPropagation = false;
+				if (!storeResults.empty()) {
+					skipPropagation = true;
+					for (int var = 0; var < arity_; var++) {
+						if (scope[var]->getCost(scope[var]->toValue(storeResults[var])) > 0) {
+							skipPropagation = false;
+							break;
+						}
+					}
+				}
+							
+				if(!skipPropagation) {
+					// Initialize cost matrix for the Hungarian algorithm and variable support value index
+					vector<vector<Cost>> cost_matrix(arity_, vector<Cost>(arity_));
+					vector<int> supports(arity_, 0);
+					for (int var = 0; var < arity_; var++) { 
+						supports[var] = scope[var]->toIndex(scope[var]->getSupport());
+						for (int index_val = 0; index_val < arity_; index_val++) {
+							if(scope[var]->canbe(scope[var]->toValue(index_val))){
+								cost_matrix[var][index_val] = (scope[var]->getCost(scope[var]->toValue(index_val)));
+							}
+							else {
+								cost_matrix[var][index_val] = MAX_COST;
+							}	
+						}
+					}
+
+					// Use the Hungarian algorithm to solve the Linear Assignment Problem (LAP)
+					Hungarian solver(MAX_COST);
+					Cost TotalCost = solver.compute(cost_matrix, supports);
+
+					// Check if a contradiction was found during the solving process
+					if (TotalCost >= MAX_COST) {
+						THROWCONTRADICTION;
+					}
+					// If the total cost is valid and greater than zero, store the results
+					else if (TotalCost > 0) {
+						storeResults = solver.getAssignment();  // Store the optimal assignment
+						vector<Cost> ReduceCostRow = solver.getReduceCostRow();  // Get row reductions
+						vector<Cost> ReduceCostCol = solver.getReduceCostCol();  // Get column reductions
+						Cost hungarian = TotalCost;  // Save the total cost of the optimal assignment
+
+					    //TODO: modify unary costs by a set of EPTs using ExtOrProj
+						for (int var = 0; var < arity_; var++) {
+								for (int index_val = 0; index_val < arity_; index_val++){
+									if(scope[var]->canbe(scope[var]->toValue(index_val)))
+										ExtOrProJ(var, scope[var]->toValue(index_val), -(ReduceCostCol[index_val] + ReduceCostRow[var]));
+								}
+								if(scope[var]->getCost(scope[var]->getSupport()) > MIN_COST){
+									scope[var]->setSupport(scope[var]->toValue(storeResults[var]));
+									assert(scope[var]->getCost(scope[var]->getSupport()) == MIN_COST);
+							}
+								
+						}
+						// Update lower bound
+						projectLB(hungarian);
+						
+					}
+					
+				}
+			}	
         }
     }
 
-    //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
+   //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
     //bool verify() override;
 
     void increase(int index) override
