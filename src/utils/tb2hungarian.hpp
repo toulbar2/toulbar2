@@ -1,158 +1,160 @@
 #ifndef TB2HUNGARIAN_HPP_
 #define TB2HUNGARIAN_HPP_
 
+
 #include <vector>
 #include <algorithm>
 #include "core/tb2enumvar.hpp"
+#include "core/tb2wcsp.hpp"
+
+using namespace std;
 
 /**
  * @class Hungarian
- * @brief Implements the Hungarian Algorithm (Munkres Algorithm) to solve the assignment problem.
+ * @brief Implements the Hungarian Algorithm for solving the assignment problem.
  *
- * The Hungarian Algorithm provides an optimal solution to the assignment problem,
- * which consists of assigning tasks to agents in such a way that the total cost is minimized.
- * This class handles the transformation of a square cost matrix and applies the algorithm
- * through a well-defined series of steps.
- * Source code in python: https://github.com/bmc/munkres
+ * The Hungarian Algorithm is used to find the optimal assignment that minimizes cost.
+ * It follows a series of steps to transform the cost matrix and find the best matching.
  */
 class Hungarian {
 private:
-    vector<vector<Cost>> C; ///< Input cost matrix.
-    vector<bool> row_covered; ///< Tracks whether each row is currently covered.
-    vector<bool> col_covered; ///< Tracks whether each column is currently covered.
-    vector<vector<int>> marked; ///< Matrix used to mark starred and primed zeros.
-    vector<int> assignment; ///< Stores the column assigned to each row in the optimal solution.
-    vector<vector<int>> path; ///< Used to store the alternating path of starred and primed zeros (Step 5).
-    vector<Cost> reduce_cost_row; ///< Reduction values applied to each row.
-    vector<Cost> reduce_cost_col; ///< Reduction values applied to each column.
-    int n; ///< Size of the square cost matrix.
-    int Z0_r, Z0_c; ///< Coordinates of an uncovered zero used in Step 5.
-    Cost MAX_COST; ///< Value representing disallowed or invalid assignments.
+    vector<bool> row_covered; ///< Boolean vector for row coverage.
+    vector<bool> col_covered; ///< Boolean vector for column coverage.
+    vector<vector<int>> marked; ///< Matrix for marking starred and primed zeros.
+	vector<int> results;
+    vector<vector<int>> path; ///< Path matrix used in step 5.
+    vector<Cost> reduce_cost_row; ///< Row reduction values.
+    vector<Cost> reduce_cost_col; ///< Column reduction values.
+    int n; ///< Matrix size.
+    int Z0_r, Z0_c; ///< Coordinates for the zero used in step 5.
+    Cost total_cost; ///< Total minimal cost.
+	Cost MAX_COST;
 
 public:
     /**
-     * @brief Constructs a Hungarian solver instance with a disallowed cost value.
-     * @param DISALLOWED The cost value used to indicate an invalid or forbidden assignment.
+     * @brief Default constructor.
+     * Initializes an empty Hungarian solver instance.
      */
-    Hungarian(Cost DISALLOWED);
+    Hungarian(Cost limit_val);
 
     /**
-     * @brief Computes the optimal assignment based on the given cost matrix.
-     * @param cost_matrix A square matrix representing the cost of assigning rows to columns.
-     * @param supports A preference or weighting vector that may guide the initial zero marking.
-     * @return The total cost of the optimal assignment, or MAX_COST if no valid assignment is found.
+     * @brief Computes the optimal assignment for a given cost matrix.
+     * @param cost_matrix The matrix representing the cost of assignments.
+     * @return  The cost of the optimal assignment if solution found else the max cost.
      */
-    Cost compute(vector<vector<Cost>> &cost_matrix, vector<int> &supports);
+    Cost compute(EnumeratedVariable** scope, int arity);
+
 
     /**
-     * @brief Retrieves the row reduction values applied during the algorithm.
-     * @return A vector containing the reduction value for each row.
+     * @brief Gets the row reduction values.
+     * @return A vector representing the reduction applied to each row.
      */
     vector<Cost> getReduceCostRow() const;
 
     /**
-     * @brief Retrieves the column reduction values applied during the algorithm.
-     * @return A vector containing the reduction value for each column.
+     * @brief Gets the column reduction values.
+     * @return A vector representing the reduction applied to each column.
      */
     vector<Cost> getReduceCostCol() const;
 
-    /**
-     * @brief Returns the optimal assignments as computed by the algorithm.
-     * @return A vector where each index represents a row and the value is the assigned column.
+  
+      /**
+     * @brief Gets the optimal assignment.
+     *@return A vector of pairs row representing the optimal assignments..
      */
-    vector<int> getAssignment() const;
+	
+	vector<int> getAssignment() const;
 
 private:
     /**
      * @brief Step 1: Row reduction.
-     * Subtracts the minimum value from each row to ensure at least one zero per row.
+     * Subtracts the minimum value in each row from all elements in that row.
      * @return The next step number.
      */
     int step1();
 
     /**
-     * @brief Step 2: Star initial zeros.
-     * Identifies and marks independent zeros as "starred" based on the algorithm's rules.
-     * @param supports A vector of row preferences used to guide zero selection.
+     * @brief Step 2: Star zeros.
+     * Finds and marks zeros following the algorithm's rules.
      * @return The next step number.
      */
-    int step2(vector<int> &supports);
+    int step2(EnumeratedVariable** scope);
 
     /**
-     * @brief Step 3: Cover all columns with starred zeros.
-     * Determines whether the current assignment is complete.
-     * @return The next step number, or a signal to terminate if assignment is optimal.
+     * @brief Step 3: Cover columns with starred zeros.
+     * Determines if an optimal assignment has been found.
+     * @return The next step number or termination.
      */
     int step3();
 
     /**
      * @brief Step 4: Prime uncovered zeros.
-     * Searches for uncovered zeros, primes them, and prepares for path augmentation.
+     * Searches for uncovered zeros and primes them if needed.
      * @return The next step number.
      */
-    int step4();
+    int step4(EnumeratedVariable** scope);
 
     /**
-     * @brief Step 5: Construct an alternating path and update starred zeros.
-     * Builds and processes a sequence of alternating primed and starred zeros.
+     * @brief Step 5: Augment paths and update assignments.
+     * Builds an alternating sequence of primed and starred zeros.
      * @return The next step number.
      */
     int step5();
 
     /**
-     * @brief Step 6: Adjust matrix values.
-     * Modifies the cost matrix to create additional zeros by adjusting uncovered elements.
+     * @brief Step 6: Adjust the matrix values.
+     * Adds the smallest uncovered value to covered rows and subtracts it from uncovered columns.
      * @return The next step number.
      */
-    int step6();
+    int step6(EnumeratedVariable** scope);
 
     /**
      * @brief Finds the smallest uncovered value in the matrix.
-     * @return The smallest uncovered cost value.
+     * @return The smallest uncovered value.
      */
-    Cost find_smallest();
+    Cost find_smallest(EnumeratedVariable** scope);
 
     /**
-     * @brief Finds an uncovered zero in the cost matrix.
-     * @return A pair (row, column) of an uncovered zero location.
+     * @brief Finds an uncovered zero in the matrix.
+     * @return A pair (row, column) of the uncovered zero.
      */
-    pair<int, int> find_a_zero();
+    pair<int, int> find_a_zero(EnumeratedVariable** scope);
 
     /**
-     * @brief Finds a starred zero in the given row.
+     * @brief Finds a starred zero in a given row.
      * @param row The row index.
-     * @return The column index of the starred zero, or -1 if none exists.
+     * @return The column index of the starred zero or -1 if none.
      */
     int find_star_in_row(int row);
 
     /**
-     * @brief Finds a starred zero in the given column.
+     * @brief Finds a starred zero in a given column.
      * @param col The column index.
-     * @return The row index of the starred zero, or -1 if none exists.
+     * @return The row index of the starred zero or -1 if none.
      */
     int find_star_in_col(int col);
 
     /**
-     * @brief Finds a primed zero in the given row.
+     * @brief Finds a primed zero in a given row.
      * @param row The row index.
-     * @return The column index of the primed zero, or -1 if none exists.
+     * @return The column index of the primed zero or -1 if none.
      */
     int find_prime_in_row(int row);
 
     /**
-     * @brief Converts the current path of primed and starred zeros into a new star configuration.
+     * @brief Converts the alternating sequence of starred and primed zeros.
      * @param path The path matrix.
-     * @param count The number of points in the path.
+     * @param count Number of elements in the path.
      */
     void convert_path(vector<vector<int>>& path, int count);
 
     /**
-     * @brief Clears all row and column coverage.
+     * @brief Clears all row and column covers.
      */
     void clear_covers();
 
     /**
-     * @brief Erases all primed zeros from the marked matrix.
+     * @brief Erases all primed zeros in the matrix.
      */
     void erase_primes();
 };

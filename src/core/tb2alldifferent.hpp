@@ -210,24 +210,10 @@ public:
 				}
 							
 				if(!skipPropagation) {
-					// Initialize cost matrix for the Hungarian algorithm and variable support value index
-					vector<vector<Cost>> cost_matrix(arity_, vector<Cost>(arity_));
-					vector<int> supports(arity_, 0);
-					for (int var = 0; var < arity_; var++) { 
-						supports[var] = scope[var]->toIndex(scope[var]->getSupport());
-						for (int index_val = 0; index_val < arity_; index_val++) {
-							if(scope[var]->canbe(scope[var]->toValue(index_val))){
-								cost_matrix[var][index_val] = (scope[var]->getCost(scope[var]->toValue(index_val)));
-							}
-							else {
-								cost_matrix[var][index_val] = MAX_COST;
-							}	
-						}
-					}
 
 					// Use the Hungarian algorithm to solve the Linear Assignment Problem (LAP)
 					Hungarian solver(MAX_COST);
-					Cost TotalCost = solver.compute(cost_matrix, supports);
+					Cost TotalCost = solver.compute(scope, arity_);
 
 					// Check if a contradiction was found during the solving process
 					if (TotalCost >= MAX_COST) {
