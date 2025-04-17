@@ -242,13 +242,13 @@ public:
 
 					    //TODO: modify unary costs by a set of EPTs using ExtOrProj
 						for (int var = 0; var < arity_; var++) {
-								for (int index_val = 0; index_val < arity_; index_val++){
-									if(scope[var]->canbe(scope[var]->toValue(index_val)))
-										ExtOrProJ(var, scope[var]->toValue(index_val), -(ReduceCostCol[index_val] + ReduceCostRow[var]));
-								}
-								if(scope[var]->getCost(scope[var]->getSupport()) > MIN_COST){
-									scope[var]->setSupport(scope[var]->toValue(storeResults[var]));
-									assert(scope[var]->getCost(scope[var]->getSupport()) == MIN_COST);
+							for (int index_val = 0; index_val < arity_; index_val++){
+								if(scope[var]->canbe(scope[var]->toValue(index_val)))
+									ExtOrProJ(var, scope[var]->toValue(index_val), -(ReduceCostCol[index_val] + ReduceCostRow[var]));
+							}
+							if(scope[var]->toIndex(scope[var]->getSupport()) != storeResults[var]){
+								scope[var]->setSupport(scope[var]->toValue(storeResults[var]));
+								assert(scope[var]->getCost(scope[var]->getSupport()) == MIN_COST);
 							}
 								
 						}
