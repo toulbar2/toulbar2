@@ -52,6 +52,7 @@ for i in range(N):
 		ListConstraintsUnaryC.append(randint(1,N))
 	Problem.AddFunction([i], ListConstraintsUnaryC)
 
+Problem.AddAllDifferent(range(N), 'hungarian')
 
 #Problem.Dump('WeightQueen.cfn')
 Problem.CFN.timer(300)
