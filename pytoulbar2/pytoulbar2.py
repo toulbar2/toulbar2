@@ -162,7 +162,7 @@ class CFN:
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
         if (len(iscope) == 0 and isinstance(costs, (int, float))):
@@ -229,7 +229,7 @@ class CFN:
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
         if (len(iscope) == 0):
@@ -293,7 +293,7 @@ class CFN:
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
         sscope = set(iscope)
         if len(iscope) != len(sscope):
@@ -369,7 +369,7 @@ class CFN:
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
 
         if operand == '>=' or operand == '>' or operand == '==':
@@ -411,7 +411,7 @@ class CFN:
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         if (len(iscope) >= 2):
             if (encoding=='binary'):
@@ -455,7 +455,7 @@ class CFN:
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         params = str(list(parameters))[1:-1].replace(',','').replace('\'','')
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
@@ -484,7 +484,7 @@ class CFN:
                 if (v < 0 or v >= len(self.VariableNames)):
                     v = self.AddVariable(vname, [(problem.CFN.wcsp.getValueName(i, value) if len(problem.CFN.wcsp.getValueName(i, value)) > 0 else value) for value in problem.Domain(vname)])
             if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v))
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         multicfn = MultiCFN()
         multicfn.PushCFN(problem, -1)
