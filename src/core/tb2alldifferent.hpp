@@ -246,15 +246,22 @@ public:
 								if(scope[var]->canbe(scope[var]->toValue(index_val)))
 									ExtOrProJ(var, scope[var]->toValue(index_val), -(ReduceCostCol[index_val] + ReduceCostRow[var]));
 							}
-							if(scope[var]->toIndex(scope[var]->getSupport()) != storeResults[var]){
-								scope[var]->setSupport(scope[var]->toValue(storeResults[var]));
-								assert(scope[var]->getCost(scope[var]->getSupport()) == MIN_COST);
+						        //update supports if needed
+							Value val = scope[var]->toValue(storeResults[var]);
+							if(scope[var]->getSupport() != val) {
+                                                    		if (ToulBar2::verbose > 0)
+                                                        		cout << "CHANGE ALLDIFF SUPPORT " << scope[var]->getName() << " from " << scope[var]->getSupport() << " to " << val << endl;
+#ifndef NDEBUG
+								scope[var]->queueEAC1(); // EAC support may have been lost
+#endif
+								scope[var]->setSupport(val);
 							}
-								
+							assert(scope[var]->getCost(scope[var]->getSupport()) == MIN_COST);
 						}
-						// Update lower bound
-						projectLB(hungarian);
 						
+						// Update lower bound
+						projectLB(hungarian);	
+													
 					}
 					
 				}

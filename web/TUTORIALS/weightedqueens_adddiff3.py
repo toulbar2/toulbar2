@@ -38,7 +38,7 @@ for i in range(N):
 		ListConstraintsUnaryC.append(randint(1,N))
 	Problem.AddFunction([i], ListConstraintsUnaryC)
 
-Problem.Dump('WeightQueenAllDiffs.cfn')
+#Problem.Dump('WeightQueenAllDiff3.cfn')
 Problem.CFN.timer(300)
 res = Problem.Solve(showSolutions = 3)
 if res:
