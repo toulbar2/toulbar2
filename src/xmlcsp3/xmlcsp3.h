@@ -561,6 +561,9 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
+       if (std::all_of(vars.cbegin(), vars.cend(), [&problem=this->problem, size=vars.size()](int i) { if (problem->getDomainInitSize(i) != size) cout << i << " " << problem->getDomainInitSize(i) << " " << size << endl; return problem->getDomainInitSize(i) == size; })) {
+            problem->postAllDifferentConstraint(vars, "");
+       } else {
         if (vars.size() <= ALLDIFFMAXSIZEDECOMP) {
             for (unsigned int i = 0; i < vars.size(); i++) {
                 for (unsigned int j = i+1; j < vars.size(); j++) {
@@ -576,6 +579,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else {
             problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
         }
+       }
     }
 
     void buildConstraintAlldifferent(string id, vector<string> &list) {
