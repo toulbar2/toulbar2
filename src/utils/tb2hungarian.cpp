@@ -6,7 +6,7 @@ Hungarian::Hungarian(Cost DISALLOWED) : n(0), Z0_r(0), Z0_c(0), MAX_COST(DISALLO
 
 // Executes the Hungarian algorithm to find the optimal assignment with minimal cost.
 // Returns the total cost of the assignment or MAX_COST if no valid solution exists.
-Cost Hungarian::compute(vector<vector<Cost>> &cost_matrix, vector<int> &supports) {
+Cost Hungarian::compute(vector<vector<Cost>> &cost_matrix, int start_step) {
     C = cost_matrix;
     n = C.size();
 
@@ -18,14 +18,14 @@ Cost Hungarian::compute(vector<vector<Cost>> &cost_matrix, vector<int> &supports
     reduce_cost_col.assign(n, 0);
     assignment.assign(n, 0);
 
-    int step = 2;
+    int step = start_step;
     bool done = false;
 
     // Main step loop of the algorithm
     while (!done) {
         switch (step) {
             case 1: step = step1(); break;            // Step 1: Reduce each row
-            case 2: step = step2(supports); break;    // Step 2: Star initial zeros
+            case 2: step = step2(); break;    	      // Step 2: Star initial zeros
             case 3: step = step3(); break;            // Step 3: Cover columns with stars
             case 4: step = step4(); break;            // Step 4: Prime uncovered zeros
             case 5: step = step5(); break;            // Step 5: Build and augment paths
@@ -86,18 +86,7 @@ int Hungarian::step1() {
 
 // Step 2: Star independent zeros in the matrix.
 // First use the preferred supports vector, then find additional zeros if needed.
-int Hungarian::step2(vector<int> &supports) {
-    int count = 0;
-    for (int i = 0; i < n; i++) {
-        if (col_covered[supports[i]]) continue;
-        count++;
-        marked[i][supports[i]] = 1;
-        row_covered[i] = true;
-        col_covered[supports[i]] = true;
-    }
-
-    if (count == n)
-        return 7;
+int Hungarian::step2() {
 
     for (int i = 0; i < n; i++) {
         if (row_covered[i]) continue;
