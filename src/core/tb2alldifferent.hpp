@@ -191,81 +191,199 @@ public:
             bool b = false;
             for (int i = 0; !b && connected() && i < arity_; i++) { // SdG: do not continue to assign if one assign already done
                 if (connected(i) && scope[i]->assigned()) {
+                   
                     assign(i);
                     b = true;
                 }
             }
             if (!b && connected()) {
-                //TODO: compute a lower bound and prune forbidden domain values
-				// Determine whether propagation should be skipped
-				bool skipPropagation = false;
-				if (!storeResults.empty()) {
-					skipPropagation = true;
-					for (int var = 0; var < arity_; var++) {
-						if (scope[var]->getCost(scope[var]->toValue(storeResults[var])) > 0) {
-							skipPropagation = false;
-							break;
-						}
-					}
-				}
-							
-				if(!skipPropagation) {
-					// Initialize cost matrix for the Hungarian algorithm and variable support value index
-					vector<vector<Cost>> cost_matrix(arity_, vector<Cost>(arity_));
-					vector<int> supports(arity_, 0);
-					for (int var = 0; var < arity_; var++) { 
-						supports[var] = scope[var]->toIndex(scope[var]->getSupport());
-						for (int index_val = 0; index_val < arity_; index_val++) {
-							if(scope[var]->canbe(scope[var]->toValue(index_val))){
-								cost_matrix[var][index_val] = (scope[var]->getCost(scope[var]->toValue(index_val)));
-							}
-							else {
-								cost_matrix[var][index_val] = MAX_COST;
-							}	
-						}
-					}
+                // TODO: compute a lower bound and prune forbidden domain values
+            
+                // Determine whether propagation should be skipped
+                bool skipPropagation = false;
+                if (!storeResults.empty()) {
+                    skipPropagation = true;
+                    for (int var = 0; var < arity_; ++var) {
+                        if (scope[var]->getCost(scope[var]->toValue(storeResults[var])) > 0) {
+                            skipPropagation = false;
+                            break;
+                        }
+                    }
+                }
+            
+                if (!skipPropagation) {
+                    // Initialize total cost and determine assigned/unassigned variables
+		    bool project = false;
+                    int start_step = 2;
+                    int NbNoAssigned = getNonAssigned();
+                    if (NbNoAssigned < arity_){
+                    	    //start_step = 2;
+		            int NbAssigned = arity_ - NbNoAssigned;
+		            
+		            vector<int> AssignedVar;
+		            vector<int> AssignedVal;
+		            vector<int> NoAssignedVar;
+		            AssignedVar.reserve(NbAssigned);
+		            AssignedVal.reserve(NbAssigned);
+		            NoAssignedVar.reserve(NbNoAssigned);
+		            
+		            // Track which values are already assigned
+		            vector<bool> isAssignedValue(arity_, false);
+		            
+		            for (int var = 0; var < arity_; ++var) {
+		                auto* variable = scope[var];
+		            
+		                if (variable->assigned()) {
+		                    AssignedVar.push_back(var);
+		                    int index_val = variable->toIndex(variable->getValue());
 
-					// Use the Hungarian algorithm to solve the Linear Assignment Problem (LAP)
-					Hungarian solver(MAX_COST);
-					Cost TotalCost = solver.compute(cost_matrix, supports);
+		                    AssignedVal.push_back(index_val);
+		                    isAssignedValue[index_val] = true;
+		                } else {
+		                    NoAssignedVar.push_back(var);
+		                }
+		            }
+		            
+		            // Build the list of values that are not currently assigned
+		            vector<int> NoAssignedVal;
+		            NoAssignedVal.reserve(NbNoAssigned);
+		            for (int val = 0; val < arity_; ++val) {
+		                if (!isAssignedValue[val]) {
+		                    NoAssignedVal.push_back(val);
+		                }
+		            }
+		            
+		            // Initialize the cost matrix  for the Hungarian algorithm
+		            vector<vector<Cost>> cost_matrix(NbNoAssigned, vector<Cost>(NbNoAssigned, 0));            
+		            for (int i = 0; i < NbNoAssigned; ++i) {
+		                int varIndex = NoAssignedVar[i];
+		                auto* variable = scope[varIndex];
+		                assert(variable != nullptr); // Safety check
+		               
+		            
+		                for (int j = 0; j < NbNoAssigned; ++j) {
+		                    int valIndex = NoAssignedVal[j];
+		                    Value val = variable->toValue(valIndex);
+		            
+		                    cost_matrix[i][j] = variable->canbe(val) ? variable->getCost(val) : MAX_COST;
+		                }
+		            }
+		            
+		            // Solve the Linear Assignment Problem (LAP) using the Hungarian algorithm
+		            Hungarian solver(MAX_COST);
+		            Cost TotalCost = solver.compute(cost_matrix, start_step );
+		            
+		            if (TotalCost >= MAX_COST) {
+		                THROWCONTRADICTION;
+		            } else if (TotalCost >= 0) {
+		            	project = true;
+		                vector<int> Results = solver.getAssignment();  // Get the optimal assignment
+		                vector<Cost> ReduceCostRow = solver.getReduceCostRow();
+		                vector<Cost> ReduceCostCol = solver.getReduceCostCol();
+		                Cost hungarian = TotalCost;
+		            
+		                // Ensure storeResults is properly sized before assignment
+		                storeResults.resize(arity_);
+		            
+		                // Assign values from the result of the Hungarian algorithm
+		                for (int i = 0; i < NbNoAssigned; ++i) {
+		                    //assert(Results[i] < NoAssignedVal.size());
+		                    storeResults[NoAssignedVar[i]] = NoAssignedVal[Results[i]];
+		                }
+		            
+		                // Add previously assigned values back into storeResults
+		                for (int i = 0; i < NbAssigned; ++i) {
+		                    storeResults[AssignedVar[i]] = AssignedVal[i];
+		                }
+		                
+		                // Update the lower bound with the Hungarian algorithm's total cost
+		                projectLB(hungarian);
+		            
+		                // Modify unary costs using ExtOrProJ, for unassigned variables only
+		                for (int i = 0; i < NbNoAssigned; ++i) {
+		                    int var = NoAssignedVar[i];
+		                    auto* variable = scope[var];
+		            
+		                    for (int j = 0; j < NbNoAssigned; ++j) {
+		                        int index_val = NoAssignedVal[j];
+		                        Value val = variable->toValue(index_val);
+		            
+		                        if (variable->canbe(val)) {
+		                            // Adjust the cost using reduced row and column costs
+		                            ExtOrProJ(var, val, -(ReduceCostRow[i] + ReduceCostCol[j]));
+		                        }
+		                    }
 
-					// Check if a contradiction was found during the solving process
-					if (TotalCost >= MAX_COST) {
-						THROWCONTRADICTION;
-					}
-					// If the total cost is valid and greater than zero, store the results
-					else if (TotalCost > 0) {
-						storeResults = solver.getAssignment();  // Store the optimal assignment
-						vector<Cost> ReduceCostRow = solver.getReduceCostRow();  // Get row reductions
-						vector<Cost> ReduceCostCol = solver.getReduceCostCol();  // Get column reductions
-						Cost hungarian = TotalCost;  // Save the total cost of the optimal assignment
-
-					    //TODO: modify unary costs by a set of EPTs using ExtOrProj
-						for (int var = 0; var < arity_; var++) {
-							for (int index_val = 0; index_val < arity_; index_val++){
-								if(scope[var]->canbe(scope[var]->toValue(index_val)))
-									ExtOrProJ(var, scope[var]->toValue(index_val), -(ReduceCostCol[index_val] + ReduceCostRow[var]));
-							}
-						        //update supports if needed
-							Value val = scope[var]->toValue(storeResults[var]);
-							if(scope[var]->getSupport() != val) {
-                                                    		if (ToulBar2::verbose > 0)
-                                                        		cout << "CHANGE ALLDIFF SUPPORT " << scope[var]->getName() << " from " << scope[var]->getSupport() << " to " << val << endl;
+		                }
+		            }
+		        }
+		        else{
+		           //start_step = 1;
+		           // Initialize the cost matrix and supports for the Hungarian algorithm
+		            vector<vector<Cost>> cost_matrix(arity_, vector<Cost>(arity_, 0));
+		            
+		            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+		                auto* variable = scope[varIndex];
+		            
+		                for (int valIndex = 0; valIndex < arity_; ++valIndex) {
+		                    Value val = variable->toValue(valIndex);
+		            
+		                    cost_matrix[varIndex][valIndex] = variable->canbe(val) ? variable->getCost(val) : MAX_COST;
+		                }
+		            }
+		            
+		            // Solve the Linear Assignment Problem (LAP) using the Hungarian algorithm
+		            Hungarian solver(MAX_COST);
+		            Cost TotalCost = solver.compute(cost_matrix, start_step );
+		            
+		            if (TotalCost >= MAX_COST) {
+		                THROWCONTRADICTION;
+		            } else if (TotalCost >= 0) {
+		            	project = true;
+		                storeResults = solver.getAssignment();  // Get the optimal assignment
+		                vector<Cost> ReduceCostRow = solver.getReduceCostRow();
+		                vector<Cost> ReduceCostCol = solver.getReduceCostCol();
+		                Cost hungarian = TotalCost;
+		                
+		                // Update the lower bound with the Hungarian algorithm's total cost
+		                projectLB(hungarian);
+		            
+		                // Modify unary costs using ExtOrProJ
+		                for (int var = 0; var < arity_; ++var) {
+		                    auto* variable = scope[var];
+		            
+		                    for (int index_val = 0; index_val < arity_; ++index_val) {
+		                        Value val = variable->toValue(index_val);
+		            
+		                        if (variable->canbe(val)) {
+		                            ExtOrProJ(var, val, -(ReduceCostRow[var] + ReduceCostCol[index_val]));
+		                        }
+		                    }
+		            
+		                }
+		            }	
+		        }
+		        // Update support if needed
+			if(project){
+				for (int var = 0; var < arity_; ++var) {
+				    auto* variable = scope[var];		            
+				    
+				    Value opt_val = variable->toValue(storeResults[var]);
+				    if (variable->getSupport() != opt_val)  {
+				  	  if (ToulBar2::verbose > 0)
+						cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << opt_val << endl;
 #ifndef NDEBUG
-								scope[var]->queueEAC1(); // EAC support may have been lost
+				        variable->queueEAC1(); // EAC support may have been lost
 #endif
-								scope[var]->setSupport(val);
-							}
-							assert(scope[var]->getCost(scope[var]->getSupport()) == MIN_COST);
-						}
-						
-						// Update lower bound
-						projectLB(hungarian);	
-													
-					}
-					
-				}
-			}	
+				        variable->setSupport(opt_val);
+				        assert(variable->getCost(variable->getSupport()) == MIN_COST);
+				    }
+			    }
+		       }
+		}
+	   	
+            }
+                    
         }
     }
 
@@ -411,4 +529,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-
