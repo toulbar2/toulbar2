@@ -204,7 +204,8 @@ public:
                 if (!storeResults.empty()) {
                     skipPropagation = true;
                     for (int var = 0; var < arity_; ++var) {
-                        if (scope[var]->getCost(scope[var]->toValue(storeResults[var])) > 0) {
+			auto* variable = scope[var];
+			if (variable->cannotbe(variable->toValue(storeResults[var])) || variable->getCost(scope[var]->toValue(storeResults[var])) > MIN_COST) {
                             skipPropagation = false;
                             break;
                         }
