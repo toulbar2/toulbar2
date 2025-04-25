@@ -42,7 +42,7 @@ public:
      * @param supports A preference or weighting vector that may guide the initial zero marking.
      * @return The total cost of the optimal assignment, or MAX_COST if no valid assignment is found.
      */
-    Cost compute(vector<vector<Cost>> &cost_matrix, vector<int> &supports);
+    Cost compute(vector<vector<Cost>> &cost_matrix, int start_step);
 
     /**
      * @brief Retrieves the row reduction values applied during the algorithm.
@@ -76,7 +76,7 @@ private:
      * @param supports A vector of row preferences used to guide zero selection.
      * @return The next step number.
      */
-    int step2(vector<int> &supports);
+    int step2();
 
     /**
      * @brief Step 3: Cover all columns with starred zeros.
@@ -156,6 +156,5 @@ private:
      */
     void erase_primes();
 };
-
 
 #endif // HUNGARIAN_HPP_
