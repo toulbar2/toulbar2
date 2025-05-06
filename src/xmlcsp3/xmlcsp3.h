@@ -115,6 +115,26 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     // bug correction: vector<vector<int> > &tuples generates a wrong solution on BeerJugs-table-01_c23.xml in MiniCOP23
     void buildConstraintExtension(vector<int> vars, vector<vector<int> > tuples, bool isSupport, bool hasStar) {
+        if(hasStar && isSupport && tuples.size() > 0 && vars.size() >= 4) {
+            string extravarname = IMPLICIT_VAR_TAG + to_string("tuples") + to_string(problem->numberOfVariables());
+            int extravar = problem->makeEnumeratedVariable(extravarname, 0, tuples.size() - 1);
+            mapping[extravarname] = extravar;
+            for (unsigned int t = 0; t < tuples.size(); t++) {
+                for (unsigned int i = 0; i < vars.size(); i++) {
+                    if (tuples[t][i] == STAR) {
+                        continue;
+                    }
+                    vector<Cost> costs(problem->getDomainInitSize(vars[i]) * tuples.size(), MIN_COST);
+                    for (unsigned int v = 0; v < problem->getDomainInitSize(vars[i]); v++) {
+                        if (v != problem->toIndex(vars[i], tuples[t][i])) {
+                            costs[v * tuples.size() + t] = MAX_COST_XML3;
+                        }
+                    }
+                    problem->postBinaryConstraint(vars[i], extravar, costs);
+                }
+            }
+            return;
+        }
         if(hasStar) {
             vector<vector<int> > newtuples;
             for(auto& tuple:tuples) {

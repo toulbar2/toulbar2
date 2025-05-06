@@ -38,10 +38,10 @@ namespace XCSP3Core {
     } ConstraintType;
 
     typedef enum order {
-        LE, LT, GE, GT, IN, EQ, NE
+        LE, LT, GE, GT, IN, EQ, NE, NOTIN
     } OrderType;
     typedef enum operantype {
-        INTEGER, INTERVAL, VARIABLE
+        INTEGER, INTERVAL, VARIABLE, SET
     } OperandType;
 
 
