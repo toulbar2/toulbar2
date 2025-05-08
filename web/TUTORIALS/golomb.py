@@ -25,7 +25,7 @@ for i in range(N):
                         Constraint.append(top)
         Problem.AddFunction(['X' + str(i), 'X' + str(j), 'X' + str(j) + '-X' + str(i)], Constraint)
 
-Problem.AddAllDifferent(['X' + str(j) + '-X' + str(i) for i in range(N) for j in range(i+1,N)])
+Problem.AddAllDifferent(['X' + str(j) + '-X' + str(i) for i in range(N) for j in range(i+1,N)], encoding='hungarian')
 
 Problem.AddFunction(['X' + str(N-1)], range(N**2))
 
