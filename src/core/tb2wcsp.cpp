@@ -3487,7 +3487,7 @@ int WCSP::postUnary(int xIndex, Value* d, int dsize, Cost penalty)
 }
 
 /// \brief add unary floating point costs approximated to the current ToulBar2::decimalPoint precision to enumerated variable \e xIndex
-/// \note  The ToulBar2::decimapPoint precision must have been set previously for the rest of the CFN existence.
+/// \note  The ToulBar2::decimalPoint precision must have been set previously for the rest of the CFN existence.
 void WCSP::postUnaryConstraint(int xIndex, vector<Double>& dcosts, bool incremental)
 {
     assert(vars[xIndex]->enumerated());
