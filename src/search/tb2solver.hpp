@@ -414,7 +414,7 @@ protected:
     Cost globalUpperBound;
     int initialDepth;
     void initGap(Cost newlb, Cost newub);
-    void showGap(Cost newlb, Cost newub);
+    void showGap(Cost newlb, Cost newub, bool always = false);
     Double getDDualBound() const { return wcsp->Cost2ADCost(globalLowerBound); }
 
     Cost prevDivSolutionCost;

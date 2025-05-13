@@ -1454,16 +1454,16 @@ void Solver::initGap(Cost newLb, Cost newUb)
     initialDepth = Store::getDepth();
 }
 
-void Solver::showGap(Cost newLb, Cost newUb)
+void Solver::showGap(Cost newLb, Cost newUb, bool always)
 {
     if (newLb > newUb)
         newLb = newUb;
-    if (newUb > initialLowerBound && Store::getDepth() == initialDepth) {
+    if (always || (newUb > initialLowerBound && Store::getDepth() == initialDepth)) {
         int oldgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
         globalLowerBound = MAX(globalLowerBound, newLb);
         globalUpperBound = MIN(globalUpperBound, newUb);
         int newgap = (int)(100. - 100. * (globalLowerBound - initialLowerBound) / (globalUpperBound - initialLowerBound));
-        if (ToulBar2::verbose >= 0 && newgap < oldgap) {
+        if (ToulBar2::verbose >= 0 && (always || newgap < oldgap)) {
             Double Dglb = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalLowerBound) : wcsp->Cost2ADCost(globalUpperBound));
             Double Dgub = (ToulBar2::costMultiplier >= 0 ? wcsp->Cost2ADCost(globalUpperBound) : wcsp->Cost2ADCost(globalLowerBound));
             std::ios_base::fmtflags f(cout.flags());
@@ -3751,12 +3751,14 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                 cout << solType[isLimited] << cost << " log10like: " << ToulBar2::haplotype->Cost2LogProb(cost) / Log(10.) << " loglike: " << ToulBar2::haplotype->Cost2LogProb(cost) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else if (!ToulBar2::bayesian) {
                 if (!isComplete) {
+                    showGap((Store::getDepth()==0)?max(wcsp->getLb(),globalLowerBound):globalLowerBound, wcsp->getUb(), true);
                     cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << ((Store::getDepth()==0)?((ToulBar2::costMultiplier < 0)?min(wcsp->getDDualBound(),getDDualBound()):max(wcsp->getDDualBound(),getDDualBound())):getDDualBound()) << std::setprecision(DECIMAL_POINT) << endl;
                 }
                 cout << solType[isLimited] << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(cost) << std::setprecision(DECIMAL_POINT) << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
             } else {
                 if (!isComplete) {
                     Cost dualCost = ((Store::getDepth()==0)?(max(wcsp->getLb(),globalLowerBound)):globalLowerBound);
+                    showGap(dualCost, wcsp->getUb(), true);
                     cout << "Dual bound: " << dualCost << " energy: " << -(wcsp->Cost2LogProb(dualCost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(dualCost) * Exp(ToulBar2::markov_log) << std::fixed << endl;
                 }
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
@@ -3771,6 +3773,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
             } else if (ToulBar2::verbose >= 0 && ToulBar2::uai && !ToulBar2::isZ) {
                 if (!isComplete) {
                     Cost dualCost = ((Store::getDepth()==0)?(max(wcsp->getLb(),globalLowerBound)):globalLowerBound);
+                    showGap(dualCost, wcsp->getUb(), true);
                     cout << "Dual bound: " << dualCost << " energy: " << -(wcsp->Cost2LogProb(dualCost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(dualCost) * Exp(ToulBar2::markov_log) << std::fixed << endl;
                 }
                 if (isLimited == 2)
@@ -3790,9 +3793,11 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
         if (ToulBar2::verbose >= 0) {
             if (!isComplete && !ToulBar2::haplotype) {
                 if (!ToulBar2::bayesian) {
+                    showGap((Store::getDepth()==0)?max(wcsp->getLb(),globalLowerBound):globalLowerBound, wcsp->getUb(), true);
                     cout << "Dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << ((Store::getDepth()==0)?((ToulBar2::costMultiplier < 0)?min(wcsp->getDDualBound(),getDDualBound()):max(wcsp->getDDualBound(),getDDualBound())):getDDualBound()) << std::setprecision(DECIMAL_POINT) << endl;
                 } else {
                     Cost dualCost = ((Store::getDepth()==0)?(max(wcsp->getLb(),globalLowerBound)):globalLowerBound);
+                    showGap(dualCost, wcsp->getUb(), true);
                     cout << "Dual bound: " << dualCost << " energy: " << -(wcsp->Cost2LogProb(dualCost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(dualCost) * Exp(ToulBar2::markov_log) << std::fixed << endl;
                 }
             }
