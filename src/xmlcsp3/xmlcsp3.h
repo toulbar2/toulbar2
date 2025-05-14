@@ -154,19 +154,25 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             string extravarname = IMPLICIT_VAR_TAG + to_string("tuples") + to_string(problem->numberOfVariables());
             int extravar = problem->makeEnumeratedVariable(extravarname, 0, tuples.size() - 1);
             mapping[extravarname] = extravar;
+            vector<vector<Cost>> allcosts;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                vector<Cost> costs(problem->getDomainInitSize(vars[i]) * tuples.size(), MIN_COST);
+                allcosts.push_back(costs);
+            }
             for (unsigned int t = 0; t < tuples.size(); t++) {
                 for (unsigned int i = 0; i < vars.size(); i++) {
                     if (tuples[t][i] == STAR) {
                         continue;
                     }
-                    vector<Cost> costs(problem->getDomainInitSize(vars[i]) * tuples.size(), MIN_COST);
                     for (unsigned int v = 0; v < problem->getDomainInitSize(vars[i]); v++) {
                         if (v != problem->toIndex(vars[i], tuples[t][i])) {
-                            costs[v * tuples.size() + t] = MAX_COST_XML3;
+                            allcosts[i][v * tuples.size() + t] = MAX_COST_XML3;
                         }
                     }
-                    problem->postBinaryConstraint(vars[i], extravar, costs);
                 }
+            }
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                problem->postBinaryConstraint(vars[i], extravar, allcosts[i]);
             }
             return;
         }
