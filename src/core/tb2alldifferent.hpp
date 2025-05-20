@@ -91,22 +91,20 @@ public:
             NbValues = (int)scope[0]->getDomainInitSize() ;
 			
             assert( NbValues >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
-			deltaCosts.emplace_back(NbValues, MIN_COST);
-            
-			int DomainSize;
+	    deltaCosts.emplace_back(NbValues, MIN_COST);
+	    int DomainSize;
             for (int i = 1; i < arity_in; i++) {
                 conflictWeights.push_back(0);
-				DomainSize = (int)scope[i]->getDomainInitSize();
+		DomainSize = (int)scope[i]->getDomainInitSize();
                 assert(DomainSize >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
-				deltaCosts.emplace_back(DomainSize, MIN_COST);
-				if (DomainSize> NbValues) NbValues = DomainSize;
+		deltaCosts.emplace_back(DomainSize, MIN_COST);
+		if (DomainSize> NbValues) NbValues = DomainSize;
             }
-			if(NbValues < arity_in) THROWCONTRADICTION;
-			
-             storeResults = vector<StoreInt>(arity_in, StoreInt(-1));
-             NoAssignedVar = vector<int>(arity_in, -1);
-             AssignedVar= vector<int>(arity_in, -1);
-             AssignedVal= vector<int>(arity_in, -1);
+	    if(NbValues < arity_in) THROWCONTRADICTION;	
+            storeResults = vector<StoreInt>(arity_in, StoreInt(-1));
+            NoAssignedVar = vector<int>(arity_in, -1);
+            AssignedVar= vector<int>(arity_in, -1);
+            AssignedVal= vector<int>(arity_in, -1);
             propagate();
         } else {
             deconnect();
@@ -541,12 +539,8 @@ public:
         }
     }
 
-
-    //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
-    //bool verify() override;
-
-   //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
-    //bool verify() override;
+  //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
+ //bool verify() override;
  bool verify() override
     {
         if (!isResults) {
@@ -604,8 +598,6 @@ public:
 
     //bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL; // TODO
 
-    //bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL; // TODO
-
     bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
     {
         bool result = checkEACGreedySolution(index, supportValue);
@@ -623,7 +615,6 @@ public:
     }
 	
 	
-
     void print(ostream& os) override
     {
         os << this << " alldifferent(";
