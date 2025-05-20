@@ -86,27 +86,27 @@ public:
         , assigneddeltas(0)
 		, isResults(false)
     {
-        if (arity_in > 0) {
-            conflictWeights.push_back(0);
-            NbValues = (int)scope[0]->getDomainInitSize() ;
-			
-            assert( NbValues >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
-	    deltaCosts.emplace_back(NbValues, MIN_COST);
-	    int DomainSize;
-            for (int i = 1; i < arity_in; i++) {
-                conflictWeights.push_back(0);
-		DomainSize = (int)scope[i]->getDomainInitSize();
-                assert(DomainSize >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
-		deltaCosts.emplace_back(DomainSize, MIN_COST);
-		if (DomainSize> NbValues) NbValues = DomainSize;
-            }
-	    if(NbValues < arity_in) THROWCONTRADICTION;	
-            storeResults = vector<StoreInt>(arity_in, StoreInt(-1));
-            NoAssignedVar = vector<int>(arity_in, -1);
-            AssignedVar= vector<int>(arity_in, -1);
-            AssignedVal= vector<int>(arity_in, -1);
-            propagate();
-        } else {
+    	if (arity_in > 0) {
+    		conflictWeights.push_back(0);
+    		NbValues = (int)scope[0]->getDomainInitSize() ;
+
+    		assert( NbValues >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
+    		deltaCosts.emplace_back(NbValues, MIN_COST);
+    		int DomainSize;
+    		for (int i = 1; i < arity_in; i++) {
+    			conflictWeights.push_back(0);
+    			DomainSize = (int)scope[i]->getDomainInitSize();
+    			assert(DomainSize >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
+    			deltaCosts.emplace_back(DomainSize, MIN_COST);
+    			if (DomainSize> NbValues) NbValues = DomainSize;
+    		}
+    		if(NbValues < arity_in) THROWCONTRADICTION;
+    		storeResults = vector<StoreInt>(arity_in, StoreInt(-1));
+    		NoAssignedVar = vector<int>(arity_in, -1);
+    		AssignedVar= vector<int>(arity_in, -1);
+    		AssignedVal= vector<int>(arity_in, -1);
+    		propagate();
+    	} else {
             deconnect();
         }
     }
@@ -163,9 +163,9 @@ public:
         // returns the cost of the corresponding assignment s
         Cost res = -lb + assigneddeltas;
         Cost nbsame = 0;
-        vector<bool> alreadyUsed(arity_, false);
+        vector<bool> alreadyUsed(NbValues, false);
         for (int i = 0; i < arity_; i++) {
-            assert(s[i] < arity_);
+            assert(s[i] < NbValues);
             res += deltaCosts[i][s[i]];
             if (alreadyUsed[s[i]]) {
                 nbsame++;
@@ -546,7 +546,7 @@ public:
         if (!isResults) {
             return false;
         }
-        vector<bool> alreadyUsed(arity_, false);
+        vector<bool> alreadyUsed(NbValues, false);
         for (int i = 0; i < arity_; i++) {
             if (alreadyUsed[storeResults[i]] || scope[i]->cannotbe(scope[i]->toValue(storeResults[i])) || scope[i]->getCost(scope[i]->toValue(storeResults[i])) > MIN_COST) {
                 if (alreadyUsed[storeResults[i]]) {
@@ -650,7 +650,23 @@ public:
         os << " unassigned: " << getNonAssigned() << "/" << unassigned_ << endl;
     }
 
-void dump_CFN(ostream& os, bool original = true) override
+    void dump(ostream& os, bool original = true) override
+    {
+        if (original) {
+            os << arity_;
+            for (int i = 0; i < arity_; i++)
+                os << " " << scope[i]->wcspIndex;
+            os << " -1 alldiff" << endl;
+        } else {
+            os << getNonAssigned();
+            for (int i = 0; i < arity_; i++)
+                if (scope[i]->unassigned())
+                    os << " " << scope[i]->getCurrentVarId();
+            os << " -1 alldiff" << endl;
+        }
+    }
+
+    void dump_CFN(ostream& os, bool original = true) override
     {
         bool printed = false;
         os << "\"F_";

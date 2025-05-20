@@ -49,7 +49,7 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_verif
     rm -f sol
     randomfile="salldiffkp-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
-    ./Debug/bin/Linux/toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z > /dev/null
+    ./Debug/bin/Linux/toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z -v=-1 > /dev/null
     cp problem.wcsp problemKP.wcsp
     ./Debug/bin/Linux/toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub2=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
@@ -80,7 +80,7 @@ while (( $n < $nend )) ; do
   tctr=`expr $tctr + 5`  
   bctr=`expr $bctr + 10`  
   n=`expr $n + 1`
-  d=$n
+  d=`expr $d + 2`
 done
 
 rm -f problem.wcsp
@@ -89,6 +89,7 @@ rm -f problemKP.wcsp
 rm -f toulbar2_opt
 rm -f toolbar_opt
 rm -f toolbar_sol
+rm -f toulbar2_verif
 rm -f sol
 rm -f problem.dot
 rm -f problem.degree
