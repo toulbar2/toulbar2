@@ -32,13 +32,19 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<Long> conflictWeights; // used by weighted degree heuristics
     vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs to values in the cost function
     vector<StoreInt> storeResults; // store the last optimal assignment
-    // vector<StoreCost> StoreU;
     StoreInt isResults;
     int *rowsol = nullptr;
     Cost* ReduceCostRow = nullptr;
     Cost* ReduceCostCol= nullptr;
     Cost * cost_matrix = nullptr;
     int NbValues;
+    vector<int> AssignedVar;
+    vector<int> AssignedVal;
+    vector<int> NoAssignedVar;
+    int NbAssigned;
+    int NbNoAssigned;
+    vector<bool> isAssignedValue;
+    vector<bool> varAlreadyProcessed;
 
     void projectLB(Cost c)
     {
@@ -72,7 +78,6 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     }
 	
 
-
 public:
     AllDifferentConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
         : AbstractNaryConstraint(wcsp, scope_in, arity_in)
@@ -99,6 +104,9 @@ public:
 			if(NbValues < arity_in) THROWCONTRADICTION;
 			
              storeResults = vector<StoreInt>(arity_in, StoreInt(-1));
+             NoAssignedVar = vector<int>(arity_in, -1);
+             AssignedVar= vector<int>(arity_in, -1);
+             AssignedVal= vector<int>(arity_in, -1);
             propagate();
         } else {
             deconnect();
@@ -230,6 +238,89 @@ public:
             }
         }
     }
+  bool filtreAndPropagate()
+  {  
+        isAssignedValue = vector<bool>(NbValues, false);
+        varAlreadyProcessed = vector<bool>(arity_, false);
+        AssignedVar.clear();
+        AssignedVar.reserve(arity_);       
+        AssignedVal.clear();
+        AssignedVal.reserve(arity_);
+        NoAssignedVar.clear();
+        NoAssignedVar.reserve(NbNoAssigned);
+
+        for (int var = 0; var < arity_; ++var) {
+            auto* variable = scope[var];
+            if (!variable->assigned()) {
+                NoAssignedVar.push_back(var);
+            } else {
+                int index_val = variable->toIndex(variable->getValue());
+                isAssignedValue[index_val] = true;
+                AssignedVar.push_back(var);
+                AssignedVal.push_back(index_val);
+            }
+        }
+    
+        NbAssigned = AssignedVar.size();
+        bool VarAssigned;
+        bool NaryPro = false;
+    
+        do {
+            VarAssigned = false;
+            vector<int> newlyAssignedVars;
+    
+            for (int val = 0; val < NbValues; ++val) {
+                if (!isAssignedValue[val]) continue;
+    
+                for (int varIndex : NoAssignedVar) {
+                    if (varAlreadyProcessed[varIndex]) continue;
+    
+                    auto* variable = scope[varIndex];
+                    Value value = variable->toValue(val);
+    
+                    if (variable->canbe(value)) {
+                        variable->remove(value);
+                        if (variable->assigned()) {
+                            newlyAssignedVars.push_back(varIndex);
+                            varAlreadyProcessed[varIndex] = true;
+                        }
+                    }
+                }
+            }
+    
+            for (int varIndex : newlyAssignedVars) {
+                if (connected(varIndex)) {
+                    deconnect(varIndex);
+                    NbNoAssigned--;
+    
+                    if (NbNoAssigned <= 2) {
+                        deconnect();
+                        projectNary();
+                        NaryPro = true;
+                        break;
+                    } else {
+                        VarAssigned = true;
+                        auto* variable = scope[varIndex];
+                        int valIndex = variable->toIndex(variable->getValue());
+                        isAssignedValue[valIndex] = true;
+                    }
+                }
+            }
+    
+            if (VarAssigned && !NaryPro) {
+                vector<int> updatedNoAssigned;
+                for (int varIndex : NoAssignedVar) {
+                    if (!scope[varIndex]->assigned()) {
+                        updatedNoAssigned.push_back(varIndex);
+                    }
+                }
+                NoAssignedVar.swap(updatedNoAssigned);
+            }
+    
+        } while (VarAssigned);
+        
+        return (!NaryPro) ;
+   }
 
     void propagate() override
     {
@@ -266,97 +357,19 @@ public:
 		}
   		if (!skipPropagation) {
                     // Initialize total cost and determine assigned/unassigned variables
-                    int NbNoAssigned = getNonAssigned();
+                    NbNoAssigned = getNonAssigned();
                     
                     if (NbNoAssigned < arity_) {
-                        vector<bool> isAssignedValue(NbValues, false);
-                        vector<int> NoAssignedVar;
-                        vector<bool> varAlreadyProcessed(arity_, false);
-                        vector<int> AssignedVar;
-                        vector<int> AssignedVal;
-                    
-                        AssignedVar.reserve(arity_);
-                        AssignedVal.reserve(arity_);
-                    
+               
+                        if (filtreAndPropagate()) {
                         
-                        for (int var = 0; var < arity_; ++var) {
-                            auto* variable = scope[var];
-                            if (!variable->assigned()) {
-                                NoAssignedVar.push_back(var);
-                            } else {
-                                int index_val = variable->toIndex(variable->getValue());
-                                isAssignedValue[index_val] = true;
-                                AssignedVar.push_back(var);
-                                AssignedVal.push_back(index_val);
-                            }
-                        }
-                    
-                        int NbAssigned = AssignedVar.size();
-                        bool VarAssigned;
-                        bool NaryPro = false;
-                    
-                        do {
-                            VarAssigned = false;
-                            vector<int> newlyAssignedVars;
-                    
-                            for (int val = 0; val < NbValues; ++val) {
-                                if (!isAssignedValue[val]) continue;
-                    
-                                for (int varIndex : NoAssignedVar) {
-                                    if (varAlreadyProcessed[varIndex]) continue;
-                    
-                                    auto* variable = scope[varIndex];
-                                    Value value = variable->toValue(val);
-                    
-                                    if (variable->canbe(value)) {
-                                        variable->remove(value);
-                                        if (variable->assigned()) {
-                                            newlyAssignedVars.push_back(varIndex);
-                                            varAlreadyProcessed[varIndex] = true;
-                                        }
-                                    }
-                                }
-                            }
-                    
-                            for (int varIndex : newlyAssignedVars) {
-                                if (connected(varIndex)) {
-                                    deconnect(varIndex);
-                                    NbNoAssigned--;
-                    
-                                    if (NbNoAssigned <= 2) {
-                                        deconnect();
-                                        projectNary();
-                                        NaryPro = true;
-                                        break;
-                                    } else {
-                                        VarAssigned = true;
-                                        auto* variable = scope[varIndex];
-                                        int valIndex = variable->toIndex(variable->getValue());
-                                        isAssignedValue[valIndex] = true;
-                                    }
-                                }
-                            }
-                    
-                            if (VarAssigned && !NaryPro) {
-                                vector<int> updatedNoAssigned;
-                                for (int varIndex : NoAssignedVar) {
-                                    if (!scope[varIndex]->assigned()) {
-                                        updatedNoAssigned.push_back(varIndex);
-                                    }
-                                }
-                                NoAssignedVar.swap(updatedNoAssigned);
-                            }
-                    
-                        } while (VarAssigned);
-                    
-                       
-                        if (!NaryPro) {
                             vector<int> NoAssignedVal;
-                            for (int val = 0; val < NbValues; ++val) {
-                                if (!isAssignedValue[val]) {
-                                    NoAssignedVal.push_back(val);
-                                }
-                            }
+			    for (int val = 0; val < NbValues; ++val) {
+				if (!isAssignedValue[val]) {
+				    NoAssignedVal.push_back(val);
+				}
+			    }
+                            
                             int NbNoAssignedVal =  NoAssignedVal.size();
                            // Initialize cost matrix for the Jonker algorithm
                             Cost curent_ub = wcsp->getUb() - wcsp->getLb() ;
@@ -365,7 +378,7 @@ public:
 		            delete[] ReduceCostCol;
 		            delete[] rowsol;
 			    
-			    cost_matrix = new Cost[NbNoAssigned*NbNoAssignedVal];
+			    cost_matrix = new Cost[NbNoAssigned*NbNoAssignedVal];			    
 			    rowsol = new int[NbNoAssigned];
 			    ReduceCostRow = new Cost[NbNoAssigned];
 			    ReduceCostCol = new Cost[NbNoAssignedVal];
@@ -376,8 +389,7 @@ public:
                                 for (int j = 0; j < NbNoAssignedVal; ++j) {
                                     int valIndex = NoAssignedVal[j];
                                     Value val = variable->toValue(valIndex);
-                                    cost_matrix[i * NbNoAssignedVal + j] = variable->canbe(val) ? variable->getCost(val) : curent_ub;
-                                    
+                                    cost_matrix[i * NbNoAssignedVal + j] = variable->canbe(val) ? variable->getCost(val) : curent_ub;    
                                 }
                             }
 			    Cost TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub );
@@ -390,10 +402,8 @@ public:
                                 for (int i = 0; i < NbNoAssigned; ++i) {
 
                                     storeResults[NoAssignedVar[i]] = NoAssignedVal[rowsol[i]];
-
                                 }
 
-                    
                                 for (int i = 0; i < NbAssigned; ++i) {
                                     storeResults[AssignedVar[i]] = AssignedVal[i];
                                 }
@@ -702,4 +712,3 @@ void dump_CFN(ostream& os, bool original = true) override
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-
