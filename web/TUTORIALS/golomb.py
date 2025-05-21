@@ -62,7 +62,7 @@ Problem.AddFunction(['X' + str(N-1)], range(N**2))
 # Add a global alldifferent on all differences
 Problem.AddAllDifferent(['X' + str(j) + '-X' + str(i) for i in range(N) for j in range(i+1,N)], encoding='hungarian')
 
-Problem.Dump(f'golomb_{N}.cfn')
+#Problem.Dump(f'golomb_{N}.cfn')
 Problem.CFN.timer(300)
 
 # Remove preprocessing and run a depth-first search method with a static lexicographic variable ordering
