@@ -97,6 +97,41 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(dest.size() > 0);
     }
 
+    /// \return size of the cartesian product of all initial domains in the list of variables.
+    /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
+    Long getDomainInitSizeProduct(vector<int> vars) const
+    {
+        if (vars.size() == 0)
+            return 1;
+        Long cartesianProduct = 1;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+            // trap overflow numbers
+#if __GNUC__ >= 5
+            if (__builtin_smulll_overflow(cartesianProduct,
+                    static_cast<Long>(problem->getDomainInitSize(vars[i])),
+                    &cartesianProduct))
+                return LONGLONG_MAX;
+#else
+            if (cartesianProduct > LONGLONG_MAX / MAX_DOMAIN_SIZE)
+                return LONGLONG_MAX;
+            cartesianProduct *= problem->getDomainInitSize(vars[i]);
+#endif
+        }
+        return cartesianProduct;
+    }
+
+    /// \return maximum initial domain size in the list of variables.
+    Long getMaxDomainInitSize(vector<int> vars) const
+    {
+        Long maxdom = 1;
+        for (unsigned int i = 0; i < vars.size(); i++) {
+             if (problem->getDomainInitSize(vars[i]) > maxdom) {
+                 maxdom = problem->getDomainInitSize(vars[i]);
+             }
+        }
+        return maxdom;
+    }
+
     void recursiveExpanse(vector<int> &vars, vector<int> &tuple, unsigned int pos, int value, vector<vector<int>> &tuples, vector<int> expanded) {
         if (pos < vars.size()) {
             if (value == STAR) {
@@ -115,6 +150,32 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
 
     // bug correction: vector<vector<int> > &tuples generates a wrong solution on BeerJugs-table-01_c23.xml in MiniCOP23
     void buildConstraintExtension(vector<int> vars, vector<vector<int> > tuples, bool isSupport, bool hasStar) {
+        if (isSupport && tuples.size() > 0 && getMaxDomainInitSize(vars) * (Long)tuples.size() * (Long)vars.size() < getDomainInitSizeProduct(vars)) {
+            string extravarname = IMPLICIT_VAR_TAG + to_string("tuples") + to_string(problem->numberOfVariables());
+            int extravar = problem->makeEnumeratedVariable(extravarname, 0, tuples.size() - 1);
+            mapping[extravarname] = extravar;
+            vector<vector<Cost>> allcosts;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                vector<Cost> costs(problem->getDomainInitSize(vars[i]) * tuples.size(), MIN_COST);
+                allcosts.push_back(costs);
+            }
+            for (unsigned int t = 0; t < tuples.size(); t++) {
+                for (unsigned int i = 0; i < vars.size(); i++) {
+                    if (tuples[t][i] == STAR) {
+                        continue;
+                    }
+                    for (unsigned int v = 0; v < problem->getDomainInitSize(vars[i]); v++) {
+                        if (v != problem->toIndex(vars[i], tuples[t][i])) {
+                            allcosts[i][v * tuples.size() + t] = MAX_COST_XML3;
+                        }
+                    }
+                }
+            }
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                problem->postBinaryConstraint(vars[i], extravar, allcosts[i]);
+            }
+            return;
+        }
         if(hasStar) {
             vector<vector<int> > newtuples;
             for(auto& tuple:tuples) {
@@ -561,9 +622,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
-       if (std::all_of(vars.cbegin(), vars.cend(), [&problem=this->problem, size=vars.size()](int i) { if (problem->getDomainInitSize(i) != size) cout << i << " " << problem->getDomainInitSize(i) << " " << size << endl; return problem->getDomainInitSize(i) == size; })) {
-            problem->postAllDifferentConstraint(vars, "");
-       } else {
         if (vars.size() <= ALLDIFFMAXSIZEDECOMP) {
             for (unsigned int i = 0; i < vars.size(); i++) {
                 for (unsigned int j = i+1; j < vars.size(); j++) {
@@ -579,7 +637,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         } else {
             problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
         }
-       }
     }
 
     void buildConstraintAlldifferent(string id, vector<string> &list) {

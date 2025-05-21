@@ -647,10 +647,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
 
 // VNS Methods
 #ifdef BOOST
-    { OPT_VNS_search, (char*)"-vns", SO_NONE },
-    { OPT_VNS_search, (char*)"--vns", SO_NONE },
-    { OPT_VNS_search, (char*)"-dgvns", SO_NONE },
-    { OPT_VNS_search, (char*)"--dgvns", SO_NONE },
+    { OPT_VNS_search, (char*)"-vns", SO_OPT },
+    { OPT_VNS_search, (char*)"--vns", SO_OPT },
+    { OPT_VNS_search, (char*)"-dgvns", SO_OPT },
+    { OPT_VNS_search, (char*)"--dgvns", SO_OPT },
 #ifdef OPENMPI
     { OPT_CPDGVNS_search, (char*)"--cpdgvns", SO_NONE },
     { OPT_RADGVNS_search, (char*)"-radgvns", SO_NONE },
@@ -1316,7 +1316,7 @@ int _tmain(int argc, TCHAR* argv[])
                 else
                     ToulBar2::btdMode = 0;
                 if (ToulBar2::debug)
-                    cout << "Search Method used =  " << mode << endl;
+                    cout << "Tree Search Method used =  " << mode << endl;
             }
 
 // VNS
@@ -1334,12 +1334,20 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::vnsParallelSync = false;
                 } else {
                     ToulBar2::searchMethod = DGVNS;
-                    ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+                    if (args.OptionArg() != NULL && atoi(args.OptionArg()) >= RANDOMVAR && atoi(args.OptionArg()) <= PCONFLICTVAR && atoi(args.OptionArg()) != MASTERCLUSTERRAND)
+                        ToulBar2::vnsNeighborVarHeur = static_cast<VNSVariableHeuristic>(atoi(args.OptionArg()));
+                    else
+                        ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
                 }
 #else
                 ToulBar2::searchMethod = DGVNS;
-                ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
+                if (args.OptionArg() != NULL && atoi(args.OptionArg()) >= RANDOMVAR && atoi(args.OptionArg()) <= PCONFLICTVAR && atoi(args.OptionArg()) != MASTERCLUSTERRAND)
+                    ToulBar2::vnsNeighborVarHeur = static_cast<VNSVariableHeuristic>(atoi(args.OptionArg()));
+                else
+                    ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
 #endif
+                if (ToulBar2::debug)
+                    cout << "Neighborhood used =  " << ToulBar2::vnsNeighborVarHeur << endl;
             }
 #ifdef OPENMPI
             if (world.size() > 1 && args.OptionId() == OPT_CPDGVNS_search) {

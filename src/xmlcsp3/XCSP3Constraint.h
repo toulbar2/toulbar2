@@ -97,6 +97,7 @@ namespace XCSP3Core {
         int val;
         int min, max;
         string var;
+        std::vector<int> set;
 
         friend ostream &operator<<(ostream &f, const XCSP3Core::XCondition &ie);
     };

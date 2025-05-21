@@ -761,6 +761,26 @@ namespace XCSP3Core {
             throw runtime_error("Ordered constraint with lengths is not yet supported");
         }
 
+        /**
+         * The callback function related to an ordered constraint
+         * See http://xcsp.org/specifications/ordered
+         *
+         * Ordered is LE, LT, GE, GT... See OrderType in XCSPConstants.h
+         *
+         * Example:
+         * <ordered>
+         *   <list> x1 x2 x3 x4 </list>
+         *   <operator> lt </operator>
+         * </ordered>
+         *
+         * @param id the id (name) of the constraint
+         * @param list the scope of the constraint
+         * @param order the order LT, LE...
+         */
+        virtual void buildConstraintOrdered(string id, vector<XVariable *> &list, vector<XVariable*> &lengths, OrderType order) {
+            (void)id; (void)list; (void)lengths; (void)order;
+            throw runtime_error("Ordered constraint with lengths variables is not yet supported");
+        }
 
         /**
          * The callback function related to an ordered list constraint (this is a lex constraint)
