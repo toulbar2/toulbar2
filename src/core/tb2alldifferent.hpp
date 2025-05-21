@@ -245,7 +245,7 @@ public:
         AssignedVal.clear();
         AssignedVal.reserve(arity_);
         NoAssignedVar.clear();
-        NoAssignedVar.reserve(NbNoAssigned);
+        NoAssignedVar.reserve(arity_);
 
         for (int var = 0; var < arity_; ++var) {
             auto* variable = scope[var];
@@ -253,9 +253,14 @@ public:
                 NoAssignedVar.push_back(var);
             } else {
                 int index_val = variable->toIndex(variable->getValue());
-                isAssignedValue[index_val] = true;
-                AssignedVar.push_back(var);
-                AssignedVal.push_back(index_val);
+                if(!isAssignedValue[index_val]){
+	                isAssignedValue[index_val] = true;
+	                AssignedVar.push_back(var);
+	                AssignedVal.push_back(index_val); 
+                }
+                else {
+                    THROWCONTRADICTION;
+                }
             }
         }
     
@@ -281,6 +286,7 @@ public:
                         if (variable->assigned()) {
                             newlyAssignedVars.push_back(varIndex);
                             varAlreadyProcessed[varIndex] = true;
+
                         }
                     }
                 }
@@ -290,7 +296,7 @@ public:
                 if (connected(varIndex)) {
                     deconnect(varIndex);
                     NbNoAssigned--;
-    
+                    NbAssigned++;   
                     if (NbNoAssigned <= 2) {
                         deconnect();
                         projectNary();
@@ -301,8 +307,11 @@ public:
                         auto* variable = scope[varIndex];
                         int valIndex = variable->toIndex(variable->getValue());
                         isAssignedValue[valIndex] = true;
+                        AssignedVar.push_back(varIndex);
+                        AssignedVal.push_back(valIndex);
                     }
                 }
+                else return (false);
             }
     
             if (VarAssigned && !NaryPro) {
@@ -317,7 +326,7 @@ public:
     
         } while (VarAssigned);
         
-        return (!NaryPro) ;
+        return (!NaryPro);
    }
 
     void propagate() override
