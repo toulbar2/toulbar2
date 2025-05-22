@@ -50,6 +50,7 @@ Problem.NoPreprocessing()
 Problem.Option.Static_variable_ordering = True
 Problem.Option.weightedDegree = False
 Problem.Option.lastConflict = False
+Problem.Option.LcLevel = 1
 Problem.Option.hbfs = 0
 res = Problem.Solve(showSolutions=3)
 print('Backtracks: ' + str(Problem.GetNbBacktracks()) + '  Nodes: ' + str(Problem.GetNbNodes()))

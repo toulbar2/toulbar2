@@ -1499,7 +1499,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
-        { "alldiff", "exceptedValues:[v]+" },
+        { "alldiff", ":exceptedvalues:[v]+" },
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
         { "knapsackv", ":capacity:N:weightedvalues:[VvN]+" },

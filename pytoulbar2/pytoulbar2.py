@@ -55,7 +55,7 @@ class CFN:
     """
     def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, init=True):
         if init:
-            tb2.reinit();
+            tb2.reinit()
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.seed = seed    # random seed number (use -1 if a pseudo-randomly generated seed is wanted)
@@ -75,9 +75,9 @@ class CFN:
         if vns is not None:
             tb2.option.vnsInitSol = vns   # if vns different than None then perform Decomposition-Guided Variable Neighborhood Search (-1: initial solution at random, -2: minimum domain values, -3: maximum domain values, -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies)
             tb2.option.lds = 4
-            tb2.option.restart = 10000;
-            tb2.option.searchMethod = 2;    # 0:DFBB or HBFS, 1:VNS, 2:DGVNS 4:Parallel DGVNS
-            tb2.option.vnsNeighborVarHeur = 3;   # 0: random, 1:conflict, 3: decomposition
+            tb2.option.restart = 10000
+            tb2.option.searchMethod = 2    # 0:DFBB or HBFS, 1:VNS, 2:DGVNS 4:Parallel DGVNS
+            tb2.option.vnsNeighborVarHeur = 3   # 0: random, 1:conflict, 3: decomposition
 
         self.Variables = {}
         self.VariableIndices = {}
@@ -420,22 +420,24 @@ class CFN:
                         costs = [(0 if (self.CFN.wcsp.toValue(iscope[i], a) != self.CFN.wcsp.toValue(iscope[j], b) or (excepted and ((self.CFN.wcsp.toValue(iscope[i], a) in excepted) or (self.CFN.wcsp.toValue(iscope[j], b) in excepted)))) else self.Top) for a in range(self.CFN.wcsp.getDomainInitSize(iscope[i])) for b in range(self.CFN.wcsp.getDomainInitSize(iscope[j]))]
                         self.CFN.wcsp.postBinaryConstraint(iscope[i], iscope[j], costs, incremental)
             elif (encoding=='hungarian'):
-                params = str(len(excepted))
-                for v in excepted:
-                    params += " " + str(v)
-                self.CFN.wcsp.postAllDifferentConstraint(iscope, params);
+                params = ''
+                if excepted is not None:
+                    params = str(len(excepted))
+                    for v in excepted:
+                        params += ' ' + str(v)
+                self.CFN.wcsp.postAllDifferentConstraint(iscope, params)
             elif (encoding=='salldiff'):
-                self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST);
+                self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST)
             elif (encoding=='salldiffdp'):
-                self.CFN.wcsp.postWAllDiff(iscope, "var", "DAG", tb2.MAX_COST);
+                self.CFN.wcsp.postWAllDiff(iscope, "var", "DAG", tb2.MAX_COST)
             elif (encoding=='salldiffkp'):
-                self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST);
+                self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST)
             elif (encoding=='salldiffeq'):
-                self.CFN.wcsp.postWAllDiff(iscope, "hardeq", "knapsack", tb2.MAX_COST);
+                self.CFN.wcsp.postWAllDiff(iscope, "hardeq", "knapsack", tb2.MAX_COST)
             elif (encoding=='salldiffge'):
-                self.CFN.wcsp.postWAllDiff(iscope, "hardge", "knapsack", tb2.MAX_COST);
+                self.CFN.wcsp.postWAllDiff(iscope, "hardge", "knapsack", tb2.MAX_COST)
             elif (encoding=='walldiff'):
-                self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST);
+                self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST)
             else:
                 raise RuntimeError("Unknown encoding for AllDifferent: "+encoding)
 

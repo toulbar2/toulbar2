@@ -665,7 +665,7 @@ public:
                 os << "," << conflictWeights[i];
             }
         }
-        os << " exceptedValues:";
+        os << " exceptedvalues:";
         for (Value v : exceptedValues) {
             os << " " << v;
         }
@@ -718,7 +718,7 @@ public:
                 os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
-            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedValues\":[";
+            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedvalues\":[";
         } else {
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned()) {
@@ -736,7 +736,7 @@ public:
                     os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
-            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedValues\":[";
+            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedvalues\":[";
         }
         printed = false;
         for (Value v : exceptedValues) {
@@ -745,7 +745,7 @@ public:
             os << v;
             printed = true;
         }
-        os << "]},\n";
+        os << "]}},\n";
     }
 };
 #endif /*TB2ALLDIFFERENT_HPP_*/
