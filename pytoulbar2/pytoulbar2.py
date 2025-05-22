@@ -420,7 +420,7 @@ class CFN:
                         costs = [(0 if (self.CFN.wcsp.toValue(iscope[i], a) != self.CFN.wcsp.toValue(iscope[j], b) or (excepted and ((self.CFN.wcsp.toValue(iscope[i], a) in excepted) or (self.CFN.wcsp.toValue(iscope[j], b) in excepted)))) else self.Top) for a in range(self.CFN.wcsp.getDomainInitSize(iscope[i])) for b in range(self.CFN.wcsp.getDomainInitSize(iscope[j]))]
                         self.CFN.wcsp.postBinaryConstraint(iscope[i], iscope[j], costs, incremental)
             elif (encoding=='hungarian'):
-                self.CFN.wcsp.postAllDifferentConstraint(iscope, "");
+                self.CFN.wcsp.postAllDifferentConstraint(iscope, "0");
             elif (encoding=='salldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST);
             elif (encoding=='salldiffdp'):

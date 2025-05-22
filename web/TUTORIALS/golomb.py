@@ -15,43 +15,21 @@ for i in range(N):
 for i in range(N-1):
     for j in range(i+1, N):
         Problem.AddVariable('X' + str(j) + '-X' + str(i), range(N**2))
-        Constraint = []
-        for m in range(N**2):
-            for k in range(N**2):
-                for l in range(N**2):
-                    if l-k == m:
-                        Constraint.append(0)
-                    else:
-                        Constraint.append(top)
         # Putting the functional variable Xj-Xi first in the scope of the ternary cost function will occupy less memory space (more compact internal representation of costs)
-        Problem.AddFunction(['X' + str(j) + '-X' + str(i), 'X' + str(i), 'X' + str(j)], Constraint) 
+        Problem.AddLinearConstraint([1,1,-1], ['X' + str(j) + '-X' + str(i), 'X' + str(i), 'X' + str(j)], '==', 0) 
         
         # Reduce domain size of difference variables (see explanations in https://choco-solver.org/tutos/golomb-ruler/math)
         lb = (j - i) * (j - i + 1) // 2
-        Problem.AddFunction(['X' + str(j) + '-X' + str(i)], [top] * (lb) + [0] * (N**2 - lb))
+        Problem.AddLinearConstraint([1], ['X' + str(j) + '-X' + str(i)], '>=', lb)
         ub = (N - 1 - j + i) * (N - j + i) // 2
         Problem.AddLinearConstraint([1,-1],['X' + str(j) + '-X' + str(i), 'X' + str(N - 1)], '<=', -ub)
 
 # Add constraints to enforce increasing order among variables
 for i in range(N-1):
-    Constraint_sym = []
-    for xi in range(N**2):
-        for xj in range(N**2):
-            if xj > xi:
-                Constraint_sym.append(0)  
-            else:
-                Constraint_sym.append(top)  
-    Problem.AddFunction(['X' + str(i ), 'X' + str(i + 1)], Constraint_sym)
+    Problem.AddLinearConstraint([1,-1], ['X' + str(i ), 'X' + str(i + 1)], '<', 0)
 
 # Add a constraint to ensure the last difference is greater than the first difference
-Constraint_cmp = []
-for d2 in range(N**2):
-    for d1 in range(N**2):
-        if d1 < d2:
-            Constraint_cmp.append(0)  
-        else:
-            Constraint_cmp.append(top)  
-Problem.AddFunction(['X' + str(N - 1) + '-X' + str(N - 2), 'X' + str(1) + '-X' + str(0)], Constraint_cmp)   
+Problem.AddLinearConstraint([1,-1], ['X' + str(N - 1) + '-X' + str(N - 2), 'X' + str(1) + '-X' + str(0)], '>', 0)   
 
 # Fix the first mark to be zero
 Problem.AddFunction(['X0'], [0] + [top] * (N**2 - 1))

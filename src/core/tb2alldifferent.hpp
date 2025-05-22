@@ -45,6 +45,7 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     int NbNoAssigned;
     vector<bool> isAssignedValue;
     vector<bool> varAlreadyProcessed;
+    vector<Value> exceptedValues;
 
     void projectLB(Cost c)
     {
@@ -113,7 +114,16 @@ public:
 
     virtual ~AllDifferentConstraint() {}
 
-    void read(istream& file) {} // TODO: add a parameter for controlling the level of propagation if necessary
+    void read(istream& file) // TODO: add a parameter for controlling the level of propagation if necessary
+    {
+        int nbExcepted = 0;
+        file >> nbExcepted;
+        for (int v=0; v < nbExcepted; v++) {
+            Value except;
+            file >> except;
+            exceptedValues.push_back(except);
+        }
+    }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but no other preprocessing
 
@@ -225,7 +235,7 @@ public:
             deconnect(varIndex);
             assert(getNonAssigned() >= 0);
 
-            if (getNonAssigned() <= 2) { // TODO: use NARYPROJECTIONSIZE
+            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
                 deconnect();
                 projectNary();
             } else {
@@ -297,7 +307,7 @@ public:
                     deconnect(varIndex);
                     NbNoAssigned--;
                     NbAssigned++;   
-                    if (NbNoAssigned <= 2) {
+                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
                         deconnect();
                         projectNary();
                         NaryPro = true;
@@ -655,28 +665,39 @@ public:
                 os << "," << conflictWeights[i];
             }
         }
+        os << " exceptedValues:";
+        for (Value v : exceptedValues) {
+            os << " " << v;
+        }
         os << " arity: " << arity_;
         os << " unassigned: " << getNonAssigned() << "/" << unassigned_ << endl;
-    }
+     }
 
     void dump(ostream& os, bool original = true) override
     {
+        assert(lb == MIN_COST); // TODO: how to dump with deltaCosts?
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
                 os << " " << scope[i]->wcspIndex;
-            os << " -1 alldiff" << endl;
+            os << " -1 alldiff ";
         } else {
             os << getNonAssigned();
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned())
                     os << " " << scope[i]->getCurrentVarId();
-            os << " -1 alldiff" << endl;
+            os << " -1 alldiff ";
         }
+        os << exceptedValues.size();
+        for (Value v : exceptedValues) {
+            os << " " << v;
+        }
+        os << endl;
     }
 
     void dump_CFN(ostream& os, bool original = true) override
     {
+        assert(lb == MIN_COST); // TODO: how to dump with deltaCosts?
         bool printed = false;
         os << "\"F_";
 
@@ -697,7 +718,7 @@ public:
                 os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
-            os << "],\"type\":\"alldiff\",\"params\":{}";
+            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedValues\":[";
         } else {
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned()) {
@@ -715,9 +736,16 @@ public:
                     os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
-            os << "],\"type\":\"alldiff\",\"params\":{}";
+            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedValues\":[";
         }
-        os << "},\n";
+        printed = false;
+        for (Value v : exceptedValues) {
+            if (printed)
+                os << ",";
+            os << v;
+            printed = true;
+        }
+        os << "]},\n";
     }
 };
 #endif /*TB2ALLDIFFERENT_HPP_*/

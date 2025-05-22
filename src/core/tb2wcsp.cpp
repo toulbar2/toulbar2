@@ -1488,7 +1488,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
     } else {
         ctr = new NaryConstraint(this, scopeVars, arity, defval, nbtuples);
     }
-    if (arity > NARYPROJECTIONSIZE) {
+    if (arity > NARYPROJECTIONSIZE || (arity >= 2 && ctr->getDomainInitSizeProduct() > NARYPROJECTIONPRODDOMSIZE)) {
         if (isDelayedNaryCtr)
             delayedNaryCtr.push_back(ctr->wcspIndex);
         else {
@@ -1553,10 +1553,11 @@ void WCSP::postNaryConstraintEnd(int ctrindex)
         ctr->deconnect(true);
         return;
     }
-    if (ctr->arity() <= NARYPROJECTIONSIZE)
+    if (ctr->arity() <= NARYPROJECTIONSIZE && (ctr->arity() <= 1 || ctr->getDomainInitSizeProduct() <= NARYPROJECTIONPRODDOMSIZE)) {
         ctr->projectNaryBeforeSearch();
-    else if (!isDelayedNaryCtr)
+    } else if (!isDelayedNaryCtr) {
         ctr->propagate();
+    }
 }
 
 // Add a temporary (backtrackable) binary constraint for incremental search (like "on the fly ElimVar")

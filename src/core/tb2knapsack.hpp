@@ -175,7 +175,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     // returns true if the constraint can be projected to small local cost function in extension
     bool canbeProjectedInExtension()
     {
-        return getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() < 3 || (Store::getDepth() >= ToulBar2::vac && (maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || prodInitDomSize <= NARYPROJECTION3PRODDOMSIZE)));
+        return getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 2 || Store::getDepth() >= ToulBar2::vac) && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE));
     }
 
     void Group_extendNVV(int var, Cost C)

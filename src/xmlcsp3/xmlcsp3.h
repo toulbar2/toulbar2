@@ -17,7 +17,8 @@
 using namespace XCSP3Core;
 
 #define MAX_COST_XML3 ((Cost)INT_MAX * 1024)
-#define ALLDIFFMAXSIZEDECOMP 100
+#define ALLDIFFMAXSIZEDECOMP 0
+#define ALLDIFFEXCEPTMAXSIZEDECOMP 0
 
 class MySolverCallbacks : public XCSP3CoreCallbacks {
     public:
@@ -635,7 +636,8 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         } else {
-            problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
+            //problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
+            problem->postAllDifferentConstraint(vars, "0");
         }
     }
 
@@ -705,7 +707,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
-        if (vars.size() <= ALLDIFFMAXSIZEDECOMP) {
+        if (vars.size() <= ALLDIFFEXCEPTMAXSIZEDECOMP) {
             for (unsigned int i = 0; i < vars.size(); i++) {
                 for (unsigned int j = i+1; j < vars.size(); j++) {
                     vector<Cost> costs;
@@ -718,22 +720,30 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         } else {
-            set<Value> values;
-            for (unsigned int i = 0; i < vars.size(); i++) {
-                ((EnumeratedVariable*)((WCSP*)problem)->getVar(vars[i]))->getDomain(values);
-            }
-            for (Value value : values) {
-                if (std::find(except.begin(), except.end(), value)==except.end()) {
-                    string params = to_string(-1);
-                    for (unsigned int i = 0; i < vars.size(); i++) {
-                        if (problem->canbe(vars[i], value)) {
-                            params += to_string(" 1 ") + to_string(value) + to_string(" -1");
-                        } else {
-                            params += " 0";
-                        }
-                    }
-                    problem->postKnapsackConstraint(vars, params, false, true, false);
+            if (except.size() > 1) { // TODO: remove this restriction when AllDifferent allows to propagate with several excepted values
+                set<Value> values;
+                for (unsigned int i = 0; i < vars.size(); i++) {
+                    ((EnumeratedVariable*)((WCSP*)problem)->getVar(vars[i]))->getDomain(values);
                 }
+                for (Value value : values) {
+                    if (std::find(except.begin(), except.end(), value)==except.end()) {
+                        string params = to_string(-1);
+                        for (unsigned int i = 0; i < vars.size(); i++) {
+                            if (problem->canbe(vars[i], value)) {
+                                params += to_string(" 1 ") + to_string(value) + to_string(" -1");
+                            } else {
+                                params += " 0";
+                            }
+                        }
+                        problem->postKnapsackConstraint(vars, params, false, true, false);
+                    }
+                }
+            } else {
+                string params = to_string(except.size());
+                for (Value v : except) {
+                    params += to_string(" ") + to_string(v);
+                }
+                problem->postAllDifferentConstraint(vars, params);
             }
         }
     }
