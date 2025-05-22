@@ -401,7 +401,7 @@ class CFN:
         """
         if incremental and encoding != 'binary':
             raise RuntimeError("Implementation of AllDifferent constraint requires 'binary' encoding in incremental mode!")
-        if excepted is not None and encoding != 'binary':
+        if excepted is not None and encoding != 'binary' and encoding != 'hungarian':
             raise RuntimeError("Excepted domain values in AllDifferent constraint requires 'binary' encoding!")
         sscope = set(scope)
         if len(scope) != len(sscope):
@@ -420,7 +420,10 @@ class CFN:
                         costs = [(0 if (self.CFN.wcsp.toValue(iscope[i], a) != self.CFN.wcsp.toValue(iscope[j], b) or (excepted and ((self.CFN.wcsp.toValue(iscope[i], a) in excepted) or (self.CFN.wcsp.toValue(iscope[j], b) in excepted)))) else self.Top) for a in range(self.CFN.wcsp.getDomainInitSize(iscope[i])) for b in range(self.CFN.wcsp.getDomainInitSize(iscope[j]))]
                         self.CFN.wcsp.postBinaryConstraint(iscope[i], iscope[j], costs, incremental)
             elif (encoding=='hungarian'):
-                self.CFN.wcsp.postAllDifferentConstraint(iscope, "0");
+                params = str(len(excepted))
+                for v in excepted:
+                    params += " " + str(v)
+                self.CFN.wcsp.postAllDifferentConstraint(iscope, params);
             elif (encoding=='salldiff'):
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST);
             elif (encoding=='salldiffdp'):
