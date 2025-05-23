@@ -159,7 +159,7 @@ public:
             exceptedValues.push_back(except);
             exceptedValIndex.push_back(scope[0]->toIndex(except));
         }
-        if (excepted)
+        if (excepted && isSquare)
         {
             for(int var = 0; var < arity_; var++) {
                 deltaCosts.emplace_back(arity_, MIN_COST);
