@@ -42,16 +42,18 @@ for i in range(1,nodes1):
     Problem.AddVariable('X' + str(i), range(nodes2))
 
 #forbid crossovers by adding precedence constraints (except for value 0)
+costs = [0 if a==0 or b==0 or a<b else top for a in range(nodes2) for b in range(nodes2)]
 for i in range(1,nodes1):
     for k in range(i+1,nodes1):
-        Problem.AddFunction(['X' + str(i), 'X' + str(k)], [0 if a==0 or b==0 or a<b else top for a in range(nodes2) for b in range(nodes2)])
+        Problem.AddFunction(['X' + str(i), 'X' + str(k)], costs)
 
 #objective function in minimization
+costs = [-1 if (a,b) in edges2 else 0 for a in range(nodes2) for b in range(nodes2)]
 for i,k in edges1:
-    Problem.AddFunction(['X' + str(i), 'X' + str(k)], [-1 if (a,b) in edges2 else 0 for a in range(nodes2) for b in range(nodes2)])
+    Problem.AddFunction(['X' + str(i), 'X' + str(k)], costs)
 
 #redundant constraint: alldifferent (except for value 0)
-Problem.AddAllDifferent(scope=list(range(nodes1 - 1)), encoding='binary', excepted=[0])
+Problem.AddAllDifferent(scope=list(range(nodes1 - 1)), encoding='hungarian', excepted=[0])
 
 #Problem.Dump('cmo.cfn')
 Problem.CFN.timer(300)
