@@ -46,9 +46,9 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<bool> isAssignedValue;
     vector<bool> varAlreadyProcessed;
     vector<Value> exceptedValues;
-	vector<int>exceptedValIndex;
-	bool excepted;
-	bool isSquare;
+    vector<int>exceptedValIndex;
+    bool excepted;
+    bool isSquare;
 
 
     void projectLB(Cost c)
@@ -97,8 +97,8 @@ public:
         , Original_ub(wcsp->getUb())
         , lb(0)
         , assigneddeltas(0)
-		, isResults(false)
-		, excepted(false)
+	, isResults(false)
+	, excepted(false)
     {
     	if (arity_in > 0) {
     		isSquare = false;
@@ -149,12 +149,12 @@ public:
     {
         int nbExcepted = 0;
         file >> nbExcepted;
-		excepted =  nbExcepted > 0;
+	excepted =  nbExcepted > 0;
         for (int v=0; v < nbExcepted; v++) {
             Value except;
             file >> except;
             exceptedValues.push_back(except);
-			exceptedValIndex.push_back(scope[0]->toIndex(except));
+	    exceptedValIndex.push_back(scope[0]->toIndex(except));
         }
 		if (excepted)
 		{
@@ -207,7 +207,7 @@ public:
     /// \brief returns true if constraint always satisfied and has (less than) zero cost only
     //bool universal(Cost zero = MIN_COST) override;
 	
- Cost eval(const Tuple& s) override
+    Cost eval(const Tuple& s) override
     {
         // returns the cost of the corresponding assignment s
         if(isSquare)
@@ -219,7 +219,7 @@ public:
 		for (int i = 0; i < arity_; i++) {
 		    assert(s[i] < arity_);
             if (alreadyUsed[s[i]]) {
-				auto it = find(exceptedValues.begin(), exceptedValues.end(), s[i]);
+		auto it = find(exceptedValues.begin(), exceptedValues.end(), s[i]);
                 nbsame+= (it == exceptedValues.end());
 		    } else {
 		        alreadyUsed[s[i]] = true;
@@ -244,7 +244,7 @@ public:
             assert(s[i] < NbValues);
             res += deltaCosts[i][s[i]];
             if (alreadyUsed[s[i]]) {
-				auto it = find(exceptedValues.begin(), exceptedValues.end(), s[i]);
+		auto it = find(exceptedValues.begin(), exceptedValues.end(), s[i]);
                 nbsame+= (it == exceptedValues.end());
             } else {
                 alreadyUsed[s[i]] = true;
@@ -283,14 +283,10 @@ public:
         return deltaCosts[index][scope[index]->toIndex(val)];
     }
 
- 
-
     double computeTightness() override { return 0; } // TODO: compute factorial(n)/(n**n)?
 
     // TODO: needed for dominance test by DEE
     // pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b)
-
-
 
     // void setInfiniteCost(Cost ub)
     void setInfiniteCost(Cost ub) override
@@ -306,9 +302,8 @@ public:
         if (connected(varIndex)) {
             deconnect(varIndex);
             assert(getNonAssigned() >= 0);
-
             if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-                deconnect();
+		deconnect();
                 projectNary();
             } else {
                 // TODO: incremental bound propagation
@@ -318,6 +313,7 @@ public:
             }
         }
     }
+
   bool filtreAndPropagate()
   {  
         isAssignedValue = vector<bool>(NbValues, false);
@@ -425,17 +421,15 @@ public:
             if (!variable->assigned()) {
                 NoAssignedVar.push_back(var);
             } else {
-
-				auto Var = variable->getValue();
-				int index_val = variable->toIndex(Var);
-				auto it = find(exceptedValues.begin(), exceptedValues.end(), Var);
+			auto Var = variable->getValue();
+			int index_val = variable->toIndex(Var);
+			auto it = find(exceptedValues.begin(), exceptedValues.end(), Var);
                 if(!isAssignedValue[index_val]){
                     if( it == exceptedValues.end()) isAssignedValue[index_val] = true;                 
                 }
                 else{ 
-					if (it == exceptedValues.end()) THROWCONTRADICTION;
+			if (it == exceptedValues.end()) THROWCONTRADICTION;
                 }
-
             }
         }
 
@@ -470,7 +464,7 @@ public:
                 if (connected(varIndex)) {
                     deconnect(varIndex);
                     NbNoAssigned--;  
-                    if (NbNoAssigned <= 2) {
+	            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
                         deconnect();
                         projectNary();
                         NaryPro = true;
@@ -478,13 +472,11 @@ public:
                     } else {
                         VarAssigned = true;
                         auto* variable = scope[varIndex];
-						auto Var = variable->getValue();
-				        int valIndex = variable->toIndex(Var);
-                        if(find(exceptedValues.begin(), exceptedValues.end(), Var) == exceptedValues.end()){
-                            
+			auto Var = variable->getValue();
+			int valIndex = variable->toIndex(Var);
+                        if(find(exceptedValues.begin(), exceptedValues.end(), Var) == exceptedValues.end()){  
                             isAssignedValue[valIndex] = true;
                         }
-  
                     }
                 }
                 else return (false);
@@ -504,9 +496,6 @@ public:
         
         return (!NaryPro);
    }
-
-
-
 
     void propagate() override
     {
@@ -544,14 +533,14 @@ public:
   		if (!skipPropagation) {
 			// Initialize total cost and determine assigned/unassigned variables
 			NbNoAssigned = getNonAssigned();
-             bool FiltreExcepted = false;
+             		bool FiltreExcepted = false;
 			if (NbNoAssigned < arity_) {
 				if(excepted){
 					FiltreExcepted = filtreAndPropagate(excepted);
 				}		
 					
-               else if(filtreAndPropagate()) {
-                        
+               		else if(filtreAndPropagate()) {
+	                        
                             vector<int> NoAssignedVal;
 			    for (int val = 0; val < NbValues; ++val) {
 				if (!isAssignedValue[val]) {
@@ -642,12 +631,10 @@ public:
  
 
 		    else{
-				if(NbNoAssigned == arity_ || FiltreExcepted)
+			if(NbNoAssigned == arity_ || FiltreExcepted)
 					
 			 // Initialize cost matrix for the Jonker algorithm
-				   
-			//Cost *cost_matrix;
-    		    delete[] cost_matrix;
+    		        delete[] cost_matrix;
 		        delete[] ReduceCostRow;
 		        delete[] ReduceCostCol;
 		        delete[] rowsol;
@@ -667,16 +654,16 @@ public:
 		        }		            
 	
 		        // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
-			    rowsol = new int[arity_];
-			    ReduceCostRow = new Cost[arity_];
-			    ReduceCostCol = new Cost[NbValues];
-				Cost TotalCost;
-				if(excepted)
-					TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub, exceptedValIndex);
-				else
-					TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub);
+			 rowsol = new int[arity_];
+			 ReduceCostRow = new Cost[arity_];
+			 ReduceCostCol = new Cost[NbValues];
+			Cost TotalCost;
+			if(excepted)
+				TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub, exceptedValIndex);
+			else
+				TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub);
 	
-		            if (TotalCost >= curent_ub  ) {		   		            
+			 if (TotalCost >= curent_ub  ) {		   		            
 		                THROWCONTRADICTION;
 		            } else if (TotalCost >=0) {
 	       
@@ -741,7 +728,7 @@ public:
         for (int i = 0; i < arity_; i++) {
             if (alreadyUsed[storeResults[i]] || scope[i]->cannotbe(scope[i]->toValue(storeResults[i])) || scope[i]->getCost(scope[i]->toValue(storeResults[i])) > MIN_COST) {
                 if (alreadyUsed[storeResults[i]]) {
-					if(excepted && (find(exceptedValues.begin(), exceptedValues.end(), scope[i]->toValue(storeResults[i])) != exceptedValues.end())){ return true;}
+		    if(excepted && (find(exceptedValues.begin(), exceptedValues.end(), scope[i]->toValue(storeResults[i])) != exceptedValues.end())){ return true;}
                     cout << "variable " << scope[i]->getName() << " value " << scope[i]->toValue(storeResults[i]) << " used twice!" << endl;
                 } else if (scope[i]->cannotbe(scope[i]->toValue(storeResults[i]))) {
                     cout << "variable " << scope[i]->getName() << " value " << scope[i]->toValue(storeResults[i]) << " has been removed!" << endl;
