@@ -137,6 +137,10 @@ public:
     		NoAssignedVar = vector<int>(arity_in, -1);
     		AssignedVar= vector<int>(arity_in, -1);
     		AssignedVal= vector<int>(arity_in, -1);
+		rowsol = new int[arity_];
+	        ReduceCostRow = new Cost[arity_];
+		ReduceCostCol = new Cost[NbValues];
+		cost_matrix = new Cost[arity_ * NbValues];
     		// propagate();
     	} else {
             deconnect();
@@ -550,17 +554,7 @@ public:
                             
                             int NbNoAssignedVal =  NoAssignedVal.size();
                            // Initialize cost matrix for the Jonker algorithm
-                            Cost curent_ub = wcsp->getUb() - wcsp->getLb() ;
-			    delete[] cost_matrix;
-		            delete[] ReduceCostRow;
-		            delete[] ReduceCostCol;
-		            delete[] rowsol;
-			    
-			    cost_matrix = new Cost[NbNoAssigned*NbNoAssignedVal];			    
-			    rowsol = new int[NbNoAssigned];
-			    ReduceCostRow = new Cost[NbNoAssigned];
-			    ReduceCostCol = new Cost[NbNoAssignedVal];
-			  
+                            Cost curent_ub = wcsp->getUb() - wcsp->getLb();			  
                             for (int i = 0; i < NbNoAssigned; ++i) {
                                 int varIndex = NoAssignedVar[i];
                                 auto* variable = scope[varIndex];
@@ -630,18 +624,11 @@ public:
 		    }
  
 
-		    else{
-			if(NbNoAssigned == arity_ || FiltreExcepted)
+		    else
+			if(NbNoAssigned == arity_ || FiltreExcepted) {
 					
-			 // Initialize cost matrix for the Jonker algorithm
-    		        delete[] cost_matrix;
-		        delete[] ReduceCostRow;
-		        delete[] ReduceCostCol;
-		        delete[] rowsol;
-
-			cost_matrix = new Cost[arity_ * NbValues];
-		        
-		        Cost curent_ub = wcsp->getUb() - wcsp->getLb() +1;	
+			 // Initialize cost matrix for the Jonker algorithm		        
+		        Cost curent_ub = wcsp->getUb() - wcsp->getLb();	
 		        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
 		                auto* variable = scope[varIndex];
 
@@ -654,9 +641,7 @@ public:
 		        }		            
 	
 		        // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
-			 rowsol = new int[arity_];
-			 ReduceCostRow = new Cost[arity_];
-			 ReduceCostCol = new Cost[NbValues];
+
 			Cost TotalCost;
 			if(excepted)
 				TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub, exceptedValIndex);
