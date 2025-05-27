@@ -648,7 +648,7 @@ void ReplicatedParallelDGVNS::DumpBestSol(bool improved)
         ((WCSP*)wcsp)->solution_XML(false);
     }
     if (ToulBar2::maxsateval) {
-        cout << "o " << bestUb << endl;
+        cout << "o " << std::fixed << std::setprecision(0) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
     }
     if (ToulBar2::uaieval && !ToulBar2::isZ) {
         ((WCSP*)wcsp)->solution_UAI(bestUb);

@@ -2048,7 +2048,7 @@ void Solver::newSolution()
             ((WCSP*)wcsp)->solution_XML(false);
         }
         if (ToulBar2::maxsateval) {
-            cout << "o " << wcsp->getLb() << endl;
+            cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         }
         if (ToulBar2::uaieval && !ToulBar2::isZ) {
             ((WCSP*)wcsp)->solution_UAI(wcsp->getLb());
@@ -2635,7 +2635,7 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
                 ((WCSP*)wcsp)->solution_XML(false);
             }
             if (ToulBar2::maxsateval) {
-                cout << "o " << work2.ub << endl;
+                cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
             }
             if (ToulBar2::uaieval && !ToulBar2::isZ) {
                 ((WCSP*)wcsp)->solution_UAI(work2.ub);
@@ -3780,12 +3780,16 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
                     cout << "(" << ToulBar2::deltaUbS << "," << std::scientific << ToulBar2::deltaUbRelativeGap << std::fixed << ")-";
                 cout << solType[isLimited] << cost << " energy: " << -(wcsp->Cost2LogProb(cost) + ToulBar2::markov_log) << std::scientific << " prob: " << wcsp->Cost2Prob(cost) * Exp(ToulBar2::markov_log) << std::fixed << " in " << nbBacktracks << " backtracks and " << nbNodes << " nodes" << ((ToulBar2::DEE) ? (to_string(" ( ") + to_string(wcsp->getNbDEE()) + to_string(" removals by DEE)")) : to_string("")) << " and " << ((ToulBar2::parallel) ? (realTime() - ToulBar2::startRealTime) : (cpuTime() - ToulBar2::startCpuTime)) << " seconds." << endl;
 #ifdef OPENMPI
-            } else if (ToulBar2::maxsateval && !isLimited && (!ToulBar2::parallel || world.rank() == MASTER)) {
+            } else if (ToulBar2::maxsateval && (!ToulBar2::parallel || world.rank() == MASTER)) {
 #else
-            } else if (ToulBar2::maxsateval && !isLimited) {
+            } else if (ToulBar2::maxsateval) {
 #endif
-                cout << "o " << cost << endl;
-                cout << "s OPTIMUM FOUND" << endl;
+                cout << "o " << std::fixed << std::setprecision(0) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << endl;
+                if (!isLimited) {
+                    cout << "s OPTIMUM FOUND" << endl;
+                } else {
+                    cout << "s SATISFIABLE" << endl;
+                }
                 ((WCSP*)wcsp)->printSolutionMaxSAT(cout);
             }
         }
@@ -3808,7 +3812,6 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
 #else
         if ((ToulBar2::maxsateval || ToulBar2::xmlflag) && !isLimited) {
 #endif
-            //            cout << "o " << cost << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
     }
