@@ -1074,6 +1074,14 @@ class MultiCFN:
 
         return self.MultiCFN.getVariableIndex(name)
 
+    def GetNbCFN(self):
+        """GetNbCFN returns the number of CFN pushd in the MultiCFN.
+
+        Returns:
+            Number of CFN (int).
+
+        """
+        return self.MultiCFN.nbNetworks()
 
     def GetSolution(self):
         """GetSolution returns the solution of the combined cfn after being solved.

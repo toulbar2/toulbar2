@@ -1,3 +1,5 @@
+#ifdef LR_BCD_BUILD
+
 #define _USE_MATH_DEFINES
 
 #include <vector>
@@ -895,3 +897,21 @@ Cost Solver::lrBCD(size_t maxiter, int k, size_t nbR, vector<Value>& solution)
 
     return (wcsp->getUb() < initialUpperBound) ? wcsp->getSolutionCost() : MAX_COST;
 }
+
+#else
+
+#include <vector>
+#include <core/tb2wcsp.hpp>
+
+// LR-BCD
+Cost Solver::lrBCD(string cmd, vector<Value>& solution)
+{
+
+    cerr << "Error: this version of ToulBar2 has not been built with the LR-BCD solver." << endl;
+    
+    throw BadConfiguration();
+    
+    return MAX_COST;
+}
+
+#endif

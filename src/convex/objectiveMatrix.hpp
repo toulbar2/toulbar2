@@ -1,6 +1,8 @@
 #ifndef OBJECTIVEMATRIX_HPP_
 #define OBJECTIVEMATRIX_HPP_
 
+#ifdef LR_BCD_BUILD
+
 #include <string>
 #include <iostream>
 #include <vector>
@@ -229,5 +231,7 @@ DnMat objectiveMatrix(WeightedCSP* wcsp)
 
     return costMatrix;
 }
+
+#endif // LR_BCD_BUILD
 
 #endif
