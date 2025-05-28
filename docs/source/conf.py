@@ -25,7 +25,7 @@ sys.path.insert(0, pytoulbar2_code_path)
 # -- Project information -----------------------------------------------------
 
 project = 'toulbar2'
-copyright = '2022, INRAE'
+copyright = '2025, INRAE'
 author = 'INRAE'
 
 # The short X.Y version
@@ -59,15 +59,9 @@ extensions = [
 
 # Breathe
 breathe_default_project = "toulbar2cpp"
-
-if "/home/sbuchet/dev/toulbar2_doc/build" == '@'+'CMAKE_CURRENT_BINARY_DIR'+'@':
-    tb2cpp_folder = os.path.normpath(os.path.join(docs_path, "..", "..", "build", "xml"))
-else:
-    tb2cpp_folder = os.path.normpath(os.path.join("/home/sbuchet/dev/toulbar2_doc/build", "xml"))
-
-
 breathe_projects = {
-    "toulbar2cpp" : tb2cpp_folder,
+    "toulbar2cpp" : os.path.normpath(os.path.join(docs_path, "..", "..",
+                                                  "build", "xml")),
 }
 #breathe_implementation_filename_extensions = ['.c', '.cc', '.cpp']
 
