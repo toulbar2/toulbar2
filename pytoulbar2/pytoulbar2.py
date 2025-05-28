@@ -19,7 +19,7 @@ except Exception:
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
     
-    Constructor Args:
+    Args:
         ubinit (decimal cost or None): initial upper bound.
         resolution (int): decimal precision of costs.
         vac (int): if non zero, maximum solver depth minus one where virtual arc consistency algorithm is applied (1: VAC only in preprocessing).
