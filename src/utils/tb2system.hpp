@@ -37,6 +37,7 @@ public:
 
 class WrongFileFormat : public InternalError {
 public:
+    WrongFileFormat();
     const char* what() const throw() FINAL { return "... wrong problem file format!"; }
 };
 

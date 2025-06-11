@@ -1636,7 +1636,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         int domsize,nbval;
         for (int k = 0; k < (int)values.size(); ++k) {
             vars = vars_copy;
-            params="0 ";
+            params="0";
             vars.push_back(getMyVar(occurs[k]));
             for (int i = 0; i < (int)vars.size()-1; ++i) {
                 domsize = problem->getDomainInitSize(vars[i]);
@@ -1669,7 +1669,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
             }
             problem->postKnapsackConstraint(vars, params, false, true, false);
-            params="0 ";
+            params="0";
             for (int i = 0; i < (int)vars.size()-1; ++i) {
                 domsize = problem->getDomainInitSize(vars[i]);
                 nbval=0;

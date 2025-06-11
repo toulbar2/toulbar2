@@ -19,6 +19,20 @@ const char* PrintFormatProb = "%lf";
 
 std::mt19937 myrandom_generator{ std::random_device{}() };
 
+WrongFileFormat::WrongFileFormat()
+{
+    if (ToulBar2::maxsateval || ToulBar2::xmlflag) {
+#ifdef OPENMPI
+        mpi::communicator world;
+        if (!ToulBar2::parallel || world.rank() == WeightedCSPSolver::MASTER) {
+            std::cout << std::endl << "s UNSUPPORTED" << std::endl;
+        }
+#else
+        std::cout << std::endl << "s UNSUPPORTED" << std::endl;
+#endif
+    }
+}
+
 /* --------------------------------------------------------------------
 // Timer management functions
 // -------------------------------------------------------------------- */
