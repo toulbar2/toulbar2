@@ -22,33 +22,39 @@
 #include "tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
 #include "utils/tb2lapjv.hpp"
+#include <unordered_set>
+#include <unordered_map>
 
 using namespace std;
 
 class AllDifferentConstraint : public AbstractNaryConstraint {
-    Cost Original_ub; // initial upper bound when creating the constraint
-    StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
-    StoreCost assigneddeltas;
-    vector<Long> conflictWeights; // used by weighted degree heuristics
-    vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs to values in the cost function
-    vector<StoreInt> storeResults; // store the last optimal assignment
-    StoreInt isResults;
-    int *rowsol = nullptr;
-    Cost* ReduceCostRow = nullptr;
-    Cost* ReduceCostCol= nullptr;
-    Cost * cost_matrix = nullptr;
-    int NbValues;
-    vector<int> AssignedVar;
-    vector<int> AssignedVal;
-    vector<int> NoAssignedVar;
-    int NbAssigned;
-    int NbNoAssigned;
-    vector<bool> isAssignedValue;
-    vector<bool> varAlreadyProcessed;
-    vector<Value> exceptedValues;
-    vector<int>exceptedValIndex;
-    bool excepted;
-    bool isSquare;
+    Cost Original_ub; // Initial upper bound when creating the constraint
+    StoreCost lb; // Projected cost to problem lower bound (if zero, all deltaCosts must be zero)
+    StoreCost assigneddeltas; // Accumulated deltas from assigned values (used in cost propagation)
+    vector<Long> conflictWeights; // Used by weighted degree heuristics to prioritize variables
+    vector<vector<StoreCost>> deltaCosts; // Extended unary costs to all values (2D cost matrix)
+    vector<StoreValue> storeLastAssignment; // Stores the last optimal assignment of variables
+    StoreInt storeAssignment; // True if store optimal assignment
+    int *rowSol = nullptr; // Row solution pointer for assignment
+    Cost* ReduceCostRow = nullptr; // Row reduction costs 
+    Cost* ReduceCostCol = nullptr; // Column reduction costs 
+    vector<Cost> costMatrix; // Flattened cost matrix 
+    int NbValues; // Total number of values in the domain
+    vector<int> AssignedVar; // List of currently assigned variables
+    vector<int> AssignedVal; // List of values assigned to variables
+    vector<int> NoAssignedVar; // List of unassigned variables
+    int NbAssigned; // Number of assigned variables
+    int NbNoAssigned; // Number of unassigned variables
+    vector<bool> isAssignedValue; // Flags for whether each value is assigned
+    vector<bool> varAlreadyProcessed; // Flags for whether a variable has already been processed
+    vector<Value> exceptedValues; // Values to be excluded 
+    vector<int> exceptedValIndex; // Indices of excluded values
+    bool excepted; // Flag indicating if no excluded values
+    bool isSquare; // Indicates if the cost matrix is square 
+    vector<string> UnionVarDomain; // Combined domain of all variables 
+    vector<int> VarDomainSize; // Domain size per variable
+    unordered_map<string, int> mapDomainValToIndex; // Maps domain values to indices in UnionVarDomain
+    bool SameDomain; // True if all variables have the same domain
 
 
     void projectLB(Cost c)
@@ -92,60 +98,104 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
 	
 
 public:
+    // Constructor for the AllDifferentConstraint class
     AllDifferentConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
-        : AbstractNaryConstraint(wcsp, scope_in, arity_in)
+        : AbstractNaryConstraint(wcsp, scope_in, arity_in) 
         , Original_ub(wcsp->getUb())
-        , lb(0)
-        , assigneddeltas(0)
-	, isResults(false)
-	, excepted(false)
-    {
-    	if (arity_in > 0) {
-    		isSquare = false;
-    		NbValues = (int)scope[0]->getDomainInitSize() ;
-    		int DomainSize;
-    		if(NbValues == arity_in)
-    		{
-    			conflictWeights.push_back(0);
-    			isSquare = true;
-                	for (int i = 1; i < arity_in; i++) {
-				conflictWeights.push_back(0);
-				DomainSize = (int)scope[i]->getDomainInitSize();
-				if(DomainSize != NbValues) {
-					conflictWeights.clear();
-					isSquare = false;	
-					break;
-				}
-			}
-		}
-		if(!isSquare)
-		{
-			conflictWeights.push_back(0);
-	    		deltaCosts.emplace_back(NbValues, MIN_COST);
-	    		for (int i = 1; i < arity_in; i++) {
-	    			conflictWeights.push_back(0);
-	    			DomainSize = (int)scope[i]->getDomainInitSize();
-	    			assert(DomainSize >= arity_in); //TODO: do not assume identical initial domain size equal to the arity
-	    			deltaCosts.emplace_back(DomainSize, MIN_COST);
-	    			if (DomainSize> NbValues) NbValues = DomainSize;
-	    		}
-	    	}
-	    	
-	    	
-    		if(NbValues < arity_in) THROWCONTRADICTION;
-    		storeResults = vector<StoreInt>(arity_in, StoreInt(-1));
-    		NoAssignedVar = vector<int>(arity_in, -1);
-    		AssignedVar= vector<int>(arity_in, -1);
-    		AssignedVal= vector<int>(arity_in, -1);
-		rowsol = new int[arity_];
-	        ReduceCostRow = new Cost[arity_];
-		ReduceCostCol = new Cost[NbValues];
-		cost_matrix = new Cost[arity_ * NbValues];
-    		// propagate();
-    	} else {
-            deconnect();
+        , lb(0) 
+        , assigneddeltas(0) 
+        , storeAssignment(false) 
+        , excepted(false) 
+        , SameDomain(true) 
+        {
+        if (arity_in > 0) { 
+            unordered_set<string> seen; 
+            isSquare = true; 
+            NbValues = 0; 
+            int DomainSize;
+            int varIndex = 0;
+            // add dummy value names needed by AllDifferent
+            for (int var_ind = 0; var_ind < arity_in; var_ind++) {
+                auto* variable = scope[var_ind];
+                if(variable->isValueNames()) continue;
+                for (int val_ind = 0; val_ind < (int)variable->getDomainInitSize() ; val_ind++) {
+                    variable->addValueName(to_string("v") + to_string(variable->toValue(val_ind)));
+                }
+            }
+            conflictWeights.push_back(0); 
+
+            // Get the domain size of the first variable
+            auto* variable = scope[varIndex];
+            DomainSize = (int)variable->getDomainInitSize();
+            VarDomainSize.push_back(DomainSize);
+           // cout<<"variable : x"<<varIndex<<" domain size : "<<DomainSize<<endl;
+
+            // Collect values from the first variable's domain
+            for (int valIndex= 0; valIndex< DomainSize; valIndex++) {
+               // cout<<variable->getValueName(valIndex)<<" ";
+                if (seen.insert(variable->getValueName(valIndex)).second) {
+                    UnionVarDomain.push_back(variable->getValueName(valIndex));
+                    NbValues++;
+                }
+                
+            }
+           // cout<<endl;
+
+            // Repeat for the rest of the variables
+            for (int varIndex = 1; varIndex< arity_in; varIndex++) {
+                conflictWeights.push_back(0); 
+                auto* variable = scope[varIndex];
+                DomainSize = (int)variable->getDomainInitSize();
+               // cout<<"variable : x"<<varIndex<<" domain size : "<<DomainSize<<endl;
+                VarDomainSize.push_back(DomainSize);
+                if(VarDomainSize[varIndex -1] != VarDomainSize[varIndex]) SameDomain = false;
+
+                // Add only new unique values to the union
+                for (int valIndex = 0; valIndex < DomainSize; valIndex++) {
+                    //cout<<variable->getValueName(valIndex)<<" ";
+                    if (seen.insert(variable->getValueName(valIndex)).second) {
+                        UnionVarDomain.push_back(variable->getValueName(valIndex));
+                        NbValues++;
+                        SameDomain = false; // Different domains detected
+                    }
+                }
+
+            }
+
+            // Map each unique value to its index
+            for (int valIndex = 0; valIndex < NbValues; valIndex++) {
+                mapDomainValToIndex[UnionVarDomain[valIndex]] = valIndex;
+            }
+
+            // If more values than variables, cost matrix is not square
+            if (NbValues > arity_in) {
+                isSquare = false;
+                for (int varIndex = 0; varIndex < arity_in; varIndex++) {
+                    // Initialize extended cost vector for each variable
+                    deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
+                }
+            }
+
+            //  contradiction
+            if (NbValues < arity_in)
+                THROWCONTRADICTION;
+
+            // Initialize 
+            storeLastAssignment = vector<StoreInt>(arity_in, StoreInt(-1)); 
+            NoAssignedVar = vector<int>(arity_in, -1); 
+            AssignedVar = vector<int>(arity_in, -1);
+            AssignedVal = vector<int>(arity_in, -1); 
+            costMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
+
+            // Allocate memory 
+            rowSol = new int[arity_]; 
+            ReduceCostRow = new Cost[arity_]; 
+            ReduceCostCol = new Cost[NbValues]; 
+        } else {
+            deconnect(); 
         }
     }
+
 
     virtual ~AllDifferentConstraint() {}
 
@@ -153,16 +203,17 @@ public:
     {
         int nbExcepted = 0;
         file >> nbExcepted;
-	excepted =  nbExcepted > 0;
-        for (int v=0; v < nbExcepted; v++) {
+	    excepted =  nbExcepted > 0;
+        for (int v = 0; v < nbExcepted; v++) {
+		    auto* variable = scope[0];
             Value except;
             file >> except;
             exceptedValues.push_back(except);
-	    exceptedValIndex.push_back(scope[0]->toIndex(except));
+	        exceptedValIndex.push_back(mapDomainValToIndex[variable->getValueName(variable->toIndex(except))]);
         }
 		if (excepted)
 		{
-			for(int var = 0; var < arity_; var++){
+			for(int varIndex = 0; varIndex < arity_; varIndex++){
 				deltaCosts.emplace_back(arity_, MIN_COST);
 			}
 		}
@@ -214,44 +265,42 @@ public:
     Cost eval(const Tuple& s) override
     {
         // returns the cost of the corresponding assignment s
-        if(isSquare)
+        if (isSquare)
         {
-		// returns the cost of the corresponding assignment s
-		Cost res = MIN_COST;
-		Cost nbsame = 0;
-		vector<bool> alreadyUsed(arity_, false);
-		for (int i = 0; i < arity_; i++) {
-		    assert(s[i] < arity_);
-            if (alreadyUsed[s[i]]) {
-		auto it = find(exceptedValues.begin(), exceptedValues.end(), s[i]);
-                nbsame+= (it == exceptedValues.end());
-		    } else {
-		        alreadyUsed[s[i]] = true;
-		    }
-		}
-		if (nbsame > 0) {
-		    if (nbsame > 0 && Original_ub < wcsp->getUb() && 1.0L * Original_ub * nbsame < wcsp->getUb()) {
-		        res = Original_ub * nbsame; // VNS-like methods may exploit a relaxation of the constraint
-		    } else {
-		        res = wcsp->getUb();
-		    }
-		}
-		assert(res <= wcsp->getUb());
-		assert(res >= MIN_COST);
-		return res;
+            Cost res = MIN_COST;
+            Cost nbsame = 0;
+            vector<bool> alreadyUsed(arity_, false);
+            for (int varIndex = 0; varIndex < arity_; varIndex++) {
+                if (alreadyUsed[s[varIndex]]) {
+                    auto it = find(exceptedValues.begin(), exceptedValues.end(), s[varIndex]);
+                    nbsame += (it == exceptedValues.end());
+                } else {
+                    alreadyUsed[s[varIndex]] = true;
+                }
+            }
+            if (nbsame > 0) {
+                if (nbsame > 0 && Original_ub < wcsp->getUb() && 1.0L * Original_ub * nbsame < wcsp->getUb()) {
+                    res = Original_ub * nbsame; // VNS-like methods may exploit a relaxation of the constraint
+                } else {
+                    res = wcsp->getUb();
+                }
+            }
+            assert(res <= wcsp->getUb());
+            assert(res >= MIN_COST);
+            return res;
         }
-        
+
         Cost res = -lb + assigneddeltas;
         Cost nbsame = 0;
         vector<bool> alreadyUsed(NbValues, false);
-        for (int i = 0; i < arity_; i++) {
-            assert(s[i] < NbValues);
-            res += deltaCosts[i][s[i]];
-            if (alreadyUsed[s[i]]) {
-		auto it = find(exceptedValues.begin(), exceptedValues.end(), s[i]);
-                nbsame+= (it == exceptedValues.end());
+        for (int varIndex = 0; varIndex < arity_; varIndex++) {
+            res += deltaCosts[varIndex][s[varIndex]];
+            int valIndex = mapDomainValToIndex[scope[varIndex]->getValueName(s[varIndex])];
+            if (alreadyUsed[valIndex]) {
+                auto it = find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex);
+                nbsame += (it == exceptedValIndex.end());
             } else {
-                alreadyUsed[s[i]] = true;
+                alreadyUsed[valIndex] = true;
             }
         }
         if (nbsame > 0 || res > wcsp->getUb()) {
@@ -265,6 +314,7 @@ public:
         assert(res >= MIN_COST);
         return res;
     }
+
 
     Cost getMaxFiniteCost() override ///< \brief returns the maximum finite cost for any valid tuple less than wcsp->getUb()
     {
@@ -318,10 +368,30 @@ public:
         }
     }
 
-  bool filtreAndPropagate()
-  {  
+
+    bool RemoveAssignVar()
+    {  
+
+        /**
+        * @brief Filters and removes assigned values from unassigned variables in the AllDifferent constraint.
+        * 
+        * This function enforces the AllDifferent constraint by:
+        * - Verifying that assigned variables do not share the same value.
+        * - Removing values from unassigned variable domains if already assigned elsewhere.
+        * - Propagating newly assigned variables and updating internal state.
+        * - Triggering full n-ary projection if thresholds on domain sizes or variable count are met.
+        * 
+        * @return true if constraint propagation was successful without needing full projection.
+        * @return false if the constraint switched to full n-ary projection.
+        * 
+        * @throws Throws a contradiction exception (THROWCONTRADICTION) if two variables are assigned the same value.
+        */
+
+        // Initialize tracking vectors for assigned values and processed variables
         isAssignedValue = vector<bool>(NbValues, false);
         varAlreadyProcessed = vector<bool>(arity_, false);
+
+        // Clear and reserve space for assigned and unassigned variables containers
         AssignedVar.clear();
         AssignedVar.reserve(arity_);       
         AssignedVal.clear();
@@ -329,163 +399,101 @@ public:
         NoAssignedVar.clear();
         NoAssignedVar.reserve(arity_);
 
-        for (int var = 0; var < arity_; ++var) {
-            auto* variable = scope[var];
+        // Identify assigned and unassigned variables
+        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+            auto* variable = scope[varIndex];
+
             if (!variable->assigned()) {
-                NoAssignedVar.push_back(var);
+                // Variable not assigned yet: add to unassigned list
+                NoAssignedVar.push_back(varIndex);
             } else {
-                int index_val = variable->toIndex(variable->getValue());
-                if(!isAssignedValue[index_val]){
-	                isAssignedValue[index_val] = true;
-	                AssignedVar.push_back(var);
-	                AssignedVal.push_back(index_val); 
-                }
-                else {
-                    THROWCONTRADICTION;
+                // Variable assigned: find the index of its assigned value
+                int valIndex = mapDomainValToIndex[variable->getValueName(variable->toIndex(variable->getValue()))];
+                auto it = find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex);
+                if (!isAssignedValue[valIndex]) {
+                    AssignedVar.push_back(varIndex);
+                    if(it == exceptedValIndex.end()){
+                        // Mark this value as assigned and track the variable
+                        isAssignedValue[valIndex] = true;
+                        AssignedVal.push_back(valIndex); 
+                    } 
+                       
+                } else {
+                    // Contradiction: same value assigned to more than one variable
+                    if(it == exceptedValIndex.end()) THROWCONTRADICTION;
                 }
             }
         }
-    
+
         NbAssigned = AssignedVar.size();
         bool VarAssigned;
         bool NaryPro = false;
-    
+
+        // Propagation loop: remove assigned values from unassigned variables' domains
         do {
             VarAssigned = false;
             vector<int> newlyAssignedVars;
-    
-            for (int val = 0; val < NbValues; ++val) {
-                if (!isAssignedValue[val]) continue;
-    
+
+            // For each assigned value, check all unassigned variables
+            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                if (!isAssignedValue[valIndex]) continue; // Skip values not assigned
+
                 for (int varIndex : NoAssignedVar) {
-                    if (varAlreadyProcessed[varIndex]) continue;
-    
+                    if (varAlreadyProcessed[varIndex]) continue; // Skip already processed vars
+
                     auto* variable = scope[varIndex];
-                    Value value = variable->toValue(val);
-    
-                    if (variable->canbe(value)) {
+                    Value value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+
+                    if (variable->canbe(value) && (find(exceptedValues.begin(), exceptedValues.end(), value) == exceptedValues.end())) {
+                        // Remove the assigned value from the domain of unassigned variable
                         variable->remove(value);
+
                         if (variable->assigned()) {
+                            // If variable becomes assigned after removal, mark for propagation
                             newlyAssignedVars.push_back(varIndex);
                             varAlreadyProcessed[varIndex] = true;
-
                         }
                     }
                 }
             }
-    
+
+            // Process newly assigned variables after domain filtering
             for (int varIndex : newlyAssignedVars) {
                 if (connected(varIndex)) {
+                    // Disconnect variable from constraint and update counts
                     deconnect(varIndex);
                     NbNoAssigned--;
-                    NbAssigned++;   
-                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
+                    NbAssigned++;
+
+                    // Check whether to switch to full n-ary projection based on thresholds
+                    if (getNonAssigned() <= NARYPROJECTIONSIZE &&
+                        (getNonAssigned() <= 1 ||
+                         prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE ||
+                         maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE ||
+                         (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
                         deconnect();
                         projectNary();
                         NaryPro = true;
                         break;
                     } else {
+                        // Update assigned values and variables tracking
                         VarAssigned = true;
                         auto* variable = scope[varIndex];
-                        int valIndex = variable->toIndex(variable->getValue());
-                        isAssignedValue[valIndex] = true;
-                        AssignedVar.push_back(varIndex);
-                        AssignedVal.push_back(valIndex);
-                    }
-                }
-                else return (false);
-            }
-    
-            if (VarAssigned && !NaryPro) {
-                vector<int> updatedNoAssigned;
-                for (int varIndex : NoAssignedVar) {
-                    if (!scope[varIndex]->assigned()) {
-                        updatedNoAssigned.push_back(varIndex);
-                    }
-                }
-                NoAssignedVar.swap(updatedNoAssigned);
-            }
-    
-        } while (VarAssigned);
-        
-        return (!NaryPro);
-   }
-
-
-  bool filtreAndPropagate(bool excepted)
-  {  
-        isAssignedValue = vector<bool>(NbValues, false);
-        varAlreadyProcessed = vector<bool>(arity_, false);
-        AssignedVar.clear();
-        NoAssignedVar.clear();
-        NoAssignedVar.reserve(arity_);
-
-        for (int var = 0; var < arity_; ++var) {
-            auto* variable = scope[var];
-            if (!variable->assigned()) {
-                NoAssignedVar.push_back(var);
-            } else {
-			auto Var = variable->getValue();
-			int index_val = variable->toIndex(Var);
-			auto it = find(exceptedValues.begin(), exceptedValues.end(), Var);
-                if(!isAssignedValue[index_val]){
-                    if( it == exceptedValues.end()) isAssignedValue[index_val] = true;                 
-                }
-                else{ 
-			if (it == exceptedValues.end()) THROWCONTRADICTION;
-                }
-            }
-        }
-
-        bool VarAssigned;
-        bool NaryPro = false;
-    
-        do {
-            VarAssigned = false;
-            vector<int> newlyAssignedVars;
-    
-            for (int val = 0; val < NbValues; ++val) {
-                if (!isAssignedValue[val]) continue;
-    
-                for (int varIndex : NoAssignedVar) {
-                    if (varAlreadyProcessed[varIndex]) continue;
-    
-                    auto* variable = scope[varIndex];
-                    Value value = variable->toValue(val);
-    
-                    if (variable->canbe(value) && (find(exceptedValues.begin(), exceptedValues.end(), value)== exceptedValues.end())) {
-                        variable->remove(value);
-                        if (variable->assigned()) {
-                            newlyAssignedVars.push_back(varIndex);
-                            varAlreadyProcessed[varIndex] = true;
-
-                        }
-                    }
-                }
-            }
-    
-            for (int varIndex : newlyAssignedVars) {
-                if (connected(varIndex)) {
-                    deconnect(varIndex);
-                    NbNoAssigned--;  
-	            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-                        deconnect();
-                        projectNary();
-                        NaryPro = true;
-                        break;
-                    } else {
-                        VarAssigned = true;
-                        auto* variable = scope[varIndex];
-			auto Var = variable->getValue();
-			int valIndex = variable->toIndex(Var);
-                        if(find(exceptedValues.begin(), exceptedValues.end(), Var) == exceptedValues.end()){  
+                        int valIndex = mapDomainValToIndex[variable->getValueName(variable->toIndex(variable->getValue()))];
+                        if(find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end()){
                             isAssignedValue[valIndex] = true;
+                            AssignedVal.push_back(valIndex);
                         }
+                        AssignedVar.push_back(varIndex);
+                        
                     }
+                } else {
+                    // Variable not connected to constraint: stop propagation
+                    return false;
                 }
-                else return (false);
             }
-    
+
+            // Update list of unassigned variables after propagation
             if (VarAssigned && !NaryPro) {
                 vector<int> updatedNoAssigned;
                 for (int varIndex : NoAssignedVar) {
@@ -495,238 +503,256 @@ public:
                 }
                 NoAssignedVar.swap(updatedNoAssigned);
             }
-    
+
         } while (VarAssigned);
-        
+
         return (!NaryPro);
-   }
+    }
+
 
     void propagate() override
     {
-        if (ToulBar2::dumpWCSP % 2) // do not propagate if problem is dumped before preprocessing
+    /**
+     * @brief Propagate the AllDifferent constraint to enforce consistency and improve problem lower bound.
+     * 
+     * This method performs constraint propagation by checking assigned variables,
+     * removing inconsistent values, computing lower bounds using the Jonker algorithm,
+     * and updating unary costs and supports accordingly.
+     * 
+     * It handles different cases depending on whether variables are assigned or not,
+     * if the domains are the same, and whether "excepted" values are considered.
+     * 
+     * @throws TimeOut if the propagation is interrupted.
+     * @throws ContradictionException if the constraint becomes unsatisfiable.
+     */
+
+        if (ToulBar2::dumpWCSP % 2) // skip propagation if the problem is dumped before preprocessing
             return;
+
         if (ToulBar2::interrupted && !ToulBar2::isZ) {
             throw TimeOut();
         }
-        // propagates from scratch the constraint
+
+        // Propagate only if the constraint is connected
         if (connected()) {
             if (ToulBar2::verbose >= 3) {
                 cout << "propagate " << *this << endl;
             }
+
             bool b = false;
-            for (int i = 0; !b && connected() && i < arity_; i++) { // SdG: do not continue to assign if one assign already done
-                if (connected(i) && scope[i]->assigned()) {
-                    assign(i);
+
+            // Attempt to assign variables already connected and assigned
+            for (int varIndex = 0; !b && connected() && varIndex < arity_; varIndex++) {
+                if (connected(varIndex) && scope[varIndex]->assigned()) {
+                    assign(varIndex);
                     b = true;
                 }
             }
+
             if (!b && connected()) {
-                // TODO: compute a lower bound and prune forbidden domain values
-            
-                // Determine whether propagation should be skipped
-		bool skipPropagation = false;
-		if (isResults) {
-			skipPropagation = true;
-			for (int var = 0; var < arity_; var++) {
-				if (scope[var]->cannotbe(scope[var]->toValue(storeResults[var])) || scope[var]->getCost(scope[var]->toValue(storeResults[var])) > MIN_COST) {
-					skipPropagation = false;
-					break;
-				}
-			}
-		}
-  		if (!skipPropagation) {
-			// Initialize total cost and determine assigned/unassigned variables
-			NbNoAssigned = getNonAssigned();
-             		bool FiltreExcepted = false;
-			if (NbNoAssigned < arity_) {
-				if(excepted){
-					FiltreExcepted = filtreAndPropagate(excepted);
-				}		
-					
-               		else if(filtreAndPropagate()) {
-	                        
+                // Check whether propagation should be skipped based on stored results
+                bool skipPropagation = false;
+                if (storeAssignment) {
+                    skipPropagation = true;
+                    for (int varIndex = 0; varIndex < arity_; varIndex++) {
+                        if (scope[varIndex]->cannotbe(storeLastAssignment[varIndex]) || scope[varIndex]->getCost(storeLastAssignment[varIndex]) > MIN_COST) {
+                            skipPropagation = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!skipPropagation) {
+                    // Initialize number of unassigned variables
+                    NbNoAssigned = getNonAssigned();
+                    bool filtreExcepted = false;
+
+                    // If there are assigned variables, handle accordingly
+                    if (NbNoAssigned < arity_) {
+                        if (excepted) {
+                            filtreExcepted = RemoveAssignVar();
+                        } else if (SameDomain && RemoveAssignVar()) {
+                            // Collect unassigned values
                             vector<int> NoAssignedVal;
-			    for (int val = 0; val < NbValues; ++val) {
-				if (!isAssignedValue[val]) {
-				    NoAssignedVal.push_back(val);
-				}
-			    }
-                            
-                            int NbNoAssignedVal =  NoAssignedVal.size();
-                           // Initialize cost matrix for the Jonker algorithm
-                            Cost curent_ub = wcsp->getUb() - wcsp->getLb();			  
-                            for (int i = 0; i < NbNoAssigned; ++i) {
-                                int varIndex = NoAssignedVar[i];
-                                auto* variable = scope[varIndex];
-                                for (int j = 0; j < NbNoAssignedVal; ++j) {
-                                    int valIndex = NoAssignedVal[j];
-                                    Value val = variable->toValue(valIndex);
-                                    cost_matrix[i * NbNoAssignedVal + j] = variable->canbe(val) ? variable->getCost(val) : curent_ub;    
+                            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                if (!isAssignedValue[valIndex]) {
+                                    NoAssignedVal.push_back(valIndex);
                                 }
                             }
-			    Cost TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub );
-                    
-		            if (TotalCost >= curent_ub ) {
-					THROWCONTRADICTION;
-                            }else if (TotalCost >=0 ){
-								
-                                Cost jonker =TotalCost;
-                                for (int i = 0; i < NbNoAssigned; ++i) {
 
-                                    storeResults[NoAssignedVar[i]] = NoAssignedVal[rowsol[i]];
+                            int NbNoAssignedVal = NoAssignedVal.size();
+
+                            // Initialize cost matrix for the Jonker algorithm
+                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
+
+                            for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                int varIndex = NoAssignedVar[varInd];
+                                auto* variable = scope[varIndex];
+
+                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                    int valIndex = NoAssignedVal[valInd];
+                                    Value val = variable->toValue(valIndex);
+                                    costMatrix[varInd * NbNoAssignedVal + valInd] = variable->canbe(val) ? variable->getCost(val) : current_ub;
+                                }
+                            }
+
+                            // Solve assignment problem using Jonker algorithm
+                            Cost TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub);
+
+                            if (TotalCost >= current_ub) {
+                                THROWCONTRADICTION;
+                            } else if (TotalCost >= 0) {
+                                Cost jonker = TotalCost;
+
+                                // Store results from Jonker algorithm
+                                for (int varIndex = 0; varIndex < NbNoAssigned; ++varIndex) {
+                                    auto* variable = scope[NoAssignedVar[varIndex]];
+                                    storeLastAssignment[NoAssignedVar[varIndex]] = variable->toValue(variable->toIndex(UnionVarDomain[NoAssignedVal[rowSol[varIndex]]]));
                                 }
 
-                                for (int i = 0; i < NbAssigned; ++i) {
-                                    storeResults[AssignedVar[i]] = AssignedVal[i];
+                                for (int varIndex  = 0; varIndex  < NbAssigned; ++varIndex) {
+                                    auto* variable = scope[AssignedVar[varIndex]];
+                                    storeLastAssignment[AssignedVar[varIndex]] = variable->toValue(variable->toIndex(UnionVarDomain[AssignedVal[varIndex]]));
                                 }
-		                isResults = true;
-		                // Update the lower bound with the Jonker algorithm's total cost
-		                projectLB(jonker);
-		            
-		                // Modify unary costs using ExtOrProJ, for unassigned variables only
 
-		                for (int i = 0; i < NbNoAssigned; ++i) {
-		                    int var = NoAssignedVar[i];
-		                    auto* variable = scope[var];
-		            
-		                    for (int j = 0; j < NbNoAssignedVal; ++j) {
-		                        int index_val = NoAssignedVal[j];
-		                        Value val = variable->toValue(index_val);
-		            
-		                        if (variable->canbe(val)) {
-		                            //Adjust the cost using reduced row and column costs
+                                storeAssignment = true;
 
-		                            ExtOrProJ(var, val, (ReduceCostRow[i] + ReduceCostCol[j]));
-		                        }
+                                // Update the lower bound with the Jonker algorithm's total cost
+                                projectLB(jonker);
 
-		                    }
+                                // Adjust unary costs for unassigned variables based on reduced costs
+                                for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                    int varIndex = NoAssignedVar[varInd];
+                                    auto* variable = scope[varIndex];
 
-		                }
+                                    for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                        int valIndex = NoAssignedVal[valInd];
+                                        Value value = variable->toValue(valIndex);
 
-	  		        // Update support if needed              
-				for (int i = 0; i < NbNoAssigned; ++i) {
-				    int var = NoAssignedVar[i];
-	                    	    auto* variable = scope[var];		            
-				    Value opt_val = variable->toValue(storeResults[var]);
-				    if (variable->getSupport() != opt_val)  {
-				  	  if (ToulBar2::verbose > 0)
-						cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << opt_val << endl;
+                                        if (variable->canbe(value)) {
+                                            ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+                                        }
+                                    }
+                                }
+
+                                // Update support values if needed for unassigned variables
+                                for (int varInd  = 0; varInd  < NbNoAssigned; ++varInd ) {
+                                    int varIndex = NoAssignedVar[varInd];
+                                    auto* variable = scope[varIndex];
+                                    Value optimalValue = storeLastAssignment[varIndex];
+                                    if (variable->getSupport() != optimalValue) {
+                                        if (ToulBar2::verbose > 0)
+                                            cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
 #ifndef NDEBUG
-					variable->queueEAC1(); // EAC support may have been lost
+                                        variable->queueEAC1(); // EAC support may have been lost
 #endif
-					variable->setSupport(opt_val);
+                                        variable->setSupport(optimalValue);
+                                        assert(variable->getCost(variable->getSupport()) == MIN_COST);
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-					assert(variable->getCost(variable->getSupport()) == MIN_COST);
-				    }
-			    	}
-		           }
-			}
-		    }
- 
+                    // Case when all variables are unassigned or filtering exception or domains differ
+                    if (NbNoAssigned == arity_ || filtreExcepted) {
+                        Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
-		    else
-			if(NbNoAssigned == arity_ || FiltreExcepted) {
-					
-			 // Initialize cost matrix for the Jonker algorithm		        
-		        Cost curent_ub = wcsp->getUb() - wcsp->getLb();	
-		        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
-		                auto* variable = scope[varIndex];
+                        // Initialize the cost matrix for all variables and their domain values
+                        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                            auto* variable = scope[varIndex];
 
-		            
-		                for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-		                    Value val = variable->toValue(valIndex);
-		            
-		                    cost_matrix[varIndex * NbValues + valIndex] = variable->canbe(val) ? variable->getCost(val) : curent_ub;
-		                }
-		        }		            
-	
-		        // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
+                            for (int valIndex = 0; valIndex < VarDomainSize[varIndex]; ++valIndex) {
+                                Value value = variable->toValue(valIndex);
+                                string valName = variable->getValueName(valIndex);
+                                costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] = variable->canbe(value) ? variable->getCost(value) : current_ub;
+                            }
+                        }
 
-			Cost TotalCost;
-			if(excepted)
-				TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub, exceptedValIndex);
-			else
-				TotalCost = lapjv(arity_, NbValues , cost_matrix ,  rowsol,  ReduceCostRow, ReduceCostCol, curent_ub);
-	
-			 if (TotalCost >= curent_ub  ) {		   		            
-		                THROWCONTRADICTION;
-		            } else if (TotalCost >=0) {
-	       
-				    for (int var = 0; var < arity_; var++){
-						storeResults[var] = rowsol[var];
-					}
-				    isResults = true;
+                        // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
+                        Cost TotalCost;
+                        if (excepted)
+                            TotalCost = lapjv(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, exceptedValIndex);
+                        else
+                            TotalCost = lapjv(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub);
 
-				    Cost jonker = TotalCost;
-					      
-				   // Update the lower bound with the Jonker algorithm's total cost
-				   projectLB(jonker);
-			    
-				  // Modify unary costs using ExtOrProJ
-				  for (int var = 0; var < arity_; ++var) {
-				      auto* variable = scope[var];
-			    
-				      for (int index_val = 0; index_val < NbValues; ++index_val) {
-				          Value val = variable->toValue(index_val);
-			    
-				          if (variable->canbe(val)) {
-				            	ExtOrProJ(var, val, (ReduceCostRow[var] + ReduceCostCol[index_val]));
-				          }
-				     }
-				  }
+                        if (TotalCost >= current_ub) {
+                            THROWCONTRADICTION;
+                        } else if (TotalCost >= 0) {
+                            // Store results from Jonker algorithm
+                            for (int varIndex = 0; varIndex < arity_; varIndex++) {
+                                auto* variable = scope[varIndex];
+                                storeLastAssignment[varIndex] = variable->toValue(variable->toIndex(UnionVarDomain[rowSol[varIndex]]));
+                            }
 
-		 
-				// Update support if needed
-				for (int var = 0; var < arity_; ++var) {
-				    auto* variable = scope[var];		            
-				    
-				    Value opt_val = variable->toValue(storeResults[var]);
-				    if (variable->getSupport() != opt_val)  {
-				  	  if (ToulBar2::verbose > 0)
-						cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << opt_val << endl;
-		#ifndef NDEBUG
-					variable->queueEAC1(); // EAC support may have been lost
-		#endif
+                            storeAssignment = true;
 
-					variable->setSupport(opt_val);
-					if (variable->cannotbe(variable->getSupport()))
-						cout<< "var "<<endl;
-					assert(variable->getCost(variable->getSupport()) == MIN_COST);
-				    }
-			   	 }		 
-		             }		
-		        }
-		  }	
-            }           
+                            // Update lower bound with the total cost found
+                            projectLB(TotalCost);
+
+                            // Adjust unary costs using reduced row and column costs
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                                auto* variable = scope[varIndex];
+
+                                for (int valIndex = 0; valIndex < VarDomainSize[varIndex]; ++valIndex) {
+                                    Value value = variable->toValue(valIndex);
+                                    string valName = variable->getValueName(valIndex);
+
+                                    if (variable->canbe(value)) {
+                                        ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
+                                    }
+                                }
+                            }
+
+                            // Update support if needed for all variables
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                                auto* variable = scope[varIndex];
+                                Value optimalValue = storeLastAssignment[varIndex];
+                                if (variable->getSupport() != optimalValue) {
+                                    if (ToulBar2::verbose > 0)
+                                        cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
+#ifndef NDEBUG
+                                    variable->queueEAC1(); // EAC support may have been lost
+#endif
+                                    variable->setSupport(optimalValue);
+                                    assert(variable->getCost(variable->getSupport()) == MIN_COST);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
+
 
 
   //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
  //bool verify() override;
- bool verify() override
+ /*bool verify() override
     {
-        if (!isResults) {
+        if (!storeAssignment) {
             return false;
         }
         vector<bool> alreadyUsed(NbValues, false);
         for (int i = 0; i < arity_; i++) {
-            if (alreadyUsed[storeResults[i]] || scope[i]->cannotbe(scope[i]->toValue(storeResults[i])) || scope[i]->getCost(scope[i]->toValue(storeResults[i])) > MIN_COST) {
-                if (alreadyUsed[storeResults[i]]) {
-		    if(excepted && (find(exceptedValues.begin(), exceptedValues.end(), scope[i]->toValue(storeResults[i])) != exceptedValues.end())){ return true;}
-                    cout << "variable " << scope[i]->getName() << " value " << scope[i]->toValue(storeResults[i]) << " used twice!" << endl;
-                } else if (scope[i]->cannotbe(scope[i]->toValue(storeResults[i]))) {
-                    cout << "variable " << scope[i]->getName() << " value " << scope[i]->toValue(storeResults[i]) << " has been removed!" << endl;
-                } else if (scope[i]->getCost(scope[i]->toValue(storeResults[i])) > MIN_COST) {
-                    cout << "variable " << scope[i]->getName() << " value " << scope[i]->toValue(storeResults[i]) << " has nonzero cost!" << endl;
+            int valIndex = mapDomainValToIndex[scope[i]->getValueName(scope[i]->toIndex(storeLastAssignment[i]))];
+            if (alreadyUsed[valIndex] || scope[i]->cannotbe(storeLastAssignment[i]) || scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
+                if (alreadyUsed[valIndex]) {
+		            if(excepted && (find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex ) != exceptedValIndex.end())){ return true;}
+                    cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " used twice!" << endl;
+                } else if (scope[i]->cannotbe(storeLastAssignment[i])) {
+                    cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has been removed!" << endl;
+                } else if (scope[i]->getCost(scope[i]->toValue(storeLastAssignment[i])) > MIN_COST) {
+                    cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has nonzero cost!" << endl;
                 }
                 return false;
             } else {
-                alreadyUsed[storeResults[i]] = true;
+                alreadyUsed[valIndex] = true;
             }
         }
         return true;
-    }
+    }*/
 
     void increase(int index) override
     {
@@ -740,7 +766,7 @@ public:
     {
         if (scope[index]->unassigned()) {
             bool revise = ToulBar2::FullEAC && getVar(index)->cannotbe(getVar(index)->getSupport());
-            if (!isResults || scope[index]->cannotbe(scope[index]->toValue(storeResults[index]))) {
+            if (!storeAssignment || scope[index]->cannotbe(storeLastAssignment[index])) {
 	        propagate();
 	    }
             if (revise)
@@ -753,12 +779,13 @@ public:
     {
         // TODO: incremental cost propagation
         bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) > MIN_COST);
-        if (!isResults || scope[index]->cannotbe(scope[index]->toValue(storeResults[index])) || scope[index]->getCost(scope[index]->toValue(storeResults[index])) > MIN_COST) {
+        if (!storeAssignment || scope[index]->cannotbe(storeLastAssignment[index]) || scope[index]->getCost(storeLastAssignment[index]) > MIN_COST) {
 	    propagate();
 	}
         if (revise)
             reviseEACGreedySolution();
     }
+       
 
     //bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL; // TODO
 
