@@ -17,10 +17,10 @@ using namespace std;
  * which consists of assigning tasks to agents in such a way that the total cost is minimized.
  * This class handles the transformation of a square cost matrix and applies the algorithm
  * through a well-defined series of steps.
- * Source code : https://github.com/scipy/scipy/tree/main/scipy/optimize/rectangular_lsap
+ * Source code : 
  */
  static intptr_t
-augmenting_path(intptr_t dim_val, Cost *cost, vector<Cost>& u,
+augmenting_path(intptr_t dim_val, vector<Cost>& cost, vector<Cost>& u,
                 vector<Cost>& v, vector<intptr_t>& path,
                 vector<intptr_t>& row4col,
                 vector<Cost>& shortestPathCosts, intptr_t i,
@@ -89,7 +89,7 @@ augmenting_path(intptr_t dim_val, Cost *cost, vector<Cost>& u,
     return sink;
 }
 
-Cost lapjv(intptr_t dim_var, intptr_t dim_val, Cost* cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST)
+Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST)
 {
 
     // initialize variables
@@ -162,7 +162,7 @@ Cost lapjv(intptr_t dim_var, intptr_t dim_val, Cost* cost,  int* b,  Cost* usol,
  
  
 static intptr_t
-augmenting_path(intptr_t dim_val, Cost *cost, vector<Cost>& u,
+augmenting_path(intptr_t dim_val, vector<Cost>& cost, vector<Cost>& u,
                 vector<Cost>& v, vector<intptr_t>& path,
                 vector<intptr_t>& row4col,
                 vector<Cost>& shortestPathCosts, intptr_t i,
@@ -234,7 +234,7 @@ augmenting_path(intptr_t dim_val, Cost *cost, vector<Cost>& u,
     return sink;
 }
 
-Cost lapjv(intptr_t dim_var, intptr_t dim_val, Cost* cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST, vector<int>& exceptedValIndex)
+Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST, vector<int>& exceptedValIndex)
 {
 
     // initialize variables
