@@ -25,7 +25,7 @@ sys.path.insert(0, pytoulbar2_code_path)
 # -- Project information -----------------------------------------------------
 
 project = 'toulbar2'
-copyright = '2022, INRAE'
+copyright = '2025, INRAE'
 author = 'INRAE'
 
 # The short X.Y version
