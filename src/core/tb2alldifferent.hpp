@@ -105,7 +105,11 @@ public:
         , lb(0) 
         , assigneddeltas(0) 
         , storeAssignment(false) 
-        , excepted(false) 
+        , NbValues(0)
+        , NbAssigned(0)
+        , NbNoAssigned(arity_in)
+        , excepted(false)
+        , isSquare(false)
         , SameDomain(true) 
         {
         if (arity_in > 0) { 
@@ -272,7 +276,7 @@ public:
             vector<bool> alreadyUsed(arity_, false);
             for (int varIndex = 0; varIndex < arity_; varIndex++) {
                 if (alreadyUsed[s[varIndex]]) {
-                    auto it = find(exceptedValues.begin(), exceptedValues.end(), s[varIndex]);
+                    auto it = find(exceptedValues.begin(), exceptedValues.end(), scope[varIndex]->toValue(s[varIndex]));
                     nbsame += (it == exceptedValues.end());
                 } else {
                     alreadyUsed[s[varIndex]] = true;
@@ -727,9 +731,8 @@ public:
 
 
 
-  //TODO: checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
- //bool verify() override;
- /*bool verify() override
+    //checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
+    bool verify() override
     {
         if (!storeAssignment) {
             return false;
@@ -737,9 +740,8 @@ public:
         vector<bool> alreadyUsed(NbValues, false);
         for (int i = 0; i < arity_; i++) {
             int valIndex = mapDomainValToIndex[scope[i]->getValueName(scope[i]->toIndex(storeLastAssignment[i]))];
-            if (alreadyUsed[valIndex] || scope[i]->cannotbe(storeLastAssignment[i]) || scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
+            if ((alreadyUsed[valIndex] && (!excepted || find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end())) || scope[i]->cannotbe(storeLastAssignment[i]) || scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
                 if (alreadyUsed[valIndex]) {
-		            if(excepted && (find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex ) != exceptedValIndex.end())){ return true;}
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " used twice!" << endl;
                 } else if (scope[i]->cannotbe(storeLastAssignment[i])) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has been removed!" << endl;
@@ -752,7 +754,7 @@ public:
             }
         }
         return true;
-    }*/
+    }
 
     void increase(int index) override
     {

@@ -17,7 +17,7 @@ using namespace std;
  * which consists of assigning tasks to agents in such a way that the total cost is minimized.
  * This class handles the transformation of a square cost matrix and applies the algorithm
  * through a well-defined series of steps.
- * Source code : 
+ * Original source code from https://github.com/scipy/scipy/tree/main/scipy/optimize/rectangular_lsap
  */
  static intptr_t
 augmenting_path(intptr_t dim_val, vector<Cost>& cost, vector<Cost>& u,
