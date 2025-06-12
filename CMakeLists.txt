@@ -63,6 +63,7 @@ OPTION(verbose "verbose mode [default:on]" ON)
 OPTION(COVER_TEST "cover test [default:on]" ON)
 OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
+OPTION(LR_BCD "embed the LR-BCD solver to produce initial solutions and lower bound estimates (requires Eigen3 library) [default:off]" OFF)
 
 MARK_AS_ADVANCED(FORCE BUILD_API_DOC_LATEX)
 MARK_AS_ADVANCED(FORCE CPLEX CPLEX_LOCATION ILOG XML XCSP3 verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS BINARYWCSP TERNARYWCSP)
@@ -121,6 +122,12 @@ IF(CPLEX)
   SET (all_depends  ${all_depends} "dl") 
   SET(STATIC OFF)
 ENDIF(CPLEX)
+
+IF(LR_BCD)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLR_BCD_BUILD")
+  find_package (Eigen3 3.0 REQUIRED NO_MODULE)
+  SET (all_depends  ${all_depends} "Eigen3::Eigen")
+ENDIF(LR_BCD)
 
 if(verbose) 
   set (CMAKE_VERBOSE_MAKEFILE ON)
@@ -292,7 +299,6 @@ IF(XCSP3)
 ELSE(XCSP3)
   INCLUDE(${My_cmake_script}/xmlcsp.cmake)
 ENDIF(XCSP3)
-
 
 ##########################################
 # Build executables

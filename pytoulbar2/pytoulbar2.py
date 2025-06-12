@@ -19,7 +19,7 @@ except Exception:
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
     
-    Constructor Args:
+    Args:
         ubinit (decimal cost or None): initial upper bound.
         resolution (int): decimal precision of costs.
         vac (int): if non zero, maximum solver depth minus one where virtual arc consistency algorithm is applied (1: VAC only in preprocessing).
@@ -1081,6 +1081,14 @@ class MultiCFN:
 
         return self.MultiCFN.getVariableIndex(name)
 
+    def GetNbCFN(self):
+        """GetNbCFN returns the number of CFN pushd in the MultiCFN.
+
+        Returns:
+            Number of CFN (int).
+
+        """
+        return self.MultiCFN.nbNetworks()
 
     def GetSolution(self):
         """GetSolution returns the solution of the combined cfn after being solved.
