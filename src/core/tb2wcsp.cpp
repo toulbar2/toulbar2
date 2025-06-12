@@ -2767,9 +2767,14 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
                 }
             }
         }
-        assert((int)weights.size() == ar);
-        assert((int)scopeVars.size() == ar);
-        assert((int)VarVal.size() == ar);
+        assert((int)weights.size() >= ar);
+        assert((int)scopeVars.size() >= ar);
+        assert((int)VarVal.size() >= ar);
+        assert((int)NotVarVal.size() >= ar);
+        weights.resize(ar);
+        scopeVars.resize(ar);
+        VarVal.resize(ar);
+        NotVarVal.resize(ar);
         for (int i = 0; i < ar; ++i) {
             if (!weights[i].empty()) {
                 minweight = *min_element(weights[i].begin(), weights[i].end());

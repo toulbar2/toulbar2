@@ -762,7 +762,17 @@ public:
     {
         os << "v";
         for (unsigned int i = 0; i < numberOfVariables(); i++) {
-            os << " " << ((solution[i]) ? ((int)i + 1) : -((int)i + 1));
+            if (ToulBar2::opb) {
+                if (ToulBar2::showHidden || (getName((int)i).rfind(HIDDEN_VAR_TAG, 0) != 0)) {
+                    os << " ";
+                    if (!(solution[i])) {
+                        os << "-";
+                    }
+                    os << getName((int)i);
+                }
+            } else {
+                os << " " << ((solution[i]) ? ((int)i + 1) : -((int)i + 1));
+            }
         };
         os << endl;
     }

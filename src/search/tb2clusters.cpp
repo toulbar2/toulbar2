@@ -2602,7 +2602,7 @@ void TreeDecomposition::newSolution(Cost lb)
         ((WCSP*)wcsp)->solution_XML(false);
     }
     if (ToulBar2::maxsateval) {
-        cout << "o " << lb << endl;
+        cout << "o " << std::fixed << std::setprecision(0) << wcsp->Cost2ADCost(lb) << std::setprecision(DECIMAL_POINT) << endl;
     }
     if (ToulBar2::uaieval && !ToulBar2::isZ) {
         wcsp->solution_UAI(lb);

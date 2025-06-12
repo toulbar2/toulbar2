@@ -1189,8 +1189,8 @@ int _tmain(int argc, TCHAR* argv[])
     bool updateValueHeuristic = true;
 
     // Configuration for MaxSAT Evaluation
-    //	ToulBar2::maxsateval = true;
-    //	ToulBar2::verbose = -1;
+    //  ToulBar2::maxsateval = true;
+    //  ToulBar2::verbose = -1;
     //	ToulBar2::binaryBranching = false;
     //	ToulBar2::lds = 1;
 
@@ -3598,7 +3598,6 @@ int _tmain(int argc, TCHAR* argv[])
             cout << -numeric_limits<TProb>::infinity() << endl;
         }
         if (ToulBar2::maxsateval || ToulBar2::xmlflag) {
-            //            cout << "o " << solver->getWCSP()->getUb() << endl;
             cout << "s UNSATISFIABLE" << endl;
         }
     }
