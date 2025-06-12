@@ -185,7 +185,7 @@ public:
                 THROWCONTRADICTION;
 
             // Initialize 
-            storeLastAssignment = vector<StoreInt>(arity_in, StoreInt(-1)); 
+            storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1); 
@@ -659,7 +659,7 @@ public:
                     }
 
                     // Case when all variables are unassigned or filtering exception or domains differ
-                    if (NbNoAssigned == arity_ || filtreExcepted) {
+                    if (NbNoAssigned == arity_ || filtreExcepted || !SameDomain) {
                         Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
                         // Initialize the cost matrix for all variables and their domain values
@@ -745,7 +745,7 @@ public:
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " used twice!" << endl;
                 } else if (scope[i]->cannotbe(storeLastAssignment[i])) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has been removed!" << endl;
-                } else if (scope[i]->getCost(scope[i]->toValue(storeLastAssignment[i])) > MIN_COST) {
+                } else if (scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has nonzero cost!" << endl;
                 }
                 return false;
