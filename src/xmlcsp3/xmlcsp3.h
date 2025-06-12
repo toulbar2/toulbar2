@@ -2805,7 +2805,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     + " has different number of variables and levels");
         vector<int> statevars(lvlstates.size());
         for (size_t i = 0; i != lvlstates.size(); ++i) {
-            string varname = id + to_string("_Q") + to_string(i);
+            string varname = IMPLICIT_VAR_TAG + to_string("mdd") + to_string(problem->numberOfVariables());
             statevars[i] = problem->makeEnumeratedVariable(varname, 0, lvlstates[i].size());
         }
 
