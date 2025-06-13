@@ -179,11 +179,6 @@ public:
                     deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
                 }
             }
-
-            //  contradiction
-            if (NbValues < arity_in)
-                THROWCONTRADICTION;
-
             // Initialize 
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
@@ -207,20 +202,29 @@ public:
     {
         int nbExcepted = 0;
         file >> nbExcepted;
-	    excepted =  nbExcepted > 0;
+        excepted = nbExcepted > 0;
         for (int v = 0; v < nbExcepted; v++) {
-		    auto* variable = scope[0];
             Value except;
             file >> except;
             exceptedValues.push_back(except);
-	        exceptedValIndex.push_back(mapDomainValToIndex[variable->getValueName(variable->toIndex(except))]);
+            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                auto* variable = scope[varIndex];
+                if (variable->canbe(except)) {
+                    exceptedValIndex.push_back(mapDomainValToIndex[variable->getValueName(variable->toIndex(except))]);
+                    break;
+                }
+            }
         }
-		if (excepted)
-		{
-			for(int varIndex = 0; varIndex < arity_; varIndex++){
-				deltaCosts.emplace_back(arity_, MIN_COST);
-			}
-		}
+        if (excepted)
+        {
+            for (int varIndex = 0; varIndex < arity_; varIndex++) {
+                deltaCosts.emplace_back(arity_, MIN_COST);
+            }
+        }
+        else {
+            // contradiction
+            if (NbValues < arity_) THROWCONTRADICTION;
+        }
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but no other preprocessing
@@ -448,7 +452,7 @@ public:
                     auto* variable = scope[varIndex];
                     Value value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
 
-                    if (variable->canbe(value) && (find(exceptedValues.begin(), exceptedValues.end(), value) == exceptedValues.end())) {
+                    if (variable->canbe(value) && (find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end())) {
                         // Remove the assigned value from the domain of unassigned variable
                         variable->remove(value);
 
