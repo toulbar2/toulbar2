@@ -24,9 +24,7 @@
 
 class InternalError : public std::exception {
 public:
-    InternalError()
-    {
-    }
+    InternalError();
     virtual const char* what() const throw() { return "... internal error found, sorry!"; }
 };
 
@@ -37,7 +35,6 @@ public:
 
 class WrongFileFormat : public InternalError {
 public:
-    WrongFileFormat();
     const char* what() const throw() FINAL { return "... wrong problem file format!"; }
 };
 

@@ -19,7 +19,7 @@ const char* PrintFormatProb = "%lf";
 
 std::mt19937 myrandom_generator{ std::random_device{}() };
 
-WrongFileFormat::WrongFileFormat()
+InternalError::InternalError()
 {
     if (ToulBar2::maxsateval || ToulBar2::xmlflag) {
 #ifdef OPENMPI
