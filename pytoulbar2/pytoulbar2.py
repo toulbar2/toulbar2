@@ -389,7 +389,7 @@ class CFN:
                     params += ' ' + str(e[0]) + ' ' + str(e[1])
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
-    def AddAllDifferent(self, scope, encoding = 'binary', excepted = None, incremental = False):
+    def AddAllDifferent(self, scope, encoding = 'hungarian', excepted = None, incremental = False):
         """Add AllDifferent hard global constraint.
         
         Args:
@@ -420,7 +420,7 @@ class CFN:
                         costs = [(0 if (self.CFN.wcsp.toValue(iscope[i], a) != self.CFN.wcsp.toValue(iscope[j], b) or (excepted and ((self.CFN.wcsp.toValue(iscope[i], a) in excepted) or (self.CFN.wcsp.toValue(iscope[j], b) in excepted)))) else self.Top) for a in range(self.CFN.wcsp.getDomainInitSize(iscope[i])) for b in range(self.CFN.wcsp.getDomainInitSize(iscope[j]))]
                         self.CFN.wcsp.postBinaryConstraint(iscope[i], iscope[j], costs, incremental)
             elif (encoding=='hungarian'):
-                params = ''
+                params = '0'
                 if excepted is not None:
                     params = str(len(excepted))
                     for v in excepted:
