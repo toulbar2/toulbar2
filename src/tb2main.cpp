@@ -3245,6 +3245,9 @@ int _tmain(int argc, TCHAR* argv[])
     ToulBar2::startRealTime = realTime();
 #ifndef __WIN32__
     signal(SIGINT, timeOut);
+    if (ToulBar2::maxsateval) {
+        signal(SIGTERM, timeOut);
+    }
     if (timeout > 0)
         timer(timeout);
 #endif
