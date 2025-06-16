@@ -315,7 +315,7 @@ public:
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
     virtual int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \brief post a soft weighted among cost function
     virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
-    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
+    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated
     virtual void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values) = 0; ///< \brief post a weighted among cost function with the number of values encoded as the last variable with index \a varIndex (\e network-based propagator only)
     virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues) = 0; ///< \deprecated
 
