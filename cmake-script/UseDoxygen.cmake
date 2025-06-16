@@ -29,6 +29,8 @@ add_custom_target(sphinx-doc ALL COMMAND make BUILDDIR=${CMAKE_CURRENT_BINARY_DI
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs
 )
 
+# "doxygen.stamp" is a dummy command output file so that targets doc and sphinx-doc
+# would trigger documentation generation with doxygen 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
   DEPENDS ${doxyfile} ${TB2_INCLUDES}
