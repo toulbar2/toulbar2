@@ -8,6 +8,9 @@ ELSE(DOXYGEN_FOUND)
   MESSAGE(STATUS "######### doxygen not found. Cannot generate doc...#############")
 ENDIF (DOXYGEN_FOUND)
 
+# collect cpp header files and python files to incremantally re-build the documentation after small changes (use targets "build/doc" and "docs/html" for instance)
+file(GLOB_RECURSE TB2_INCLUDES "${My_Source}/*.hpp" "${My_Source}/*.py")
+
 set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 set(sphinx_conf_in ${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py.in)
@@ -28,7 +31,7 @@ add_custom_target(sphinx-doc ALL COMMAND make BUILDDIR=${CMAKE_CURRENT_BINARY_DI
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
-  DEPENDS ${doxyfile}
+  DEPENDS ${doxyfile} ${TB2_INCLUDES}
   COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
   COMMAND cmake -E touch ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
