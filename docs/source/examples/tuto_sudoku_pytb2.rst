@@ -63,7 +63,7 @@ In the case of a Sudoku puzzle, since the problem does not contain a numerical o
    cfn = pytb2.CFN(top)
 
 Representing the grid in ToulBar2
-=================
+==================================
 
 To represent our problem in pytoulbar2, it is necessary to define discrete decision variables.
 The variables will represent the various choices that can be made to build a solution to the problem.
@@ -81,7 +81,7 @@ We use the function `AddVariable <pytb2-CFN-AddVariable_>`_ of our :code:`cfn` o
          cfn.AddVariable('cell_'+str(row)+'_'+str(col), range(9))
 
 Solving first the grid
-=================
+=======================
 
 It is already possible to "solve" the puzzle with ToulBar2, as the cfn object contains the variables of the problem.
 The function `Solve <pytb2-CFN-Solve_>`_ is used to run the solving algorithm.
@@ -148,7 +148,7 @@ Which helps to display the first solution:
 
 
 Adding initial values
-=================
+=====================
 
 The next step consists in initializing the variables that correspond to cells for which the value is known.
 We will use the values in the grid example above, defined as a double array (where 0 means the value is unspecified) :

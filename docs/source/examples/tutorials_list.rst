@@ -5,8 +5,7 @@
 .. File name as tuto_*.rst and ref name as _tuto_* for tutorials respecting
 .. content structure : Brief description, CFN model, Python model generator...
 
-- :ref:`tuto_sudoku_pytb2`
-- :ref:`tuto_sudoku_libtb2`
+
 - :ref:`tuto_wnqp`
 - :ref:`tuto_wlsp`
 - :ref:`tuto_biwlsp`
