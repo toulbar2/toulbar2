@@ -289,14 +289,16 @@ public:
     /// \brief create a knapsack constraint (also known as generalized linear constraint) e.g. c1 * (v_0 == a_0) + c2 * (v_1 == a_0) + [...] >= c
     /// \brief The constraint parameters are given as a string:
     /// - the first argument is the capacity
-    /// - kp == 0: 
-    /// - kp > 0:  
+    /// - kp = 0 (knapsack keyword in wcsp format): list of weights (positive or negative integers) associated to the scope variables (must be 0/1 variables)
+    /// - kp = 1 (knapsackp keyword in wcsp format): for each variable in the scope, the number of values with a nonzero weight, followed by the list of pairs of value and corresponding nonzero weight
+    /// - kp = 2 (knapsackv keyword in wcsp format): number of triplets, followed by the list of triplets of variable index in the scope, value, and its corresponding weight
     /// \param scope variable indices of the constraint scope.
-    /// \param arguments constraint parameters (coefficients, bound) as a string.
-    /// \param isclique
-    /// \param kp
-    /// \param conflict
-    /// \param wcnf
+    /// \param arguments constraint parameters (capacity, coefficients) as a string.
+    /// \param isclique if true, then arguments contains a fixed capacity (must be 1) and for each variable in the scope, the number of values, followed by the list of values having a unit weight (clique keywork in wcsp format, warning: it assumes a less than or equal operator)
+    /// \param kp see above
+    /// \param conflict if true, then kp must be 0 and arguments is extended with a list of non-overlapping at-most-one constraints given by the number of AMO constraints, followed by, for each AMO constraint, the number of pairs, followed by the list of pairs of variable index in the scope and value (knapsackc keyword in wcsp format)
+    /// \param wcnf if not empty, then it contains a vector of -1/1 coefficients describing a hard clause (for each Boolean variable in the scope, it must be true if the associated coefficient is 1 or its opposite must be true if -1)
+    /// \note The knapsack constraint assumes a greater than or equal operator, use negative weights and capacity if the less than or equal operator is needed.
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0;
 
     virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0; ///< \deprecated
