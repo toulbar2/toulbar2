@@ -16,7 +16,7 @@ Additional constraints need to be enforced to solve the puzzle.
 In each line, the same number cannot appear twice.
 The same type of constraint occurs for each column.
 Finally, each sub square of size 3x3 located every 3 cells must also not contain duplicates.
-The image bellow show an example of a Sudoku grid given with its initial values.
+The image bellow shows an example of a Sudoku grid given with its initial values.
 The goal is to deduce the other values while verifying the different constraints.
 
 .. only:: html
@@ -48,10 +48,10 @@ Before starting, make sure pytoulbar2 is installed in your environment. It can b
    pip install pytoulbar2
 
 We first create a `CFN <pytb2-CFN_>`_ object. CFN, which stands for Cost Function Network, is the main object that is manipulated in pytoulbar2.
-It represent a problem to solve expressed as a network of cost function, i.e a set of variables that are connected to each other through discret cost functions (or constraints).
+It represents a problem to solve expressed as a network of cost functions, i.e a set of variables that are connected to each other through discrete cost functions (or constraints).
 
-As ToulBar2 is an optimization framework, an optional upper bound can be provided to the cfn object in order to exclude any solution which value exceed this bound.
-In the case of a sudoku puzzle, since the problem does not contain a numerical objective, an upper bound of 1 can be chosen.
+As ToulBar2 is an optimization framework, an optional upper bound can be provided to the CFN object in order to exclude any solution whose value exceeds this bound.
+In the case of a Sudoku puzzle, since the problem does not contain a numerical objective, an upper bound of 1 can be chosen.
 
 .. _pytb2-CFN: ../ref/ref_python.html#pytoulbar2.CFN
 
@@ -67,7 +67,7 @@ Representing the grid in ToulBar2
 
 To represent our problem in pytoulbar2, it is necessary to define discrete decision variables.
 The variables will represent the various choices that can be made to build a solution to the problem.
-In the sudoku puzzle, decision variables are typically the different cells of the grid.
+In the Sudoku puzzle, decision variables are typically the different cells of the grid.
 Their values would be the possible integers they can be assigned to, from 1 to 9.
 We use the function `AddVariable <pytb2-CFN-AddVariable_>`_ of our :code:`cfn` object to create the variables.
 
@@ -83,7 +83,7 @@ We use the function `AddVariable <pytb2-CFN-AddVariable_>`_ of our :code:`cfn` o
 Solving first the grid
 =================
 
-It is already possible to "solve" the puzzle with ToulBar2 as the cfn object contains the variables of the problem.
+It is already possible to "solve" the puzzle with ToulBar2, as the cfn object contains the variables of the problem.
 The function `Solve <pytb2-CFN-Solve_>`_ is used to run the solving algorithm.
 
 .. _pytb2-CFN-Solve: ../ref/ref_python.html#pytoulbar2.CFN.Solve
@@ -103,7 +103,7 @@ We then define a function to print the solutions as a grid:
 
 .. code-block:: python
 
-   # print a solution as a sudoku grid
+   # print a solution as a Sudoku grid
    def print_grid(solution):
 
       print('-------------------------')
@@ -151,7 +151,7 @@ Adding initial values
 =================
 
 The next step consists in initializing the variables that correspond to cells for which the value is known.
-We will use the values in the grid example above, define as a double array (where 0 means the value is unspecified) :
+We will use the values in the grid example above, defined as a double array (where 0 means the value is unspecified) :
 
 .. code-block:: python
 
@@ -167,7 +167,7 @@ We will use the values in the grid example above, define as a double array (wher
                   [0,0,0,0,8,0,0,7,9]]
 
 Variables can be assigned with the function `Assign <pytb2-CFN-Assign_>`_.
-The variable and its value can be specified as integers indexes or as strings.
+The variable and its value can be specified as integer indexes or as strings.
 
 .. _pytb2-CFN-Assign: ../ref/ref_python.html#pytoulbar2.CFN.Assign
 
@@ -184,7 +184,7 @@ The variable and its value can be specified as integers indexes or as strings.
    print_grid(result[0])
 
 .. CAUTION::
-   Although we already solve the problem once, a :code:`CFN` object cannot execute its :code:`Solve` function twice in a row. The object must be recreated or the function must be called only once. 
+   Although we have already solved the problem once, a :code:`CFN` object cannot execute its :code:`Solve` function twice in a row. The object must be recreated or the function must be called only once. 
 
 The solution returned by the algorithm this time looks like this :
 
@@ -212,7 +212,7 @@ Adding constraints and solving the grid
 The last missing part before being able to compute a solution is the constraints.
 Starting with the row constraints, we must ensure that none of the variables in the same row will be assigned to the same values.
 This constraint is usually called *all different* and can be added with the function `AddAllDifferent <pytb2-CFN-AddAllDifferent_>`_.
-The function takes as argument a list of indices of the variables that must differ.
+The function takes as an argument a list of indices of the variables that must differ.
 The constraint on the first row is obtained via:
 
 .. _pytb2-CFN-AddAllDifferent: ../ref/ref_python.html#pytoulbar2.CFN.AddAllDifferent
@@ -228,7 +228,7 @@ Which generates the following first row in the solution:
    -------------------------
    | 5 3 1 | 2 7 4 | 9 8 6 |
 
-Constraints for each rows can be added by varying the column index for each row:
+Constraints for each row can be added by varying the column index for each row:
 
 .. code-block:: python
 
@@ -236,7 +236,7 @@ Constraints for each rows can be added by varying the column index for each row:
    for row_ind in range(9):
       cfn.AddAllDifferent([row_ind*9+col_ind for col_ind in range(9)])
 
-Constraints for each columns are obtained similarly:
+Constraints for each column are obtained similarly:
 
 .. code-block:: python
 
@@ -244,7 +244,7 @@ Constraints for each columns are obtained similarly:
    for col_ind in range(9):
       cfn.AddAllDifferent([row_ind*9+col_ind for row_ind in range(9)])
 
-At this point, the solution is not correct yet since sub-grids of size 3x3 may contain duplicates, such as the values :code:`9` and :code:`3` in the example bellow:
+At this point, the solution is not correct yet since sub-grids of size 3x3 may contain duplicates, such as the values :code:`9` and :code:`3` in the example below:
 
 .. code-block:: text
 
@@ -254,7 +254,7 @@ At this point, the solution is not correct yet since sub-grids of size 3x3 may c
    | 1 9 8 |
    ---------
 
-Additional constraints are added for each of the 9 sub-grid:
+Additional constraints are added for each of the 9 sub-grids:
 
 .. code-block:: python
 
@@ -263,7 +263,7 @@ Additional constraints are added for each of the 9 sub-grid:
       for sub_ind2 in range(3): # column offset
          cfn.AddAllDifferent([(sub_ind1*3+row_ind)*9+ sub_ind2*3+col_ind for col_ind in range(3) for row_ind in range(3)])
 
-These last constraints allow to finally obtain a consistent solution to the sudoku puzzle:
+These last constraints allow to obtain a consistent solution to the Sudoku puzzle finally:
 
 .. code-block:: text
 
