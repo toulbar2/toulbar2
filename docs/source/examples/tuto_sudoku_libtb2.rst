@@ -30,7 +30,7 @@ The goal is to deduce the other values while verifying the different constraints
 
 .. only:: latex
 
-   .. figure:: ../../../web/IMAGES/sudoku_cst.eps
+   .. figure:: ../../../web/IMAGES/sudoku_cst.pdf
       :height: 240px
       :align: center
       :alt: A Sudoku grid with its constraints.
@@ -253,7 +253,7 @@ The variable and its value can be specified as integer indexes or as strings.
    }
 
 .. warning::
-   Although we already solve the problem once, a :code:`WeightedCSP` object cannot execute its :code:`WeightedCSPSolver::solve` function twice in a row. The object must be recreated or the function must be called only once.
+   Although we already solved the problem once, a :code:`WeightedCSP` object cannot execute its :code:`WeightedCSPSolver::solve` function twice in a row. The object must be recreated or the function must be called only once.
 
 The solution returned by the algorithm this time looks like this:
 

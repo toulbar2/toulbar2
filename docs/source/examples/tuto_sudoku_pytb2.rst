@@ -30,7 +30,7 @@ The goal is to deduce the other values while verifying the different constraints
 
 .. only:: latex
 
-   .. figure:: ../../../web/IMAGES/sudoku_cst.eps
+   .. figure:: ../../../web/IMAGES/sudoku_cst.pdf
       :height: 240px
       :align: center
       :alt: A Sudoku grid with its constraints.
