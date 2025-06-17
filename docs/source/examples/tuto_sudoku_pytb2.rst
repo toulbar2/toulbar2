@@ -69,7 +69,7 @@ To represent our problem in pytoulbar2, it is necessary to define discrete decis
 The variables will represent the various choices that can be made to build a solution to the problem.
 In the sudoku puzzle, decision variables are typically the different cells of the grid.
 Their values would be the possible integers they can be assigned to, from 1 to 9.
-We use the function `AddVariable_ <pytb2-CFN-AddVariable_>`_ of our :code:`cfn` object to create the variables.
+We use the function `AddVariable <pytb2-CFN-AddVariable_>`_ of our :code:`cfn` object to create the variables.
 
 .. _pytb2-CFN-AddVariable: ../ref/ref_python.html#pytoulbar2.CFN.AddVariable
 
