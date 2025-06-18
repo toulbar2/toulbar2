@@ -29,7 +29,7 @@ jobs:
 
       - name: "Build docs"
         container:
-        image: ghcr.io/toulbar2/toulbar2/toulbar2_docs
+          image: ghcr.io/toulbar2/toulbar2/toulbar2_docs
         credentials:
             username: ${{ github.actor }}
             password: ${{ secrets.toulbar2_docs_pull }}
