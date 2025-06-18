@@ -58,7 +58,7 @@ As ToulBar2 is an optimization framework, an optional upper bound can be provide
 In the case of a Sudoku puzzle, since the problem does not contain a numerical objective, an upper bound of 1 can be chosen.
 
 In order to compile the following code, assuming we are in the main ToulBar2 source repository, the same compilation flags as used to compile :code:`libtb2.so` must be used:
-:code:`g++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -I./src -o sudoku sudoku_tutorial.cpp libtb2.so
+:code:`g++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -I./src -o sudoku sudoku_tutorial.cpp libtb2.so`
 
 .. highlight:: c++
    
