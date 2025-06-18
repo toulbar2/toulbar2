@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     #runs-on: ubuntu-20.04
 
+    
+
     steps:
 
       - name: "Checkout"
@@ -25,13 +27,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: "ToulBar2 docs build"
+      - name: "Build docs"
+        container:
         image: ghcr.io/toulbar2/toulbar2/toulbar2_docs
         credentials:
-          username: ${{ github.actor }}
-          password: ${{ secrets.toulbar2_docs_pull }}
+            username: ${{ github.actor }}
+            password: ${{ secrets.toulbar2_docs_pull }}
         volumes:
           - ./:/docs
+        run: echo ""
 
       - name: "Deploy on Github Pages (ghp-import)"
         run: | 
