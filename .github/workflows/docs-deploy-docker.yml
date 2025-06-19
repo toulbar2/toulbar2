@@ -1,0 +1,44 @@
+name: "docs-deploy toulbar2 site on GitHub Pages via docker"
+
+# workflow manually executed
+on:
+  workflow_dispatch:
+jobs:
+
+  build-and-deploy-docs:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/toulbar2/toulbar2/toulbar2_docs
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.TOULBAR2_DOCS_PULL }}
+      volumes:
+        - ./:/docs
+
+    steps:
+
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          ref: 'master'
+
+      - name: "Cache"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: "Build docs"
+        run: |
+          mkdir -p build && cd build
+          cmake -DBUILD_API_DOC=ON /docs && make doc
+          cd /docs/docs && make docs
+
+      - name: "Deploy on Github Pages (ghp-import)"
+        run: | 
+          ghp-import -n -p -f docs/_build/html
+
