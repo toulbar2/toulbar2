@@ -271,22 +271,37 @@ public:
     virtual int postIncrementalBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs) = 0;
     virtual int postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
     virtual int postIncrementalTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>& costs) = 0;
-    virtual int postNaryConstraintBegin(vector<int> scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
-    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; /// \deprecated
+    virtual int postNaryConstraintBegin(vector<int> scope, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; ///< \warning must call WeightedCSP::postNaryConstraintEnd after giving cost tuples
+    virtual int postNaryConstraintBegin(int* scope, int arity, Cost defval, Long nbtuples = 0, bool forcenary = !NARY2CLAUSE) = 0; ///< \deprecated
     virtual void postNaryConstraintTuple(int ctrindex, vector<Value>& tuple, Cost cost) = 0;
-    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0; /// \deprecated
-    virtual void postNaryConstraintEnd(int ctrindex) = 0; /// \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
+    virtual void postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost) = 0; ///< \deprecated
+    virtual void postNaryConstraintEnd(int ctrindex) = 0; ///< \warning must call WeightedCSP::sortConstraints after all cost functions have been posted (see WeightedCSP::sortConstraints)
     virtual int postUnary(int xIndex, Value* d, int dsize, Cost penalty) = 0; ///< \deprecated Please use the postUnaryConstraint method instead
     virtual int postUnaryConstraint(int xIndex, Value* d, int dsize, Cost penalty) = 0;
     virtual int postSupxyc(int xIndex, int yIndex, Value cst, Value deltamax = MAX_VAL - MIN_VAL) = 0;
     virtual int postDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Cost penalty) = 0;
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
     virtual int postAllDifferentConstraint(vector<int> scope, const string& arguments) = 0;
-    virtual int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
+    virtual int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file) = 0; ///< \deprecated
     virtual int postCliqueConstraint(vector<int> scope, const string& arguments) = 0;
-    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
+    virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; ///< \deprecated
+
+    /// \brief create a knapsack constraint (also known as generalized linear constraint) e.g. c1 * (v_0 == a_0) + c2 * (v_1 == a_0) + [...] >= c
+    /// \brief The constraint parameters are given as a string:
+    /// - the first argument is the capacity
+    /// - kp = 0 (knapsack keyword in wcsp format): list of weights (positive or negative integers) associated to the scope variables (must be 0/1 variables)
+    /// - kp = 1 (knapsackp keyword in wcsp format): for each variable in the scope, the number of values with a nonzero weight, followed by the list of pairs of value and corresponding nonzero weight
+    /// - kp = 2 (knapsackv keyword in wcsp format): number of triplets, followed by the list of triplets of variable index in the scope, value, and its corresponding weight
+    /// \param scope variable indices of the constraint scope.
+    /// \param arguments constraint parameters (capacity, coefficients) as a string.
+    /// \param isclique if true, then arguments contains a fixed capacity (must be 1) and for each variable in the scope, the number of values, followed by the list of values having a unit weight (clique keywork in wcsp format, warning: it assumes a less than or equal operator)
+    /// \param kp see above
+    /// \param conflict if true, then kp must be 0 and arguments is extended with a list of non-overlapping at-most-one constraints given by the number of AMO constraints, followed by, for each AMO constraint, the number of pairs, followed by the list of pairs of variable index in the scope and value (knapsackc keyword in wcsp format)
+    /// \param wcnf if not empty, then it contains a vector of -1/1 coefficients describing a hard clause (for each Boolean variable in the scope, it must be true if the associated coefficient is 1 or its opposite must be true if -1)
+    /// \note The knapsack constraint assumes a greater than or equal operator, use negative weights and capacity if the less than or equal operator is needed.
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0;
-    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0; /// \deprecated
+
+    virtual int postKnapsackConstraint(int* scopeIndex, int arity, istream& file, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0; ///< \deprecated
     virtual int postWeightedCSPConstraint(vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb = MIN_COST, Cost ub = MAX_COST, bool duplicateHard = false, bool strongDuality = false) = 0; ///< \brief create a hard constraint such that the input cost function network (problem) must have its optimum cost in [lb,ub[ interval. \warning The input scope must contain all variables in problem in the same order. \warning if duplicateHard is true it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model). \warning if strongDuality is true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum on the remaining variables is between lb and ub.
     virtual int postGlobalConstraint(int* scopeIndex, int arity, const string& gcname, istream& file, int* constrcounter = NULL, bool mult = true) = 0; ///< \deprecated Please use the postWxxx methods instead
     virtual void postGlobalFunction(vector<int> scope, const string& gcname, const string& arguments) = 0; ///< \brief generic function to post any global cost function
@@ -300,9 +315,9 @@ public:
     /// \param values a vector of values to be restricted
     /// \param lb a fixed lower bound for the number variables to be assigned to the values in \a values
     /// \param ub a fixed upper bound for the number variables to be assigned to the values in \a values
-    virtual int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< post a soft weighted among cost function
+    virtual int postWAmong(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \brief post a soft weighted among cost function
     virtual int postWAmong(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub) = 0; ///< \deprecated
-    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated post a weighted among cost function decomposed as a cost function network
+    virtual void postWAmong(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int lb, int ub) = 0; ///< \deprecated
     virtual void postWVarAmong(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values) = 0; ///< \brief post a weighted among cost function with the number of values encoded as the last variable with index \a varIndex (\e network-based propagator only)
     virtual void postWVarAmong(int* scopeIndex, int arity, const string& semantics, Cost baseCost, Value* values, int nbValues) = 0; ///< \deprecated
 
@@ -317,7 +332,7 @@ public:
     /// \param accepting_States a vector of WeightedObjInt specifying the final states
     /// \param Wtransitions a vector of (weighted) transitions
     /// \warning Weights are ignored in the current implementation of DAG and flow-based propagators
-    virtual int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< post a soft weighted regular cost function
+    virtual int postWRegular(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< \brief post a soft weighted regular cost function
     virtual int postWRegular(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions) = 0; ///< \deprecated
     virtual void postWRegular(int* scopeIndex, int arity, int nbStates, vector<pair<int, Cost>> initial_States, vector<pair<int, Cost>> accepting_States, int** Wtransitions, vector<Cost> transitionsCosts) = 0; ///< \deprecated post a weighted regular cost function decomposed as a cost function network
 

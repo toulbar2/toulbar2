@@ -62,6 +62,8 @@ See examples at https://forgemia.inra.fr/thomas.schiex/cfn-learn.
 How do I install it ?
 =====================
 
+.. _install-binaries:
+
 toulbar2 is an open source solver distributed under the MIT license as a set of C++ sources managed with git at http://github.com/toulbar2/toulbar2. If you want
 to use a released version, then you can download there source archives of a specific release that should be easy to compile on most Linux systems.
 

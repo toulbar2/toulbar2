@@ -7,6 +7,8 @@ List of all examples
 .. toctree::
    :maxdepth: 1
 
+   tuto_sudoku_pytb2.rst
+   tuto_sudoku_libtb2.rst
    tuto_wnqp.rst
    tuto_wlsp.rst
    tuto_biwlsp.rst
