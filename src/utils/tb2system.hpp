@@ -12,6 +12,8 @@
 #define FINAL
 #endif
 
+#include "tb2config.hpp"
+
 #ifdef QUAD_PROB
 #include <boost/multiprecision/float128.hpp>
 //#include <quadmath.h>

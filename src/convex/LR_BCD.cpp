@@ -1,3 +1,6 @@
+
+#include "tb2config.hpp"
+
 #ifdef LR_BCD_BUILD
 
 #define _USE_MATH_DEFINES

@@ -28,6 +28,8 @@
 #ifndef TB2STORE_HPP_
 #define TB2STORE_HPP_
 
+#include "tb2config.hpp"
+
 #include "core/tb2types.hpp"
 
 #ifndef NUMBERJACK

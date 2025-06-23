@@ -13,6 +13,8 @@
 #include <cstring>
 #include "libgen.h"
 
+#include "tb2config.hpp"
+
 #ifdef OPENMPI
 #define BOOST_MPI_HOMOGENEOUS
 #include <boost/mpi.hpp>

@@ -20,6 +20,8 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
+#include "tb2config.hpp"
+
 // #define INT_COST
 // #define LONGLONG_COST
 // #define PARETOPAIR_COST

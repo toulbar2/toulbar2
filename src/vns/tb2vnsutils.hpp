@@ -9,6 +9,9 @@
 
 #ifndef TB2VNSUTILS_HPP_
 #define TB2VNSUTILS_HPP_
+
+#include "tb2config.hpp"
+
 #ifdef BOOST
 
 #include "tb2vns.hpp"
