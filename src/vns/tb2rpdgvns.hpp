@@ -8,6 +8,9 @@
 
 #ifndef TB2RPDGVNS_HPP_
 #define TB2RPDGVNS_HPP_
+
+#include "tb2config.hpp"
+
 #ifdef OPENMPI
 
 #include "tb2cpdgvns.hpp"

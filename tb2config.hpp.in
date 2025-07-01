@@ -1,0 +1,35 @@
+/** 
+ *  \file tb2config.hpp
+ *  \brief Types definitions, automatically generated with cmake.
+ */
+
+#pragma once
+
+// probabilities
+#cmakedefine DOUBLE_PROB
+#cmakedefine LONGDOUBLE_PROB
+#cmakedefine QUAD_PROB
+
+// costs
+#cmakedefine SHORT_COST
+#cmakedefine INT_COST
+#cmakedefine LONGLONG_COST
+
+// domain Values
+#cmakedefine SHORT_VALUE
+
+// BOOST
+#cmakedefine BOOST
+
+// XML XCSP Parser
+#cmakedefine XMLFLAG
+#cmakedefine XMLFLAG3
+
+// MPI
+#cmakedefine OPENMPI
+
+// CPLEX
+#cmakedefine ILOGCPLEX
+
+// LR-BCD (Eigen)
+#cmakedefine LR_BCD_BUILD

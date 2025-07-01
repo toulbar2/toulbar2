@@ -34,6 +34,5 @@ IF(NOT Boost_FOUND)
         MESSAGE(ERROR "#################################")
 ELSE (NOT Boost_FOUND)
         MESSAGE(STATUS "boost Package configured successfully.")
-        SET (boostflag BOOST)
 ENDIF(NOT Boost_FOUND)
 

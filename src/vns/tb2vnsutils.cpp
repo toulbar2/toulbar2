@@ -6,6 +6,8 @@
  *      PhD Student: LITIO, University of Oran ; GREYC, University of Caen.
  */
 
+#include "tb2config.hpp"
+
 #ifdef BOOST
 #include "tb2vnsutils.hpp"
 #include "core/tb2wcsp.hpp"

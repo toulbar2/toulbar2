@@ -88,28 +88,19 @@ ELSE()
    message("Conan file not found in ${CMAKE_CURRENT_SOURCE_DIR} - assuming conan free build.")
 ENDIF()
 
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release CACHE STRING
-      "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
-    FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
 
-IF(QUAD_PROBABILITY)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++17" )
-ELSE(QUAD_PROBABILITY)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17" )
-ENDIF(QUAD_PROBABILITY)
+MESSAGE(STATUS "compile flags: ${CMAKE_CXX_FLAGS}")
+
 # -fsanitize=address -fsanitize=undefined -Wconversion -Wsign-conversion
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftrapping-math -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native" ) #  -flto
 
-IF(QUAD_PROBABILITY)
-  SET (all_depends  ${all_depends} "quadmath") 
-ENDIF(QUAD_PROBABILITY)
 
+SET(ILOGCPLEX OFF)
 IF(CPLEX)
   MESSAGE("CPLEX location: ${CPLEX_LOCATION}")
-  SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DILOGCPLEX -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
+  SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
   SET(CPLEXLIB "-L${CPLEX_LOCATION}/cplex/lib/x86-64_linux/static_pic -L${CPLEX_LOCATION}/concert/lib/x86-64_linux/static_pic") 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPLEXFLAGS}")
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CPLEXLIB}")
@@ -120,13 +111,16 @@ IF(CPLEX)
   SET (all_depends  ${all_depends} "m") 
   SET (all_depends  ${all_depends} "pthread") 
   SET (all_depends  ${all_depends} "dl") 
+  SET(ILOGCPLEX ON)
   SET(STATIC OFF)
 ENDIF(CPLEX)
 
+# LR-BCD Solver configuration
+SET(LR_BCD_BUILD OFF)
 IF(LR_BCD)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLR_BCD_BUILD")
   find_package (Eigen3 3.0 REQUIRED NO_MODULE)
   SET (all_depends  ${all_depends} "Eigen3::Eigen")
+  SET(LR_BCD_BUILD ON)
 ENDIF(LR_BCD)
 
 if(verbose) 
@@ -279,6 +273,7 @@ IF(Boost)
   INCLUDE(${My_cmake_script}/Boost_option.cmake)
   LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+  SET(BOOST ON)
 ENDIF(Boost)
 
 IF(MPI) 
@@ -291,9 +286,11 @@ IF(MPI)
   INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
   FIND_PACKAGE(Boost REQUIRED COMPONENTS serialization mpi)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-  SET(mpiflag OPENMPI)
+  SET(OPENMPI ON)
 ENDIF(MPI)
 
+SET(XMLFLAG OFF)
+SET(XMLFLAG3 OFF)
 IF(XCSP3)
   INCLUDE(${My_cmake_script}/xmlcsp3.cmake)
 ELSE(XCSP3)
@@ -308,6 +305,7 @@ ENDIF(XCSP3)
 
 INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 
+
 IF(TOULBAR2)
   ADD_LIBRARY(tb2-objects OBJECT ${LIBTB2FILES})
   ADD_EXECUTABLE(toulbar2${EXE} ${My_Source}/tb2main.cpp $<TARGET_OBJECTS:tb2-objects>)
@@ -315,9 +313,12 @@ IF(TOULBAR2)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} PUBLIC "-static")
   ENDIF(STATIC)
   ADD_LIBRARY(tb2-archive STATIC $<TARGET_OBJECTS:tb2-objects>)
+
+  # tb2version.hpp
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   ADD_DEPENDENCIES(toulbar2${EXE} gen_version)
+
   IF(MPI)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} PUBLIC ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
     IF(MPI_COMPILE_FLAGS)
@@ -331,6 +332,7 @@ IF(TOULBAR2)
   ENDIF(MPI)
 
   INSTALL( TARGETS toulbar2${EXE} DESTINATION bin)
+
 ENDIF(TOULBAR2)
 
 ##########################################
@@ -357,7 +359,7 @@ IF(LIBTB2)
     SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
   ENDIF(NOT WIN64)
   IF(XML)
-    MESSAGE(STATUS "Warning! Recompile libxcsp3parser.a with option -fPIC")
+    MESSAGE(WARNING "Warning! Recompile libxcsp3parser.a with option -fPIC")
   ENDIF(XML)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 

@@ -8,6 +8,8 @@
 
 #include "toulbar2lib.hpp"
 
+#include "tb2config.hpp"
+
 #ifdef ILOGCPLEX
 #include <ilcplex/ilocplex.h>
 #endif

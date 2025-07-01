@@ -1,6 +1,8 @@
 #ifndef OBJECTIVEMATRIX_HPP_
 #define OBJECTIVEMATRIX_HPP_
 
+#include "tb2config.hpp"
+
 #ifdef LR_BCD_BUILD
 
 #include <string>

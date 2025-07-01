@@ -10,6 +10,8 @@
 #ifndef TB2VNS_HPP_
 #define TB2VNS_HPP_
 
+#include "tb2config.hpp"
+
 #include "tb2localsearch.hpp"
 
 #ifdef BOOST
