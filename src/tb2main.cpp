@@ -3244,10 +3244,21 @@ int _tmain(int argc, TCHAR* argv[])
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
 #ifndef __WIN32__
-    signal(SIGINT, timeOut);
-    if (ToulBar2::maxsateval) {
-        signal(SIGTERM, timeOut);
+#ifdef OPENMPI
+    if (!ToulBar2::parallel || world.rank() == WeightedCSPSolver::MASTER) {
+#endif
+        signal(SIGINT, timeOut);
+        if (ToulBar2::maxsateval) {
+            signal(SIGTERM, timeOut);
+        }
+#ifdef OPENMPI
+    } else {
+        signal(SIGINT, SIG_IGN);
+        if (ToulBar2::maxsateval) {
+            signal(SIGTERM, SIG_IGN);
+        }
     }
+#endif
     if (timeout > 0)
         timer(timeout);
 #endif

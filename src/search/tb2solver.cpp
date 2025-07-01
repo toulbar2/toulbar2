@@ -2506,6 +2506,15 @@ pair<Cost, Cost> Solver::hybridSolveMaster(Cluster* cluster, Cost clb, Cost cub)
         // loop to distribute jobs to workers
         vector<mpi::request> reqs;
         while (!open_->finished() && !idleQ.empty()) { // while there is work to do and workers to do it
+            if (ToulBar2::interrupted) {
+                vector<mpi::request> reqs;
+                for (int i = 0; i < world.size(); i++)
+                    if (i != MASTER) {
+                        reqs.push_back(world.isend(i, DIETAG, Work()));
+                    }
+                mpi::wait_all(reqs.begin(), reqs.end());
+                throw TimeOut();
+            }
             int worker = idleQ.front(); // get the first worker in the queue
             vector<Value> masterSol;
             Cost masterUb = wcsp->getSolutionCost();
