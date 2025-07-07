@@ -88,7 +88,7 @@ ELSE()
    message("Conan file not found in ${CMAKE_CURRENT_SOURCE_DIR} - assuming conan free build.")
 ENDIF()
 
-SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
+SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel.")
 
 MESSAGE(STATUS "compile flags: ${CMAKE_CXX_FLAGS}")
 
