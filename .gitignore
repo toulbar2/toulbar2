@@ -1,5 +1,6 @@
 .vscode
 .pc
+.cache
 build
 pytoulbar2/*.so
 src/ToulbarVersion.hpp
