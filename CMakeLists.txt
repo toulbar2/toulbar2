@@ -21,6 +21,13 @@ set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
 # default name for packaging
 SET(Toulbar2_NAME "toulbar2")
 SET(CMAKE_MACOSX_RPATH 1)
+
+# build type
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 ##########################################
 # PROJECT NAME
 ##########################################
@@ -87,8 +94,6 @@ IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conan_paths.cmake)
 ELSE()
    message("Conan file not found in ${CMAKE_CURRENT_SOURCE_DIR} - assuming conan free build.")
 ENDIF()
-
-SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel.")
 
 MESSAGE(STATUS "compile flags: ${CMAKE_CXX_FLAGS}")
 
