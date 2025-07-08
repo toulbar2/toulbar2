@@ -43,8 +43,8 @@ ELSE() # DOUBLE_PROBABILITY
 ENDIF()
 
 # header configuration options
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/tb2config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/tb2config.hpp)
-
+MAKE_DIRECTORY(${CMAKE_CURRENT_BINARY_DIR}/tb2config)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/tb2config.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/tb2config/tb2config.hpp)
 
 # Options that are not handled yet in tb2config.hpp
 IF(BINARYWCSP)

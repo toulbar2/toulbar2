@@ -45,6 +45,9 @@ ENDIF(CPLEX)
 
 INCLUDE_DIRECTORIES(${My_Source}/pils/src/)
 
+# tb2 config header
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/tb2config)
+
 set(source_files ${LIBTB2FILES} ${My_Source}/tb2main.cpp)
 set(pysource_files ${LIBTB2FILES} ${My_Source}/pytoulbar2.cpp)
 

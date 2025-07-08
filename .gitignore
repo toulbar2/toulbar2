@@ -4,7 +4,6 @@
 build
 pytoulbar2/*.so
 src/ToulbarVersion.hpp
-src/tb2config.hpp
 src/MyCPackConf.cmake
 __pycache__
 docs/_build
