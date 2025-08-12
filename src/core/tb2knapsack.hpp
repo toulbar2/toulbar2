@@ -3445,6 +3445,24 @@ public:
             }
 
             if (ToulBar2::LcLevel >= LC_FDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST))) {
+                // checks the minimum cost of the  multiple-choice problem with relaxed knapsack is zero
+                Cost minSumDeltas = -lb + assigneddeltas;
+                for (int i = 0; i < arity_; i++) {
+                    Cost minDelta = MAX_COST;
+                    for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
+                        if (deltaCosts[i][j] < minDelta) {
+                            minDelta = deltaCosts[i][j];
+                        }
+                    }
+                    minSumDeltas += minDelta;
+                }
+                if (minSumDeltas > MIN_COST) {
+                    if (ToulBar2::verbose >= 1) {
+                        cout << "Warning! relaxed-knapsack constraint (" << wcspIndex << ") has optimum cost greater than 1! (" << minSumDeltas << ")" << endl;
+                    }
+                    return false;
+                }
+
                 // checks the minimum cost of the relaxed multiple-choice knapsack problem is zero
                 // sort list of slopes and greedily takes the minimum such that the constraint is satisfied
                 vector< tuple<int, Value, Long, Cost, Value, Long, Cost, Double>> slopes;
