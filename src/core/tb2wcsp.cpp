@@ -6541,19 +6541,19 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     delete[] scopeU;
     delete[] scopeUi;
     delete[] scopeI;
-    if (ctrIndex >= 0 && ctrIndex != INT_MAX) {
+    if (ctrIndex != -INT_MAX && ctrIndex != INT_MAX) {
         ctr = getCtr(ctrIndex);
         ctr->propagate();
-    }
-    if (ToulBar2::verbose >= 1) {
-        cout << endl
-             << "Has result: ";
-        if (ctr) {
-            cout << *ctr;
-        } else {
-            cout << "Null";
+        if (ToulBar2::verbose >= 1) {
+            cout << endl
+                    << "Has result: ";
+            if (ctr) {
+                cout << *ctr;
+            } else {
+                cout << "Null";
+            }
+            cout << endl;
         }
-        cout << endl;
     }
     return ctr;
 }

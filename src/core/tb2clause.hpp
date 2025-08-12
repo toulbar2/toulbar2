@@ -13,8 +13,7 @@
 class WeightedClause : public AbstractNaryConstraint {
     Cost cost; // clause weight
     Tuple tuple; // forbidden assignment corresponding to the negation of the clause
-    StoreCost lb; // projected cost to problem lower bound (if it is zero then all deltaCosts must be zero)
-    vector<StoreCost> deltaCosts; // extended costs from unary costs to the cost function
+    StoreCost lb; // projected cost to problem lower bound
     int support; // index of a variable in the scope with a zero unary cost on its value which satisfies the clause
     vector<Long> conflictWeights; // used by weighted degree heuristics
     bool zeros; // true if all deltaCosts are zero (temporally used by first/next)
@@ -34,7 +33,6 @@ class WeightedClause : public AbstractNaryConstraint {
         for (int i = 0; i < arity_; i++) {
             EnumeratedVariable* x = scope[i];
             if (x->unassigned()) {
-                deltaCosts[i] += c;
                 Value v = getClause(i);
                 TreeDecomposition* td = wcsp->getTreeDec();
                 if (td)
@@ -50,15 +48,14 @@ class WeightedClause : public AbstractNaryConstraint {
     {
         assert(scope[varIndex]->assigned());
         assert(scope[varIndex]->getValue() == getClause(varIndex));
-        assert(deltaCosts[varIndex] == lb);
-        for (int i = 0; i < arity_; i++) {
-            EnumeratedVariable* x = scope[i];
-            assert(deconnected(i));
-            if (i != varIndex) { // the assigned satisfying variable is left as is. This accounts for the increase of the global lb in extend
-                Cost c = deltaCosts[i];
-                Value v = getClause(i);
-                if (c > MIN_COST) { // we extended, now we give back
-                    deltaCosts[i] = MIN_COST;
+        Cost c = lb;
+        lb = MIN_COST;
+        if (c > MIN_COST) { // we extended, now we give back
+            for (int i = 0; i < arity_; i++) {
+                EnumeratedVariable* x = scope[i];
+                assert(deconnected(i));
+                if (i != varIndex) { // the assigned satisfying variable is left as is. This accounts for the increase of the global lb in extend
+                    Value v = getClause(i);
                     if (x->unassigned()) {
                         if (!CUT(c + wcsp->getLb(), wcsp->getUb())) {
                             TreeDecomposition* td = wcsp->getTreeDec();
@@ -90,7 +87,6 @@ public:
     {
         if (tuple_in.empty() && arity_in > 0)
             tuple = Tuple(arity_in, 0);
-        deltaCosts = vector<StoreCost>(arity_in, StoreCost(MIN_COST));
         for (int i = 0; i < arity_in; i++) {
             assert(scope_in[i]->getDomainInitSize() == 2);
             conflictWeights.push_back(0);
@@ -108,8 +104,7 @@ public:
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     Long size() const FINAL
     {
-        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
-        if (sumdelta == MIN_COST)
+        if (lb == MIN_COST)
             return 1;
         return getDomainSizeProduct();
     }
@@ -154,23 +149,19 @@ public:
     {
         if (cost > zero || lb > zero)
             return false;
-        for (int i = 0; i < arity_; i++)
-            if (deltaCosts[i] > zero)
-                return false;
         return true;
     }
 
     Cost eval(const Tuple& s) override
     {
         if (lb == MIN_COST && tuple[support] != s[support]) {
-            assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
             return MIN_COST;
         } else {
             Cost res = -lb;
             bool istuple = true;
             for (int i = 0; i < arity_; i++) {
                 if (tuple[i] != s[i]) {
-                    res += deltaCosts[i];
+                    res += lb;
                     istuple = false;
                 }
             }
@@ -185,16 +176,16 @@ public:
 
     pair<pair<Cost, Cost>, pair<Cost, Cost>> getMaxCost(int index, Value a, Value b) override
     {
-        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
+        Cost sumdelta = (Cost)lb * (arity_ - 1);
         bool supporta = (getClause(index) == a);
-        Cost maxcosta = max((supporta) ? MIN_COST : (cost - lb), sumdelta - ((supporta) ? MIN_COST : (Cost)deltaCosts[index]));
-        Cost maxcostb = max((supporta) ? (cost - lb) : MIN_COST, sumdelta - ((supporta) ? (Cost)deltaCosts[index] : MIN_COST));
+        Cost maxcosta = max((supporta) ? MIN_COST : (cost - lb), sumdelta - ((supporta) ? MIN_COST : (Cost)lb));
+        Cost maxcostb = max((supporta) ? (cost - lb) : MIN_COST, sumdelta - ((supporta) ? (Cost)lb : MIN_COST));
         return make_pair(make_pair(maxcosta, maxcosta), make_pair(maxcostb, maxcostb));
     }
 
     void first() override
     {
-        zeros = all_of(deltaCosts.begin(), deltaCosts.end(), [](Cost c) { return c == MIN_COST; });
+        zeros = (lb == MIN_COST);
         done = false;
         if (!zeros)
             firstlex();
@@ -213,10 +204,10 @@ public:
 
     Cost getMaxFiniteCost() override
     {
-        Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);
+        Cost sumdelta = (Cost)lb * (arity_ - 1);
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
-        if (CUT(cost, wcsp->getUb()))
+        if (CUT(cost - lb, wcsp->getUb()))
             return sumdelta;
         else
             return max(sumdelta, cost - lb);
@@ -224,7 +215,7 @@ public:
     void setInfiniteCost(Cost ub) override
     {
         Cost mult_ub = ((wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb());
-        if (CUT(cost, ub))
+        if (CUT(cost - lb, ub))
             cost = mult_ub;
     }
 
@@ -299,18 +290,16 @@ public:
     {
         bool zerolb = (lb == MIN_COST);
         if (zerolb && getTuple(support) != ((support == index) ? supportValue : getVar(support)->getSupport())) {
-            assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
             return true;
         } else {
             Cost res = -lb;
             bool istuple = true;
             for (int i = 0; i < arity_; i++) {
                 if (getTuple(i) != ((i == index) ? supportValue : getVar(i)->getSupport())) {
-                    res += deltaCosts[i];
+                    res += lb;
                     istuple = false;
                     if (zerolb) {
                         assert(res == MIN_COST);
-                        assert(accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) == MIN_COST);
                         return true;
                     }
                 }
@@ -353,15 +342,9 @@ public:
             if (i < arity_ - 1)
                 os << ",";
         }
-        os << ") s:" << support << " / " << cost << " - " << lb << " (";
-        for (int i = 0; i < arity_; i++) {
-            os << deltaCosts[i];
-            if (i < arity_ - 1)
-                os << ",";
-        }
-        os << ") ";
+        os << ") s:" << support << " / " << cost << " - " << lb;
         if (ToulBar2::weightedDegree) {
-            os << "/" << getConflictWeight();
+            os << " / " << getConflictWeight();
             for (int i = 0; i < arity_; i++) {
                 os << "," << conflictWeights[i];
             }
@@ -372,12 +355,7 @@ public:
 
     void dump(ostream& os, bool original = true) override
     {
-        Cost maxdelta = MIN_COST;
-        for (vector<StoreCost>::iterator it = deltaCosts.begin(); it != deltaCosts.end(); ++it) {
-            Cost d = (*it);
-            if (d > maxdelta)
-                maxdelta = d;
-        }
+        Cost maxdelta = lb;
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
@@ -433,12 +411,7 @@ public:
         bool printed = false;
         os << "\"F_";
 
-        Cost maxdelta = MIN_COST;
-        for (vector<StoreCost>::iterator it = deltaCosts.begin(); it != deltaCosts.end(); ++it) {
-            Cost d = (*it);
-            if (d > maxdelta)
-                maxdelta = d;
-        }
+        Cost maxdelta = lb;
         if (original) {
             printed = false;
             for (int i = 0; i < arity_; i++) {
