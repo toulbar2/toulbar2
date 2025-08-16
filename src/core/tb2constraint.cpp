@@ -409,7 +409,7 @@ bool Constraint::findConditionalIndependences()
 Constraint* Constraint::copy()
 {
     static Tuple t;
-    int scope[arity()];
+    int scope[this->arity()];
     for (int i = 0; i < arity(); i++)
         scope[i] = getVar(i)->wcspIndex;
     Cost defcost = getDefCost();

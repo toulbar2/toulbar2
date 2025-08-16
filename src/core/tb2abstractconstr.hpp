@@ -526,7 +526,7 @@ public:
 
     int arity() const FINAL { return arity_; }
     int getNonAssigned() const { return nonassigned; }
-    Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
+    Long getDomainInitSizeProduct() const; // warning! return LONGLONG_MAX if overflow occurs
 
     Variable* getVar(int varCtrIndex) const FINAL
     {

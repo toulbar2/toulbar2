@@ -14,7 +14,7 @@
 
 /// \return size of the cartesian product of all initial domains in the constraint scope.
 /// \warning use deprecated MAX_DOMAIN_SIZE for performance.
-Long AbstractNaryConstraint::getDomainInitSizeProduct()
+Long AbstractNaryConstraint::getDomainInitSizeProduct() const
 {
     if (arity_ == 0)
         return 1;

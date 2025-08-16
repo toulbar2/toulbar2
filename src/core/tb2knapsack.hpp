@@ -352,7 +352,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         assert(current_scope_idx.size() == current_val_idx.size());
     }
 
-    void firstlex()
+    void firstlex() override
     {
         it_tuple.clear();
         it_tuple.resize(arity_, 0);
@@ -426,7 +426,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         assert(it_assignedWeight + it_rightWeights[0] >= capacity);
     }
 
-    bool nextlex(Tuple& t, Cost& c)
+    bool nextlex(Tuple& t, Cost& c) override
     {
         if (it_iterators[0] >= (int)it_sortedValuesIdx[0].size())
             return false;
