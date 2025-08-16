@@ -3,7 +3,7 @@
 # version 0.9 -# David allouche 17/10/10
 ##########################################
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.5)
 IF(APPLE)
     cmake_minimum_required(VERSION 3.13)
 ENDIF(APPLE)
@@ -494,13 +494,14 @@ IF (BUILD_API_DOC OR BUILD_SPHINX_DOC)
   include(${My_cmake_script}/UseDoxygen.cmake)  
 ENDIF (BUILD_API_DOC OR BUILD_SPHINX_DOC)
 
-ADD_CUSTOM_TARGET(man ALL)
+ADD_CUSTOM_TARGET(man ALL
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+)
 
 ADD_CUSTOM_COMMAND(
-  TARGET man
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1 ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
-  OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
   )
 
 ##########################################
