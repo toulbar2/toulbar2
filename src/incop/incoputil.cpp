@@ -601,18 +601,6 @@ void populationsort(Configuration** population, int taille)
 
 /* ------------------------------ECRITURES--------------------------------------------------*/
 
-/* le nom du fichier de sortie : pour les tests : resultatsxxx/concat�nation des arguments */
-void ofile_name(char* filename, int argc, char** argv)
-{
-    unsigned offset = sprintf(filename, "%s%s", "results/", argv[2]);
-    char* slide = filename;
-    for (int i = 3; i < argc; i++) {
-        slide += offset;
-        offset = sprintf(slide, "-%s", argv[i]);
-    }
-    cout << filename << endl;
-}
-
 /* les ecritures sur le fichier de sortie *ofile */
 
 void ecriture_graine(int graine, int nessai)

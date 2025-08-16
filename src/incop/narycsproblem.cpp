@@ -466,7 +466,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     // remove multiples space in cmd
     removeSpaces(cmd);
 
-    sprintf(line, "bin/Linux/narycsp %s %s %s", outputfile.c_str(), filename.c_str(), cmd.c_str());
+    snprintf(line, 1024, "bin/Linux/narycsp %s %s %s", outputfile.c_str(), filename.c_str(), cmd.c_str());
 
     argc = split(line, ' ', &argv);
 

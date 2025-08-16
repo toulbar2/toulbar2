@@ -781,11 +781,11 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
         if (end) {
             *end = 0;
             strncpy(buffer, bin_name, buflen);
-            sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
+            snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);
         } else {
             strcpy(buffer, ".");
             // path separator added to the path value
-            sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
+            snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);
         }
         return (bin_path);
     }
@@ -797,7 +797,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
             static char bin_path[512];
             strncpy(buffer, tok, buflen);
             free(path);
-            sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
+            snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);
             return bin_path;
         }
         tok = strtok(NULL, PATH_DELIM);
@@ -1601,10 +1601,10 @@ int _tmain(int argc, TCHAR* argv[])
                 int varElimOrder = atoi(args.OptionArg());
                 if (varElimOrder >= 0) {
                     char buf[512];
-                    sprintf(buf, "%s", args.OptionArg());
+                    snprintf(buf, 512, "%s", args.OptionArg());
                     clean_ToulBar2_varOrder();
                     ToulBar2::varOrder = new char[strlen(buf) + 1];
-                    sprintf(ToulBar2::varOrder, "%s", buf);
+                    snprintf(ToulBar2::varOrder, strlen(buf) + 1, "%s", buf);
                     if (ToulBar2::debug)
                         cout << "variable order read from file " << args.OptionArg() << endl;
                 } else {
@@ -1614,7 +1614,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_problemsaved_filename) {
                 char buf[512];
-                sprintf(buf, "%s", args.OptionArg());
+                snprintf(buf, 512, "%s", args.OptionArg());
                 ToulBar2::problemsaved_filename = to_string(buf);
                 //                if (!ToulBar2::dumpWCSP) ToulBar2::dumpWCSP = 1;
                 if (ToulBar2::debug)
@@ -3163,7 +3163,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading variable order in file: " << problem << endl;
                 clean_ToulBar2_varOrder();
                 ToulBar2::varOrder = new char[problem.length() + 1];
-                sprintf(ToulBar2::varOrder, "%s", problem.c_str());
+                snprintf(ToulBar2::varOrder, problem.length() + 1, "%s", problem.c_str());
             }
 
             //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
@@ -3174,7 +3174,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading tree decomposition in file: " << problem << endl;
                 clean_ToulBar2_varOrder();
                 ToulBar2::varOrder = new char[problem.length() + 1];
-                sprintf(ToulBar2::varOrder, "%s", problem.c_str());
+                snprintf(ToulBar2::varOrder, problem.length() + 1, "%s", problem.c_str());
                 if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
                     cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
                     throw WrongFileFormat();
@@ -3244,21 +3244,7 @@ int _tmain(int argc, TCHAR* argv[])
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
 #ifndef __WIN32__
-#ifdef OPENMPI
-    if (!ToulBar2::parallel || world.rank() == WeightedCSPSolver::MASTER) {
-#endif
-        signal(SIGINT, timeOut);
-        if (ToulBar2::maxsateval) {
-            signal(SIGTERM, timeOut);
-        }
-#ifdef OPENMPI
-    } else {
-        signal(SIGINT, SIG_IGN);
-        if (ToulBar2::maxsateval) {
-            signal(SIGTERM, SIG_IGN);
-        }
-    }
-#endif
+    signal(SIGINT, timeOut);
     if (timeout > 0)
         timer(timeout);
 #endif
@@ -3486,7 +3472,7 @@ int _tmain(int argc, TCHAR* argv[])
                     varOrder += "\n";
                     clean_ToulBar2_varOrder();
                     ToulBar2::varOrder = new char[varOrder.size() + 1];
-                    sprintf(ToulBar2::varOrder, "%s", varOrder.c_str());
+                    snprintf(ToulBar2::varOrder, varOrder.size() + 1, "%s", varOrder.c_str());
                     if (ToulBar2::verbose >= 1)
                         cout << "Build tree decomposition from covering:" << endl
                              << ToulBar2::varOrder << endl;
@@ -3636,7 +3622,7 @@ int _tmain(int argc, TCHAR* argv[])
       string strfile(argv[1]);
       int pos = strfile.find_last_of(".");
       string strfilewcsp = strfile.substr(0,pos) + ".ub";
-      sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
+      snprintf(line, 1024, "echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
       system(line); */
 
 #ifndef NDEBUG

@@ -1114,11 +1114,11 @@ void Cluster::dump()
     char fatherFilename[128];
     char sepSizeFilename[128];
 
-    sprintf(clusterVarsFilename, "%s.info/%d.vars", getWCSP()->getName().c_str(), getId());
-    sprintf(sepVarsFilename, "%s.info/%d.sep", getWCSP()->getName().c_str(), getId());
-    sprintf(sonsFilename, "%s.info/%d.sons", getWCSP()->getName().c_str(), getId());
-    sprintf(fatherFilename, "%s.info/%d.father", getWCSP()->getName().c_str(), getId());
-    sprintf(sepSizeFilename, "%s.info/%d.sepsize", getWCSP()->getName().c_str(), getId());
+    snprintf(clusterVarsFilename, 128, "%s.info/%d.vars", getWCSP()->getName().c_str(), getId());
+    snprintf(sepVarsFilename, 128, "%s.info/%d.sep", getWCSP()->getName().c_str(), getId());
+    snprintf(sonsFilename, 128, "%s.info/%d.sons", getWCSP()->getName().c_str(), getId());
+    snprintf(fatherFilename, 128, "%s.info/%d.father", getWCSP()->getName().c_str(), getId());
+    snprintf(sepSizeFilename, 128, "%s.info/%d.sepsize", getWCSP()->getName().c_str(), getId());
 
     ofstream clusterVarsFile(clusterVarsFilename);
     ofstream sepVarsFile(sepVarsFilename);
@@ -2767,14 +2767,14 @@ void TreeDecomposition::dump(Cluster* c)
 {
     if (!c) {
         char tmpName[256];
-        sprintf(tmpName, "%s.info", getWCSP()->getName().c_str());
+        snprintf(tmpName, 256, "%s.info", getWCSP()->getName().c_str());
 #ifdef __WIN32__
         mkdir(tmpName);
 #else
         mkdir(tmpName, 0777);
 #endif
 
-        sprintf(tmpName, "%s.info/root", getWCSP()->getName().c_str());
+        snprintf(tmpName, 256, "%s.info/root", getWCSP()->getName().c_str());
 
         ofstream rootFile(tmpName);
         if (roots.empty()) {

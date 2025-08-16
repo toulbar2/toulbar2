@@ -479,7 +479,7 @@ int main(int argc, char** argv)
         model.add(vars);
         for (int i = 0; i < nbvar; i++) {
             char* name = new char[16];
-            sprintf(name, "x%d", i);
+            snprintf(name, 16, "x%d", i);
             vars[i].setName(name);
         }
 

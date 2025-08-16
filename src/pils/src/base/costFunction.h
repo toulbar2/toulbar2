@@ -79,10 +79,10 @@ public:
 //                    energy.resize(n_variables);
 //                    char e[256];
 //                    for(unsigned i = 0; i < n_variables; i++) {
-//                        sprintf(e, "E%d", i+1);
+//                        snprintf(e, 256, "E%d", i+1);
 //                        rapidjson::Value::ConstMemberIterator itr = document["functions"].FindMember(e);
 //                        if (itr == document["functions"].MemberEnd()) {
-//                        	sprintf(e, "F_%d", i);
+//                        	snprintf(e, 256, "F_%d", i);
 //                        	itr = document["functions"].FindMember(e);
 //                        }
 //                        if (itr != document["functions"].MemberEnd()) {
@@ -116,11 +116,11 @@ public:
 //                    for(unsigned i = 0; i < n_variables; i++) {
 //                        energy2[i].resize(n_variables);
 //                        for(unsigned j = i + 1; j < n_variables; j++) {
-//                            sprintf(e, "E%d_%d", i+1, j+1);
+//                            snprintf(e, 256, "E%d_%d", i+1, j+1);
 //
 //                            rapidjson::Value::ConstMemberIterator itr = document["functions"].FindMember(e);
 //                            if (itr == document["functions"].MemberEnd()) {
-//                            	sprintf(e, "F_%d_%d", i, j);
+//                            	snprintf(e, 256, "F_%d_%d", i, j);
 //                            	itr = document["functions"].FindMember(e);
 //                            }
 //                            rapidjson::Value::ConstMemberIterator itr2;
