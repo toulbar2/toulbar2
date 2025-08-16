@@ -166,7 +166,6 @@ void Pedigree::readPedigree(const char* fileName, WCSP* wcsp)
     int individual;
     int nbindividuals = 0;
     int nballeles = 0;
-    int nbtypings = 0;
     map<int, int> allelesInv;
     int maxallele = 0;
 
@@ -302,7 +301,6 @@ void Pedigree::readPedigree(const char* fileName, WCSP* wcsp)
         }
 
         if (allele1 > 0 || allele2 > 0) {
-            nbtypings++;
             genotypes.push_back(individual);
         }
     }

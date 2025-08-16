@@ -1219,8 +1219,6 @@ void MultiCFN::extractSolution()
 void MultiCFN::outputNetSolutionCosts(size_t index, MultiCFN::Solution& solution)
 {
 
-    Double cost = _doriginal_lbs[index];
-
     for (auto func_ind : networks[index]) {
 
         auto& func = cost_function[func_ind];
@@ -1231,8 +1229,6 @@ void MultiCFN::outputNetSolutionCosts(size_t index, MultiCFN::Solution& solution
             string var_name = var[var_ind].name;
             tuple.push_back(var[var_ind].str_to_index[solution[var_name]]);
         }
-
-        cost += func->getCost(tuple);
 
         if (fabs(func->getCost(tuple)) > 0.1) {
             cout << "func " << func_ind << " (" << func->name << ") = " << func->getCost(tuple) << endl;
@@ -1245,8 +1241,6 @@ std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution
 {
 
     vector<Double> obj_values;
-
-    int cpt = 0;
 
     for (unsigned int net_ind = 0; net_ind < networks.size(); net_ind++) {
 
@@ -1266,8 +1260,6 @@ std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution
             } else if (func->getType() == mcriteria::CostFunction::Linear) {
                 assert(checkLinCostFuncConsistency(func_ind, solution));
             }
-
-            cpt++;
         }
 
         obj_values.push_back(cost);

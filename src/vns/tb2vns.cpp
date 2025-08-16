@@ -63,9 +63,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         }
         assert(nbunvars.size() == wcsp->numberOfUnassignedVariables());
         TCDGraph::vertex_iterator v, vend, v2;
-        int num = 0;
         for (tie(v, vend) = vertices(m_graph); v != vend; ++v) {
-            num++;
             string name;
             vector<int> cl;
             ostringstream ss(name);

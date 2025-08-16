@@ -202,9 +202,7 @@ void TreeDecRefinement::load_decomposition()
             cout << "Warning: cluster decomposition has missing variables! (" << nbvars.size() << "!=" << wcsp->numberOfVariables() << ")" << endl;
         }
         TCDGraph::vertex_iterator v, vend, v2;
-        int num = 0;
         for (tie(v, vend) = vertices(m_graph); v != vend; ++v) {
-            num++;
             string name;
             vector<int> cl;
             ostringstream ss(name);

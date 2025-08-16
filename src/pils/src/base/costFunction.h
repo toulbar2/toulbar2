@@ -417,7 +417,7 @@ public:
     }
 
     void printlinks() {
-        for(size_t i; i<links.size() ; i ++)
+        for(size_t i=0; i<links.size() ; i ++)
         {
             cout << " links " << i << ": ";
                         for (unsigned j : links[i]){

@@ -1234,19 +1234,16 @@ void VACExtension::minsumDiffusion()
         int ntimes = 0;
         while (change && (ntimes < maxit)) {
             change = false;
-            int nchanged = 0;
             for (unsigned int i = 0; i < wcsp->numberOfVariables();
                  i++)
                 if (wcsp->unassigned(i)) {
                     VACVariable* evar = (VACVariable*)wcsp->getVar(i);
                     if (evar->averaging()) {
                         change = true;
-                        nchanged++;
                         evar->findSupport();
                     }
                 }
             ntimes++;
-            // cout << "it " << ntimes << "   changed: " << nchanged << endl;
         }
         if (ToulBar2::verbose >= 0)
             cout << "   done iterations: " << ntimes << endl;

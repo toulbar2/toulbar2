@@ -712,13 +712,9 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
         _lower_bounds.push_back(lb2);
     }
 
-    unsigned int iter = 0;
-
     MultiCFN::Solution new_sol;
 
     while (!pending.empty()) {
-
-        iter++;
 
         pair<Point, Point> top = pending.top();
         pending.pop();

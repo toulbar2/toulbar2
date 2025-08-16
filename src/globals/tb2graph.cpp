@@ -241,9 +241,7 @@ pair<int, Cost> Graph::minCostFlow(int s, int t)
 
     // shortest_path(s);
     // for (int i=0;i<n;i++) potential[i] = d[i];
-    int iterationCount = 0;
     while (!stopped) {
-        iterationCount++;
         stopped = false;
         // shortest_path_with_potential(s);
         shortest_path(s);

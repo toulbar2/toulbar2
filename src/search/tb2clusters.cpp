@@ -2409,8 +2409,6 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
 void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet& totalusedctrs, TVars& inusedvars, TVars& currentusedvars, vector<Variable*>& currentRevElimOrder, ConstraintSet& currentusedctrs)
 {
     vector<TVars> listeVars(wcsp->numberOfVariables()); // liste des voisins d'ordre superieur de chaque variable
-    int nbcstr = 0;
-    double time, timetot = 0;
     while (inusedvars.size() > 0) {
         int maxsize = -1;
         Variable* maxvar = NULL; /* next variable */
@@ -2447,15 +2445,11 @@ void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet
                     if (scopectr.size() == 0) { // all edges of the ctr are in the sub graph => the cstr is added in this current part
                         if (included(sc, listeVars[maxvar->wcspIndex])) {
                             ConstraintSet subctr;
-                            nbcstr++;
                             currentusedctrs.insert(ctr);
                             totalusedctrs.insert(ctr);
-                            time = cpuTime();
                             subctr = ctr->subConstraint();
                             ctrSum(totalusedctrs, subctr);
                             ctrSum(currentusedctrs, subctr);
-                            time = time - cpuTime();
-                            timetot += time;
                             sum(currentusedvars, sc);
                             currentusedvars.insert(maxvar->wcspIndex);
                         }
