@@ -6480,36 +6480,46 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                             Cost c = MIN_COST;
                             if (ctr2->isTernary()) {
                                 c = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
-                            } else {
-                                assert(ctr2->isNary());
+                            } else if (ctr2->isNary()) {
                                 t[0] = vxi;
                                 t[1] = vyi;
                                 t[2] = vzi;
                                 c = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
+                            } else {
+                                t[ctr2->getIndex(x)] = vxi;
+                                t[ctr2->getIndex(y)] = vyi;
+                                t[ctr2->getIndex(z)] = vzi;
+                                c = ((AbstractNaryConstraint*)ctr2)->eval(t);
                             }
                             costsum += ((BinaryConstraint*)ctr1)->getCost(x, y, vx, vy) + c;
                         } else if (arityI == 3) {
-                            assert(ctr1->isTernary());
-                            assert(ctr2->isTernary());
                             Cost c1 = MIN_COST;
                             Cost c2 = MIN_COST;
                             if (ctr1->isTernary()) {
                                 c1 = ((TernaryConstraint*)ctr1)->getCost(x, y, z, vx, vy, vz);
-                            } else {
-                                assert(ctr1->isNary());
+                            } else if (ctr1->isNary()) {
                                 t[0] = vxi;
                                 t[1] = vyi;
                                 t[2] = vzi;
                                 c1 = ((NaryConstraint*)ctr1)->eval(t, scopeTernary);
+                            } else {
+                                t[ctr1->getIndex(x)] = vxi;
+                                t[ctr1->getIndex(y)] = vyi;
+                                t[ctr1->getIndex(z)] = vzi;
+                                c1 = ((AbstractNaryConstraint*)ctr1)->eval(t);
                             }
                             if (ctr2->isTernary()) {
                                 c2 = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
-                            } else {
-                                assert(ctr2->isNary());
+                            } else if (ctr2->isNary()) {
                                 t[0] = vxi;
                                 t[1] = vyi;
                                 t[2] = vzi;
                                 c2 = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
+                            } else {
+                                t[ctr2->getIndex(x)] = vxi;
+                                t[ctr2->getIndex(y)] = vyi;
+                                t[ctr2->getIndex(z)] = vzi;
+                                c2 = ((AbstractNaryConstraint*)ctr2)->eval(t);
                             }
                             costsum += c1 + c2;
                         } else {
@@ -6522,6 +6532,8 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                 }
         ctrIndex = postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
     } else if (arityU == 2) {
+        assert(ctr1->isBinary());
+        assert(ctr2->isBinary());
         BinaryConstraint* bctr1 = (BinaryConstraint*)ctr1;
         BinaryConstraint* bctr2 = (BinaryConstraint*)ctr2;
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
