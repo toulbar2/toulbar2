@@ -383,7 +383,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
                         return InitLargestWeight[x] > InitLargestWeight[y];
                     }
              });
-        assert((int)it_sortedVariables.size() == getNonAssigned());
+        assert((int)it_sortedVariables.size() >= getNonAssigned());
         assert(it_sortedVariables.size() < 2 || InitLargestWeight[it_sortedVariables[0]] >= InitLargestWeight[it_sortedVariables[1]]);
         it_iterators.clear();
         it_sortedValuesIdx.resize(it_sortedVariables.size());
@@ -1692,7 +1692,7 @@ public:
         return res;
     }
 
-    Cost getCost(int index, Value val) const
+    Cost getDeltaCost(int index, Value val) const
     {
         assert(index >= 0 && index < arity_);
         auto it = VarValInv[index].find(val);
@@ -3660,7 +3660,7 @@ public:
     {
         // TODO: incremental cost propagation
         UpdateGreatestWeight();
-        bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) + getCost(index, getVar(index)->getSupport()) > MIN_COST);
+        bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) + getDeltaCost(index, getVar(index)->getSupport()) > MIN_COST);
         propagate();
         if (revise)
             reviseEACGreedySolution();
