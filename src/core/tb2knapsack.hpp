@@ -1692,7 +1692,7 @@ public:
         return res;
     }
 
-    Cost getCost(int index, Value val)
+    Cost getCost(int index, Value val) const
     {
         assert(index >= 0 && index < arity_);
         auto it = VarValInv[index].find(val);
