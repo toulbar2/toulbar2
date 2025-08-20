@@ -582,7 +582,7 @@ public:
     bool isKnapsack() const FINAL { return true; }
 
     bool isPseudoBoolean() const {return maxInitDomSize == 2;}
-    bool isTight() const {return istight;}
+    bool isTight() const {return istight;} // a pseudo-Boolean knapsack constraint is tight if its number of allowed tuples is less than or equal to its arity plus one
 
     void queueKnapsack() { wcsp->queueKnapsack(&linkKnapsack); }
     void unqueueKnapsack() { wcsp->unqueueKnapsack(&linkKnapsack); }
@@ -2314,6 +2314,7 @@ public:
         }
     }
     // Return True if a value has been deleted else return False
+    // A knapsack constraint is said tight (tight=true) if each variable i has MaxWeight-maxweight(i)+minweight(i)=capacity
     bool BoundConsistency(bool &tight)
     {
         int k = 0, k2;
