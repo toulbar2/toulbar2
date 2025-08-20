@@ -24,16 +24,19 @@ graphical models:
 * 2010 UAI APPROXIMATE INFERENCE CHALLENGE [UAI 2010][uai2010] (winner on 1200-second MPE task)
 * The Probabilistic Inference Challenge [PIC 2011][pic2011] (second place by ficolofo on 1-hour MAP task)
 * UAI 2014 Inference Competition [UAI 2014][uai2014] (winner on all MAP task categories, see Proteus, Robin, and IncTb entries)
-* [XCSP3][xcsp] Competitions (second place on Mini COP and Parallel COP tracks in 2022, first place on Mini COP in 2023, third place in 2024)
+* [XCSP3][xcsp] Competitions (*first place* on Mini COP in 2023 *and 2025*, second place on Mini COP and Parallel COP tracks in 2022, third place in 2024)
 * UAI 2022 Inference Competition [UAI 2022][uai2022] (winner on all MPE and MMAP task categories)
+* Pseudo-Boolean Competition 2025 [PB25][pbo25] (OPT-LIN ranking 39/46 ; PARTIAL-LIN ranking 6/9, but it gave the best known answer from an incomplete solver point of view in [185][partiallin25] instances among 208)
 
-[cpai08]: http://www.cril.univ-artois.fr/CPAI08/
+[cpai08]: http://www.cril.univ-artois.fr/CPAI08
 [uai2008]: http://graphmod.ics.uci.edu/uai08/Evaluation/Report
 [uai2010]: http://www.cs.huji.ac.il/project/UAI10/summary.php
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: https://personal.utdallas.edu/~vibhav.gogate/uai14-competition/leaders.html 
 [xcsp]: https://xcsp.org/competitions
 [uai2022]: https://uaicompetition.github.io/uci-2022/results/final-leader-board
+[pbo25]: https://www.cril.univ-artois.fr/PB25
+[partiallin25]: https://www.cril.univ-artois.fr/PB25/results/globalbybench.php?idev=118&idcat=119
 
 toulbar2 is now also able to collaborate with ML code that can learn
 an additive graphical model (with constraints) from data (see the
