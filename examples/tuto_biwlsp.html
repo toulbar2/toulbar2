@@ -1,0 +1,484 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bicriteria weighted latin square problem &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=tutorials.html>Tutorials</a> |
+    <a href=usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bicriteria-weighted-latin-square-problem">
+<span id="tuto-biwlsp"></span><h1>Bicriteria weighted latin square problem<a class="headerlink" href="#bicriteria-weighted-latin-square-problem" title="Link to this heading"></a></h1>
+<div align=right>
+    <span style="color:Firebrick; font-weight:bold;"> Back to </span>
+    <a href="tutorials.html">Tutorials</a> |
+    <a href="usecases.html">Use cases</a>
+</div><section id="brief-description">
+<h2>Brief description<a class="headerlink" href="#brief-description" title="Link to this heading"></a></h2>
+<p>In this variant of the <a class="reference internal" href="tuto_wlsp.html#tuto-wlsp"><span class="std std-ref">Weighted latin square problem</span></a>, the objective (sum of the costs of the cells) is decomposed into two criteria: the sum of the cells in the first half of the chessboard and the sum of the cells in the second half. A subset of the pareto solutions can be obtained by solving linear combinations of the two criteria with various weights on the objectives. This can be achieved in ToulBar2 via a MultiCFN object.</p>
+</section>
+<section id="cfn-model">
+<h2>CFN model<a class="headerlink" href="#cfn-model" title="Link to this heading"></a></h2>
+<p>Similarly to the <a class="reference internal" href="tuto_wlsp.html#tuto-wlsp"><span class="std std-ref">Weighted latin square problem</span></a>, NxN variables are created with a domain size N.
+In this model, the permutation of every row and every column is ensured through infinite costs in binary cost functions.
+Two different CFN are created to represent the two objectives: a first CFN where unary costs are added only for the first half of the chessboard, and a second one with unary costs for the remaining cells.</p>
+<p>Toulbar2 allows to either solve for a chosen weighted sum of the two cost function networks as input, or approximate the pareto front by enumerating a complete set of non-redundant weights. As it is shown below, the method allows to compute solutions which costs lie in the convex hull of the pareto front. However, potential solutions belonging to the triangles will be missed with this approach.</p>
+<a class="reference internal image-reference" href="../_images/pareto.png"><img alt="../_images/pareto.png" src="../_images/pareto.png" style="height: 300px;" />
+</a>
+</section>
+<section id="python-model">
+<h2>Python model<a class="headerlink" href="#python-model" title="Link to this heading"></a></h2>
+<p>The following code using the pytoulbar2 library solves the bicriteria weighted latin square problem with two different pairs of weights for the two objectives.</p>
+<p><a class="reference download internal" download="" href="../_downloads/44cccb244547db4ab589294d3917d576/bicriteria_latinsquare.py"><code class="xref download docutils literal notranslate"><span class="pre">bicriteria_latinsquare.py</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">seed</span><span class="p">,</span> <span class="n">randint</span>
+<span class="n">seed</span><span class="p">(</span><span class="mi">123456789</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytoulbar2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">top</span> <span class="o">=</span> <span class="n">N</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span><span class="mi">1</span>
+
+<span class="c1"># printing a solution as a grid</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_solution</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+  
+  <span class="n">grid</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">N</span><span class="p">)]</span>
+  <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">sol</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">grid</span><span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span><span class="o">*</span><span class="n">N</span><span class="o">+</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span> <span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+  <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+  <span class="k">for</span> <span class="n">var_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sol</span><span class="p">)):</span>
+    <span class="n">output</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="n">var_ind</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
+    <span class="k">if</span> <span class="n">var_ind</span> <span class="o">%</span> <span class="n">N</span> <span class="o">==</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+      <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># creation of the base problem: variables and hard constraints (alldiff must be decomposed into binary constraints)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_base_cfn</span><span class="p">(</span><span class="n">cfn</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">top</span><span class="p">):</span>
+
+  <span class="c1"># variable creation</span>
+  <span class="n">var_indexes</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="c1"># create N^2 variables, with N values in their domains</span>
+  <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+      <span class="n">index</span> <span class="o">=</span> <span class="n">cfn</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;Cell_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;v&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
+      <span class="n">var_indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+  <span class="c1"># all permutation constraints: pairwise all different</span>
+
+  <span class="c1"># forbidden values are enforced by infinite costs</span>
+  <span class="n">alldiff_costs</span> <span class="o">=</span> <span class="p">[</span> <span class="n">top</span> <span class="k">if</span> <span class="n">row</span> <span class="o">==</span> <span class="n">col</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">]</span>
+
+  <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">var_ind1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+      <span class="k">for</span> <span class="n">var_ind2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">var_ind1</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+
+        <span class="c1"># permutations in the rows</span>
+        <span class="n">cfn</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">var_indexes</span><span class="p">[</span><span class="n">N</span><span class="o">*</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind1</span><span class="p">],</span> <span class="n">var_indexes</span><span class="p">[</span><span class="n">N</span><span class="o">*</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind2</span><span class="p">]],</span> <span class="n">alldiff_costs</span><span class="p">)</span>
+        
+        <span class="c1"># permutations in the columns</span>
+        <span class="n">cfn</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">var_indexes</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind1</span><span class="o">*</span><span class="n">N</span><span class="p">],</span> <span class="n">var_indexes</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind2</span><span class="o">*</span><span class="n">N</span><span class="p">]],</span> <span class="n">alldiff_costs</span><span class="p">)</span>
+
+<span class="n">split_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">N</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+
+<span class="c1"># generation of random costs</span>
+<span class="n">cell_costs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">N</span><span class="p">)]</span>
+
+<span class="c1"># multicfn is the main object for combining multiple cost function networks</span>
+<span class="n">multicfn</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">MultiCFN</span><span class="p">()</span>
+
+
+<span class="c1"># first cfn: first half of the grid</span>
+<span class="n">cfn</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">(</span><span class="n">ubinit</span> <span class="o">=</span> <span class="n">top</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">cfn</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="s1">&#39;first half&#39;</span><span class="p">)</span>
+<span class="n">create_base_cfn</span><span class="p">(</span><span class="n">cfn</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">split_index</span><span class="p">):</span>
+  <span class="n">cfn</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">cell_costs</span><span class="p">[</span><span class="n">variable_index</span><span class="p">])</span>
+<span class="n">multicfn</span><span class="o">.</span><span class="n">PushCFN</span><span class="p">(</span><span class="n">cfn</span><span class="p">)</span>
+
+
+<span class="c1"># second cfn: second half of the grid</span>
+<span class="n">cfn</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">(</span><span class="n">ubinit</span> <span class="o">=</span> <span class="n">top</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">cfn</span><span class="o">.</span><span class="n">SetName</span><span class="p">(</span><span class="s1">&#39;second half&#39;</span><span class="p">)</span>
+<span class="n">create_base_cfn</span><span class="p">(</span><span class="n">cfn</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">variable_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">split_index</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+  <span class="n">cfn</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="n">variable_index</span><span class="p">],</span> <span class="n">cell_costs</span><span class="p">[</span><span class="n">variable_index</span><span class="p">])</span>
+<span class="n">multicfn</span><span class="o">.</span><span class="n">PushCFN</span><span class="p">(</span><span class="n">cfn</span><span class="p">)</span>
+
+
+<span class="c1"># solve with a first pair of weights</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">)</span>
+
+<span class="n">multicfn</span><span class="o">.</span><span class="n">SetWeight</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">multicfn</span><span class="o">.</span><span class="n">SetWeight</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">cfn</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">()</span>
+<span class="n">cfn</span><span class="o">.</span><span class="n">InitFromMultiCFN</span><span class="p">(</span><span class="n">multicfn</span><span class="p">)</span> <span class="c1"># the final cfn is initialized from the combined cfn</span>
+
+<span class="c1"># cfn.Dump(&#39;python_latin_square_bicriteria.cfn&#39;)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">cfn</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">timeLimit</span> <span class="o">=</span> <span class="mi">60</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Solution found with weights&#39;</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+  <span class="n">sol_costs</span> <span class="o">=</span> <span class="n">multicfn</span><span class="o">.</span><span class="n">GetSolutionCosts</span><span class="p">()</span>
+  <span class="n">solution</span> <span class="o">=</span> <span class="n">multicfn</span><span class="o">.</span><span class="n">GetSolution</span><span class="p">()</span>
+  <span class="n">print_solution</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;with costs:&#39;</span><span class="p">,</span> <span class="n">sol_costs</span><span class="p">,</span> <span class="s1">&#39;(weighted sum=&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;)&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># solve a second time with other weights</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
+
+<span class="n">multicfn</span><span class="o">.</span><span class="n">SetWeight</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">multicfn</span><span class="o">.</span><span class="n">SetWeight</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">cfn</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">()</span>
+<span class="n">cfn</span><span class="o">.</span><span class="n">InitFromMultiCFN</span><span class="p">(</span><span class="n">multicfn</span><span class="p">)</span> <span class="c1"># the final cfn is initialized from the combined cfn</span>
+
+<span class="c1"># cfn.Dump(&#39;python_latin_square_bicriteria.cfn&#39;)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">cfn</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">timeLimit</span> <span class="o">=</span> <span class="mi">60</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Solution found with weights&#39;</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+  <span class="n">sol_costs</span> <span class="o">=</span> <span class="n">multicfn</span><span class="o">.</span><span class="n">GetSolutionCosts</span><span class="p">()</span>
+  <span class="n">solution</span> <span class="o">=</span> <span class="n">multicfn</span><span class="o">.</span><span class="n">GetSolution</span><span class="p">()</span>
+  <span class="n">print_solution</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;with costs:&#39;</span><span class="p">,</span> <span class="n">sol_costs</span><span class="p">,</span> <span class="s1">&#39;(weighted sum=&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;)&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># approximate the pareto front</span>
+<span class="p">(</span><span class="n">solutions</span><span class="p">,</span> <span class="n">costs</span><span class="p">)</span> <span class="o">=</span> <span class="n">multicfn</span><span class="o">.</span><span class="n">ApproximateParetoFront</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">showSolutions</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">timeLimit</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span> <span class="n">timeLimit_per_solution</span> <span class="o">=</span> <span class="mi">60</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">costs</span><span class="p">],</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">costs</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">costs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+  <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+  <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+  <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">costs</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;First objective&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Second objective&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Approximation of the Pareto front&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="c-model">
+<h2>C++ model<a class="headerlink" href="#c-model" title="Link to this heading"></a></h2>
+<p>The following code using the C++ toulbar2 library API solves the weighted latin square problem.</p>
+<p><a class="reference download internal" download="" href="../_downloads/10f257dc7d8ffdc740aae3db4de43674/bicriteria_latinsquare.cpp"><code class="xref download docutils literal notranslate"><span class="pre">bicriteria_latinsquare.cpp</span></code></a></p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;core/tb2wcsp.hpp&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;mcriteria/multicfn.hpp&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;mcriteria/bicriteria.hpp&quot;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span>
+
+<span class="c1">// an alias for storing the variable costs</span>
+<span class="c1">// first dim is the grid rows and second is the columns</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Cost</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">LatinCostArray</span><span class="p">;</span>
+
+
+<span class="c1">// generate random costs for each variable (cell)</span>
+<span class="c1">// param N grid size</span>
+<span class="c1">// param costs the matrix costs</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">createCostMatrix</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">LatinCostArray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">costs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// N*N*N values, costs for each cell</span>
+<span class="w">    </span><span class="n">costs</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">N</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">col</span><span class="o">:</span><span class="w"> </span><span class="n">costs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">col</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">N</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">cell</span><span class="o">:</span><span class="w"> </span><span class="n">col</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cell</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">N</span><span class="p">);</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">val_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">val_ind</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">val_ind</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">cell</span><span class="p">[</span><span class="n">val_ind</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">rand</span><span class="p">()</span><span class="o">%</span><span class="n">N</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+
+
+<span class="c1">// print the costs for each unary variabl (cell)</span>
+<span class="c1">// param costs the cost matrix</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printCosts</span><span class="p">(</span><span class="n">LatinCostArray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">costs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">row_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row_ind</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">costs</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">row_ind</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">col_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">col_ind</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">costs</span><span class="p">[</span><span class="n">row_ind</span><span class="p">].</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">col_ind</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;cell &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">row_ind</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;_&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">col_ind</span><span class="p">;</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; : &quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">cost</span><span class="o">:</span><span class="w"> </span><span class="n">costs</span><span class="p">[</span><span class="n">row_ind</span><span class="p">][</span><span class="n">col_ind</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">cost</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// fill in a WCSP object with a latin square problem</span>
+<span class="c1">// param wcsp the wcsp object to fill</span>
+<span class="c1">// param LatinCostArray the cost matrix</span>
+<span class="c1">// param N grid size</span>
+<span class="c1">// top the top value, problem upper bound (the objective is always lower than top)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">buildLatinSquare</span><span class="p">(</span><span class="n">WeightedCSP</span><span class="o">&amp;</span><span class="w"> </span><span class="n">wcsp</span><span class="p">,</span><span class="w"> </span><span class="n">LatinCostArray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">costs</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">Cost</span><span class="w"> </span><span class="n">top</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// variables</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">wcsp</span><span class="p">.</span><span class="n">makeEnumeratedVariable</span><span class="p">(</span><span class="s">&quot;Cell_&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">col</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* costs for all different constraints (top on diagonal) */</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Cost</span><span class="o">&gt;</span><span class="w"> </span><span class="n">alldiff_costs</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">alldiff_costs</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">top</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">alldiff_costs</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* all different constraints */</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">var_ind1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">var_ind1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">var_ind1</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">var_ind2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">var_ind1</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">var_ind2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">var_ind2</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="cm">/* row constraints */</span>
+<span class="w">                </span><span class="n">wcsp</span><span class="p">.</span><span class="n">postBinaryConstraint</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="o">*</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind2</span><span class="p">,</span><span class="w"> </span><span class="n">alldiff_costs</span><span class="p">);</span>
+<span class="w">                </span><span class="cm">/* col constraints */</span>
+<span class="w">                </span><span class="n">wcsp</span><span class="p">.</span><span class="n">postBinaryConstraint</span><span class="p">(</span><span class="n">index</span><span class="o">+</span><span class="n">var_ind1</span><span class="o">*</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="o">+</span><span class="n">var_ind2</span><span class="o">*</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">alldiff_costs</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">    </span><span class="cm">/* unary costs */</span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">var_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">wcsp</span><span class="p">.</span><span class="n">postUnaryConstraint</span><span class="p">(</span><span class="n">var_ind</span><span class="p">,</span><span class="w"> </span><span class="n">costs</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">var_ind</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="c1">// print a solution as a grid</span>
+<span class="c1">// param N the size of the grid</span>
+<span class="c1">// param solution the multicfn solution (dict)</span>
+<span class="c1">// param point the objective costs (objective space point)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printSolution</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">MultiCFN</span><span class="o">::</span><span class="n">Solution</span><span class="o">&amp;</span><span class="w"> </span><span class="n">solution</span><span class="p">,</span><span class="w"> </span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">Point</span><span class="o">&amp;</span><span class="w"> </span><span class="n">point</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">string</span><span class="w"> </span><span class="n">var_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Cell_&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">col</span><span class="p">);</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">solution</span><span class="p">[</span><span class="n">var_name</span><span class="p">].</span><span class="n">substr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;obj_1 = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">point</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; ; obj2 = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">point</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+
+<span class="p">}</span>
+
+<span class="c1">// main function</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="n">srand</span><span class="p">(</span><span class="mi">123456789</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Cost</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">N</span><span class="o">*</span><span class="n">N</span><span class="o">*</span><span class="n">N</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// two cost matrice</span>
+<span class="w">    </span><span class="n">LatinCostArray</span><span class="w"> </span><span class="n">costs_obj1</span><span class="p">,</span><span class="w"> </span><span class="n">costs_obj2</span><span class="p">;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// init the objective with random costs</span>
+<span class="w">    </span><span class="n">createCostMatrix</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">costs_obj1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">createCostMatrix</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">costs_obj2</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// cout &lt;&lt; &quot;Randomly genereated costs : &quot; &lt;&lt; endl;</span>
+<span class="w">    </span><span class="c1">// printCosts(costs_obj1);</span>
+<span class="w">    </span><span class="c1">// cout &lt;&lt; endl &lt;&lt; endl;</span>
+<span class="w">    </span><span class="c1">// printCosts(costs_obj2);</span>
+
+<span class="w">    </span><span class="n">tb2init</span><span class="p">();</span>
+<span class="w">    </span><span class="n">initCosts</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// create the two wcsp objects</span>
+<span class="w">    </span><span class="n">WeightedCSP</span><span class="o">*</span><span class="w"> </span><span class="n">wcsp1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WeightedCSP</span><span class="o">::</span><span class="n">makeWeightedCSP</span><span class="p">(</span><span class="n">top</span><span class="p">);</span>
+<span class="w">    </span><span class="n">WeightedCSP</span><span class="o">*</span><span class="w"> </span><span class="n">wcsp2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WeightedCSP</span><span class="o">::</span><span class="n">makeWeightedCSP</span><span class="p">(</span><span class="n">top</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// initialize the objects as a latin square problem objectives with two different objectves</span>
+<span class="w">    </span><span class="n">buildLatinSquare</span><span class="p">(</span><span class="o">*</span><span class="n">wcsp1</span><span class="p">,</span><span class="w"> </span><span class="n">costs_obj1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">top</span><span class="p">);</span>
+<span class="w">    </span><span class="n">buildLatinSquare</span><span class="p">(</span><span class="o">*</span><span class="n">wcsp2</span><span class="p">,</span><span class="w"> </span><span class="n">costs_obj2</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">top</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// creation of the multicfn</span>
+<span class="w">    </span><span class="n">MultiCFN</span><span class="w"> </span><span class="n">mcfn</span><span class="p">;</span>
+<span class="w">    </span><span class="n">mcfn</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="n">WCSP</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">wcsp1</span><span class="p">));</span>
+<span class="w">    </span><span class="n">mcfn</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="n">WCSP</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">wcsp2</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// computation iof the supported points of the biobjective problem</span>
+<span class="w">    </span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">computeSupportedPoints</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mcfn</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">OptimDir</span><span class="o">::</span><span class="n">Optim_Min</span><span class="p">,</span><span class="w"> </span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">OptimDir</span><span class="o">::</span><span class="n">Optim_Min</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// access to the computed solutions and their objective values</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">MultiCFN</span><span class="o">::</span><span class="n">Solution</span><span class="o">&gt;</span><span class="w"> </span><span class="n">solutions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">getSolutions</span><span class="p">();</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">Point</span><span class="o">&gt;</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Bicriteria</span><span class="o">::</span><span class="n">getPoints</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// print all solutions computed</span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Resulting solutions: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">sol_index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">sol_index</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">solutions</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">sol_index</span><span class="w"> </span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printSolution</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">solutions</span><span class="p">[</span><span class="n">sol_index</span><span class="p">],</span><span class="w"> </span><span class="n">points</span><span class="p">[</span><span class="n">sol_index</span><span class="p">]);</span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// delete the wcsp objects</span>
+<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">wcsp1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">wcsp2</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The above code can be compiled with the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>g++<span class="w"> </span>-O3<span class="w"> </span>-std<span class="o">=</span>c++17<span class="w"> </span>-Wall<span class="w"> </span>-DBOOST<span class="w"> </span>-DLONGLONG_COST<span class="w"> </span>-DLONGDOUBLE_PROB<span class="w"> </span>-I<span class="w"> </span><span class="nv">$YOUR_TB2_INCLUDE_PATH</span><span class="w"> </span>main.cpp<span class="w"> </span>-c<span class="w"> </span>-o<span class="w"> </span>main.o
+</pre></div>
+</div>
+<p>Where <code class="code highlight bash docutils literal highlight-bash"><span class="nv">$YOUR_TB2_INCLUDE_PATH</span></code> is the path to the ToulBar2 src directory.
+And the compiled program is obtained via :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>g++<span class="w"> </span>-O3<span class="w"> </span>-std<span class="o">=</span>c++17<span class="w"> </span>-Wall<span class="w"> </span>-DBOOST<span class="w"> </span>-DLONGLONG_COST<span class="w"> </span>-DLONGDOUBLE_PROB<span class="w"> </span>main.o<span class="w"> </span>-o<span class="w"> </span>main<span class="w"> </span>-L<span class="w"> </span><span class="nv">$YOUR_LIBTB2_PATH</span><span class="w"> </span>-ltb2<span class="w"> </span>-lgmp<span class="w"> </span>-lboost_graph<span class="w"> </span>-lboost_iostreams<span class="w"> </span>-lz<span class="w"> </span>-llzma
+</pre></div>
+</div>
+<p>Where <code class="code highlight bash docutils literal highlight-bash"><span class="nv">$YOUR_LIBTB2_PATH</span></code> is the path to the ToulBar2 compiled library.
+When running the program, do not forget to set the <code class="code highlight bash docutils literal highlight-bash"><span class="k">$(</span>LD_LIBRARY_PATH<span class="k">)</span></code> environment variable in Linux.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

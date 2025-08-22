@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudoku puzzle in Pytoulbar2 &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=tutorials.html>Tutorials</a> |
+    <a href=usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-logo-sudoku-puzzle-in-pytoulbar2">
+<span id="tuto-sudoku-pytb2"></span><h1><a class="reference internal" href="https://s3.dualstack.us-east-2.amazonaws.com/pythondotorg-assets/media/community/logos/python-logo-only.png"><img alt="python_logo" src="https://s3.dualstack.us-east-2.amazonaws.com/pythondotorg-assets/media/community/logos/python-logo-only.png" style="width: 40px;" /></a> Sudoku puzzle in <a class="reference internal" href="../ref/ref_python.html#ref-python"><span class="std std-ref">Pytoulbar2</span></a><a class="headerlink" href="#python-logo-sudoku-puzzle-in-pytoulbar2" title="Link to this heading"></a></h1>
+<div align=right>
+    <span style="color:Firebrick; font-weight:bold;"> Back to </span>
+    <a href="tutorials.html">Tutorials</a> |
+    <a href="usecases.html">Use cases</a>
+</div><p>The Sudoku is a widely known puzzle game that consists in filling a grid with numbers.
+The typical grid has 9x9 cells in total and each cell must contain an integer between 1 and 9.</p>
+<p>Additional constraints need to be enforced to solve the puzzle.
+In each line, the same number cannot appear twice.
+The same type of constraint occurs for each column.
+Finally, each sub square of size 3x3 located every 3 cells must also not contain duplicates.
+The image bellow shows an example of a Sudoku grid given with its initial values.
+The goal is to deduce the other values while verifying the different constraints.</p>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="../_images/sudoku_cst.svg"><img alt="A Sudoku grid with its constraints." src="../_images/sudoku_cst.svg" style="height: 240px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">A Sudoku grid partially filled where some of its constraints have been highlighted. Grid source: <a class="reference external" href="https://en.wikipedia.org/wiki/Sudoku/">Wikipedia</a></span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<section id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
+<p>Before starting, make sure pytoulbar2 is installed in your environment. It can be installed via the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pytoulbar2
+</pre></div>
+</div>
+<p>We first create a <a class="reference external" href="../ref/ref_python.html#pytoulbar2.CFN">CFN</a> object. CFN, which stands for Cost Function Network, is the main object that is manipulated in pytoulbar2.
+It represents a problem to solve expressed as a network of cost functions, i.e a set of variables that are connected to each other through discrete cost functions (or constraints).</p>
+<p>As ToulBar2 is an optimization framework, an optional upper bound can be provided to the CFN object in order to exclude any solution whose value exceeds this bound.
+In the case of a Sudoku puzzle, since the problem does not contain a numerical objective, an upper bound of 1 can be chosen.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pytoulbar2</span>
+
+<span class="n">top</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># upper bound value of the problem</span>
+<span class="n">cfn</span> <span class="o">=</span> <span class="n">pytb2</span><span class="o">.</span><span class="n">CFN</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="representing-the-grid-in-toulbar2">
+<h2>Representing the grid in ToulBar2<a class="headerlink" href="#representing-the-grid-in-toulbar2" title="Link to this heading"></a></h2>
+<p>To represent our problem in pytoulbar2, it is necessary to define discrete decision variables.
+The variables will represent the various choices that can be made to build a solution to the problem.
+In the Sudoku puzzle, decision variables are typically the different cells of the grid.
+Their values would be the possible integers they can be assigned to, from 1 to 9.
+We use the function <a class="reference external" href="../ref/ref_python.html#pytoulbar2.CFN.AddVariable">AddVariable</a> of our <code class="code docutils literal notranslate"><span class="pre">cfn</span></code> object to create the variables.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># variable creation</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+   <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+      <span class="n">cfn</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;cell_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="solving-first-the-grid">
+<h2>Solving first the grid<a class="headerlink" href="#solving-first-the-grid" title="Link to this heading"></a></h2>
+<p>It is already possible to “solve” the puzzle with ToulBar2, as the cfn object contains the variables of the problem.
+The function <a class="reference external" href="../ref/ref_python.html#pytoulbar2.CFN.Solve">Solve</a> is used to run the solving algorithm.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">cfn</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">showSolutions</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If ToulBar2 finds a solution, it will return an array containing the chosen values for each variable:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Would return <code class="code docutils literal notranslate"><span class="pre">0</span></code>, meaning the chosen value of the first variable (upper left cell) is 1 (first value of the list).
+We then define a function to print the solutions as a grid:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># print a solution as a Sudoku grid</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_grid</span><span class="p">(</span><span class="n">solution</span><span class="p">):</span>
+
+   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------&#39;</span><span class="p">)</span>
+
+   <span class="n">var_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+   <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+      <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+      <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+         <span class="k">if</span> <span class="n">col</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+               <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39;|&#39;</span>
+         <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+         <span class="n">line</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">solution</span><span class="p">[</span><span class="n">var_index</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">col</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+               <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+         <span class="n">var_index</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39;|&#39;</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">row</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------&#39;</span><span class="p">)</span>
+
+<span class="c1"># print the first solution</span>
+<span class="n">print_grid</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Which helps to display the first solution:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>-------------------------
+| 1 1 1 | 1 1 1 | 1 1 1 |
+| 1 1 1 | 1 1 1 | 1 1 1 |
+| 1 1 1 | 1 1 1 | 1 1 1 |
+-------------------------
+| 1 1 1 | 1 1 1 | 1 1 1 |
+| 1 1 1 | 1 1 1 | 1 1 1 |
+| 1 1 1 | 1 1 1 | 1 1 1 |
+-------------------------
+| 1 1 1 | 1 1 1 | 1 1 1 |
+| 1 1 1 | 1 1 1 | 1 1 1 |
+| 1 1 1 | 1 1 1 | 1 1 1 |
+-------------------------
+</pre></div>
+</div>
+</section>
+<section id="adding-initial-values">
+<h2>Adding initial values<a class="headerlink" href="#adding-initial-values" title="Link to this heading"></a></h2>
+<p>The next step consists in initializing the variables that correspond to cells for which the value is known.
+We will use the values in the grid example above, defined as a double array (where 0 means the value is unspecified) :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define known values</span>
+<span class="n">initial_values</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
+               <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>Variables can be assigned with the function <a class="reference external" href="../ref/ref_python.html#pytoulbar2.CFN.Assign">Assign</a>.
+The variable and its value can be specified as integer indexes or as strings.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">var_index</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+ <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+     <span class="k">if</span> <span class="n">initial_values</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+         <span class="n">cfn</span><span class="o">.</span><span class="n">Assign</span><span class="p">(</span><span class="n">var_index</span><span class="p">,</span> <span class="n">initial_values</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+     <span class="n">var_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">cfn</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">showSolutions</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">print_grid</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>Although we have already solved the problem once, a <code class="code docutils literal notranslate"><span class="pre">CFN</span></code> object cannot execute its <code class="code docutils literal notranslate"><span class="pre">Solve</span></code> function twice in a row. The object must be recreated or the function must be called only once.</p>
+</div>
+<p>The solution returned by the algorithm this time looks like this :</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>-------------------------
+| 5 3 1 | 1 7 1 | 1 1 1 |
+| 6 1 1 | 1 9 5 | 1 1 1 |
+| 1 9 8 | 1 1 1 | 1 6 1 |
+-------------------------
+| 8 1 1 | 1 6 1 | 1 1 3 |
+| 4 1 1 | 8 1 3 | 1 1 1 |
+| 7 1 1 | 1 2 1 | 1 1 6 |
+-------------------------
+| 1 6 1 | 1 1 1 | 2 8 1 |
+| 1 1 1 | 4 1 9 | 1 1 5 |
+| 1 1 1 | 1 8 1 | 1 7 9 |
+-------------------------
+</pre></div>
+</div>
+<p>The initial values are now correctly specified in the variables.</p>
+</section>
+<section id="adding-constraints-and-solving-the-grid">
+<h2>Adding constraints and solving the grid<a class="headerlink" href="#adding-constraints-and-solving-the-grid" title="Link to this heading"></a></h2>
+<p>The last missing part before being able to compute a solution is the constraints.
+Starting with the row constraints, we must ensure that none of the variables in the same row will be assigned to the same values.
+This constraint is usually called <em>all different</em> and can be added with the function <a class="reference external" href="../ref/ref_python.html#pytoulbar2.CFN.AddAllDifferent">AddAllDifferent</a>.
+The function takes as an argument a list of indices of the variables that must differ.
+The constraint on the first row is obtained via:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([</span><span class="n">var_ind</span> <span class="k">for</span> <span class="n">var_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>Which generates the following first row in the solution:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>-------------------------
+| 5 3 1 | 2 7 4 | 9 8 6 |
+</pre></div>
+</div>
+<p>Constraints for each row can be added by varying the column index for each row:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># row constraints</span>
+<span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+   <span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([</span><span class="n">row_ind</span><span class="o">*</span><span class="mi">9</span><span class="o">+</span><span class="n">col_ind</span> <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>Constraints for each column are obtained similarly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># column constraints</span>
+<span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+   <span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([</span><span class="n">row_ind</span><span class="o">*</span><span class="mi">9</span><span class="o">+</span><span class="n">col_ind</span> <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>At this point, the solution is not correct yet since sub-grids of size 3x3 may contain duplicates, such as the values <code class="code docutils literal notranslate"><span class="pre">9</span></code> and <code class="code docutils literal notranslate"><span class="pre">3</span></code> in the example below:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>---------
+| 5 3 9 |
+| 6 2 3 |
+| 1 9 8 |
+---------
+</pre></div>
+</div>
+<p>Additional constraints are added for each of the 9 sub-grids:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sub grids constraints</span>
+<span class="k">for</span> <span class="n">sub_ind1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="c1"># row offset</span>
+   <span class="k">for</span> <span class="n">sub_ind2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="c1"># column offset</span>
+      <span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([(</span><span class="n">sub_ind1</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">row_ind</span><span class="p">)</span><span class="o">*</span><span class="mi">9</span><span class="o">+</span> <span class="n">sub_ind2</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">col_ind</span> <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>These last constraints allow to obtain a consistent solution to the Sudoku puzzle finally:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>-------------------------
+| 5 3 4 | 6 7 8 | 9 1 2 |
+| 6 7 2 | 1 9 5 | 3 4 8 |
+| 1 9 8 | 3 4 2 | 5 6 7 |
+-------------------------
+| 8 5 9 | 7 6 1 | 4 2 3 |
+| 4 2 6 | 8 5 3 | 7 9 1 |
+| 7 1 3 | 9 2 4 | 8 5 6 |
+-------------------------
+| 9 6 1 | 5 3 7 | 2 8 4 |
+| 2 8 7 | 4 1 9 | 6 3 5 |
+| 3 4 5 | 2 8 6 | 1 7 9 |
+-------------------------
+</pre></div>
+</div>
+</section>
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading"></a></h2>
+<p>This short introduction shows how to represent a problem in ToulBar2 via its python interface <a class="reference internal" href="../ref/ref_python.html#ref-python"><span class="std std-ref">Pytoulbar2</span></a> by defining the problem variables and constraints and how to obtain a solution to this problem.
+Below is the complete python script from this tutorial.</p>
+<p><a class="reference download internal" download="" href="../_downloads/3817dc2b6312e96c9545d370ebd98c71/sudoku_tutorial.py"><code class="xref download docutils literal notranslate"><span class="pre">sudoku_tutorial.py</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pytoulbar2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pytb2</span>
+
+<span class="c1"># print a solution as a sudoku grid</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_grid</span><span class="p">(</span><span class="n">solution</span><span class="p">):</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------&#39;</span><span class="p">)</span>
+
+    <span class="n">var_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39;|&#39;</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> 
+            <span class="n">line</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">solution</span><span class="p">[</span><span class="n">var_index</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+            <span class="n">var_index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39;|&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">row</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------&#39;</span><span class="p">)</span>
+    
+
+<span class="n">cfn</span> <span class="o">=</span> <span class="n">pytb2</span><span class="o">.</span><span class="n">CFN</span><span class="p">()</span>
+
+<span class="c1"># variables</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+        <span class="n">cfn</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;cell_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">))</span>
+
+<span class="c1"># define known values</span>
+<span class="n">initial_values</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">]]</span>
+
+<span class="n">var_index</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">initial_values</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cfn</span><span class="o">.</span><span class="n">Assign</span><span class="p">(</span><span class="n">var_index</span><span class="p">,</span> <span class="n">initial_values</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">var_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># row constraints</span>
+<span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([</span><span class="n">row_ind</span><span class="o">*</span><span class="mi">9</span><span class="o">+</span><span class="n">col_ind</span> <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">)])</span>
+
+<span class="c1"># column constraints</span>
+<span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([</span><span class="n">row_ind</span><span class="o">*</span><span class="mi">9</span><span class="o">+</span><span class="n">col_ind</span> <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">)])</span>
+
+<span class="c1"># sub grids constraints</span>
+<span class="k">for</span> <span class="n">sub_ind1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="c1"># row offset</span>
+    <span class="k">for</span> <span class="n">sub_ind2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="c1"># column offset</span>
+        <span class="n">cfn</span><span class="o">.</span><span class="n">AddAllDifferent</span><span class="p">([(</span><span class="n">sub_ind1</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">row_ind</span><span class="p">)</span><span class="o">*</span><span class="mi">9</span><span class="o">+</span> <span class="n">sub_ind2</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">col_ind</span> <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
+                
+<span class="n">result</span> <span class="o">=</span> <span class="n">cfn</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">showSolutions</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">allSolutions</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">print_grid</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

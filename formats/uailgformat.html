@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UAI and LG formats (.uai, .LG) &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Partial Weighted MaxSAT format" href="cnfwcnfformat.html" />
+    <link rel="prev" title="Weighted Constraint Satisfaction Problem file format (wcsp)" href="wcspformat.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../userdoc.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#what-is-toulbar2">What is toulbar2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-install-it">How do I install it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-test-it">How do I test it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#using-it-as-a-black-box">Using it as a black box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#potential-issues">Potential issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#command-line-options">Command line options</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../userdoc.html#input-formats">Input formats</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../userdoc.html#introduction">Introduction</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../userdoc.html#formats-details">Formats details</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cfnformat.html">cfn format (.cfn, .cfn.gz, .cfn.bz2, and .cfn.xz file extension)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wcspformat.html">wcsp format (.wcsp file extension)</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">UAI and LG formats (.uai, .LG)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnfwcnfformat.html">Partial Weighted MaxSAT format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qpboformat.html">QPBO format (.qpbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html">OPB format (.opb)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html#wbo-format-wbo">WBO format (.wbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lpformat.html">CPLEX format (.lp)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html">XCSP2.1 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html#xcsp3-format-xml">XCSP3 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preformat.html">Linkage format (.pre)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-use-it">How do I use it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=../examples/tutorials.html>Tutorials</a> |
+    <a href=../examples/usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="uai-and-lg-formats-uai-lg">
+<span id="uai-lg-format"></span><h1>UAI and LG formats (.uai, .LG)<a class="headerlink" href="#uai-and-lg-formats-uai-lg" title="Link to this heading"></a></h1>
+<p>It is a simple text file format specified below to describe probabilistic graphical model instances. The format is a generalization of the Ergo file format initially developed by Noetic Systems Inc. for their Ergo software.</p>
+<ul>
+<li><p><strong>Structure</strong></p>
+<p>A file in the UAI format consists of the following two parts, in that order:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Preamble</span><span class="o">&gt;</span>
+
+<span class="o">&lt;</span><span class="n">Function</span> <span class="n">tables</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>The contents of each section (denoted <span class="math notranslate nohighlight">\(&lt;...&gt;\)</span> above) are described in the following:</p>
+</li>
+<li><p><strong>Preamble</strong></p>
+<p>The preamble starts with one line denoting the type of network. This will be either BAYES (if the network is a Bayesian network) or MARKOV (in case of a Markov network). This is followed by a line containing the number of variables. The next line specifies each variable’s domain size, one at a time, separated by whitespace (note that this implies an order on the variables which will be used throughout the file).</p>
+<p>The fourth line contains only one integer, denoting the number of functions in the problem (conditional probability tables for Bayesian networks, general factors for Markov networks). Then, one function per line, the scope of each function is given as follows: The first integer in each line specifies the size of the function’s scope, followed by the actual indexes of the variables in the scope. The order of this list is not restricted, except when specifying a conditional probability table (CPT) in a Bayesian network, where the child variable has to come last. Also note that variables are indexed starting with 0.</p>
+<p>For instance, a general function over variables 0, 5 and 11 would have this entry:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">5</span> <span class="mi">11</span>
+</pre></div>
+</div>
+<p>A simple Markov network preamble with three variables and two functions might for instance look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MARKOV</span>
+<span class="mi">3</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="mi">2</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span>
+<span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>The first line denotes the Markov network, the second line tells us the problem consists of three variables, let’s refer to them as X, Y, and Z. Their domain size is 2, 2, and 3 respectively (from the third line). Line four specifies that there are 2 functions. The scope of the first function is X,Y, while the second function is defined over X,Y,Z.</p>
+<p>An example preamble for a Belief network over three variables (and therefore with three functions) might be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BAYES</span>
+<span class="mi">3</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="mi">3</span>
+<span class="mi">1</span> <span class="mi">0</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>The first line signals a Bayesian network. This example has three variables, let’s call them X, Y, and Z, with domain size 2, 2, and 3, respectively (from lines two and three). Line four says that there are 3 functions (CPTs in this case). The scope of the first function is given in line five as just X (the probability P(X)), the second one is defined over X and Y (this is (Y | X)). The third function, from line seven, is the CPT P(Z | Y). We can therefore deduce that the joint probability for this problem factors as P(X,Y,Z) = P(X).P(Y | X).P(Z | Y).</p>
+</li>
+<li><p><strong>Function tables</strong></p>
+<p>In this section each function is specified by giving its full table (i.e, specifying the function value for each tuple). The order of the functions is identical to the one in which they were introduced in the preamble.</p>
+<p>For each function table, first the number of entries is given (this should be equal to the product of the domain sizes of the variables in the scope). Then, one by one, separated by whitespace, the values for each assignment to the variables in the function’s scope are enumerated. Tuples are implicitly assumed in ascending order, with the last variable in the scope as the ‘least significant’.</p>
+<p>To illustrate, we continue with our Bayesian network example from above, let’s assume the following conditional probability tables:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">X</span>      <span class="n">P</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="mi">0</span>      <span class="mf">0.436</span>
+<span class="mi">1</span>      <span class="mf">0.564</span>
+
+<span class="n">X</span>      <span class="n">Y</span>         <span class="n">P</span><span class="p">(</span><span class="n">Y</span> <span class="o">|</span> <span class="n">X</span><span class="p">)</span>
+<span class="mi">0</span>      <span class="mi">0</span>         <span class="mf">0.128</span>
+<span class="mi">0</span>      <span class="mi">1</span>         <span class="mf">0.872</span>
+<span class="mi">1</span>      <span class="mi">0</span>         <span class="mf">0.920</span>
+<span class="mi">1</span>      <span class="mi">1</span>         <span class="mf">0.080</span>
+
+<span class="n">Y</span>      <span class="n">Z</span>         <span class="n">P</span><span class="p">(</span><span class="n">Z</span> <span class="o">|</span> <span class="n">Y</span><span class="p">)</span>
+<span class="mi">0</span>      <span class="mi">0</span>         <span class="mf">0.210</span>
+<span class="mi">0</span>      <span class="mi">1</span>         <span class="mf">0.333</span>
+<span class="mi">0</span>      <span class="mi">2</span>         <span class="mf">0.457</span>
+<span class="mi">1</span>      <span class="mi">0</span>         <span class="mf">0.811</span>
+<span class="mi">1</span>      <span class="mi">1</span>         <span class="mf">0.000</span>
+<span class="mi">1</span>      <span class="mi">2</span>         <span class="mf">0.189</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>The corresponding function tables in the file would then look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2</span>
+ <span class="mf">0.436</span> <span class="mf">0.564</span>
+
+<span class="mi">4</span>
+ <span class="mf">0.128</span> <span class="mf">0.872</span>
+ <span class="mf">0.920</span> <span class="mf">0.080</span>
+
+<span class="mi">6</span>
+ <span class="mf">0.210</span> <span class="mf">0.333</span> <span class="mf">0.457</span>
+ <span class="mf">0.811</span> <span class="mf">0.000</span> <span class="mf">0.189</span>
+</pre></div>
+</div>
+<p>(Note that line breaks and empty lines are effectively just whitespace, exactly like plain spaces “ “. They are used here to improve readability.)</p>
+<p>In the LG format, probabilities are replaced by their logarithm.</p>
+<ul>
+<li><p><strong>Summary</strong></p>
+<p>To sum up, a problem file consists of 2 sections: the preamble and the full the function tables, the names and the labels.</p>
+<p>For our Markov network example above, the full file could be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MARKOV</span>
+<span class="mi">3</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="mi">2</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span>
+<span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span>
+
+<span class="mi">4</span>
+ <span class="mf">4.000</span> <span class="mf">2.400</span>
+ <span class="mf">1.000</span> <span class="mf">0.000</span>
+
+<span class="mi">12</span>
+ <span class="mf">2.2500</span> <span class="mf">3.2500</span> <span class="mf">3.7500</span>
+ <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">10.0000</span>
+ <span class="mf">1.8750</span> <span class="mf">4.0000</span> <span class="mf">3.3330</span>
+ <span class="mf">2.0000</span> <span class="mf">2.0000</span> <span class="mf">3.4000</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Here is the full Bayesian network example from above:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BAYES</span>
+<span class="mi">3</span>
+<span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="mi">3</span>
+<span class="mi">1</span> <span class="mi">0</span>
+<span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span>
+<span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span>
+
+<span class="mi">2</span>
+ <span class="mf">0.436</span> <span class="mf">0.564</span>
+
+<span class="mi">4</span>
+ <span class="mf">0.128</span> <span class="mf">0.872</span>
+ <span class="mf">0.920</span> <span class="mf">0.080</span>
+
+<span class="mi">6</span>
+ <span class="mf">0.210</span> <span class="mf">0.333</span> <span class="mf">0.457</span>
+ <span class="mf">0.811</span> <span class="mf">0.000</span> <span class="mf">0.189</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>Expressing evidence</strong></p>
+<p>Evidence is specified in a separate file. This file has the same name as the original problems file but an added .evid extension at the end. For instance, problem.uai will have evidence in problem.uai.evid.</p>
+<p>The file simply starts with a line specifying the number of evidence variables. This is followed by the pairs of variable and value indexes for each observed variable, one pair per line. The indexes correspond to the ones implied by the original problem file.</p>
+<p>If, for our above example, we want to specify that variable Y has been observed as having its first value and Z with its second value, the file example.uai.evid would contain the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2</span>
+ <span class="mi">1</span> <span class="mi">0</span>
+ <span class="mi">2</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="wcspformat.html" class="btn btn-neutral float-left" title="Weighted Constraint Satisfaction Problem file format (wcsp)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cnfwcnfformat.html" class="btn btn-neutral float-right" title="Partial Weighted MaxSAT format" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
