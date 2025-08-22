@@ -1,19 +1,32 @@
 
 .. raw:: html
 
-    <div class= toulbar2news>
+    
 
-        </br>
-        <span style="color:Firebrick; font-weight:bold;"> New! </span>
+    <div class=toulbar2news>
 
-        toulbar2 won medals at <a href="https://xcsp.org/competitions/">XCSP 2024</a> and <a href="https://uaicompetition.github.io/uci-2022/results/final-leader-board">UAI 2022</a> Competitions!</br>
-        
-        <span style="color:Firebrick; font-weight:bold;"> New! </span>
+    <fieldset style = "overflow-y: scroll; overflow: -moz-scrollbars-vertical; border: solid 2px; height: 180px; padding-bottom: 1rem; margin:0rem;">
 
-        Your Sudoku solved on your smartphone by toulbar2
-        (<a href="examples/vsapp_apk.html">APK</a>)</br>
+    <legend style="width:fit-content; height:fit-content; margin-left: 1.2rem; padding-left: 1rem; padding-right: 1rem; margin-bottom: 0rem;">News 📣</legend>
 
-        </br>
-        
+    <div style="margin-left: 1.2rem; margin-right: 1.2rem; padding-top: -2rem; margin-bottom: -3rem; position: relative; top: -2.9rem;">
+
+    <script src="https://giscus.app/client.js"
+        data-repo="toulbar2/tb2news"
+        data-repo-id="R_kgDOPiZpEA"
+        data-mapping="number"
+        data-term="2"
+        data-reactions-enabled="0"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+    </script>
+
     </div>
 
+    </fieldset> 
+
+    </div>

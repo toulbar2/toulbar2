@@ -59,9 +59,15 @@ extensions = [
 
 # Breathe
 breathe_default_project = "toulbar2cpp"
+
+if "/home/sbuchet/code/toulbar2_news/toulbar2/build" == '@'+'CMAKE_CURRENT_BINARY_DIR'+'@':
+    tb2cpp_folder = os.path.normpath(os.path.join(docs_path, "..", "..", "build", "xml"))
+else:
+    tb2cpp_folder = os.path.normpath(os.path.join("/home/sbuchet/code/toulbar2_news/toulbar2/build", "xml"))
+
+
 breathe_projects = {
-    "toulbar2cpp" : os.path.normpath(os.path.join(docs_path, "..", "..",
-                                                  "build", "xml")),
+    "toulbar2cpp" : tb2cpp_folder,
 }
 #breathe_implementation_filename_extensions = ['.c', '.cc', '.cpp']
 

@@ -1,15 +1,12 @@
 .. _presentation:
 
-.. include:: news/news_home.rst
-
 ============
 Presentation
 ============
 
 .. _about_toulbar2:
 
-About toulbar2
-==============
+.. include:: news/news_home.rst
 
 **toulbar2** is an open-source C++ solver for cost function networks. It solves various combinatorial optimization problems.
 
