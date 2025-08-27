@@ -350,7 +350,7 @@ void TernaryConstraint::dump_CFN(ostream& os, bool original)
     os << name2cfn(x->getName()) << "\",\""
        << name2cfn(y->getName()) << "\",\""
        << name2cfn(z->getName()) << "\"],";
-    os << "\"defaultcost\":" << defaultCost << ",\n\"costs\":[\n";
+    os << "\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(defaultCost)) << ",\n\"costs\":[\n";
     int i = 0;
     for (EnumeratedVariable::iterator iterX = x->begin(); iterX != x->end(); ++iterX, i++) {
         int j = 0;
