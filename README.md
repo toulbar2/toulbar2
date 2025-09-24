@@ -104,7 +104,6 @@ Recommended libraries (default use):
 * zlib1g-dev
 * liblzma-dev
 * libbz2-dev
-* libeigen3-dev
 
 Optional libraries:
 * libjemalloc-dev
@@ -116,6 +115,7 @@ Optional libraries:
 * libicudata
 * libxml2-dev
 * libxcsp3parser
+* libeigen3-dev
 
 On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries. For Mac with ARM64, add option -DBoost=OFF to cmake.
 
