@@ -447,6 +447,45 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         problem->postBinaryConstraint(varx, vary, costs);
     }
 
+    void buildConstraintPrimitive3(OrderType op, int varx, int vark, int vary) {
+        assert(varx != vary);
+        assert(varx != vark);
+        assert(vark != vary);
+        vector<Cost> costs;
+        for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+            for (unsigned int kk = 0; kk < problem->getDomainInitSize(vark); kk++) {
+                int k = problem->toValue(vark, kk);
+                for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
+                    switch (op) {
+                    case OrderType::LE:
+                        costs.push_back((problem->toValue(varx, a) + k <= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::LT:
+                        costs.push_back((problem->toValue(varx, a) + k < problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::GE:
+                        costs.push_back((problem->toValue(varx, a) + k >= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::GT:
+                        costs.push_back((problem->toValue(varx, a) + k > problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        costs.push_back((problem->toValue(varx, a) + k == problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::NE:
+                        costs.push_back((problem->toValue(varx, a) + k != problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << op << " not implemented!" << endl;
+                        throw WrongFileFormat();
+                    }
+                }
+            }
+        }
+        problem->postTernaryConstraint(varx, vark, vary, costs);
+    }
+
     void buildConstraintPrimitiveMult(OrderType op, int varx, int mult, int vary) {
         assert(varx != vary);
         vector<Cost> costs;
@@ -2533,6 +2572,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(vars.size() <= lengths.size() + 1);
         for (unsigned int i = 0; i < vars.size()-1; i++) {
             buildConstraintPrimitive(order, vars[i], lengths[i], vars[i+1]);
+        }
+    }
+
+    void buildConstraintOrdered(string id, vector<XVariable *> &list, vector<XVariable*> &lengths, OrderType order) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        vector<int> varlengths;
+        toMyVariables(lengths,varlengths);
+        assert(vars.size() <= varlengths.size() + 1);
+        for (unsigned int i = 0; i < vars.size()-1; i++) {
+            buildConstraintPrimitive3(order, vars[i], varlengths[i], vars[i+1]);
         }
     }
 
