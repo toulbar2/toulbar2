@@ -3146,6 +3146,318 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, vector<int> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        vector<int> varlengths;
+        toMyVariables(lengths, varlengths);
+//        vector<int> varends;
+//        toMyVariables(ends, varends);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+//            buildConstraintPrimitive3(OrderType::EQ, vars[i], varlengths[i], varends[i]);
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string extravarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                vector<Cost> costs;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    for (Value l : problem->getEnumDomain(varlengths[i])) {
+                        if (time >= value && time < value + l) {
+                            costs.push_back(MAX_COST_XML3);
+                            costs.push_back(MIN_COST);
+                        } else {
+                            costs.push_back(MIN_COST);
+                            costs.push_back(MAX_COST_XML3);
+                        }
+                    }
+                }
+                problem->postTernaryConstraint(vars[i], varlengths[i], extravar, costs);
+                string valparamspos;
+                string valparamsneg;
+                paramspos += to_string(" ") + to_string(1) + to_string(" ") + to_string(1) + to_string(" ") + to_string(heights[i]);
+                paramsneg += to_string(" ") + to_string(1) + to_string(" ") + to_string(1) + to_string(" ") + to_string(-heights[i]);
+                scope.push_back(extravar);
+                nbvar++;
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+    }
+
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths, vector<XVariable *> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        vector<int> varheights;
+        toMyVariables(heights, varheights);
+//        vector<int> varends;
+//        toMyVariables(ends, varends);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+//            buildConstraintPrimitive3(OrderType::EQ, vars[i], varlengths[i], varends[i]);
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+            assert(problem->getInf(varheights[i]) >= 0);
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string extravarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                vector<Cost> costs;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    if (time >= value && time < value + lengths[i]) {
+                        costs.push_back(MAX_COST_XML3);
+                        costs.push_back(MIN_COST);
+                    } else {
+                        costs.push_back(MIN_COST);
+                        costs.push_back(MAX_COST_XML3);
+                    }
+                }
+                problem->postBinaryConstraint(vars[i], extravar, costs);
+                string extraheightvarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extraheightvar = problem->makeEnumeratedVariable(extraheightvarname, min(0, problem->getInf(varheights[i])), problem->getSup(varheights[i]));
+                mapping[extraheightvarname] = extraheightvar;
+                buildConstraintMult(extravar, varheights[i], extraheightvar);
+                string valparamspos;
+                string valparamsneg;
+                int nbval = 0;
+                for (Value value : problem->getEnumDomain(extraheightvar)) {
+                    if (value != 0) {
+                        valparamspos += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
+                        valparamsneg += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
+                        nbval++;
+                    }
+                }
+                if (nbval > 0) {
+                    paramspos += to_string(" ") + to_string(nbval) + valparamspos;
+                    paramsneg += to_string(" ") + to_string(nbval) + valparamsneg;
+                    scope.push_back(extraheightvar);
+                    nbvar++;
+                }
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+    }
+
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *>& lengths, vector<XVariable *> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        vector<int> varlengths;
+        toMyVariables(lengths, varlengths);
+        vector<int> varheights;
+        toMyVariables(heights, varheights);
+//        vector<int> varends;
+//        toMyVariables(ends, varends);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+//            buildConstraintPrimitive3(OrderType::EQ, vars[i], varlengths[i], varends[i]);
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+            assert(problem->getInf(varheights[i]) >= 0);
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string extravarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                vector<Cost> costs;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    for (Value l : problem->getEnumDomain(varlengths[i])) {
+                        if (time >= value && time < value + l) {
+                            costs.push_back(MAX_COST_XML3);
+                            costs.push_back(MIN_COST);
+                        } else {
+                            costs.push_back(MIN_COST);
+                            costs.push_back(MAX_COST_XML3);
+                        }
+                    }
+                }
+                problem->postTernaryConstraint(vars[i], varlengths[i], extravar, costs);
+                string extraheightvarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extraheightvar = problem->makeEnumeratedVariable(extraheightvarname, min(0, problem->getInf(varheights[i])), problem->getSup(varheights[i]));
+                mapping[extraheightvarname] = extraheightvar;
+                buildConstraintMult(extravar, varheights[i], extraheightvar);
+                string valparamspos;
+                string valparamsneg;
+                int nbval = 0;
+                for (Value value : problem->getEnumDomain(extraheightvar)) {
+                    if (value != 0) {
+                        valparamspos += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
+                        valparamsneg += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
+                        nbval++;
+                    }
+                }
+                if (nbval > 0) {
+                    paramspos += to_string(" ") + to_string(nbval) + valparamspos;
+                    paramsneg += to_string(" ") + to_string(nbval) + valparamsneg;
+                    scope.push_back(extraheightvar);
+                    nbvar++;
+                }
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+    }
+
     void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(list,vars);
