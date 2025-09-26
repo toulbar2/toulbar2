@@ -168,7 +168,13 @@ What are the algorithms inside toulbar2 ?
   `Bi-Objective Discrete Graphical Model Optimization <https://miat.inrae.fr/degivry/Buchet24a.pdf>`_,
   S Buchet, D Allouche, S de Givry, and T Schiex
   In Proc. of CP-AI-OR'2024, Uppsala, Sweden, 2024.
-  
+
+- **Virtual arc consistency for linear constraints (VAC-lin)**
+
+  `Virtual Arc Consistency for Linear Constraints in Cost Function Networks <http://miat.inrae.fr/degivry/Montalbano25a.pdf>`_,
+  P. Montalbano, S. de Givry, G. Katsirelos
+  In Proc. of ICTAI-25, Athens, Greece, 2025.
+
    
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------
