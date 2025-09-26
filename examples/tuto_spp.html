@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Square packing problem &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=tutorials.html>Tutorials</a> |
+    <a href=usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="square-packing-problem">
+<span id="tuto-spp"></span><h1>Square packing problem<a class="headerlink" href="#square-packing-problem" title="Link to this heading"></a></h1>
+<div align=right>
+    <span style="color:Firebrick; font-weight:bold;"> Back to </span>
+    <a href="tutorials.html">Tutorials</a> |
+    <a href="usecases.html">Use cases</a>
+</div><section id="brief-description">
+<h2>Brief description<a class="headerlink" href="#brief-description" title="Link to this heading"></a></h2>
+<p>We have N squares of respective size 1×1, 2×2,…, NxN. We have to fit them without overlaps into a square of size SxS.</p>
+<p>Results up to N=56 are given <a class="reference external" href="https://oeis.org/A005842">here</a>.</p>
+<p>An optimal solution for 15 squares packed into a 36x36 square (Fig. taken from Takehide Soh)</p>
+<a class="reference internal image-reference" href="../_images/square.png"><img alt="../_images/square.png" src="../_images/square.png" style="height: 250px;" />
+</a>
+</section>
+<section id="cfn-model">
+<h2>CFN model<a class="headerlink" href="#cfn-model" title="Link to this heading"></a></h2>
+<p>We create an integer variable of domain size (S-i)x(S-i) for each square.
+The variable represents the position of the top left corner of the square.</p>
+<p>The value of a given variable modulo (S-i) gives the x-coordinate, whereas its value divided by (S-i) gives the y-coordinate.</p>
+<p>We have hard binary constraints to forbid any overlapping pair of squares.</p>
+<p>We make the problem a pure satisfaction problem by fixing the initial upper bound to 1.</p>
+</section>
+<section id="python-model">
+<h2>Python model<a class="headerlink" href="#python-model" title="Link to this heading"></a></h2>
+<p>The following code uses the pytoulbar2 library to generate the cost function network and solve it (e.g. “python3 square.py 3 5”).
+<a class="reference download internal" download="" href="../_downloads/768c0faa364892417f2d432d0af49b16/square.py"><code class="xref download docutils literal notranslate"><span class="pre">square.py</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">randint</span><span class="p">,</span> <span class="n">seed</span>		
+<span class="n">seed</span><span class="p">(</span><span class="mi">123456789</span><span class="p">)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytoulbar2</span>
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+	<span class="n">S</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+	<span class="k">assert</span> <span class="n">N</span> <span class="o">&lt;=</span> <span class="n">S</span>
+<span class="k">except</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Two integers need to be given as arguments: N and S&#39;</span><span class="p">)</span>
+	<span class="n">exit</span><span class="p">()</span>
+
+<span class="c1">#pure constraint satisfaction problem</span>
+<span class="n">Problem</span> <span class="o">=</span> <span class="n">pytoulbar2</span><span class="o">.</span><span class="n">CFN</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">#create a variable for each square</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+	<span class="n">Problem</span><span class="o">.</span><span class="n">AddVariable</span><span class="p">(</span><span class="s1">&#39;sq&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)])</span>
+
+<span class="c1">#binary hard constraints for overlapping squares</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+	<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+		<span class="n">ListConstraintsOverlaps</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="n">l</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)]:</span>
+			<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="o">*</span><span class="n">m</span><span class="o">+</span><span class="n">n</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)]:</span>
+				<span class="c1">#calculating the coordinates of the squares</span>
+				<span class="n">X_i</span> <span class="o">=</span> <span class="n">a</span><span class="o">%</span><span class="n">S</span>
+				<span class="n">X_j</span> <span class="o">=</span> <span class="n">b</span><span class="o">%</span><span class="n">S</span>
+				<span class="n">Y_i</span> <span class="o">=</span> <span class="n">a</span><span class="o">//</span><span class="n">S</span>
+				<span class="n">Y_j</span> <span class="o">=</span> <span class="n">b</span><span class="o">//</span><span class="n">S</span>
+				<span class="c1">#calculating if squares are overlapping</span>
+				<span class="k">if</span> <span class="n">X_i</span> <span class="o">&gt;=</span> <span class="n">X_j</span> <span class="p">:</span>
+					<span class="k">if</span> <span class="n">X_i</span> <span class="o">-</span> <span class="n">X_j</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">Y_i</span> <span class="o">&gt;=</span> <span class="n">Y_j</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_i</span> <span class="o">-</span> <span class="n">Y_j</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_j</span> <span class="o">-</span> <span class="n">Y_i</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+				<span class="k">else</span> <span class="p">:</span>
+					<span class="k">if</span> <span class="n">X_j</span> <span class="o">-</span> <span class="n">X_i</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">Y_i</span> <span class="o">&gt;=</span> <span class="n">Y_j</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_i</span> <span class="o">-</span> <span class="n">Y_j</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="k">if</span> <span class="n">Y_j</span> <span class="o">-</span> <span class="n">Y_i</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+							<span class="k">else</span><span class="p">:</span>
+								<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="n">ListConstraintsOverlaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+		<span class="n">Problem</span><span class="o">.</span><span class="n">AddFunction</span><span class="p">([</span><span class="s1">&#39;sq&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;sq&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)],</span> <span class="n">ListConstraintsOverlaps</span><span class="p">)</span>
+
+<span class="c1">#Problem.Dump(&#39;Square.cfn&#39;)</span>
+<span class="n">Problem</span><span class="o">.</span><span class="n">CFN</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">Problem</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">showSolutions</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+		<span class="n">row</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+			<span class="n">row</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">-</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">//</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">-</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">//</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">):</span>
+					<span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">65</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No solution found!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="c-program-using-libtb2-so">
+<h2>C++ program using libtb2.so<a class="headerlink" href="#c-program-using-libtb2-so" title="Link to this heading"></a></h2>
+<p>The following code uses the C++ toulbar2 library. Compile toulbar2 with “cmake -DLIBTB2=ON -DPYTB2=ON . ; make” and copy the library in your current directory “cp lib/Linux/libtb2.so .” before compiling “g++ -o square square.cpp -Isrc -Llib/Linux -std=c++11 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY libtb2.so” and running the example (e.g. “./square 15 36”).</p>
+<p><a class="reference download internal" download="" href="../_downloads/3a550a065f1590db2ba49bac5df56c1f/square.cpp"><code class="xref download docutils literal notranslate"><span class="pre">square.cpp</span></code></a></p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cm">/**</span>
+<span class="cm"> * Square Packing Problem</span>
+<span class="cm"> */</span>
+
+<span class="c1">// Compile with cmake option -DLIBTB2=ON -DPYTB2=ON to get C++ toulbar2 library lib/Linux/libtb2.so</span>
+<span class="c1">// Then,</span>
+<span class="c1">// g++ -o square square.cpp -Isrc -Llib/Linux -std=c++11 -O3 -DNDEBUG -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY libtb2.so</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;toulbar2lib.hpp&quot;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">S</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+
+<span class="w">    </span><span class="n">tb2init</span><span class="p">();</span><span class="w"> </span><span class="c1">// must be call before setting specific ToulBar2 options and creating a model</span>
+
+<span class="w">    </span><span class="n">ToulBar2</span><span class="o">::</span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// change to 0 or higher values to see more trace information</span>
+
+<span class="w">    </span><span class="n">initCosts</span><span class="p">();</span><span class="w"> </span><span class="c1">// last check for compatibility issues between ToulBar2 options and Cost data-type</span>
+
+<span class="w">    </span><span class="n">Cost</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UNIT_COST</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WeightedCSPSolver</span><span class="o">*</span><span class="w"> </span><span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WeightedCSPSolver</span><span class="o">::</span><span class="n">makeWeightedCSPSolver</span><span class="p">(</span><span class="n">top</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">getWCSP</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">makeEnumeratedVariable</span><span class="p">(</span><span class="n">to_string</span><span class="p">(</span><span class="s">&quot;sq&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Cost</span><span class="o">&gt;</span><span class="w"> </span><span class="n">costs</span><span class="p">((</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">),</span><span class="w"> </span><span class="n">MIN_COST</span><span class="p">);</span>
+<span class="w">    	    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="o">&lt;</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">);</span><span class="w"> </span><span class="n">a</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    	        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">b</span><span class="o">&lt;</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">);</span><span class="w"> </span><span class="n">b</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="n">costs</span><span class="p">[</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">+</span><span class="n">b</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((((</span><span class="n">a</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">((</span><span class="n">b</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">((</span><span class="n">a</span><span class="o">/</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="o">/</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">)))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">((</span><span class="n">b</span><span class="o">/</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">j</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="o">/</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">))))</span><span class="o">?</span><span class="n">MIN_COST</span><span class="o">:</span><span class="n">top</span><span class="p">);</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">getWCSP</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">postBinaryConstraint</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">costs</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">getWCSP</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">sortConstraints</span><span class="p">();</span><span class="w"> </span><span class="c1">// must be done at the end of the modeling</span>
+
+<span class="w">    </span><span class="n">tb2checkOptions</span><span class="p">();</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">solve</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Value</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sol</span><span class="p">;</span>
+<span class="w">            </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">getSolution</span><span class="p">(</span><span class="n">sol</span><span class="p">);</span>
+<span class="w">    	    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;</span><span class="n">S</span><span class="p">;</span><span class="w"> </span><span class="n">y</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">&lt;</span><span class="n">S</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">;</span>
+<span class="w">                    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">sol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                            </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">65</span><span class="o">+</span><span class="n">i</span><span class="p">;</span>
+<span class="w">                            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                     </span><span class="p">}</span>
+<span class="w">                     </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;No solution found!&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">solver</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,190 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QPBO format (.qpbo) &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="OPB format (.opb)" href="opbformat.html" />
+    <link rel="prev" title="Partial Weighted MaxSAT format" href="cnfwcnfformat.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../userdoc.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#what-is-toulbar2">What is toulbar2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-install-it">How do I install it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-test-it">How do I test it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#using-it-as-a-black-box">Using it as a black box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#potential-issues">Potential issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#command-line-options">Command line options</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../userdoc.html#input-formats">Input formats</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../userdoc.html#introduction">Introduction</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../userdoc.html#formats-details">Formats details</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cfnformat.html">cfn format (.cfn, .cfn.gz, .cfn.bz2, and .cfn.xz file extension)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wcspformat.html">wcsp format (.wcsp file extension)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="uailgformat.html">UAI and LG formats (.uai, .LG)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnfwcnfformat.html">Partial Weighted MaxSAT format</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">QPBO format (.qpbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html">OPB format (.opb)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html#wbo-format-wbo">WBO format (.wbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lpformat.html">CPLEX format (.lp)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html">XCSP2.1 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html#xcsp3-format-xml">XCSP3 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preformat.html">Linkage format (.pre)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-use-it">How do I use it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=../examples/tutorials.html>Tutorials</a> |
+    <a href=../examples/usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="qpbo-format-qpbo">
+<span id="qpbo-format"></span><h1>QPBO format (.qpbo)<a class="headerlink" href="#qpbo-format-qpbo" title="Link to this heading"></a></h1>
+<p>In the quadratic pseudo-Boolean optimization (unconstrained quadratic programming) format, the goal is to minimize or maximize the quadratic function:</p>
+<p><span class="math notranslate nohighlight">\(X' * W * X = \sum_{i=1}^N \sum_{j=1}^N  W_{ij} * X_i * X_j\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(W\)</span> is a symmetric squared <span class="math notranslate nohighlight">\(N \times N\)</span> matrix expressed by all its non-zero half (<span class="math notranslate nohighlight">\(i \leq j\)</span>) squared matrix coefficients, <span class="math notranslate nohighlight">\(X\)</span> is a vector of <span class="math notranslate nohighlight">\(N\)</span> binary variables with domain values in <span class="math notranslate nohighlight">\(\{0,1\}\)</span> or <span class="math notranslate nohighlight">\(\{1,-1\}\)</span>, and <span class="math notranslate nohighlight">\(X'\)</span> is the transposed vector of <span class="math notranslate nohighlight">\(X\)</span>.</p>
+<p>Note that for two indices <span class="math notranslate nohighlight">\(i \neq j\)</span>, coefficient <span class="math notranslate nohighlight">\(W_{ij} = W_{ji}\)</span> (symmetric matrix) and it appears twice in the previous sum.
+It can be controled by the option {tt -qpmult=[double]} which defines a coefficient multiplier for quadratic terms (default value is 2).</p>
+<p>Note also that coefficients can be positive or negative and are real float numbers. They are converted to fixed-point real numbers by multiplying them by <span class="math notranslate nohighlight">\(10^{precision}\)</span> (see option {em -precision} to modify it, default value is 7).  Infinite coefficients are forbidden.</p>
+<p>Notice that depending on the sign of the number of variables in the first text line, the domain of all variables is either <span class="math notranslate nohighlight">\(\{0,1\}\)</span> or <span class="math notranslate nohighlight">\(\{1,-1\}\)</span>.</p>
+<p>Warning! The encoding in Weighted CSP of variable domain <span class="math notranslate nohighlight">\(\{1,-1\}\)</span> associates for each variable value the following index: value 1 has index 0 and value -1 has index 1 in the solutions found by toulbar2.
+The encoding  of variable domain <span class="math notranslate nohighlight">\(\{0,1\}\)</span> is direct.</p>
+<p>Qpbo is a file text format:</p>
+<blockquote>
+<div><ul>
+<li><p>First line contains the number of variables <span class="math notranslate nohighlight">\(N\)</span> and the number of non-zero coefficients <span class="math notranslate nohighlight">\(M\)</span>.</p>
+<p>If <span class="math notranslate nohighlight">\(N\)</span> is negative then domain values are in <span class="math notranslate nohighlight">\(\{1, -1\}\)</span>, otherwise <span class="math notranslate nohighlight">\(\{0, 1\}\)</span>.
+If <span class="math notranslate nohighlight">\(M\)</span> is negative then it will maximize the quadratic function, otherwise it will minimize it.</p>
+</li>
+<li><p>Followed by <span class="math notranslate nohighlight">\(|M|\)</span> lines where each text line contains three values separated by spaces:
+position index <span class="math notranslate nohighlight">\(i\)</span> (integer belonging to <span class="math notranslate nohighlight">\([1,|N|]\)</span>),
+position index <span class="math notranslate nohighlight">\(j\)</span> (integer belonging to <span class="math notranslate nohighlight">\([1,|N|]\)</span>),
+coefficient <span class="math notranslate nohighlight">\(W_{ij}\)</span> (float number)
+such that <span class="math notranslate nohighlight">\(i \leq j\)</span> and <span class="math notranslate nohighlight">\(W_{ij} \neq 0\)</span>.</p></li>
+</ul>
+</div></blockquote>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cnfwcnfformat.html" class="btn btn-neutral float-left" title="Partial Weighted MaxSAT format" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="opbformat.html" class="btn btn-neutral float-right" title="OPB format (.opb)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

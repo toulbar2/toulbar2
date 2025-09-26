@@ -1,0 +1,805 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CFN format (.cfn suffix) &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Weighted Constraint Satisfaction Problem file format (wcsp)" href="wcspformat.html" />
+    <link rel="prev" title="User Guide" href="../userdoc.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../userdoc.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#what-is-toulbar2">What is toulbar2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-install-it">How do I install it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-test-it">How do I test it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#using-it-as-a-black-box">Using it as a black box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#potential-issues">Potential issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#command-line-options">Command line options</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../userdoc.html#input-formats">Input formats</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../userdoc.html#introduction">Introduction</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../userdoc.html#formats-details">Formats details</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cfn format (.cfn, .cfn.gz, .cfn.bz2, and .cfn.xz file extension)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wcspformat.html">wcsp format (.wcsp file extension)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="uailgformat.html">UAI and LG formats (.uai, .LG)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnfwcnfformat.html">Partial Weighted MaxSAT format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qpboformat.html">QPBO format (.qpbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html">OPB format (.opb)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="opbformat.html#wbo-format-wbo">WBO format (.wbo)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lpformat.html">CPLEX format (.lp)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html">XCSP2.1 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmlformat.html#xcsp3-format-xml">XCSP3 format (.xml)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preformat.html">Linkage format (.pre)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#how-do-i-use-it">How do I use it ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../userdoc.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=../examples/tutorials.html>Tutorials</a> |
+    <a href=../examples/usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cfn-format-cfn-suffix">
+<span id="cfn-format"></span><h1>CFN format (.cfn suffix)<a class="headerlink" href="#cfn-format-cfn-suffix" title="Link to this heading"></a></h1>
+<p>With this JSON-compatible format, it is possible:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>to give a name to variables and functions.</p></li>
+<li><p>to associate a local label to every value that is accessible inside toulbar2 (among others for heuristics design purposes).</p></li>
+<li><p>to use decimal and possibly negative costs.</p></li>
+<li><p>to solve both minimization and maximization problems.</p></li>
+<li><p>to debug your <strong>.cfn</strong> files: the parser gives a cause and line number when it fails.</p></li>
+<li><p>to use gzip’d or xz compressed files directly as input (.cfn.gz and .cfn.xz).</p></li>
+<li><p>to use dense descriptions for dense cost tables.</p></li>
+</ul>
+</div></blockquote>
+<p>In a <strong>cfn</strong> file, a Cost Function Network is described as a JSON object with extra freedom and extra constraints.</p>
+<p>Freedom:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the double quotes around strings are not compulsory: both <code class="code docutils literal notranslate"><span class="pre">&quot;problem&quot;</span></code> and <code class="code docutils literal notranslate"><span class="pre">problem</span></code> are strings.</p></li>
+<li><p>double quotes can also be added around numbers: both <code class="code docutils literal notranslate"><span class="pre">1.20</span></code> and <code class="code docutils literal notranslate"><span class="pre">&quot;1.20&quot;</span></code> will be interpreted as decimal numbers.</p></li>
+<li><p>the commas that separate the fields inside an array or object are not compulsory. Any separator will do (comma, white space). So <code class="code docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2]</span></code> or <code class="code docutils literal notranslate"><span class="pre">[1,2]</span></code> or <code class="code docutils literal notranslate"><span class="pre">[1</span> <span class="pre">2]</span></code> are all describing the same array.</p></li>
+<li><p>the delimiters for objects and arrays (<code class="code docutils literal notranslate"><span class="pre">{}</span></code> and <code class="code docutils literal notranslate"><span class="pre">[]</span></code>) can be used arbitrarily for both types of items.</p></li>
+<li><p>the colon (<code class="code docutils literal notranslate"><span class="pre">:</span></code>) that separates the name of a field in an object from the contents of the field is not compulsory.</p></li>
+<li><p>It is possible to comment a line with a <code class="code docutils literal notranslate"><span class="pre">#</span></code> the first position of a line.</p></li>
+</ul>
+</div></blockquote>
+<p>Constraints:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>strings should not start with a character in <code class="code docutils literal notranslate"><span class="pre">0123456789-.+</span></code> and cannot contain <code class="code docutils literal notranslate"><span class="pre">/#[]{}:,</span></code> or a space character (tabs…).</p></li>
+<li><p>numbers can only be integers or decimals. No scientific notation.</p></li>
+<li><p>the order of fields inside an object is compulsory and cannot be changed.</p></li>
+</ul>
+</div></blockquote>
+<p>A CFN is an object with 3 data: a definition of the main problem properties (tag <code class="code docutils literal notranslate"><span class="pre">problem</span></code>), of variables and their domains (tag <code class="code docutils literal notranslate"><span class="pre">variables</span></code>) and of cost functions (tag <code class="code docutils literal notranslate"><span class="pre">functions</span></code>), in this order:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="s2">&quot;problem&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">problem</span> <span class="n">properties</span><span class="o">&gt;</span><span class="p">,</span>
+  <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">variables</span> <span class="ow">and</span> <span class="n">domains</span><span class="o">&gt;</span><span class="p">,</span>
+  <span class="s2">&quot;functions&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">functions</span> <span class="n">descriptions</span><span class="o">&gt;</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Problem properties:</strong></p>
+<p>An object with two fields:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;name&quot;</span></code> : the name of the problem.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;mustbe&quot;</span></code> : specifies the direction of optimization and a global (upper/lower) bound on the objective. This is the concatenation of a comparator (<code class="code docutils literal notranslate"><span class="pre">&gt;</span></code> or <code class="code docutils literal notranslate"><span class="pre">&lt;</span></code>) immediately followed by a decimal number, described as a string. The comparator specifies the direction of optimization:</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;&lt;&quot;</span></code>: we are minimizing and the decimal indicates a global upper bound (all costs equal to or larger than this are considered as unfeasible).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;&gt;&quot;</span></code>: we are maximizing and and the decimal indicates a global lower bound (all costs equal to or less than this are considered as unfeasible).</p></li>
+</ul>
+</div></blockquote>
+<p>The number of significant digits in the decimal number gives the precision that will be used for all cost computations inside toulbar2.</p>
+<p>As an example, <code class="code docutils literal notranslate"><span class="pre">&quot;mustbe&quot;:</span> <span class="pre">&quot;&lt;10.00&quot;</span></code> means that the CFN describes a function where all costs larger than or equal to 10.00 are considered as infinite. All costs will also be handled with 2 digits of precision after the decimal point.</p>
+</div></blockquote>
+<p>The two fields must appear in this order:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test_problem&quot;</span><span class="p">,</span> <span class="s2">&quot;mustbe&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;-12.100&quot;</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">test</span><span class="o">.</span><span class="n">problem</span> <span class="o">&lt;</span><span class="mf">12.100</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>in a more concise non-JSON-compatible form.</p>
+<p><strong>Variables and domains:</strong></p>
+<p>An object with as many fields as variables. All fields must have different names. The contents of a variable field can be an array or an integer. An array gives the sequence of values (defined by their name) of the variable domain. An integer gives the domain cardinality, without naming values (values are represented by their position in the domain, starting at 0). If a negative domain size is given, the variable is an interval variable instead of a finite domain variable and it has domain [0,-domainsize-1].</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="s2">&quot;fdv1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">],</span> <span class="s2">&quot;fdv2&quot;</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;iv1&quot;</span> <span class="p">:</span> <span class="o">-</span><span class="mi">100</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>defines 3 variables, two finite domain variables and 1 interval variable. The first domain variable has 3 values, <code class="code docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code> <code class="code docutils literal notranslate"><span class="pre">&quot;b&quot;</span></code> and <code class="code docutils literal notranslate"><span class="pre">&quot;c&quot;</span></code>. the second has two anonymous values and the interval variable has domain [0,99].</p>
+<p>As an extra freedom, it is possible to give no name to variables. This can be achieved using an array instead of an object. The example above can therefore be written:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="n">a</span> <span class="n">b</span> <span class="n">c</span><span class="p">]</span> <span class="mi">2</span> <span class="o">-</span><span class="mi">100</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>or even just</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">3</span> <span class="mi">2</span> <span class="o">-</span><span class="mi">100</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>in a dense non JSON-compatible format.</p>
+<p><strong>Functions:</strong></p>
+<p>An object with as many fields as functions. Every function is an object with different possible fields. All functions have a <code class="code docutils literal notranslate"><span class="pre">scope</span></code> which is an array of variables (names or indices). The rest of the fields depends on the type of the cost function: table cost function or global (including arithmetic functions).</p>
+<p><strong>Table cost functions:</strong></p>
+<p>Sparse functions format:* useful for functions that are dominantly constant. A numerical <code class="code docutils literal notranslate"><span class="pre">defaultcost</span></code> must be given after the scope. The <code class="code docutils literal notranslate"><span class="pre">costs</span></code> table must be an array of tuple costs: a sequence of value names or indices followed by a numeric cost or <code class="code docutils literal notranslate"><span class="pre">inf</span></code> to represent a forbidden tuple. The <code class="code docutils literal notranslate"><span class="pre">defaultcost</span></code> is used to define the cost of any missing tuple.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fdv1&quot;</span><span class="p">,</span> <span class="s2">&quot;fdv2&quot;</span><span class="p">],</span>
+ <span class="s2">&quot;defaultcost&quot;</span><span class="p">:</span> <span class="mf">0.234</span><span class="p">,</span>
+ <span class="s2">&quot;costs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span>
+           <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">6.2</span><span class="p">,</span>
+           <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.21</span><span class="p">]</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>is a possible sparse function definition. Here only 3 tuples are defined with their costs. All 3 remaining tuples will have cost <code class="code docutils literal notranslate"><span class="pre">0.234</span></code>.</p>
+<p><em>Dense function format:</em> if the <code class="code docutils literal notranslate"><span class="pre">defaultcost</span></code> tag is absent, a complete lexicographically ordered list of costs is expected instead.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;fdv1&quot;</span><span class="p">,</span> <span class="s2">&quot;fdv2&quot;</span> <span class="p">],</span>
+ <span class="s2">&quot;costs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">4.2</span><span class="p">,</span> <span class="mf">3.67</span><span class="p">,</span> <span class="o">-</span><span class="mf">12.1</span><span class="p">,</span> <span class="mf">7.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.1</span><span class="p">,</span> <span class="mf">100.2</span><span class="p">]</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>describes the 6 costs of the 6 tuples insides the cartesian product of the two variables <code class="code docutils literal notranslate"><span class="pre">&quot;fdv1&quot;</span></code> and <code class="code docutils literal notranslate"><span class="pre">&quot;fdv2&quot;</span></code>. To assign costs to tuples, all possible tuples of the cartesian product are lexicographically ordered using the declared value order in the domain of each variable.  In the example above, the order over the six pairs will be <code class="code docutils literal notranslate"><span class="pre">(&quot;a&quot;,0)</span> <span class="pre">(&quot;a&quot;,1)</span> <span class="pre">(&quot;b&quot;,0)</span> <span class="pre">(&quot;b&quot;,1)</span> <span class="pre">(&quot;c&quot;,0)</span> <span class="pre">(&quot;c&quot;,1)</span></code> that will be associated to the costs <code class="code docutils literal notranslate"><span class="pre">4.2,</span> <span class="pre">3.67,</span> <span class="pre">-12.1,</span> <span class="pre">7.1,</span> <span class="pre">-3.1</span></code> and <code class="code docutils literal notranslate"><span class="pre">100.2</span></code> in this order. This lexicographic ordering is used for all arities.</p>
+<p><em>Shared function format:</em> If instead of an array, a string is given for the cost table, then this string must be the name of a yet undefined function. The actual function will have the same cost table as the future indicated function (on the specified scope). The domain sizes of the two functions must match.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;v1&quot;</span><span class="p">,</span> <span class="s2">&quot;v3&quot;</span> <span class="p">],</span>
+ <span class="s2">&quot;costs&quot;</span><span class="p">:</span> <span class="s2">&quot;f12&quot;</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>defines a function on variables <code class="code docutils literal notranslate"><span class="pre">v1</span></code> and <code class="code docutils literal notranslate"><span class="pre">v3</span></code> that will have the same cost table as the function i:code:<cite>f12</cite> that must be defined later in the file.</p>
+<p><strong>Global and arithmetic cost functions</strong></p>
+<p>These functions are defined by a <code class="code docutils literal notranslate"><span class="pre">scope</span></code>, a <code class="code docutils literal notranslate"><span class="pre">type</span></code> and <code class="code docutils literal notranslate"><span class="pre">parameters</span></code>. The <code class="code docutils literal notranslate"><span class="pre">type</span></code> is a string that defines the specific function to use, the <code class="code docutils literal notranslate"><span class="pre">parameters</span></code> is an array of objects. The composition of the <code class="code docutils literal notranslate"><span class="pre">parameters</span></code> depends on the <code class="code docutils literal notranslate"><span class="pre">type</span></code> of the function.</p>
+<p>At this point, in maximization mode, most of the global cost functions have restricted usage (with the exception of wregular).</p>
+<p><em>Arithmetic functions:</em></p>
+<p>These functions have all arity 2 and it is assumed here that these variables are called x and y . The values are considered as representing their index in the domain and are therefore integer. The <code class="code docutils literal notranslate"><span class="pre">type</span></code> can be either:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;&gt;=&quot;</span></code> : with <code class="code docutils literal notranslate"><span class="pre">parameters</span></code> array <span class="math notranslate nohighlight">\([ cst , \delta ]\)</span>
+where <span class="math notranslate nohighlight">\(cst\)</span> and <span class="math notranslate nohighlight">\(\delta\)</span> are two costs, to express cost
+function <span class="math notranslate nohighlight">\(max(0, y + cst - x \leq \delta ? y + cst - x : upperbound)\)</span>. This is a soft inequality with hard threshold <span class="math notranslate nohighlight">\(\delta\)</span>.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;&gt;&quot;</span></code>: similar with a strict inequality and semantics
+<span class="math notranslate nohighlight">\(max(0, y + 1 + cst - x \leq \delta ? y + 1 + cst - x : upperbound)\)</span></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;&lt;=&quot;</span></code>: similar with an inverted inequality and semantics:
+<span class="math notranslate nohighlight">\(max(0, x - cst - y \leq \delta ? x - cst - y : upperbound)\)</span></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;&lt;&quot;</span></code>: similar with a strict inequality and semantics
+<span class="math notranslate nohighlight">\(max(0, x - cst + 1 - y \leq \delta ? x - cst + 1 - y : upperbound)\)</span></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;=&quot;</span></code>: similar with an equality and semantics: similar with a strict
+inequality and semantics
+<span class="math notranslate nohighlight">\(\left| y + cst - x \right| \leq \delta ? \left|y + cst - x \right| : upperbound)\)</span></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;disj&quot;</span></code>: takes a <code class="code docutils literal notranslate"><span class="pre">parameters</span></code> array <span class="math notranslate nohighlight">\([ cstx, csty, w]\)</span>
+to express soft binary disjunctive cost function with semantics <span class="math notranslate nohighlight">\(( (x \geq y + csty) \lor ( y \geq x + cstx)) ? 0 : w)\)</span></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;sdisj&quot;</span></code>: takes a <code class="code docutils literal notranslate"><span class="pre">parameters</span></code> array <span class="math notranslate nohighlight">\([ cstx, csty, xmax, ymax wx wy]\)</span> to express a special disjunctive cost function with three implicit constraints <span class="math notranslate nohighlight">\(x \leq xmax\)</span>, <span class="math notranslate nohighlight">\(y \leq ymax\)</span> and <span class="math notranslate nohighlight">\(( x &lt; xmax \land y &lt; ymax) \Rightarrow ( x \geq y + csty \lor  y \geq x + cstx)\)</span> and an additional cost function <span class="math notranslate nohighlight">\(( (x = xmax) ? wx : 0) + ( (y = y max? wy : 0)\)</span>.</p></li>
+</ul>
+</div></blockquote>
+<p>Example : arithmetic function with <code class="code docutils literal notranslate"><span class="pre">&gt;=</span></code> operator :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;arith0&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;v5&quot;</span><span class="p">,</span> <span class="s2">&quot;v6&quot;</span><span class="p">],</span>
+           <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p><em>Global cost functions:</em></p>
+<p>We use an informal syntactical description of each global cost function below. the <code class="code docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code> is used for alternative keywords and parentheses together with <code class="code docutils literal notranslate"><span class="pre">?</span></code>, <code class="code docutils literal notranslate"><span class="pre">*</span></code> and <code class="code docutils literal notranslate"><span class="pre">+</span></code> to denote optional or repeated groups of items (+ requires that at least one repetition exists). For more details on
+semantics and implementation, see:</p>
+<blockquote>
+<div><p>1. Lee, J. H. M., &amp; Leung, K. L. (2012). Consistency techniques for flow-based projection-safe global cost functions in weighted constraint satisfaction. <em>Journal of Artificial Intelligence Research</em>, 43, 257-292.
+<em>Artificial Intelligence</em>, 238, 166-189. 2. Allouche, D., Bessiere, C., Boizumault, P., De Givry, S., Gutierrez, P., Lee, J. H., … &amp; Wu, Y. (2016). Tractability-preserving transformations of global cost functions. <em>Artificial Intelligence</em>, 238, 166-189.</p>
+</div></blockquote>
+<p>Using a flow-based propagator:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">salldiff&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;|&quot;dec&quot;|&quot;decbi&quot;</span> <span class="pre">cost:</span> <span class="pre">cost]</span></code> expresses a soft alldifferent with either variable-based (<code class="code docutils literal notranslate"><span class="pre">var</span></code> keyword) or decomposition-based (<code class="code docutils literal notranslate"><span class="pre">dec</span></code> and <code class="code docutils literal notranslate"><span class="pre">decbi</span></code> keywords) cost semantic with a given <code class="code docutils literal notranslate"><span class="pre">cost</span></code> per violation (<code class="code docutils literal notranslate"><span class="pre">decbi</span></code> decomposes into a complete binary cost function network).</p>
+<ul>
+<li><p>example :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;f1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;v1&quot;</span> <span class="s2">&quot;v2&quot;</span> <span class="s2">&quot;v3&quot;</span> <span class="s2">&quot;v4&quot;</span><span class="p">],</span>
+       <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;salldiff&quot;</span><span class="p">,</span>
+       <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="s2">&quot;var&quot;</span> <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>generates a cost of 0.7 per variable assignment that needs to be
+changed for all variables to take a different value.</p>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;sgcc&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:&quot;var&quot;|&quot;dec&quot;|&quot;wdec&quot;</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">bounds:</span> <span class="pre">[[value</span> <span class="pre">lower_bound</span> <span class="pre">upper_bound</span> <span class="pre">(shortage_weight</span> <span class="pre">excess_weight)?]*]</span></code> expresses a soft global cardinality constraint with either variable-based (<code class="code docutils literal notranslate"><span class="pre">var</span></code> keyword) or decomposition-based (<code class="code docutils literal notranslate"><span class="pre">dec</span></code> keyword) cost semantic with a given <code class="code docutils literal notranslate"><span class="pre">cost</span></code> per violation and for each value its <code class="code docutils literal notranslate"><span class="pre">lower</span></code> and <code class="code docutils literal notranslate"><span class="pre">upper</span></code> bound (<code class="code docutils literal notranslate"><span class="pre">value</span> <span class="pre">shortage</span></code> and <code class="code docutils literal notranslate"><span class="pre">excess</span> <span class="pre">weights</span></code> penalties must be given iff <code class="code docutils literal notranslate"><span class="pre">wdec</span></code> is used).</p>
+<ul>
+<li><p>example :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">sgcc</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">wdec</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">0.5</span>
+          <span class="n">bounds</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">0.2</span> <span class="mf">0.2</span><span class="p">]</span>
+                   <span class="p">[</span><span class="mi">1</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mf">0.2</span> <span class="mf">0.1</span><span class="p">]]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;ssame&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[cost:</span> <span class="pre">cost</span> <span class="pre">vars1:</span> <span class="pre">[(variable)*]</span> <span class="pre">vars2:</span> <span class="pre">[(variable)*]]</span></code> to express a permutation constraint on two lists of variables of equal size with implicit variable-based cost semantic</p>
+<ul>
+<li><p>example :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">ssame</span>
+       <span class="n">params</span> <span class="p">:</span> <span class="p">{</span>
+          <span class="n">cost</span> <span class="p">:</span> <span class="mf">6.2</span>
+          <span class="n">vars1</span> <span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span><span class="p">]</span>
+          <span class="n">vars2</span> <span class="p">:</span> <span class="p">[</span><span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;sregular&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;|&quot;edit&quot;</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">starts:</span> <span class="pre">[(state)*]</span> <span class="pre">ends:</span> <span class="pre">[(state)*]</span> <span class="pre">transitions:</span> <span class="pre">[(start-state</span> <span class="pre">symbol_value</span> <span class="pre">end_state)*]</span></code> to express a soft regular constraint with either variable-based (<code class="code docutils literal notranslate"><span class="pre">var</span></code> keyword) or edit distance-based (<code class="code docutils literal notranslate"><span class="pre">edit</span></code> keyword) cost semantics with a given <code class="code docutils literal notranslate"><span class="pre">cost</span></code> per violation followed by the definition of a deterministic finite automaton with arrays of initial and final states, and an array of state transitions where symbols are domain values indices.</p>
+<ul>
+<li><p>example :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">sregular</span>
+       <span class="n">params</span> <span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">var</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">1.0</span>
+          <span class="n">nb_states</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="n">starts</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+          <span class="n">ends</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">1</span><span class="p">]</span>
+          <span class="n">transitions</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">][</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<p>Global cost functions using a dynamic programming DAG-based propagator:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;sregulardp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">nb_states:</span> <span class="pre">nb_states</span> <span class="pre">starts:</span> <span class="pre">[(state)*]</span> <span class="pre">ends:</span> <span class="pre">[(state)*]</span> <span class="pre">transitions:</span> <span class="pre">[(start_state</span> <span class="pre">value_index</span> <span class="pre">end_state)*]</span></code> to express a soft regular constraint with a variable-based (<code class="code docutils literal notranslate"><span class="pre">var</span></code> keyword) cost semantic with a given <code class="code docutils literal notranslate"><span class="pre">cost</span></code> per violation followed by the definition of a deterministic finite automaton with arrays of initial and final states, and an array of state transitions where symbols are domain value indices.</p>
+<ul class="simple">
+<li><p>example: see sregular above.</p></li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;sgrammar&quot;|&quot;sgrammardp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;|&quot;weight&quot;</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">nb_symbols:</span> <span class="pre">nb_symbols</span> <span class="pre">nb_values:</span> <span class="pre">nb_values</span> <span class="pre">start:</span> <span class="pre">start_symbol</span> <span class="pre">terminals:</span> <span class="pre">[(terminal_symbol</span> <span class="pre">value</span> <span class="pre">(cost)?)*]</span> <span class="pre">non_terminals:</span> <span class="pre">[(nonterminal_in</span> <span class="pre">nonterminal_out_left</span> <span class="pre">nonterminal_out_right</span> <span class="pre">(cost)?)*]</span></code> to express a soft/weighted grammar in Chomsky normal form. The costs inside the rules and terminals should be used only with the <code class="code docutils literal notranslate"><span class="pre">weight</span></code> metric.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">sgrammardp</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span> <span class="p">:</span> <span class="n">var</span>
+          <span class="n">cost</span> <span class="p">:</span> <span class="mf">1.012</span>
+          <span class="n">nb_symbols</span> <span class="p">:</span> <span class="mi">4</span>
+          <span class="n">nb_values</span> <span class="p">:</span> <span class="mi">2</span>
+          <span class="n">start</span> <span class="p">:</span> <span class="mi">0</span>
+          <span class="n">terminals</span> <span class="p">:</span> <span class="p">[[</span><span class="mi">1</span> <span class="mi">0</span><span class="p">][</span><span class="mi">3</span> <span class="mi">1</span><span class="p">]]</span>
+          <span class="n">non_terminals</span> <span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">][</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">][</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">3</span><span class="p">][</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">3</span><span class="p">]]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;samong&quot;|&quot;samongdp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">min:</span> <span class="pre">lower_bound</span> <span class="pre">max:</span> <span class="pre">upper_bound</span> <span class="pre">values:</span> <span class="pre">[(value)*]]</span></code> to express a soft among constraint to restrict the number of variables taking their value into a given set of value indices</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">samong</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span> <span class="p">:</span> <span class="n">var</span>
+          <span class="n">cost</span> <span class="p">:</span> <span class="mf">1.0</span>
+          <span class="nb">min</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="nb">max</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="n">values</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;salldiffdp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;</span> <span class="pre">cost:</span> <span class="pre">cost]</span></code> to express a soft alldifferent constraint with variable-based (<code class="code docutils literal notranslate"><span class="pre">&quot;var&quot;</span></code> keyword) cost semantic with a given cost per violation (decomposes into <code class="code docutils literal notranslate"><span class="pre">samongdp</span></code> cost functions)</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">salldiffdp</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">var</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">0.7</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;sgccdp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;var&quot;</span> <span class="pre">cost:</span> <span class="pre">&quot;cost&quot;</span> <span class="pre">bounds:</span> <span class="pre">[(value</span> <span class="pre">lower_bound</span> <span class="pre">upper_bound)*]]</span></code> to express a soft global cardinality constraint with variable-based (<code class="code docutils literal notranslate"><span class="pre">&quot;var&quot;</span></code> keyword) cost semantic with a given cost per violation and for each value its lower and upper bound (decomposes into <code class="code docutils literal notranslate"><span class="pre">samongdp</span></code> cost functions)</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">sgccdp</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">var</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">1.1</span>
+          <span class="n">bounds</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">]]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;max|smaxdp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[defaultcost:</span> <span class="pre">defcost</span> <span class="pre">tuples:</span> <span class="pre">[(variable</span> <span class="pre">value</span> <span class="pre">cost)*]]</span></code> to express a weighted max cost function to find the maximum cost over a set of unary cost functions associated to a set of variables (by default, <code class="code docutils literal notranslate"><span class="pre">defCost</span></code> if unspecified)</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">smaxdp</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">3</span>
+          <span class="n">tuples</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">4</span><span class="p">]</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">3</span><span class="p">][</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">][</span><span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span><span class="p">]]</span>
+          <span class="p">}</span>
+       <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;MST&quot;|&quot;smstdp&quot;</span></code> with empty parameters expresses a hard spanning tree constraint where each variable is assigned to its parent variable index in order to build a spanning tree (the root being assigned to itself)</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+        <span class="nb">type</span><span class="p">:</span> <span class="n">MST</span> <span class="n">params</span><span class="p">:</span> <span class="p">[]}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<p>Global cost functions using a cost function network-based propagator (decompose to bounded arity table cost functions):</p>
+<blockquote>
+<div><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wregular&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">nb_states:</span> <span class="pre">nbstates</span> <span class="pre">starts:</span> <span class="pre">[[state</span> <span class="pre">cost]*]</span> <span class="pre">ends:</span> <span class="pre">[[state</span> <span class="pre">cost]*]</span> <span class="pre">transitions:</span> <span class="pre">[[state</span> <span class="pre">value_index</span> <span class="pre">state</span> <span class="pre">cost]*]</span></code> to express a weighted regular constraint with weights on initial states, final states, and transitions, followed by the definition of a deterministic finite automaton with number of states, list of initial and final states with their costs, and list of weighted state transitions where symbols are domain value indices</p>
+<ul>
+<li><p>example :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v4</span> <span class="n">v3</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">wregular</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">nb_states</span><span class="p">:</span> <span class="mi">4</span>
+          <span class="n">starts</span> <span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mf">0.0</span><span class="p">][</span><span class="mi">1</span> <span class="mf">0.5</span><span class="p">]]</span>
+          <span class="n">ends</span> <span class="p">:</span> <span class="p">[[</span><span class="mi">2</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]</span> <span class="p">[</span><span class="mi">3</span> <span class="mf">0.0</span><span class="p">]]</span>
+          <span class="n">transitions</span> <span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mf">0.5</span><span class="p">][</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">0.0</span><span class="p">]</span>
+                         <span class="p">[</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mf">1.0</span><span class="p">][</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">3</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]]</span>
+          <span class="p">}</span>
+       <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;walldiff&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[hard|lin|quad]</span></code> cost to express a soft alldifferent constraint as a set of wamong hard constraint (<code class="code docutils literal notranslate"><span class="pre">hard</span></code> keyword) or decomposition-based (<code class="code docutils literal notranslate"><span class="pre">lin</span></code> and <code class="code docutils literal notranslate"><span class="pre">quad</span></code> keywords) cost semantic with a given cost per violation.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">walldiff</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">lin</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">0.8</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wgcc&quot;</span></code> with parameters metric: <code class="code docutils literal notranslate"><span class="pre">hard|lin|quad</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">bounds:</span> <span class="pre">[[value</span> <span class="pre">lower_bound</span> <span class="pre">upper_bound]*]</span></code> to express a soft global cardinality constraint as either a hard constraint (<code class="code docutils literal notranslate"><span class="pre">hard</span></code> keyword) or with decomposition-based (<code class="code docutils literal notranslate"><span class="pre">lin</span></code> and <code class="code docutils literal notranslate"><span class="pre">quad</span></code> keyword) cost semantic with a given cost per violation and for each value its lower and upper bound</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">wgcc</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">lin</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">3.3</span>
+          <span class="n">bounds</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">][</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wsame&quot;</span></code> with parameters a <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard|lin|quad</span> <span class="pre">cost:</span> <span class="pre">cost</span></code> to express a permutation constraint on two lists of variables of equal size (implicitly concatenated in the scope) using implicit decomposition-based cost semantic</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+        <span class="nb">type</span> <span class="p">:</span> <span class="n">wsame</span>
+        <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+           <span class="n">metric</span><span class="p">:</span> <span class="n">lin</span>
+           <span class="n">cost</span><span class="p">:</span> <span class="mf">3.3</span>
+           <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wsamegcc&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard|lin|quad</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">bounds:</span> <span class="pre">[[value</span> <span class="pre">lower_bound</span> <span class="pre">upper_bound]*]</span></code> to express the combination of a soft global cardinality constraint and a permutation constraint.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">wsamegcc</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">lin</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">3.3</span>
+          <span class="n">bounds</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">][</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">][</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">]]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wamong&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard|lin|quad</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">values:</span> <span class="pre">[(value)*]</span> <span class="pre">min:</span> <span class="pre">lower_bound</span> <span class="pre">max:</span> <span class="pre">upper_bound</span></code> to express a soft among constraint to restrict the number of variables taking their value into a given set of values.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">wamong</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">lin</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mi">1</span>
+          <span class="n">values</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+          <span class="nb">min</span><span class="p">:</span> <span class="mi">1</span>
+          <span class="nb">max</span><span class="p">:</span> <span class="mi">1</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wvaramong&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">values:</span> <span class="pre">[(value)*]</span></code> to express a hard among constraint to restrict the number of variables taking their value into a given set of values to be equal to the last variable in the scope.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span> <span class="n">v5</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">wvaramong</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">hard</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">12.0</span>
+          <span class="n">values</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;woverlap&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard|lin|quad</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">comparator:</span> <span class="pre">comparator</span> <span class="pre">to:</span> <span class="pre">righthandside]</span></code> overlaps between two sequences of variables X, Y (i.e. set the fact that Xi and Yi take the same value (not equal to zero))</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">woverlap</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">hard</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">2.01</span>
+          <span class="n">comparator</span><span class="p">:</span> <span class="s2">&quot;&gt;&quot;</span>
+          <span class="n">to</span><span class="p">:</span> <span class="mi">1</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wdiverse&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">distance:</span> <span class="pre">integer</span> <span class="pre">values:</span> <span class="pre">[(value)*]</span></code> to express a hard diversity constraint using a dual encoding such that there is a given minimum Hamming distance to a given variable assignment (values).</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+        <span class="nb">type</span> <span class="p">:</span> <span class="n">wdiverse</span>
+        <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+           <span class="n">distance</span><span class="p">:</span> <span class="mi">2</span>
+           <span class="n">values</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span>
+           <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;whdiverse&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">distance:</span> <span class="pre">integer</span> <span class="pre">values:</span> <span class="pre">[(value)*]</span></code> to express a hard diversity constraint using a hidden encoding such that there is a given minimum Hamming distance to a given variable assignment (values).</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+        <span class="nb">type</span> <span class="p">:</span> <span class="n">whdiverse</span>
+        <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+           <span class="n">distance</span><span class="p">:</span> <span class="mi">2</span>
+           <span class="n">values</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span>
+           <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wtdiverse&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">distance:</span> <span class="pre">integer</span> <span class="pre">values:</span> <span class="pre">[(value)*]</span></code> to express a hard diversity constraint using a ternary encoding such that there is a given minimum Hamming distance to a given variable assignment (values).</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+        <span class="nb">type</span> <span class="p">:</span> <span class="n">wtdiverse</span>
+        <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+           <span class="n">distance</span><span class="p">:</span> <span class="mi">2</span>
+           <span class="n">values</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span><span class="p">]</span>
+           <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wsum&quot;</span></code> parameters <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard|lin|quad</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">comparator:</span> <span class="pre">comparator</span> <span class="pre">to:</span> <span class="pre">righthandside</span></code> to express a soft sum constraint with unit coefficients to test if the sum of a set of variables matches with a given comparator and right-hand-side value.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">wsum</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">quad</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="mf">1.0</span>
+          <span class="n">comparator</span><span class="p">:</span> <span class="s2">&quot;&lt;=&quot;</span>
+          <span class="n">to</span><span class="p">:</span> <span class="mi">4</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;wvarsum&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">metric:</span> <span class="pre">hard</span> <span class="pre">cost:</span> <span class="pre">cost</span> <span class="pre">comparator:</span> <span class="pre">comparator</span></code> to express a hard sum constraint to restrict the sum to be comparator to the value of the last variable in the scope.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mywsum</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+         <span class="nb">type</span> <span class="p">:</span> <span class="n">wvarsum</span>
+         <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">metric</span><span class="p">:</span> <span class="n">hard</span>
+            <span class="n">cost</span><span class="p">:</span> <span class="mi">3</span>
+            <span class="n">comparator</span><span class="p">:</span> <span class="s2">&quot;==&quot;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Comparators: let us note &lt;&gt; the comparator, K the right-hand-side (to:) value associated to the comparator, and Sum the result of the sum over the variables. For each comparator, the gap is defined according to the distance as follows:</p>
+<ul class="simple">
+<li><p>if &lt;&gt; is == : gap = abs(K - Sum)</p></li>
+<li><p>if &lt;&gt; is &lt;= : gap = max(0,Sum - K)</p></li>
+<li><p>if &lt;&gt; is &lt; : gap = max(0,Sum - K - 1)</p></li>
+<li><p>if &lt;&gt; is != : gap = 1 if Sum != K and gap = 0 otherwise</p></li>
+<li><p>if &lt;&gt; is &gt; : gap = max(0,K - Sum + 1);</p></li>
+<li><p>if &lt;&gt; is &gt;= : gap = max(0,K - Sum);</p></li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<p>Warning: the decomposition of <code class="code docutils literal notranslate"><span class="pre">wsum</span></code> and <code class="code docutils literal notranslate"><span class="pre">wvarsum</span></code> may use an exponential size (sum of domain sizes). list_size1 and list_size2 must be equal in <code class="code docutils literal notranslate"><span class="pre">ssame</span></code>.</p>
+<p>Global cost functions using a dedicated propagator:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;knapsack&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">capacity:</span> <span class="pre">capacity</span> <span class="pre">weights:</span> <span class="pre">[(coefficient)*]</span></code> to express a hard global reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with &gt;= operator) where capacity and coefficients (one for each variable in the scope) are positive or negative integers. Use negative numbers to express a linear constraint with &lt;= operator. See below a simple example encoding <code class="code docutils literal notranslate"><span class="pre">v1+v2+v3+v4</span> <span class="pre">&gt;=</span> <span class="pre">1</span></code>.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myknapsack</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+         <span class="nb">type</span> <span class="p">:</span> <span class="n">knapsack</span>
+         <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">capacity</span><span class="p">:</span> <span class="mi">1</span>
+            <span class="n">weights</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;knapsackv&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">capacity:</span> <span class="pre">capacity</span> <span class="pre">weightedvalues:</span> <span class="pre">[([variable</span> <span class="pre">value</span> <span class="pre">coefficient])*]</span></code> to express a hard global reverse knapsack constraint (i.e., a generalized linear constraint on domain variables with &gt;= operator) where capacity and coefficients are positive or negative integers. Use negative numbers to express a generalized linear constraint with &lt;= operator. Variables can be names or indices in the whole problem. They must also belong to the scope. See below a simple example encoding <code class="code docutils literal notranslate"><span class="pre">(v1=1)+(v2=1)+(v3=1)+(v4=1)</span> <span class="pre">&gt;=</span> <span class="pre">1</span></code>.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myknapsackv</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+         <span class="nb">type</span> <span class="p">:</span> <span class="n">knapsackv</span>
+         <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">capacity</span><span class="p">:</span> <span class="mi">1</span>
+            <span class="n">weightedvalues</span><span class="p">:</span> <span class="p">[[</span><span class="n">v1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span> <span class="p">[</span><span class="n">v2</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span> <span class="p">[</span><span class="n">v3</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span> <span class="p">[</span><span class="n">v4</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]]</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;salldiffkp&quot;</span></code> with parameters array <code class="code docutils literal notranslate"><span class="pre">[metric:</span> <span class="pre">&quot;hard&quot;</span> <span class="pre">cost:</span> <span class="pre">inf]</span></code> to express a hard alldifferent constraint (decomposes into <code class="code docutils literal notranslate"><span class="pre">knapsackv</span></code> cost functions)</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span><span class="p">:</span> <span class="n">salldiffkp</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">metric</span><span class="p">:</span> <span class="n">hard</span>
+          <span class="n">cost</span><span class="p">:</span> <span class="n">inf</span>
+          <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;clique&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">rhs:</span> <span class="pre">1</span> <span class="pre">values:</span> <span class="pre">[([(value)*])*]</span></code> to express a hard global clique constraint to restrict the number of variables taking their value into a given set of values (one set per variable) to at most 1 occurrence for all the variables. A clique of binary constraints must also be added to forbid any two variables from using both the restricted values.</p>
+<ul>
+<li><p>example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f01</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v0</span> <span class="n">v1</span><span class="p">]</span> <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="n">inf</span><span class="p">]}</span>
+<span class="n">f02</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v0</span> <span class="n">v2</span><span class="p">]</span> <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="n">inf</span><span class="p">]}</span>
+<span class="n">f03</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v0</span> <span class="n">v3</span><span class="p">]</span> <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="n">inf</span><span class="p">]}</span>
+<span class="n">f12</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span><span class="p">]</span> <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="n">inf</span><span class="p">]}</span>
+<span class="n">f13</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v3</span><span class="p">]</span> <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="n">inf</span><span class="p">]}</span>
+<span class="n">f23</span><span class="p">:</span> <span class="p">{</span> <span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v2</span> <span class="n">v3</span><span class="p">]</span> <span class="n">defaultcost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="n">inf</span><span class="p">]}</span>
+<span class="n">myclique</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v0</span> <span class="n">v1</span> <span class="n">v2</span> <span class="n">v3</span><span class="p">]</span>
+         <span class="nb">type</span> <span class="p">:</span> <span class="n">clique</span>
+         <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">rhs</span><span class="p">:</span> <span class="mi">1</span>
+            <span class="n">values</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;cfnconstraint&quot;</span></code> with parameters <code class="code docutils literal notranslate"><span class="pre">cfn:</span> <span class="pre">cost-function-network</span> <span class="pre">lb:</span> <span class="pre">cost</span> <span class="pre">ub:</span> <span class="pre">cost</span> <span class="pre">duplicatehard:</span> <span class="pre">value</span> <span class="pre">strongduality:</span> <span class="pre">value</span></code> to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in cfn format such that its valid solutions must have a cost value in [lb,ub[.</p>
+<ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;duplicatehard&quot;</span></code> (0|1): if true then it assumes any forbidden tuple in the original input problem is also forbidden by another constraint in the main model (you must duplicate any hard constraints in your input model into the main model).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;strongduality&quot;</span></code> (0|1): if true then it assumes the propagation is complete when all channeling variables in the scope are assigned and the semantic of the constraint enforces that the optimum and ONLY the optimum on the remaining variables is between lb and ub.</p></li>
+<li><p>example :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span> <span class="n">v2</span> <span class="n">v4</span><span class="p">]</span>
+       <span class="nb">type</span> <span class="p">:</span> <span class="n">cfnconstraint</span>
+       <span class="n">params</span><span class="p">:</span> <span class="p">{</span>
+          <span class="n">cfn</span><span class="p">:</span>
+            <span class="p">{</span>
+            <span class="n">problem</span><span class="p">:</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="s2">&quot;subcfn&quot;</span><span class="p">,</span> <span class="n">mustbe</span><span class="p">:</span> <span class="s2">&quot;&lt;1000.0&quot;</span><span class="p">}</span>
+            <span class="n">variables</span><span class="p">:</span> <span class="p">{</span><span class="n">v1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">v2</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">v4</span><span class="p">:</span><span class="mi">2</span><span class="p">}</span>
+            <span class="n">functions</span><span class="p">:</span> <span class="p">{</span>
+               <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v1</span><span class="p">],</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">]},</span>
+               <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v2</span><span class="p">],</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]},</span>
+               <span class="p">{</span><span class="n">scope</span><span class="p">:</span> <span class="p">[</span><span class="n">v4</span><span class="p">],</span> <span class="n">costs</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]}}</span>
+            <span class="p">}</span>
+          <span class="n">lb</span> <span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span>
+          <span class="n">ub</span> <span class="p">:</span> <span class="mf">0.0</span>
+          <span class="n">duplicatehard</span><span class="p">:</span> <span class="mi">0</span>
+          <span class="n">strongduality</span><span class="p">:</span> <span class="mi">0</span>
+          <span class="p">}</span>
+       <span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Warning: the same floatting-point precision and optimization sense (minimization or maximization) should be used by the encapsulated cost function network and the main model.
+Warning: the list of variables of the encapsulated cost function network should be exactly the same as the scope (and with the same order).</p>
+</li>
+</ul>
+</div></blockquote>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../userdoc.html" class="btn btn-neutral float-left" title="User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="wcspformat.html" class="btn btn-neutral float-right" title="Weighted Constraint Satisfaction Problem file format (wcsp)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

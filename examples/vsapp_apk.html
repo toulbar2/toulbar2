@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual Sudoku App for Android &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=tutorials.html>Tutorials</a> |
+    <a href=usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="visual-sudoku-app-for-android">
+<span id="vs-app-apk"></span><h1>Visual Sudoku App for Android<a class="headerlink" href="#visual-sudoku-app-for-android" title="Link to this heading"></a></h1>
+<div align=right>
+    <span style="color:Firebrick; font-weight:bold;"> Back to </span>
+    <a href="tutorials.html">Tutorials</a> |
+    <a href="usecases.html">Use cases</a>
+</div><section id="a-visual-sudoku-solver-based-on-cost-function-networks">
+<h2>A visual sudoku solver based on cost function networks<a class="headerlink" href="#a-visual-sudoku-solver-based-on-cost-function-networks" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>This application solves the sudoku problem from a smartphone by reading the
+grid using its camera. The cost function network solver toulbar2 is used to
+deal with the uncertainty on the digit recognition produced by the neural
+network. This uncertainty, combined with the sudoku logical rules, makes it
+possible to correct perceptual errors. It is particularly useful in the case
+of hand-written digits or poor image quality. It is also possible to solve a
+partially filled-in grid with printed and hand-written digits. The solver
+will always suggest a valid solution that best adapts to the retrieved digit
+information. It will naturally detect (a small number of) errors in a
+partially filled-in grid and could be used later as a diagnosis tool (future
+work). This software demonstration emphasizes the tight relation between
+constraint programming, computer vision, and deep learning.</p>
+<p>We used the open-source C++ solver
+<a class="reference external" href="https://github.com/toulbar2/toulbar2">toulbar2</a> in order to find the
+maximum a posteriori solution of a constrained probabilistic graphical model.
+With its dedicated numerical (soft) local consistency bounds, toulbar2
+outperforms traditional CP solvers on this problem. Grid perception and cell
+extraction are performed by the computer vision library
+<a class="reference external" href="https://opencv.org">OpenCV</a>. Digit recognition is done by <strong>Keras</strong> and
+<strong>TensorFlow</strong>. The current android application is written in Python using
+the <a class="reference external" href="https://kivy.org">Kivy</a> framework. It is inspired from a
+<a class="reference external" href="https://pyimagesearch.com/2020/08/10/opencv-sudoku-solver-and-ocr">tutorial</a>
+by Adrian Rosebrock. It uses the <a class="reference external" href="http://147.100.179.250">ws</a> RESTful web
+services in order to run the solver.</p>
+<p>See also : <a class="reference internal" href="vsapp.html#vs-app"><span class="std std-ref">Visual Sudoku Application</span></a>.</p>
+</div></blockquote>
+</section>
+<section id="source-code">
+<h2>Source Code<a class="headerlink" href="#source-code" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p><a class="reference external" href="https://github.com/toulbar2/visualsudoku">GitHub code</a>
+<a class="reference external" href="https://github.com/toulbar2/visualsudoku"><img alt="https://github.com/toulbar2/visualsudoku" src="../_images/logo-github.png" style="width: 30px;" /></a></p>
+</div></blockquote>
+</section>
+<section id="download-and-install">
+<h2>Download and Install<a class="headerlink" href="#download-and-install" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>To install the ‘Visual Sudoku’ application on smartphone :</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p><strong>Download</strong> the <strong>visualsudoku-release.apk</strong> APK file from Github
+repository :</p>
+<blockquote>
+<div><p><a class="reference external" href="https://github.com/toulbar2/visualsudoku/releases/latest"><img alt="`url_download_visualsudokuapk`_" src="../_images/qr-code_visualsudokuapk.png" style="width: 100px;" /></a>
+<a class="reference external" href="https://github.com/toulbar2/visualsudoku/releases/latest">https://github.com/toulbar2/visualsudoku/releases/latest</a></p>
+</div></blockquote>
+</li>
+<li><p>Click on the downloaded <strong>visualsudoku-release.apk</strong> APK file to ask
+for <strong>installation</strong>
+(<em>you have to accept to ‘install anyway’ from unknown developer</em>).</p></li>
+<li><p>In your parameter settings for the app, give permissions to the
+‘Visual Sudoku’ application
+(smartphone menu ‘Parameters’ &gt; ‘Applications’ &gt; ‘Visual Sudoku’) :
+allow camera (required to capture grids), files and multimedia contents
+(required to save images as files). Re-run the app.</p></li>
+</ol>
+</div></blockquote>
+<p>Warnings :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The application may fail at first start and you may have to launch it
+twice.</p></li>
+<li><p>While setting up successfully, the application should have created
+itself the required ‘VisualSudoku’ folder (under the smartphone
+‘Internal storage’ folder) but if not, you will have to create it
+by yourself manually.</p></li>
+<li><p>Since the application calls a web service, an internet connection is required.</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>The ‘SETTINGS’ menu allows to save grids or solutions as image files (‘savinginputfile’, ‘savingoutputfile’ parameters) and to access to some ‘expert’ parameters in order to enhance the resolution process (‘keep’, ‘border’, ‘time’ parameters).</p>
+<p>The application allows to capture a grid from its own camera (<em>‘CAMERA’ menu</em>)
+or to select a grid among the smartphone existing files (<em>‘FILE’ menu</em>), for
+example files coming from ‘DCIM’, in .jpg or .png formats. The grid image must
+have been captured in portrait orientation. Once the grid has been chosen, the
+<em>‘Solve’</em> button allows to get the solution.</p>
+<blockquote>
+<div><p>Fig.1 <a class="reference internal" href="../_images/apk_main_menu.png"><img alt="screen_mainmenu" src="../_images/apk_main_menu.png" style="width: 150px;" /></a> Fig.2 <a class="reference internal" href="../_images/apk_grid_screen.png"><img alt="screen_grid" src="../_images/apk_grid_screen.png" style="width: 150px;" /></a> Fig.3 <a class="reference internal" href="../_images/apk_solution_grid.png"><img alt="screen_solution" src="../_images/apk_solution_grid.png" style="width: 150px;" /></a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Fig.1 : Screen of main menu</p></li>
+<li><p>Fig.2 : Screen of the grid to be solved</p></li>
+<li><p>Fig.3 : Screen of the solution (in yellow) found by the solver</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<p><a class="reference download internal" download="" href="../_downloads/dc1b61d39709d9b99991f6a9bfe95c64/visualsudoku_examples.pdf"><code class="xref download docutils literal notranslate"><span class="pre">Examples</span> <span class="pre">of</span> <span class="pre">some</span> <span class="pre">input</span> <span class="pre">grids</span> <span class="pre">and</span> <span class="pre">their</span> <span class="pre">solved</span> <span class="pre">grids</span></code></a></p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
