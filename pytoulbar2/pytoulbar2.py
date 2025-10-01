@@ -744,7 +744,7 @@ class CFN:
         tb2.option.trwsAccuracy = -1
         
     # non-incremental solving method
-    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0, writeSolution = ''):
+    def Solve(self, showSolutions = 0, allSolutions = 0, diversityBound = 0, timeLimit = 0, bestSol = None, writeSolution = ''):
         """Solve solves the problem (i.e., finds its optimum and proves optimality). It can also enumerate (diverse) solutions depending on the arguments.
 
         Args:
@@ -756,6 +756,7 @@ class CFN:
                                       such that it also has a Hamming-distance from the previously found solutions greater than a given bound.
                                       The number of diverse solutions is bounded by the argument value of allSolutions.
             timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
+            bestSol (decimal cost or None): stops the search if a solution with a decimal cost better than or equal to bestsol is found.
             writeSolution (str): write best solution found in a file using a given file name and using the same format as showSolutions (or write all solutions if allSolutions is non-zero)
             
         Returns:
@@ -787,6 +788,10 @@ class CFN:
         if self.UbInit is not None:
             self.CFN.wcsp.updateDUb(self.UbInit)
         self.CFN.wcsp.sortConstraints()
+        if len(tb2.option.vnsOptimumS) > 0:
+            tb2.option.setVnsOptimum(self.CFN.wcsp.DoubletoCost(float(tb2.option.vnsOptimumS)))
+        if bestSol is not None:
+            tb2.option.setVnsOptimum(self.CFN.wcsp.DoubletoCost(bestSol))
         solved = self.CFN.solve()
         if len(writeSolution) > 0:
             tb2.option.closeSolution()
