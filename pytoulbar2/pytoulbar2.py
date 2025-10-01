@@ -92,6 +92,7 @@ class CFN:
         self.Option = tb2.option
         self.Top = float('inf') # can be used to represent forbidden assignments
         self.Limit = None
+        self.Incremental = False
         tb2.check()    # checks compatibility between selected options
 
     @staticmethod
@@ -817,6 +818,7 @@ class CFN:
         tb2.check()    # checks compatibility between selected options
         assert(self.Depth() == 0)
         self.Limit = None
+        self.Incremental = True
         self.CFN.wcsp.sortConstraints()
         ub = self.CFN.wcsp.getUb()
         self.CFN.beginSolve(ub)
@@ -834,6 +836,9 @@ class CFN:
 
         Args:
             cost (decimal cost): new initial upper bound.
+
+        Warning:
+            This operation should be called after SolveFirst and before SolveNext.
             
         """
         icost = self.CFN.wcsp.DoubletoCost(cost)
@@ -846,7 +851,7 @@ class CFN:
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
     def SolveNext(self, showSolutions = 0, timeLimit = 0):
         """SolveNext solves the problem (i.e., finds its optimum and proves optimality). 
-        It should be done after calling SolveFirst and modifying the problem if necessary.
+        It should be done after calling SolveFirst and modifying the problem if necessary using SetUB, Assign, MultipleAssign, Remove, Increase, Decrease, or adding an incremental cost function.
 
         Args:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
@@ -920,8 +925,11 @@ class CFN:
             value (int): domain value.
 
         """
-        self.CFN.wcsp.assign(self.VariableIndices[var] if isinstance(var, str) else var, value)
-        self.CFN.wcsp.propagate()
+        if self.Incremental:
+            self.CFN.wcsp.assign(self.VariableIndices[var] if isinstance(var, str) else var, value)
+            self.CFN.wcsp.propagate()
+        else:
+            self.AddCompactFunction([var], self.Top, [[value]], [0])
 
     def MultipleAssign(self, vars, values):
         """MultipleAssign assigns several variables at once.
@@ -931,7 +939,12 @@ class CFN:
             values (list): list of domain values.
 
         """
-        self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, False)
+        assert(len(vars) == len(values))
+        if self.Incremental:
+            self.CFN.wcsp.assignLS([self.VariableIndices[var] if isinstance(var, str) else var for var in vars], values, False)
+        else:
+            for i in range(len(vars)):
+                self.AddCompactFunction([vars[i]], self.Top, [[values[i]]], [0])
         
     def Remove(self, var, value):
         """Remove removes a value from the domain of a variable.
@@ -941,8 +954,11 @@ class CFN:
             value (int): domain value.
 
         """
-        self.CFN.wcsp.remove(self.VariableIndices[var] if isinstance(var, str) else var, value)
-        self.CFN.wcsp.propagate()
+        if self.Incremental:
+            self.CFN.wcsp.remove(self.VariableIndices[var] if isinstance(var, str) else var, value)
+            self.CFN.wcsp.propagate()
+        else:
+            self.AddCompactFunction([var], 0, [[value]], [self.Top])
         
     def Increase(self, var, value):
         """Increase removes the first values strictly lower than a given value in the domain of a variable.
@@ -952,8 +968,11 @@ class CFN:
             value (int): domain value.
 
         """
-        self.CFN.wcsp.increase(self.VariableIndices[var] if isinstance(var, str) else var, value)
-        self.CFN.wcsp.propagate()
+        if self.Incremental:
+            self.CFN.wcsp.increase(self.VariableIndices[var] if isinstance(var, str) else var, value)
+            self.CFN.wcsp.propagate()
+        else:
+            self.AddFunction([var], [0 if self.GetValue(var, index) >= value else self.Top for index in range(self.GetDomainInitSize(var))])
         
     def Decrease(self, var, value):
         """Decrease removes the last values strictly greater than a given value in the domain of a variable.
@@ -963,8 +982,12 @@ class CFN:
             value (int): domain value.
 
         """
-        self.CFN.wcsp.decrease(self.VariableIndices[var] if isinstance(var, str) else var, value)
-        self.CFN.wcsp.propagate()
+        if self.Incremental:
+            self.CFN.wcsp.decrease(self.VariableIndices[var] if isinstance(var, str) else var, value)
+            self.CFN.wcsp.propagate()
+        else:
+            self.AddFunction([var], [0 if self.GetValue(var, index) <= value else self.Top for index in range(self.GetDomainInitSize(var))])
+            
         
     def Deconnect(self, var):
         """Deconnect deconnects a variable from the rest of the problem and assigns it to its support value.
