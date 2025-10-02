@@ -3237,7 +3237,7 @@ bool Solver::solve(bool first)
                         nbBacktracksLimit = ToulBar2::backtrackLimit;
                         ToulBar2::restart = 0;
                         if (ToulBar2::verbose >= 0)
-                            cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
+                            cout << "****** Restart " << nbrestart << " with no backtrack limit and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
                         if (ToulBar2::debug >= 1 && ToulBar2::weightedDegree) {
                             int size = unassignedVars->getSize();
                             ValueCost sorted[size];
@@ -3255,7 +3255,7 @@ bool Solver::solve(bool first)
                     } else {
                         nbBacktracksLimit = min(ToulBar2::backtrackLimit, nbBacktracks + currentNbBacktracksLimit * 100);
                         if (ToulBar2::verbose >= 0)
-                            cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit * 100 << " backtracks max and UB=" << wcsp->getUb() << " ****** (" << nbNodes << " nodes)" << endl;
+                            cout << "****** Restart " << nbrestart << " with " << currentNbBacktracksLimit * 100 << " backtracks max and UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDPrimalBound() << std::setprecision(DECIMAL_POINT) << " ****** (" << nbNodes << " nodes)" << endl;
                     }
                     upperbound = wcsp->getUb();
                     enforceUb();
