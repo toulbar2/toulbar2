@@ -33,6 +33,7 @@
 #include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
 #include "tb2alldifferent.hpp"
+#include "tb2gcc.hpp"
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
 #include "tb2globalwcsp.hpp"
@@ -2453,7 +2454,7 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
     if (gcname == "salldiff") {
         gc = new AllDiffConstraint(this, scopeVars, arity);
     } else if (gcname == "sgcc") {
-        gc = new GlobalCardinalityConstraint(this, scopeVars, arity);
+        gc = new SoftGlobalCardinalityConstraint(this, scopeVars, arity);
     } else if (gcname == "ssame") {
         gc = new SameConstraint(this, scopeVars, arity);
     } else if (gcname == "sregular") {
@@ -2528,6 +2529,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         decomposableGCF->addToCostFunctionNetwork(this);
     } else if (gcname == "alldiff") {
         postAllDifferentConstraint(scopeIndex, arity, file);
+    } else if (gcname == "gcc") {
+        postGlobalCardinalityConstraint(scopeIndex, arity, file);
     } else if (gcname == "clique") {
         postCliqueConstraint(scopeIndex, arity, file);
     } else if (gcname == "knapsackc") {
@@ -2617,6 +2620,37 @@ int WCSP::postAllDifferentConstraint(int* scopeIndex, int arity, istream& file)
     for (int i = 0; i < arity; i++)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto cc = new AllDifferentConstraint(this, scopeVars.data(), arity);
+    cc->read(file);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        cc->propagate();
+    }
+    return cc->wcspIndex;
+}
+
+int WCSP::postGlobalCardinalityConstraint(int* scopeIndex, int arity, istream& file)
+{
+    assert(ToulBar2::bilevel <= 1);
+#ifndef NDEBUG
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    vector<EnumeratedVariable*> scopeVars(arity);
+    for (int i = 0; i < arity; i++)
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+    auto cc = new GlobalCardinalityConstraint(this, scopeVars.data(), arity);
     cc->read(file);
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
@@ -3166,7 +3200,7 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
     }
 
     if (propagator == "flow") {
-        GlobalCardinalityConstraint* gc = (GlobalCardinalityConstraint*)postGlobalCostFunction(scopeIndex, arity, "sgcc");
+        SoftGlobalCardinalityConstraint* gc = (SoftGlobalCardinalityConstraint*)postGlobalCostFunction(scopeIndex, arity, "sgcc");
         if (gc == NULL)
             return -1;
 

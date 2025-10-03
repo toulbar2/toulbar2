@@ -9,7 +9,7 @@
 // #include "stddef.h"
 #include "tb2flowbasedconstr.hpp"
 
-class GlobalCardinalityConstraint : public FlowBasedGlobalConstraint {
+class SoftGlobalCardinalityConstraint : public FlowBasedGlobalConstraint {
 private:
     map<Value, pair<int, int>> bound;
     void buildIndex();
@@ -31,9 +31,9 @@ public:
     // JP End//
     static const int VALUE = 1;
     static const int VAR = 0;
-    GlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
+    SoftGlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in);
 
-    ~GlobalCardinalityConstraint()
+    ~SoftGlobalCardinalityConstraint()
     {
         /*if (ToulBar2::consistencyLevel != FINE_IC) {
                                 cout << "no. of GAC propagation = " << count << endl;

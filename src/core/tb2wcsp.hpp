@@ -540,6 +540,13 @@ public:
     }
     int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file);
 
+    int postGlobalCardinalityConstraint(vector<int> scope, const string& arguments)
+    {
+        std::istringstream file(arguments);
+        return postGlobalCardinalityConstraint(scope.data(), scope.size(), file);
+    }
+    int postGlobalCardinalityConstraint(int* scopeIndex, int arity, istream& file);
+
     int postCliqueConstraint(vector<int> scope, const string& arguments)
     {
         std::istringstream file(arguments);
@@ -588,8 +595,8 @@ public:
     int postWAllDiff(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \deprecated
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
-    int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObjValue>& values); ///< \brief post a soft global cardinality cost function
+    int postWGcc(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values) { return postWGcc(scope.data(), scope.size(), semantics, propagator, baseCost, values); } ///< \brief post a soft global cardinality cost function
+    int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values); ///< \deprecated
     void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
     int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost); ///< \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
     void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft same cost function

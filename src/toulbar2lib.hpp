@@ -283,6 +283,8 @@ public:
     virtual int postSpecialDisjunction(int xIndex, int yIndex, Value cstx, Value csty, Value xinfty, Value yinfty, Cost costx, Cost costy) = 0;
     virtual int postAllDifferentConstraint(vector<int> scope, const string& arguments) = 0;
     virtual int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
+    virtual int postGlobalCardinalityConstraint(vector<int> scope, const string& arguments) = 0;
+    virtual int postGlobalCardinalityConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
     virtual int postCliqueConstraint(vector<int> scope, const string& arguments) = 0;
     virtual int postCliqueConstraint(int* scopeIndex, int arity, istream& file) = 0; /// \deprecated
     virtual int postKnapsackConstraint(vector<int> scope, const string& arguments, bool isclique = false, int kp = 0, bool conflict = false, Tuple wcnf = {}) = 0;
@@ -338,9 +340,8 @@ public:
     /// \param propagator the propagation method ("flow", "DAG", "network")
     /// \param baseCost the scaling factor of the violation
     /// \param values a vector of BoundedObjValue, specifying the lower and upper bounds of each value, restricting the number of variables can be assigned to them
-    virtual int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObjValue>& values)
-        = 0;
+    virtual int postWGcc(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values) = 0; ///< post a soft global cardinality cost function
+    virtual int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values) = 0; ///< \deprecated
     virtual void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub) = 0; ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
 
     /// \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
