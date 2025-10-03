@@ -8,6 +8,7 @@ DESCRIPTION
 
 """
 from math import isinf
+from mpi4py import MPI
 import traceback
 try :
     import pytoulbar2.pytb2 as tb2
@@ -15,6 +16,7 @@ try :
 except Exception:
     traceback.print_exc()
     pass
+
 
 class CFN:
     """pytoulbar2 base class used to manipulate and solve a cost function network.
@@ -53,9 +55,18 @@ class CFN:
     See pytoulbar2test.py example in src repository.
     
     """
-    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, init=True):
+    def __init__(self, ubinit = None, resolution = 0, vac = 0, configuration = False, vns = None, seed = 1, verbose = -1, init = True, parallel = False):
         if init:
             tb2.reinit()
+
+        if parallel:        
+            self.comm = MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+            if (self.comm.Get_size() > 1):
+                tb2.option.parallel = True
+            if (self.rank != 0):
+                verbose = -1
+        
         tb2.option.decimalPoint = resolution   # decimal precision of costs
         tb2.option.vac = vac   # if no zero, maximum search depth-1 where VAC algorithm is performed (use 1 for preprocessing only)
         tb2.option.seed = seed    # random seed number (use -1 if a pseudo-randomly generated seed is wanted)
