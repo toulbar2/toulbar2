@@ -300,4 +300,123 @@ Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cos
     
     return Total_cost;
 }
+
+
+
+static intptr_t
+augmenting_path_gcc(intptr_t dim_val, vector<Cost>& cost, vector<Cost>& u,
+                vector<Cost>& v, vector<intptr_t>& path,
+                vector<intptr_t>& row4col,
+                vector<Cost>& shortestPathCosts, intptr_t i,
+                vector<bool>& SR, vector<bool>& SC,
+                vector<intptr_t>& remaining, Cost* p_minVal, Cost MAX_COST, vector<int>& capacity)
+{
+    Cost minVal = 0;
+    intptr_t num_remaining = dim_val;
+    for (intptr_t it = 0; it < dim_val; it++) {
+        remaining[it] = dim_val - it - 1;
+    }
+
+    fill(SR.begin(), SR.end(), false);
+    fill(SC.begin(), SC.end(), false);
+    fill(shortestPathCosts.begin(), shortestPathCosts.end(), MAX_COST);
+
+    intptr_t sink = -1;
+    while (sink == -1) {
+        intptr_t index = -1;
+        Cost lowest = MAX_COST;
+        SR[i] = true;
+
+        for (intptr_t it = 0; it < num_remaining; it++) {
+            intptr_t j = remaining[it];
+            Cost r = minVal + cost[i * dim_val + j] - u[i] - v[j];
+            if (r < shortestPathCosts[j]) {
+                path[j] = i;
+                shortestPathCosts[j] = r;
+            }
+
+            if (shortestPathCosts[j] < lowest ||
+                (shortestPathCosts[j] == lowest && (row4col[j] == -1 || capacity[j] != 0))) {
+                lowest = shortestPathCosts[j];
+                index = it;
+            }
+        }
+
+        minVal = lowest;
+        if (minVal >= MAX_COST) {
+            return -1;
+        }
+
+        intptr_t j = remaining[index];
+        if (row4col[j] == -1 || (capacity[j] != 0)) {
+            sink = j;
+            capacity[j]--;
+        } else {
+            i = row4col[j];
+        }
+
+        SC[j] = true;
+        remaining[index] = remaining[--num_remaining];
+    }
+
+    *p_minVal = minVal;
+    return sink;
+}
+
+Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,
+           int* b, Cost* usol, Cost* vsol, Cost MAX_COST, vector<int>& capacity)
+{
+    vector<Cost> u(dim_var, 0);
+    vector<Cost> v(dim_val, 0);
+    vector<Cost> shortestPathCosts(dim_val);
+    vector<intptr_t> path(dim_val, -1);
+    vector<intptr_t> col4row(dim_var, -1);
+    vector<intptr_t> row4col(dim_val, -1);
+    vector<bool> SR(dim_var);
+    vector<bool> SC(dim_val);
+    vector<intptr_t> remaining(dim_val);
+
+    for (intptr_t curRow = 0; curRow < dim_var; curRow++) {
+        Cost minVal;
+        intptr_t sink = augmenting_path_gcc(dim_val, cost, u, v, path, row4col,
+                                        shortestPathCosts, curRow, SR, SC,
+                                        remaining, &minVal, MAX_COST, capacity);
+        if (sink < 0) {
+            return MAX_COST;
+        }
+
+        u[curRow] += minVal;
+        for (intptr_t i = 0; i < dim_var; i++) {
+            if (SR[i] && i != curRow) {
+                u[i] += minVal - shortestPathCosts[col4row[i]];
+            }
+        }
+        for (intptr_t j = 0; j < dim_val; j++) {
+            if (SC[j]) {
+                v[j] -= minVal - shortestPathCosts[j];
+            }
+        }
+
+        intptr_t j = sink;
+        while (1) {
+            intptr_t i = path[j];
+            row4col[j] = i;
+            swap(col4row[i], j);
+            if (i == curRow) {
+                break;
+            }
+        }
+    }
+
+    Cost Total_cost = 0;
+    for (intptr_t i = 0; i < dim_var; i++) {
+        b[i] = col4row[i];
+        Total_cost += cost[i * dim_val + col4row[i]];
+        usol[i] = u[i];
+    }
+    for (intptr_t j = 0; j < dim_val; j++) {
+        vsol[j] = v[j];
+    }      
+    return Total_cost;
+ }
 #endif // LAPJV_HPP_
