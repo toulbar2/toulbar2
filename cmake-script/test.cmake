@@ -36,6 +36,25 @@ endif()
 SET(FOPT "test-opt.cmake") #cmake name where local value for timeout,regexp and command line option are declared
 
 FOREACH (UTEST ${validation_file})
+
+  # skip tests when compiled without lzma
+  IF(${UTEST} MATCHES ".*.xz" AND Boost AND NO_LZMA)
+    MESSAGE(STATUS "skipping test " ${UTEST})
+    continue()
+  ENDIF()
+
+  # skip tests when compiled without bzip2
+  IF(${UTEST} MATCHES ".*.bz2" AND Boost AND NO_BZ2)
+    MESSAGE(STATUS "skipping test " ${UTEST})
+    continue()
+  ENDIF()
+
+  # skip tests when compiled without boost
+  IF(${UTEST} MATCHES ".*.cfn" AND NOT Boost)
+    MESSAGE(STATUS "skipping test " ${UTEST})
+    continue()
+  ENDIF()
+
   #reset ub end enum from the previous iteration
   UNSET(UB)
   UNSET(ENUM)

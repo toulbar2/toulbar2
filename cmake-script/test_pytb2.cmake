@@ -13,6 +13,12 @@ FOREACH (UTEST ${validation_scripts})
 
     STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TNAME ${UTEST})
 
+    # skip tests with wcspconstraint as it requires specfic formatting in cfn format
+    IF(NOT Boost AND ${UTEST} MATCHES ".*weightedcspconstraint.py")
+        MESSAGE(STATUS "skipping test " ${UTEST})
+        continue()
+    ENDIF()
+
     ADD_TEST(NAME validation_pytb2_${TNAME} COMMAND ${Python3_EXECUTABLE} ${UTEST})
     
     set_tests_properties(validation_pytb2_${TNAME} PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}")

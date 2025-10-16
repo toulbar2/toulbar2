@@ -21,6 +21,12 @@
 // BOOST
 #cmakedefine BOOST
 
+// BZ2 (only relevant when BOOST defined)
+#cmakedefine NO_BZ2
+
+// LZMA (only relevant when BOOST defined)
+#cmakedefine NO_LZMA
+
 // XML XCSP Parser
 #cmakedefine XMLFLAG
 #cmakedefine XMLFLAG3
