@@ -4394,6 +4394,45 @@ void WCSP::preprocessing()
                     nary->keepAllowedTuples(getUb()); // can be very slow!
                     nary->preprojectall2();
                 }
+            } else if (constrs[i]->connected() && constrs[i]->isAllDiff()) {
+                // projects on existing binary cost functions inside the scope of AllDifferent
+                Cost mult_ub = (getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, getUb() * MEDIUM_COST)) : getUb();
+                for (int j=0; j < constrs[i]->arity(); j++) {
+                    EnumeratedVariable *xj = (EnumeratedVariable *)constrs[i]->getVar(j);
+                    if (xj->getDegree() >  1) {
+                        ConstraintList *constrsj = xj->getConstrs();
+                        for (ConstraintList::iterator it = constrsj->begin(); it != constrsj->end(); ++it) {
+                            Constraint* ctr = (*it).constr;
+                            if (ctr->isBinary() && !ctr->isSep() && constrs[i]->scopeIncluded(ctr)) {
+                                BinaryConstraint *cij = (BinaryConstraint*)ctr;
+                                EnumeratedVariable *xk = (EnumeratedVariable *)((cij->getVar(0)==xj)?cij->getVar(1):cij->getVar(0));
+                                if (xj->getDomainSize() > xk->getDomainSize()) {
+                                    EnumeratedVariable *tmpvar = xj;
+                                    xj = xk;
+                                    xk = tmpvar;
+                                }
+                                if (xj->isValueNames() && xk->isValueNames()) {
+                                    for (Value vj : getEnumDomain(xj->wcspIndex)) {
+                                        string svj = xj->getValueName(xj->toIndex(vj));
+                                        assert(svj.size() > 0);
+                                        unsigned int vkindex = xk->toIndex(svj);
+                                        Value vk = xk->toValue(vkindex);
+                                        if (xk->canbe(vk)) {
+                                            cij->setcost(xj, xk, vj, vk, mult_ub);
+                                        }
+                                    }
+                                } else {
+                                    for (Value vj : getEnumDomain(xj->wcspIndex)) {
+                                        if (xk->canbe(vj)) {
+                                            cij->setcost(vj, vj, mult_ub);
+                                        }
+                                    }
+                                }
+                                cij->propagate();
+                            }
+                        }
+                    }
+                }
             }
         }
         //		processTernary();

@@ -228,6 +228,7 @@ public:
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but no other preprocessing
+    bool isAllDiff() const FINAL { return true; }
 
     Cost getDefCost() FINAL { return MAX_COST; }
 
