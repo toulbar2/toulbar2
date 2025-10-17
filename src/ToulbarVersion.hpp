@@ -1,2 +1,2 @@
 // Cmake generated version
-#define Toulbar_VERSION "v1.2.1-382-g6b81f22d-master-tainted (1760687329)"
+#define Toulbar_VERSION "pytb2-v0.0.0.5-9-g39e12547-master-tainted (1760715138)"
