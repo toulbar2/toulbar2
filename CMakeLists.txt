@@ -369,19 +369,21 @@ IF(LIBTB2)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
-### Old cmake, python and pybind11
-    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0) ### New cmake, python and pybind11
+      pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+    ELSE() ### Old cmake, python and pybind11
+      ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+      SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+    ENDIF()
+
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytb2")
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
-    IF(APPLE)
-        target_link_options(pytb2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
-    ENDIF(APPLE)
 
-### New cmake, python and pybind11
-#    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
-###
+    IF(APPLE)
+      target_link_options(pytb2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
+    ENDIF(APPLE)
 
   ### Create a copy of the pytoulbar2 library
   ADD_CUSTOM_TARGET(copy_pytb2 ALL
