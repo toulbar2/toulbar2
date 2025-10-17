@@ -10,7 +10,6 @@ on:
 jobs:
 
   pytb2-linux:
-    if: false
     name: pytoulbar2-linux
     runs-on: ubuntu-24.04
     steps:
@@ -43,7 +42,6 @@ jobs:
 
 
   pytb2-macos-x86_64:
-    if: false
     name: pytoulbar2-macos-x86_64
     runs-on: macos-13
     steps:
@@ -74,7 +72,6 @@ jobs:
 
 
   pytb2-macos-arm:
-    if: false
     name: pytoulbar2-macos-arm
     runs-on: macos-14
     steps:
