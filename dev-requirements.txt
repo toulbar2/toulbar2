@@ -1,2 +1,3 @@
+setuptools
 pybind11[global]
 nose2
