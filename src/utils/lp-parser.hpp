@@ -38,6 +38,8 @@
 
 #include <type_traits>
 
+#include <algorithm>
+
 typedef long double Double;
 
 namespace baryonyx {
