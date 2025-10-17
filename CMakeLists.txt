@@ -241,20 +241,21 @@ IF(PYTB2)
 
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
 
-  EXECUTE_PROCESS(
-    COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
-    OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  
-    IF ("${Pybind11_INCLUDES}" STREQUAL "" )
-      MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
-    ELSE()
-      MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
-    ENDIF()
-
+  ### New cmake and python and pybind11
+  IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0) 
+	  FIND_PACKAGE(pybind11 REQUIRED)
+  ELSE() ### older cmake versions
+    EXECUTE_PROCESS(
+      COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
+      OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
     
-### New cmake and python and pybind11
-#  FIND_PACKAGE(pybind11 CONFIG)
-###
+      IF ("${Pybind11_INCLUDES}" STREQUAL "" )
+        MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
+      ELSE()
+        MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+      ENDIF()
+  ENDIF()
+
 ENDIF(PYTB2)
 
 IF(WITH_MEM_JEMALLOC)
