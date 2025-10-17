@@ -24,7 +24,8 @@ jobs:
 
           CIBW_ENVIRONMENT: BOOST_INCLUDEDIR=/usr/include/boost169 BOOST_LIBRARYDIR=/usr/lib64/boost169
           
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          # CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp38-*"
 
           CIBW_SKIP: "*-manylinux_i686* *-musllinux*"
 
@@ -56,7 +57,8 @@ jobs:
 
           CIBW_BEFORE_BUILD: "pip install -r dev-requirements.txt"
 
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          # CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp38-*"
 
           CIBW_BUILD_VERBOSITY: 1
 
@@ -89,7 +91,8 @@ jobs:
           
           HOMEBREW_NO_AUTO_UPDATE: 1
           
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          # CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp39-*"
 
           CIBW_BUILD_VERBOSITY: 1
 
@@ -102,7 +105,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
   publish:
-    if: false
     name: Upload release to PyPI
     needs: [pytb2-linux, pytb2-macos-x86_64, pytb2-macos-arm]
     runs-on: ubuntu-latest
