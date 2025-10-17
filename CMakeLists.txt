@@ -222,7 +222,7 @@ IF(PYTB2)
   SET(LIBTB2 ON)
   SET(Python3_FIND_STRATEGY LOCATION)
   SET(Python3_FIND_FRAMEWORK NEVER)
-  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development.Module)
 
   if(NOT Python3_Interpreter_FOUND)
     MESSAGE(STATUS "Python3_Interpreter NOT FOUND")
