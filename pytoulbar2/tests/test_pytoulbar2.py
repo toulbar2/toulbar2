@@ -9,3 +9,9 @@ class TestExtension(TestCase):
       self.assertEqual(res[1],0.0)
       self.assertEqual(res[2],1)
  
+   def test_2(self):
+      cfn = pytoulbar2.CFN()
+      cfn.Read("./example.wcsp")
+      cfn.Option.setVarOrder("-3")
+      res = cfn.Solve()
+      assert(res and res[1]==27)
