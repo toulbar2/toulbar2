@@ -418,7 +418,7 @@ IF(LIBTB2)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
     IF(PYTB2)
-      TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+      TARGET_LINK_LIBRARIES(pytb2 PUBLIC ${all_depends})
     ENDIF(PYTB2)
   ENDIF(MPI)
   
