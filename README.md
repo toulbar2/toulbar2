@@ -1,5 +1,4 @@
 # toulbar2
-
 ## Exact optimization for cost function networks and additive graphical models 
 
 <div align="center">
