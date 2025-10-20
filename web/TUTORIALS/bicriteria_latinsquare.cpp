@@ -149,7 +149,7 @@ int main() {
     mcfn.push_back(dynamic_cast<WCSP*>(wcsp1));
     mcfn.push_back(dynamic_cast<WCSP*>(wcsp2));
 
-    // computation iof the supported points of the biobjective problem
+    // computation of the supported points of the biobjective problem
     Bicriteria::computeSupportedPoints(&mcfn, std::make_pair(Bicriteria::OptimDir::Optim_Min, Bicriteria::OptimDir::Optim_Min));
 
     // access to the computed solutions and their objective values
