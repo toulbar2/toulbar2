@@ -3,6 +3,7 @@
 ## Exact optimization for cost function networks and additive graphical models 
 
 <div align="center">
+    
 [![Static Badge](https://img.shields.io/badge/master-%22%22?logo=github&label=latest)](https://github.com/toulbar2/toulbar2/tree/master)
 [![PyPI - Version](https://img.shields.io/pypi/v/pytoulbar2?logo=python&label=pytoulbar2)](https://pypi.org/project/pytoulbar2)
 </div>
