@@ -1,8 +1,7 @@
 # toulbar2
 ## Exact optimization for cost function networks and additive graphical models 
 
-[![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://app.travis-ci.com/github/toulbar2/toulbar2)
-[![PyPi version](https://img.shields.io/pypi/v/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi wheel](https://img.shields.io/pypi/wheel/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi python versions](https://img.shields.io/pypi/pyversions/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)
+[![PyPI - Version](https://img.shields.io/pypi/v/pytoulbar2?logo=python&label=pytoulbar2)](https://pypi.org/project/pytoulbar2)
 
 <!-- (_README_1)= -->
 ## What is toulbar2? 
