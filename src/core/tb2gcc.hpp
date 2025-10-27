@@ -54,7 +54,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     bool SameDomain; // True if all variables have the same domain
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
     vector<int> capacity; // pper bound capacities for every value
-    vector<int> currentCapacity; //  upper bound capacities for every value
+   // vector<int> currentCapacity; //  upper bound capacities for every value
 
     void projectLB(Cost c)
     {
@@ -176,7 +176,7 @@ public:
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
             capacity = vector<int>(NbValues, 0); 
-            currentCapacity = vector<int>(NbValues, 0); 
+            //currentCapacity = vector<int>(NbValues, 0); 
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1); 
             costMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
@@ -433,12 +433,12 @@ public:
                                 costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] = variable->canbe(value) ? variable->getCost(value) : current_ub;
                             }
                         }
-                          for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-                              currentCapacity[valIndex] = capacity[valIndex];
-                            }
+                          //for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                              //currentCapacity[valIndex] = capacity[valIndex];
+                           // }
                         // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                         Cost TotalCost;
-                        TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, currentCapacity);
+                        TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity);
 
                         if (TotalCost >= current_ub) {
                             THROWCONTRADICTION;
