@@ -4437,7 +4437,6 @@ void WCSP::preprocessing()
                                 for (EnumeratedVariable::iterator iterj = xj->begin(); deconnect && iterj != xj->end(); ++iterj ) {
                                     for (EnumeratedVariable::iterator iterk = xk->begin(); deconnect && iterk != xk->end(); ++iterk ) {
                                         if (cij->getCost(xj, xk, *iterj, *iterk) > MIN_COST && forbidden.find(pair(*iterj, *iterk)) == forbidden.end()) {
-                                            assert(CUT(cij->getCost(xj, xk, *iterj, *iterk), getUb()));
                                             deconnect = false;
                                         }
                                     }

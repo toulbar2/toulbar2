@@ -1843,12 +1843,11 @@ void Solver::singletonConsistency(int restricted)
                     if (wcsp->canbe(varIndex, sorted[a].value)) {
                         bool deadend = false;
                         bool extend = false;
-                        Cost initlb = wcsp->getLb();
                         Cost inclb = MIN_COST;
                         map< pair<unsigned int, Value>, Cost> binarycostsBefore;
                         map< pair<unsigned int, Value>, Cost> unarycostsAfter;
                         if (singletonNC) {
-                            // extend all unary costs towards binary cost functions related to the current target variable x
+                            // extend all unary costs towards binary cost functions related to the current target variable x (warning, create the function if it does not exist)
                             for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                                 if (i != varIndex && wcsp->getMaxUnaryCost(i) > MIN_COST) {
                                     EnumeratedVariable *y = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(i));
@@ -1862,7 +1861,7 @@ void Solver::singletonConsistency(int restricted)
                                     for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery ) {
                                         Cost cost = y->getCost(*itery);
                                         if (cost > MIN_COST) {
-                                            bctr->extend(yIndex, *itery, cost); // extend all unary costs towards binary cost functions with the current targer variable x in their scope
+                                            bctr->extend(yIndex, *itery, cost);
                                             propagateBinaryDelayed.insert(bctr);
                                         }
                                     }
@@ -1886,6 +1885,7 @@ void Solver::singletonConsistency(int restricted)
                         int storedepth = Store::getDepth();
                         try {
                             Store::store();
+                            Cost initlb = wcsp->getLb();
                             wcsp->assign(varIndex, sorted[a].value);
                             wcsp->propagate();
 //                            if (wcsp->getLb() - initlb < minlambda) {
