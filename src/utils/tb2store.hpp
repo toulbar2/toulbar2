@@ -252,7 +252,7 @@ public:
     {
     } ///< \warning allows conversion from T to StoreBasic<T>, which may loose the compiler when mixing T and StoreBasic<T> in the same expression: explicit cast needed e.g. in T::v1 + (T) StoreBasic<T>::v2
 
-    StoreBasic() {} /// need by resize method applied on vactor<StoreBasic>
+    StoreBasic() {} /// need by resize method applied on vector<StoreBasic>
 
     operator T() const
     {

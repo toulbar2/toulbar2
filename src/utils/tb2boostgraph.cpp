@@ -230,7 +230,7 @@ void WCSP::minimumDegreeOrderingBGL(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) //SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -310,7 +310,7 @@ void WCSP::spanningTreeOrderingBGL(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) //SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G, maxt);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -415,7 +415,7 @@ void WCSP::reverseCuthillMcKeeOrderingBGL(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) //SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -448,7 +448,7 @@ void WCSP::maximumCardinalitySearch(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) //SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -538,7 +538,7 @@ void WCSP::minimumFillInOrdering(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) //SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -656,7 +656,7 @@ void WCSP::minimumDegreeOrdering(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) //SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())

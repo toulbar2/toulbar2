@@ -1811,8 +1811,8 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 
 void Solver::singletonConsistency(int restricted)
 {
-    bool deadend;
     bool done = false;
+    bool singletonNC = (ToulBar2::LcLevel == LC_NC) && (ToulBar2::vac == 0) && (ToulBar2::DEE_ == 0) && (ToulBar2::elimDegree_ == -1);
     int vac = ToulBar2::vac;
     if (ToulBar2::vac) {
         ToulBar2::vac = Store::getDepth() + 2; // make sure VAC is performed if requested
@@ -1835,21 +1835,79 @@ void Solver::singletonConsistency(int restricted)
                 // wcsp->iniSingleton(); //Warning! constructive disjunction is not compatible with variable elimination
                 wcsp->getEnumDomainAndCost(varIndex, sorted);
                 qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
-                Cost initlb = wcsp->getLb();
-                Cost minlambda = MAX_COST;
+//                Cost minlambda = MAX_COST;
+                bool supportBroken = false;
+                EnumeratedVariable *x = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(varIndex));
+                set< BinaryConstraint* > propagateBinaryDelayed;
                 for (int a = size - 1; a >= 0; --a) {
                     if (wcsp->canbe(varIndex, sorted[a].value)) {
-                        deadend = false;
+                        bool deadend = false;
+                        bool extend = false;
+                        Cost initlb = wcsp->getLb();
+                        Cost inclb = MIN_COST;
+                        map< pair<unsigned int, Value>, Cost> binarycostsBefore;
+                        map< pair<unsigned int, Value>, Cost> unarycostsAfter;
+                        if (singletonNC) {
+                            // extend all unary costs towards binary cost functions related to the current target variable x
+                            for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                                if (i != varIndex && wcsp->getMaxUnaryCost(i) > MIN_COST) {
+                                    EnumeratedVariable *y = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(i));
+                                    BinaryConstraint *bctr = x->getConstr(y);
+                                    if (bctr == NULL) {
+                                        vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
+                                        bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                    }
+                                    bctr->reconnect(); // should be visible for the projection
+                                    int yIndex = bctr->getIndex(y);
+                                    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery ) {
+                                        Cost cost = y->getCost(*itery);
+                                        if (cost > MIN_COST) {
+                                            bctr->extend(yIndex, *itery, cost); // extend all unary costs towards binary cost functions with the current targer variable x in their scope
+                                            propagateBinaryDelayed.insert(bctr);
+                                        }
+                                    }
+                                }
+                            }
+                            // remember finite costs in binary cost functions related to the current target variable x assigned to value sorted[a].value
+                            for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
+                                if ((*iter).constr->isBinary() && !(*iter).constr->isSep()) {
+                                    BinaryConstraint *bctr = (BinaryConstraint *)((*iter).constr);
+                                    EnumeratedVariable *y = (EnumeratedVariable *)((bctr->getVar(0)==x)?bctr->getVar(1):bctr->getVar(0));
+                                    for (Value v : wcsp->getEnumDomain(y->wcspIndex)) {
+                                        Cost cost = bctr->getCost(x,y,sorted[a].value,v);
+                                        if (cost > MIN_COST && !CUT(cost, wcsp->getUb())) {
+                                            binarycostsBefore[pair(y->wcspIndex, v)] = cost;
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
                         int storedepth = Store::getDepth();
                         try {
                             Store::store();
                             wcsp->assign(varIndex, sorted[a].value);
                             wcsp->propagate();
-                            if (wcsp->getLb() - initlb < minlambda) {
-                                minlambda = wcsp->getLb() - initlb;
-                            }
-                            if (ToulBar2::verbose >= 1 && wcsp->getLb() - initlb > sorted[a].cost) {
-                                cout << "singleton consistency may increase unary cost of variable " << wcsp->getName(varIndex) << " value " << sorted[a].value << " from " << sorted[a].cost  << " to " << wcsp->getLb() - initlb << endl;
+//                            if (wcsp->getLb() - initlb < minlambda) {
+//                                minlambda = wcsp->getLb() - initlb;
+//                            }
+                            if (singletonNC && wcsp->getLb() - initlb > sorted[a].cost) {
+                                if (ToulBar2::verbose >= 1) {
+                                    cout << "singleton consistency can increase unary cost of variable " << wcsp->getName(varIndex) << " value " << sorted[a].value << " from " << sorted[a].cost  << " to " << wcsp->getLb() - initlb << endl;
+                                }
+                                extend = true;
+                                inclb = wcsp->getLb() - initlb - sorted[a].cost;
+                                for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                                    if (i != varIndex) {
+                                        EnumeratedVariable *y = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(i));
+                                        for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery ) {
+                                            Cost cost = y->getCost(*itery);
+                                            if (cost > MIN_COST || binarycostsBefore.find(pair(i, *itery)) != binarycostsBefore.end()) {
+                                                unarycostsAfter[pair(i, *itery)] = cost;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         } catch (const Contradiction&) {
                             wcsp->whenContradiction();
@@ -1867,9 +1925,40 @@ void Solver::singletonConsistency(int restricted)
                                 flush(cout);
                             }
                             // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
+                        } else if (extend) {
+                            if (ToulBar2::verbose >= 1) {
+                                cout << "singleton consistency increase unary cost of variable " << wcsp->getName(varIndex) << " value " << sorted[a].value << " from " << sorted[a].cost  << " to " << (sorted[a].cost + inclb) << endl;
+                            }
+                            for (const auto& [key, cost] : unarycostsAfter) {
+                                EnumeratedVariable *y = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(key.first));
+                                BinaryConstraint *bctr = x->getConstr(y);
+                                if (bctr == NULL) {
+                                    vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
+                                    bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                }
+                                bctr->reconnect();
+                                Cost oldcost = bctr->getCost(x, y, sorted[a].value, key.second);
+                                if (!CUT(oldcost, wcsp->getUb()) && cost != oldcost) {
+                                    bctr->addcost(x, y, sorted[a].value, key.second, cost - oldcost);
+                                    propagateBinaryDelayed.insert(bctr);
+                                }
+                            }
+                            x->project(sorted[a].value, inclb, true);
+                            supportBroken |= (x->getSupport() == sorted[a].value);
                         }
                     }
                 }
+                if (supportBroken) {
+                    x->findSupport();
+                }
+                for (BinaryConstraint *bctr : propagateBinaryDelayed) {
+                    if (bctr->universal()) {
+                        bctr->deconnect();
+                    } else {
+                        bctr->propagate();
+                    }
+                }
+                wcsp->propagate();
 //                if (minlambda > MIN_COST) {
 //                    if (ToulBar2::verbose >= 0) {
 //                        cout << "singleton consistency may increase lower bound by " << minlambda << " from variable " << wcsp->getName(varIndex) << endl;

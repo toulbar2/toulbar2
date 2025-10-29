@@ -4404,6 +4404,7 @@ void WCSP::preprocessing()
                         for (ConstraintList::iterator it = constrsj->begin(); it != constrsj->end(); ++it) {
                             Constraint* ctr = (*it).constr;
                             if (ctr->isBinary() && !ctr->isSep() && constrs[i]->scopeIncluded(ctr)) {
+                                set< pair<Value, Value> > forbidden;
                                 BinaryConstraint *cij = (BinaryConstraint*)ctr;
                                 EnumeratedVariable *xk = (EnumeratedVariable *)((cij->getVar(0)==xj)?cij->getVar(1):cij->getVar(0));
                                 if (xj->getDomainSize() > xk->getDomainSize()) {
@@ -4418,17 +4419,34 @@ void WCSP::preprocessing()
                                         unsigned int vkindex = xk->toIndex(svj);
                                         Value vk = xk->toValue(vkindex);
                                         if (xk->canbe(vk)) {
-                                            cij->setcost(xj, xk, vj, vk, mult_ub);
+                                            Cost oldcost = cij->getCost(xj, xk, vj, vk);
+                                            cij->addcost(xj, xk, vj, vk, mult_ub - oldcost);
+                                            forbidden.insert(pair(vj, vk));
                                         }
                                     }
                                 } else {
                                     for (Value vj : getEnumDomain(xj->wcspIndex)) {
                                         if (xk->canbe(vj)) {
-                                            cij->setcost(vj, vj, mult_ub);
+                                            Cost oldcost = cij->getCost(vj, vj);
+                                            cij->addcost(vj, vj, mult_ub - oldcost);
+                                            forbidden.insert(pair(vj, vj));
                                         }
                                     }
                                 }
-                                cij->propagate();
+                                bool deconnect = true;
+                                for (EnumeratedVariable::iterator iterj = xj->begin(); deconnect && iterj != xj->end(); ++iterj ) {
+                                    for (EnumeratedVariable::iterator iterk = xk->begin(); deconnect && iterk != xk->end(); ++iterk ) {
+                                        if (cij->getCost(xj, xk, *iterj, *iterk) > MIN_COST && forbidden.find(pair(*iterj, *iterk)) == forbidden.end()) {
+                                            assert(CUT(cij->getCost(xj, xk, *iterj, *iterk), getUb()));
+                                            deconnect = false;
+                                        }
+                                    }
+                                }
+                                if (deconnect) {
+                                    cij->deconnect();
+                                } else {
+                                    cij->propagate();
+                                }
                             }
                         }
                     }

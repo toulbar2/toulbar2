@@ -1,2 +1,2 @@
 // Cmake generated version
-#define Toulbar_VERSION "v1.2.1-358-g0e7866bf-lapjv-tainted (1760628040)"
+#define Toulbar_VERSION "v1.2.1-359-g35fd524b-lapjv-tainted (1761751420)"
