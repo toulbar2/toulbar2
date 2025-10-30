@@ -1819,7 +1819,7 @@ void Solver::singletonConsistency(int restricted)
     }
     vector<int> revelimorder(wcsp->numberOfVariables(), -1);
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-        revelimorder[wcsp->getDACOrder(i)] = i;
+        revelimorder[(restricted==INT_MAX)?(wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1):wcsp->getDACOrder(i)] = i;
     }
     while (!done && restricted) {
         done = true;
