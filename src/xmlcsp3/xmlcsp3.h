@@ -1020,7 +1020,6 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
-                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1578,62 +1577,47 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         vector<int> vars;
         toMyVariables(list,vars);
         string params="";
-        string params2="";
-        int domsize;
-        int nbval;
+        params=to_string((int)values.size());
+        int count = 0;
+        set<int> myvalues;
         for (int k = 0; k < (int)values.size(); ++k) {
-            params=to_string(occurs[k]);
+            count += occurs[k];
+            if (closed) myvalues.insert(values[k]);
+            params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(0) + to_string(" ") + to_string(occurs[k]);
+        }
+        if (count > (int)vars.size() || (closed && (count < (int)vars.size()))) throw Contradiction();
+        if (closed) {
             for (int i = 0; i < (int)vars.size(); ++i) {
-                domsize = problem->getDomainInitSize(vars[i]);
-                nbval=0;
-                params2="";
-                //params +=to_string(" ")+to_string(domsize);
-                for (int idval=0; idval < domsize; idval++) {
-                    int value = problem->toValue(vars[i], idval);
-                    if(value==values[k]){
-                        params2 += to_string(" ") + to_string(value) + to_string(" 1");
-                        nbval++;
-                    }
-                    else {
-                        if(closed)
-                        {
-                            auto it =find(values.begin(),values.end(),value);
-                            if(it==values.end()) {
-                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
-                                nbval++;
-                            }
-                        }
+                for (Value v : problem->getEnumDomain(vars[i])) {
+                    if (myvalues.find(v) == myvalues.end()) {
+                        problem->remove(vars[i], v);
                     }
                 }
-                params+=to_string(" ")+to_string(nbval)+params2;
             }
-            problem->postKnapsackConstraint(vars, params, false, true, false);
-            params=to_string(-occurs[k])+ to_string(" ");
-            for (int i = 0; i < (int)vars.size(); ++i) {
-                domsize = problem->getDomainInitSize(vars[i]);
-                nbval=0;
-                params2="";
-                //params +=to_string(" ")+to_string(domsize);
-                for (int idval=0; idval < domsize; idval++) {
-                    int value = problem->toValue(vars[i], idval);
-                    if(value==values[k]){
-                        params2 += to_string(" ") + to_string(value) + to_string(" -1");
-                        nbval++;
-                    }
-                    else {
-                        if(closed)
-                        {
-                            auto it =find(values.begin(),values.end(),value);
-                            if(it==values.end()) {
-                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
-                                nbval++;
-                            }
+        }
+        problem->postGlobalCardinalityConstraint(vars, params);
+        if (count != (int)vars.size()) {
+            string params2="";
+            int domsize;
+            int nbval;
+            for (int k = 0; k < (int)values.size(); ++k) if(occurs[k] > 0) {
+                params=to_string(occurs[k]);
+                for (int i = 0; i < (int)vars.size(); ++i) {
+                    domsize = problem->getDomainInitSize(vars[i]);
+                    nbval=0;
+                    params2="";
+                    //params +=to_string(" ")+to_string(domsize);
+                    for (int idval=0; idval < domsize; idval++) {
+                        int value = problem->toValue(vars[i], idval);
+                        if(value==values[k]){
+                            params2 += to_string(" ") + to_string(value) + to_string(" 1");
+                            nbval++;
                         }
                     }
+                    params+=to_string(" ")+to_string(nbval)+params2;
                 }
-                params+=to_string(" ")+to_string(nbval)+params2;
+                problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-            problem->postKnapsackConstraint(vars, params, false, true, false);
         }
     }
 
@@ -1719,60 +1703,47 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         toMyVariables(list,vars);
         string params="";
         string params2="";
-        int domsize,nbval;
+        int countlb = 0;
+        int countub = 0;
+        set<int> myvalues;
+        int nbval;
+        params=to_string((int)values.size());
         for (int k = 0; k < (int)values.size(); ++k) {
-            params=to_string(occurs[k].min)+ to_string(" ");
+            countlb += occurs[k].min;
+            countub += occurs[k].max;
+            if (closed) myvalues.insert(values[k]);
+            params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(0) + to_string(" ") + to_string(occurs[k].max);
+        }
+        if (countlb > (int)vars.size() || (closed && (countub < (int)vars.size()))) throw Contradiction();
+        if (closed) {
             for (int i = 0; i < (int)vars.size(); ++i) {
-                domsize = problem->getDomainInitSize(vars[i]);
-                nbval=0;
-                params2="";
-                //params +=to_string(" ")+to_string(domsize);
-                for (int idval=0; idval < domsize; idval++) {
-                    int value = problem->toValue(vars[i], idval);
-                    if(value==values[k]){
-                        params2 += to_string(" ") + to_string(value) + to_string(" 1");
-                        nbval++;
-                    }
-                    else {
-                        if(closed)
-                        {
-                            auto it =find(values.begin(),values.end(),value);
-                            if(it==values.end()) {
-                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
-                                nbval++;
-                            }
-                        }
+                for (Value v : problem->getEnumDomain(vars[i])) {
+                    if (myvalues.find(v) == myvalues.end()) {
+                        problem->remove(vars[i], v);
                     }
                 }
-                params+=to_string(" ")+to_string(nbval)+params2;
             }
-            problem->postKnapsackConstraint(vars, params, false, true, false);
-            params=to_string(-occurs[k].max)+ to_string(" ");
-            for (int i = 0; i < (int)vars.size(); ++i) {
-                domsize = problem->getDomainInitSize(vars[i]);
-                nbval=0;
-                params2="";
-                //params +=to_string(" ")+to_string(domsize);
-                for (int idval=0; idval < domsize; idval++) {
-                    int value = problem->toValue(vars[i], idval);
-                    if(value==values[k]){
-                        params2 += to_string(" ") + to_string(value) + to_string(" -1");
-                        nbval++;
-                    }
-                    else {
-                        if(closed)
-                        {
-                            auto it =find(values.begin(),values.end(),value);
-                            if(it==values.end()) {
-                                params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(-(int)vars.size());
-                                nbval++;
-                            }
+        }
+        problem->postGlobalCardinalityConstraint(vars, params);
+        for (int k = 0; k < (int)values.size(); ++k) {
+            if(occurs[k].min > 0){
+                params=to_string(occurs[k].min)+ to_string(" ");
+                for (int i = 0; i < (int)vars.size(); ++i) {
+                    int domsize = problem->getDomainInitSize(vars[i]);
+                    nbval=0;
+                    params2="";
+                    //params +=to_string(" ")+to_string(domsize);
+                    for (int idval=0; idval < domsize; idval++) {
+                        int value = problem->toValue(vars[i], idval);
+                        if(value==values[k]){
+                            params2 += to_string(" ") + to_string(value) + to_string(" 1");
+                            nbval++;
                         }
                     }
+                    params+=to_string(" ")+to_string(nbval)+params2;
                 }
-                params+=to_string(" ")+to_string(nbval)+params2;
+                problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-            problem->postKnapsackConstraint(vars, params, false, true, false);
         }
     }
 
