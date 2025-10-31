@@ -106,6 +106,7 @@ public:
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+    bool isClause() const FINAL { return true; }
     Long size() const FINAL
     {
         Cost sumdelta = ((lb > MIN_COST) ? accumulate(deltaCosts.begin(), deltaCosts.end(), -lb) : MIN_COST);

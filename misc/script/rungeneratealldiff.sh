@@ -8,10 +8,10 @@ ninstances=100
 nend=10
 bctr=10
 tctr=0
-nary="1"
+nary="0-1"
 tight=80
-n=4
-d=4
+n=5
+d=5
 K=1
 
 while (( $n < $nend )) ; do
@@ -77,10 +77,10 @@ while (( $n < $nend )) ; do
     seed=`expr $seed + 1`
   done	
   nary="0-$nary" 
-  tctr=`expr $tctr + 5`  
-  bctr=`expr $bctr + 10`  
+  tctr=`expr $tctr + 0`  
+  bctr=`expr $bctr + 5`  
   n=`expr $n + 1`
-  d=`expr $d + 2`
+  d=`expr $d + 1`
 done
 
 rm -f problem.wcsp

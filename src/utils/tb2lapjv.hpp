@@ -1,6 +1,12 @@
+/** \file tb2lapjv.hpp
+ *  \brief Solves linear assignment problems using Jonker and Volgenant's algorithm.
+ *
+ */
+
 #ifndef TB2LAPJV_HPP_
 #define TB2LAPJV_HPP_
- #include <bits/stdc++.h>
+
+#include <bits/stdc++.h>
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -464,5 +470,11 @@ Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
 
     return total_cost;
 }
-
 #endif // LAPJV_HPP_
+
+/* Local Variables: */
+/* c-basic-offset: 4 */
+/* tab-width: 4 */
+/* indent-tabs-mode: nil */
+/* c-default-style: "k&r" */
+/* End: */

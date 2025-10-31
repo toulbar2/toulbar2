@@ -29,8 +29,12 @@ public:
     virtual bool isBinary() const { return false; } // return true if the cost function class is a BinaryConstraint
     virtual bool isTernary() const { return false; } // return true if the cost function class is a TernaryConstraint
     virtual bool isNary() const { return false; } // return true if the cost function class is a NaryConstraint
+    virtual bool isClause() const { return false; } // return true if the cost function class is a WeightedClause
     virtual bool isKnapsack() const { return false; } // return true if the cost function class is a KnapsackConstraint
     virtual bool isAllDiff() const { return false; } // return true if the cost function class is a AllDifferentConstraint
+    virtual bool isAllDiffSquare() const { return false; } // return true if the cost function class is a AllDifferentConstraint and NbValues==arity
+    virtual bool isGCC() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint
+    virtual bool isGCCSquare() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint and NbValues==arity
     virtual bool isGlobal() const { return false; } // return true if it is a global cost function (flow-based monolithic propagation)
     //    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 

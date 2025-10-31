@@ -220,6 +220,8 @@ public:
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but no other preprocessing
+    bool isGCC() const FINAL { return true; }
+    bool isGCCSquare() const FINAL { return isSquare; }
 
     Cost getDefCost() FINAL { return MAX_COST; }
 
@@ -364,9 +366,6 @@ public:
         }
     }
 
-
-   
-
     void propagate() override
     {
     /**
@@ -489,8 +488,6 @@ public:
         }
     }
 
-
-
     //checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
     bool verify() override
     {
@@ -560,7 +557,6 @@ public:
         }
         return result;
     }
-	
 	
     void print(ostream& os) override
     {
