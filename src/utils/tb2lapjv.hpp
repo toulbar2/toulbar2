@@ -395,13 +395,13 @@ Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
                          Cost MAX_COST,                // Top
                          vector<int>& capacity)         // capacities size m
 {
-    if (dim_var <= 0) return 0;
+    /*if (dim_var <= 0) return 0;
     if (dim_val <= 0) return MAX_COST;
 
     // feasibility check:
     long long total_cap = 0;
     for (intptr_t j = 0; j < dim_val; ++j) total_cap += capacity[j];
-    if (total_cap < dim_var) return MAX_COST;
+    if (total_cap < dim_var) return MAX_COST;*/
 
     vector<int> col4row(dim_var, -1);       // row -> col (or -1)
     vector<vector<int>> row4col(dim_val);      // list of rows assigned to column j

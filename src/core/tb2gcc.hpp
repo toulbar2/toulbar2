@@ -55,6 +55,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
     vector<int> capacity; // pper bound capacities for every value
    // vector<int> currentCapacity; //  upper bound capacities for every value
+   int sumub, sumlb, Gcc_NbValues;
 
     void projectLB(Cost c)
     {
@@ -101,13 +102,12 @@ public:
         , storeAssignment(false) 
         , NbValues(0)
         , NbAssigned(0)
-        , NbNoAssigned(arity_in)
-        , isSquare(false)
-        , SameDomain(true) 
+        , NbNoAssigned(arity_in)  
         {
         if (arity_in > 0) { 
+            SameDomain = true;
+            isSquare = true;
             unordered_set<string> seen; 
-            isSquare = true; 
             NbValues = 0; 
             int DomainSize;
             int varIndex = 0;
@@ -165,7 +165,8 @@ public:
             }
 
             // If more values than variables, cost matrix is not square
-            if (NbValues > arity_in) {
+            if(sumub > arity_in && Gcc_NbValues == NbValues ) THROWCONTRADICTION;
+            if (Gcc_NbValues < NbValues || sumub > arity_in) {
                 isSquare = false;
                 for (int varIndex = 0; varIndex < arity_in; varIndex++) {
                     // Initialize extended cost vector for each variable
@@ -175,7 +176,7 @@ public:
             // Initialize 
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
-            capacity = vector<int>(NbValues, 0); 
+            capacity = vector<int>(NbValues, arity_in); 
             //currentCapacity = vector<int>(NbValues, 0); 
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1); 
@@ -196,14 +197,14 @@ public:
     void read(istream& file) // TODO: add a parameter for controlling the level of propagation if necessary
     {
        
-        int nbValues = 0;
-        int sumlb = 0;
-        int sumub = 0;
+        Gcc_NbValues = 0;
+        sumlb = 0;
+        sumub = 0;
         int lower = 0;
         int upper = 0;
-        file >> nbValues;
+        file >> Gcc_NbValues;
         
-        for (int v = 0; v < nbValues; v++) {
+        for (int v = 0; v < Gcc_NbValues; v++) {
             
             Value value;
             file >> value;
@@ -211,12 +212,16 @@ public:
             sumlb += lower;
             file >> upper;
             sumub += upper;     
-            bounds[value] = {lower, upper};            
-            capacity[v] = upper;
-         
+            bounds[value] = {lower, upper};  
+            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                auto* variable = scope[varIndex];
+                if (variable->canbe(value)) {
+                    capacity[mapDomainValToIndex[variable->getValueName(variable->toIndex(value))]] = upper;
+                    break;
+                }
+            }   
         }
         if (sumlb > arity_) THROWCONTRADICTION;
-        if (sumub < arity_) THROWCONTRADICTION;
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but no other preprocessing
