@@ -228,6 +228,7 @@ public:
             isincluded = isincluded && (getIndex(ctr->getVar(i)) >= 0);
         return isincluded;
     }
+    virtual bool implies(Constraint* ctr) { return false; } ///< \brief returns true if ctr is redundant wrt the constraint
 
     void scopeCommon(TSCOPE& scope_out, Constraint* ctr)
     {

@@ -1811,15 +1811,20 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 
 void Solver::singletonConsistency(int restricted)
 {
+    int nbiter = 0;
     bool done = false;
-    bool singletonNC = (ToulBar2::LcLevel == LC_NC) && (ToulBar2::vac == 0) && (ToulBar2::DEE_ == 0) && (ToulBar2::elimDegree_ == -1);
-    int vac = ToulBar2::vac;
+    LcLevelType lclevel = ToulBar2::LcLevel;
+    int vaclevel = ToulBar2::vac;
     if (ToulBar2::vac) {
         ToulBar2::vac = Store::getDepth() + 2; // make sure VAC is performed if requested
     }
+    int vaclevel_ = ToulBar2::vac;
+    VACExtension* vac_ = ((WCSP*)wcsp)->vac;
+    int elimDegree_ = ToulBar2::elimDegree_;
+    int DEE_ = ToulBar2::DEE_;
     vector<int> revelimorder(wcsp->numberOfVariables(), -1);
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-        revelimorder[(restricted==INT_MAX)?(wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1):wcsp->getDACOrder(i)] = i;
+        revelimorder[(restricted>=(int)wcsp->numberOfVariables())?(wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1):wcsp->getDACOrder(i)] = i;
     }
     while (!done && restricted) {
         done = true;
@@ -1830,6 +1835,7 @@ void Solver::singletonConsistency(int restricted)
             unsigned int size = wcsp->getDomainSize(varIndex);
             if (size > 1 && (ToulBar2::nbDecisionVars <= 0 || varIndex < (unsigned int)ToulBar2::nbDecisionVars)) {
                 restricted--;
+                nbiter++;
                 EnumeratedVariable *x = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(varIndex));
                 ValueCost sorted[size];
                 // ValueCost* sorted = new ValueCost [size];
@@ -1837,7 +1843,42 @@ void Solver::singletonConsistency(int restricted)
                 // Cost minlambda = MAX_COST;
                 wcsp->getEnumDomainAndCost(varIndex, sorted);
                 qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
+
+                Cost previouslb = wcsp->getLb();
+                bool singletonNC = false;
+                Constraint *alldiff = NULL;
+                // singletonNC is true only if there are only binary cost functions and squared AllDifferent or GCC
                 set< BinaryConstraint* > propagateBinaryDelayed;
+                for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
+                    if ((*iter).constr->isAllDiff()) {
+                        if (!((*iter).constr->isAllDiffSquare()) || (*iter).constr->arity() <= 4) {
+                            singletonNC = false;
+                            break;
+                        } else {
+                            alldiff = (*iter).constr;
+                            singletonNC = true;
+                        }
+                    } else if ((*iter).constr->isGCC()) {
+                        if (!((*iter).constr->isGCCSquare()) || (*iter).constr->arity() <= 4) {
+                            singletonNC = false;
+                            break;
+                        } else {
+                            singletonNC = true;
+                        }
+                    } else if (!(*iter).constr->isBinary() || (*iter).constr->isSep()) {
+                        singletonNC = false;
+                        break;
+                    }
+                }
+                if (singletonNC) {
+                    // deactivate propagation features not compatible with singleton node consistency
+                    ToulBar2::LcLevel = LC_NC;
+                    ToulBar2::vac = 0;
+                    ((WCSP*)wcsp)->vac = NULL;
+                    ToulBar2::elimDegree_ = -1;
+                    ToulBar2::DEE_ = 0;
+                }
+                // test all domain values in decreasing order of unary costs
                 for (int a = size - 1; a >= 0; --a) {
                     if (wcsp->canbe(varIndex, sorted[a].value)) {
                         bool deadend = false;
@@ -1869,6 +1910,7 @@ void Solver::singletonConsistency(int restricted)
                                     }
                                 }
                             }
+                            x->sortConstraints();
                             // remember finite costs in binary cost functions related to the current target variable x assigned to value sorted[a].value
                             for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
                                 if ((*iter).constr->isBinary() && !(*iter).constr->isSep()) {
@@ -1972,6 +2014,16 @@ void Solver::singletonConsistency(int restricted)
                         }
                     }
                 }
+                // reactivate propagation features
+                ToulBar2::LcLevel = lclevel;
+                ToulBar2::vac = vaclevel_;
+                ((WCSP*)wcsp)->vac = vac_;
+                ToulBar2::elimDegree_ = elimDegree_;
+                ToulBar2::DEE_ = DEE_;
+                x->queueAC();
+                x->queueDAC();
+                x->queueEAC1();
+                x->queueDEE();
                 for (BinaryConstraint *bctr : propagateBinaryDelayed) {
                     if (bctr->universal()) {
                         bctr->deconnect();
@@ -1980,6 +2032,21 @@ void Solver::singletonConsistency(int restricted)
                     }
                 }
                 wcsp->propagate(); // Warning! after propagate, sorted[].cost may differ from current unary costs
+                for (BinaryConstraint *bctr : propagateBinaryDelayed) {
+                    if (bctr->universal() || (alldiff && alldiff->implies(bctr))) {
+                        bctr->deconnect();
+                    }
+                }
+                initGap(wcsp->getLb(), wcsp->getUb());
+                if (singletonNC && wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.01) {
+                    if (ToulBar2::verbose >= 0) {
+                        if (ToulBar2::uai)
+                            cout << "Singleton consistency dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+                        else
+                            cout << "Singleton consistency dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+                    }
+                    done = false;
+                }
 //                if (minlambda > MIN_COST) {
 //                    if (ToulBar2::verbose >= 0) {
 //                        cout << "singleton consistency may increase lower bound by " << minlambda << " from variable " << wcsp->getName(varIndex) << endl;
@@ -2030,9 +2097,9 @@ void Solver::singletonConsistency(int restricted)
             }
         }
     }
-    ToulBar2::vac = vac;
+    ToulBar2::vac = vaclevel;
     if (ToulBar2::verbose >= 0)
-        cout << "Done Singleton Consistency" << endl;
+        cout << "Done Singleton Consistency (" << nbiter << " iterations)" << endl;
 }
 
 /*

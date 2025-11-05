@@ -271,7 +271,35 @@ public:
 
     /// \brief returns true if constraint always satisfied and has (less than) zero cost only
     //bool universal(Cost zero = MIN_COST) override;
-	
+
+    bool implies(Constraint* ctr) FINAL
+    {
+        if (scopeIncluded(ctr) && ctr->isBinary()) {
+            BinaryConstraint *bctr = (BinaryConstraint *)ctr;
+            EnumeratedVariable*x = (EnumeratedVariable *)(bctr->getVar(0));
+            EnumeratedVariable*y = (EnumeratedVariable *)(bctr->getVar(1));
+            if (x->isValueNames() && y->isValueNames()) {
+                for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+                    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
+                        if (x->getValueName(x->toIndex(*iterx)) != y->getValueName(y->toIndex(*itery)) && bctr->getCost(*iterx,*itery) > MIN_COST) {
+                            return false;
+                        }
+                    }
+                }
+            } else {
+                for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+                    for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
+                        if (*iterx != *itery && bctr->getCost(*iterx,*itery) > MIN_COST) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     Cost eval(const Tuple& s) override
     {
         // returns the cost of the corresponding assignment s
@@ -413,7 +441,7 @@ public:
         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
             auto* variable = scope[varIndex];
 
-            if (!variable->assigned()) {
+            if (variable->unassigned()) {
                 // Variable not assigned yet: add to unassigned list
                 NoAssignedVar.push_back(varIndex);
             } else {
@@ -775,8 +803,8 @@ public:
         if (scope[index]->unassigned()) {
             bool revise = ToulBar2::FullEAC && getVar(index)->cannotbe(getVar(index)->getSupport());
             if (!storeAssignment || scope[index]->cannotbe(storeLastAssignment[index])) {
-	        propagate();
-	    }
+                propagate();
+            }
             if (revise)
                 reviseEACGreedySolution();
         } else {
@@ -788,8 +816,8 @@ public:
         // TODO: incremental cost propagation
         bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) > MIN_COST);
         if (!storeAssignment || scope[index]->cannotbe(storeLastAssignment[index]) || scope[index]->getCost(storeLastAssignment[index]) > MIN_COST) {
-	    propagate();
-	}
+            propagate();
+        }
         if (revise)
             reviseEACGreedySolution();
     }
