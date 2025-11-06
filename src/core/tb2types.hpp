@@ -628,6 +628,7 @@ typedef enum {
     CONSTR_ORDER_LAG = 7,
     CONSTR_ORDER_ARITY = 8,
     CONSTR_ORDER_ARITY_DAC = 9,
+    CONSTR_ORDER_DAC_ARITY = 10,
     CONSTR_ORDER_THEMAX
 } ConstrOrdering;
 

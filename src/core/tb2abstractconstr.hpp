@@ -526,6 +526,16 @@ public:
 
     int arity() const FINAL { return arity_; }
     int getNonAssigned() const { return nonassigned; }
+    int getTrueNonAssigned() const
+    {
+        int nbunassigned = 0;
+        for (int i=0; i<arity_; i++) {
+            if (getVar(i)->unassigned()) {
+                nbunassigned++;
+            }
+        }
+        return nbunassigned;
+    }
     Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
 
     Variable* getVar(int varCtrIndex) const FINAL

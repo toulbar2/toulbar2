@@ -1843,7 +1843,7 @@ void Solver::singletonConsistency(int restricted)
                 // Cost minlambda = MAX_COST;
                 wcsp->getEnumDomainAndCost(varIndex, sorted);
                 qsort(sorted, size, sizeof(ValueCost), cmpValueCost);
-
+                vector<Cost> unaryCosts(x->getDomainInitSize(), MIN_COST);
                 Cost previouslb = wcsp->getLb();
                 bool singletonNC = false;
                 Constraint *alldiff = NULL;
@@ -1851,7 +1851,7 @@ void Solver::singletonConsistency(int restricted)
                 set< BinaryConstraint* > propagateBinaryDelayed;
                 for (ConstraintList::iterator iter = x->getConstrs()->begin(); iter != x->getConstrs()->end(); ++iter) {
                     if ((*iter).constr->isAllDiff()) {
-                        if (!((*iter).constr->isAllDiffSquare()) || (*iter).constr->arity() <= 4) {
+                        if (!((*iter).constr->isAllDiffSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4) {
                             singletonNC = false;
                             break;
                         } else {
@@ -1859,7 +1859,7 @@ void Solver::singletonConsistency(int restricted)
                             singletonNC = true;
                         }
                     } else if ((*iter).constr->isGCC()) {
-                        if (!((*iter).constr->isGCCSquare()) || (*iter).constr->arity() <= 4) {
+                        if (!((*iter).constr->isGCCSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4) {
                             singletonNC = false;
                             break;
                         } else {
@@ -1880,7 +1880,7 @@ void Solver::singletonConsistency(int restricted)
                 }
                 // test all domain values in decreasing order of unary costs
                 for (int a = size - 1; a >= 0; --a) {
-                    if (wcsp->canbe(varIndex, sorted[a].value)) {
+                    if (x->unassigned() && x->canbe(sorted[a].value)) {
                         bool deadend = false;
                         bool extend = false;
                         Cost inclb = MIN_COST;
@@ -1897,6 +1897,7 @@ void Solver::singletonConsistency(int restricted)
                                         if (bctr == NULL) {
                                             vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
                                             bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                            propagateBinaryDelayed.insert(bctr);
                                         }
                                         bctr->reconnect(); // should be visible for the projection
                                         int yIndex = bctr->getIndex(y);
@@ -1922,18 +1923,20 @@ void Solver::singletonConsistency(int restricted)
                                             binarycostsBefore.push_back(make_tuple(y->wcspIndex, v, cost));
                                         }
                                     }
-                                } else if (((*iter).constr->isAllDiff() && (!((*iter).constr->isAllDiffSquare()) || (*iter).constr->arity() <= 4))
-                                        || ((*iter).constr->isGCC() && (!((*iter).constr->isGCCSquare()) || (*iter).constr->arity() <= 4))
+                                } else if (((*iter).constr->isAllDiff() && (!((*iter).constr->isAllDiffSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4))
+                                        || ((*iter).constr->isGCC() && (!((*iter).constr->isGCCSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4))
                                         || (*iter).constr->isGlobal()
                                         || (*iter).constr->isClause()
                                         || (*iter).constr->isKnapsack()
-                                        || ((*iter).constr->isNary() && ((NaryConstraint*)((*iter).constr))->getNonAssigned() <= 4)) {
+                                        || ((*iter).constr->isNary() && ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4)) {
                                     singletonNC = false;
                                 }
                             }
                             wcsp->propagate(); // update MaxCostValue if needed
                         }
                         int storedepth = Store::getDepth();
+                        int nbunassigned = numberOfUnassignedVariables();
+                        assert(nbunassigned >= 0);
                         try {
                             Store::store();
                             Cost initlb = wcsp->getLb() + x->getCost(sorted[a].value);
@@ -1942,7 +1945,7 @@ void Solver::singletonConsistency(int restricted)
 //                            if (wcsp->getLb() - initlb < minlambda) {
 //                                minlambda = wcsp->getLb() - initlb;
 //                            }
-                            if (singletonNC && wcsp->getLb() > initlb) {
+                            if (singletonNC && wcsp->getLb() > initlb && numberOfUnassignedVariables() >= nbunassigned - 1) { // at most one variable should have been assigned
                                 extend = true;
                                 inclb = wcsp->getLb() - initlb;
                                 for (int bucket=0; bucket < ((WCSP*)wcsp)->getNCBucketSize(); bucket++) {
@@ -1969,7 +1972,18 @@ void Solver::singletonConsistency(int restricted)
                                         }
                                     }
                                 }
-
+                                // remember value removals (possibly made before this singleton assignment)
+                                for (Queue::iterator iter = ((WCSP*)wcsp)->getQueueAC()->begin(); iter != ((WCSP*)wcsp)->getQueueAC()->end(); ++iter) {
+                                    EnumeratedVariable* y = (EnumeratedVariable*) iter.getElt()->content.var;
+                                    unsigned int domsize = y->getDomainInitSize();
+                                    if (domsize > y->getDomainSize()) {
+                                        for (unsigned int j = 0; j < domsize; j++) {
+                                            if (y->cannotbe(y->toValue(j))) {
+                                                unarycostsAfter.push_back(make_tuple(y->wcspIndex, y->toValue(j), (wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb()));
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         } catch (const Contradiction&) {
                             wcsp->whenContradiction();
@@ -1980,8 +1994,7 @@ void Solver::singletonConsistency(int restricted)
                         // wcsp->updateSingleton();
                         // cout << "(" << varIndex << "," << a <<  ")" << endl;
                         if (deadend) {
-                            wcsp->remove(varIndex, sorted[a].value);
-                            wcsp->propagate();
+                            unaryCosts[x->toIndex(sorted[a].value)] = wcsp->getUb();
                             if (ToulBar2::verbose >= 0) {
                                 cout << ".";
                                 flush(cout);
@@ -1989,28 +2002,32 @@ void Solver::singletonConsistency(int restricted)
                             // WARNING!!! can we stop if the variable is assigned, what about removeSingleton after???
                         } else if (extend) {
                             if (ToulBar2::verbose >= 1) {
-                                cout << "singleton consistency increase unary cost of variable " << wcsp->getName(varIndex) << " value " << sorted[a].value << " by " << inclb << endl;
+                                cout << "singleton consistency increase unary cost of variable " << x->getName() << " value " << sorted[a].value << " by " << inclb << endl;
                             }
+                            bool addnewbinary = false;
                             for (const auto& tuple : unarycostsAfter) {
                                 EnumeratedVariable *y = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(std::get<0>(tuple)));
                                 assert(y->unassigned());
-                                BinaryConstraint *bctr = x->getConstr(y);
-                                if (bctr == NULL) {
-                                    vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
-                                    bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
-                                }
-                                bctr->reconnect();
-                                Cost oldcost = bctr->getCost(x, y, sorted[a].value, std::get<1>(tuple));
-                                if (!CUT(oldcost, wcsp->getUb()) && std::get<2>(tuple) != oldcost) {
-                                    bctr->addcost(x, y, sorted[a].value, std::get<1>(tuple), std::get<2>(tuple) - oldcost);
-                                    propagateBinaryDelayed.insert(bctr);
+                                if (y->canbe(std::get<1>(tuple))) {
+                                    BinaryConstraint *bctr = x->getConstr(y);
+                                    if (bctr == NULL) {
+                                        vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
+                                        bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                        propagateBinaryDelayed.insert(bctr); // insert in order to check if it can be deconnected later
+                                        addnewbinary = true;
+                                    }
+                                    bctr->reconnect();
+                                    Cost oldcost = bctr->getCost(x, y, sorted[a].value, std::get<1>(tuple));
+                                    if (!CUT(oldcost, wcsp->getUb()) && std::get<2>(tuple) != oldcost) {
+                                        bctr->addcost(x, y, sorted[a].value, std::get<1>(tuple), std::get<2>(tuple) - oldcost);
+                                        propagateBinaryDelayed.insert(bctr);
+                                    }
                                 }
                             }
-                            x->project(sorted[a].value, inclb, true);
-                            if (x->getSupport() == sorted[a].value) {
-                                x->findSupport();
+                            if (addnewbinary) {
+                                x->sortConstraints();
                             }
-                            wcsp->propagate(); // Warning! must fully propagate before testing another value
+                            unaryCosts[x->toIndex(sorted[a].value)] = inclb;
                         }
                     }
                 }
@@ -2025,15 +2042,18 @@ void Solver::singletonConsistency(int restricted)
                 x->queueEAC1();
                 x->queueDEE();
                 for (BinaryConstraint *bctr : propagateBinaryDelayed) {
-                    if (bctr->universal()) {
-                        bctr->deconnect();
-                    } else {
-                        bctr->propagate();
+                    if (bctr->connected()) {
+                        if (bctr->universal()) {
+                            bctr->deconnect();
+                        } else {
+                            bctr->propagate();
+                        }
                     }
                 }
+                wcsp->postUnaryConstraint(varIndex, unaryCosts);
                 wcsp->propagate(); // Warning! after propagate, sorted[].cost may differ from current unary costs
                 for (BinaryConstraint *bctr : propagateBinaryDelayed) {
-                    if (bctr->universal() || (alldiff && alldiff->implies(bctr))) {
+                    if (bctr->connected() && (bctr->universal() || (alldiff && alldiff->implies(bctr)))) {
                         bctr->deconnect();
                     }
                 }

@@ -510,7 +510,7 @@ void tb2init()
     ToulBar2::bisupport = 0.;
 
     // constraint/propagation ordering heuristics
-    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
+    ToulBar2::constrOrdering = CONSTR_ORDER_DAC_ARITY;
     ToulBar2::MSTDAC = false;
     ToulBar2::generation = false;
     ToulBar2::QueueComplexity = false;
@@ -4399,19 +4399,13 @@ void WCSP::preprocessing()
                 Cost mult_ub = (getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, getUb() * MEDIUM_COST)) : getUb();
                 for (int j=0; j < constrs[i]->arity(); j++) {
                     EnumeratedVariable *xj = (EnumeratedVariable *)constrs[i]->getVar(j);
-                    if (xj->getDegree() >  1) {
+                    if (xj->unassigned() && xj->getDegree() >  1) {
                         ConstraintList *constrsj = xj->getConstrs();
                         for (ConstraintList::iterator it = constrsj->begin(); it != constrsj->end(); ++it) {
                             Constraint* ctr = (*it).constr;
                             if (ctr->isBinary() && !ctr->isSep() && constrs[i]->scopeIncluded(ctr)) {
-                                set< pair<Value, Value> > forbidden;
-                                BinaryConstraint *cij = (BinaryConstraint*)ctr;
-                                EnumeratedVariable *xk = (EnumeratedVariable *)((cij->getVar(0)==xj)?cij->getVar(1):cij->getVar(0));
-                                if (xj->getDomainSize() > xk->getDomainSize()) {
-                                    EnumeratedVariable *tmpvar = xj;
-                                    xj = xk;
-                                    xk = tmpvar;
-                                }
+                                BinaryConstraint *cjk = (BinaryConstraint*)ctr;
+                                EnumeratedVariable *xk = (EnumeratedVariable *)((cjk->getVar(0)==xj)?cjk->getVar(1):cjk->getVar(0));
                                 if (xj->isValueNames() && xk->isValueNames()) {
                                     for (Value vj : getEnumDomain(xj->wcspIndex)) {
                                         string svj = xj->getValueName(xj->toIndex(vj));
@@ -4419,32 +4413,22 @@ void WCSP::preprocessing()
                                         unsigned int vkindex = xk->toIndex(svj);
                                         Value vk = xk->toValue(vkindex);
                                         if (xk->canbe(vk)) {
-                                            Cost oldcost = cij->getCost(xj, xk, vj, vk);
-                                            cij->addcost(xj, xk, vj, vk, mult_ub - oldcost);
-                                            forbidden.insert(pair(vj, vk));
+                                            Cost oldcost = cjk->getCost(xj, xk, vj, vk);
+                                            cjk->addcost(xj, xk, vj, vk, mult_ub - oldcost);
                                         }
                                     }
                                 } else {
                                     for (Value vj : getEnumDomain(xj->wcspIndex)) {
                                         if (xk->canbe(vj)) {
-                                            Cost oldcost = cij->getCost(vj, vj);
-                                            cij->addcost(vj, vj, mult_ub - oldcost);
-                                            forbidden.insert(pair(vj, vj));
+                                            Cost oldcost = cjk->getCost(vj, vj);
+                                            cjk->addcost(vj, vj, mult_ub - oldcost);
                                         }
                                     }
                                 }
-                                bool deconnect = true;
-                                for (EnumeratedVariable::iterator iterj = xj->begin(); deconnect && iterj != xj->end(); ++iterj ) {
-                                    for (EnumeratedVariable::iterator iterk = xk->begin(); deconnect && iterk != xk->end(); ++iterk ) {
-                                        if (cij->getCost(xj, xk, *iterj, *iterk) > MIN_COST && forbidden.find(pair(*iterj, *iterk)) == forbidden.end()) {
-                                            deconnect = false;
-                                        }
-                                    }
-                                }
-                                if (deconnect) {
-                                    cij->deconnect();
+                                if (constrs[i]->implies(cjk)) {
+                                    cjk->deconnect();
                                 } else {
-                                    cij->propagate();
+                                    cjk->propagate();
                                 }
                             }
                         }

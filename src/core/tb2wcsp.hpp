@@ -847,15 +847,19 @@ public:
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
     void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 
+    Queue* getQueueNC() { return &NC; }
     void propagateNC(); ///< \brief removes forbidden values
     void propagateIncDec(); ///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)
+    Queue* getQueueAC() { return &AC; }
     void propagateAC(); ///< \brief ensures unary and binary and ternary arc consistency supports
+    Queue* getQueueDAC() { return &DAC; }
     void propagateDAC(); ///< \brief ensures unary and binary and ternary directed arc consistency supports
     void propagateTRWS(); ///< \brief iterates TRW-S until convergence
     void fillEAC2();
     Queue* getQueueEAC1() { return &EAC1; }
     void propagateEAC(); ///< \brief ensures unary existential arc consistency supports
     void propagateSeparator(); ///< \brief exploits graph-based learning
+    Queue* getQueueDEE() { return &DEE; }
     void propagateDEE(); ///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability)
     void propagateFEAC(); ///< \brief seek if new EAC support is also FullEAC support (i.e., compatible with all its EAC value neighbors)
 

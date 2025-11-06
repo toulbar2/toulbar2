@@ -28,6 +28,9 @@ while (( $n < $nend )) ; do
     cp problem.wcsp problemHUN.wcsp
     ./Debug/bin/Linux/toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
+    ub=`expr $ub1 + 2`
+    ./Debug/bin/Linux/toulbar2 problem.wcsp "${@:1}" -ub=$ub -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
+    ub1=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
     ./Debug/bin/Linux/toulbar2 problem.wcsp -x | awk 'BEGIN{opt=-1;} /nb. of unassigned variables: 0/{ sub("[[]","",$0); opt=$4;} END{printf("%d",opt);}' > toulbar2_verif
     ub1b=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_verif`
     if [[ $ub1 -lt 0 ]] ; then
