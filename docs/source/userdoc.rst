@@ -680,7 +680,7 @@ Branching, variable and value ordering
 -sortd  sorts domains in preprocessing based on increasing unary costs
         (works only for binary WCSPs).
 
--sortc  sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2 - default option), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), or the opposite order if using a negative value.
+-sortc  sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), decreasing DAC then increasing arity (10 - default option), or the opposite order if using a negative value.
 
 -solr   solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
 
