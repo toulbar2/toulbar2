@@ -7,6 +7,7 @@
 
 #include "tb2solver.hpp"
 #include "core/tb2vac.hpp"
+#include "core/tb2vacutils.hpp"
 #include "core/tb2domain.hpp"
 #include "core/tb2globalwcsp.hpp"
 #include "applis/tb2pedigree.hpp"
@@ -1896,7 +1897,11 @@ void Solver::singletonConsistency(int restricted)
                                         BinaryConstraint *bctr = x->getConstr(y);
                                         if (bctr == NULL) {
                                             vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
-                                            bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                            if (vaclevel) {
+                                                bctr = (BinaryConstraint *) new VACBinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                            } else {
+                                                bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                            }
                                             propagateBinaryDelayed.insert(bctr);
                                         }
                                         bctr->reconnect(); // should be visible for the projection
@@ -2012,7 +2017,11 @@ void Solver::singletonConsistency(int restricted)
                                     BinaryConstraint *bctr = x->getConstr(y);
                                     if (bctr == NULL) {
                                         vector<Cost> zerocosts(x->getDomainInitSize()*y->getDomainInitSize(), MIN_COST);
-                                        bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                        if (vaclevel) {
+                                            bctr = (BinaryConstraint *) new VACBinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                        } else {
+                                            bctr = new BinaryConstraint((WCSP*)wcsp, x, y, zerocosts);
+                                        }
                                         propagateBinaryDelayed.insert(bctr); // insert in order to check if it can be deconnected later
                                         addnewbinary = true;
                                     }
