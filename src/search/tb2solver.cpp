@@ -1812,6 +1812,12 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 
 void Solver::singletonConsistency(int restricted)
 {
+    double startTime = 0;
+    if (ToulBar2::parallel) {
+        startTime = realTime();
+    } else {
+        startTime = cpuTime();
+    }
     int nbiter = 0;
     bool done = false;
     LcLevelType lclevel = ToulBar2::LcLevel;
@@ -2070,9 +2076,9 @@ void Solver::singletonConsistency(int restricted)
                 if (singletonNC && wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.01) {
                     if (ToulBar2::verbose >= 0) {
                         if (ToulBar2::uai)
-                            cout << "Singleton consistency dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+                            cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
                         else
-                            cout << "Singleton consistency dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+                            cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
                     }
                     done = false;
                 }
@@ -2127,8 +2133,13 @@ void Solver::singletonConsistency(int restricted)
         }
     }
     ToulBar2::vac = vaclevel;
-    if (ToulBar2::verbose >= 0)
-        cout << "Done Singleton Consistency (" << nbiter << " iterations)" << endl;
+    if (ToulBar2::verbose >= 0) {
+        if (ToulBar2::uai)
+            cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << endl;
+        else
+            cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        cout << "Singleton consistency done in " << nbiter << " iterations and " << ((ToulBar2::parallel) ? (realTime() - startTime) : (cpuTime() - startTime)) << " seconds." << endl;
+    }
 }
 
 /*
