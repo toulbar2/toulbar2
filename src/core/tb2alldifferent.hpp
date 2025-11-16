@@ -300,6 +300,32 @@ public:
         return false;
     }
 
+    void projects(Constraint* ctr) FINAL
+    {
+        if (scopeIncluded(ctr) && ctr->isBinary()) {
+            BinaryConstraint *bctr = (BinaryConstraint *)ctr;
+            EnumeratedVariable*x = (EnumeratedVariable *)(bctr->getVar(0));
+            EnumeratedVariable*y = (EnumeratedVariable *)(bctr->getVar(1));
+            Cost mult_ub = (wcsp->getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, wcsp->getUb() * MEDIUM_COST)) : wcsp->getUb();
+            if (x->isValueNames() && y->isValueNames()) {
+                for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+                    string s = x->getValueName(x->toIndex(*iterx));
+                    unsigned int yindex = y->toIndex(s);
+                    Value yval = y->toValue(yindex);
+                    if (y->canbe(yval) && !CUT(bctr->getCost(*iterx,yval), wcsp->getUb())) {
+                        bctr->addcost(*iterx, yval, mult_ub - bctr->getCost(*iterx,yval));
+                    }
+                }
+            } else {
+                for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
+                    if (y->canbe(*iterx) && !CUT(bctr->getCost(*iterx,*iterx), wcsp->getUb())) {
+                        bctr->addcost(*iterx, *iterx, mult_ub - bctr->getCost(*iterx,*iterx));
+                    }
+                }
+            }
+        }
+    }
+
     Cost eval(const Tuple& s) override
     {
         // returns the cost of the corresponding assignment s

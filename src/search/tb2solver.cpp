@@ -1830,9 +1830,14 @@ void Solver::singletonConsistency(int restricted)
     int elimDegree_ = ToulBar2::elimDegree_;
     int DEE_ = ToulBar2::DEE_;
     vector<int> revelimorder(wcsp->numberOfVariables(), -1);
+//    vector<int> invdacorder(wcsp->numberOfVariables(), -1);
+//    vector<int> dacorder(wcsp->numberOfVariables(), -1);
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
         revelimorder[(restricted>=(int)wcsp->numberOfVariables())?(wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1):wcsp->getDACOrder(i)] = i;
+//        invdacorder[i] = wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1;
+//        dacorder[wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1] = i;
     }
+//    vector<int> copydacorder(dacorder);
     while (!done && restricted) {
         done = true;
         unsigned int revelimpos = 0;
@@ -1844,6 +1849,17 @@ void Solver::singletonConsistency(int restricted)
                 restricted--;
                 nbiter++;
                 EnumeratedVariable *x = (EnumeratedVariable *)(((WCSP*)wcsp)->getVar(varIndex));
+
+                // force DAC to converge on x (USELESS OPERATION WHICH TAKES TIME!!!)
+//                int swapdaclast = dacorder.back();
+//                int swapdacxindex = invdacorder[x->wcspIndex];
+//                dacorder.back() = x->wcspIndex;
+//                assert(dacorder[swapdacxindex] == x->wcspIndex);
+//                dacorder[swapdacxindex] = swapdaclast;
+//                wcsp->setDACOrder(dacorder);
+//                dacorder.back() = swapdaclast;
+//                dacorder[swapdacxindex] = x->wcspIndex;
+
                 ValueCost sorted[size];
                 // ValueCost* sorted = new ValueCost [size];
                 // wcsp->iniSingleton(); //Warning! constructive disjunction is not compatible with variable elimination
@@ -2061,6 +2077,9 @@ void Solver::singletonConsistency(int restricted)
                         if (bctr->universal()) {
                             bctr->deconnect();
                         } else {
+                            if (alldiff) {
+                                alldiff->projects(bctr);
+                            }
                             bctr->propagate();
                         }
                     }
@@ -2133,6 +2152,7 @@ void Solver::singletonConsistency(int restricted)
         }
     }
     ToulBar2::vac = vaclevel;
+//    wcsp->setDACOrder(copydacorder);
     if (ToulBar2::verbose >= 0) {
         if (ToulBar2::uai)
             cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << endl;

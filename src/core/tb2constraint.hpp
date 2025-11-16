@@ -229,6 +229,7 @@ public:
         return isincluded;
     }
     virtual bool implies(Constraint* ctr) { return false; } ///< \brief returns true if ctr is redundant wrt the constraint
+    virtual void projects(Constraint* ctr) { } ///< \brief projects the constraint on ctr
 
     void scopeCommon(TSCOPE& scope_out, Constraint* ctr)
     {
