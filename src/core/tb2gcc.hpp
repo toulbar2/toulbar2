@@ -45,7 +45,6 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     vector<int> NoAssignedVar; // List of unassigned variables
     int NbAssigned; // Number of assigned variables
     int NbNoAssigned; // Number of unassigned variables
-    vector<bool> isAssignedValue; // Flags for whether each value is assigned
     vector<bool> varAlreadyProcessed; // Flags for whether a variable has already been processed
     bool isSquare; // Indicates if the cost matrix is square 
     vector<string> UnionVarDomain; // Combined domain of all variables 
@@ -54,7 +53,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     bool SameDomain; // True if all variables have the same domain
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
     vector<int> capacity; // pper bound capacities for every value
-   // vector<int> currentCapacity; //  upper bound capacities for every value
+    vector<int> CurrentCapacity; //  upper bound capacities for every value
    int sumub, sumlb, Gcc_NbValues;
 
     void projectLB(Cost c)
@@ -177,7 +176,7 @@ public:
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
             capacity = vector<int>(NbValues, arity_in); 
-            //currentCapacity = vector<int>(NbValues, 0); 
+            CurrentCapacity = vector<int>(NbValues, 0); 
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1); 
             costMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
@@ -371,6 +370,139 @@ public:
         }
     }
 
+     bool RemoveAssignVar()
+    {  
+
+        /**
+        * @brief Filters and removes assigned values from unassigned variables in the GCC constraint.
+        * 
+        * This function enforces the GCC constraint by:
+        * - Verifying that assigned variables do not share the same value.
+        * - Removing values from unassigned variable domains if already assigned elsewhere.
+        * - Propagating newly assigned variables and updating internal state.
+        * - Triggering full n-ary projection if thresholds on domain sizes or variable count are met.
+        * 
+        * @return true if constraint propagation was successful without needing full projection.
+        * @return false if the constraint switched to full n-ary projection.
+        * 
+        * @throws Throws a contradiction exception (THROWCONTRADICTION) if two variables are assigned the same value.
+        */
+
+        // Initialize tracking vectors for assigned values and processed variables
+        varAlreadyProcessed = vector<bool>(arity_, false);
+
+        // Clear and reserve space for assigned and unassigned variables containers
+        AssignedVar.clear();
+        AssignedVar.reserve(arity_);       
+        NoAssignedVar.clear();
+        NoAssignedVar.reserve(arity_);
+        AssignedVal.clear();
+        AssignedVal.reserve(arity_);
+        // Identify assigned and unassigned variables
+        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+            auto* variable = scope[varIndex];
+
+            if (variable->unassigned()) {
+                // Variable not assigned yet: add to unassigned list
+                NoAssignedVar.push_back(varIndex);
+            } else {
+                // Variable assigned: find the index of its assigned value
+                int valIndex = mapDomainValToIndex[variable->getValueName(variable->toIndex(variable->getValue()))];
+                CurrentCapacity[valIndex]-=1;
+                if (CurrentCapacity[valIndex] > -1) {
+                    AssignedVar.push_back(varIndex);  
+                    AssignedVal.push_back(valIndex);                     
+                } else {
+                     THROWCONTRADICTION;
+                }
+            }
+        }
+
+        NbAssigned = AssignedVar.size();
+        bool VarAssigned;
+        bool NaryPro = false;
+
+        // Propagation loop: remove assigned values from unassigned variables' domains
+        do {
+            VarAssigned = false;
+            vector<int> newlyAssignedVars;
+
+            // For each assigned value, check all unassigned variables
+            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                if (CurrentCapacity[valIndex] > 0) continue; // Skip values not assigned
+
+                for (int varIndex : NoAssignedVar) {
+                    if (varAlreadyProcessed[varIndex]) continue; // Skip already processed vars
+
+                    auto* variable = scope[varIndex];
+                    Value value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+
+                    if (variable->canbe(value)) {
+                        // Remove the assigned value from the domain of unassigned variable
+                        variable->remove(value);
+
+                        if (variable->assigned()) {
+                            // If variable becomes assigned after removal, mark for propagation
+                            newlyAssignedVars.push_back(varIndex);
+                            varAlreadyProcessed[varIndex] = true;
+                        }
+                    }
+                }
+            }
+
+            // Process newly assigned variables after domain filtering
+            for (int varIndex : newlyAssignedVars) {
+                if (connected(varIndex)) { 
+                    // Disconnect variable from constraint and update counts
+                    deconnect(varIndex);
+                    NbNoAssigned--;
+                    NbAssigned++;
+
+                    // Check whether to switch to full n-ary projection based on thresholds
+                    if (getNonAssigned() <= NARYPROJECTIONSIZE &&
+                        (getNonAssigned() <= 1 ||
+                         prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE ||
+                         maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE ||
+                         (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
+                        deconnect();
+                        projectNary();
+                        NaryPro = true;
+                        break;
+                    } else {
+                        // Update assigned values and variables tracking
+                        VarAssigned = true;
+                        auto* variable = scope[varIndex];
+                        int valIndex = mapDomainValToIndex[variable->getValueName(variable->toIndex(variable->getValue()))];
+                        CurrentCapacity[valIndex]-=1;
+                        if (CurrentCapacity[valIndex] > -1) {
+                            AssignedVar.push_back(varIndex);   
+                            AssignedVal.push_back(valIndex);                   
+                        } else {
+                          THROWCONTRADICTION;
+                        }
+                    }
+                } else {
+                    return false;
+                }
+            }
+            
+
+            // Update list of unassigned variables after propagation
+            if (VarAssigned && !NaryPro) {
+                vector<int> updatedNoAssigned;
+                for (int varIndex : NoAssignedVar) {
+                    if (!scope[varIndex]->assigned()) {
+                        updatedNoAssigned.push_back(varIndex);
+                    }
+                }
+                NoAssignedVar.swap(updatedNoAssigned);
+            }
+
+        } while (VarAssigned);
+
+        return (!NaryPro);
+    }
+
     void propagate() override
     {
     /**
@@ -423,8 +555,99 @@ public:
                 }
 
                 if (!skipPropagation) {
-                    // Case when all variables are unassigned or filtering exception or domains differ
-                    if (arity_ ) {
+                     // Initialize number of unassigned variables
+                    NbNoAssigned = getNonAssigned();
+                    // If there are assigned variables, handle accordingly
+                    if (NbNoAssigned < arity_) {
+                        for(int valIndex = 0; valIndex < NbValues; ++valIndex){
+				CurrentCapacity[valIndex] = capacity[valIndex];
+                        }
+                        if (SameDomain && RemoveAssignVar()) {
+                            // Collect unassigned values
+                            vector<int> NoAssignedVal;
+                            vector<int> NoAsscapacity;
+                            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                if (CurrentCapacity[valIndex] > 0) {
+                                    NoAssignedVal.push_back(valIndex);
+                                    NoAsscapacity.push_back(CurrentCapacity[valIndex]);
+                                }
+                            }
+
+                            int NbNoAssignedVal = NoAssignedVal.size();
+                            if(NbNoAssignedVal == 0) THROWCONTRADICTION; 
+
+                            // Initialize cost matrix for the Jonker algorithm
+                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
+
+                            for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                int varIndex = NoAssignedVar[varInd];
+                                auto* variable = scope[varIndex];
+
+                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                    int valIndex = NoAssignedVal[valInd];
+                                    Value val = variable->toValue(valIndex);
+                                    costMatrix[varInd * NbNoAssignedVal + valInd] = variable->canbe(val) ? variable->getCost(val) : current_ub;
+                                }
+                            }
+
+                            // Solve assignment problem using Jonker algorithm
+                            Cost TotalCost = lapjv_gcc(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity);
+
+                            if (TotalCost >= current_ub) {
+                                THROWCONTRADICTION;
+                            } else if (TotalCost >= 0) {
+                                Cost jonker = TotalCost;
+
+                                // Store results from Jonker algorithm
+                                for (int varIndex = 0; varIndex < NbNoAssigned; ++varIndex) {
+                                    auto* variable = scope[NoAssignedVar[varIndex]];
+                                    storeLastAssignment[NoAssignedVar[varIndex]] = variable->toValue(variable->toIndex(UnionVarDomain[NoAssignedVal[rowSol[varIndex]]]));
+                                }
+
+                                for (int varIndex  = 0; varIndex  < NbAssigned; ++varIndex) {
+                                    auto* variable = scope[AssignedVar[varIndex]];
+                                    storeLastAssignment[AssignedVar[varIndex]] = variable->toValue(variable->toIndex(UnionVarDomain[AssignedVal[varIndex]]));
+                                }
+
+                                storeAssignment = true;
+
+                                // Update the lower bound with the Jonker algorithm's total cost
+                                projectLB(jonker);
+
+                                // Adjust unary costs for unassigned variables based on reduced costs
+                                for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                    int varIndex = NoAssignedVar[varInd];
+                                    auto* variable = scope[varIndex];
+
+                                    for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                        int valIndex = NoAssignedVal[valInd];
+                                        Value value = variable->toValue(valIndex);
+
+                                        if (variable->canbe(value)) {
+                                            ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+                                        }
+                                    }
+                                }
+
+                                // Update support values if needed for unassigned variables
+                                for (int varInd  = 0; varInd  < NbNoAssigned; ++varInd ) {
+                                    int varIndex = NoAssignedVar[varInd];
+                                    auto* variable = scope[varIndex];
+                                    Value optimalValue = storeLastAssignment[varIndex];
+                                    if (variable->getSupport() != optimalValue) {
+                                        if (ToulBar2::verbose > 0)
+                                            cout << "CHANGE GCC SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
+#ifndef NDEBUG
+                                        variable->queueEAC1(); // EAC support may have been lost
+#endif
+                                        variable->setSupport(optimalValue);
+                                        assert(variable->getCost(variable->getSupport()) == MIN_COST);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (arity_  == NbNoAssigned || !SameDomain) {
                         Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
                         // Initialize the cost matrix for all variables and their domain values
@@ -437,9 +660,6 @@ public:
                                 costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] = variable->canbe(value) ? variable->getCost(value) : current_ub;
                             }
                         }
-                          //for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-                              //currentCapacity[valIndex] = capacity[valIndex];
-                           // }
                         // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                         Cost TotalCost;
                         TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity);
