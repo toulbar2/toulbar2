@@ -245,7 +245,9 @@ public:
         assert(from != NULL);
         if (from == this) {
             if (getNonAssigned() == arity_ || deconnected()) {
-                Constraint::incConflictWeight(1);
+                if (arity_ < (int)wcsp->numberOfVariables()) { // SdG: no need to increase weightedDegree of all problem variables
+                    Constraint::incConflictWeight(1);
+                }
             } else {
                 for (int i = 0; i < arity_; i++) {
                     if (connected(i)) {

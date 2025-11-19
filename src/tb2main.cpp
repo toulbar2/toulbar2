@@ -1025,9 +1025,9 @@ void help_msg(char* toulbar2filename)
     cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
     cout << "   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
     cout << "   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
-    cout << "   -S=[integer] : preprocessing only: performs restricted singleton consistency on at-most a given number of variables (all variables if no integer value is given)";
+    cout << "   -S=[float] : preprocessing only: performs restricted singleton consistency on at-most a given number of variables (all variables if no integer value is given, change stopping accuracy if floating-point value is given in [0,1[)";
     if (ToulBar2::singletonConsistency)
-        cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables)";
+        cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables and stopping accuracy of " << ToulBar2::singletonAccuracy << ")";
     cout << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
@@ -1925,8 +1925,14 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_singletonConsistency) {
                 if (args.OptionArg() != NULL) {
                     int size = atol(args.OptionArg());
-                    if (size >= 0)
+                    if (size > 0)
                         ToulBar2::singletonConsistency = size;
+                    float accuracy = atof(args.OptionArg());
+                    if (accuracy >= 0. && accuracy < 1.) {
+                        ToulBar2::singletonAccuracy = accuracy;
+                        if (ToulBar2::singletonConsistency == 0)
+                            ToulBar2::singletonConsistency = INT_MAX;
+                    }
                 } else
                     ToulBar2::singletonConsistency = INT_MAX;
                 if (ToulBar2::debug && ToulBar2::singletonConsistency > 0)

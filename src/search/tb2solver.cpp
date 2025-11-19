@@ -2077,7 +2077,7 @@ void Solver::singletonConsistency(int restricted)
                         if (bctr->universal()) {
                             bctr->deconnect();
                         } else {
-                            if (alldiff) {
+                            if (alldiff && ToulBar2::preprocessNary > 0) {
                                 alldiff->projects(bctr);
                             }
                             bctr->propagate();
@@ -2092,7 +2092,7 @@ void Solver::singletonConsistency(int restricted)
                     }
                 }
                 initGap(wcsp->getLb(), wcsp->getUb());
-                if (singletonNC && wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.01) {
+                if (singletonNC && wcsp->getLb() > previouslb && (Double)(wcsp->getLb() - previouslb) / wcsp->getLb() > ToulBar2::singletonAccuracy) {
                     if (ToulBar2::verbose >= 0) {
                         if (ToulBar2::uai)
                             cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;

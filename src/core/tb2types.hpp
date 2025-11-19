@@ -850,6 +850,7 @@ public:
     static Cost deltaUbAbsolute; ///< \brief stops search if the absolute optimality gap reduces below a given value (command line option -agap)
     static Double deltaUbRelativeGap; ///< \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
     static int singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
+    static Double singletonAccuracy; ///< \brief in preprocessing, stopping accuracy condition for singleton node consistency (command line option -S)
     static int vacValueHeuristic; ///< \brief VAC-based and Knapsack value (and variable) ordering heuristics (command line options -V and -A)
     static BEP* bep; ///< \internal do not use
     static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
