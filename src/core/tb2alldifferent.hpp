@@ -179,6 +179,18 @@ public:
                     deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
                 }
             }
+
+            // Test value symmetries
+            for (unsigned int a = 0; a < NbValues; ++a) {
+                for (unsigned int b = a+1; b < NbValues; ++b) {
+                    if (valueSymmetry(UnionVarDomain[a], UnionVarDomain[b])) {
+                        if (ToulBar2::verbose >= 1) {
+                            cout << "detect value symmetry between " <<  UnionVarDomain[a] << " and " << UnionVarDomain[b] << endl;
+                        }
+                    }
+                }
+            }
+
             // Initialize 
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
@@ -196,7 +208,7 @@ public:
     }
 
 
-    virtual ~AllDifferentConstraint() {}
+    virtual ~AllDifferentConstraint() { delete[] rowSol; delete[] ReduceCostRow; delete[] ReduceCostCol; }
 
     void read(istream& file) // TODO: add a parameter for controlling the level of propagation if necessary
     {
@@ -326,6 +338,44 @@ public:
                 }
             }
         }
+    }
+
+    bool valueSymmetry(string stra, string strb) {
+        if (!isSquare) {
+            return false;
+        }
+        for (int j=0; j < arity_; j++) {
+            EnumeratedVariable *xj = (EnumeratedVariable *)getVar(j);
+            unsigned int ida = xj->toIndex(stra);
+            Value xja = xj->toValue(ida);
+            unsigned int idb = xj->toIndex(strb);
+            Value xjb = xj->toValue(idb);
+            if (xj->cannotbe(xja) || xj->cannotbe(xjb) || xj->getCost(xja) != xj->getCost(xjb)) {
+                return false;
+            }
+            if (xj->unassigned() && xj->getDegree() >  1) {
+                ConstraintList *constrsj = xj->getConstrs();
+                for (ConstraintList::iterator it = constrsj->begin(); it != constrsj->end(); ++it) {
+                    Constraint* ctr = (*it).constr;
+                    if (ctr->isBinary() && !ctr->isSep() && scopeIncluded(ctr)) {
+                        BinaryConstraint *cjk = (BinaryConstraint*)ctr;
+                        EnumeratedVariable *xk = (EnumeratedVariable *)((cjk->getVar(0)==xj)?cjk->getVar(1):cjk->getVar(0));
+                        unsigned int ida = xk->toIndex(stra);
+                        Value xka = xk->toValue(ida);
+                        unsigned int idb = xk->toIndex(strb);
+                        Value xkb = xk->toValue(idb);
+                        for (EnumeratedVariable::iterator iterk = xk->begin(); iterk != xk->end(); ++iterk) {
+                            if (*iterk != xka && *iterk != xkb && cjk->getCost(xj, xk, xja, *iterk) != cjk->getCost(xj, xk, xjb, *iterk)) {
+                                return false;
+                            }
+                        }
+                    } else if (!ctr->isAllDiff()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     Cost eval(const Tuple& s) override
