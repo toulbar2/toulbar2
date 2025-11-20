@@ -54,7 +54,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
     vector<int> capacity; // pper bound capacities for every value
     vector<int> CurrentCapacity; //  upper bound capacities for every value
-   int sumub, sumlb, Gcc_NbValues;
+    int sumub, sumlb, Gcc_NbValues;
 
     void projectLB(Cost c)
     {
@@ -163,15 +163,6 @@ public:
                 mapDomainValToIndex[UnionVarDomain[valIndex]] = valIndex;
             }
 
-            // If more values than variables, cost matrix is not square
-            if(sumub > arity_in && Gcc_NbValues == NbValues ) THROWCONTRADICTION;
-            if (Gcc_NbValues < NbValues || sumub > arity_in) {
-                isSquare = false;
-                for (int varIndex = 0; varIndex < arity_in; varIndex++) {
-                    // Initialize extended cost vector for each variable
-                    deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
-                }
-            }
             // Initialize 
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1); 
@@ -191,7 +182,7 @@ public:
         }
     }
 
-    virtual ~GlobalCardinalityConstraint() {}
+    virtual ~GlobalCardinalityConstraint() { delete[] rowSol; delete[] ReduceCostRow; delete[] ReduceCostCol; }
 
     void read(istream& file) // TODO: add a parameter for controlling the level of propagation if necessary
     {
@@ -221,6 +212,16 @@ public:
             }   
         }
         if (sumlb > arity_) THROWCONTRADICTION;
+        //if(sumub > arity_ && Gcc_NbValues == NbValues ) THROWCONTRADICTION; //SdG: WHY???
+
+        // If more values than variables, cost matrix is not square
+        if (Gcc_NbValues < NbValues || sumub > arity_) {
+            isSquare = false;
+            for (int varIndex = 0; varIndex < arity_; varIndex++) {
+                // Initialize extended cost vector for each variable
+                deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
+            }
+        }
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but no other preprocessing
@@ -241,7 +242,9 @@ public:
         assert(from != NULL);
         if (from == this) {
             if (getNonAssigned() == arity_ || deconnected()) {
-                Constraint::incConflictWeight(1);
+                if (arity_ < (int)wcsp->numberOfVariables()) { // SdG: no need to increase weightedDegree of all problem variables
+                    Constraint::incConflictWeight(1);
+                }
             } else {
                 for (int i = 0; i < arity_; i++) {
                     if (connected(i)) {
