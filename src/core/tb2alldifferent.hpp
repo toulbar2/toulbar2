@@ -181,15 +181,15 @@ public:
             }
 
             // Test value symmetries
-            for (unsigned int a = 0; a < NbValues; ++a) {
-                for (unsigned int b = a+1; b < NbValues; ++b) {
-                    if (valueSymmetry(UnionVarDomain[a], UnionVarDomain[b])) {
-                        if (ToulBar2::verbose >= 1) {
-                            cout << "detect value symmetry between " <<  UnionVarDomain[a] << " and " << UnionVarDomain[b] << endl;
-                        }
-                    }
-                }
-            }
+//            for (unsigned int a = 0; a < NbValues; ++a) {
+//                for (unsigned int b = a+1; b < NbValues; ++b) {
+//                    if (valueSymmetry(UnionVarDomain[a], UnionVarDomain[b])) {
+//                        if (ToulBar2::verbose >= 1) {
+//                            cout << "detect value symmetry between " <<  UnionVarDomain[a] << " and " << UnionVarDomain[b] << endl;
+//                        }
+//                    }
+//                }
+//            }
 
             // Initialize 
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
