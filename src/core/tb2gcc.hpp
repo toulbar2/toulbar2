@@ -212,7 +212,7 @@ public:
             }   
         }
         if (sumlb > arity_) THROWCONTRADICTION;
-        //if(sumub > arity_ && Gcc_NbValues == NbValues ) THROWCONTRADICTION; //SdG: WHY???
+        if (sumub < arity_ && Gcc_NbValues == NbValues) THROWCONTRADICTION;
 
         // If more values than variables, cost matrix is not square
         if (Gcc_NbValues < NbValues || sumub > arity_) {
