@@ -508,19 +508,19 @@ public:
 
     void propagate() override
     {
-    /**
-     * @brief Propagate the AllDifferent constraint to enforce consistency and improve problem lower bound.
-     * 
-     * This method performs constraint propagation by checking assigned variables,
-     * removing inconsistent values, computing lower bounds using the Jonker algorithm,
-     * and updating unary costs and supports accordingly.
-     * 
-     * It handles different cases depending on whether variables are assigned or not,
-     * if the domains are the same, and whether "excepted" values are considered.
-     * 
-     * @throws TimeOut if the propagation is interrupted.
-     * @throws ContradictionException if the constraint becomes unsatisfiable.
-     */
+        /**
+         * @brief Propagate the AllDifferent constraint to enforce consistency and improve problem lower bound.
+         *
+         * This method performs constraint propagation by checking assigned variables,
+         * removing inconsistent values, computing lower bounds using the Jonker algorithm,
+         * and updating unary costs and supports accordingly.
+         *
+         * It handles different cases depending on whether variables are assigned or not,
+         * if the domains are the same, and whether "excepted" values are considered.
+         *
+         * @throws TimeOut if the propagation is interrupted.
+         * @throws ContradictionException if the constraint becomes unsatisfiable.
+         */
         if (ToulBar2::dumpWCSP % 2) // skip propagation if the problem is dumped before preprocessing
             return;
 
@@ -558,12 +558,12 @@ public:
                 }
 
                 if (!skipPropagation) {
-                     // Initialize number of unassigned variables
+                    // Initialize number of unassigned variables
                     NbNoAssigned = getNonAssigned();
                     // If there are assigned variables, handle accordingly
                     if (NbNoAssigned < arity_) {
                         for(int valIndex = 0; valIndex < NbValues; ++valIndex){
-				CurrentCapacity[valIndex] = capacity[valIndex];
+                            CurrentCapacity[valIndex] = capacity[valIndex];
                         }
                         if (SameDomain && RemoveAssignVar()) {
                             // Collect unassigned values
@@ -722,15 +722,35 @@ public:
         if (!storeAssignment) {
             return false;
         }
+        map<Value, int> count;
         for (int i = 0; i < arity_; i++) {
+            if (count.find(storeLastAssignment[i]) != count.end()) {
+                count[storeLastAssignment[i]]++;
+            } else {
+                count[storeLastAssignment[i]] = 1;
+            }
             if (scope[i]->cannotbe(storeLastAssignment[i]) || scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
-                  if (scope[i]->cannotbe(storeLastAssignment[i])) {
-                         cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has been removed!" << endl;
+                if (scope[i]->cannotbe(storeLastAssignment[i])) {
+                    cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has been removed!" << endl;
                 } else if (scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has nonzero cost!" << endl;
                 }
                 return false;
             } 
+        }
+        for (auto e : bounds) {
+            int mycount = 0;
+            if (count.find(e.first)!=count.end()) {
+                mycount = count[e.first];
+            }
+            if (mycount < e.second.first || mycount > e.second.second) {
+                if (mycount < e.second.first) {
+                    cout << " value " << e.first << " has underpassed the cardinality constraint of " << e.second.first << endl;
+                } else if (mycount > e.second.second) {
+                    cout << " value " << e.first << " has overpassed the cardinality constraint of " << e.second.second << endl;
+                }
+                return false;
+            }
         }
         return true;
     }
@@ -748,8 +768,8 @@ public:
         if (scope[index]->unassigned()) {
             bool revise = ToulBar2::FullEAC && getVar(index)->cannotbe(getVar(index)->getSupport());
             if (!storeAssignment || scope[index]->cannotbe(storeLastAssignment[index])) {
-	        propagate();
-	    }
+                propagate();
+            }
             if (revise)
                 reviseEACGreedySolution();
         } else {
@@ -761,8 +781,8 @@ public:
         // TODO: incremental cost propagation
         bool revise = ToulBar2::FullEAC && (getVar(index)->cannotbe(getVar(index)->getSupport()) || getVar(index)->getCost(getVar(index)->getSupport()) > MIN_COST);
         if (!storeAssignment || scope[index]->cannotbe(storeLastAssignment[index]) || scope[index]->getCost(storeLastAssignment[index]) > MIN_COST) {
-	    propagate();
-	}
+            propagate();
+        }
         if (revise)
             reviseEACGreedySolution();
     }

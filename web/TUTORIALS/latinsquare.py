@@ -16,10 +16,10 @@ for i in range(N):
 
 for i in range(N):
     #Create a constraint all different with variables on the same row
-    Problem.AddAllDifferent(['Cell(' + str(i) + ',' + str(j) + ')' for j in range(N)], encoding = 'salldiffkp')
+    Problem.AddAllDifferent(['Cell(' + str(i) + ',' + str(j) + ')' for j in range(N)])
 
     #Create a constraint all different with variables on the same column
-    Problem.AddAllDifferent(['Cell(' + str(j) + ',' + str(i) + ')'for j in range(N)], encoding = 'salldiffkp')
+    Problem.AddAllDifferent(['Cell(' + str(j) + ',' + str(i) + ')'for j in range(N)])
 
 #Random unary costs
 for i in range(N):

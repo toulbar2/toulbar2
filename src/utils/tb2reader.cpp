@@ -152,6 +152,7 @@ typedef struct {
  *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
  *     - knapsackv \e capacity \e nb_triplets (\e variable \e value \e weight)* to express a reverse knapsack constraint with a list of triplets variable, value, and its corresponding weight
  *     - salldiffkp hard \e UB to express a hard alldifferent constraint decomposed into knapsack cost functions
+ *     - sgcckp hard \e UB \e nb_values (\e value \e lower_bound \e upper_bound)* to express a hard global cardinality constraint  decomposed into knapsack cost functions with for each value its lower and upper bound capacity
  *     - wcsp \e lb \e ub \e duplicatehard \e strongduality \e wcsp to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in wcsp format such that its valid solutions must have a cost value in [lb,ub[.
  *
  * - Global cost functions using a flow-based propagator:
@@ -1521,6 +1522,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "salldiffdp", ":metric:K:cost:c" },
         { "salldiffkp", ":metric:K:cost:c" },
         { "sgccdp", ":metric:K:cost:c:bounds:[vNN]+" },
+        { "sgcckp", ":metric:K:cost:c:bounds:[vNN]+" },
         { "max", ":defaultcost:c:tuples:[Vvc]+" },
         { "smaxdp", ":defaultcost:c:tuples:[Vvc]+" },
         { "MST", "" },

@@ -2426,6 +2426,21 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
+    } else if (gcname == "sgcckp") {
+        string semantics;
+        Cost baseCost;
+        int nvalues;
+        vector<BoundedObjValue> values;
+        file >> semantics >> baseCost >> nvalues;
+        for (int i = 0; i < nvalues; i++) {
+            int d, high, low;
+            file >> d >> low >> high;
+            values.push_back(BoundedObjValue(d, high, low));
+        }
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
+        postWGcc(scopeIndex, arity, semantics, "knapsack", baseCost, values);
+        return -1;
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
@@ -3199,6 +3214,41 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
         }
         postWGcc(scopeIndex, arity, semantics, baseCost, values_, nbValues, lb, ub);
         return INT_MIN;
+    }
+
+    if (propagator == "knapsack") {
+        if (semantics == "hard") {
+            for (auto& iter : values) {
+                if ((int)iter.upper < arity) {
+                    string params = to_string(-(int)(iter.upper));
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(iter.val)) {
+                            params += to_string(" 1 ") + to_string(iter.val) + to_string(" -1");
+                        } else {
+                            params += to_string(" 0");
+                        }
+                    }
+                    istringstream file(params);
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
+                }
+                if ((int)iter.lower > 0) {
+                    string params = to_string(iter.lower);
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(iter.val)) {
+                            params += to_string(" 1 ") + to_string(iter.val) + to_string(" 1");
+                        } else {
+                            params += to_string(" 0");
+                        }
+                    }
+                    istringstream file(params);
+                    postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
+                }
+            }
+            return INT_MIN;
+        } else {
+            cerr << "Error: post GlobalCardinalityConstraint with knapsack propagator cannot be a soft constraint! (use instead semantics=\"hard\" and baseCost=" << getUb() << ")" << endl;
+            throw WrongFileFormat();
+        }
     }
 
     if (propagator == "flow") {

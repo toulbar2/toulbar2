@@ -510,6 +510,19 @@ Global cost functions using a dedicated propagator:
                   }
               }
 
+  - :code:`"sgcckp"` with parameters array :code:`[metric: "var" cost: "cost" bounds: [(value lower_bound upper_bound)*]]` to express a hard global cardinality constraint (decomposes into :code:`knapsackv` cost functions) with for each value its lower and upper bound
+
+    - example: ::
+
+        name: {scope: [v1 v2 v3 v4]
+               type: sgcckp
+               params: {
+                  metric: hard
+                  cost: inf
+                  bounds: [[0 0 1] [1 2 3]]
+                  }
+              }
+
   - :code:`"clique"` with parameters :code:`rhs: 1 values: [([(value)*])*]` to express a hard global clique constraint to restrict the number of variables taking their value into a given set of values (one set per variable) to at most 1 occurrence for all the variables. A clique of binary constraints must also be added to forbid any two variables from using both the restricted values.  
 
     - example: ::

@@ -14,7 +14,7 @@ for i in range(N):
 		#Create a variable for each square
 		Problem.AddVariable('Cell(' + str(i) + ',' + str(j) + ')', range(1,N*N+1))
 
-Problem.AddAllDifferent(['Cell(' + str(i) + ',' + str(j) + ')' for i in range(N) for j in range(N)], encoding = 'salldiffkp')
+Problem.AddAllDifferent(['Cell(' + str(i) + ',' + str(j) + ')' for i in range(N) for j in range(N)])
 
 for i in range(N):
 	#Create a sum constraint with variables on the same row

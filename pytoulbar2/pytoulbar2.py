@@ -448,7 +448,7 @@ class CFN:
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
             bounds (list): list of triplets (domain value, lower bound capacity, upper bound capacity).
-            encoding (str): encoding used to represent the Gcc (available choices are 'hungarian' or 'sgcc' or 'sgccdp' or 'wgcc').
+            encoding (str): encoding used to represent the Gcc (available choices are 'hungarian' or 'sgcc' or 'sgccdp' or 'sgcckp' or 'wgcc').
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
         """
@@ -479,6 +479,8 @@ class CFN:
             self.CFN.wcsp.postWGcc(iscope, "var", "flow", tb2.MAX_COST, bbounds)
         elif (encoding=='sgccdp'):
             self.CFN.wcsp.postWGcc(iscope, "var", "DAG", tb2.MAX_COST, bbounds)
+        elif (encoding=='sgcckp'):
+            self.CFN.wcsp.postWGcc(iscope, "hard", "knapsack", tb2.MAX_COST, bbounds)
         elif (encoding=='wgcc'):
             self.CFN.wcsp.postWGcc(iscope, "hard", "network", tb2.MAX_COST, bbounds)
         else:
