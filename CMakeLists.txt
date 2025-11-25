@@ -123,7 +123,7 @@ ENDIF(CPLEX)
 # LR-BCD Solver configuration
 SET(LR_BCD_BUILD OFF)
 IF(LR_BCD)
-  find_package (Eigen3 3.0 REQUIRED NO_MODULE)
+  find_package (Eigen3 REQUIRED NO_MODULE)
   SET (all_depends  ${all_depends} "Eigen3::Eigen")
   SET(LR_BCD_BUILD ON)
 ENDIF(LR_BCD)
