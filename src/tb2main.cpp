@@ -275,9 +275,11 @@ enum {
     OPT_RASPSlds,
 
     OPT_singletonConsistency,
+    OPT_GILMORELAWLER,
     OPT_GenAMOforPB,
     OPT_DynPB,
     NO_OPT_singletonConsistency,
+    NO_OPT_GILMORELAWLER,
     OPT_vacValueHeuristic,
     NO_OPT_vacValueHeuristic,
     OPT_preprocessTernary,
@@ -565,6 +567,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
     { OPT_singletonConsistency, (char*)"-S", SO_OPT },
+    { NO_OPT_singletonConsistency, (char*)"-S:", SO_OPT },
+    { OPT_GILMORELAWLER, (char*)"-glb", SO_NONE },
+    { NO_OPT_GILMORELAWLER, (char*)"-glb:", SO_NONE },
     { OPT_GenAMOforPB, (char*)"-amo", SO_OPT },
     { OPT_DynPB, (char*)"-kpdp", SO_OPT },
     { OPT_preprocessTernary, (char*)"-t", SO_OPT },
@@ -1028,6 +1033,10 @@ void help_msg(char* toulbar2filename)
     cout << "   -S=[float] : preprocessing only: performs restricted singleton consistency on at-most a given number of variables (all variables if no integer value is given, change stopping accuracy if floating-point value is given in [0,1[)";
     if (ToulBar2::singletonConsistency)
         cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables and stopping accuracy of " << ToulBar2::singletonAccuracy << ")";
+    cout << endl;
+    cout << "   -glb : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound instead of EAC-like greedy heuristic";
+    if (ToulBar2::GilmoreLawler)
+        cout << " (default option)";
     cout << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
@@ -1920,6 +1929,12 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cardinality = true;
             } else if (args.OptionId() == NO_OPT_card) {
                 ToulBar2::cardinality = false;
+            }
+
+            if (args.OptionId() == OPT_GILMORELAWLER) {
+                ToulBar2::GilmoreLawler = true;
+            } else if (args.OptionId() == NO_OPT_GILMORELAWLER) {
+                ToulBar2::GilmoreLawler = false;
             }
 
             if (args.OptionId() == OPT_singletonConsistency) {
