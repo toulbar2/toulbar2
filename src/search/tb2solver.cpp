@@ -2108,7 +2108,7 @@ void Solver::singletonConsistency(int restricted)
                             if (bctr->universal()) {
                                 bctr->deconnect();
                             } else {
-                                if (alldiff && ToulBar2::preprocessNary > 0) {
+                                if (alldiff && alldiff->connected() && ToulBar2::preprocessNary > 0) {
                                     alldiff->projects(bctr);
                                 }
                                 bctr->propagate();
@@ -2124,7 +2124,7 @@ void Solver::singletonConsistency(int restricted)
                     wcsp->postUnaryConstraint(varIndex, unaryCosts);
                     wcsp->propagate(); // Warning! after propagate, sorted[].cost may differ from current unary costs
                     for (BinaryConstraint *bctr : propagateBinaryDelayed) {
-                        if (bctr->connected() && (bctr->universal() || (alldiff && alldiff->implies(bctr)))) {
+                        if (bctr->connected() && (bctr->universal() || (alldiff && alldiff->connected() && alldiff->implies(bctr)))) {
                             bctr->deconnect();
                         }
                     }
