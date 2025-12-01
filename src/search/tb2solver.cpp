@@ -1810,7 +1810,7 @@ void Solver::narySortedChoicePointLDS(int varIndex, int discrepancy)
 #endif
 }
 
-void Solver::singletonConsistency(int restricted)
+int Solver::singletonConsistency(int restricted, int startiter)
 {
     double startTime = 0;
     if (ToulBar2::parallel) {
@@ -1818,7 +1818,7 @@ void Solver::singletonConsistency(int restricted)
     } else {
         startTime = cpuTime();
     }
-    int nbiter = 0;
+    int nbiter = startiter;
     LcLevelType lclevel = ToulBar2::LcLevel;
     int vaclevel = ToulBar2::vac;
     if (ToulBar2::vac) {
@@ -2204,13 +2204,15 @@ void Solver::singletonConsistency(int restricted)
     }
     ToulBar2::vac = vaclevel;
 //    wcsp->setDACOrder(copydacorder);
-    if (ToulBar2::verbose >= 0) {
+    initGap(wcsp->getLb(), wcsp->getUb());
+    if (ToulBar2::verbose >= 0 && nbiter > startiter) {
         if (ToulBar2::uai)
             cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << endl;
         else
             cout << "Singleton consistency dual bound at iteration " << nbiter << ": " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
         cout << "Singleton consistency done in " << nbiter << " iterations and " << ((ToulBar2::parallel) ? (realTime() - startTime) : (cpuTime() - startTime)) << " seconds." << endl;
     }
+    return nbiter;
 }
 
 /*
@@ -3396,7 +3398,26 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 #endif
 
     if (ToulBar2::singletonConsistency) {
-        singletonConsistency(ToulBar2::singletonConsistency);
+        int startiter = 0;
+        if (ToulBar2::GilmoreLawler) {
+            Cost previouslb = wcsp->getLb();
+//            LcLevelType prevLc = ToulBar2::LcLevel;
+//            ToulBar2::LcLevel = LC_NC;
+            startiter = singletonConsistency(ToulBar2::singletonConsistency);
+//            ToulBar2::LcLevel = prevLc;
+            ToulBar2::GilmoreLawler = false;
+            ToulBar2::singletonConsistency -= startiter;
+//            wcsp->setDACOrder(dacorder);
+//            wcsp->propagate();
+            initGap(wcsp->getLb(), wcsp->getUb());
+            if (ToulBar2::verbose >= 0) {
+                if (ToulBar2::uai)
+                    cout << "Gilmore-Lawler dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " energy: " << -(wcsp->Cost2LogProb(wcsp->getLb()) + ToulBar2::markov_log) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+                else
+                    cout << "Gilmore-Lawler dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
+            }
+        }
+        singletonConsistency(ToulBar2::singletonConsistency, startiter);
         wcsp->resetWeightedDegree();
         wcsp->propagate();
         wcsp->resetTightness();
