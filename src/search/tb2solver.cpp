@@ -1961,12 +1961,14 @@ int Solver::singletonConsistency(int restricted, int startiter)
                                             if (ToulBar2::GilmoreLawler && binarycostsHiddenFirst.find(bctr) == binarycostsHiddenFirst.end() && cost/inthemiddle > MIN_COST && !CUT(cost, wcsp->getUb())) {
                                                 bctr->addcost(x,y,sorted[a].value,v,-cost/inthemiddle); // binary cost is partially hidden for doing later singleton consistency on variable y
                                                 binarycostsHidden.push_back(make_tuple(bctr, y->wcspIndex, sorted[a].value, v, cost/inthemiddle));
-                                                binarycostsHiddenFirst.insert(bctr);
                                                 cost = bctr->getCost(x,y,sorted[a].value,v);
                                             }
                                             if (cost > MIN_COST && !CUT(cost, wcsp->getUb())) {
                                                 binarycostsBefore.push_back(make_tuple(y->wcspIndex, v, cost));
                                             }
+                                        }
+                                        if (ToulBar2::GilmoreLawler && a == 0 && binarycostsHiddenFirst.find(bctr) == binarycostsHiddenFirst.end()) {
+                                            binarycostsHiddenFirst.insert(bctr);
                                         }
                                     } else if (((*iter).constr->isAllDiff() && (!((*iter).constr->isAllDiffSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4))
                                             || ((*iter).constr->isGCC() && (!((*iter).constr->isGCCSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4))
