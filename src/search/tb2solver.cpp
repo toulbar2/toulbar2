@@ -3400,17 +3400,10 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 #endif
 
     if (ToulBar2::singletonConsistency) {
-        int startiter = 0;
         if (ToulBar2::GilmoreLawler) {
             Cost previouslb = wcsp->getLb();
-//            LcLevelType prevLc = ToulBar2::LcLevel;
-//            ToulBar2::LcLevel = LC_NC;
-            startiter = singletonConsistency(ToulBar2::singletonConsistency);
-//            ToulBar2::LcLevel = prevLc;
-            ToulBar2::GilmoreLawler = false;
+            int startiter = singletonConsistency(ToulBar2::singletonConsistency);
             ToulBar2::singletonConsistency -= startiter;
-//            wcsp->setDACOrder(dacorder);
-//            wcsp->propagate();
             initGap(wcsp->getLb(), wcsp->getUb());
             if (ToulBar2::verbose >= 0) {
                 if (ToulBar2::uai)
@@ -3418,8 +3411,15 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 else
                     cout << "Gilmore-Lawler dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
             }
+            if (ToulBar2::GilmoreLawler == 2) {
+                int prevGLB = ToulBar2::GilmoreLawler;
+                ToulBar2::GilmoreLawler = 0;
+                singletonConsistency(ToulBar2::singletonConsistency, startiter);
+                ToulBar2::GilmoreLawler = prevGLB;
+            }
+        } else {
+            singletonConsistency(ToulBar2::singletonConsistency);
         }
-        singletonConsistency(ToulBar2::singletonConsistency, startiter);
         wcsp->resetWeightedDegree();
         wcsp->propagate();
         wcsp->resetTightness();
