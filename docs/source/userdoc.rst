@@ -721,7 +721,7 @@ Console output
         sets the verbosity level (default 0).
 
 -Z=[integer]
-        debug mode (save problem at each node if verbosity
+        debug mode (during DFS, print current search depth and a rough estimate of remaining search tree size ; during HBFS, print also lb, ub, number of open nodes, size of open node memory, total number of visited nodes) (save problem at each node if verbosity
         option -v=num :math:`>= 1` and -Z=num :math:`>=3`)
 
 -s=[integer]
