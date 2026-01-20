@@ -228,6 +228,8 @@ public:
     bool isGCC() const FINAL { return true; }
     bool isGCCSquare() const FINAL { return isSquare; }
 
+    map<Value, pair<int, int>> getBounds() const { return bounds; }
+
     Cost getDefCost() FINAL { return MAX_COST; }
 
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
@@ -986,6 +988,7 @@ public:
     }
 
 };
+
 #endif /*TB2GCC_HPP_*/
 
 /* Local Variables: */

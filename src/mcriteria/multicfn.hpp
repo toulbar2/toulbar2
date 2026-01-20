@@ -6,13 +6,17 @@
 #ifndef MULTI_CFN_HPP
 #define MULTI_CFN_HPP
 
-#include "toulbar2lib.hpp"
-
 #ifdef ILOGCPLEX
 #include <ilcplex/ilocplex.h>
 #endif
 
-class MultiCFN; // forward delaration
+#include "core/tb2types.hpp"
+
+class WeightedCSP;
+class WCSP;
+class MultiCFN; // forward declaration
+
+using namespace std;
 
 // namespace preventing collisions with tb2 Var and Cost functions classes
 namespace mcriteria {
@@ -58,7 +62,7 @@ class CostFunction {
 
 public:
     enum Type { Tuple,
-        Linear };
+        Linear, AllDiff, GCC };
 
 public:
     /*!
@@ -194,6 +198,78 @@ public:
 public:
     Double capacity;
     std::vector<std::vector<std::pair<unsigned int, Double>>> weights; // for each variable of the scope, a list of values and their weight
+};
+
+/*!
+ * \class AllDiffCostFunction
+ * \brief store an AllDifferent constraint data: name, scope, excepted values
+ */
+class AllDiffCostFunction : public CostFunction {
+
+public:
+    /*!
+     * \brief constructor
+     */
+    AllDiffCostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief print the cost function data
+     * \brief os the stream to print to
+     */
+    void print(std::ostream& os);
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param tuple the tuple
+     */
+    virtual Double getCost(std::vector<unsigned int>& tuple);
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType()
+    {
+        return CostFunction::Type::AllDiff;
+    }
+
+public:
+    std::set<unsigned int> exceptedValues; // a list of values which can be assigned to variables multiple times
+};
+
+/*!
+ * \class GCCCostFunction
+ * \brief store a Global Cardinality Constraint data: name, scope, excepted values
+ */
+class GCCCostFunction : public CostFunction {
+
+public:
+    /*!
+     * \brief constructor
+     */
+    GCCCostFunction(MultiCFN* multicfn, unsigned int net_index);
+
+    /*!
+     * \brief print the cost function data
+     * \brief os the stream to print to
+     */
+    void print(std::ostream& os);
+
+    /*!
+     * \brief return the cost of a given tuple
+     * \param tuple the tuple
+     */
+    virtual Double getCost(std::vector<unsigned int>& tuple);
+
+    /*!
+     * \brief return the type of the cost function
+     */
+    virtual Type getType()
+    {
+        return CostFunction::Type::GCC;
+    }
+
+public:
+    std::map<unsigned int, std::pair<Double, Double>> bounds; // a map for each value, its minimum and maximum occurrence in the scope
 };
 
 } // namespace mcriteria
@@ -449,6 +525,16 @@ private: /* private methods */
     void exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind);
 
     /*!
+     * \brief export an AllDifferent constraint to the wcsp
+     */
+    void exportAllDiffCostFunction(WCSP* wcsp, unsigned int func_ind);
+
+    /*!
+     * \brief export a Global Cardinality Constraint to the wcsp
+     */
+    void exportGCCCostFunction(WCSP* wcsp, unsigned int func_ind);
+
+   /*!
      * \brief  extract the solution and the objective values from the created wcsp
      */
     void extractSolution();
@@ -486,6 +572,20 @@ private: /* private methods */
      * \return true if the solution verifies the constraint
      */
     bool checkLinCostFuncConsistency(unsigned int func_ind, Solution& sol);
+
+    /*!
+     * \brief check if an AllDifferent constraint is verifed for a solution
+     * \param sol the solution to check
+     * \return true if the solution verifies the constraint
+     */
+    bool checkAllDiffCostFuncConsistency(unsigned int func_ind, Solution& sol);
+
+    /*!
+     * \brief check if a GCC constraint is verifed for a solution
+     * \param sol the solution to check
+     * \return true if the solution verifies the constraint
+     */
+    bool checkGCCCostFuncConsistency(unsigned int func_ind, Solution& sol);
 
 #ifdef ILOGCPLEX
 

@@ -243,6 +243,8 @@ public:
     bool isAllDiff() const FINAL { return true; }
     bool isAllDiffSquare() const FINAL { return isSquare; }
 
+    vector<Value> getExceptedValues() const { return exceptedValues; }
+
     Cost getDefCost() FINAL { return MAX_COST; }
 
     Long getConflictWeight() const override { return Constraint::getConflictWeight(); }
@@ -841,8 +843,6 @@ public:
         }
     }
 
-
-
     //checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
     bool verify() override
     {
@@ -1037,6 +1037,7 @@ public:
         os << "]}},\n";
     }
 };
+
 #endif /*TB2ALLDIFFERENT_HPP_*/
 
 /* Local Variables: */

@@ -1,5 +1,5 @@
-#include "multicfn.hpp"
 
+#include "multicfn.hpp"
 using namespace std;
 
 #ifdef ILOGCPLEX

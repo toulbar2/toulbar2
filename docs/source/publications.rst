@@ -169,6 +169,17 @@ What are the algorithms inside toulbar2 ?
   S Buchet, D Allouche, S de Givry, and T Schiex
   In Proc. of CP-AI-OR'2024, Uppsala, Sweden, 2024.
   
+- **Virtual Arc Consistency for Knapsack/generalized linear global constraint (vaclin)**
+
+  `Virtual arc consistency for linear constraints in cost function networks <https://miat.inrae.fr/degivry/Montalbano25a.pdf>`_,
+  P Montalbano, S de Givry, and G Katsirelos,
+  In Proc. of ICTAI-25, Athens, Greece, 2025.  
+ 
+- **AllDifferent global constraint (alldiff)**
+
+  `Assignment problems in cost function networks <https://miat.inrae.fr/degivry/Sewa26a.pdf>`_,
+  G Sewa, D Allouche, S de Givry, G Katsirelos, P Montalbano, and T Schiex
+  In Proc. of AAAI-26, Singapore, 2026.  
    
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------

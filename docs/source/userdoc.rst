@@ -367,10 +367,16 @@ Preprocessing
 
 -mst    find a maximum spanning tree ordering for DAC
 
--S=[integer]
+-S=[integer|float]
         preprocessing only: performs singleton consistency restricted 
         to the first variables following the DAC ordering (or all the
-        variables if no parameter is given).
+        variables if no parameter is given, change stopping accuracy
+        if floating-point value is given in [0,1[, default value is 0.0001).
+  
+-glb=[integer]
+        preprocessing only: in conjunction with option -S, performs
+        singleton node consistency using Gilmore-Lawler lower bound 
+        before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic.
 
 -M=[integer]
         preprocessing only: 

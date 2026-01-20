@@ -14,6 +14,7 @@
 #include <iostream>
 #include <cstdlib> 
 #include "core/tb2enumvar.hpp"
+
 using namespace std;
 
 /**
@@ -95,7 +96,7 @@ augmenting_path(intptr_t dim_val, vector<Cost>& cost, vector<Cost>& u,
     return sink;
 }
 
-Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST)
+static Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST)
 {
 
     // initialize variables
@@ -234,7 +235,7 @@ augmenting_path(intptr_t dim_val, vector<Cost>& cost, vector<Cost>& u,
     return sink;
 }
 
-Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST, vector<int>& exceptedValIndex)
+static Cost lapjv(intptr_t dim_var, intptr_t dim_val, vector<Cost>& cost,  int* b,  Cost* usol, Cost* vsol, Cost MAX_COST, vector<int>& exceptedValIndex)
 {
 
     // initialize variables
@@ -387,8 +388,7 @@ augmenting_path_gcc(intptr_t dim_val,                 // number of columns (m)
     return sink;
 }
 
-
-Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
+static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
                          const vector<Cost>& cost,
                          int* b,           // size dim_var, output: column assigned to row i
                          Cost* usol, Cost* vsol,      // output duals (u size n, v size m)
@@ -470,6 +470,7 @@ Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
 
     return total_cost;
 }
+
 #endif // LAPJV_HPP_
 
 /* Local Variables: */
