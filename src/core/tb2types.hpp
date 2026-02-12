@@ -851,6 +851,7 @@ public:
     static Double deltaUbRelativeGap; ///< \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
     static int singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
     static Double singletonAccuracy; ///< \brief in preprocessing, stopping accuracy condition for singleton node consistency (command line option -S)
+    static int ReducedCostsFiltering; ///< \brief in alldifferent and gcc, reduced costs filtering level condition (command line option -camb)
     static int GilmoreLawler; ///< \brief in preprocessing, singleton node consistency using Gilmore-Lawler lower bound before/instead of EAC-like greedy lower bound (command line option -S -glb)
     static int vacValueHeuristic; ///< \brief VAC-based and Knapsack value (and variable) ordering heuristics (command line options -V and -A)
     static BEP* bep; ///< \internal do not use

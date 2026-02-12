@@ -274,6 +274,9 @@ enum {
     NO_OPT_RASPSreset,
     OPT_RASPSlds,
 
+    OPT_ReducedCostsFiltering,
+    NO_OPT_ReducedCostsFiltering,
+
     OPT_singletonConsistency,
     OPT_GILMORELAWLER,
     OPT_GenAMOforPB,
@@ -563,6 +566,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_trwsNIter, (char*)"--trws-n-iters", SO_REQ_SEP },
     { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
     { OPT_trwsNIterComputeUb, (char*)"--trws-n-iters-compute-ub", SO_REQ_SEP },
+
+    //Reduced costs filtering for alldifferent and gcc
+    { OPT_ReducedCostsFiltering, (char*)"-camb", SO_OPT },
+    { NO_OPT_ReducedCostsFiltering, (char*)"-camb:", SO_NONE },
 
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -1037,6 +1044,12 @@ void help_msg(char* toulbar2filename)
     cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
+    
+     if (ToulBar2::ReducedCostsFiltering)
+        cout << " (default option " << ToulBar2::ReducedCostsFiltering<< ")";
+    cout<<endl;
+    cout << "   -camb=[integer] : Reduced costs filtering for alldifferent and gcc";
+  
     if (ToulBar2::FullEAC)
         cout << " (default option)";
     cout << endl;
@@ -1959,6 +1972,21 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "singleton consistency OFF" << endl;
                 ToulBar2::singletonConsistency = 0;
             }
+            
+
+            if (args.OptionId() == OPT_ReducedCostsFiltering) {
+                if (args.OptionArg() != NULL) {
+                    int rcf = atoi(args.OptionArg());
+                    if(rcf < 0 || rcf > 100) rcf = 10;
+                    ToulBar2::ReducedCostsFiltering = rcf;
+                } else {
+                    ToulBar2::ReducedCostsFiltering = 10;
+                }
+            } else if (args.OptionId() == NO_OPT_ReducedCostsFiltering) {
+                ToulBar2::ReducedCostsFiltering = 0;
+            }
+
+
 
 #ifdef BOOST
             if (args.OptionId() == OPT_GenAMOforPB) {

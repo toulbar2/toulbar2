@@ -165,9 +165,10 @@ bool ToulBar2::MSTDAC;
 int ToulBar2::DEE;
 int ToulBar2::DEE_;
 int ToulBar2::nbDecisionVars;
-int ToulBar2::singletonConsistency;
+int ToulBar2::singletonConsistency; 
 Double ToulBar2::singletonAccuracy;
 int ToulBar2::GilmoreLawler;
+int ToulBar2::ReducedCostsFiltering;
 int ToulBar2::vacValueHeuristic;
 
 externalevent ToulBar2::setvalue;
@@ -445,6 +446,7 @@ void tb2init()
     ToulBar2::costfuncSeparate = true;
     ToulBar2::preprocessNary = 10;
     ToulBar2::singletonConsistency = 0;
+    ToulBar2::ReducedCostsFiltering = 0;
     ToulBar2::singletonAccuracy = 0.0001;
     ToulBar2::GilmoreLawler = 0;
     ToulBar2::minsumDiffusion = 0;
