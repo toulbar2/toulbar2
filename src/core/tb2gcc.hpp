@@ -69,7 +69,6 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     vector<uint8_t> AlreadyUse;
     vector<uint8_t> inHeap;
     vector<Cost> distanceToVar; // shortest distances from source variable to each variable
-    unsigned int seed;
     int Q;
     double FiltLevel;
 
@@ -118,7 +117,7 @@ public:
         , NbValues(0)
         , NbAssigned(0)
         , NbNoAssigned(arity_in)
-        , seed(42)
+        , FiltLevel(0.0)
     {
         if (arity_in > 0) {
             SameDomain = true;
@@ -744,7 +743,7 @@ public:
                                     }
                                 }
                                 
-                                // Filtre variables domains with Sellmann or Cambazard method
+                                // Filtering of variables domains with Sellmann or Cambazard method
                                 if (FiltLevel > 0) {
                                     bool NaryPro = false;
                                     int dimVal = NbNoAssignedVal;
@@ -759,10 +758,8 @@ public:
                                             VariableList.insert(i);
                                     } else {
                                         Q = 1 + static_cast<int>(NbNoAssigned * FiltLevel);
-                                        mt19937 gen(seed);
-                                        uniform_int_distribution<int> dist(0, NbNoAssigned - 1);
                                         while (int(VariableList.size()) < Q)
-                                            VariableList.insert(dist(gen));
+                                            VariableList.insert(myrand() % NbNoAssigned);
                                     }
                                     AlreadyUse.assign(dimVal, 0);
                                     for (int varInde : VariableList) {

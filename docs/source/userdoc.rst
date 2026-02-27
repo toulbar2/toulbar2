@@ -412,6 +412,9 @@ Preprocessing
 -minqual
         finds a minimal intersection constraint graph to achieve pairwise consistency (combine with option -pwc) (default option)
 
+-camb=[integer]
+        reduced costs filtering level for alldifferent and gcc constraints (default value is 0)
+
 
 Initial upper bounding
 ----------------------

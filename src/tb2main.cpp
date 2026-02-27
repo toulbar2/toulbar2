@@ -1044,12 +1044,6 @@ void help_msg(char* toulbar2filename)
     cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
-    
-     if (ToulBar2::ReducedCostsFiltering)
-        cout << " (default option " << ToulBar2::ReducedCostsFiltering<< ")";
-    cout<<endl;
-    cout << "   -camb=[integer] : Reduced costs filtering for alldifferent and gcc";
-  
     if (ToulBar2::FullEAC)
         cout << " (default option)";
     cout << endl;
@@ -1068,6 +1062,10 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::RASPSreset)
         cout << " (default option)";
     cout << endl;
+    cout << "   -camb=[integer] : reduced costs filtering level for alldifferent and gcc constraints";
+    if (ToulBar2::ReducedCostsFiltering)
+        cout << " (default option " << ToulBar2::ReducedCostsFiltering<< ")";
+    cout<<endl;
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
     cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";
     if (ToulBar2::trwsOrder)

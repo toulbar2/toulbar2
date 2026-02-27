@@ -66,9 +66,8 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<uint8_t> visit;
     vector<uint8_t> inHeap;
     vector<Cost> distanceToVar; // shortest distances from source variable to each variable
-    unsigned int seed;
     int Q;
-    float FiltLevel;
+    double FiltLevel;
 
     void projectLB(Cost c)
     {
@@ -119,7 +118,6 @@ public:
         , excepted(false)
         , isSquare(false)
         , SameDomain(true)
-        , seed(42)
         , FiltLevel(0.0) 
     {
         if (arity_in > 0) {
@@ -799,7 +797,7 @@ public:
                                     }
                                 }
 
-                                // Filtre variables domains with Sellmann or Cambazard method
+                                // Filtering of variables domains with Sellmann or Cambazard method
                                 // filtreVarDomainWithExactReduceCost(current_ub, NoAssignedVal, VarList);
                                 
                                 if (FiltLevel > 0) {
@@ -817,10 +815,8 @@ public:
                                             VariableList.insert(i);
                                     } else {
                                         Q = 1 + static_cast<int>(NbNoAssigned * FiltLevel);
-                                        mt19937 gen(seed);
-                                        uniform_int_distribution<int> dist(0, NbNoAssigned - 1);
                                         while (int(VariableList.size()) < Q)
-                                            VariableList.insert(dist(gen));
+                                            VariableList.insert(myrand() % NbNoAssigned);
                                     }
 
                                     for (int varInde : VariableList) {
