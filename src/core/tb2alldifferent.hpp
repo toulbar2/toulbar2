@@ -763,7 +763,7 @@ public:
                                     VarMaxReducedCost = 0;
                                     int varIndex = NoAssignedVar[varInd];
                                     auto* variable = scope[varIndex];
-                                    ValList[varInd] = vector<uint8_t>(NbNoAssigned, 0);
+                                    ValList[varInd] = vector<uint8_t>(NbNoAssignedVal, 0);
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                         int valIndex = NoAssignedVal[valInd];
                                         Value value = variable->toValue(valIndex);
@@ -919,11 +919,11 @@ public:
                                         
                                      /* (END) : Bimodal Dijkstra’s shortest path algorithm from source s
                                                 to all other vertices and values in the residual graph. */
-
+                                        int valInd;
                                         for (int row = 0; row < NbNoAssigned; ++row) {
                                             if (distanceToVar[row] >= MAX_COST)
                                                 continue;
-                                            int valInd = rowSol[row];
+                                            valInd = rowSol[row];
                                             position = -1;
                                             auto& varlist = VarList[valInd];
                                             for (int varInd : varlist) {
