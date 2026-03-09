@@ -61,7 +61,6 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<int> VarDomainSize; // Domain size per variable
     unordered_map<string, int> mapDomainValToIndex; // Maps domain values to indices in UnionVarDomain
     bool SameDomain; // True if all variables have the same domain
-    int* colSol = nullptr;
     vector<Cost> ReduceCostMatrix;
     vector<uint8_t> visited;
     vector<uint8_t> inHeap;
@@ -219,7 +218,6 @@ public:
             ReduceCostMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
 
             // Allocate memory
-            colSol = new int[arity_];
             rowSol = new int[arity_];
             ReduceCostRow = new Cost[arity_];
             ReduceCostCol = new Cost[NbValues];
@@ -231,7 +229,6 @@ public:
     virtual ~AllDifferentConstraint()
     {
         delete[] rowSol;
-        delete[] colSol;
         delete[] ReduceCostRow;
         delete[] ReduceCostCol;
     }
@@ -787,14 +784,6 @@ public:
                                     if(MaxReducedCost < current_ub) MaxReducedCost+= VarMaxReducedCost;
                                 }
 
-                                if (FiltLevel > 0 && MaxReducedCost >= current_ub ) {
-                                    for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
-                                        colSol[rowSol[varInd]] = varInd;
-                                    }
-                                }
-
-
-
                                 // Update support values if needed for unassigned variables
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                     int varIndex = NoAssignedVar[varInd];
@@ -931,16 +920,17 @@ public:
                                      /* (END) : Bimodal Dijkstra’s shortest path algorithm from source s
                                                 to all other vertices and values in the residual graph. */
 
-                                        for (int valInd = 0; valInd < NbNoAssigned; ++valInd) {
-                                            if (distanceToVar[colSol[valInd]] >= MAX_COST)
+                                        for (int row = 0; row < NbNoAssigned; ++row) {
+                                            if (distanceToVar[row] >= MAX_COST)
                                                 continue;
+                                            int valInd = rowSol[row];
                                             position = -1;
                                             auto& varlist = VarList[valInd];
                                             for (int varInd : varlist) {
                                                 position++;
                                                 if (distanceToVar[varInd] == MAX_COST || costMatrix[varInd * NbNoAssignedVal + valInd] >= current_ub)
                                                     continue;
-                                                Cost reducedCost = ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] - distanceToVar[varInd] + distanceToVar[colSol[valInd]];
+                                                Cost reducedCost = ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] - distanceToVar[varInd] + distanceToVar[row];
 
                                                 if (reducedCost > current_ub) {
                                                     int varIndex = NoAssignedVar[varInd];
