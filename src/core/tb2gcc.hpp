@@ -699,6 +699,7 @@ public:
 
                                 // Update the lower bound with the Jonker algorithm's total cost
                                 projectLB(jonker);
+                                current_ub -= jonker;
 
                                 // Adjust unary costs for unassigned variables based on reduced costs
 
@@ -752,7 +753,7 @@ public:
                                     int position;
                                     unordered_set<int> VariableList;
 
-                                    if (FiltLevel == 1) {
+                                    if (FiltLevel >= 1. - (double)ToulBar2::epsilon) {
                                         Q = NbNoAssigned;
                                         for (int i = 0; i < Q; i++)
                                             VariableList.insert(i);
@@ -833,7 +834,7 @@ public:
                                                     continue;
                                                 Cost reducedCost = ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] - distanceToVar[varInd] + distanceToVar[colSol[valInd]];
 
-                                                if (reducedCost > current_ub) {
+                                                if (reducedCost >= current_ub) {
                                                     int varIndex = NoAssignedVar[varInd];
                                                     int valIndex = NoAssignedVal[valInd];
                                                     auto* variable = scope[varIndex];
@@ -843,20 +844,21 @@ public:
 
                                                     if (variable->canbe(value)) {
                                                         if (ToulBar2::verbose > 0)
-                                                            cout << "REMOVE VALUE " << variable->toIndex(UnionVarDomain[valIndex]) << " from " << variable->getName() << endl;
-                                                        variable->remove(value);
-
-                                                        if (variable->assigned() && connected(varIndex)) {
-                                                            deconnect(varIndex);
-
-                                                            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-
-                                                                deconnect();
-                                                                projectNary();
-                                                                NaryPro = true;
-                                                                break;
-                                                            }
-                                                        }
+                                                            cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
+                                                        ExtOrProJ(variable->wcspIndex, value, -current_ub); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
+//                                                        variable->remove(value);
+//
+//                                                        if (variable->assigned() && connected(varIndex)) {
+//                                                            deconnect(varIndex);
+//
+//                                                            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
+//
+//                                                                deconnect();
+//                                                                projectNary();
+//                                                                NaryPro = true;
+//                                                                break;
+//                                                            }
+//                                                        }
                                                     }
                                                 }
                                             }
