@@ -757,7 +757,7 @@ public:
                                         for (int i = 0; i < Q; i++)
                                             VariableList.insert(i);
                                     } else {
-                                        Q = 1 + static_cast<int>(NbNoAssigned * FiltLevel);
+                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));
                                         while (int(VariableList.size()) < Q)
                                             VariableList.insert(myrand() % NbNoAssigned);
                                     }
