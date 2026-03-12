@@ -69,6 +69,10 @@ typedef long double Double;
 #include <random>
 extern std::mt19937 myrandom_generator;
 
+inline void myrearrange(vector<int>& V){
+    shuffle(V.begin(), V.end(), myrandom_generator);
+}
+
 inline void mysrand(int seed_)
 {
     myrandom_generator.seed(seed_);

@@ -71,6 +71,10 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     vector<Cost> distanceToVar; // shortest distances from source variable to each variable
     int Q;
     double FiltLevel;
+    unordered_set<int> trackingList;
+    Cost MaxReducedCost;
+    Cost ReducedCost;
+    Cost VarMaxReducedCost;
 
     void projectLB(Cost c)
     {
@@ -194,7 +198,7 @@ public:
             ReduceCostMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
 
             // Allocate memory
-            colSol = new int[arity_];
+            colSol = new int[NbValues];
             rowSol = new int[arity_];
             ReduceCostRow = new Cost[arity_];
             ReduceCostCol = new Cost[NbValues];
@@ -703,11 +707,16 @@ public:
 
                                 // Adjust unary costs for unassigned variables based on reduced costs
 
+                                // Adjust unary costs for unassigned variables based on reduced costs
+                                MaxReducedCost = 0;
                                 vector<vector<int>> VarList(NbNoAssignedVal);
+                                vector<vector<uint8_t>> ValList(NbNoAssigned);
+                                unordered_set<int> usedValList;
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                    VarMaxReducedCost = 0;
                                     int varIndex = NoAssignedVar[varInd];
                                     auto* variable = scope[varIndex];
-
+                                    ValList[varInd] = vector<uint8_t>(NbNoAssignedVal, 0);
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                         int valIndex = NoAssignedVal[valInd];
                                         Value value = variable->toValue(valIndex);
@@ -715,17 +724,27 @@ public:
                                         if (variable->canbe(value)) {
                                             ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
                                             if (FiltLevel > 0) {
-                                                ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
-                                                if (rowSol[varInd] != valInd)
+                                                ReducedCost = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
+                                                ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
+                                                if(ReducedCost > VarMaxReducedCost) VarMaxReducedCost = ReducedCost;
+                                                if (rowSol[varInd] != valInd){
                                                     VarList[valInd].push_back(varInd);
+                                                    ValList[varInd][valInd] = 1;
+                                                }
                                             }
                                         }
                                     }
+                                    if(MaxReducedCost < current_ub) MaxReducedCost+= VarMaxReducedCost;
                                 }
-                                if (FiltLevel > 0) {
+
+                                if (FiltLevel > 0 && MaxReducedCost >= current_ub) {
                                     for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
-                                        colSol[rowSol[varInd]] = varInd;
+                                        if(usedValList.insert(rowSol[varInd]).second)
+                                        {
+                                            colSol[rowSol[varInd]] = varInd;
+                                        }
                                     }
+                                   
                                 }
 
                                 // Update support values if needed for unassigned variables
@@ -743,86 +762,146 @@ public:
                                         assert(variable->getCost(variable->getSupport()) == MIN_COST);
                                     }
                                 }
-                                
-                                // Filtering of variables domains with Sellmann or Cambazard method
-                                if (FiltLevel > 0) {
-                                    bool NaryPro = false;
+                                   /* (BEGIN) : Filtering of variables domains with Sellmann or Cambazard method 
+
+                                   Source : Claus, G.; Cambazard, H.; and Jost, V. 2020. Analysis of Re-
+                                            duced Costs Filtering for Alldifferent and Minimum Weight
+                                            Alldifferent Global Constraints. In Giacomo, G. D.; Catal´a,
+                                            A.; Dilkina, B.; Milano, M.; Barro, S.; Bugar´ın, A.; and
+                                            Lang, J., eds., ECAI 2020 - 24th European Conference on
+                                            Artificial Intelligence, volume 325, 323–330. Santiago de
+                                            Compostela, Spain: IOS Press.  */ 
+
+                                if (FiltLevel > 0 && MaxReducedCost >= current_ub) {
+                                    //bool NaryPro = false;
                                     int dimVal = NbNoAssignedVal;
                                     int dimVar = NbNoAssigned;
                                     int source;
                                     int position;
-                                    unordered_set<int> VariableList;
-
+                                    vector<int> VariableList(NbNoAssigned);                                
+                                    
                                     if (FiltLevel >= 1. - (double)ToulBar2::epsilon) {
-                                        Q = NbNoAssigned;
-                                        for (int i = 0; i < Q; i++)
-                                            VariableList.insert(i);
+                                        Q = NbNoAssigned;    
                                     } else {
-                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));
-                                        while (int(VariableList.size()) < Q)
-                                            VariableList.insert(myrand() % NbNoAssigned);
+                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));   
                                     }
+                                    
+                                    iota(VariableList.begin(), VariableList.end(), 0);
+                                    myrearrange(VariableList);
                                     AlreadyUse.assign(dimVal, 0);
-                                    for (int varInde : VariableList) {
+                                    int varInde;
+                                    for (int ind = 0; ind < Q; ++ind) {
+                                    varInde = VariableList[ind];
                                         if (AlreadyUse[rowSol[varInde]] == 0) {
                                             AlreadyUse[rowSol[varInde]] = 1;
-                                        } else {
+                                        } 
+                                        else {
                                             continue;
                                         }
 
-                                        // dijkstraOnResidualGraph;
+                                  /* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
+                                                     to all other vertices and values in the residual graph.
+
+                                         Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
+                                            Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
+                                            Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
+                                            International Joint Conference on Artificial Intelligence, IJCAI 2025, */ 
 
                                         // Initialize shortest distances
                                         source = varInde;
                                         distanceToVar.assign(dimVar, MAX_COST);
-                                        distanceToVar[source] = 0;
+                                        visitVal.assign(dimVal, -1);
+                                        visited.assign(dimVar, 0);
 
                                         // Min-heap: (distance, variable)
                                         vector<PQ::handle_type> handles(dimVar);
-                                        inHeap.assign(dimVar, 0);
-
-                                        distanceToVar[source] = 0;
-
                                         PQ pq;
-                                        handles[source] = pq.push({ 0, source });
+                                        // trackingList 
+                                        trackingList.clear();
+                                        trackingList.reserve(dimVar);
+
+
+                                        // Add all other variables
+                                        for (int var = 0; var < dimVar; ++var) {
+                                            trackingList.insert(var);
+                                        }
+
+                                        inHeap.assign(dimVar, 0);
+                                        distanceToVar[source] = 0;
+                                        handles[source] = pq.push({distanceToVar[source], source});
                                         inHeap[source] = 1;
-                                        visited.assign(dimVar, 0);
-                                        visitVal.assign(dimVal, -1);
 
                                         while (!pq.empty()) {
                                             auto [d, var] = pq.top();
                                             pq.pop();
                                             visited[var] = 1;
-
+                                            trackingList.erase(var);
                                             int val = rowSol[var];
+
                                             if (visitVal[val] == -1) {
                                                 visitVal[val] = var;
-                                            } else {
+                                            } 
+                                            else {
                                                 distanceToVar[var] = distanceToVar[visitVal[val]];
                                                 continue;
                                             }
-                                            if (d > distanceToVar[var])
-                                                continue;
 
-                                            for (int nextVar : VarList[val]) {
-                                                if (visited[nextVar] == 1)
-                                                    continue;
-                                                Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
+                                            auto &varlist = VarList[val];
 
-                                                if (alt < distanceToVar[nextVar]) {
-                                                    distanceToVar[nextVar] = alt;
-                                                    // if(nextVar >= dimVar) cout<<"ok "<<dimVar<<" "<<nextVar<<" "<<dimVal<<endl;
-                                                    if (!inHeap[nextVar]) {
-                                                        handles[nextVar] = pq.push({ alt, nextVar });
-                                                        inHeap[nextVar] = 1;
-                                                    } else {
-                                                        pq.decrease(handles[nextVar], { alt, nextVar });
+                                            if ((int)varlist.size() < (int)trackingList.size()) {
+                                                for (int nextVar : varlist) {
+                                                    if (visited[nextVar])
+                                                        continue;
+                                                    Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
+                                                    if (alt < distanceToVar[nextVar]) {
+                                                        distanceToVar[nextVar] = alt;
+                                                        if (!inHeap[nextVar]) {
+                                                            handles[nextVar] = pq.push({ alt, nextVar });
+                                                            inHeap[nextVar] = 1;
+                                                        } 
+                                                        else {
+                                                            pq.decrease(handles[nextVar], { alt, nextVar });
+                                                        }
+                                                        if(alt == d){
+                                                            trackingList.erase(nextVar);
+                                                            visited[nextVar] = 1;
+                                                        }
                                                     }
+                                                }
+                                            } 
+
+                                            else {
+                                                auto it = trackingList.begin();
+                                                while (it != trackingList.end()) {
+                                                    auto nextVar = *it;                            
+                                                    if(ValList[nextVar][val]){
+                                                        Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
+                                                        if (alt < distanceToVar[nextVar]) {
+
+                                                            distanceToVar[nextVar] = alt;
+                                                            if (!inHeap[nextVar]) {
+                                                                handles[nextVar] = pq.push({ alt, nextVar });
+                                                                inHeap[nextVar] = 1;
+                                                            } else {
+                                                                pq.decrease(handles[nextVar], { alt, nextVar });
+                                                            }
+                                                            if(alt == d){
+                                                               it = trackingList.erase(it);
+                                                                visited[nextVar] = 1;
+                                                                continue;
+                                                            }
+                                                        }
+                                                    } 
+                                                        ++it;
                                                 }
                                             }
                                         }
+                                        
+                                     /* (END) : Bimodal Dijkstra’s shortest path algorithm from source s
+                                                to all other vertices and values in the residual graph. */
 
-                                        for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+
+                                        for (int valInd : usedValList) {
 
                                             if (distanceToVar[colSol[valInd]] >= MAX_COST)
                                                 continue;
@@ -839,6 +918,7 @@ public:
                                                     int valIndex = NoAssignedVal[valInd];
                                                     auto* variable = scope[varIndex];
                                                     varlist[position] = -1;
+                                                    ValList[varInd][valInd] = 0; 
 
                                                     Value value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
 
@@ -846,30 +926,14 @@ public:
                                                         if (ToulBar2::verbose > 0)
                                                             cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
                                                         ExtOrProJ(variable->wcspIndex, value, -current_ub); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
-//                                                        variable->remove(value);
-//
-//                                                        if (variable->assigned() && connected(varIndex)) {
-//                                                            deconnect(varIndex);
-//
-//                                                            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-//
-//                                                                deconnect();
-//                                                                projectNary();
-//                                                                NaryPro = true;
-//                                                                break;
-//                                                            }
-//                                                        }
                                                     }
                                                 }
                                             }
-                                            if (NaryPro)
-                                                break;
                                             varlist.erase(std::remove(varlist.begin(), varlist.end(), -1), varlist.end());
                                         }
-                                        if (NaryPro)
-                                            break;
                                     }
                                 }
+                                /* (END) : Filtering of variables domains with Sellmann or Cambazard method */
                             }
                         }
                     }

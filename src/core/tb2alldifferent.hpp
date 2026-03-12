@@ -813,23 +813,23 @@ public:
 
                                 if (FiltLevel > 0 && MaxReducedCost >= current_ub ) {
                                     
-                                    bool NaryPro = false;
                                     int dimVal = NbNoAssignedVal;
                                     int dimVar = NbNoAssigned;
                                     int source;
-                                    int position;
-                                    unordered_set<int> VariableList;
+                                    int position;  
+                                    vector<int> VariableList(NbNoAssigned);                                
                                     
                                     if (FiltLevel >= 1. - (double)ToulBar2::epsilon) {
-                                        Q = NbNoAssigned;
-                                        for (int i = 0; i < Q; i++)
-                                            VariableList.insert(i);
+                                        Q = NbNoAssigned;    
                                     } else {
-                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));
-                                        while (int(VariableList.size()) < Q)
-                                            VariableList.insert(myrand() % NbNoAssigned); //Warning: can be slow to insert all elements if Q is large and closed to NbNoAssigned (probability of trying to reinsert the same element is higher)
+                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));   
                                     }
-                                    for (int varInde : VariableList) {
+                                    
+                                    iota(VariableList.begin(), VariableList.end(), 0);
+                                    myrearrange(VariableList);
+                                    int varInde;
+                                    for (int ind = 0; ind < Q; ++ind) {
+                                    varInde = VariableList[ind];
 
                                        /* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
                                                      to all other vertices and values in the residual graph.
@@ -946,27 +946,11 @@ public:
                                                         if (ToulBar2::verbose > 0)
                                                             cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
                                                         ExtOrProJ(variable->wcspIndex, value, -current_ub); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
-//                                                        variable->remove(value);
-//                                                        if (variable->assigned() && connected(varIndex)) {
-//                                                            deconnect(varIndex);
-//
-//                                                            if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-//
-//                                                                deconnect();
-//                                                                projectNary();
-//                                                                NaryPro = true;
-//                                                                break;
-//                                                            }
-//                                                        }
                                                     }
                                                 }
                                             }
-                                            if (NaryPro)
-                                                break;
                                             varlist.erase(std::remove(varlist.begin(), varlist.end(), -1), varlist.end());
                                         }
-                                        if (NaryPro)
-                                            break;
                                     }
                                 }
 
