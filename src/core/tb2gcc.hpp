@@ -779,15 +779,13 @@ public:
                                     int source;
                                     int position;
                                     vector<int> VariableList(NbNoAssigned);                                
-                                    
+                                    iota(VariableList.begin(), VariableList.end(), 0);
                                     if (FiltLevel >= 1. - (double)ToulBar2::epsilon) {
                                         Q = NbNoAssigned;    
                                     } else {
                                         Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));   
-                                    }
-                                    
-                                    iota(VariableList.begin(), VariableList.end(), 0);
-                                    myrearrange(VariableList);
+                                        myrearrange(VariableList);
+                                    }    
                                     AlreadyUse.assign(dimVal, 0);
                                     int varInde;
                                     for (int ind = 0; ind < Q; ++ind) {

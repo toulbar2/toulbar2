@@ -817,16 +817,16 @@ public:
                                     int dimVar = NbNoAssigned;
                                     int source;
                                     int position;  
-                                    vector<int> VariableList(NbNoAssigned);                                
+                                    vector<int> VariableList(NbNoAssigned);     
+                                    iota(VariableList.begin(), VariableList.end(), 0);                           
                                     
                                     if (FiltLevel >= 1. - (double)ToulBar2::epsilon) {
                                         Q = NbNoAssigned;    
                                     } else {
-                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));   
+                                        Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));  
+                                        myrearrange(VariableList); 
                                     }
                                     
-                                    iota(VariableList.begin(), VariableList.end(), 0);
-                                    myrearrange(VariableList);
                                     int varInde;
                                     for (int ind = 0; ind < Q; ++ind) {
                                     varInde = VariableList[ind];
