@@ -67,7 +67,6 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<Cost> distanceToVar; // shortest distances from source variable to each variable
     int Q;
     double FiltLevel;
-    //unordered_set<int> VariableList;
     unordered_set<int> trackingList;
     Cost MaxReducedCost;
     Cost ReducedCost;
@@ -645,6 +644,139 @@ public:
         return (!NaryPro);
     }
 
+
+/* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
+                to all other vertices and values in the residual graph.
+
+    Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
+    Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
+    Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
+    International Joint Conference on Artificial Intelligence, IJCAI 2025, 
+    Montreal, Canada, August 16-22, 2025. */
+
+    
+    void BimodalDijkstra(int source, vector<vector<int>> & VarList, vector<vector<uint8_t>>& ValList ){
+        
+        vector<PQ::handle_type> handles(NbNoAssigned);
+        PQ pq;
+
+        distanceToVar.assign(NbNoAssigned, MAX_COST);
+        visited.assign(NbNoAssigned, 0);
+
+        // trackingList 
+        trackingList.clear();
+        trackingList.reserve(NbNoAssigned);
+
+        // Add all other variables
+        for (int var = 0; var < NbNoAssigned; ++var) {
+            trackingList.insert(var);
+        }
+
+        inHeap.assign(NbNoAssigned, 0);
+        distanceToVar[source] = 0;
+        handles[source] = pq.push({distanceToVar[source], source});
+        inHeap[source] = 1;
+
+        while (!pq.empty()) {
+            auto [d, var] = pq.top();
+            pq.pop();
+            visited[var] = 1;
+            trackingList.erase(var);
+            int val = rowSol[var];
+            auto &varlist = VarList[val];
+
+            if ((int)varlist.size() < (int)trackingList.size()) {
+                for (int nextVar : varlist) {
+                    if (visited[nextVar])
+                        continue;
+                    Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+                    if (alt < distanceToVar[nextVar]) {
+                        distanceToVar[nextVar] = alt;
+                        if (!inHeap[nextVar]) {
+                            handles[nextVar] = pq.push({ alt, nextVar });
+                            inHeap[nextVar] = 1;
+                        } 
+                        else {
+                            pq.decrease(handles[nextVar], { alt, nextVar });
+                        }
+                        if(alt == d){
+                            trackingList.erase(nextVar);
+                            visited[nextVar] = 1;
+                        }
+                    }
+                }
+            } 
+
+            else {
+                auto it = trackingList.begin();
+                while (it != trackingList.end()) {
+                    auto nextVar = *it;                            
+                    if(ValList[nextVar][val]){
+                        Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+                        if (alt < distanceToVar[nextVar]) {
+
+                            distanceToVar[nextVar] = alt;
+                            if (!inHeap[nextVar]) {
+                                handles[nextVar] = pq.push({ alt, nextVar });
+                                inHeap[nextVar] = 1;
+                            } else {
+                                pq.decrease(handles[nextVar], { alt, nextVar });
+                            }
+                            if(alt == d){
+                                it = trackingList.erase(it);
+                                visited[nextVar] = 1;
+                                continue;
+                            }
+                        }
+                    } 
+                        ++it;
+                }
+            }
+        }
+    }
+
+    void Dijkstra(int source, vector<vector<int>> & VarList ){
+        vector<PQ::handle_type> handles(NbNoAssigned);
+        PQ pq;
+
+        distanceToVar.assign(NbNoAssigned, MAX_COST);
+        visited.assign(NbNoAssigned, 0);
+        inHeap.assign(NbNoAssigned, 0);
+        distanceToVar[source] = 0;
+        handles[source] = pq.push({distanceToVar[source], source});
+        inHeap[source] = 1;
+
+        while (!pq.empty()) {
+            auto [d, var] = pq.top();
+            pq.pop();
+            visited[var] = 1;
+            int val = rowSol[var];
+            auto &varlist = VarList[val];
+
+
+            for (int nextVar : varlist) {
+                if (visited[nextVar])
+                    continue;
+                Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+                if (alt < distanceToVar[nextVar]) {
+                    distanceToVar[nextVar] = alt;
+                    if (!inHeap[nextVar]) {
+                        handles[nextVar] = pq.push({ alt, nextVar });
+                        inHeap[nextVar] = 1;
+                    } 
+                    else {
+                        pq.decrease(handles[nextVar], { alt, nextVar });
+                    }
+                    if(alt == d){
+                        visited[nextVar] = 1;
+                    }
+                }
+            }
+        } 
+
+    }
+
+
     void propagate() override
     {
         /**
@@ -695,7 +827,7 @@ public:
                             break;
                         }
                     }
-                }
+                } 
 
                 if (!skipPropagation) {
                     // Initialize number of unassigned variables
@@ -758,8 +890,12 @@ public:
 
                                 // Adjust unary costs for unassigned variables based on reduced costs
                                 MaxReducedCost = 0;
+
                                 vector<vector<int>> VarList(NbNoAssignedVal);
                                 vector<vector<uint8_t>> ValList(NbNoAssigned);
+
+                                //VarList.resize(NbNoAssignedVal);
+                                //ValList.resize(NbNoAssigned);
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                     VarMaxReducedCost = 0;
                                     int varIndex = NoAssignedVar[varInd];
@@ -809,14 +945,11 @@ public:
                                             A.; Dilkina, B.; Milano, M.; Barro, S.; Bugar´ın, A.; and
                                             Lang, J., eds., ECAI 2020 - 24th European Conference on
                                             Artificial Intelligence, volume 325, 323–330. Santiago de
-                                            Compostela, Spain: IOS Press.  */ 
+                                            Compostela, Spain: IOS Press.  */
 
-                                if (FiltLevel > 0 && MaxReducedCost >= current_ub ) {
-                                    
-                                    int dimVal = NbNoAssignedVal;
-                                    int dimVar = NbNoAssigned;
-                                    int source;
-                                    int position;  
+                                if (FiltLevel > 0 /* */ && MaxReducedCost >= current_ub /**/ ) {
+                                    int position; 
+                                    int varInde; 
                                     vector<int> VariableList(NbNoAssigned);     
                                     iota(VariableList.begin(), VariableList.end(), 0);                           
                                     
@@ -827,99 +960,14 @@ public:
                                         myrearrange(VariableList); 
                                     }
                                     
-                                    int varInde;
+                                  
                                     for (int ind = 0; ind < Q; ++ind) {
-                                    varInde = VariableList[ind];
-
-                                       /* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
-                                                     to all other vertices and values in the residual graph.
-
-                                         Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
-                                            Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
-                                            Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
-                                            International Joint Conference on Artificial Intelligence, IJCAI 2025, 
-                                            Montreal, Canada, August 16-22, 2025. */
-
-                                        source = varInde;  // starting node
-                                        vector<PQ::handle_type> handles(dimVar);
-                                        PQ pq;
-
-                                        distanceToVar.assign(dimVar, MAX_COST);
-                                        visited.assign(dimVar, 0);
-
-                                        // trackingList 
-                                        trackingList.clear();
-                                        trackingList.reserve(dimVar);
-
-                                        // Add all other variables
-                                        for (int var = 0; var < dimVar; ++var) {
-                                            trackingList.insert(var);
-                                        }
-
-                                        inHeap.assign(dimVar, 0);
-                                        distanceToVar[source] = 0;
-                                        handles[source] = pq.push({distanceToVar[source], source});
-                                        inHeap[source] = 1;
-
-                                        while (!pq.empty()) {
-                                            auto [d, var] = pq.top();
-                                            pq.pop();
-                                            visited[var] = 1;
-                                            trackingList.erase(var);
-                                            int val = rowSol[var];
-                                            auto &varlist = VarList[val];
-
-                                            if ((int)varlist.size() < (int)trackingList.size()) {
-                                                for (int nextVar : varlist) {
-                                                    if (visited[nextVar])
-                                                        continue;
-                                                    Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
-                                                    if (alt < distanceToVar[nextVar]) {
-                                                        distanceToVar[nextVar] = alt;
-                                                        if (!inHeap[nextVar]) {
-                                                            handles[nextVar] = pq.push({ alt, nextVar });
-                                                            inHeap[nextVar] = 1;
-                                                        } 
-                                                        else {
-                                                            pq.decrease(handles[nextVar], { alt, nextVar });
-                                                        }
-                                                        if(alt == d){
-                                                            trackingList.erase(nextVar);
-                                                            visited[nextVar] = 1;
-                                                        }
-                                                    }
-                                                }
-                                            } 
-
-                                            else {
-                                                auto it = trackingList.begin();
-                                                while (it != trackingList.end()) {
-                                                    auto nextVar = *it;                            
-                                                    if(ValList[nextVar][val]){
-                                                        Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
-                                                        if (alt < distanceToVar[nextVar]) {
-
-                                                            distanceToVar[nextVar] = alt;
-                                                            if (!inHeap[nextVar]) {
-                                                                handles[nextVar] = pq.push({ alt, nextVar });
-                                                                inHeap[nextVar] = 1;
-                                                            } else {
-                                                                pq.decrease(handles[nextVar], { alt, nextVar });
-                                                            }
-                                                            if(alt == d){
-                                                               it = trackingList.erase(it);
-                                                                visited[nextVar] = 1;
-                                                                continue;
-                                                            }
-                                                        }
-                                                    } 
-                                                        ++it;
-                                                }
-                                            }
-                                        }
+                                        varInde = VariableList[ind];
                                         
-                                     /* (END) : Bimodal Dijkstra’s shortest path algorithm from source s
-                                                to all other vertices and values in the residual graph. */
+                                        //Dijkstra(varInde, VarList);
+                                        //Bimodal Dijkstra’s shortest path algorithm 
+                                        BimodalDijkstra(varInde, VarList, ValList );                                 
+
                                         int valInd;
                                         for (int row = 0; row < NbNoAssigned; ++row) {
                                             if (distanceToVar[row] >= MAX_COST)
