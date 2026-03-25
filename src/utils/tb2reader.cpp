@@ -3689,10 +3689,11 @@ void WCSP::read_wcnf(const char* fileName)
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
 
+    bool oldformat = false;
     int maxarity = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
 
-    int nbvar, nbclauses;
+    int nbvar = 0, nbclauses = 0;
     string dummy, sflag;
 
     file >> sflag;
@@ -3700,52 +3701,63 @@ void WCSP::read_wcnf(const char* fileName)
         getline(file, dummy);
         file >> sflag;
     }
-    if (sflag != "p") {
+    if (sflag != "p" && sflag != "h" && !sflag.empty() && !std::all_of(sflag.begin(), sflag.end(), ::isdigit)) {
         cerr << "Wrong wcnf format in " << fileName << endl;
         throw WrongFileFormat();
     }
+    if (sflag == "p") {
+        oldformat = true;
+    }
 
-    string format, strtop;
-    Cost top;
-    file >> format;
-    file >> nbvar;
-    file >> nbclauses;
-    if (format == "wcnf") {
-        getline(file, strtop);
-        if (strtop.size() > 0 && string2Cost((char*)strtop.c_str()) > 0) {
-            if (ToulBar2::verbose >= 0)
-                cout << "c (Weighted) Partial Max-SAT input format" << endl;
-            top = string2Cost((char*)strtop.c_str());
-            if (top < MAX_COST / K)
-                top = top * K;
-            else
-                top = MAX_COST;
-            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
-            updateUb(top + ToulBar2::deltaUb);
+    string format = "", strtop;
+    Cost top = getUb();
+
+    if (oldformat) {
+        file >> format;
+        file >> nbvar;
+        file >> nbclauses;
+        if (format == "wcnf") {
+            getline(file, strtop);
+            if (strtop.size() > 0 && string2Cost((char*)strtop.c_str()) > 0) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "c (Weighted) Partial Max-SAT input format" << endl;
+                top = string2Cost((char*)strtop.c_str());
+                if (top < MAX_COST / K)
+                    top = top * K;
+                else
+                    top = MAX_COST;
+                ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+                updateUb(top + ToulBar2::deltaUb);
+            } else {
+                if (ToulBar2::verbose >= 0)
+                    cout << "c Weighted Max-SAT input format" << endl;
+            }
         } else {
             if (ToulBar2::verbose >= 0)
-                cout << "c Weighted Max-SAT input format" << endl;
+                cout << "c Max-SAT input format" << endl;
+            Cost top = (nbclauses + 1) * K;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+            updateUb(top + ToulBar2::deltaUb);
+        }
+
+        // create Boolean variables
+        for (int i = 0; i < nbvar; i++) {
+            string varname;
+            varname = to_string("x") + to_string(i);
+            DEBONLY(int theindex =)
+            makeEnumeratedVariable(varname, 0, 1);
+            assert(theindex == i);
         }
     } else {
         if (ToulBar2::verbose >= 0)
-            cout << "c Max-SAT input format" << endl;
-        Cost top = (nbclauses + 1) * K;
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
-        updateUb(top + ToulBar2::deltaUb);
-    }
-
-    // create Boolean variables
-    for (int i = 0; i < nbvar; i++) {
-        string varname;
-        varname = to_string("x") + to_string(i);
-        DEBONLY(int theindex =)
-        makeEnumeratedVariable(varname, 0, 1);
-        assert(theindex == i);
+            cout << "c new Max-SAT input format" << endl;
+        format = "2022";
     }
 
     // Read each clause
     Tuple tup;
-    for (int ic = 0; ic < nbclauses; ic++) {
+    int ic = 0;
+    while (file && (!oldformat || ic < nbclauses)) {
         vector<int> scopeIndex;
         tup.clear();
         int arity = 0;
@@ -3755,6 +3767,31 @@ void WCSP::read_wcnf(const char* fileName)
         Cost cost = UNIT_COST;
         if (format == "wcnf")
             file >> cost;
+        if (format == "2022") {
+            string strcost;
+            if (ic > 0) {
+                file >> strcost;
+                while (strcost[0] == 'c') {
+                    getline(file, dummy);
+                    file >> strcost;
+                }
+                if (!file) {
+                    break;
+                }
+            } else {
+                strcost = sflag;
+            }
+            if (strcost == "h") {
+                cost = top;
+            } else {
+                cost = string2Cost((char*)strcost.c_str());
+                if (cost <= 0) {
+                    cerr << "Wrong cost (" << strcost << ") in clause number " << ic << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+        ic++;
         bool tautology = false;
         do {
             file >> j;
@@ -3795,6 +3832,21 @@ void WCSP::read_wcnf(const char* fileName)
             continue;
 
         maxarity = max(maxarity, arity);
+
+        // create Boolean variables if needed
+        if (!scopeIndex.empty()) {
+            int maxvarindex = *std::max_element(scopeIndex.begin(), scopeIndex.end());
+            if (nbvar < maxvarindex + 1) {
+                for (int i = nbvar; i < maxvarindex + 1; i++) {
+                    string varname;
+                    varname = to_string("x") + to_string(i);
+                    DEBONLY(int theindex =)
+                    makeEnumeratedVariable(varname, 0, 1);
+                    assert(theindex == i);
+                }
+                nbvar = maxvarindex + 1;
+            }
+        }
 
         if (arity > 3) {
             // #ifdef CLAUSE2KNAPSACK
@@ -3847,6 +3899,7 @@ void WCSP::read_wcnf(const char* fileName)
             throw WrongFileFormat();
         }
     }
+    nbclauses = ic;
 
     file >> dummy;
     if (file) {
