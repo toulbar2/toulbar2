@@ -3057,7 +3057,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             }
         } while (wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.5);
     }
-    wcsp->preprocessing(); // preprocessing after initial propagation
+    wcsp->preprocessing(); // first preprocessing after initial propagation
     initGap(wcsp->getLb(), wcsp->getUb());
     if (!ToulBar2::isZ) {
         Cost finiteUb = wcsp->finiteUb(); // find worst-case assignment finite cost plus one as new upper bound
@@ -3073,6 +3073,18 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             initGap(wcsp->getLb(), wcsp->getUb());
         }
     }
+#ifdef BOOST
+    if (ToulBar2::addAMOConstraints != -1) {
+        unsigned int nbctr = wcsp->numberOfConstraints();
+        ToulBar2::addAMOConstraints_ = true;
+        wcsp->addAMOConstraints();
+        ToulBar2::addAMOConstraints_ = false;
+        if (wcsp->numberOfConstraints() > nbctr) {
+            wcsp->preprocessing();
+            initGap(wcsp->getLb(), wcsp->getUb());
+        }
+    }
+#endif
 
     // special data structure to be initialized for variable ordering heuristics including weighted degrees and tightness
     initVarHeuristic();
@@ -3107,14 +3119,6 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             cout << "LR-BCD solving time: " << cpuTime() - lrBCDStartTime << " seconds." << endl;
     }
     ToulBar2::lds = lds;
-
-#ifdef BOOST
-    if (ToulBar2::addAMOConstraints != -1) {
-        ToulBar2::addAMOConstraints_ = true;
-        wcsp->addAMOConstraints();
-        ToulBar2::addAMOConstraints_ = false;
-    }
-#endif
 
     if (ToulBar2::singletonConsistency) {
         singletonConsistency(ToulBar2::singletonConsistency);
