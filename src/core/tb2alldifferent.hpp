@@ -284,7 +284,10 @@ public:
                 }
             } else {
                 for (int i = 0; i < arity_; i++) {
-                    if (connected(i)) {
+                    //if (connected(i)) {
+                    auto* variable = scope[i];
+
+                    if (!variable->unassigned() ){
                         conflictWeights[i]++;
                     }
                 }
@@ -867,6 +870,7 @@ public:
                             Cost TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub);
 
                             if (TotalCost >= current_ub) {
+                                wcsp->revise(this);
                                 THROWCONTRADICTION;
                             } else if (TotalCost >= 0) {
                                 Cost jonker = TotalCost;
@@ -1030,6 +1034,7 @@ public:
                             TotalCost = lapjv(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub);
 
                         if (TotalCost >= current_ub) {
+                            wcsp->revise(this);
                             THROWCONTRADICTION;
                         } else if (TotalCost >= 0) {
                             // Store results from Jonker algorithm
