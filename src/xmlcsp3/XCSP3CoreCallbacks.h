@@ -1612,6 +1612,56 @@ namespace XCSP3Core {
         }
 
         /**
+               * The callback function related to a element constraint matrix
+               * See http://xcsp.org/specifications/element
+               *
+               * Example:  matrix[t][v] = z
+               * <element>
+               *    <matrix> (1 2 3)(4 5 6) </matrix>
+               *    <index> t v </index>
+               *    <condition>(eq,z)</condition>
+               * </element>
+               *
+               * @param id the id (name) of the constraint
+               * @param matrix the matrix (here a matrix of int)
+               * @param rowIndex the row index
+               * @param colIndex the col index
+               * @param startRowIndex the start index for rows
+               * @param startColIndex the start index for cols
+               * @param value the value (here a variable)
+               */
+
+        virtual void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XCondition &xc) {
+            (void)id; (void)matrix; (void)startRowIndex; (void)rowIndex; (void)startColIndex; (void)colIndex; (void)xc;
+            throw runtime_error("Element matrix constraint (int) with condition is not yet supported");
+        }
+
+        /**
+       * The callback function related to a element constraint matrix
+       * See http://xcsp.org/specifications/element
+       *
+       * Example:  matrix[t][v] = z
+       * <element>
+       *    <matrix> (1 2 3)(4 5 6) </matrix>
+       *    <index> t v </index>
+       *    <condition>(eq,z)</condition>
+       * </element>
+       *
+       * @param id the id (name) of the constraint
+       * @param matrix the matrix (here a matrix of int)
+       * @param rowIndex the row index
+       * @param colIndex the col index
+       * @param startRowIndex the start index for rows
+       * @param startColIndex the start index for cols
+       * @param value the value (here a variable)
+       */
+
+        virtual void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XCondition &xc) {
+            (void)id; (void)matrix; (void)startRowIndex; (void)rowIndex; (void)startColIndex; (void)colIndex; (void)xc;
+            throw runtime_error("Element matrix constraint (variables) with condition is not yet supported");
+        }
+
+        /**
          * The callback function related to a element constraint with variable value
          * See http://xcsp.org/specifications/element
          *
@@ -1628,6 +1678,27 @@ namespace XCSP3Core {
         virtual void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *value) {
             (void)id; (void)list; (void)value;
             throw runtime_error("Element variable constraint is not yet supported");
+        }
+
+        /**
+         * The callback function related to a element constraint with variable value
+         * See http://xcsp.org/specifications/element
+         *
+         * Example:
+         * <element>
+         *    <list> 1 2 4 5  </list>
+         *    <index> x </index>
+         *    <value> z </value>
+         * </element>
+         *
+         * @param id the id (name) of the constraint
+         * @param list the list of integers
+         * @param value the value (here an integer)
+         * @param index the index (here a variable)
+         */
+        virtual void buildConstraintElement(string id, vector<int> &list, int startIndex, XVariable *index, RankType rank, int value) {
+            (void)id; (void)list; (void)startIndex; (void)index; (void)rank; (void)value;
+            throw runtime_error("Element value with index variable and list of int is not yet supported");
         }
 
 
@@ -1877,6 +1948,27 @@ namespace XCSP3Core {
             throw runtime_error("K dim nooverlap with int lengths constraint is not yet supported");
         }
 
+
+        /**
+         * The callback function related to a no overlap constraint with variable origins and 2 dimensional mixed var/int lenghts
+         * See http://xcsp.org/specifications/noOverlap
+         *
+         * Example:
+         * <noOverlap>
+         *    <origins> (x1,y1)(x2,y2)(x3,y3)(x4,y4) </origins>
+         *    <lengths> (z1,3)(z2,2)(z3,5)(z4,1) </lengths>
+         * </noOverlap>
+         *
+         * @param id  the id (name) of the constraint
+         * @param origins the vector of origins
+         * @param varLengths the vector of var lengths
+         * @param intLengths the vector of var lengths
+         * @param zeroIgnored are zero ignored?
+         */
+        virtual void buildConstraintNoOverlap(string id, vector<vector<XVariable *>> &origins, vector<XVariable *> &varLengths, vector<int> &intLengths, bool zeroIgnored) {
+            (void)id; (void)origins; (void)varLengths; (void)intLengths; (void)zeroIgnored;
+            throw runtime_error("2 dim nooverlap with mixed lengths constraint is not yet supported");
+        }
 
         /**
          * The callback function related to a no overlap constraint with variable origins and 3 dimensional variable  lenghts
@@ -2582,7 +2674,7 @@ namespace XCSP3Core {
          * @param list the scope
          * @param coefs the vector of coefficients (variables)
          */
-        virtual void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<XVariable *> &coefs) {
+         virtual void buildObjectiveMaximize(ExpressionObjective type, vector<Tree *> &trees, vector<XVariable *> &coefs) {
             (void)type; (void)trees; (void)coefs;
             throw runtime_error("maximize objective with expression  not yet supported");
         }

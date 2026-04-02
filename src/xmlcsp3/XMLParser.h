@@ -840,10 +840,13 @@ namespace XCSP3Core {
         class OriginsTagAction : public TagAction {
 
             vector<XVariable *> &listToFill;
+            UTF8String origins;
+
         public:
             OriginsTagAction(XMLParser *parser, string nm, vector<XVariable *> &ltf) : TagAction(parser, nm), listToFill(ltf) { }
-            virtual void beginTag(const AttributeList &attributes) override;
-            virtual void text(const UTF8String txt, bool last) override;
+            void beginTag(const AttributeList &attributes) override;
+            void text(const UTF8String txt, bool last) override;
+            void endTag() override;
         };
 
         /***************************************************************************
@@ -942,6 +945,7 @@ namespace XCSP3Core {
          ****************************************************************************/
 
         class MatrixTagAction : public TagAction {
+            UTF8String matrix;
         public:
             MatrixTagAction(XMLParser *parser, string name) : TagAction(parser, name) { }
             void beginTag(const AttributeList &attributes) override;
