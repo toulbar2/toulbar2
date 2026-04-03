@@ -2293,6 +2293,18 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         problem->postBinaryConstraint(varvalue, varindex, costs);
     }
 
+    void buildConstraintElement(string id, vector<int> &list, int startIndex, XVariable *index, RankType rank, int value) override {
+        assert(startIndex == 0);
+        assert(rank == RankType::ANY);
+        int varindex = getMyVar(index->id);
+        assert(problem->getDomainInitSize(varindex) <= list.size());
+        for (unsigned int b=0; b < list.size(); b++) {
+            if (problem->canbe(varindex, (Value)b) && value != list[b]) {
+                problem->remove(varindex, b);
+            }
+        }
+    }
+
     void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *value) override {
         int varvalue = getMyVar(value->id);
         vector<int> vars;
@@ -2398,7 +2410,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
     }
 
-    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable* value) override {
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, string value) {
         vector<vector<int> > vars;
         for (unsigned int i=0; i<matrix.size(); i++) {
             vars.push_back(vector<int>());
@@ -2408,7 +2420,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(startColIndex == 0);
         int varrowindex = getMyVar(rowIndex->id);
         int varcolindex = getMyVar(colIndex->id);
-        int varvalue = getMyVar(value->id);
+        int varvalue = getMyVar(value);
         assert(varcolindex != varrowindex);
         assert(varrowindex != varvalue);
         assert(varcolindex != varvalue);
@@ -2446,6 +2458,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable* value) override {
+        buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, value->id);
+    }
+
     void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int value) override {
         vector<vector<int> > vars;
         for (unsigned int i=0; i<matrix.size(); i++) {
@@ -2477,12 +2493,66 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) override {
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int minValue, int maxValue) {
+        vector<vector<int> > vars;
+        for (unsigned int i=0; i<matrix.size(); i++) {
+            vars.push_back(vector<int>());
+            toMyVariables(matrix[i],vars[i]);
+        }
         assert(startRowIndex == 0);
         assert(startColIndex == 0);
         int varrowindex = getMyVar(rowIndex->id);
         int varcolindex = getMyVar(colIndex->id);
-        int varvalue = getMyVar(value->id);
+        assert(varcolindex != varrowindex);
+        assert(problem->getDomainInitSize(varrowindex) <= vars.size());
+        for (unsigned int i=0; i<vars.size(); i++) {
+            if (problem->canbe(varrowindex, (Value)i)) {
+                for (unsigned int j=0; j<vars[i].size(); j++) {
+                    if (problem->canbe(varcolindex, (Value)j)) {
+                        assert(varrowindex != vars[i][j]);
+                        assert(varcolindex != vars[i][j]);
+                        vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(vars[i][j]), MIN_COST);
+                        for (unsigned int b=0; b < problem->getDomainInitSize(vars[i][j]); b++) {
+                            if (problem->toValue(vars[i][j], b) < minValue || problem->toValue(vars[i][j], b) > maxValue) {
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]) + problem->toIndex(varcolindex, (Value)j) * problem->getDomainInitSize(vars[i][j]) + b] = MAX_COST_XML3;
+                            }
+                        }
+                        problem->postTernaryConstraint(varrowindex, varcolindex, vars[i][j], costs);
+                    }
+                }
+            }
+        }
+    }
+
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XCondition &xc) override {
+        switch (xc.operandType) {
+        case OperandType::INTEGER:
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.val);
+            break;
+        case OperandType::VARIABLE:
+            if (xc.op == OrderType::EQ || xc.op == OrderType::IN) {
+                buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.var);
+            } else {
+                cerr << "Sorry order type " << xc.op << " not implemented in matrix element constraint!" << endl;
+                throw WrongFileFormat();
+            }
+            break;
+        case OperandType::INTERVAL:
+            assert(xc.op == OrderType::IN);
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.min, xc.max);
+            break;
+        default:
+            cerr << "Sorry operand type " << xc.operandType << " not implemented in matrix element constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, string value) {
+        assert(startRowIndex == 0);
+        assert(startColIndex == 0);
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        int varvalue = getMyVar(value);
         assert(varcolindex != varrowindex);
         assert(varrowindex != varvalue);
         assert(varcolindex != varvalue);
@@ -2501,6 +2571,77 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     }
                 }
             }
+        }
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) override {
+        buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, value->id);
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int value) {
+        assert(startRowIndex == 0);
+        assert(startColIndex == 0);
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        assert(varcolindex != varrowindex);
+        assert(problem->getDomainInitSize(varrowindex) <= matrix.size());
+        vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex), MIN_COST);
+        for (unsigned int i=0; i<matrix.size(); i++) {
+            if (problem->canbe(varrowindex, (Value)i)) {
+                for (unsigned int j=0; j<matrix[i].size(); j++) {
+                    if (problem->canbe(varcolindex, (Value)j)) {
+                        if (matrix[i][j] != value) {
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) + problem->toIndex(varcolindex, (Value)j)] = MAX_COST_XML3;
+                        }
+                    }
+                }
+            }
+        }
+        problem->postBinaryConstraint(varrowindex, varcolindex, costs);
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int minValue, int maxValue) {
+        assert(startRowIndex == 0);
+        assert(startColIndex == 0);
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        assert(varcolindex != varrowindex);
+        assert(problem->getDomainInitSize(varrowindex) <= matrix.size());
+        vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex), MIN_COST);
+        for (unsigned int i=0; i<matrix.size(); i++) {
+            if (problem->canbe(varrowindex, (Value)i)) {
+                for (unsigned int j=0; j<matrix[i].size(); j++) {
+                    if (problem->canbe(varcolindex, (Value)j)) {
+                        if (matrix[i][j] < minValue || matrix[i][j] > maxValue) {
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) + problem->toIndex(varcolindex, (Value)j)] = MAX_COST_XML3;
+                        }
+                    }
+                }
+            }
+        }
+        problem->postBinaryConstraint(varrowindex, varcolindex, costs);
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XCondition &xc) override {
+        switch (xc.operandType) {
+        case OperandType::INTEGER:
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.val);
+            break;
+        case OperandType::VARIABLE:
+            if (xc.op == OrderType::EQ ||xc.op == OrderType::IN) {
+                buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.var);
+            } else {
+                cerr << "Sorry order type " << xc.op << " not implemented in matrix element constraint!" << endl;
+                throw WrongFileFormat();
+            }
+            break;
+        case OperandType::INTERVAL:
+            assert(xc.op == OrderType::IN);
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.min, xc.max);
+            break;
+        default:
+            cerr << "Sorry operand type " << xc.operandType << " not implemented in matrix element constraint!" << endl;
+            throw WrongFileFormat();
         }
     }
 
@@ -3053,6 +3194,29 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         buildConstraintIntension(id, &tree);
                     } else {
                         Tree tree("or(eq(" + lengths[i][0]->id + ",0),eq(" + lengths[j][0]->id + ",0),eq(" + lengths[i][1]->id + ",0),eq(" + lengths[j][1]->id + ",0),eq(" + lengths[i][2]->id + ",0),eq(" + lengths[j][2]->id + ",0),or(or(le(add(" + origins[i][0]->id + "," + lengths[i][0]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + lengths[j][0]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + lengths[i][1]->id + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + lengths[j][1]->id + ")," + origins[i][1]->id + "))),or(le(add(" + origins[i][2]->id + "," + lengths[i][2]->id + ")," + origins[j][2]->id + "),le(add(" + origins[j][2]->id + "," + lengths[j][2]->id + ")," + origins[i][2]->id + "))))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else {
+            cerr << "Sorry " << origins[0].size() << " dimension not implemented in NoOverlap constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
+    void buildConstraintNoOverlap(string id, vector<vector<XVariable *>> &origins, vector<XVariable *> &varLengths, vector<int> &intLengths, bool zeroIgnored) override {
+        assert(origins.size() == varLengths.size());
+        assert(origins.size() == intLengths.size());
+        assert(origins.size() >= 1);
+        if (origins[0].size()==2) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i+1 ; j < n; j++) {
+                    if (!zeroIgnored) {
+                        Tree tree("or(or(le(add(" + origins[i][0]->id + "," + varLengths[i]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + varLengths[j]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + to_string(intLengths[i]) + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + to_string(intLengths[j]) + ")," + origins[i][1]->id + ")))");
+                        buildConstraintIntension(id, &tree);
+                    } else {
+                        Tree tree("or(eq(" + varLengths[i]->id + ",0),eq(" + varLengths[j]->id + ",0),eq(" + to_string(intLengths[i]) + ",0),eq(" + to_string(intLengths[j]) + ",0),or(le(add(" + origins[i][0]->id + "," + varLengths[i]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + varLengths[j]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + to_string(intLengths[i]) + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + to_string(intLengths[j]) + ")," + origins[i][1]->id + ")))");
                         buildConstraintIntension(id, &tree);
                     }
                 }
