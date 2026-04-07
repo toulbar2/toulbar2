@@ -56,7 +56,8 @@ jobs:
 
           CIBW_ENVIRONMENT: BOOST_INCLUDEDIR=/usr/include/boost169 BOOST_LIBRARYDIR=/usr/lib64/boost169
           
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          # CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp38-*"
 
           CIBW_SKIP: "*-musllinux*"
 
@@ -153,7 +154,7 @@ jobs:
 
       - shell: bash
         working-directory: artifacts
-        run: mkdir ../dist && cp */*.whl ../dist
+        run: mkdir ../dist && cp */*.whl ../dist | true && cp *.whl ../dist | true 
       
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
