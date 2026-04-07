@@ -12,7 +12,6 @@ jobs:
   pytb2-linux-x86_64:
     name: pytoulbar2-linux-x86_64
     runs-on: ubuntu-24.04
-    if: false
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
@@ -56,8 +55,7 @@ jobs:
 
           CIBW_ENVIRONMENT: BOOST_INCLUDEDIR=/usr/include/boost169 BOOST_LIBRARYDIR=/usr/lib64/boost169
           
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
-          # CIBW_BUILD: "cp38-*"
+          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
 
           CIBW_SKIP: "*-musllinux*"
 
@@ -75,7 +73,6 @@ jobs:
 
   pytb2-macos-x86_64:
     name: pytoulbar2-macos-x86_64
-    if: false
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
@@ -106,7 +103,6 @@ jobs:
 
   pytb2-macos-arm:
     name: pytoulbar2-macos-arm
-    if: false
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -137,8 +133,7 @@ jobs:
 
   publish:
     name: Upload release to PyPI
-    needs: [pytb2-linux-arm]
-    # needs: [pytb2-linux-x86_64, pytb2-linux-arm, pytb2-macos-x86_64, pytb2-macos-arm]
+    needs: [pytb2-linux-x86_64, pytb2-linux-arm, pytb2-macos-x86_64, pytb2-macos-arm]
     runs-on: ubuntu-latest
     environment:
       name: pypi
