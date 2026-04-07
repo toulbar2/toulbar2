@@ -150,7 +150,7 @@ jobs:
 
       - uses: actions/download-artifact@v5
         with:
-          path: artifacts
+          path: $GITHUB_WORKSPACE/artifacts
 
       - shell: bash
         working-directory: $GITHUB_WORKSPACE/artifacts
