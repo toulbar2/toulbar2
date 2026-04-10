@@ -98,7 +98,7 @@ bool VNSSolver::solve(bool first)
             ClustersNeighborhoodStructure* ch = (ClustersNeighborhoodStructure*)h;
             if (ToulBar2::verbose >= 1 || ToulBar2::debug)
                 ch->printClusters(cout); 
-            cout << "Problem decomposition in ah ok" << ch->getSize() << " clusters with size distribution: min: " << ch->getMinClusterSize() << " median: " << ch->getMedianClusterSize() << " mean: " << ch->getMeanClusterSize() << " max: " << ch->getMaxClusterSize() << endl;
+            cout << "Problem decomposition in " << ch->getSize() << " clusters with size distribution: min: " << ch->getMinClusterSize() << " median: " << ch->getMedianClusterSize() << " mean: " << ch->getMeanClusterSize() << " max: " << ch->getMaxClusterSize() << endl;
         }
         // vns/lds+cp
         Long nbRestart = 1;
