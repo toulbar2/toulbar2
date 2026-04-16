@@ -85,6 +85,15 @@ public:
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
 };
 
+class NaturelNeighborhoodChoice : public NeighborhoodStructure {
+public:
+    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
+    virtual const zone getNeighborhood(size_t neighborhood_size);
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+};
+
+
+
 class ClustersNeighborhoodStructure : public NeighborhoodStructure {
 protected:
     vector<int> clusters;

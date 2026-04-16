@@ -167,6 +167,9 @@ uint ClustersNeighborhoodStructure::getMedianClusterSize() const
     return stochastic_selection<int>(csize, 0, nbc - 1, nbc / 2);
 }
 
+
+
+// RandomNeighborhoodChoice
 void RandomNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
     this->l = l_;
@@ -197,6 +200,43 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, z
     neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
     return neighborhood;
 }
+
+
+//NaturelNeighborhoodChoice
+void NaturelNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
+{
+    this->l = l_;
+    wcsp = wcsp_;
+}
+const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
+{
+    zone neighborhood;
+    vector<int> z(l->unassignedVars->getSize());
+    unsigned int j = 0;
+
+    for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
+        z[j] = *iter;
+        ++j;
+    }
+    shuffle(z.begin(), z.end(), myrandom_generator);
+    assert(neighborhood_size <= z.size());
+    neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
+    return neighborhood;
+}
+const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, zone z) const
+{
+    zone neighborhood;
+    vector<int> zv(z.begin(), z.end());
+
+    shuffle(zv.begin(), zv.end(), myrandom_generator);
+    assert(neighborhood_size <= zv.size());
+    neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
+    return neighborhood;
+}
+
+
+
+
 
 void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
