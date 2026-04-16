@@ -20,6 +20,11 @@ bool VNSSolver::solve(bool first)
     bestSolution.clear();
     bestUb = MAX_COST;
     int initdepth = Store::getDepth();
+    
+    // [première modif pour les instructions de Samuel] Ajout de deux nouvelles variables : timePerK et bestSolutionK.
+    
+    map<int, double> timePerK;
+    int bestSolutionK = -1;
     try {
         try {
             lastUb = MAX_COST;
@@ -138,10 +143,16 @@ bool VNSSolver::solve(bool first)
                 // repair
                 ToulBar2::vnsKcur = k;
                 ToulBar2::vnsLDScur = (ToulBar2::lds) ? lds : -1;
+                 
+                // [2ème modif] Mesure du temps CPU passé dans chaque voisinage k.
+                
+                
+                double timeBeforeRepair = cpuTime();
                 if (ToulBar2::lds)
                     complete = repair_recursiveSolve(lds, variables, values, bestUb);
                 else
                     complete = repair_recursiveSolve(variables, values, bestUb);
+                timePerK[k] += cpuTime() - timeBeforeRepair;
 
                 // updating
                 if (lastUb >= bestUb) {
@@ -183,8 +194,12 @@ bool VNSSolver::solve(bool first)
                         assert(lastSolution.find(v) != lastSolution.end());
                         bestSolution[v] = lastSolution[v];
                     }
+                    
+                    // [3 ème modif] Mémorisation du k de la meilleure solution (bestSolutionK).
+                    
+                    bestSolutionK = ToulBar2::vnsKcur;
                     if (ToulBar2::verbose >= 1)
-                        cout << "VNS: new solution with cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
+                        cout << "VNS: new solution with cost " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << ", k=" << ToulBar2::vnsKcur << endl;
                     try {
                         wcsp->updateUb(bestUb);
                         wcsp->enforceUb();
@@ -239,6 +254,16 @@ bool VNSSolver::solve(bool first)
 
     if (ToulBar2::vnsOutput)
         ToulBar2::vnsOutput.close();
+
+    
+    // [dernière modif] Affichage du résumé VNS final après la fin de toutes les itérations.
+    
+    if (ToulBar2::verbose >= 0 && !timePerK.empty()) {
+        cout << "VNS summary: final k=" << ToulBar2::vnsKcur << " best solution k=" << bestSolutionK << " final UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
+        cout << "VNS time for neighborhood size k:" << endl;
+        for (map<int, double>::iterator it = timePerK.begin(); it != timePerK.end(); ++it)
+            cout << "  k=" << it->first << " : " << std::fixed << std::setprecision(3) << it->second << "s" << endl;
+    }
 
     if (bestUb < MAX_COST)
         wcsp->setSolution(bestUb, &bestSolution);
