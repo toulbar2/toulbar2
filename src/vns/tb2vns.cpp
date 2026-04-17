@@ -215,10 +215,48 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     vector<int> z(l->unassignedVars->getSize());
     unsigned int j = 0;
 
+
+
     for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
         z[j] = *iter;
         ++j;
     }
+
+    // --------------------------------------------------------
+    // trouver les voisins de la première variable
+    // ?????
+    // 1) récupérer un pointeur vers l'objet "Variable"
+    // 2) récupérer la liste des fonctions de couts dans lesquelles est la variable
+    // 3) récupère le scope des fonctions de cout -> les variables voisines
+
+    // première variable non affectée
+    std::cout << "z[0]: " << z[0] << std::endl;
+
+    int firstVar= z[0];
+    EnumeratedVariable* var = (EnumeratedVariable*) ((WCSP*)wcsp)->getVar(firstVar);
+    std::cout << "var name: " << var->getName() << std::endl;
+
+    auto cstlist = var->getConstrs();
+
+    for(auto it = cstlist->begin(); it != cstlist->end(); ++it) {
+        Constraint* ctr = (*it).constr;
+        std::cout << ctr->arity() << std::endl;
+        if(ctr->arity() == 2) {
+            BinaryConstraint* bconstr = (BinaryConstraint*)(ctr);
+            TSCOPE scope_inv; 
+            bconstr->getScope(scope_inv);
+            for(auto elt: scope_inv) {
+                std::cout << elt.first << ":" << elt.second << ", ";
+                if(elt.first != firstVar) {
+                    std::cout << ((WCSP*)wcsp)->getVar(elt.first)->getName() << ", ";
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    // --------------------------------------------------------
+    
     sort(z.begin(), z.end());  // ordre naturel
     if (counter + neighborhood_size > z.size())
         counter = 0; // on a parcouru toutes les variables, on repart au début
