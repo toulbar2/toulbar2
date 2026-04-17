@@ -207,6 +207,7 @@ void NaturelNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
     this->l = l_;
     wcsp = wcsp_;
+    counter = 0; // on repart toujours du début de la liste au démarrage
 }
 const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
 {
@@ -218,9 +219,12 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
         z[j] = *iter;
         ++j;
     }
-    shuffle(z.begin(), z.end(), myrandom_generator);
+    sort(z.begin(), z.end());  // ordre naturel
+    if (counter + neighborhood_size > z.size())
+        counter = 0; // on a parcouru toutes les variables, on repart au début
     assert(neighborhood_size <= z.size());
-    neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
+    neighborhood.insert(z.begin() + counter, z.begin() + counter + neighborhood_size);
+    counter += neighborhood_size;  // on avance d'un bloc pour le prochain appel
     return neighborhood;
 }
 const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, zone z) const
@@ -228,7 +232,8 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
     zone neighborhood;
     vector<int> zv(z.begin(), z.end());
 
-    shuffle(zv.begin(), zv.end(), myrandom_generator);
+    sort(zv.begin(), zv.end());  // ordre naturel sur la zone restreinte
+
     assert(neighborhood_size <= zv.size());
     neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
     return neighborhood;

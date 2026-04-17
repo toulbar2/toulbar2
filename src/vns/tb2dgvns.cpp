@@ -94,10 +94,18 @@ bool VNSSolver::solve(bool first)
                 cout << "Random Clusters Neighborhood Structure selection" << endl;
             h = new RandomClusterChoice();
             break;
+        case NATURELLE:
+             
+            if (ToulBar2::verbose >= 1)
+                cout << "Naturel Variables Neighborhood Structure selection" << endl;
+            h = new NaturelNeighborhoodChoice();
+            break;  
+
         default:
             cerr << "Unknown Neighborhood Structure" << endl;
             throw BadConfiguration();
         }
+
         h->init(wcsp, this);
         if (ToulBar2::verbose >= 0 && ToulBar2::vnsNeighborVarHeur == CLUSTERRAND && ((ClustersNeighborhoodStructure*)h)->getSize() > 1) {
             ClustersNeighborhoodStructure* ch = (ClustersNeighborhoodStructure*)h;

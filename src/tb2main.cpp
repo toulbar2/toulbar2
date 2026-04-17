@@ -1341,7 +1341,7 @@ int _tmain(int argc, TCHAR* argv[])
                 }
 #else
                 ToulBar2::searchMethod = DGVNS;
-                if (args.OptionArg() != NULL && atoi(args.OptionArg()) >= RANDOMVAR && atoi(args.OptionArg()) <= PCONFLICTVAR && atoi(args.OptionArg()) != MASTERCLUSTERRAND)
+                if (args.OptionArg() != NULL && atoi(args.OptionArg()) >= RANDOMVAR && atoi(args.OptionArg()) <= NATURELLE && atoi(args.OptionArg()) != MASTERCLUSTERRAND)
                     ToulBar2::vnsNeighborVarHeur = static_cast<VNSVariableHeuristic>(atoi(args.OptionArg()));
                 else
                     ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;

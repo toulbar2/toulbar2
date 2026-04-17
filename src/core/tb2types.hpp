@@ -700,7 +700,8 @@ typedef enum {
     SEPCLUSTERSORTED = 6,
     SEPCLUSTERSORTEDV2 = 7,
     MASTERCLUSTERRAND = 8,
-    PCONFLICTVAR = 9
+    PCONFLICTVAR = 9,
+    NATURELLE = 10
 } VNSVariableHeuristic;
 
 typedef enum {

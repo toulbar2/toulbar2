@@ -86,6 +86,8 @@ public:
 };
 
 class NaturelNeighborhoodChoice : public NeighborhoodStructure {
+protected:
+    unsigned int counter;   
 public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
