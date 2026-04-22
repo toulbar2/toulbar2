@@ -249,6 +249,7 @@ public:
             }
         }
         if (excepted) {
+            isSquare = false; //problem  
             for (int varIndex = 0; varIndex < arity_; varIndex++) {
                 deltaCosts.emplace_back(arity_, MIN_COST);
             }
