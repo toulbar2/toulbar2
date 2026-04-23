@@ -366,6 +366,7 @@ enum {
     OPT_lds_max,
     OPT_lds_inc,
     OPT_k_min,
+    OPT_k_dn,
     OPT_k_max,
     OPT_k_inc,
     //    OPT_vns_restart_strategy,
@@ -671,6 +672,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_k_min, (char*)"--kinit", SO_REQ_SEP },
     { OPT_k_max, (char*)"-kmax", SO_REQ_SEP },
     { OPT_k_max, (char*)"--kmax", SO_REQ_SEP },
+    { OPT_k_dn, (char*)"-kdn", SO_REQ_SEP },
     { OPT_k_inc, (char*)"-kinc", SO_REQ_SEP },
     //    { OPT_vns_var_heur, (char*) "--variable-heuristic", SO_REQ_SEP },
     { OPT_neighbor_change, (char*)"--strategy", SO_NONE },
@@ -1341,7 +1343,7 @@ int _tmain(int argc, TCHAR* argv[])
                 }
 #else
                 ToulBar2::searchMethod = DGVNS;
-                if (args.OptionArg() != NULL && atoi(args.OptionArg()) >= RANDOMVAR && atoi(args.OptionArg()) <= NATURELLE && atoi(args.OptionArg()) != MASTERCLUSTERRAND)
+                if (args.OptionArg() != NULL && atoi(args.OptionArg()) >= RANDOMVAR && atoi(args.OptionArg()) <= GRAPH && atoi(args.OptionArg()) != MASTERCLUSTERRAND)
                     ToulBar2::vnsNeighborVarHeur = static_cast<VNSVariableHeuristic>(atoi(args.OptionArg()));
                 else
                     ToulBar2::vnsNeighborVarHeur = CLUSTERRAND;
@@ -1427,7 +1429,14 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_k_max) {
                 if (args.OptionArg() != NULL)
                     ToulBar2::vnsKmax = atoi(args.OptionArg());
+        
             }
+            if (args.OptionId() == OPT_k_dn) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsKdn = atoi(args.OptionArg());
+            }
+
+
             if (args.OptionId() == OPT_k_inc) {
                 if (args.OptionArg() != NULL)
                     ToulBar2::vnsKinc = static_cast<VNSInc>(atoi(args.OptionArg()));

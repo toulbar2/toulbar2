@@ -95,11 +95,18 @@ bool VNSSolver::solve(bool first)
             h = new RandomClusterChoice();
             break;
         case NATURELLE:
-             
+            
             if (ToulBar2::verbose >= 1)
                 cout << "Naturel Variables Neighborhood Structure selection" << endl;
             h = new NaturelNeighborhoodChoice();
             break;  
+
+
+        case GRAPH:
+            if (ToulBar2::verbose >= 1)
+                cout << "Graph Neighborhood Structure selection" << endl;
+            h = new GraphNeighborhoodChoice();
+            break;    
 
         default:
             cerr << "Unknown Neighborhood Structure" << endl;
@@ -165,6 +172,8 @@ bool VNSSolver::solve(bool first)
                 // updating
                 if (lastUb >= bestUb) {
                     if (h->incrementK()) {
+                        if (ToulBar2::vnsNeighborVarHeur == GRAPH)
+                            ((GraphNeighborhoodChoice*)h)->nextRoot(); // idx ← idx+1
                         rank++;
                         if (k < ToulBar2::vnsKmax) {
                             switch (ToulBar2::vnsKinc) {
@@ -195,6 +204,8 @@ bool VNSSolver::solve(bool first)
                 } else {
                     rank = 1;
                     k = ToulBar2::vnsKmin;
+                    if (ToulBar2::vnsNeighborVarHeur == GRAPH)
+                        h->init(wcsp, this);  // idx ← 0 : intensification (L.26)
                     restart = 1;
                     lds = ToulBar2::vnsLDSmin;
                     bestUb = lastUb;

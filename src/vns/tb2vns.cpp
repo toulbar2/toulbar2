@@ -216,7 +216,7 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     unsigned int j = 0;
 
 
-
+    //BTList, elle contient les variables non affectées dans l'ordre de leur index.
     for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
         z[j] = *iter;
         ++j;
@@ -277,8 +277,84 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
     return neighborhood;
 }
 
+// GraphNeighborhoodChoice
+void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
+{
+    this->l = l_;
+    wcsp = wcsp_;
+    rootIndex = 0;
+}
 
+const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
+{
+    // R : variables non-affectées triées par indice croissant (L.2 pseudocode)
+    vector<int> z(l->unassignedVars->getSize());
+    unsigned int j = 0;
+    for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
+        z[j] = *iter;
+        ++j;
+    }
+    sort(z.begin(), z.end());
+    if (rootIndex >= z.size())
+        rootIndex = 0;
 
+    // L ← {vr}  (L.5-6)
+    zone neighborhood;
+    neighborhood.insert(z[rootIndex]);
+
+    int depth = 1;  // d ← 1  (L.7)
+
+    // while d ≤ kdn ∧ |L| < kmax  (L.9)
+    while (depth <= ToulBar2::vnsKdn && (int)neighborhood.size() < (int)neighborhood_size) {
+
+        // Vc : voisins de tout L non encore dans L  (L.10)
+        // on utilise getConstrs() + BinaryConstraint + getScope() — même patron que lignes 236-256
+        vector<int> Vc;
+        for (int v : neighborhood) {
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(v);
+            auto cstlist = var->getConstrs();
+            for (auto it = cstlist->begin(); it != cstlist->end(); ++it) {
+                Constraint* ctr = (*it).constr;
+                if (ctr->arity() == 2) {
+                    BinaryConstraint* bconstr = (BinaryConstraint*)(ctr);
+                    TSCOPE scope_inv;
+                    bconstr->getScope(scope_inv);
+                    for (auto elt : scope_inv) {
+                        if (neighborhood.find(elt.first) == neighborhood.end())
+                            Vc.push_back(elt.first);
+                    }
+                }
+            }
+        }
+
+        // dédoublonner et trier Vc par indice croissant (L.11-12)
+        sort(Vc.begin(), Vc.end());
+        Vc.erase(unique(Vc.begin(), Vc.end()), Vc.end());
+
+        // tronquer si |L| + |Vc| > kmax  (L.13)
+        int slots = (int)neighborhood_size - (int)neighborhood.size();
+        if ((int)Vc.size() > slots)
+            Vc.resize(slots);
+
+        // L ← L ∪ Vc  (L.15)
+        for (int v : Vc)
+            neighborhood.insert(v);
+
+        depth++;  // d ← d+1  (L.22)
+    }
+
+    return neighborhood;  // retourné à VNS
+}
+
+const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, zone z) const
+{
+    zone neighborhood;
+    vector<int> zv(z.begin(), z.end());
+    sort(zv.begin(), zv.end());
+    assert(neighborhood_size <= zv.size());
+    neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
+    return neighborhood;
+}
 
 
 void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)

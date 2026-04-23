@@ -382,7 +382,8 @@ protected:
     friend class ParallelRandomClusterChoice;
     friend class VACExtension;
     friend class NaturelNeighborhoodChoice;
-
+    friend class GraphNeighborhoodChoice;
+    
     bool self_wcsp; // true if the wcsp has been created inside the solver object, false otherwise
     Long nbNodes;
     Long nbBacktracks;
