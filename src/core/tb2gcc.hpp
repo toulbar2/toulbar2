@@ -282,7 +282,9 @@ public:
                 }
             } else {
                 for (int i = 0; i < arity_; i++) {
-                    if (connected(i)) {
+                    //if (connected(i)) {
+                    auto* variable = scope[i];
+                    if (!variable->unassigned() ){
                         conflictWeights[i]++;
                     }
                 }
@@ -592,6 +594,103 @@ public:
         return (!NaryPro);
     }
 
+    /* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
+                    to all other vertices and values in the residual graph.
+
+        Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
+        Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
+        Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
+        International Joint Conference on Artificial Intelligence, IJCAI 2025, */ 
+
+
+    void BimodalDijkstra(int source, vector<vector<int>> & VarList, vector<vector<uint8_t>>& ValList ){
+
+        vector<PQ::handle_type> handles(NbNoAssigned);
+        PQ pq;
+
+        distanceToVar.assign(NbNoAssigned, MAX_COST);
+        visited.assign(NbNoAssigned, 0);
+        visitVal.assign(NbNoAssignedVal, -1);
+
+        // trackingList 
+        trackingList.clear();
+        trackingList.reserve(NbNoAssigned);
+
+        // Add all other variables
+        for (int var = 0; var < NbNoAssigned; ++var) {
+            trackingList.insert(var);
+        }
+
+        inHeap.assign(NbNoAssigned, 0);
+        distanceToVar[source] = 0;
+        handles[source] = pq.push({distanceToVar[source], source});
+        inHeap[source] = 1;
+
+        while (!pq.empty()) {
+            auto [d, var] = pq.top();
+            pq.pop();
+            visited[var] = 1;
+            trackingList.erase(var);
+            int val = rowSol[var];
+            auto &varlist = VarList[val];
+
+            if (visitVal[val] == -1) {
+                visitVal[val] = var;
+            } 
+            else {
+                distanceToVar[var] = distanceToVar[visitVal[val]];
+                continue;
+            }
+            if ((int)varlist.size() < (int)trackingList.size()) {
+                for (int nextVar : varlist) {
+                    if (visited[nextVar])
+                        continue;
+                    Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+                    if (alt < distanceToVar[nextVar]) {
+                        distanceToVar[nextVar] = alt;
+                        if (!inHeap[nextVar]) {
+                            handles[nextVar] = pq.push({ alt, nextVar });
+                            inHeap[nextVar] = 1;
+                        } 
+                        else {
+                            pq.decrease(handles[nextVar], { alt, nextVar });
+                        }
+                        if(alt == d){
+                            trackingList.erase(nextVar);
+                            visited[nextVar] = 1;
+                        }
+                    }
+                }
+            } 
+
+            else {
+                auto it = trackingList.begin();
+                while (it != trackingList.end()) {
+                    auto nextVar = *it;                            
+                    if(ValList[nextVar][val]){
+                        Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+                        if (alt < distanceToVar[nextVar]) {
+
+                            distanceToVar[nextVar] = alt;
+                            if (!inHeap[nextVar]) {
+                                handles[nextVar] = pq.push({ alt, nextVar });
+                                inHeap[nextVar] = 1;
+                            } else {
+                                pq.decrease(handles[nextVar], { alt, nextVar });
+                            }
+                            if(alt == d){
+                                it = trackingList.erase(it);
+                                visited[nextVar] = 1;
+                                continue;
+                            }
+                        }
+                    } 
+                        ++it;
+                }
+            }
+        }
+    }
+
     void propagate() override
     {
         /**
@@ -684,6 +783,7 @@ public:
                             Cost TotalCost = lapjv_gcc(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity);
 
                             if (TotalCost >= current_ub) {
+                                wcsp->revise(this);
                                 THROWCONTRADICTION;
                             } else if (TotalCost >= 0) {
                                 Cost jonker = TotalCost;
@@ -773,10 +873,7 @@ public:
                                             Compostela, Spain: IOS Press.  */ 
 
                                 if (FiltLevel > 0 && MaxReducedCost >= current_ub) {
-                                    //bool NaryPro = false;
-                                    int dimVal = NbNoAssignedVal;
-                                    int dimVar = NbNoAssigned;
-                                    int source;
+
                                     int position;
                                     vector<int> VariableList(NbNoAssigned);                                
                                     iota(VariableList.begin(), VariableList.end(), 0);
@@ -786,118 +883,19 @@ public:
                                         Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));   
                                         myrearrange(VariableList);
                                     }    
-                                    AlreadyUse.assign(dimVal, 0);
+                                    AlreadyUse.assign(NbNoAssignedVal, 0);
                                     int varInde;
                                     for (int ind = 0; ind < Q; ++ind) {
-                                    varInde = VariableList[ind];
+                                        varInde = VariableList[ind];
                                         if (AlreadyUse[rowSol[varInde]] == 0) {
                                             AlreadyUse[rowSol[varInde]] = 1;
                                         } 
                                         else {
                                             continue;
                                         }
-
-                                  /* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
-                                                     to all other vertices and values in the residual graph.
-
-                                         Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
-                                            Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
-                                            Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
-                                            International Joint Conference on Artificial Intelligence, IJCAI 2025, */ 
-
-                                        // Initialize shortest distances
-                                        source = varInde;
-                                        distanceToVar.assign(dimVar, MAX_COST);
-                                        visitVal.assign(dimVal, -1);
-                                        visited.assign(dimVar, 0);
-
-                                        // Min-heap: (distance, variable)
-                                        vector<PQ::handle_type> handles(dimVar);
-                                        PQ pq;
-                                        // trackingList 
-                                        trackingList.clear();
-                                        trackingList.reserve(dimVar);
-
-
-                                        // Add all other variables
-                                        for (int var = 0; var < dimVar; ++var) {
-                                            trackingList.insert(var);
-                                        }
-
-                                        inHeap.assign(dimVar, 0);
-                                        distanceToVar[source] = 0;
-                                        handles[source] = pq.push({distanceToVar[source], source});
-                                        inHeap[source] = 1;
-
-                                        while (!pq.empty()) {
-                                            auto [d, var] = pq.top();
-                                            pq.pop();
-                                            visited[var] = 1;
-                                            trackingList.erase(var);
-                                            int val = rowSol[var];
-
-                                            if (visitVal[val] == -1) {
-                                                visitVal[val] = var;
-                                            } 
-                                            else {
-                                                distanceToVar[var] = distanceToVar[visitVal[val]];
-                                                continue;
-                                            }
-
-                                            auto &varlist = VarList[val];
-
-                                            if ((int)varlist.size() < (int)trackingList.size()) {
-                                                for (int nextVar : varlist) {
-                                                    if (visited[nextVar])
-                                                        continue;
-                                                    Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
-                                                    if (alt < distanceToVar[nextVar]) {
-                                                        distanceToVar[nextVar] = alt;
-                                                        if (!inHeap[nextVar]) {
-                                                            handles[nextVar] = pq.push({ alt, nextVar });
-                                                            inHeap[nextVar] = 1;
-                                                        } 
-                                                        else {
-                                                            pq.decrease(handles[nextVar], { alt, nextVar });
-                                                        }
-                                                        if(alt == d){
-                                                            trackingList.erase(nextVar);
-                                                            visited[nextVar] = 1;
-                                                        }
-                                                    }
-                                                }
-                                            } 
-
-                                            else {
-                                                auto it = trackingList.begin();
-                                                while (it != trackingList.end()) {
-                                                    auto nextVar = *it;                            
-                                                    if(ValList[nextVar][val]){
-                                                        Cost alt = d + ReduceCostMatrix[nextVar * dimVal + val];
-                                                        if (alt < distanceToVar[nextVar]) {
-
-                                                            distanceToVar[nextVar] = alt;
-                                                            if (!inHeap[nextVar]) {
-                                                                handles[nextVar] = pq.push({ alt, nextVar });
-                                                                inHeap[nextVar] = 1;
-                                                            } else {
-                                                                pq.decrease(handles[nextVar], { alt, nextVar });
-                                                            }
-                                                            if(alt == d){
-                                                               it = trackingList.erase(it);
-                                                                visited[nextVar] = 1;
-                                                                continue;
-                                                            }
-                                                        }
-                                                    } 
-                                                        ++it;
-                                                }
-                                            }
-                                        }
-                                        
-                                     /* (END) : Bimodal Dijkstra’s shortest path algorithm from source s
-                                                to all other vertices and values in the residual graph. */
-
+                                        //Dijkstra(varInde, VarList);
+                                        //Bimodal Dijkstra’s shortest path algorithm 
+                                        BimodalDijkstra(varInde, VarList, ValList );        
 
                                         for (int valInd : usedValList) {
 
@@ -923,7 +921,7 @@ public:
                                                     if (variable->canbe(value)) {
                                                         if (ToulBar2::verbose > 0)
                                                             cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
-                                                        ExtOrProJ(variable->wcspIndex, value, -current_ub); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
+                                                        ExtOrProJ(varIndex, value, -current_ub); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
                                                     }
                                                 }
                                             }
@@ -953,6 +951,7 @@ public:
                         TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity);
 
                         if (TotalCost >= current_ub) {
+                            wcsp->revise(this);
                             THROWCONTRADICTION;
                         } else if (TotalCost >= 0) {
                             // Store results from Jonker algorithm
