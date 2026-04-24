@@ -190,6 +190,7 @@ public:
     virtual void reactivatePropagate() = 0; ///< \brief re-authorizes propagate calls
     virtual void propagate(bool fromscratch = false) = 0; ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction). If fromscratch is true then propagates every cost function at least once.
     virtual bool verify() = 0; ///< \brief checks the propagation fix point is reached
+    virtual void propagateConstraint(int constraintIndex) = 0; ///< \brief force propagation of a specific constraint
 #ifdef BOOST
     virtual void addAMOConstraints() = 0;
 #endif

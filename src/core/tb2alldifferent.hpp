@@ -250,6 +250,7 @@ public:
             }
         }
         if (excepted) {
+            isSquare = false;
             for (int varIndex = 0; varIndex < arity_; varIndex++) {
                 deltaCosts.emplace_back(arity_, MIN_COST);
             }
@@ -309,6 +310,7 @@ public:
     /// \brief returns true if constraint always satisfied and has (less than) zero cost only
     // bool universal(Cost zero = MIN_COST) override;
 
+    /*
     bool implies(Constraint* ctr) FINAL
     {
         if (scopeIncluded(ctr) && ctr->isBinary()) {
@@ -362,6 +364,7 @@ public:
             }
         }
     }
+*/
 
     bool valueSymmetry(string stra, string strb)
     {
@@ -735,6 +738,7 @@ public:
                             Cost TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub);
 
                             if (TotalCost >= current_ub) {
+                                wcsp->revise(this);
                                 THROWCONTRADICTION;
                             } else if (TotalCost >= 0) {
                                 Cost jonker = TotalCost;
@@ -982,6 +986,7 @@ public:
                             TotalCost = lapjv(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub);
 
                         if (TotalCost >= current_ub) {
+                            wcsp->revise(this);
                             THROWCONTRADICTION;
                         } else if (TotalCost >= 0) {
                             // Store results from Jonker algorithm

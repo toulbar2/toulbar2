@@ -898,7 +898,7 @@ class CFN:
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
 
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
-    def SolveNext(self, showSolutions = 0, timeLimit = 0):
+    def SolveNext(self, showSolutions = 0, timeLimit = 0, hbfs = 1):
         """SolveNext solves the problem (i.e., finds its optimum and proves optimality). 
         It should be done after calling SolveFirst and modifying the problem if necessary using SetUB, Assign, MultipleAssign, Remove, Increase, Decrease, or adding an incremental cost function.
 
@@ -918,10 +918,12 @@ class CFN:
         self.Limit = None
         if (timeLimit > 0):
             self.CFN.timer(timeLimit)
+        if self.configuration :
+            self.CFN.wcsp.resetWeightedDegree()
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)
-        tb2.option.hbfs = 1     # reinitialize this parameter which can be modified during hybridSolve()
+        tb2.option.hbfs = hbfs     # reinitialize this parameter which can be modified during hybridSolve()
         try:
             try:
                 tb2.store.store()
@@ -932,6 +934,7 @@ class CFN:
         except tb2.SolverOut as e:
             tb2.option.limit = False
             self.Limit = e
+            self.CFN.wcsp.whenContradiction()
         tb2.store.restore(initdepth)
         if self.CFN.wcsp.getSolutionCost() < initub:
             return self.CFN.solution(), self.CFN.wcsp.getDPrimalBound(), None   # warning! None: does not return number of found solutions because it is two slow to retrieve all solutions in python
@@ -1057,6 +1060,15 @@ class CFN:
 
         """
         self.CFN.wcsp.deconnect([self.VariableIndices[var] if isinstance(var, str) else var for var in vars])
+
+    def Propagate(self, constraintId):
+        """Propagate propagates a single constraint.
+
+        Args:
+            constraintId (int): index of a constraint in the model.
+
+        """
+        self.CFN.wcsp.propagateConstraint(constraintId)
         
     def ClearPropagationQueues(self):
         """ClearPropagationQueues resets propagation queues. It should be called when an exception Contradiction occurs.

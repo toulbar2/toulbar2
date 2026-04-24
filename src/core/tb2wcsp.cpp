@@ -4452,6 +4452,7 @@ void WCSP::preprocessing()
                 }
             } else if (constrs[i]->connected() && constrs[i]->isAllDiff()) {
                 // projects on existing binary cost functions inside the scope of AllDifferent
+                vector<Value> exceptedValues = ((AllDifferentConstraint *) constrs[i])->getExceptedValues();
                 Cost mult_ub = (getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, getUb() * MEDIUM_COST)) : getUb();
                 for (int j=0; j < constrs[i]->arity(); j++) {
                     EnumeratedVariable *xj = (EnumeratedVariable *)constrs[i]->getVar(j);
@@ -4463,7 +4464,7 @@ void WCSP::preprocessing()
                                 BinaryConstraint *cjk = (BinaryConstraint*)ctr;
                                 EnumeratedVariable *xk = (EnumeratedVariable *)((cjk->getVar(0)==xj)?cjk->getVar(1):cjk->getVar(0));
                                 if (xj->isValueNames() && xk->isValueNames()) {
-                                    for (Value vj : getEnumDomain(xj->wcspIndex)) {
+                                    for (Value vj : getEnumDomain(xj->wcspIndex)) if (exceptedValues.size()==0 || std::find(exceptedValues.begin(), exceptedValues.end(), vj) == exceptedValues.end()) {
                                         string svj = xj->getValueName(xj->toIndex(vj));
                                         assert(svj.size() > 0);
                                         unsigned int vkindex = xk->toIndex(svj);
