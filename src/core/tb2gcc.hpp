@@ -34,47 +34,54 @@ using namespace std;
 using PQ = boost::heap::pairing_heap<pair<Cost, int>, boost::heap::compare<greater<>>>;
 
 class GlobalCardinalityConstraint : public AbstractNaryConstraint {
-    Cost Original_ub; // initial upper bound when creating the constraint
-    StoreCost lb; // Projected cost to problem lower bound (if zero, all deltaCosts must be zero)
-    StoreCost assigneddeltas; // Accumulated deltas from assigned values (used in cost propagation)
-    vector<Long> conflictWeights; // Used by weighted degree heuristics to prioritize variables
-    vector<vector<StoreCost>> deltaCosts; // Extended unary costs to all values (2D cost matrix)
+    Cost Original_ub;           // Initial upper bound when creating the constraint
+    StoreCost lb;               // Projected cost to problem lower bound (if zero, all deltaCosts must be zero)
+    StoreCost assigneddeltas;   // Accumulated deltas from assigned values (used in cost propagation)
+    vector<Long> conflictWeights;           // Used by weighted degree heuristics to prioritize variables
+    vector<vector<StoreCost>> deltaCosts;   // Extended unary costs to all values (2D cost matrix)
     vector<StoreValue> storeLastAssignment; // Stores the last optimal assignment of variables
-    StoreInt storeAssignment; // True if store optimal assignment
-    int* rowSol = nullptr; // Row solution pointer for assignment
-    Cost* ReduceCostRow = nullptr; // Row reduction costs
-    Cost* ReduceCostCol = nullptr; // Column reduction costs
-    vector<Cost> costMatrix; // Flattened cost matrix
-    int NbValues; // Total number of values in the domain
-    vector<int> AssignedVar; // List of currently assigned variables
-    vector<int> AssignedVal; // List of values assigned to variables
-    vector<int> NoAssignedVar; // List of unassigned variables
-    int NbAssigned; // Number of assigned variables
-    int NbNoAssigned; // Number of unassigned variables
-    int NbNoAssignedVal;
-    vector<bool> varAlreadyProcessed; // Flags for whether a variable has already been processed
-    bool isSquare; // Indicates if the cost matrix is square
-    vector<string> UnionVarDomain; // Combined domain of all variables
-    vector<int> VarDomainSize; // Domain size per variable
-    unordered_map<string, int> mapDomainValToIndex; // Maps domain values to indices in UnionVarDomain
+    StoreInt storeAssignment;   // True if an optimal assignment is currently stored
+    int* rowSol = nullptr;      // Row solution array: rowSol[var] = value index assigned to variable var by the LAP 
+    int* colSol = nullptr;      // Cow solution array: cowSol[val] = variable index assigned to value val by the LAP 
+    Cost* ReduceCostRow = nullptr; // Reduced costs per row (per variable) after solving the LAP
+    Cost* ReduceCostCol = nullptr; // Reduced costs per column (per value) after solving the LAP
+    vector<Cost> costMatrix;    // Flattened row-major cost matrix passed to the Jonker LAP 
+    int NbValues;               // Total number of distinct values across all variable domains (size of UnionVarDomain)
+    vector<int> AssignedVar;    // Indices (in scope) of currently assigned variables
+    vector<int> AssignedVal;    // Value indices (in UnionVarDomain) assigned to each variable in AssignedVar
+    vector<int> NoAssignedVar;  // Indices (in scope) of currently unassigned variables
+    int NbAssigned;             // Number of currently assigned variables
+    int NbNoAssigned;           // Number of currently unassigned variables
+    int NbNoAssignedVal;        // Number of values not yet taken by any assigned variable (columns in the reduced cost matrix)
+    vector<bool> isAssignedValue;       // isAssignedValue[v] = true if value v (index in UnionVarDomain) is already taken by an assigned variable
+    vector<bool> varAlreadyProcessed;   // varAlreadyProcessed[i] = true if variable i has already been processed during domain filtering
     bool SameDomain; // True if all variables have the same domain
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
     vector<int> capacity; // pper bound capacities for every value
     vector<int> CurrentCapacity; //  upper bound capacities for every value
-    int sumub, sumlb, Gcc_NbValues;
-    int* colSol = nullptr;
-    vector<Cost> ReduceCostMatrix;
-    vector<int> visitVal;
-    vector<uint8_t> visited;
-    vector<uint8_t> AlreadyUse;
-    vector<uint8_t> inHeap;
-    vector<Cost> distanceToVar; // shortest distances from source variable to each variable
-    int Q;
-    double FiltLevel;
-    unordered_set<int> trackingList;
-    Cost MaxReducedCost;
-    Cost ReducedCost;
-    Cost VarMaxReducedCost;
+    vector<int> demand; // lower bound capacities for every value
+    int sumub, sumlb, Gcc_NbValues;     // sum of upper bound capacities lpwer bound capacities and gcc values.
+    bool isSquare;              // True if the cost matrix is square (number of variables == number of values)
+    vector<string> UnionVarDomain;      // Sorted union of all variable domains (unique value names)
+    vector<int> VarDomainSize;          // Initial domain size for each variable (indexed by variable position in scope)
+    unordered_map<string, int> mapDomainValToIndex; // Maps each value name to its index in UnionVarDomain
+    vector<Cost> ReduceCostMatrix;      // Reduced cost matrix after LAP solving: ReduceCostMatrix[var * NbNoAssignedVal + val] = reduced cost of assigning value val to variable var
+    vector<uint8_t> visited;    // visited[v] = 1 if variable node v has been finalized by Dijkstra
+    vector<int> visitVal;       // visitVal[v] = 1 if value has been used by other variable by Dijkstra
+    vector<uint8_t> AlreadyUse;  // AlreadyUse[val] = 1 if value has alredy used by other variable
+    vector<uint8_t> inHeap;     // inHeap[v] = 1 if variable/value node v is currently in the priority queue
+    vector<Cost> distanceToVar; // Shortest distances from the Dijkstra source variable to each other variable node in the residual graph
+    vector<Cost> distanceToVal; // Shortest distances from the Dijkstra source variable to each value node in the residual graph (reverse graph)
+    int Q;                      // Number of Dijkstra runs to perform during reduced-cost filtering (derived from FiltLevel and NbNoAssigned)
+    double FiltLevel;           // Fraction of variables used as Dijkstra sources during filtering (0 = disabled, 1 = all variables)
+    unordered_set<int> trackingList;    // Set of variable/value nodes not yet finalized by Dijkstra, used by the bimodal traversal strategy
+    Cost MaxReducedCost;        // Maximum reduced cost observed over all arcs in the current residual graph (used as filtering threshold)
+    Cost ReducedCost;           // Temporary reduced cost of a single arc computed during cost projection
+    Cost VarMaxReducedCost;     // Maximum reduced cost among all arcs incident to a given variable (used to guide source selection)
+    vector<int> lastConflictVars;   // Indices of the variables involved in the last detected conflict (used for conflict-driven weight updates)
+    int findConflict;           // Flag returned by the LAP solver: non-zero if a conflict (infeasible sub-problem) was detected, value encodes the number of conflicting variables
+
+
 
     void projectLB(Cost c)
     {
@@ -89,7 +96,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     // bool canbeProjectedInExtension();
 
     // Depending of the value and the cost, extend or project the cost on the index value of the variable var
-    void ExtOrProJ(int var, Value value, Cost C)
+    void ExtOrProJ(int var, Value value, Cost C, bool delta=true)
     {
         int value_idx = scope[var]->toIndex(value);
         TreeDecomposition* td = wcsp->getTreeDec();
@@ -97,7 +104,8 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             if (!isSquare) {
                 if (td && scope[var]->canbe(value))
                     td->addDelta(cluster, scope[var], value, -C);
-                deltaCosts[var][value_idx] += C;
+                if(delta)
+                    deltaCosts[var][value_idx] += C;
             }
             assert(scope[var]->getCost(value) >= C);
             scope[var]->extend(value, C);
@@ -105,7 +113,8 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             if (!isSquare) {
                 if (td && scope[var]->canbe(value))
                     td->addDelta(cluster, scope[var], value, -C);
-                deltaCosts[var][value_idx] += C;
+                if(delta)
+                    deltaCosts[var][value_idx] += C;
             }
             scope[var]->project(value, -C, true);
         }
@@ -192,10 +201,11 @@ public:
             NoAssignedVar = vector<int>(arity_in, -1);
             capacity = vector<int>(NbValues, arity_in);
             CurrentCapacity = vector<int>(NbValues, 0);
+            demand = vector<int>(NbValues, 0);
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
-            costMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
-            ReduceCostMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
+            costMatrix = vector<Cost>(arity_in * NbValues, MAX_COST);
+            ReduceCostMatrix = vector<Cost>(arity_in * NbValues, MAX_COST);
 
             // Allocate memory
             colSol = new int[NbValues];
@@ -238,6 +248,7 @@ public:
                 auto* variable = scope[varIndex];
                 if (variable->canbe(value)) {
                     capacity[mapDomainValToIndex[variable->getValueName(variable->toIndex(value))]] = upper;
+                    demand[mapDomainValToIndex[variable->getValueName(variable->toIndex(value))]] = lower;
                     break;
                 }
             }
@@ -246,9 +257,49 @@ public:
             THROWCONTRADICTION;
         if (sumub < arity_ && Gcc_NbValues == NbValues)
             THROWCONTRADICTION;
+         
+        //Values upper bound capacity update.
+        if(sumlb > 0){
+            int newCapacity;
+            int newsumub = 0;
+            for(int valIndex = 0; valIndex < NbValues ; valIndex++){
+                newCapacity = arity_ - (sumlb - demand[valIndex]);
+                if(newCapacity <= 0){
+                    capacity[valIndex] = 0;
+                    Value value;
+                    for(int varIndex =  0; varIndex < arity_ ; varIndex++){
+                        auto* variable = scope[varIndex];
+                        value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+                        if(variable->canbe(value)){
+                            variable->remove(value);
+                        }     
+                    }
+                }
+                else{
+                    capacity[valIndex] = capacity[valIndex] > newCapacity ? newCapacity : capacity[valIndex] ;
+                    newsumub += capacity[valIndex];
+                }     
+            }
+            sumub = newsumub;
+        }
+        else{
+            for(int valIndex = 0; valIndex < NbValues ; valIndex++){
+                if(capacity[valIndex] <= 0){
+                    Value value;
+                    for(int varIndex =  0; varIndex < arity_ ; varIndex++){
+                        auto* variable = scope[varIndex];
+                        value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+                        if(variable->canbe(value)){
+                            variable->remove(value);
+                        }     
+                    }
+                }
+            }
+        }
+
 
         // If more values than variables, cost matrix is not square
-        if (Gcc_NbValues < NbValues || sumub > arity_) {
+        if ((Gcc_NbValues < NbValues && sumlb == 0 ) || sumub > arity_) {
             isSquare = false;
             for (int varIndex = 0; varIndex < arity_; varIndex++) {
                 // Initialize extended cost vector for each variable
@@ -282,9 +333,11 @@ public:
                 }
             } else {
                 for (int i = 0; i < arity_; i++) {
-                    //if (connected(i)) {
+                   // if (connected(i)) {
                     auto* variable = scope[i];
+
                     if (!variable->unassigned() ){
+
                         conflictWeights[i]++;
                     }
                 }
@@ -388,18 +441,28 @@ public:
             return res;
         }
 
-        Cost res = -lb + assigneddeltas;
+        Cost res =  -lb + assigneddeltas ;
+  
         Cost nbsame = 0;
         vector<int> countUsed(NbValues, 0);
         for (int varIndex = 0; varIndex < arity_; varIndex++) {
-            res += deltaCosts[varIndex][s[varIndex]];
             int valIndex = mapDomainValToIndex[scope[varIndex]->getValueName(s[varIndex])];
+            res += deltaCosts[varIndex][valIndex];
             countUsed[valIndex]++;
-            if (countUsed[valIndex] > capacity[valIndex]) {
+            if (countUsed[valIndex] > capacity[valIndex] ) {
                 nbsame++;
             }
         }
-        if (nbsame > 0 || res > wcsp->getUb()) {
+
+        if(sumlb > 0){
+            for (int valIndex = 0; valIndex < NbValues; valIndex++) {
+                if(countUsed[valIndex] < demand[valIndex]){
+                    nbsame+= (demand[valIndex] - countUsed[valIndex]);
+                }
+            }
+        }
+        
+        if (nbsame > 0 || res > wcsp->getUb() || res < 0) {
             if (nbsame > 0 && Original_ub < wcsp->getUb() && 1.0L * Original_ub * nbsame < wcsp->getUb()) {
                 res = Original_ub * nbsame; // VNS-like methods may exploit a relaxation of the constraint
             } else {
@@ -410,7 +473,6 @@ public:
         assert(res >= MIN_COST);
         return res;
     }
-
     Cost getMaxFiniteCost() override ///< \brief returns the maximum finite cost for any valid tuple less than wcsp->getUb()
     {
         if (isSquare)
@@ -464,25 +526,22 @@ public:
         }
     }
 
+    /**
+     * @brief Filters and removes assigned values from unassigned variables in the GCC constraint.
+     *
+     * This function enforces the GCC constraint by:
+     * - Verifying that assigned variables do not share the same value.
+     * - Removing values from unassigned variable domains if already assigned elsewhere.
+     * - Propagating newly assigned variables and updating internal state.
+     * - Triggering full n-ary projection if thresholds on domain sizes or variable count are met.
+     *
+     * @return true if constraint propagation was successful without needing full projection.
+     * @return false if the constraint switched to full n-ary projection.
+     *
+     * @throws Throws a contradiction exception (THROWCONTRADICTION) if two variables are assigned the same value.
+     */
     bool RemoveAssignVar()
     {
-
-        /**
-         * @brief Filters and removes assigned values from unassigned variables in the GCC constraint.
-         *
-         * This function enforces the GCC constraint by:
-         * - Verifying that assigned variables do not share the same value.
-         * - Removing values from unassigned variable domains if already assigned elsewhere.
-         * - Propagating newly assigned variables and updating internal state.
-         * - Triggering full n-ary projection if thresholds on domain sizes or variable count are met.
-         *
-         * @return true if constraint propagation was successful without needing full projection.
-         * @return false if the constraint switched to full n-ary projection.
-         *
-         * @throws Throws a contradiction exception (THROWCONTRADICTION) if two variables are assigned the same value.
-         */
-
-        // Initialize tracking vectors for assigned values and processed variables
         varAlreadyProcessed = vector<bool>(arity_, false);
 
         // Clear and reserve space for assigned and unassigned variables containers
@@ -492,6 +551,7 @@ public:
         NoAssignedVar.reserve(arity_);
         AssignedVal.clear();
         AssignedVal.reserve(arity_);
+        unordered_map<int, vector<int>> conflictvar; 
         // Identify assigned and unassigned variables
         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
             auto* variable = scope[varIndex];
@@ -506,8 +566,15 @@ public:
                 if (CurrentCapacity[valIndex] > -1) {
                     AssignedVar.push_back(varIndex);
                     AssignedVal.push_back(valIndex);
+                    conflictvar[valIndex].push_back(varIndex);
                 } else {
+                    conflictWeights[varIndex]++;
+                    auto &vars = conflictvar[valIndex];
+                    for(int var : vars){
+                        conflictWeights[var]++;
+                    }
                     THROWCONTRADICTION;
+                    
                 }
             }
         }
@@ -535,8 +602,8 @@ public:
 
                     if (variable->canbe(value)) {
                         // Remove the assigned value from the domain of unassigned variable
-                        variable->remove(value);
-
+                         variable->remove(value);
+                        // cout<<"remove "<<valIndex<<" from "<<varIndex<<endl;
                         if (variable->assigned()) {
                             // If variable becomes assigned after removal, mark for propagation
                             newlyAssignedVars.push_back(varIndex);
@@ -569,7 +636,14 @@ public:
                         if (CurrentCapacity[valIndex] > -1) {
                             AssignedVar.push_back(varIndex);
                             AssignedVal.push_back(valIndex);
+                            conflictvar[valIndex].push_back(varIndex);
+                            
                         } else {
+                            conflictWeights[varIndex]++;
+		            auto &vars = conflictvar[valIndex];
+		            for(int var : vars){
+		                conflictWeights[var]++;
+		            }
                             THROWCONTRADICTION;
                         }
                     }
@@ -594,15 +668,24 @@ public:
         return (!NaryPro);
     }
 
-    /* (BEGIN) : Bimodal Dijkstra’s shortest path algorithm from source s
-                    to all other vertices and values in the residual graph.
 
-        Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
-        Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
-        Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
-        International Joint Conference on Artificial Intelligence, IJCAI 2025, */ 
-
-
+    /**
+     * @brief Bimodal Dijkstra on the forward residual graph.
+     *        Computes shortest distances from a source variable to all other
+     *        variable nodes. At each settled node, chooses between iterating
+     *        over the (sparse) adjacency list or the (small) unsettled set,
+     *        whichever is cheaper.
+     * @param source    Index of the source variable node.
+     * @param VarList   VarList[val] = list of variable indices that have val as a non-matching arc.
+     * @param ValList   ValList[var][val] = 1 if arc (var,val) exists in the residual graph.
+     * 
+     *      Source : Bimodal Depth-First Search for Scalable GAC for AllDifferent.
+     *      Sulian Le Bozec Chiffoleau; Nicolas Beldiceanu; Charles Prud'homme; 
+     *      Gilles Simonin; and Xavier Lorca, roceedings of the Thirty-Fourth 
+     *      International Joint Conference on Artificial Intelligence, IJCAI 2025, 
+     *      Montreal, Canada, August 16-22, 2025. 
+     * 
+     */
     void BimodalDijkstra(int source, vector<vector<int>> & VarList, vector<vector<uint8_t>>& ValList ){
 
         vector<PQ::handle_type> handles(NbNoAssigned);
@@ -691,21 +774,22 @@ public:
         }
     }
 
+    /**
+     * @brief Propagate the Global Cardinality constraint to enforce consistency and improve problem lower bound.
+     *
+     * This method performs constraint propagation by checking assigned variables,
+     * removing inconsistent values, computing lower bounds using the Jonker algorithm,
+     * and updating unary costs and supports accordingly.
+     *
+     * It handles different cases depending on whether variables are assigned or not,
+     * if the domains are the same.
+     *
+     * @throws TimeOut if the propagation is interrupted.
+     * @throws ContradictionException if the constraint becomes unsatisfiable.
+     */
     void propagate() override
     {
-        /**
-         * @brief Propagate the AllDifferent constraint to enforce consistency and improve problem lower bound.
-         *
-         * This method performs constraint propagation by checking assigned variables,
-         * removing inconsistent values, computing lower bounds using the Jonker algorithm,
-         * and updating unary costs and supports accordingly.
-         *
-         * It handles different cases depending on whether variables are assigned or not,
-         * if the domains are the same, and whether "excepted" values are considered.
-         *
-         * @throws TimeOut if the propagation is interrupted.
-         * @throws ContradictionException if the constraint becomes unsatisfiable.
-         */
+
         if (ToulBar2::dumpWCSP % 2) // skip propagation if the problem is dumped before preprocessing
             return;
 
@@ -754,10 +838,23 @@ public:
                             // Collect unassigned values
                             vector<int> NoAssignedVal;
                             vector<int> NoAsscapacity;
+                            vector<int> NoAssdemand;
+                            int lb;
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 if (CurrentCapacity[valIndex] > 0) {
                                     NoAssignedVal.push_back(valIndex);
                                     NoAsscapacity.push_back(CurrentCapacity[valIndex]);
+                                    if(sumlb > 0){
+                                        lb = demand[valIndex] - (capacity[valIndex] - CurrentCapacity[valIndex]);
+                                        if (lb > 0) {
+                                            NoAssdemand.push_back(lb);
+                                        } else {
+                                            NoAssdemand.push_back(0);
+                                        }
+                                    }
+                                    else{
+                                        NoAssdemand.push_back(0);
+                                    }
                                 }
                             }
 
@@ -775,16 +872,33 @@ public:
                                 for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                     int valIndex = NoAssignedVal[valInd];
                                     Value val = variable->toValue(valIndex);
-                                    costMatrix[varInd * NbNoAssignedVal + valInd] = variable->canbe(val) ? variable->getCost(val) : current_ub;
+                                    if(variable->canbe(val)){
+                                        auto valCost = variable->getCost(val);
+                                        costMatrix[varInd * NbNoAssignedVal + valInd] =  valCost < current_ub ? valCost : current_ub;
+                                    }
+                                    else{
+                                        costMatrix[varInd * NbNoAssignedVal + valInd] = current_ub;
+                                    }
                                 }
                             }
 
                             // Solve assignment problem using Jonker algorithm
-                            Cost TotalCost = lapjv_gcc(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity);
+                            Cost TotalCost;
+                            if(isSquare || sumlb == 0){
+                                TotalCost = lapjv_ub(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, findConflict);
+                            } else{
+                                TotalCost = lapjv_gcc(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, NoAssdemand, findConflict);
+                            }
 
                             if (TotalCost >= current_ub) {
+                                if(findConflict){
+                                    for(int var=0; var< findConflict; var++){
+                                        conflictWeights[NoAssignedVar[var]]++;
+                                    } 
+                                }
                                 wcsp->revise(this);
-                                THROWCONTRADICTION;
+                                THROWCONTRADICTION; 
+
                             } else if (TotalCost >= 0) {
                                 Cost jonker = TotalCost;
 
@@ -803,26 +917,26 @@ public:
 
                                 // Update the lower bound with the Jonker algorithm's total cost
                                 projectLB(jonker);
+                                Cost lastCurrent_ub = current_ub;
                                 current_ub -= jonker;
 
                                 // Adjust unary costs for unassigned variables based on reduced costs
 
-                                // Adjust unary costs for unassigned variables based on reduced costs
                                 MaxReducedCost = 0;
                                 vector<vector<int>> VarList(NbNoAssignedVal);
                                 vector<vector<uint8_t>> ValList(NbNoAssigned);
                                 unordered_set<int> usedValList;
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
-                                    VarMaxReducedCost = 0;
                                     int varIndex = NoAssignedVar[varInd];
                                     auto* variable = scope[varIndex];
                                     ValList[varInd] = vector<uint8_t>(NbNoAssignedVal, 0);
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                        int valIndex = NoAssignedVal[valInd];
-                                        Value value = variable->toValue(valIndex);
-
-                                        if (variable->canbe(value)) {
+                                        if( ReduceCostCol[valInd] == lastCurrent_ub) continue;
+                                        if(costMatrix[varInd * NbNoAssignedVal + valInd] < lastCurrent_ub ){
+                                            int valIndex = NoAssignedVal[valInd];
+                                            Value value = variable->toValue(valIndex);                                           
                                             ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+
                                             if (FiltLevel > 0) {
                                                 ReducedCost = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
                                                 ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
@@ -921,7 +1035,7 @@ public:
                                                     if (variable->canbe(value)) {
                                                         if (ToulBar2::verbose > 0)
                                                             cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
-                                                        ExtOrProJ(varIndex, value, -current_ub); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
+                                                        ExtOrProJ(varIndex, value, -current_ub, false); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
                                                     }
                                                 }
                                             }
@@ -943,16 +1057,32 @@ public:
                             for (int valIndex = 0; valIndex < VarDomainSize[varIndex]; ++valIndex) {
                                 Value value = variable->toValue(valIndex);
                                 string valName = variable->getValueName(valIndex);
-                                costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] = variable->canbe(value) ? variable->getCost(value) : current_ub;
+                                if(variable->canbe(value)){
+                                    auto valCost = variable->getCost(value);
+                                    costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] =  valCost < current_ub ? valCost : current_ub;
+                                }
+                                else{
+                                    costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] = current_ub;
+                                }
                             }
                         }
                         // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                         Cost TotalCost;
-                        TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity);
+                        if(isSquare || sumlb == 0){
+                            TotalCost = lapjv_ub(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, findConflict);
+                        } else{    
+                            TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, demand, findConflict);
+                        }
 
                         if (TotalCost >= current_ub) {
+		                    if(findConflict){
+                                for(int var=0; var < findConflict; var++){
+                                    conflictWeights[var]++;
+                                }
+                            } 
                             wcsp->revise(this);
-                            THROWCONTRADICTION;
+                            THROWCONTRADICTION; 
+
                         } else if (TotalCost >= 0) {
                             // Store results from Jonker algorithm
                             for (int varIndex = 0; varIndex < arity_; varIndex++) {
@@ -970,14 +1100,16 @@ public:
                                 auto* variable = scope[varIndex];
 
                                 for (int valIndex = 0; valIndex < VarDomainSize[varIndex]; ++valIndex) {
-                                    Value value = variable->toValue(valIndex);
                                     string valName = variable->getValueName(valIndex);
-
-                                    if (variable->canbe(value)) {
+                                    if(ReduceCostCol[mapDomainValToIndex[valName]] == current_ub) continue;
+                                    if(costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] < current_ub){
+                                        Value value = variable->toValue(valIndex);
                                         ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
                                     }
                                 }
                             }
+                            
+
 
                             // Update support if needed for all variables
                             for (int varIndex = 0; varIndex < arity_; ++varIndex) {

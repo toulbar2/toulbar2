@@ -36,6 +36,7 @@ public:
     virtual bool isGCC() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint
     virtual bool isGCCSquare() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint and NbValues==arity
     virtual bool isGlobal() const { return false; } // return true if it is a global cost function (flow-based monolithic propagation)
+    virtual std::vector<Value> getExceptedValues() const {return std::vector<Value>();} //GS
     //    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 
     virtual bool connected() const

@@ -45,7 +45,6 @@ using std::ifstream;
 using std::isinf;
 using std::istringstream;
 using std::setprecision;
-
 #ifdef BOOST
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -4451,8 +4450,11 @@ void WCSP::preprocessing()
                     nary->preprojectall2();
                 }
             } else if (constrs[i]->connected() && constrs[i]->isAllDiff()) {
+                std::vector<Value> exceptedVal = constrs[i]->getExceptedValues();
+                bool excepted = true ;
+                if(exceptedVal.empty()) excepted = false;
+
                 // projects on existing binary cost functions inside the scope of AllDifferent
-                vector<Value> exceptedValues = ((AllDifferentConstraint *) constrs[i])->getExceptedValues();
                 Cost mult_ub = (getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, getUb() * MEDIUM_COST)) : getUb();
                 for (int j=0; j < constrs[i]->arity(); j++) {
                     EnumeratedVariable *xj = (EnumeratedVariable *)constrs[i]->getVar(j);
@@ -4464,16 +4466,24 @@ void WCSP::preprocessing()
                                 BinaryConstraint *cjk = (BinaryConstraint*)ctr;
                                 EnumeratedVariable *xk = (EnumeratedVariable *)((cjk->getVar(0)==xj)?cjk->getVar(1):cjk->getVar(0));
                                 if (xj->isValueNames() && xk->isValueNames()) {
-                                    for (Value vj : getEnumDomain(xj->wcspIndex)) if (exceptedValues.size()==0 || std::find(exceptedValues.begin(), exceptedValues.end(), vj) == exceptedValues.end()) {
+                                    for (Value vj : getEnumDomain(xj->wcspIndex)) {
                                         string svj = xj->getValueName(xj->toIndex(vj));
                                         assert(svj.size() > 0);
                                         unsigned int vkindex = xk->toIndex(svj);
                                         Value vk = xk->toValue(vkindex);
-                                        if (xk->canbe(vk)) {
-                                            Cost oldcost = cjk->getCost(xj, xk, vj, vk);
-                                            cjk->addcost(xj, xk, vj, vk, mult_ub - oldcost);
+                                        // Guidio : 
+                                        if(excepted){
+                                             auto it = std::find(exceptedVal.begin(), exceptedVal.end(), vk);
+                                             if(it == exceptedVal.end()){
+                                                if (xk->canbe(vk)) {
+                                                    Cost oldcost = cjk->getCost(xj, xk, vj, vk);
+                                                     cjk->addcost(xj, xk, vj, vk, mult_ub - oldcost);
+                                                }
+                                            }
                                         }
+                                        //end
                                     }
+
                                 } else {
                                     for (Value vj : getEnumDomain(xj->wcspIndex)) {
                                         if (xk->canbe(vj)) {

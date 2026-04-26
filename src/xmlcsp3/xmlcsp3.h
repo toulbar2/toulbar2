@@ -1583,7 +1583,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         for (int k = 0; k < (int)values.size(); ++k) {
             count += occurs[k];
             if (closed) myvalues.insert(values[k]);
-            params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(0) + to_string(" ") + to_string(occurs[k]);
+            params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(occurs[k]) + to_string(" ") + to_string(occurs[k]);
         }
         if (count > (int)vars.size() || (closed && (count < (int)vars.size()))) throw Contradiction();
         if (closed) {
@@ -1596,7 +1596,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
         }
         problem->postGlobalCardinalityConstraint(vars, params);
-        if (count != (int)vars.size()) {
+        /*if (count != (int)vars.size()) {
             string params2="";
             int domsize;
             int nbval;
@@ -1618,7 +1618,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-        }
+        }*/
     }
 
     void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XVariable *> &occurs, bool closed) override {
@@ -1706,13 +1706,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         int countlb = 0;
         int countub = 0;
         set<int> myvalues;
-        int nbval;
         params=to_string((int)values.size());
         for (int k = 0; k < (int)values.size(); ++k) {
             countlb += occurs[k].min;
             countub += occurs[k].max;
             if (closed) myvalues.insert(values[k]);
-            params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(0) + to_string(" ") + to_string(occurs[k].max);
+            params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(occurs[k].min) + to_string(" ") + to_string(occurs[k].max);
         }
         if (countlb > (int)vars.size() || (closed && (countub < (int)vars.size()))) throw Contradiction();
         if (closed) {
@@ -1725,7 +1724,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
         }
         problem->postGlobalCardinalityConstraint(vars, params);
-        for (int k = 0; k < (int)values.size(); ++k) {
+        /*for (int k = 0; k < (int)values.size(); ++k) {
             if(occurs[k].min > 0){
                 params=to_string(occurs[k].min)+ to_string(" ");
                 for (int i = 0; i < (int)vars.size(); ++i) {
@@ -1744,7 +1743,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-        }
+        }*/
     }
 
     void buildConstraintMinMax(bool max, vector<int> &vars, int varargmax, XCondition &cond) {
