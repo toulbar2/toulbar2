@@ -140,16 +140,19 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         unsigned int domsize = wcsp.getDomainSize(scopeIndexs[0]);
         arguments.append(to_string(domsize));
         int left = arity;
+        int sumlb = arity;
         unsigned int pos = 0;
         for (Value v :  wcsp.getEnumDomain(scopeIndexs[0])) {
             arguments.append(" ");
             arguments.append(to_string(v));
             arguments.append(" ");
             pos++;
-            int rand = myrand() % (left+1);
-            int capa = (pos==domsize)?left:rand; // random lower/upper bound capacity or what is left
-            left -= rand;
-            arguments.append(to_string(capa));
+            int rand = myrand() % (arity+1); // random upper bound capacity 
+            int capa = (pos==domsize && left > 0)?left:rand; 
+            int demand = myrand() % (min(capa, sumlb)+1); // random lower bound capacity 
+            left -= capa;
+            sumlb -= demand;
+            arguments.append(to_string(demand));
             arguments.append(" ");
             arguments.append(to_string(capa));
         }
@@ -162,13 +165,16 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         vector<BoundedObjValue> values;
         unsigned int domsize = wcsp.getDomainSize(scopeIndexs[0]);
         int left = arity;
+        int sumlb = arity;
         unsigned int pos = 0;
         for (Value v :  wcsp.getEnumDomain(scopeIndexs[0])) {
             pos++;
-            int rand = myrand() % (left+1);
-            int capa = (pos==domsize)?left:rand; // random lower/upper bound capacity or what is left
-            left -= rand;
-            values.push_back(BoundedObjValue(v, capa, capa));
+            int rand = myrand() % (arity+1); // random upper bound capacity 
+            int capa = (pos==domsize && left > 0)?left:rand; 
+            int demand = myrand() % (min(capa, sumlb)+1); // random lower bound capacity 
+            left -= capa;
+            sumlb -= demand;
+            values.push_back(BoundedObjValue(v, capa, demand));
         }
         wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
