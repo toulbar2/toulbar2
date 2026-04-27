@@ -226,6 +226,8 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     if (counter + neighborhood_size > z.size())
         counter = 0; // on a parcouru toutes les variables, on repart au début
     assert(neighborhood_size <= z.size());
+    
+    //cout << "counter: " << counter << " neighborhood_size: " << neighborhood_size << " z.size(): " << z.size() << endl;
     neighborhood.insert(z.begin() + counter, z.begin() + counter + neighborhood_size);
     counter += neighborhood_size;  // on avance d'un bloc pour le prochain appel
     return neighborhood;
@@ -252,31 +254,33 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 
 const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
 {
-    // R : variables non-affectées triées par indice croissant (L.2 pseudocode)
-    vector<int> z(l->unassignedVars->getSize());
+    //création d'un vecteur de taille égale au nombre de variables non affectées, contenant les indices de ces variables .
+    // unassignedVars stocke des indices et z le recopie.
+
+    vector<int> z(l->unassignedVars->getSize()); 
     unsigned int j = 0;
     for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
         z[j] = *iter;
         ++j;
     }
-    sort(z.begin(), z.end());
+    
     if (rootIndex >= z.size())
         rootIndex = 0;
 
     // L ← {vr}  (L.5-6)
-    zone neighborhood;
+    zone neighborhood; //le voisinage quon veut construire.
     neighborhood.insert(z[rootIndex]);
 
     int depth = 1;  // d ← 1  (L.7)
 
-    // while d ≤ kdn ∧ |L| < kmax  (L.9)
+    // while d ≤ kdn ∧ |L| < kmax courant  (L.9)
     while (depth <= ToulBar2::vnsKdn && (int)neighborhood.size() < (int)neighborhood_size) {
 
         // Vc : voisins de tout L non encore dans L  (L.10)
-        // on utilise getConstrs() + BinaryConstraint + getScope() — même patron que lignes 236-256
+        // on utilise getConstrs() + BinaryConstraint + getScope() pour trouver les voisins de chaque variable de L, et on les ajoute dans Vc s'ils respectent la condition.
         vector<int> Vc;
         for (int v : neighborhood) {
-            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(v);
+            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(v); // on récupère la variable à partir de son indice, en faisant d'abord un cast de wcsp en WCSP* puis un cast de la variable en EnumeratedVariable* pour pouvoir utiliser getConstrs() et getScope() ensuite.
             auto cstlist = var->getConstrs();
             for (auto it = cstlist->begin(); it != cstlist->end(); ++it) {
                 Constraint* ctr = (*it).constr;
@@ -285,16 +289,16 @@ const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
                     TSCOPE scope_inv;
                     bconstr->getScope(scope_inv);
                     for (auto elt : scope_inv) {
-                        if (neighborhood.find(elt.first) == neighborhood.end())
+                        if (neighborhood.find(elt.first) == neighborhood.end()) // tester que l n'est pas fans le vecteur
                             Vc.push_back(elt.first);
                     }
                 }
             }
         }
 
-        // dédoublonner et trier Vc par indice croissant (L.11-12)
-        sort(Vc.begin(), Vc.end());
-        Vc.erase(unique(Vc.begin(), Vc.end()), Vc.end());
+        // trier Vc pour faire apparaitre les doublons potentiel à erase pour qu'il puisse les supprimer, important pour slots soit utilisé correctement.
+        sort(Vc.begin(), Vc.end()); 
+        Vc.erase(unique(Vc.begin(), Vc.end()), Vc.end()); 
 
         // tronquer si |L| + |Vc| > kmax  (L.13)
         int slots = (int)neighborhood_size - (int)neighborhood.size();

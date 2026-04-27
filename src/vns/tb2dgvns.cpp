@@ -21,9 +21,10 @@ bool VNSSolver::solve(bool first)
     bestUb = MAX_COST;
     int initdepth = Store::getDepth();
     
-    // [première modif pour les instructions de Samuel] Ajout de deux nouvelles variables : timePerK et bestSolutionK.
+    // [première modif pour les instructions] Ajout de trois nouvelles variables : timePerKLDS , countPerKLDS et bestSolutionK.
     
-    map<int, double> timePerK;
+    map<pair<int,int>, double> timePerKLDS;
+    map<pair<int,int>, int>    countPerKLDS;
     int bestSolutionK = -1;
     try {
         try {
@@ -167,8 +168,9 @@ bool VNSSolver::solve(bool first)
                     complete = repair_recursiveSolve(lds, variables, values, bestUb);
                 else
                     complete = repair_recursiveSolve(variables, values, bestUb);
-                timePerK[k] += cpuTime() - timeBeforeRepair;
-
+                pair<int,int> klds_key = make_pair(ToulBar2::vnsLDScur, k);
+                timePerKLDS[klds_key] += cpuTime() - timeBeforeRepair;
+                countPerKLDS[klds_key]++;
                 // updating
                 if (lastUb >= bestUb) {
                     if (h->incrementK()) {
@@ -277,11 +279,20 @@ bool VNSSolver::solve(bool first)
     
     // [dernière modif] Affichage du résumé VNS final après la fin de toutes les itérations.
     
-    if (ToulBar2::verbose >= 0 && !timePerK.empty()) {
+    if (ToulBar2::verbose >= 0 && !timePerKLDS.empty()) {
         cout << "VNS summary: final k=" << ToulBar2::vnsKcur << " best solution k=" << bestSolutionK << " final UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
-        cout << "VNS time for neighborhood size k:" << endl;
-        for (map<int, double>::iterator it = timePerK.begin(); it != timePerK.end(); ++it)
-            cout << "  k=" << it->first << " : " << std::fixed << std::setprecision(3) << it->second << "s" << endl;
+        cout << "VNS neighborhood visits (lds, k) : count : total_time : avg_time" << endl;
+        for (map<pair<int,int>, double>::iterator it = timePerKLDS.begin(); it != timePerKLDS.end(); ++it) {
+            int lds_val = it->first.first;
+            int k_val   = it->first.second;
+            int count   = countPerKLDS[it->first];
+            //if (count < 2) continue;
+            double avg  = it->second / count;
+            cout << "  lds=" << lds_val << " k=" << k_val
+                << " : " << count << " visits"
+                << " : " << std::fixed << std::setprecision(3) << it->second << "s total"
+                << " : " << std::fixed << std::setprecision(6) << avg << "s avg" << endl;
+        }
     }
 
     if (bestUb < MAX_COST)
