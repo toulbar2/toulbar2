@@ -462,7 +462,7 @@ public:
             }
         }
         
-        if (nbsame > 0 || res > wcsp->getUb() || res < 0) {
+        if (nbsame > 0 || res > wcsp->getUb()) {
             if (nbsame > 0 && Original_ub < wcsp->getUb() && 1.0L * Original_ub * nbsame < wcsp->getUb()) {
                 res = Original_ub * nbsame; // VNS-like methods may exploit a relaxation of the constraint
             } else {
