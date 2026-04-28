@@ -265,7 +265,7 @@ public:
         if (excepted) {
             isSquare = false;
             for (int varIndex = 0; varIndex < arity_; varIndex++) {
-                deltaCosts.emplace_back(NbValues, MIN_COST);
+                deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
             }
         } else {
             // contradiction
@@ -463,7 +463,6 @@ public:
         vector<uint8_t> alreadyUsed(NbValues, 0);
         for (int varIndex = 0; varIndex < arity_; varIndex++) {
             res += deltaCosts[varIndex][s[varIndex]];
-            //cout<<"s : "<<s[varIndex]<<endl;
             int valIndex = mapDomainValToIndex[scope[varIndex]->getValueName(s[varIndex])];
 
             if (alreadyUsed[valIndex]) {
@@ -530,6 +529,11 @@ public:
         }
         if (connected(varIndex)) {
             deconnect(varIndex);
+//            if (!isSquare) {
+//                int valIndex = scope[varIndex]->toIndex(scope[varIndex]->getValue());
+//                assigneddeltas += deltaCosts[varIndex][valIndex];
+//                deltaCosts[varIndex][valIndex] = MIN_COST;
+//            }
             assert(getNonAssigned() >= 0);
             if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
                 deconnect();
@@ -630,6 +634,16 @@ public:
             for (int varIndex : newlyAssignedVars) {
                 if (connected(varIndex)) {
                     deconnect(varIndex);
+//                    if (!isSquare) {
+//                        int valIndex = scope[varIndex]->toIndex(scope[varIndex]->getValue());
+//                        assigneddeltas += deltaCosts[varIndex][valIndex];
+//                        deltaCosts[varIndex][valIndex] = MIN_COST;
+////                        Cost C = -lb + assigneddeltas;
+////                        if (C > MIN_COST) {
+////                            assigneddeltas = lb;
+////                            projectLB(C);
+////                        }
+//                    }
                     NbNoAssigned--;
                     NbAssigned++;
 

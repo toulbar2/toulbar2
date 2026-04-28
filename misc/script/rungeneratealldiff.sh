@@ -11,7 +11,7 @@ tctr=0
 nary="0-1"
 tight=80
 n=5
-d=5
+d=6
 K=1
 
 while (( $n < $nend )) ; do
@@ -83,7 +83,7 @@ while (( $n < $nend )) ; do
   tctr=`expr $tctr + 0`  
   bctr=`expr $bctr + 5`  
   n=`expr $n + 1`
-  d=`expr $d + 1`
+  d=`expr $d + 2`
 done
 
 rm -f problem.wcsp

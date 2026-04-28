@@ -898,7 +898,7 @@ class CFN:
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
 
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
-    def SolveNext(self, showSolutions = 0, timeLimit = 0, hbfs = 1):
+    def SolveNext(self, showSolutions = 0, timeLimit = 0, hbfs = 1, initHeuristics = True):
         """SolveNext solves the problem (i.e., finds its optimum and proves optimality). 
         It should be done after calling SolveFirst and modifying the problem if necessary using SetUB, Assign, MultipleAssign, Remove, Increase, Decrease, or adding an incremental cost function.
 
@@ -906,6 +906,8 @@ class CFN:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
                                                                3: variable and value names).  
             timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
+            hbfs (int): solves using hybrid best-first search (initial limit on the number of backtracks for DFS probes) or using depth-first search (when limit is set to zero)
+            initHeuristics (bool): if True (by default) then reinitialize weighted degree variable ordering heuristic and solution-based value heuristic
 
         Returns:
             The best solution found as a list of domain values, its associated cost, always strictly lower 
@@ -918,8 +920,10 @@ class CFN:
         self.Limit = None
         if (timeLimit > 0):
             self.CFN.timer(timeLimit)
-        if self.configuration :
+        if initHeuristics:
             self.CFN.wcsp.resetWeightedDegree()
+            for i in range(self.CFN.wcsp.numberOfVariables()):
+                 self.CFN.wcsp.setBestValue(i, self.CFN.wcsp.getSup(i) + 1); # reset value heuristic
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)

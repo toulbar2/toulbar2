@@ -447,7 +447,7 @@ public:
         vector<int> countUsed(NbValues, 0);
         for (int varIndex = 0; varIndex < arity_; varIndex++) {
             int valIndex = mapDomainValToIndex[scope[varIndex]->getValueName(s[varIndex])];
-            res += deltaCosts[varIndex][valIndex];
+            res += deltaCosts[varIndex][s[varIndex]];
             countUsed[valIndex]++;
             if (countUsed[valIndex] > capacity[valIndex] ) {
                 nbsame++;
