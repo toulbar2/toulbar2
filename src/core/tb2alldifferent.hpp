@@ -1061,7 +1061,8 @@ public:
                                                 }
                                             }
                                             else{   
-                                                deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
+                                                 if(!isSquare)
+                                                    deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
                                             }
                                         }
                                     }
@@ -1252,7 +1253,8 @@ public:
                                             ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
                                         }
                                         else{
-                                            deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]);
+                                            if(!isSquare)
+                                                deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]);
                                         }
                                     }
                                 }
