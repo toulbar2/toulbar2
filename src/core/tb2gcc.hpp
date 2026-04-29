@@ -461,7 +461,6 @@ public:
                 }
             }
         }
-        
         if (nbsame > 0 || res > wcsp->getUb()) {
             if (nbsame > 0 && Original_ub < wcsp->getUb() && 1.0L * Original_ub * nbsame < wcsp->getUb()) {
                 res = Original_ub * nbsame; // VNS-like methods may exploit a relaxation of the constraint
@@ -931,20 +930,28 @@ public:
                                     auto* variable = scope[varIndex];
                                     ValList[varInd] = vector<uint8_t>(NbNoAssignedVal, 0);
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                        if( ReduceCostCol[valInd] == lastCurrent_ub) continue;
-                                        if(costMatrix[varInd * NbNoAssignedVal + valInd] < lastCurrent_ub ){
-                                            int valIndex = NoAssignedVal[valInd];
-                                            Value value = variable->toValue(valIndex);                                           
-                                            ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+                                        int valIndex = NoAssignedVal[valInd];
+                                        Value value = variable->toValue(valIndex); 
 
-                                            if (FiltLevel > 0) {
-                                                ReducedCost = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
-                                                ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
-                                                if(ReducedCost > VarMaxReducedCost) VarMaxReducedCost = ReducedCost;
-                                                if (rowSol[varInd] != valInd){
-                                                    VarList[valInd].push_back(varInd);
-                                                    ValList[varInd][valInd] = 1;
+                                        if(variable->canbe(value)){
+                                            if(costMatrix[varInd * NbNoAssignedVal + valInd] < lastCurrent_ub ){
+                                            
+                                                ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+
+                                                if (FiltLevel > 0) {
+                                                    ReducedCost = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
+                                                    ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
+                                                    if(ReducedCost > VarMaxReducedCost) VarMaxReducedCost = ReducedCost;
+                                                    if (rowSol[varInd] != valInd){
+                                                        VarList[valInd].push_back(varInd);
+                                                        ValList[varInd][valInd] = 1;
+                                                    }
                                                 }
+                                            }
+                                            else{
+                                                if(!isSquare)
+                                                    deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
+
                                             }
                                         }
                                     }
@@ -1047,7 +1054,7 @@ public:
                             }
                         }
                     }
-                    if (arity_ == NbNoAssigned || !SameDomain) {
+                    if (NbNoAssigned == arity_  || (!SameDomain)) {
                         Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
                         // Initialize the cost matrix for all variables and their domain values
@@ -1101,10 +1108,16 @@ public:
 
                                 for (int valIndex = 0; valIndex < VarDomainSize[varIndex]; ++valIndex) {
                                     string valName = variable->getValueName(valIndex);
-                                    if(ReduceCostCol[mapDomainValToIndex[valName]] == current_ub) continue;
-                                    if(costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] < current_ub){
-                                        Value value = variable->toValue(valIndex);
-                                        ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
+                                    Value value = variable->toValue(valIndex);                                  
+                                    if(variable->canbe(value)){
+                                        if(costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] < current_ub){
+                                            
+                                            ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
+                                        }
+                                        else{
+                                            if(!isSquare)
+                                                deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]);
+                                        }
                                     }
                                 }
                             }

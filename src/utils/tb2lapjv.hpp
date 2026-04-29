@@ -210,14 +210,14 @@ const vector<int>& capacity)
     // Seed shortest-path costs with the reduced cost from source row i to
     // every column:  rc(i,j) = cost(i,j) - u[i] - v[j].
     for (intptr_t j = 0; j < dim_val; ++j) {
-        if(capacity[j] > 0){
+        //if(capacity[j] > 0){
             path[j] = -1;
             Cost r = cost[i * dim_val + j] - u[i] - v[j];
             if (r < shortestPathCost[j]) {
                 shortestPathCost[j] = r;
                 path[j] = i;
             }
-        }
+       // }
     }
 
     /* --- Main label-setting (Dijkstra) loop ------------------------------- */
@@ -258,7 +258,7 @@ const vector<int>& capacity)
             Cost backward = cost[r * dim_val + index] - u[r] - v[index];
 
             for (intptr_t k = 0; k < dim_val; ++k) {
-                if (SC[k] || capacity[k] <= 0) continue;   // column k already settled, skip
+                if (SC[k]) continue;   // column k already settled, skip
 
                 // Reduced cost of the forward arc r→k.
                 Cost forward = cost[r * dim_val + k] - u[r] - v[k];
@@ -366,7 +366,7 @@ static Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         // For every settled column j, shift v[j] so that the reduced cost
         // of its incoming arc (from the path) remains 0 after the update.
         for (intptr_t j = 0; j < dim_val; ++j) {
-            if (!SC[j] || capacity[j] <= 0 ) continue;
+            if (!SC[j] ) continue;
             v[j] -= (minVal - shortestPathCost[j]);
         }
 
@@ -409,9 +409,10 @@ static Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
     }
 
     for (intptr_t j = 0; j < dim_val; ++j) { 
-        vsol[j] = capacity[j] > 0 ? v[j] : MAX_COST;
+        vsol[j] = v[j];
 
     }
+
     return total_cost;
 }
 
@@ -785,8 +786,6 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
 
     return total_cost;
 }
-
-//Linear assignment problem with excepted values
 
 
 #endif // LAPJV_HPP_
