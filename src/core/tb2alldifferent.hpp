@@ -338,7 +338,7 @@ public:
             if (x->isValueNames() && y->isValueNames()) {
                 for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
                     for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                        if ((x->getValueName(x->toIndex(*iterx)) != y->getValueName(y->toIndex(*itery)) || ((excepted && find(exceptedValues.begin(), exceptedValues.end(), *iterx) != exceptedValues.end()))) && bctr->getCost(*iterx, *itery) > MIN_COST) {
+                        if ((x->getValueName(x->toIndex(*iterx)) != y->getValueName(y->toIndex(*itery)) || (excepted && (find(exceptedValues.begin(), exceptedValues.end(), *iterx) != exceptedValues.end() || find(exceptedValues.begin(), exceptedValues.end(), *itery) != exceptedValues.end()))) && bctr->getCost(*iterx, *itery) > MIN_COST) {
                             return false;
                         }
                     }
@@ -346,7 +346,7 @@ public:
             } else {
                 for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
                     for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                        if ((*iterx != *itery || ((excepted && find(exceptedValues.begin(), exceptedValues.end(), *iterx) != exceptedValues.end()))) && bctr->getCost(*iterx, *itery) > MIN_COST) {
+                        if ((*iterx != *itery || (excepted && (find(exceptedValues.begin(), exceptedValues.end(), *iterx) != exceptedValues.end() || find(exceptedValues.begin(), exceptedValues.end(), *itery) != exceptedValues.end()))) && bctr->getCost(*iterx, *itery) > MIN_COST) {
                             return false;
                         }
                     }
@@ -369,13 +369,13 @@ public:
                     string s = x->getValueName(x->toIndex(*iterx));
                     unsigned int yindex = y->toIndex(s);
                     Value yval = y->toValue(yindex);
-                    if (((!excepted || find(exceptedValues.begin(), exceptedValues.end(), *iterx) == exceptedValues.end())) && y->canbe(yval) && !CUT(bctr->getCost(*iterx, yval), wcsp->getUb())) {
+                    if ((!excepted || (find(exceptedValues.begin(), exceptedValues.end(), *iterx) == exceptedValues.end() && find(exceptedValues.begin(), exceptedValues.end(), yval) == exceptedValues.end())) && y->canbe(yval) && !CUT(bctr->getCost(*iterx, yval), wcsp->getUb())) {
                         bctr->addcost(*iterx, yval, mult_ub - bctr->getCost(*iterx, yval));
                     }
                 }
             } else {
                 for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
-                    if (((!excepted || find(exceptedValues.begin(), exceptedValues.end(), *iterx) == exceptedValues.end())) && y->canbe(*iterx) && !CUT(bctr->getCost(*iterx, *iterx), wcsp->getUb())) {
+                    if ((!excepted || find(exceptedValues.begin(), exceptedValues.end(), *iterx) == exceptedValues.end()) && y->canbe(*iterx) && !CUT(bctr->getCost(*iterx, *iterx), wcsp->getUb())) {
                         bctr->addcost(*iterx, *iterx, mult_ub - bctr->getCost(*iterx, *iterx));
                     }
                 }
