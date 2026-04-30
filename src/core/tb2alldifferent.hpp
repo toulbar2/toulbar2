@@ -346,7 +346,7 @@ public:
             } else {
                 for (EnumeratedVariable::iterator iterx = x->begin(); iterx != x->end(); ++iterx) {
                     for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
-                        if ((*iterx != *itery || (excepted && (find(exceptedValues.begin(), exceptedValues.end(), *iterx) != exceptedValues.end() || find(exceptedValues.begin(), exceptedValues.end(), *itery) != exceptedValues.end()))) && bctr->getCost(*iterx, *itery) > MIN_COST) {
+                        if ((*iterx != *itery || (excepted && find(exceptedValues.begin(), exceptedValues.end(), *iterx) != exceptedValues.end())) && bctr->getCost(*iterx, *itery) > MIN_COST) {
                             return false;
                         }
                     }
