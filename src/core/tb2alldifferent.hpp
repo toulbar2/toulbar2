@@ -37,7 +37,8 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     StoreCost lb;               // Projected cost to problem lower bound (if zero, all deltaCosts must be zero)
     StoreCost assigneddeltas;   // Accumulated deltas from assigned values (used in cost propagation)
     vector<Long> conflictWeights;           // Used by weighted degree heuristics to prioritize variables
-    vector<vector<StoreCost>> deltaCosts;   // Extended unary costs to all values (2D cost matrix)
+    vector<StoreCost> deltaCosts;   // Extended unary costs to all values 
+    vector<int> ValuesCapacity; 
     vector<StoreValue> storeLastAssignment; // Stores the last optimal assignment of variables
     StoreInt storeAssignment;   // True if an optimal assignment is currently stored
     int* rowSol = nullptr;      // Row solution array: rowSol[var] = value index assigned to variable var by the LAP solver
@@ -80,8 +81,8 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     void projectLB(Cost c)
     {
         if (c > MIN_COST) {
-            if (!isSquare)
-                lb += c;
+            //if (!isSquare)
+               // lb += c;
             Constraint::projectLB(c);
         }
     }
@@ -90,16 +91,15 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     // bool canbeProjectedInExtension();
 
     // Depending of the value and the cost, extend or project the cost on the index value of the variable var
-    void ExtOrProJ(int var, Value value, Cost C, bool delta=true)
+    void ExtOrProJ(int var, Value value, Cost C)
     {
-        int value_idx = scope[var]->toIndex(value);
+        //int value_idx = scope[var]->toIndex(value);
         TreeDecomposition* td = wcsp->getTreeDec();
         if (C > MIN_COST) {
             if (!isSquare) {
                 if (td && scope[var]->canbe(value))
                     td->addDelta(cluster, scope[var], value, -C);
-                if(delta) 
-                    deltaCosts[var][value_idx] += C;
+
             }
             assert(scope[var]->getCost(value) >= C);
             scope[var]->extend(value, C);
@@ -107,8 +107,6 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
             if (!isSquare) {
                 if (td && scope[var]->canbe(value))
                     td->addDelta(cluster, scope[var], value, -C);
-                if(delta)
-                    deltaCosts[var][value_idx] += C;
             }
             scope[var]->project(value, -C, true);
         }
@@ -193,10 +191,7 @@ public:
             // If more values than variables, cost matrix is not square
             if (NbValues > arity_in) {
                 isSquare = false;
-                for (int varIndex = 0; varIndex < arity_in; varIndex++) {
-                    // Initialize extended cost vector for each variable
-                    deltaCosts.emplace_back(VarDomainSize[varIndex], MIN_COST);
-                }
+                deltaCosts.assign(NbValues, MIN_COST);
             }
 
             int rate = ToulBar2::ReducedCostsFiltering;
@@ -224,6 +219,7 @@ public:
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1);
             isExceptedVal = vector<uint8_t>(NbValues, 0);
+            ValuesCapacity =  vector<int>(NbValues, 1);
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
             costMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
@@ -258,15 +254,17 @@ public:
                 if (variable->canbe(except)) {
                     exceptedValIndex.push_back(mapDomainValToIndex[variable->getValueName(variable->toIndex(except))]);
                     isExceptedVal[mapDomainValToIndex[variable->getValueName(variable->toIndex(except))]] = 1;
+                    ValuesCapacity[mapDomainValToIndex[variable->getValueName(variable->toIndex(except))]] = arity_;       
                     break;
                 }
             }
         }
         if (excepted) {
             isSquare = false;
-            for (int varIndex = 0; varIndex < arity_; varIndex++) {
+            deltaCosts.assign(NbValues, MIN_COST);
+            /*for (int varIndex = 0; varIndex < arity_; varIndex++) {
                 deltaCosts.emplace_back(NbValues, MIN_COST);
-            }
+            }*/
         } else {
             // contradiction
             if (NbValues < arity_)
@@ -457,11 +455,12 @@ public:
             return res;
         }
 
-        Cost res = -lb + assigneddeltas;
+        //Cost res = -lb + assigneddeltas;
+        Cost res = -assigneddeltas;
         Cost nbsame = 0;
-        vector<uint8_t> alreadyUsed(NbValues, 0);
+        vector<int> alreadyUsed(NbValues, 0);
         for (int varIndex = 0; varIndex < arity_; varIndex++) {
-            res += deltaCosts[varIndex][s[varIndex]];
+            //res += deltaCosts[varIndex][s[varIndex]];
             int valIndex = mapDomainValToIndex[scope[varIndex]->getValueName(s[varIndex])];
 
             if (alreadyUsed[valIndex]) {
@@ -470,9 +469,23 @@ public:
                     nbsame += 1;
                 }
                 
-            } else {
-                alreadyUsed[valIndex] = 1 ;
+            } 
+            alreadyUsed[valIndex] += 1 ;
+        
+        }
+        if(nbsame == 0){
+            if(excepted){
+                for (int valIndex = 0; valIndex < NbValues; valIndex++) {
+                    res += (ValuesCapacity[valIndex] - alreadyUsed[valIndex]) * (deltaCosts[valIndex] + assigneddeltas);
+                }
             }
+            else{
+                for (int valIndex = 0; valIndex < NbValues; valIndex++) {
+                    if(alreadyUsed[valIndex] == 0)
+                         res += deltaCosts[valIndex] + assigneddeltas;
+                 }
+            }
+
         }
 
         if (nbsame > 0 || res > wcsp->getUb()) {
@@ -493,11 +506,11 @@ public:
         if (isSquare && !excepted)
             return MIN_COST;
         Cost sumdelta = -lb + assigneddeltas;
-        for (int i = 0; i < arity_; i++) {
-            Cost m = *max_element(deltaCosts[i].begin(), deltaCosts[i].end());
-            if (m > MIN_COST)
+
+        Cost m = *max_element(deltaCosts.begin(), deltaCosts.end());
+        if (m > MIN_COST)
                 sumdelta += m;
-        }
+  
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
         else
@@ -507,7 +520,7 @@ public:
     Cost getCost(int index, Value val)
     {
         assert(index >= 0 && index < arity_);
-        return deltaCosts[index][scope[index]->toIndex(val)];
+        return deltaCosts[scope[index]->toIndex(val)];
     }
 
     double computeTightness() override { return 0; } // TODO: compute factorial(n)/(n**n)?
@@ -1026,12 +1039,39 @@ public:
                                 }
 
                                 storeAssignment = true;
+                                                              
+                               if(!isSquare){
+                                 
+                                    Cost mindelta  = current_ub;
+                                    int valIndex;
+                                    for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                        valIndex =  NoAssignedVal[valInd]; 
+                                        deltaCosts[valIndex] += (-ReduceCostCol[valInd]);
+                                        if(deltaCosts[valIndex] < mindelta) mindelta = deltaCosts[valIndex];
+                                    }
+                                    if (mindelta > 0){
+                                        for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                            valIndex =  NoAssignedVal[valInd]; 
+                                            deltaCosts[valIndex] -= mindelta;
+                                        }
+                                        jonker += mindelta;
+                                        assigneddeltas += mindelta; 
+                                        if(jonker >= current_ub){
+                                            wcsp->revise(this);
+                                            THROWCONTRADICTION;
+                                        }
+                                    }
+
+                                }
+
+
 
                                 // Update the lower bound with the Jonker algorithm's total cost
                                 projectLB(jonker);
                                 Cost newCurrentUb = current_ub - jonker;
+
                                 // Adjust unary costs for unassigned variables based on reduced costs
-                                
+
                                 vector<vector<int>> VarList(NbNoAssignedVal);
                                 vector<vector<uint8_t>> ValList(NbNoAssigned);
                                 MaxReducedCost = 0;
@@ -1041,31 +1081,27 @@ public:
                                     auto* variable = scope[varIndex];
                                     ValList[varInd] = vector<uint8_t>(NbNoAssignedVal, 0);
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                         int valIndex = NoAssignedVal[valInd];
-                                         Value value = variable->toValue(valIndex);  
-                                         if (variable->canbe(value)) {
-                                            if(costMatrix[varInd * NbNoAssignedVal + valInd] < current_ub ){
-                                                ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+                                        if(costMatrix[varInd * NbNoAssignedVal + valInd] < current_ub ){
+                                            int valIndex = NoAssignedVal[valInd];
+                                            Value value = variable->toValue(valIndex);  
+                                            ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
 
-                                                if (FiltLevel > 0 && (NbNoAssigned <= upper)) {
-                                                    ReducedCost = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
-                                                    if(ReducedCost < newCurrentUb){
-                                                        ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
-                                                        if(ReducedCost > MaxReducedCost) MaxReducedCost = ReducedCost;
-                                                        if (rowSol[varInd] != valInd){
-                                                            VarList[valInd].push_back(varInd);
-                                                            ValList[varInd][valInd] = 1;
-                                                        }
+                                            if (FiltLevel > 0 && (NbNoAssigned <= upper)) {
+                                                ReducedCost = costMatrix[varInd * NbNoAssignedVal + valInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
+                                                if(ReducedCost < newCurrentUb){
+                                                    ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
+                                                    if(ReducedCost > MaxReducedCost) MaxReducedCost = ReducedCost;
+                                                    if (rowSol[varInd] != valInd){
+                                                        VarList[valInd].push_back(varInd);
+                                                        ValList[varInd][valInd] = 1;
                                                     }
                                                 }
-                                            }
-                                            else{   
-                                                 if(!isSquare)
-                                                    deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
                                             }
                                         }
                                     }
                                 }
+
+
 
                                 // Update support values if needed for unassigned variables
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
@@ -1166,7 +1202,7 @@ public:
                                                     if (variable->canbe(value)) {
                                                         if (ToulBar2::verbose > 0)
                                                             cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
-                                                        ExtOrProJ(varIndex, value, -newCurrentUb, false); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
+                                                        ExtOrProJ(varIndex, value, -newCurrentUb); //SdG: project infinite cost on this value and avoid to skip and reenter the AllDiff constraint without finishing the current filtering
                                                     }
                                                 }
                                             }
@@ -1237,6 +1273,24 @@ public:
 
                             storeAssignment = true;
 
+                            if(!isSquare){
+                                for (int valInd = 0; valInd < NbValues; ++valInd) {
+                                    deltaCosts[valInd] += (-ReduceCostCol[valInd]);
+                                }
+                                Cost mindelta = *min_element(deltaCosts.begin(), deltaCosts.end());
+                                if (mindelta > 0){
+                                    for (auto& delta :deltaCosts) {
+                                        delta -= mindelta;
+                                    }
+                                    TotalCost += mindelta;
+                                    assigneddeltas += mindelta; 
+                                    if(TotalCost >= current_ub){
+                                         wcsp->revise(this);
+                                         THROWCONTRADICTION;
+                                    }
+                                }
+                            }
+
                             // Update lower bound with the total cost found
                             projectLB(TotalCost);
 
@@ -1246,18 +1300,14 @@ public:
 
                                 for (int valIndex = 0; valIndex < VarDomainSize[varIndex]; ++valIndex) {
                                     string valName = variable->getValueName(valIndex);
-                                    Value value = variable->toValue(valIndex);
-                                    if (variable->canbe(value)) {
-                                        if(costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] < current_ub){ 
-                                            ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
-                                        }
-                                        else{
-                                            if(!isSquare)
-                                                deltaCosts[varIndex][variable->toIndex(value)] += (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]);
-                                        }
+                                    if(costMatrix[varIndex * NbValues + mapDomainValToIndex[valName]] < current_ub){ 
+                                        Value value = variable->toValue(valIndex);
+                                        ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[mapDomainValToIndex[valName]]));
                                     }
+
                                 }
                             }
+
 
                             // Update support if needed for all variables
                             for (int varIndex = 0; varIndex < arity_; ++varIndex) {
@@ -1370,15 +1420,15 @@ public:
         if (!isSquare) {
             os << ") "
                << " cost: " << -lb << " + " << assigneddeltas << " + (";
-            for (int i = 0; i < arity_; i++) {
-                for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
-                    os << deltaCosts[i][j];
-                    if (j < deltaCosts[i].size() - 1)
+            //for (int i = 0; i < arity_; i++) {
+                for (unsigned int j = 0; j < deltaCosts.size(); j++) {
+                    os << deltaCosts[j];
+                    if (j < deltaCosts.size() - 1)
                         os << "|";
                 }
-                if (i < arity_ - 1)
-                    os << ",";
-            }
+                //if (i < arity_ - 1)
+                    //os << ",";
+            //}
             os << ") ";
         }
         os << "/" << getTightness();
