@@ -281,12 +281,32 @@ bool VNSSolver::solve(bool first)
     
     if (ToulBar2::verbose >= 0 && !timePerKLDS.empty()) {
         cout << "VNS summary: final k=" << ToulBar2::vnsKcur << " best solution k=" << bestSolutionK << " final UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
+
+        // calcul des stats globales
+        int total_visits = 0;
+        double sum_k_weighted = 0.0;
+        vector<int> all_k_visits;
+        for (map<pair<int,int>, int>::iterator it = countPerKLDS.begin(); it != countPerKLDS.end(); ++it) {
+            int k_val = it->first.second;
+            int count = it->second;
+            total_visits += count;
+            sum_k_weighted += (double)k_val * count;
+            for (int i = 0; i < count; i++)
+                all_k_visits.push_back(k_val);
+        }
+        sort(all_k_visits.begin(), all_k_visits.end());
+        double avg_k = sum_k_weighted / total_visits;
+        int median_k = all_k_visits[all_k_visits.size() / 2];
+
+        cout << "VNS global stats: total visits=" << total_visits
+            << " avg k=" << std::fixed << std::setprecision(2) << avg_k
+            << " median k=" << median_k << endl;
+
         cout << "VNS neighborhood visits (lds, k) : count : total_time : avg_time" << endl;
         for (map<pair<int,int>, double>::iterator it = timePerKLDS.begin(); it != timePerKLDS.end(); ++it) {
             int lds_val = it->first.first;
             int k_val   = it->first.second;
             int count   = countPerKLDS[it->first];
-            //if (count < 2) continue;
             double avg  = it->second / count;
             cout << "  lds=" << lds_val << " k=" << k_val
                 << " : " << count << " visits"
@@ -294,6 +314,7 @@ bool VNSSolver::solve(bool first)
                 << " : " << std::fixed << std::setprecision(6) << avg << "s avg" << endl;
         }
     }
+
 
     if (bestUb < MAX_COST)
         wcsp->setSolution(bestUb, &bestSolution);
