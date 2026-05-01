@@ -864,7 +864,7 @@ public:
                                 THROWCONTRADICTION;
 
                             // Initialize cost matrix for the Jonker algorithm
-                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
+                            Cost current_ub = min(wcsp->getUb(), wcsp->getDUb) - max(wcsp->getLb(), wcsp->getDLb());
 
                             for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                 int varIndex = NoAssignedVar[varInd];
@@ -1066,7 +1066,7 @@ public:
                         }
                     }
                     if (NbNoAssigned == arity_  || (!SameDomain)) {
-                        Cost current_ub = wcsp->getUb() - wcsp->getLb();
+                        Cost current_ub = min(wcsp->getUb(), wcsp->getDUb) - max(wcsp->getLb(), wcsp->getDLb());
 
                         // Initialize the cost matrix for all variables and their domain values
                         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
