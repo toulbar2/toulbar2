@@ -933,7 +933,7 @@ public:
     static VNSInc vnsLDSinc; ///< \brief discrepancy increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator) (command line option -ldsinc)
     static int vnsKmin; ///< \brief minimum neighborhood size for VNS-like methods (command line option -kmin)
     static int vnsKmax; ///< \brief maximum neighborhood size for VNS-like methods (command line option -kmax)
-    static int vnsKdn;  ///< \brief BFS depth for graph neighborhood (command line option -Kdn)
+    static int vnsGeode;  ///< \brief geodesic radius for graph neighborhood decomposition (command line option -geode)
     static VNSInc vnsKinc; ///< \brief neighborhood size increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator, 4: Increment by 1 until maximum cluster size then considers all variables) (command line option -kinc)
 
     static int vnsLDScur; ///< \internal do not use (current LDS discrepancy value, used only for debugging display)

@@ -297,7 +297,7 @@ int ToulBar2::vnsLDSmax;
 VNSInc ToulBar2::vnsLDSinc;
 int ToulBar2::vnsKmin;
 int ToulBar2::vnsKmax;
-int ToulBar2::vnsKdn;
+int ToulBar2::vnsGeode;
 VNSInc ToulBar2::vnsKinc;
 
 int ToulBar2::vnsLDScur;
@@ -538,7 +538,7 @@ void tb2init()
     ToulBar2::vnsLDSinc = VNS_MULT2;
     ToulBar2::vnsKmin = 4;
     ToulBar2::vnsKmax = 0;
-    ToulBar2::vnsKdn = 1;
+    ToulBar2::vnsGeode = 1;
     ToulBar2::vnsKinc = VNS_ADD1JUMP;
 
     ToulBar2::vnsLDScur = -1;

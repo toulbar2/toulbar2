@@ -274,7 +274,7 @@ const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     int depth = 1;  // d ← 1  (L.7)
 
     // while d ≤ kdn ∧ |L| < kmax courant  (L.9)
-    while (depth <= ToulBar2::vnsKdn && (int)neighborhood.size() < (int)neighborhood_size) {
+    while (depth <= ToulBar2::vnsGeode && (int)neighborhood.size() < (int)neighborhood_size) {
 
         // Vc : voisins de tout L non encore dans L  (L.10)
         // on utilise getConstrs() + BinaryConstraint + getScope() pour trouver les voisins de chaque variable de L, et on les ajoute dans Vc s'ils respectent la condition.
