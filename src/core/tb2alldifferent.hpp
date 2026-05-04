@@ -990,9 +990,7 @@ public:
                             NbNoAssignedVal = NoAssignedVal.size();
 
                             // Initialize cost matrix for the Jonker algorithm
-                            Cost bestUb = wcsp->getDUb() < wcsp->getUb() ? wcsp->getDUb() : wcsp->getUb();
-                            Cost bestLb = wcsp->getDLb() > wcsp->getLb() ? wcsp->getDLb() : wcsp->getLb();
-                            Cost current_ub = bestUb - bestLb;
+                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
                             for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                 int varIndex = NoAssignedVar[varInd];
@@ -1232,10 +1230,7 @@ public:
                                  
                     // Case when all variables are unassigned or filtering exception or domains differ
                     if (NbNoAssigned == arity_ || filtreExcepted || !SameDomain) {
-                         Cost bestUb = wcsp->getDUb() < wcsp->getUb() ? wcsp->getDUb() : wcsp->getUb();
-                         Cost bestLb = wcsp->getDLb() > wcsp->getLb() ?  wcsp->getDLb() : wcsp->getLb();
-                         Cost current_ub = bestUb - bestLb;
-
+                        Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
                         // Initialize the cost matrix for all variables and their domain values
                         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
