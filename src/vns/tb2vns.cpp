@@ -245,84 +245,215 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 }
 
 // GraphNeighborhoodChoice
+
 void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
+    this->wcsp = wcsp_;
     this->l = l_;
-    wcsp = wcsp_;
-    rootIndex = 0;
+
+    // SOFT-RESET : si les clusters sont déjà construits (cas où init() est rappelée
+    // depuis tb2dgvns.cpp ligne 210 après une amélioration), on évite de tout
+    // reconstruire ; on réinitialise juste l'ordre de parcours.
+    if (clustersBuilt) {
+        file = clusters;
+        sort(file.begin(), file.end(), std::greater<int>());  // back() = indice le plus petit
+        return;
+    }
+
+    maxClusterSize = 0;
+    minClusterSize = wcsp_->numberOfVariables();
+
+    //  Choix de la source de la décomposition 
+    if (ToulBar2::clusterFile != "") {
+        // si l'utilisateur fournit un fichier, on l'utilise.
+        if (ToulBar2::vnsGeode > 0 && ToulBar2::verbose >= 0) {
+            cout << "Warning: -geode parameter ignored because a decomposition file is provided ("
+                 << ToulBar2::clusterFile << ")." << endl;
+        }
+        load_decomposition();  // méthode héritée de ClustersNeighborhoodStructure
+    } else {
+        // Mode interne : construction des boules géodésiques
+        if (ToulBar2::vnsGeode <= 0) {
+            cerr << "Error: with -vns=11 (GRAPH mode), you must provide either"
+                 << " --decfile=<file> or -geode=<radius> with radius > 0." << endl;
+            throw BadConfiguration();
+        }
+        // info : geodesic decomposition.
+        // ma classe construit bien sa propre décomposition géodésique .
+        if (ToulBar2::verbose >= 0) {
+            cout << "Building geodesic decomposition with radius "
+                 << ToulBar2::vnsGeode << " (binary constraints only)." << endl;
+        }
+        buildGeodesicClusters();
+    }
+
+    
+    // En mode géodésique, on préserve volontairement l'intégrité des boules :
+    // l'absorption fusionnerait des clusters et casserait la sémantique du rayon.
+
+    // ---- Calcul des stats sur les clusters et préparation de file ----
+    TCDGraph::vertex_iterator v, vend;
+    tie(v, vend) = vertices(m_graph);
+    for (; v != vend; ++v) {
+        unsigned int sz = m_graph[*v].vars.size();
+        if (sz > maxClusterSize)
+            maxClusterSize = sz;
+        if (sz < minClusterSize)
+            minClusterSize = sz;
+        clusters.push_back(*v);
+    }
+
+    // Ordre déterministe : indice croissant.
+    // file est dépilée par back() => on trie en ordre décroissant.
+    file = clusters;
+    sort(file.begin(), file.end(), std::greater<int>());
+
+    // Heuristique interne : Naturel (sélection par indice croissant dans la zone)
+    insideHeuristic = new NaturelNeighborhoodChoice();
+    insideHeuristic->init(wcsp_, l_);
+
+    clustersBuilt = true;
 }
 
-const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
+void GraphNeighborhoodChoice::buildGeodesicClusters()
 {
-    //création d'un vecteur de taille égale au nombre de variables non affectées, contenant les indices de ces variables .
-    // unassignedVars stocke des indices et z le recopie.
-
-    vector<int> z(l->unassignedVars->getSize()); 
-    unsigned int j = 0;
-    for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
-        z[j] = *iter;
-        ++j;
-    }
+    // BFS depuis chaque variable non-affectée, jusqu'à profondeur vnsGeode.
+    // on s'est limité aux contraintes binaires, il faudra remplacer ctr->isBinary()par ctr->arity() si on veut les n-aires .
     
-    if (rootIndex >= z.size())
-        rootIndex = 0;
+    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+        if (!wcsp->unassigned(i))
+            continue;
 
-    // L ← {vr}  (L.5-6)
-    zone neighborhood; //le voisinage quon veut construire.
-    neighborhood.insert(z[rootIndex]);
+        set<int> ball;
+        queue<pair<int, int>> bfsQueue;  // <variable_index, depth>
+        ball.insert(i);
+        bfsQueue.push(make_pair(i, 0));
 
-    int depth = 1;  // d ← 1  (L.7)
+        while (!bfsQueue.empty()) {
+            int currVarIndex = bfsQueue.front().first;
+            int currentDepth = bfsQueue.front().second;
+            bfsQueue.pop();
 
-    // while d ≤ kdn ∧ |L| < kmax courant  (L.9)
-    while (depth <= ToulBar2::vnsGeode && (int)neighborhood.size() < (int)neighborhood_size) {
+            if (currentDepth >= ToulBar2::vnsGeode)
+                continue;
 
-        // Vc : voisins de tout L non encore dans L  (L.10)
-        // on utilise getConstrs() + BinaryConstraint + getScope() pour trouver les voisins de chaque variable de L, et on les ajoute dans Vc s'ils respectent la condition.
-        vector<int> Vc;
-        for (int v : neighborhood) {
-            EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(v); // on récupère la variable à partir de son indice, en faisant d'abord un cast de wcsp en WCSP* puis un cast de la variable en EnumeratedVariable* pour pouvoir utiliser getConstrs() et getScope() ensuite.
-            auto cstlist = var->getConstrs();
-            for (auto it = cstlist->begin(); it != cstlist->end(); ++it) {
+            Variable* var = ((WCSP*)wcsp)->getVar(currVarIndex);
+            for (ConstraintList::iterator it = var->getConstrs()->begin();
+                 it != var->getConstrs()->end(); ++it) {
                 Constraint* ctr = (*it).constr;
-                if (ctr->arity() == 2) {
-                    BinaryConstraint* bconstr = (BinaryConstraint*)(ctr);
-                    TSCOPE scope_inv;
-                    bconstr->getScope(scope_inv);
-                    for (auto elt : scope_inv) {
-                        if (neighborhood.find(elt.first) == neighborhood.end()) // tester que l n'est pas fans le vecteur
-                            Vc.push_back(elt.first);
-                    }
+                if (!ctr->isBinary())
+                    continue;
+                BinaryConstraint* bctr = (BinaryConstraint*)ctr;
+                int neighborIndex = bctr->getVarDiffFrom(var)->wcspIndex;
+                if (wcsp->unassigned(neighborIndex)
+                    && ball.find(neighborIndex) == ball.end()) {
+                    ball.insert(neighborIndex);
+                    bfsQueue.push(make_pair(neighborIndex, currentDepth + 1));
                 }
             }
         }
 
-        // trier Vc pour faire apparaitre les doublons potentiel à erase pour qu'il puisse les supprimer, important pour slots soit utilisé correctement.
-        sort(Vc.begin(), Vc.end()); 
-        Vc.erase(unique(Vc.begin(), Vc.end()), Vc.end()); 
-
-        // tronquer si |L| + |Vc| > kmax  (L.13)
-        int slots = (int)neighborhood_size - (int)neighborhood.size();
-        if ((int)Vc.size() > slots)
-            Vc.resize(slots);
-
-        // L ← L ∪ Vc  (L.15)
-        for (int v : Vc)
-            neighborhood.insert(v);
-
-        depth++;  // d ← d+1  (L.22)
+        // Création du cluster (Point 2 : on garde même les singletons)
+        TDCluster c = add_vertex(m_graph);
+        m_graph[c].name = to_string(i);
+        m_graph[c].vars = ball;
     }
 
-    return neighborhood;  // retourné à VNS
+    // Construction des arêtes par intersection (cf. load_decomposition lignes 81-94)
+    TCDGraph::vertex_iterator v, vend, v2;
+    for (tie(v, vend) = vertices(m_graph); v != vend; ++v) {
+        for (v2 = v + 1; v2 != vend; ++v2) {
+            set<int> separator;
+            set_intersection(m_graph[*v].vars.begin(), m_graph[*v].vars.end(),
+                             m_graph[*v2].vars.begin(), m_graph[*v2].vars.end(),
+                             inserter(separator, separator.begin()));
+            if (separator.size() > 0) {
+                Cluster_edge sep;
+                tie(sep, tuples::ignore) = add_edge(*v, *v2, m_graph);
+                m_graph[sep].vars = separator;
+                m_graph[sep].size = (float)1 / separator.size();
+            }
+        }
+    }
+}
+
+const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
+{
+    // Identique à RandomClusterChoice::getNeighborhood, sauf que :
+    // - L'ordre de parcours est déterministe (pas de shuffle).
+    // - Les clusters sont des boules géodésiques.
+    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
+    set<int> selclusters;
+    if (file.size() == 0) {
+        file = clusters;
+        sort(file.begin(), file.end(), std::greater<int>());  // ordre déterministe
+    }
+    assert(file.size() > 0);
+    int c = file.back();
+    file.pop_back();
+    selclusters.insert(c);
+    if (ToulBar2::verbose >= 1)
+        cout << "Select geodesic cluster " << c << endl;
+    zone z = m_graph[c].vars;
+    // info : Select geodesic cluster .
+    // on explore les clusters dans l'ordre déterministe
+
+    // Mécanisme d'union (k-jump) : si la boule est trop petite, on agrège
+    // les clusters voisins jusqu'à atteindre neighborhood_size.
+    if (z.size() < neighborhood_size) {
+        queue<int> fifo;
+        TCDGraph::adjacency_iterator av, avend;
+        int currclu = c;
+        int i = 0;
+        do {
+            tie(av, avend) = adjacent_vertices(currclu, m_graph);
+            if (av != avend) {
+                vector<int> neighbors(av, avend);
+                // Ordre déterministe : pas de shuffle, on trie par indice.
+                sort(neighbors.begin(), neighbors.end());
+                for (vector<int>::iterator it = neighbors.begin();
+                     it != neighbors.end(); ++it) {
+                    if (selclusters.count(*it) == 0) {
+                        fifo.push(*it);
+                        selclusters.insert(*it);
+                    }
+                }
+            }
+            if (fifo.size() == 0) {
+                // Le voisinage de currclu est épuisé : sauter sur un cluster
+                // non encore sélectionné.
+                if (selclusters.size() >= clusters.size())
+                    break;  // sécurité : tous les clusters ont été agrégés
+                while (selclusters.count(i) > 0) {
+                    i = (i + 1) % clusters.size();
+                }
+                fifo.push(clusters[i]);
+                selclusters.insert(clusters[i]);
+            }
+            currclu = fifo.front();
+            fifo.pop();
+            z.insert(m_graph[currclu].vars.begin(), m_graph[currclu].vars.end());
+        } while (z.size() < neighborhood_size);
+    }
+    return insideHeuristic->getNeighborhood(neighborhood_size, z);
 }
 
 const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, zone z) const
 {
-    zone neighborhood;
-    vector<int> zv(z.begin(), z.end());
-    sort(zv.begin(), zv.end());
-    assert(neighborhood_size <= zv.size());
-    neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
-    return neighborhood;
+    assert("not implemented!!!");
+    return zone();
+}
+
+bool GraphNeighborhoodChoice::incrementK()
+{
+    // Identique à RandomClusterChoice::incrementK : si la file est vide,
+    // on signale au moteur VNS que k peut être incrémenté.
+    if (file.size() == 0) {
+        file = clusters;
+        sort(file.begin(), file.end(), std::greater<int>());
+        return true;
+    }
+    return false;
 }
 
 

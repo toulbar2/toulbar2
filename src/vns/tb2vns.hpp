@@ -94,17 +94,6 @@ public:
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
 };
 
-class GraphNeighborhoodChoice  : public NeighborhoodStructure {
-protected:
-    unsigned int rootIndex;   
-public:
-    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
-    virtual const zone getNeighborhood(size_t neighborhood_size);
-    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
-    void nextRoot() { rootIndex++; }
-};
-
-
 
 class ClustersNeighborhoodStructure : public NeighborhoodStructure {
 protected:
@@ -136,6 +125,26 @@ public:
 };
 
 // for dgvns
+
+// on hérite de ClustersNeighborhoodStructure car je veux agréger les clusters voisine 
+// au cas ou mon voinage géodésique est plus petit que le k demandé
+//permet de calculer une fois pour toutes les géodésiques dans init() 
+// et à les stocker dans le graphe m_graph, plutôt que de faire un BFS "jetable" et recalculé à chaque itération
+// on hérite aussi du calcul automatique des maxClusterSize, minClusterSize, getMedianClusterSize, etc
+// Un affichage console structuré via printClusters ausi
+class GraphNeighborhoodChoice : public ClustersNeighborhoodStructure {
+protected:
+    bool clustersBuilt;  // garde-fou pour éviter de reconstruire les clusters à chaque init()
+public:
+    GraphNeighborhoodChoice() : clustersBuilt(false) {}
+    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
+    virtual const zone getNeighborhood(size_t neighborhood_size);
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+    virtual bool incrementK();
+private:
+    void buildGeodesicClusters();  // construit les boules géodésiques dans m_graph
+};
+
 class RandomClusterChoice : public ClustersNeighborhoodStructure {
 public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);

@@ -115,11 +115,14 @@ bool VNSSolver::solve(bool first)
         }
 
         h->init(wcsp, this);
-        if (ToulBar2::verbose >= 0 && ToulBar2::vnsNeighborVarHeur == CLUSTERRAND && ((ClustersNeighborhoodStructure*)h)->getSize() > 1) {
+        if (ToulBar2::verbose >= 0 && (ToulBar2::vnsNeighborVarHeur == CLUSTERRAND || ToulBar2::vnsNeighborVarHeur == GRAPH) && ((ClustersNeighborhoodStructure*)h)->getSize() > 1) {
             ClustersNeighborhoodStructure* ch = (ClustersNeighborhoodStructure*)h;
             if (ToulBar2::verbose >= 1 || ToulBar2::debug)
                 ch->printClusters(cout); 
             cout << "Problem decomposition in " << ch->getSize() << " clusters with size distribution: min: " << ch->getMinClusterSize() << " median: " << ch->getMedianClusterSize() << " mean: " << ch->getMeanClusterSize() << " max: " << ch->getMaxClusterSize() << endl;
+            // info : Problem decomposition
+            //la décomposition est bien stockée dans m_graph .
+            //on voit bien les différents statistiques .
         }
         // vns/lds+cp
         Long nbRestart = 1;
@@ -144,6 +147,7 @@ bool VNSSolver::solve(bool first)
                         cout << " " << *it;
                     cout << endl;
                 }
+                // info : LDS , c'est ici qui me permet de retourner la bonne taille demandé par k.
                 vector<int> variables;
                 variables.reserve(unassignedVars->getSize());
                 vector<Value> values;
@@ -174,8 +178,7 @@ bool VNSSolver::solve(bool first)
                 // updating
                 if (lastUb >= bestUb) {
                     if (h->incrementK()) {
-                        if (ToulBar2::vnsNeighborVarHeur == GRAPH)
-                            ((GraphNeighborhoodChoice*)h)->nextRoot(); // idx ← idx+1
+
                         rank++;
                         if (k < ToulBar2::vnsKmax) {
                             switch (ToulBar2::vnsKinc) {
