@@ -222,12 +222,12 @@ public:
             ValuesCapacity =  vector<int>(NbValues, 1);
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
-            costMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
+            costMatrix = vector<Cost>((arity_+1) * NbValues, MAX_COST);
             ReduceCostMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
 
             // Allocate memory
-            rowSol = new int[arity_];
-            ReduceCostRow = new Cost[arity_];
+            rowSol = new int[arity_+1];
+            ReduceCostRow = new Cost[arity_+1];
             ReduceCostCol = new Cost[NbValues];
         } else {
             deconnect();
@@ -456,11 +456,10 @@ public:
         }
 
         //Cost res = -lb + assigneddeltas;
-        Cost res = -assigneddeltas;
+        Cost res = 0;
         Cost nbsame = 0;
         vector<int> alreadyUsed(NbValues, 0);
         for (int varIndex = 0; varIndex < arity_; varIndex++) {
-            //res += deltaCosts[varIndex][s[varIndex]];
             int valIndex = mapDomainValToIndex[scope[varIndex]->getValueName(s[varIndex])];
 
             if (alreadyUsed[valIndex]) {
@@ -476,13 +475,13 @@ public:
         if(nbsame == 0){
             if(excepted){
                 for (int valIndex = 0; valIndex < NbValues; valIndex++) {
-                    res += (ValuesCapacity[valIndex] - alreadyUsed[valIndex]) * (deltaCosts[valIndex] + assigneddeltas);
+                    res += (ValuesCapacity[valIndex] - alreadyUsed[valIndex]) * deltaCosts[valIndex];
                 }
             }
             else{
                 for (int valIndex = 0; valIndex < NbValues; valIndex++) {
                     if(alreadyUsed[valIndex] == 0)
-                         res += deltaCosts[valIndex] + assigneddeltas;
+                         res += deltaCosts[valIndex];
                  }
             }
 
@@ -991,9 +990,9 @@ public:
                             NbNoAssignedVal = NoAssignedVal.size();
 
                             // Initialize cost matrix for the Jonker algorithm
-                            Cost UBs = wcsp->getDUb() < wcsp->getUb() ? wcsp->getDUb() : wcsp->getUb();
-                            Cost LBs = wcsp->getDLb() > wcsp->getLb() ? wcsp->getDLb() : wcsp->getLb();
-                            Cost current_ub = UBs - LBs;
+                            Cost bestUb = wcsp->getDUb() < wcsp->getUb() ? wcsp->getDUb() : wcsp->getUb();
+                            Cost bestLb = wcsp->getDLb() > wcsp->getLb() ? wcsp->getDLb() : wcsp->getLb();
+                            Cost current_ub = bestUb - bestLb;
 
                             for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                 int varIndex = NoAssignedVar[varInd];
@@ -1013,13 +1012,27 @@ public:
                             }
 
                             // Solve assignment problem using Jonker algorithm
-                            Cost TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
-                            //cout<<TotalCost<<endl;
+                            Cost TotalCost;
+                            if(!isSquare){
+                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                    costMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = deltaCosts[NoAssignedVal[valInd]];
+                                }
+                                TotalCost = lapjv(NbNoAssigned+1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
+
+                            }
+                            else{
+
+                            
+                              TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
+                            }
                             if (TotalCost >= current_ub) {
                                 
                                 if(findConflict){
+                                    int varIndex;
                                     for(int var=0; var< findConflict; var++){
-                                        conflictWeights[NoAssignedVar[var]]++;
+                                        if(rowSol[var] >= NbNoAssigned) continue;
+                                        varIndex = NoAssignedVar[rowSol[var]];
+                                        conflictWeights[varIndex]++;
                                     } 
                                 } 
                                 wcsp->revise(this);
@@ -1044,20 +1057,16 @@ public:
                                                               
                                if(!isSquare){
                                  
-                                    Cost mindelta  = current_ub;
+                                    Cost mindelta  = ReduceCostRow[NbNoAssigned];
                                     int valIndex;
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                         valIndex =  NoAssignedVal[valInd]; 
-                                        deltaCosts[valIndex] += (-ReduceCostCol[valInd]);
-                                        if(deltaCosts[valIndex] < mindelta) mindelta = deltaCosts[valIndex];
+                                        deltaCosts[valIndex] -= (ReduceCostCol[valInd] + mindelta);
                                     }
                                     if (mindelta > 0){
-                                        for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                            valIndex =  NoAssignedVal[valInd]; 
-                                            deltaCosts[valIndex] -= mindelta;
-                                        }
-                                        jonker += mindelta;
-                                        assigneddeltas += mindelta; 
+
+                                        jonker += (mindelta* (NbValues - arity_)) - mindelta;
+                                        
                                         if(jonker >= current_ub){
                                             wcsp->revise(this);
                                             THROWCONTRADICTION;
@@ -1065,8 +1074,6 @@ public:
                                     }
 
                                 }
-
-
 
                                 // Update the lower bound with the Jonker algorithm's total cost
                                 projectLB(jonker);
@@ -1225,9 +1232,9 @@ public:
                                  
                     // Case when all variables are unassigned or filtering exception or domains differ
                     if (NbNoAssigned == arity_ || filtreExcepted || !SameDomain) {
-                         Cost UBs = wcsp->getDUb() < wcsp->getUb() ? wcsp->getDUb() : wcsp->getUb();
-                         Cost LBs = wcsp->getDLb() > wcsp->getLb() ?  wcsp->getDLb() : wcsp->getLb();
-                         Cost current_ub = UBs - LBs;
+                         Cost bestUb = wcsp->getDUb() < wcsp->getUb() ? wcsp->getDUb() : wcsp->getUb();
+                         Cost bestLb = wcsp->getDLb() > wcsp->getLb() ?  wcsp->getDLb() : wcsp->getLb();
+                         Cost current_ub = bestUb - bestLb;
 
 
                         // Initialize the cost matrix for all variables and their domain values
@@ -1250,19 +1257,32 @@ public:
 
                         // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                         Cost TotalCost;
-                        if (excepted) {
-                            TotalCost = lapjv(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, exceptedValIndex, findConflict);
+
+                        if(!isSquare){
+                            for (int valInd = 0; valInd < NbValues; ++valInd) {
+                                costMatrix[arity_ * NbValues + valInd] = deltaCosts[valInd];
+                            }
+                            if (excepted) {
+                                TotalCost = lapjv(arity_+1, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, exceptedValIndex, findConflict);
+                            }
+                            else{
+                                TotalCost = lapjv(arity_ +1, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
+                            }
+                        
                         }
                         else {
                             TotalCost = lapjv(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
+                        
                         }
                         
-                         //cout<<TotalCost<<endl;
                         if (TotalCost >= current_ub) {
                            
                                if(findConflict){
+                                    int varIndex; 
                                     for(int var=0; var < findConflict; var++){
-                                        conflictWeights[var]++;
+                                        varIndex = rowSol[var];
+                                        if(varIndex >= arity_) continue;
+                                        conflictWeights[varIndex]++;
                                     } 
                                 } 
                                 wcsp->revise(this);
@@ -1278,16 +1298,20 @@ public:
                             storeAssignment = true;
 
                             if(!isSquare){
+                                Cost mindelta = ReduceCostRow[arity_];
                                 for (int valInd = 0; valInd < NbValues; ++valInd) {
-                                    deltaCosts[valInd] += (-ReduceCostCol[valInd]);
+                                    deltaCosts[valInd] -= (ReduceCostCol[valInd] + mindelta);
                                 }
-                                Cost mindelta = *min_element(deltaCosts.begin(), deltaCosts.end());
+                                
                                 if (mindelta > 0){
-                                    for (auto& delta :deltaCosts) {
-                                        delta -= mindelta;
+                                    int nbexcep = exceptedValIndex.size();
+                                    if(excepted){
+                                        TotalCost += (mindelta *(NbValues - arity_ - nbexcep + (nbexcep*arity_)) - mindelta);
+
                                     }
-                                    TotalCost += mindelta;
-                                    assigneddeltas += mindelta; 
+                                    else{
+                                        TotalCost += (mindelta *(NbValues - arity_) - mindelta);
+                                    }
                                     if(TotalCost >= current_ub){
                                          wcsp->revise(this);
                                          THROWCONTRADICTION;

@@ -778,12 +778,16 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
         // (c) Re-check feasibility; continue if another infeasible column exists.
         notFeasVal = checkFlow(dim_val, demand, count_col);
     }
-
     return lapjv_ub(dim_var, dim_val, cost, b, usol, vsol,
                     MAX_COST, count_col, findConflict);
 
-
-    return total_cost;
+    /*for(int val = 0; val < dim_val; val++){
+        if(count_col[val] == 0){
+                total_cost += vsol[val];
+        }  
+    }
+    
+    return total_cost;*/
 }
 
 
