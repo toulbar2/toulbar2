@@ -1359,8 +1359,14 @@ public:
                     os << " " << scope[i]->getCurrentVarId();
             os << " -1 gcc ";
         }
-        os << bounds.size();
+        int compt = 0;
         for (const auto& [key, bound] : bounds) {
+            if(capacity[mapDomainValToIndex[scope[0]->getValueName(scope[0]->toIndex(key))]] > 0) compt++;
+        }
+
+        os << compt;
+        for (const auto& [key, bound] : bounds) {
+            if(capacity[mapDomainValToIndex[scope[0]->getValueName(scope[0]->toIndex(key))]] == 0) continue;
             os << " " << key;
             os << " " << bound.first;
             os << " " << bound.second;
@@ -1437,10 +1443,8 @@ public:
             os << "],\"type\":\"gcc\",\"params\":{\"bounds\":[";
         }
         printed = false;
-        int compt = -1;
-        for (const auto& [key, bound] : bounds) {
-            compt++;
-            if(capacity[compt] == 0) continue;
+        for (const auto& [key, bound] : bounds) {   
+            if(capacity[mapDomainValToIndex[scope[0]->getValueName(scope[0]->toIndex(key))]] == 0) continue;
             if (printed)
                 os << ",";
             os << "[" << key;
