@@ -221,8 +221,11 @@ public:
         delete[] ReduceCostRow;
         delete[] ReduceCostCol;
     }
-    void read(istream& file) // TODO: add a parameter for controlling the level of propagation if necessary
+    void read(istream& files) // TODO: add a parameter for controlling the level of propagation if necessary
     {
+        string line;
+        getline(files, line);
+        stringstream file(line);
 
         Gcc_NbValues = 0;
         sumlb = 0;
@@ -301,6 +304,25 @@ public:
                 // Initialize extended cost vector for each variable
                 deltaCosts.assign(NbValues, MIN_COST);
             //}
+        }
+        if(!isSquare){
+            int nbDelta;
+            file >> nbDelta;
+            if(nbDelta){
+                for (int v = 0; v < nbDelta; v++) {
+                    Value value;
+                    Cost delta;
+                    file >> value;
+                    file >> delta;
+                    for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                        auto* variable = scope[varIndex];
+                        if (variable->canbe(value)) {
+                            deltaCosts[mapDomainValToIndex[variable->getValueName(variable->toIndex(value))]] = delta;
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1325,7 +1347,6 @@ public:
 
     void dump(ostream& os, bool original = true) override
     {
-        assert(lb == MIN_COST); // TODO: how to dump with deltaCosts?
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
@@ -1344,12 +1365,37 @@ public:
             os << " " << bound.first;
             os << " " << bound.second;
         }
+        if(!isSquare){
+            Cost maxdelta = *max_element(deltaCosts.begin(), deltaCosts.end());
+            if (maxdelta > 0){
+                int current_val = 0;
+                unordered_map<Value, Cost> mapValuesDeltaCosts;
+                for(int valInd = 0; valInd < NbValues ; valInd++){
+                    int valIndex = NbValues - valInd;
+                    if(deltaCosts[valIndex] == 0) continue;
+                    Value value;
+                    for(int varIndex =  0; varIndex < arity_ ; varIndex++){
+                        auto* variable = scope[varIndex];
+                        value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+                        if(variable->canbe(value)){
+                            mapValuesDeltaCosts[value] = deltaCosts[valIndex];
+                            current_val++;
+                            break;
+                        }     
+                    }
+                }
+                os <<" " <<current_val;
+                for (auto& [key, delta] : mapValuesDeltaCosts) {               
+                    os << " " << key;
+                    os << " " << delta;
+                }
+            }
+        }
         os << endl;
     }
 
     void dump_CFN(ostream& os, bool original = true) override
     {
-        assert(lb == MIN_COST); // TODO: how to dump with deltaCosts?
         bool printed = false;
         os << "\"F_";
 
@@ -1391,7 +1437,10 @@ public:
             os << "],\"type\":\"gcc\",\"params\":{\"bounds\":[";
         }
         printed = false;
+        int compt = -1;
         for (const auto& [key, bound] : bounds) {
+            compt++;
+            if(capacity[compt] == 0) continue;
             if (printed)
                 os << ",";
             os << "[" << key;
@@ -1400,7 +1449,41 @@ public:
             os << "]";
             printed = true;
         }
-        os << "]}},\n";
+        os << "],\"deltacosts\":[";
+        if(isSquare){
+            os << "]}},\n";
+        }
+        else{
+            Cost maxdelta = *max_element(deltaCosts.begin(), deltaCosts.end());
+            if(maxdelta > 0){
+                int current_val = 0;
+                unordered_map<Value, Cost> mapValuesDeltaCosts;
+                for(int valInd = 0; valInd < NbValues ; valInd++){
+                    int valIndex = NbValues - valInd;
+                    if(deltaCosts[valIndex] == 0) continue;
+                    Value value;
+                    for(int varIndex =  0; varIndex < arity_ ; varIndex++){
+                        auto* variable = scope[varIndex];
+                        value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+                        if(variable->canbe(value)){
+                            mapValuesDeltaCosts[value] = deltaCosts[valIndex];
+                            current_val++;
+                            break;
+                        }     
+                    }
+                }
+                printed = false;
+                for (auto& [key, delta] : mapValuesDeltaCosts) {
+                    if (printed)
+                        os << ",";
+                    os << "[" << key;
+                    os << "," << delta;
+                    os << "]";
+                    printed = true;
+                }
+            }
+            os << "]}},\n";
+        }
     }
 };
 

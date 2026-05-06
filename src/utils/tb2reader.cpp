@@ -1504,8 +1504,8 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
     unsigned int arity = scope.size();
 
     map<string, string> GCFTemplates = {
-        { "alldiff", ":exceptedvalues:[v]+" },
-        { "gcc", ":bounds:[vNN]+" },
+        { "alldiff", ":exceptedvalues:[v]+:deltacosts:[vc]+" },
+        { "gcc", ":bounds:[vNN]+:deltacosts:[vc]+" },
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
         { "knapsackv", ":capacity:N:weightedvalues:[VvN]+" },
