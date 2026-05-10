@@ -115,14 +115,21 @@ bool VNSSolver::solve(bool first)
         }
 
         h->init(wcsp, this);
-        if (ToulBar2::verbose >= 0 && (ToulBar2::vnsNeighborVarHeur == CLUSTERRAND || ToulBar2::vnsNeighborVarHeur == GRAPH) && ((ClustersNeighborhoodStructure*)h)->getSize() > 1) {
+        if (ToulBar2::verbose >= 0
+            && (ToulBar2::vnsNeighborVarHeur == CLUSTERRAND || ToulBar2::vnsNeighborVarHeur == GRAPH)) {
             ClustersNeighborhoodStructure* ch = (ClustersNeighborhoodStructure*)h;
-            if (ToulBar2::verbose >= 1 || ToulBar2::debug)
-                ch->printClusters(cout); 
-            cout << "Problem decomposition in " << ch->getSize() << " clusters with size distribution: min: " << ch->getMinClusterSize() << " median: " << ch->getMedianClusterSize() << " mean: " << ch->getMeanClusterSize() << " max: " << ch->getMaxClusterSize() << endl;
-            // info : Problem decomposition
-            //la décomposition est bien stockée dans m_graph .
-            //on voit bien les différents statistiques .
+            if (ch->getSize() > 1) {
+                if (ToulBar2::verbose >= 1 || ToulBar2::debug)
+                    ch->printClusters(cout);
+                cout << "Problem decomposition in " << ch->getSize()
+                     << " clusters with size distribution: min: " << ch->getMinClusterSize()
+                     << " median: " << ch->getMedianClusterSize()
+                     << " mean: " << ch->getMeanClusterSize()
+                     << " max: " << ch->getMaxClusterSize() << endl;
+                // info : Problem decomposition
+                // la décomposition est bien stockée dans m_graph .
+                // on voit bien les différents statistiques .
+            }
         }
         // vns/lds+cp
         Long nbRestart = 1;

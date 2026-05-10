@@ -222,7 +222,7 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
         ++j;
     }
     
-    sort(z.begin(), z.end());  // ordre naturel
+    
     if (counter + neighborhood_size > z.size())
         counter = 0; // on a parcouru toutes les variables, on repart au début
     assert(neighborhood_size <= z.size());
@@ -237,7 +237,7 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
     zone neighborhood;
     vector<int> zv(z.begin(), z.end());
 
-    sort(zv.begin(), zv.end());  // ordre naturel sur la zone restreinte
+    
 
     assert(neighborhood_size <= zv.size());
     neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
@@ -256,7 +256,7 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     // reconstruire ; on réinitialise juste l'ordre de parcours.
     if (clustersBuilt) {
         file = clusters;
-        sort(file.begin(), file.end(), std::greater<int>());  // back() = indice le plus petit
+        reverse(file.begin(), file.end());  // back() = indice le plus petit
         return;
     }
 
@@ -284,14 +284,14 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
             cout << "Building geodesic decomposition with radius "
                  << ToulBar2::vnsGeode << " (binary constraints only)." << endl;
         }
-        buildGeodesicClusters();
+        buildGeodesicClusters(ToulBar2::vnsGeode);
     }
 
     
     // En mode géodésique, on préserve volontairement l'intégrité des boules :
     // l'absorption fusionnerait des clusters et casserait la sémantique du rayon.
 
-    // ---- Calcul des stats sur les clusters et préparation de file ----
+    //  Calcul des stats sur les clusters et préparation de file ----
     TCDGraph::vertex_iterator v, vend;
     tie(v, vend) = vertices(m_graph);
     for (; v != vend; ++v) {
@@ -306,8 +306,8 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     // Ordre déterministe : indice croissant.
     // file est dépilée par back() => on trie en ordre décroissant.
     file = clusters;
-    sort(file.begin(), file.end(), std::greater<int>());
-
+    reverse(file.begin(), file.end());
+    // info c'est ici que je prépare l'ordre de parcours des clusters pour le moteur VNS, en commençant par le premier qui est entré (celui avec l'indice le plus petit) .   
     // Heuristique interne : Naturel (sélection par indice croissant dans la zone)
     insideHeuristic = new NaturelNeighborhoodChoice();
     insideHeuristic->init(wcsp_, l_);
@@ -315,7 +315,7 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     clustersBuilt = true;
 }
 
-void GraphNeighborhoodChoice::buildGeodesicClusters()
+void GraphNeighborhoodChoice::buildGeodesicClusters(int radius)
 {
     // BFS depuis chaque variable non-affectée, jusqu'à profondeur vnsGeode.
     // on s'est limité aux contraintes binaires, il faudra remplacer ctr->isBinary()par ctr->arity() si on veut les n-aires .
@@ -334,7 +334,7 @@ void GraphNeighborhoodChoice::buildGeodesicClusters()
             int currentDepth = bfsQueue.front().second;
             bfsQueue.pop();
 
-            if (currentDepth >= ToulBar2::vnsGeode)
+            if (currentDepth >= radius)
                 continue;
 
             Variable* var = ((WCSP*)wcsp)->getVar(currVarIndex);
@@ -386,7 +386,7 @@ const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;
-        sort(file.begin(), file.end(), std::greater<int>());  // ordre déterministe
+        reverse(file.begin(), file.end());  // on inverse l'ordre pour commencer par le premier qui est entré.
     }
     assert(file.size() > 0);
     int c = file.back();
@@ -406,11 +406,23 @@ const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
         int currclu = c;
         int i = 0;
         do {
-            tie(av, avend) = adjacent_vertices(currclu, m_graph);
+            tie(av, avend) = adjacent_vertices(currclu, m_graph); // fonction boost pour retourner les voisins direct d'un sommet dans le graphe. 
             if (av != avend) {
                 vector<int> neighbors(av, avend);
-                // Ordre déterministe : pas de shuffle, on trie par indice.
-                sort(neighbors.begin(), neighbors.end());
+                // Tri par proximité topologique (taille du séparateur décroissante).
+                // Tie-breaker par indice croissant : OBLIGATOIRE pour la reproductibilité,
+                // car sort n'est pas stable et les clusters géodésiques ont
+                // fréquemment des séparateurs de taille égale.
+                sort(neighbors.begin(), neighbors.end(), [&](int a, int b) {
+                    Cluster_edge ea, eb; // identifiant d'aretes .
+                    bool found_a, found_b;
+                    tie(ea, found_a) = edge(currclu, a, m_graph); // existante d'arete entre currclu et a dans m_graph ?
+                    tie(eb, found_b) = edge(currclu, b, m_graph);
+                    int taille_a = found_a ? m_graph[ea].vars.size() : 0;
+                    int taille_b = found_b ? m_graph[eb].vars.size() : 0;
+                    if (taille_a == taille_b) return a < b;  // tie-breaker déterministe
+                    return taille_a > taille_b;              // proximité topologique décroissante
+                });
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -432,6 +444,7 @@ const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
             }
             currclu = fifo.front();
             fifo.pop();
+            // le z est un set,donc on aura pas de doublons.
             z.insert(m_graph[currclu].vars.begin(), m_graph[currclu].vars.end());
         } while (z.size() < neighborhood_size);
     }
@@ -450,7 +463,7 @@ bool GraphNeighborhoodChoice::incrementK()
     // on signale au moteur VNS que k peut être incrémenté.
     if (file.size() == 0) {
         file = clusters;
-        sort(file.begin(), file.end(), std::greater<int>());
+        reverse(file.begin(), file.end());
         return true;
     }
     return false;

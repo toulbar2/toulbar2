@@ -142,7 +142,7 @@ public:
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
     virtual bool incrementK();
 private:
-    void buildGeodesicClusters();  // construit les boules géodésiques dans m_graph
+    void buildGeodesicClusters(int radius);  // construit les boules géodésiques dans m_graph .
 };
 
 class RandomClusterChoice : public ClustersNeighborhoodStructure {
