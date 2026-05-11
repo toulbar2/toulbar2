@@ -145,6 +145,33 @@ private:
     void buildGeodesicClusters(int radius);  // construit les boules géodésiques dans m_graph .
 };
 
+// Stratégie Kgeode : zone persistante avec fusion progressive.
+// - k démarre à |C0| (taille du premier cluster, et non vnsKmin).
+// - Quand le moteur demande k > |currentZone|, on fusionne le cluster
+//   topologiquement le plus proche (taille de séparateur la plus grande).
+// - currentZone NE se réinitialise jamais après amélioration VNS,
+//   seul lastMergedClusterIdx est utilisé pour redémarrer k = |Ccourant|.
+class KgeodeNeighborhoodChoice : public ClustersNeighborhoodStructure {
+protected:
+    bool clustersBuilt;
+    set<int> currentZone;
+    int lastMergedClusterIdx;
+    set<int> mergedClusters;
+public:
+    KgeodeNeighborhoodChoice() : clustersBuilt(false), lastMergedClusterIdx(-1) {}
+    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
+    virtual const zone getNeighborhood(size_t neighborhood_size);
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+    virtual bool incrementK();
+    int getCurrentZoneSize() const { return currentZone.size(); }
+    int getLastMergedClusterSize() const {
+        return (lastMergedClusterIdx >= 0) ? (int)m_graph[lastMergedClusterIdx].vars.size() : 0;
+    }
+private:
+    void buildGeodesicClusters(int radius);
+    int findClosestUnmergedCluster();
+};
+
 class RandomClusterChoice : public ClustersNeighborhoodStructure {
 public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);

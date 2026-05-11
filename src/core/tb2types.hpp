@@ -702,7 +702,8 @@ typedef enum {
     MASTERCLUSTERRAND = 8,
     PCONFLICTVAR = 9,
     NATURELLE = 10,
-    GRAPH = 11
+    GRAPH = 11,
+    KGEODE=12
 } VNSVariableHeuristic;
 
 typedef enum {

@@ -107,7 +107,14 @@ bool VNSSolver::solve(bool first)
             if (ToulBar2::verbose >= 1)
                 cout << "Graph Neighborhood Structure selection" << endl;
             h = new GraphNeighborhoodChoice();
+            break; 
+         
+        case KGEODE:
+            if (ToulBar2::verbose >= 1)
+                cout << "Kgeode Neighborhood Structure selection" << endl;
+            h = new KgeodeNeighborhoodChoice();
             break;    
+            
 
         default:
             cerr << "Unknown Neighborhood Structure" << endl;
@@ -116,7 +123,7 @@ bool VNSSolver::solve(bool first)
 
         h->init(wcsp, this);
         if (ToulBar2::verbose >= 0
-            && (ToulBar2::vnsNeighborVarHeur == CLUSTERRAND || ToulBar2::vnsNeighborVarHeur == GRAPH)) {
+            && (ToulBar2::vnsNeighborVarHeur == CLUSTERRAND || ToulBar2::vnsNeighborVarHeur == GRAPH || ToulBar2::vnsNeighborVarHeur == KGEODE)) {
             ClustersNeighborhoodStructure* ch = (ClustersNeighborhoodStructure*)h;
             if (ch->getSize() > 1) {
                 if (ToulBar2::verbose >= 1 || ToulBar2::debug)
@@ -184,7 +191,7 @@ bool VNSSolver::solve(bool first)
                 countPerKLDS[klds_key]++;
                 // updating
                 if (lastUb >= bestUb) {
-                    if (h->incrementK()) {
+                    if (h->incrementK()) {    // GraphNeighborhoodChoice::incrementK() retourne true si file épuisée, false sinon.
 
                         rank++;
                         if (k < ToulBar2::vnsKmax) {
@@ -199,7 +206,7 @@ bool VNSSolver::solve(bool first)
                                 k = ToulBar2::vnsKmin * (int)luby(rank);
                                 break;
                             case VNS_ADD1JUMP:
-                                if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1)
+                                if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1) //
                                     k++;
                                 else
                                     k = ToulBar2::vnsKmax;

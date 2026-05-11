@@ -263,14 +263,14 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     maxClusterSize = 0;
     minClusterSize = wcsp_->numberOfVariables();
 
-    //  Choix de la source de la décomposition 
+    //  info : Choix de la source de la décomposition 
     if (ToulBar2::clusterFile != "") {
         // si l'utilisateur fournit un fichier, on l'utilise.
         if (ToulBar2::vnsGeode > 0 && ToulBar2::verbose >= 0) {
             cout << "Warning: -geode parameter ignored because a decomposition file is provided ("
                  << ToulBar2::clusterFile << ")." << endl;
         }
-        load_decomposition();  // méthode héritée de ClustersNeighborhoodStructure
+        load_decomposition();  // fichier fourni par l'utilisateur, méthode héritée de ClustersNeighborhoodStructure .
     } else {
         // Mode interne : construction des boules géodésiques
         if (ToulBar2::vnsGeode <= 0) {
@@ -284,7 +284,7 @@ void GraphNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
             cout << "Building geodesic decomposition with radius "
                  << ToulBar2::vnsGeode << " (binary constraints only)." << endl;
         }
-        buildGeodesicClusters(ToulBar2::vnsGeode);
+        buildGeodesicClusters(ToulBar2::vnsGeode); // je declenche ma decomposition qui sera stocké dans m_graph .
     }
 
     
@@ -409,7 +409,7 @@ const zone GraphNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
             tie(av, avend) = adjacent_vertices(currclu, m_graph); // fonction boost pour retourner les voisins direct d'un sommet dans le graphe. 
             if (av != avend) {
                 vector<int> neighbors(av, avend);
-                // Tri par proximité topologique (taille du séparateur décroissante).
+                // info :Tri par proximité topologique (taille du séparateur décroissante).
                 // Tie-breaker par indice croissant : OBLIGATOIRE pour la reproductibilité,
                 // car sort n'est pas stable et les clusters géodésiques ont
                 // fréquemment des séparateurs de taille égale.
@@ -467,6 +467,41 @@ bool GraphNeighborhoodChoice::incrementK()
         return true;
     }
     return false;
+}
+// KgeodeNeighborhoodChoice .
+void KgeodeNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
+{
+    this->wcsp = wcsp_;
+    this->l = l_;
+    cerr << "[KgeodeNeighborhoodChoice::init] Not implemented yet (étape 1)" << endl;
+    throw BadConfiguration();
+}
+
+const zone KgeodeNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
+{
+    cerr << "[KgeodeNeighborhoodChoice::getNeighborhood] Not implemented yet (étape 2)" << endl;
+    throw BadConfiguration();
+}
+
+const zone KgeodeNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, zone z) const
+{
+    assert("not implemented!!!");
+    return zone();
+}
+
+bool KgeodeNeighborhoodChoice::incrementK()
+{
+    return false;
+}
+
+void KgeodeNeighborhoodChoice::buildGeodesicClusters(int radius)
+{
+    cerr << "[KgeodeNeighborhoodChoice::buildGeodesicClusters] Not implemented yet (étape 1)" << endl;
+}
+
+int KgeodeNeighborhoodChoice::findClosestUnmergedCluster()
+{
+    return -1;
 }
 
 
