@@ -75,6 +75,7 @@ public:
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const = 0;
     virtual ~NeighborhoodStructure() {}
     virtual bool incrementK() { return true; }
+    virtual bool shouldResetK() { return false; }  // signal au moteur pour reset k à kinit .
 };
 
 // for vns/lds-cp
@@ -92,6 +93,33 @@ public:
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+};
+// protéines
+// Stratégie Protein : décomposition géodésique simple sans graphe Boost.
+// - clusters stocké comme vector<vector<int>> (un cluster = boule géodésique d'une variable).
+// - getNeighborhood(k) agrège séquentiellement clusters[currentClusterIdx], +1, +2, ...
+//   jusqu'à atteindre k variables (avec déduplication par set).
+// - Passage au cluster suivant via incrementK() quand le cluster courant est épuisé
+//   (k atteint kmax ou toutes les variables non-affectées sont couvertes).
+// - Signal shouldResetK() permet au moteur DGVNS de remettre k = vnsKmin sans amélioration.
+// - Amélioration trouvée → init() est rappelée → on revient au cluster racine du cycle.
+class ProteinNeighborhoodChoice : public NeighborhoodStructure {
+private:
+    vector<vector<int>> clusters;       // clusters[i] = boule géodésique du i-ème cluster (compact)
+    vector<int> clusterRootWcspIdx;     // clusterRootWcspIdx[i] = indice WCSP de la racine du i-ème cluster
+    int currentClusterIdx;               // indice dans le vecteur compact (0 à clusters.size()-1)
+    bool needsKReset;
+    bool clustersBuilt;
+    void buildClusters(int radius);
+    set<int> getDirectNeighbors(int varIdx) const;
+public:
+    ProteinNeighborhoodChoice()
+        : currentClusterIdx(0), needsKReset(false), clustersBuilt(false) {}
+    virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
+    virtual const zone getNeighborhood(size_t neighborhood_size);
+    virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
+    virtual bool incrementK();
+    virtual bool shouldResetK();
 };
 
 

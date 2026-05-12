@@ -243,6 +243,203 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
     neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
     return neighborhood;
 }
+// ProteinNeighborhoodChoice
+
+void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
+{
+    this->wcsp = wcsp_;
+    this->l = l_;
+
+    // Soft-reset après amélioration VNS :
+    // currentClusterIdx INCHANGÉ : on revient sur le cluster racine du cycle.
+    if (clustersBuilt) {
+        needsKReset = false;
+        return;
+    }
+
+    // Première construction
+    if (ToulBar2::vnsGeode <= 0) {
+        cerr << "Error: with -vns=13 (PROTEIN mode), you must provide"
+             << " -geode=<radius> with radius > 0." << endl;
+        throw BadConfiguration();
+    }
+
+    if (ToulBar2::verbose >= 0) {
+        cout << "Building protein geodesic decomposition with radius "
+             << ToulBar2::vnsGeode << " (binary constraints only)." << endl;
+    }
+
+    buildClusters(ToulBar2::vnsGeode);
+
+    if (clusters.empty()) {
+        cerr << "Error: no unassigned variable found, cannot build protein clusters." << endl;
+        throw BadConfiguration();
+    }
+
+    // Calcul des stats
+    size_t minSize = clusters[0].size();
+    size_t maxSize = 0;
+    size_t totalSize = 0;
+    for (const auto& c : clusters) {
+        if (c.size() < minSize) minSize = c.size();
+        if (c.size() > maxSize) maxSize = c.size();
+        totalSize += c.size();
+    }
+
+    if (ToulBar2::verbose >= 0 && clusters.size() > 1) {
+        cout << "[Protein] Decomposition: " << clusters.size()
+             << " clusters with size distribution: min=" << minSize
+             << " mean=" << (totalSize / (double)clusters.size())
+             << " max=" << maxSize << endl;
+    }
+
+    currentClusterIdx = 0;  // démarrage au premier cluster compact
+    needsKReset = false;
+
+    if (ToulBar2::verbose >= 1) {
+    cout << "[Protein] Mapping cluster idx → variable WCSP racine :" << endl;
+    for (size_t i = 0; i < clusters.size(); i++) {
+        cout << "  idx=" << i << " → var=" << clusterRootWcspIdx[i] 
+             << " (taille boule=" << clusters[i].size() << ")" << endl;
+    }
+}
+
+    clustersBuilt = true;
+}
+
+const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
+{
+    // CHOIX B : structure compacte (plus de clusters vides à sauter).
+    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
+    assert(currentClusterIdx >= 0 && currentClusterIdx < (int)clusters.size());
+
+    set<int> z;
+    int idx = currentClusterIdx;
+    int nbClusters = (int)clusters.size();
+
+    int aggregated = 0;
+    while (z.size() < neighborhood_size && aggregated < nbClusters) {
+        for (int v : clusters[idx]) {
+            z.insert(v);   // set : déduplication automatique
+        }
+        aggregated++;
+        idx = (idx + 1) % nbClusters;
+    }
+
+    // Détection de saturation : tour complet OU k >= kmax
+    if (aggregated >= nbClusters || (int)neighborhood_size >= ToulBar2::vnsKmax) {
+        needsKReset = true;
+    }
+
+    if (ToulBar2::verbose >= 1) {
+        cout << "[Protein] Cluster idx=" << currentClusterIdx
+             << " (var racine=" << clusterRootWcspIdx[currentClusterIdx] << ")"
+             << " | k demandé=" << neighborhood_size
+             << " | |Z|=" << z.size()
+             << " | clusters agrégés=" << aggregated << endl;
+    }
+
+        zone neighborhood;
+    size_t actual_size = min(neighborhood_size, z.size());
+    neighborhood.insert(z.begin(), next(z.begin(), actual_size));
+    return neighborhood;
+}
+
+const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, zone z) const
+{
+    assert("not implemented!!!");
+    return zone();
+}
+
+bool ProteinNeighborhoodChoice::incrementK()
+{
+    if (needsKReset) {
+        // Passage au cluster suivant (cyclique, pas de saut nécessaire)
+        currentClusterIdx = (currentClusterIdx + 1) % (int)clusters.size();
+
+        if (ToulBar2::verbose >= 1) {
+            cout << "[Protein] incrementK: passage au cluster idx="
+                 << currentClusterIdx
+                 << " (var racine=" << clusterRootWcspIdx[currentClusterIdx] << ")"
+                 << " - cycle terminé" << endl;
+        }
+    }
+    return true;
+}
+
+bool ProteinNeighborhoodChoice::shouldResetK()
+{
+    bool reset = needsKReset;
+    needsKReset = false;   // consommation du signal
+    return reset;
+}
+
+void ProteinNeighborhoodChoice::buildClusters(int radius)
+{
+    // BFS depuis chaque variable non-affectée, jusqu'à profondeur "radius".
+    // CHOIX B (vecteur compact) :
+    // - clusters[i] = boule géodésique du i-ème cluster non vide
+    // - clusterRootWcspIdx[i] = indice WCSP de la variable racine
+    clusters.clear();
+    clusterRootWcspIdx.clear();
+
+    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+        if (!wcsp->unassigned(i))
+            continue;  // on saute les variables affectées
+
+        set<int> ball;
+        queue<pair<int, int>> bfsQueue;
+        ball.insert(i);
+        bfsQueue.push(make_pair((int)i, 0));
+
+        while (!bfsQueue.empty()) {
+            int currVar = bfsQueue.front().first;
+            int depth = bfsQueue.front().second;
+            bfsQueue.pop();
+            if (depth >= radius)
+                continue;
+
+            set<int> neighbors = getDirectNeighbors(currVar);
+            for (int n : neighbors) {
+                if (wcsp->unassigned(n) && ball.find(n) == ball.end()) {
+                    ball.insert(n);
+                    bfsQueue.push(make_pair(n, depth + 1));
+                }
+            }
+        }
+
+        // Ajouter au vecteur compact (pas de trous)
+        clusters.push_back(vector<int>(ball.begin(), ball.end()));
+        clusterRootWcspIdx.push_back((int)i);
+    }
+}
+
+set<int> ProteinNeighborhoodChoice::getDirectNeighbors(int varIdx) const
+{
+   // Retourne l'ensemble des variables connectées à varIdx par une fonction de coût
+    // binaire (= voisins directs dans le graphe primal du WCSP).
+    // Pour les SCP/CPD, cela correspond aux résidus dont la distance physique
+    // est inférieure au cutoff utilisé pour générer le CFN.
+    set<int> result;
+    EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIdx);
+    ConstraintList* ctrlist = var->getConstrs();
+    for (ConstraintList::iterator it = ctrlist->begin(); it != ctrlist->end(); ++it) {
+        Constraint* ctr = (*it).constr;
+        if (ctr->arity() != 2)
+            continue;
+        BinaryConstraint* bctr = (BinaryConstraint*)ctr;
+        TSCOPE scope;
+        bctr->getScope(scope);
+        for (auto elt : scope) {
+            if (elt.first != varIdx) {
+                result.insert(elt.first);
+            }
+        }
+    }
+    return result;
+}
+
+
 
 // GraphNeighborhoodChoice
 

@@ -113,8 +113,13 @@ bool VNSSolver::solve(bool first)
             if (ToulBar2::verbose >= 1)
                 cout << "Kgeode Neighborhood Structure selection" << endl;
             h = new KgeodeNeighborhoodChoice();
+            break; 
+               
+        case PROTEIN:
+            if (ToulBar2::verbose >= 1)
+                cout << "Protein Neighborhood Structure selection" << endl;
+            h = new ProteinNeighborhoodChoice();
             break;    
-            
 
         default:
             cerr << "Unknown Neighborhood Structure" << endl;
@@ -191,10 +196,12 @@ bool VNSSolver::solve(bool first)
                 countPerKLDS[klds_key]++;
                 // updating
                 if (lastUb >= bestUb) {
-                    if (h->incrementK()) {    // GraphNeighborhoodChoice::incrementK() retourne true si file épuisée, false sinon.
+                    if (h->incrementK()) {
 
                         rank++;
-                        if (k < ToulBar2::vnsKmax) {
+                        if (h->shouldResetK()) {
+                            k = ToulBar2::vnsKmin;
+                        } else if (k < ToulBar2::vnsKmax) {
                             switch (ToulBar2::vnsKinc) {
                             case VNS_ADD1:
                                 k++;
@@ -206,7 +213,7 @@ bool VNSSolver::solve(bool first)
                                 k = ToulBar2::vnsKmin * (int)luby(rank);
                                 break;
                             case VNS_ADD1JUMP:
-                                if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1) //
+                                if (ToulBar2::vnsNeighborVarHeur == RANDOMVAR || ToulBar2::vnsNeighborVarHeur == PROTEIN || k < ((ClustersNeighborhoodStructure*)h)->getMaxClusterSize() + ((ClustersNeighborhoodStructure*)h)->getSize() - 1)
                                     k++;
                                 else
                                     k = ToulBar2::vnsKmax;
@@ -218,13 +225,12 @@ bool VNSSolver::solve(bool first)
                             k = min(k, ToulBar2::vnsKmax);
                         } else
                             k++;
-                        //                    cout << "rank: " << rank << " luby: " << luby(rank) << " k: " << k << " lds: " << ToulBar2::lds << endl;
                     }
                 } else {
                     rank = 1;
                     k = ToulBar2::vnsKmin;
-                    if (ToulBar2::vnsNeighborVarHeur == GRAPH)
-                        h->init(wcsp, this);  // idx ← 0 : intensification (L.26)
+                    if (ToulBar2::vnsNeighborVarHeur == GRAPH || ToulBar2::vnsNeighborVarHeur == PROTEIN) 
+                        h->init(wcsp, this);  
                     restart = 1;
                     lds = ToulBar2::vnsLDSmin;
                     bestUb = lastUb;

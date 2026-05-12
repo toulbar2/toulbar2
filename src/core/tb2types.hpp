@@ -703,7 +703,8 @@ typedef enum {
     PCONFLICTVAR = 9,
     NATURELLE = 10,
     GRAPH = 11,
-    KGEODE=12
+    KGEODE=12,
+    PROTEIN = 13
 } VNSVariableHeuristic;
 
 typedef enum {
