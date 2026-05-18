@@ -146,7 +146,7 @@ bool VNSSolver::solve(bool first)
         // vns/lds+cp
         Long nbRestart = 1;
         Long restart = 1;
-        int lds = ToulBar2::vnsLDSmin;
+        int lds = ToulBar2::vnsLDSmin; 
         while (!stop && !complete && bestUb > ToulBar2::vnsOptimum) {
             if (ToulBar2::verbose >= 0 && ToulBar2::restart > 1) {
                 if (ToulBar2::lds) {
@@ -195,11 +195,11 @@ bool VNSSolver::solve(bool first)
                 timePerKLDS[klds_key] += cpuTime() - timeBeforeRepair;
                 countPerKLDS[klds_key]++;
                 // updating
-                if (lastUb >= bestUb) {
+                if (lastUb >= bestUb) {   // on rentre dans la branche (pas d'amélioration) .
                     if (h->incrementK()) {
 
                         rank++;
-                        if (h->shouldResetK()) {
+                        if (h->shouldResetK()) { // si true on fait la mise à jour .
                             k = ToulBar2::vnsKmin;
                         } else if (k < ToulBar2::vnsKmax) {
                             switch (ToulBar2::vnsKinc) {
@@ -225,7 +225,7 @@ bool VNSSolver::solve(bool first)
                             k = min(k, ToulBar2::vnsKmax);
                         } else
                             k++;
-                    }
+                    } // s'il a amélioration , on rentre dans le else et init est appelé par le moteur.
                 } else {
                     rank = 1;
                     k = ToulBar2::vnsKmin;

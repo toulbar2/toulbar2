@@ -308,6 +308,7 @@ bool ToulBar2::vnsNeighborSizeSync;
 bool ToulBar2::vnsParallelLimit;
 bool ToulBar2::vnsParallelSync;
 string ToulBar2::vnsOptimumS;
+bool ToulBar2::vnsReverseOrder;  // reverse .
 Cost ToulBar2::vnsOptimum;
 bool ToulBar2::parallel;
 
@@ -539,6 +540,7 @@ void tb2init()
     ToulBar2::vnsKmin = 4;
     ToulBar2::vnsKmax = 0;
     ToulBar2::vnsGeode = 1;
+    ToulBar2::vnsReverseOrder = false; // reverse .
     ToulBar2::vnsKinc = VNS_ADD1JUMP;
 
     ToulBar2::vnsLDScur = -1;

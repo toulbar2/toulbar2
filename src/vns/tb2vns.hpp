@@ -109,9 +109,9 @@ private:
     vector<int> clusterRootWcspIdx;     // clusterRootWcspIdx[i] = indice WCSP de la racine du i-ème cluster
     int currentClusterIdx;               // indice dans le vecteur compact (0 à clusters.size()-1)
     bool needsKReset;
-    bool clustersBuilt;
+    bool clustersBuilt; 
     void buildClusters(int radius);
-    set<int> getDirectNeighbors(int varIdx) const;
+    void getDirectNeighbors(int varIdx, set<int>& neighbors) const;
 public:
     ProteinNeighborhoodChoice()
         : currentClusterIdx(0), needsKReset(false), clustersBuilt(false) {}

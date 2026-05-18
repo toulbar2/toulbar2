@@ -391,7 +391,7 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
         queue<pair<int, int>> bfsQueue;
         ball.insert(i);
         bfsQueue.push(make_pair((int)i, 0));
-
+        set<int> neighbors;
         while (!bfsQueue.empty()) {
             int currVar = bfsQueue.front().first;
             int depth = bfsQueue.front().second;
@@ -399,8 +399,9 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
             if (depth >= radius)
                 continue;
 
-            set<int> neighbors = getDirectNeighbors(currVar);
+            getDirectNeighbors(currVar, neighbors);
             for (int n : neighbors) {
+
                 if (wcsp->unassigned(n) && ball.find(n) == ball.end()) {
                     ball.insert(n);
                     bfsQueue.push(make_pair(n, depth + 1));
@@ -412,15 +413,27 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
         clusters.push_back(vector<int>(ball.begin(), ball.end()));
         clusterRootWcspIdx.push_back((int)i);
     }
+    // reverse .
+    // Si l'option -reverse est activée, inverser l'ordre des clusters.
+    // Cela permet de tester l'impact du point de départ sur la convergence.
+    if (ToulBar2::vnsReverseOrder) {
+        std::reverse(clusters.begin(), clusters.end());
+        std::reverse(clusterRootWcspIdx.begin(), clusterRootWcspIdx.end());
+        if (ToulBar2::verbose >= 0) {
+            cout << "[Protein] Reverse order activated: starting from last cluster (var racine="
+                 << clusterRootWcspIdx[0] << ")" << endl;
+        }
+    }
 }
 
-set<int> ProteinNeighborhoodChoice::getDirectNeighbors(int varIdx) const
+
+void ProteinNeighborhoodChoice::getDirectNeighbors(int varIdx, set<int>& neighbors) const
 {
    // Retourne l'ensemble des variables connectées à varIdx par une fonction de coût
     // binaire (= voisins directs dans le graphe primal du WCSP).
     // Pour les SCP/CPD, cela correspond aux résidus dont la distance physique
     // est inférieure au cutoff utilisé pour générer le CFN.
-    set<int> result;
+    neighbors.clear();
     EnumeratedVariable* var = (EnumeratedVariable*)((WCSP*)wcsp)->getVar(varIdx);
     ConstraintList* ctrlist = var->getConstrs();
     for (ConstraintList::iterator it = ctrlist->begin(); it != ctrlist->end(); ++it) {
@@ -432,11 +445,11 @@ set<int> ProteinNeighborhoodChoice::getDirectNeighbors(int varIdx) const
         bctr->getScope(scope);
         for (auto elt : scope) {
             if (elt.first != varIdx) {
-                result.insert(elt.first);
+                neighbors.insert(elt.first);
             }
         }
     }
-    return result;
+
 }
 
 
