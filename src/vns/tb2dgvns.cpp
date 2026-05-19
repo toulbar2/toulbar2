@@ -26,6 +26,7 @@ bool VNSSolver::solve(bool first)
     map<pair<int,int>, double> timePerKLDS;
     map<pair<int,int>, int>    countPerKLDS;
     int bestSolutionK = -1;
+    NeighborhoodStructure* h = NULL;
     try {
         try {
             lastUb = MAX_COST;
@@ -83,7 +84,7 @@ bool VNSSolver::solve(bool first)
         assert(ToulBar2::vnsKmin <= ToulBar2::vnsKmax);
 
         // cluster tree initialized AFTER generating initial solution
-        NeighborhoodStructure* h = NULL;
+        
         switch (ToulBar2::vnsNeighborVarHeur) {
         case RANDOMVAR:
             if (ToulBar2::verbose >= 1)
@@ -300,6 +301,7 @@ bool VNSSolver::solve(bool first)
         ToulBar2::vnsOutput.close();
 
     
+    h->printBilan();          
     // [dernière modif] Affichage du résumé VNS final après la fin de toutes les itérations.
     
     if (ToulBar2::verbose >= 0 && !timePerKLDS.empty()) {

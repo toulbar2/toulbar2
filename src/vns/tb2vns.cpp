@@ -13,6 +13,7 @@
 #include "core/tb2wcsp.hpp"
 #include "search/tb2clusters.hpp"
 #include <random>
+#include <iomanip>
 
 using namespace boost;
 
@@ -245,28 +246,38 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 }
 // ProteinNeighborhoodChoice
 
+void ProteinNeighborhoodChoice::printBilan()
+{
+    if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
+        cout << "[Protein] Bilan: clusters visités pour l'optimum=" << clustersVisitedAtBest 
+             << "/" << clusters.size() 
+             << " | améliorations=" << nbImprovements << endl;
+
+    }
+}
+
 void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
     this->wcsp = wcsp_;
     this->l = l_;
 
-    // Soft-reset après amélioration VNS :
-    // currentClusterIdx INCHANGÉ : on revient sur le cluster racine du cycle.
     if (clustersBuilt) {
         needsKReset = false;
+        cycleComplete = false;
+        clustersVisitedAtBest = nbVisitedClusters + 1;
+        nbVisitedClusters = 0;
+        nbImprovements++; 
+        
+        if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
+            cout << "[Protein] Amélioration sur idx=" << currentClusterIdx 
+                 << " | k remis à kmin | améliorations=" << nbImprovements << endl;
+        }
         return;
     }
 
-    // Première construction
     if (ToulBar2::vnsGeode <= 0) {
-        cerr << "Error: with -vns=13 (PROTEIN mode), you must provide"
-             << " -geode=<radius> with radius > 0." << endl;
+        cerr << "Error: with -vns=13 (PROTEIN mode), you must provide -geode=<radius> with radius > 0." << endl;
         throw BadConfiguration();
-    }
-
-    if (ToulBar2::verbose >= 0) {
-        cout << "Building protein geodesic decomposition with radius "
-             << ToulBar2::vnsGeode << " (binary constraints only)." << endl;
     }
 
     buildClusters(ToulBar2::vnsGeode);
@@ -276,7 +287,6 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         throw BadConfiguration();
     }
 
-    // Calcul des stats
     size_t minSize = clusters[0].size();
     size_t maxSize = 0;
     size_t totalSize = 0;
@@ -286,30 +296,33 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         totalSize += c.size();
     }
 
-    if (ToulBar2::verbose >= 0 && clusters.size() > 1) {
-        cout << "[Protein] Decomposition: " << clusters.size()
-             << " clusters with size distribution: min=" << minSize
-             << " mean=" << (totalSize / (double)clusters.size())
-             << " max=" << maxSize << endl;
+    if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
+        cout << "[Protein] " << clusters.size() << " clusters | min=" << minSize
+             << " mean=" << std::fixed << std::setprecision(1) << (totalSize / (double)clusters.size())
+             << " max=" << maxSize << " | rayon=" << ToulBar2::vnsGeode 
+             << " | reverse=" << (ToulBar2::vnsReverseOrder ? "oui" : "non") << endl;
+             
+        cout << "[Protein] Départ: idx=0 (var=" << clusterRootWcspIdx[0] << ")" << endl;
     }
 
-    currentClusterIdx = 0;  // démarrage au premier cluster compact
+    currentClusterIdx = 0;  
     needsKReset = false;
+    cycleComplete = false;
+    nbVisitedClusters = 0;
 
-    if (ToulBar2::verbose >= 1) {
-    cout << "[Protein] Mapping cluster idx → variable WCSP racine :" << endl;
-    for (size_t i = 0; i < clusters.size(); i++) {
-        cout << "  idx=" << i << " → var=" << clusterRootWcspIdx[i] 
-             << " (taille boule=" << clusters[i].size() << ")" << endl;
+    if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
+        cout << "[Protein] Mapping cluster idx → variable WCSP racine :" << endl;
+        for (size_t i = 0; i < clusters.size(); i++) {
+            cout << "  idx=" << i << " → var=" << clusterRootWcspIdx[i] 
+                 << " (taille boule=" << clusters[i].size() << ")" << endl;
+        }
     }
-}
-
+    
     clustersBuilt = true;
 }
 
 const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
 {
-    // CHOIX B : structure compacte (plus de clusters vides à sauter).
     assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
     assert(currentClusterIdx >= 0 && currentClusterIdx < (int)clusters.size());
 
@@ -320,26 +333,25 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     int aggregated = 0;
     while (z.size() < neighborhood_size && aggregated < nbClusters) {
         for (int v : clusters[idx]) {
-            z.insert(v);   // set : déduplication automatique
+            z.insert(v);   
         }
         aggregated++;
         idx = (idx + 1) % nbClusters;
     }
 
-    // Détection de saturation : tour complet OU k >= kmax
-    if (aggregated >= nbClusters || (int)neighborhood_size >= ToulBar2::vnsKmax) {
+    if (aggregated >= nbClusters) {
         needsKReset = true;
     }
 
-    if (ToulBar2::verbose >= 1) {
+    if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
         cout << "[Protein] Cluster idx=" << currentClusterIdx
-             << " (var racine=" << clusterRootWcspIdx[currentClusterIdx] << ")"
-             << " | k demandé=" << neighborhood_size
+             << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")"
+             << " | k=" << neighborhood_size
              << " | |Z|=" << z.size()
-             << " | clusters agrégés=" << aggregated << endl;
+             << " | agrégés=" << aggregated << endl;
     }
 
-        zone neighborhood;
+    zone neighborhood;
     size_t actual_size = min(neighborhood_size, z.size());
     neighborhood.insert(z.begin(), next(z.begin(), actual_size));
     return neighborhood;
@@ -354,25 +366,46 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 bool ProteinNeighborhoodChoice::incrementK()
 {
     if (needsKReset) {
-        // Passage au cluster suivant (cyclique, pas de saut nécessaire)
         currentClusterIdx = (currentClusterIdx + 1) % (int)clusters.size();
+        nbVisitedClusters++;
 
-        if (ToulBar2::verbose >= 1) {
-            cout << "[Protein] incrementK: passage au cluster idx="
-                 << currentClusterIdx
-                 << " (var racine=" << clusterRootWcspIdx[currentClusterIdx] << ")"
-                 << " - cycle terminé" << endl;
+        if (nbVisitedClusters >= (int)clusters.size()) {
+            cycleComplete = true;
+            nbVisitedClusters = 0;
         }
+
+        if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
+            cout << "[Protein] Passage au cluster idx=" << currentClusterIdx
+                 << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")" << endl;
+        } 
+        else if (ToulBar2::showvns == 1) {
+            cout << "[Protein] → cluster idx=" << currentClusterIdx 
+                 << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")" << endl;
+        }
+
+        
     }
     return true;
 }
 
+
 bool ProteinNeighborhoodChoice::shouldResetK()
 {
+    if (cycleComplete) {
+        cycleComplete = false;
+        needsKReset = false;
+        if (ToulBar2::showvns >= 1) {
+            cout << "[Protein] Cycle complet terminé. Passage au LDS supérieur." << endl;
+        }
+        return false;
+    }
     bool reset = needsKReset;
-    needsKReset = false;   // consommation du signal
+    needsKReset = false;
     return reset;
 }
+
+
+
 
 void ProteinNeighborhoodChoice::buildClusters(int radius)
 {

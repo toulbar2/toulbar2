@@ -23,6 +23,7 @@
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/connected_components.hpp>
 
+
 /**
  * Basic structure
  */
@@ -76,6 +77,7 @@ public:
     virtual ~NeighborhoodStructure() {}
     virtual bool incrementK() { return true; }
     virtual bool shouldResetK() { return false; }  // signal au moteur pour reset k à kinit .
+    virtual void printBilan() {} // No-op par défaut, à surcharger pour afficher des statistiques de visite par voisinage k/LDS.
 };
 
 // for vns/lds-cp
@@ -110,16 +112,22 @@ private:
     int currentClusterIdx;               // indice dans le vecteur compact (0 à clusters.size()-1)
     bool needsKReset;
     bool clustersBuilt; 
+    int nbVisitedClusters;
+    int clustersVisitedAtBest;
+    int nbImprovements;
+    bool cycleComplete;
     void buildClusters(int radius);
     void getDirectNeighbors(int varIdx, set<int>& neighbors) const;
+
 public:
     ProteinNeighborhoodChoice()
-        : currentClusterIdx(0), needsKReset(false), clustersBuilt(false) {}
+        : currentClusterIdx(0), needsKReset(false), clustersBuilt(false), nbVisitedClusters(0), clustersVisitedAtBest(1), nbImprovements(0), cycleComplete(false) {}
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
     virtual bool incrementK();
     virtual bool shouldResetK();
+    virtual void printBilan();
 };
 
 
