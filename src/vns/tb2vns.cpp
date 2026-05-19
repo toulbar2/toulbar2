@@ -249,11 +249,12 @@ const zone NaturelNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 void ProteinNeighborhoodChoice::printBilan()
 {
     if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
-        cout << "[Protein] Bilan: clusters visités pour l'optimum=" << clustersVisitedAtBest 
+        cout << "[Vns geode] Summary: clusters visited for optimum=" << clustersVisitedAtBest 
              << "/" << clusters.size() 
-             << " | améliorations=" << nbImprovements << endl;
-
+             << " | number improvement=" << nbImprovements 
+             << " | time on best cluster=" << std::fixed << std::setprecision(3) << timeOnBestCluster << "s" << endl;
     }
+
 }
 
 void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
@@ -266,11 +267,14 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         cycleComplete = false;
         clustersVisitedAtBest = nbVisitedClusters + 1;
         nbVisitedClusters = 0;
+        timeOnBestCluster = cpuTime() - clusterEntryTime;
+        clusterEntryTime = cpuTime();
         nbImprovements++; 
         
         if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
-            cout << "[Protein] Amélioration sur idx=" << currentClusterIdx 
-                 << " | k remis à kmin | améliorations=" << nbImprovements << endl;
+            cout << "[Vns geode] Improvement on cluster_idx=" << currentClusterIdx 
+                 << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")"
+                 << " | k=kmin | number improvement=" << nbImprovements << endl;
         }
         return;
     }
@@ -297,24 +301,30 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     }
 
     if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
-        cout << "[Protein] " << clusters.size() << " clusters | min=" << minSize
-             << " mean=" << std::fixed << std::setprecision(1) << (totalSize / (double)clusters.size())
-             << " max=" << maxSize << " | rayon=" << ToulBar2::vnsGeode 
-             << " | reverse=" << (ToulBar2::vnsReverseOrder ? "oui" : "non") << endl;
-             
-        cout << "[Protein] Départ: idx=0 (var=" << clusterRootWcspIdx[0] << ")" << endl;
+        cout << "[Vns geode] " << clusters.size() << " clusters | min_size=" << minSize
+             << " mean_size=" << std::fixed << std::setprecision(1) << (totalSize / (double)clusters.size())
+             << " max_size=" << maxSize << " | radius=" << ToulBar2::vnsGeode 
+             << " | reverse=" << (ToulBar2::vnsReverseOrder ? "true" : "false") << endl;
+        cout << "[Vns geode] Start: cluster=0 (var=" << clusterRootWcspIdx[0] << ")" << endl;
     }
 
     currentClusterIdx = 0;  
     needsKReset = false;
     cycleComplete = false;
     nbVisitedClusters = 0;
+    timeOnBestCluster = 0.0;
+    clusterEntryTime = cpuTime();
 
     if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
-        cout << "[Protein] Mapping cluster idx → variable WCSP racine :" << endl;
+        cout << "[Vns geode] Mapping cluster_idx -> variable WCSP root" << endl;
         for (size_t i = 0; i < clusters.size(); i++) {
-            cout << "  idx=" << i << " → var=" << clusterRootWcspIdx[i] 
-                 << " (taille boule=" << clusters[i].size() << ")" << endl;
+            cout << "[Vns geode] cluster_idx=" << i 
+                 << " -> var=" << clusterRootWcspIdx[i] 
+                 << " (size ball=" << clusters[i].size() << ") | content: ";
+            for (size_t j = 0; j < clusters[i].size(); j++) {
+                cout << clusters[i][j] << (j < clusters[i].size() - 1 ? ";" : "");
+            }
+            cout << endl;
         }
     }
     
@@ -344,12 +354,18 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     }
 
     if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
-        cout << "[Protein] Cluster idx=" << currentClusterIdx
+        cout << "[Vns geode] cluster_idx=" << currentClusterIdx
              << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")"
              << " | k=" << neighborhood_size
-             << " | |Z|=" << z.size()
-             << " | agrégés=" << aggregated << endl;
+             << " | cluster size=" << z.size()
+             << " | cluster aggregate=";
+        for (int c = 0; c < aggregated; c++) {
+            int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
+            cout << aggIdx << (c < aggregated - 1 ? ";" : "");
+        }
+        cout << endl;
     }
+
 
     zone neighborhood;
     size_t actual_size = min(neighborhood_size, z.size());
@@ -368,6 +384,7 @@ bool ProteinNeighborhoodChoice::incrementK()
     if (needsKReset) {
         currentClusterIdx = (currentClusterIdx + 1) % (int)clusters.size();
         nbVisitedClusters++;
+        clusterEntryTime = cpuTime();
 
         if (nbVisitedClusters >= (int)clusters.size()) {
             cycleComplete = true;
@@ -375,12 +392,11 @@ bool ProteinNeighborhoodChoice::incrementK()
         }
 
         if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
-            cout << "[Protein] Passage au cluster idx=" << currentClusterIdx
+            cout << "[Vns geode] Next cluster: cluster_idx=" << currentClusterIdx
                  << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")" << endl;
         } 
         else if (ToulBar2::showvns == 1) {
-            cout << "[Protein] → cluster idx=" << currentClusterIdx 
-                 << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")" << endl;
+            cout << "[Vns geode] -> cluster_idx=" << currentClusterIdx << endl;
         }
 
         
@@ -395,7 +411,7 @@ bool ProteinNeighborhoodChoice::shouldResetK()
         cycleComplete = false;
         needsKReset = false;
         if (ToulBar2::showvns >= 1) {
-            cout << "[Protein] Cycle complet terminé. Passage au LDS supérieur." << endl;
+            cout << "[Vns geode] Full cycle completed. Increasing LDS." << endl;
         }
         return false;
     }
@@ -453,7 +469,7 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
         std::reverse(clusters.begin(), clusters.end());
         std::reverse(clusterRootWcspIdx.begin(), clusterRootWcspIdx.end());
         if (ToulBar2::verbose >= 0) {
-            cout << "[Protein] Reverse order activated: starting from last cluster (var racine="
+            cout << "[Vns geode] Reverse order activated: starting from last cluster (root_var="
                  << clusterRootWcspIdx[0] << ")" << endl;
         }
     }
