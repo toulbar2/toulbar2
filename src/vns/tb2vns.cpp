@@ -14,6 +14,8 @@
 #include "search/tb2clusters.hpp"
 #include <random>
 #include <iomanip>
+#include <fstream>
+#include <algorithm>
 
 using namespace boost;
 
@@ -462,6 +464,31 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
         clusters.push_back(vector<int>(ball.begin(), ball.end()));
         clusterRootWcspIdx.push_back((int)i);
     }
+
+    if (ToulBar2::vnsOrderFile != "") {
+        ifstream file(ToulBar2::vnsOrderFile.c_str());
+        if (!file) {
+            cerr << "Error: Cannot open TSP file: " << ToulBar2::vnsOrderFile << endl;
+            exit(EXIT_FAILURE);
+        }
+        vector<vector<int>> tspClusters;
+        vector<int> tspClusterRootWcspIdx;
+        int varIdx;
+        while (file >> varIdx) {
+            auto it = std::find(clusterRootWcspIdx.begin(), clusterRootWcspIdx.end(), varIdx);
+            if (it != clusterRootWcspIdx.end()) {
+                int originalIndex = std::distance(clusterRootWcspIdx.begin(), it);
+                tspClusters.push_back(clusters[originalIndex]);
+                tspClusterRootWcspIdx.push_back(clusterRootWcspIdx[originalIndex]);
+            }
+        }
+        clusters = tspClusters;
+        clusterRootWcspIdx = tspClusterRootWcspIdx;
+        if (ToulBar2::showvns >= 1) {
+            cout << "[Vns geode] TSP order applied from file: " << ToulBar2::vnsOrderFile << endl;
+        }
+    }
+
     // reverse .
     // Si l'option -reverse est activée, inverser l'ordre des clusters.
     // Cela permet de tester l'impact du point de départ sur la convergence.

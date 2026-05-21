@@ -1264,6 +1264,7 @@ int _tmain(int argc, TCHAR* argv[])
     file_extension_map["lpxz_ext"] = ".lp.xz";
     file_extension_map["treedec_ext"] = ".cov";
     file_extension_map["clusterdec_ext"] = ".dec";
+    file_extension_map["tsporder_ext"] = ".tsp";
 
     assert(cout << "Warning! toulbar2 was compiled in debug mode and it can be very slow..." << endl);
 
@@ -3217,6 +3218,17 @@ int _tmain(int argc, TCHAR* argv[])
                 ifstream decfile(ToulBar2::clusterFile.c_str());
                 if (!decfile) {
                     cerr << "File " << ToulBar2::clusterFile << " not found!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+
+            if (check_file_ext(problem, file_extension_map["tsporder_ext"])) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "loading TSP cluster order in file: " << problem << endl;
+                ToulBar2::vnsOrderFile = problem;
+                ifstream tspfile(ToulBar2::vnsOrderFile.c_str());
+                if (!tspfile) {
+                    cerr << "File " << ToulBar2::vnsOrderFile << " not found!" << endl;
                     throw WrongFileFormat();
                 }
             }

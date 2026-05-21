@@ -938,6 +938,7 @@ public:
     static int vnsGeode;  ///< \brief geodesic radius for graph neighborhood decomposition (command line option -geode)
     static bool vnsReverseOrder; ///< \brief reverse neighborhood order (command line option -vreverse) // reverse .
     static int showvns; ///< \brief shows VNS progression (0: disabled, 1: essential, 2: detailed)
+    static string vnsOrderFile; ///< \brief TSP cluster ordering file (.tsp)
     static VNSInc vnsKinc; ///< \brief neighborhood size increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator, 4: Increment by 1 until maximum cluster size then considers all variables) (command line option -kinc)
 
     static int vnsLDScur; ///< \internal do not use (current LDS discrepancy value, used only for debugging display)
