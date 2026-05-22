@@ -199,6 +199,10 @@ bool VNSSolver::solve(bool first)
                             endSolve(lastUb < MAX_COST, lastUb, true);
                             return (lastUb < MAX_COST);
                         }
+                        // TODO: redo RandomClusterChoice::init by removing assigned variables
+//                        ToulBar2::vnsKmax = min(ToulBar2::vnsKmax, unassignedVars->getSize());
+//                        ToulBar2::vnsKmin = min(ToulBar2::vnsKmin, ToulBar2::vnsKmax);
+//                        k = ToulBar2::vnsKmin;
                     } catch (const Contradiction&) {
                         wcsp->whenContradiction();
                         endSolve(bestUb < MAX_COST, bestUb, true);

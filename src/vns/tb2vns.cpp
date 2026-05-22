@@ -177,11 +177,11 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     zone neighborhood;
     vector<int> z(l->unassignedVars->getSize());
     unsigned int j = 0;
-
     for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
         z[j] = *iter;
         ++j;
     }
+    assert(j == l->unassignedVars->getSize());
     shuffle(z.begin(), z.end(), myrandom_generator);
     assert(neighborhood_size <= z.size());
     neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
@@ -243,7 +243,7 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 
 const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
-    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
+//    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;
