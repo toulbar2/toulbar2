@@ -369,6 +369,7 @@ enum {
     OPT_geode,
     OPT_reverse_order, // reverse .
     OPT_showvns,
+    OPT_kstagnation,
     OPT_k_max,
     OPT_k_inc,
     //    OPT_vns_restart_strategy,
@@ -677,6 +678,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_geode, (char*)"-geode", SO_REQ_SEP },
     { OPT_reverse_order, (char*)"-reverse", SO_NONE }, // reverse .
     { OPT_showvns, (char*)"-showvns", SO_OPT },
+    { OPT_kstagnation, (char*)"-kstagnation", SO_REQ_SEP },
     { OPT_k_inc, (char*)"-kinc", SO_REQ_SEP },
     //    { OPT_vns_var_heur, (char*) "--variable-heuristic", SO_REQ_SEP },
     { OPT_neighbor_change, (char*)"--strategy", SO_NONE },
@@ -1493,6 +1495,11 @@ int _tmain(int argc, TCHAR* argv[])
                     ToulBar2::showvns = 1; // Niveau 1 par défaut
                 }
             }
+            if (args.OptionId() == OPT_kstagnation) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsKStagnation = atoi(args.OptionArg());
+            }
+
 #ifdef OPENMPI
             if (args.OptionId() == OPT_plimit) {
                 ToulBar2::vnsParallelLimit = true;

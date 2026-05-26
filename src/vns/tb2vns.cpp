@@ -342,14 +342,17 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     int idx = currentClusterIdx;
     int nbClusters = (int)clusters.size();
 
-    int aggregated = 0;
-    while (z.size() < neighborhood_size && aggregated < nbClusters) {
-        for (int v : clusters[idx]) {
-            z.insert(v);   
+        int aggregated = 0;
+        lastAggregatedCluster = currentClusterIdx;
+        while (z.size() < neighborhood_size && aggregated < nbClusters) {
+            for (int v : clusters[idx]) {
+                z.insert(v);
+            }
+            lastAggregatedCluster = idx;
+            aggregated++;
+            idx = (idx + 1) % nbClusters;
         }
-        aggregated++;
-        idx = (idx + 1) % nbClusters;
-    }
+
 
     if (aggregated >= nbClusters) {
         needsKReset = true;
@@ -383,7 +386,33 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 
 bool ProteinNeighborhoodChoice::incrementK()
 {
-    if (needsKReset) {
+    if (ToulBar2::vnsKStagnation > 0
+        && ToulBar2::vnsKcur >= ToulBar2::vnsKStagnation) {
+        // Cas kStagnation : on repart de lastAggregatedCluster
+        int nextCluster = lastAggregatedCluster;
+        if (nextCluster == currentClusterIdx) {
+            // garde-fou boucle infinie : cluster racine seul dépasse kStagnation
+            nextCluster = (lastAggregatedCluster + 1) % (int)clusters.size();
+        }
+        int jumpSize = nextCluster - currentClusterIdx;
+        if (jumpSize <= 0) jumpSize += (int)clusters.size();
+
+        currentClusterIdx = nextCluster;
+        nbVisitedClusters += jumpSize;
+        clusterEntryTime = cpuTime();
+        needsKReset = true;
+
+        if (nbVisitedClusters >= (int)clusters.size()) {
+            cycleComplete = true;
+            nbVisitedClusters = 0;
+        }
+        if (ToulBar2::showvns >= 1) {
+            cout << "[Vns geode] kStagnation reached (k=" << ToulBar2::vnsKcur
+                 << "). Jumping to cluster_idx=" << currentClusterIdx << endl;
+        }
+
+    } else if (needsKReset) {
+        // Cas normal : boule complète épuisée
         currentClusterIdx = (currentClusterIdx + 1) % (int)clusters.size();
         nbVisitedClusters++;
         clusterEntryTime = cpuTime();
@@ -392,16 +421,12 @@ bool ProteinNeighborhoodChoice::incrementK()
             cycleComplete = true;
             nbVisitedClusters = 0;
         }
-
         if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
             cout << "[Vns geode] Next cluster: cluster_idx=" << currentClusterIdx
                  << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")" << endl;
-        } 
-        else if (ToulBar2::showvns == 1) {
+        } else if (ToulBar2::showvns == 1) {
             cout << "[Vns geode] -> cluster_idx=" << currentClusterIdx << endl;
         }
-
-        
     }
     return true;
 }

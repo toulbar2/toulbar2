@@ -195,6 +195,15 @@ bool VNSSolver::solve(bool first)
                 pair<int,int> klds_key = make_pair(ToulBar2::vnsLDScur, k);
                 timePerKLDS[klds_key] += cpuTime() - timeBeforeRepair;
                 countPerKLDS[klds_key]++;
+                // info : courbe .
+                if (ToulBar2::showvns >= 1) {
+                    cout << "[Vns geode] neighborhood k=" << k
+                        << " lds=" << lds
+                        << " time=" << std::fixed << std::setprecision(3)
+                        << (cpuTime() - timeBeforeRepair) << "s"
+                        << endl;
+                }
+
                 // updating
                 if (lastUb >= bestUb) {   // on rentre dans la branche (pas d'amélioration) .
                     if (h->incrementK()) {
