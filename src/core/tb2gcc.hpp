@@ -200,13 +200,13 @@ public:
             demand = vector<int>(NbValues, 0);
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
-            costMatrix = vector<Cost>(arity_in * NbValues, MAX_COST);
+            costMatrix = vector<Cost>((arity_in+1) * NbValues, MAX_COST);
             ReduceCostMatrix = vector<Cost>(arity_in * NbValues, MAX_COST);
 
             // Allocate memory
             colSol = new int[NbValues];
-            rowSol = new int[arity_];
-            ReduceCostRow = new Cost[arity_];
+            rowSol = new int[arity_+1];
+            ReduceCostRow = new Cost[arity_+1];
             ReduceCostCol = new Cost[NbValues];
 
         } else {
@@ -221,8 +221,11 @@ public:
         delete[] ReduceCostRow;
         delete[] ReduceCostCol;
     }
-    void read(istream& file) // TODO: add a parameter for controlling the level of propagation if necessary
+    void read(istream& files) // TODO: add a parameter for controlling the level of propagation if necessary
     {
+        string line;
+        getline(files, line);
+        stringstream file(line);
 
         Gcc_NbValues = 0;
         sumlb = 0;
@@ -301,6 +304,25 @@ public:
                 // Initialize extended cost vector for each variable
                 deltaCosts.assign(NbValues, MIN_COST);
             //}
+        }
+        if(!isSquare){
+            int nbDelta;
+            file >> nbDelta;
+            if(nbDelta){
+                for (int v = 0; v < nbDelta; v++) {
+                    Value value;
+                    Cost delta;
+                    file >> value;
+                    file >> delta;
+                    for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                        auto* variable = scope[varIndex];
+                        if (variable->canbe(value)) {
+                            deltaCosts[mapDomainValToIndex[variable->getValueName(variable->toIndex(value))]] = delta;
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -437,7 +459,7 @@ public:
             return res;
         }
 
-        Cost res =  -assigneddeltas ;
+        Cost res =  0 ;
   
         Cost nbsame = 0;
         vector<int> countUsed(NbValues, 0);
@@ -449,7 +471,6 @@ public:
                 nbsame++;
             }
         }
-
         if(sumlb > 0){
             for (int valIndex = 0; valIndex < NbValues; valIndex++) {
                 if(countUsed[valIndex] < demand[valIndex]){
@@ -460,9 +481,8 @@ public:
 
         if(nbsame == 0){
             for (int valIndex = 0; valIndex < NbValues; valIndex++) {
-                res += (capacity[valIndex] - countUsed[valIndex]) * (deltaCosts[valIndex] + assigneddeltas);
+                res += (capacity[valIndex] - countUsed[valIndex]) * deltaCosts[valIndex];
             }
-
         }
 
         if (nbsame > 0 || res > wcsp->getUb()) {
@@ -863,6 +883,7 @@ public:
                             if (NbNoAssignedVal == 0)
                                 THROWCONTRADICTION;
 
+
                             // Initialize cost matrix for the Jonker algorithm
                             Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
@@ -885,18 +906,32 @@ public:
 
                             // Solve assignment problem using Jonker algorithm
                             Cost TotalCost;
-                            if(isSquare || sumlb == 0){
+                            if(!isSquare){
+                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                    costMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = deltaCosts[NoAssignedVal[valInd]];
+                                }
+                                if(sumlb == 0){
+                                    TotalCost = lapjv_ub(NbNoAssigned+1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, findConflict);
+
+                                }
+                                else{
+                                    TotalCost = lapjv_gcc(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, NoAssdemand, findConflict);
+                                }
+                            }
+                            else{
                                 TotalCost = lapjv_ub(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, findConflict);
-                            } else{
-                                TotalCost = lapjv_gcc(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, NoAssdemand, findConflict);
+
                             }
 
                             if (TotalCost >= current_ub) {
                                 if(findConflict){
+                                    int varIndex;
                                     for(int var=0; var< findConflict; var++){
-                                        conflictWeights[NoAssignedVar[var]]++;
+                                        if(rowSol[var] >= NbNoAssigned) continue;
+                                        varIndex = NoAssignedVar[rowSol[var]];
+                                        conflictWeights[varIndex]++;
                                     } 
-                                }
+                                } 
                                 wcsp->revise(this);
                                 THROWCONTRADICTION; 
 
@@ -916,18 +951,18 @@ public:
 
                                 storeAssignment = true;
                                                               
-                               if(!isSquare){
+                               if(!isSquare){                
+                                    Cost mindelta  = sumlb > 0 ? 0 : ReduceCostRow[NbNoAssigned];
+                                
+                                    int valIndex;
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                            deltaCosts[NoAssignedVal[valInd]] += (-ReduceCostCol[valInd]);
+                                        valIndex =  NoAssignedVal[valInd]; 
+                                        deltaCosts[valIndex] -= (ReduceCostCol[valInd] + mindelta);
                                     }
-
-                                    Cost mindelta = *min_element(deltaCosts.begin(), deltaCosts.end());
                                     if (mindelta > 0){
-                                        for (auto& delta :deltaCosts) {
-                                            delta -= mindelta;
-                                        }
-                                        jonker += mindelta;
-                                        assigneddeltas += mindelta; 
+
+                                        jonker += (mindelta* (sumub - arity_)) - mindelta;
+        
                                         if(jonker >= current_ub){
                                             wcsp->revise(this);
                                             THROWCONTRADICTION;
@@ -983,7 +1018,8 @@ public:
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                     int varIndex = NoAssignedVar[varInd];
                                     auto* variable = scope[varIndex];
-                                    Value optimalValue = storeLastAssignment[varIndex];
+                                    if(variable->getCost(variable->getSupport()) > MIN_COST) variable->findSupport();
+                                    /*Value optimalValue = storeLastAssignment[varIndex];
                                     if (variable->getSupport() != optimalValue) {
                                         if (ToulBar2::verbose > 0)
                                             cout << "CHANGE GCC SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
@@ -992,7 +1028,7 @@ public:
 #endif
                                         variable->setSupport(optimalValue);
                                         assert(variable->getCost(variable->getSupport()) == MIN_COST);
-                                    }
+                                    }*/
                                 }
                                    /* (BEGIN) : Filtering of variables domains with Sellmann or Cambazard method 
 
@@ -1066,8 +1102,8 @@ public:
                         }
                     }
                     if (NbNoAssigned == arity_  || (!SameDomain)) {
-                        Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
+                        Cost current_ub = wcsp->getUb() - wcsp->getLb();
                         // Initialize the cost matrix for all variables and their domain values
                         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                             auto* variable = scope[varIndex];
@@ -1085,18 +1121,32 @@ public:
                             }
                         }
                         // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
-                        Cost TotalCost;
-                        if(isSquare || sumlb == 0){
+                         Cost TotalCost;
+                        if(!isSquare){
+                            for (int valInd = 0; valInd < NbValues; ++valInd) {
+                                costMatrix[arity_ * NbValues + valInd] = deltaCosts[valInd];
+                            }
+                            if(sumlb == 0){
+                                TotalCost = lapjv_ub(arity_+1, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, findConflict);
+
+                            }
+                            else{
+                                TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, demand, findConflict);
+                            }
+                        }
+                        else{
                             TotalCost = lapjv_ub(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, findConflict);
-                        } else{    
-                            TotalCost = lapjv_gcc(arity_, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, demand, findConflict);
+
                         }
 
                         if (TotalCost >= current_ub) {
-		                    if(findConflict){
+                            if(findConflict){
+                                int varIndex; 
                                 for(int var=0; var < findConflict; var++){
-                                    conflictWeights[var]++;
-                                }
+                                    varIndex = rowSol[var];
+                                    if(varIndex >= arity_) continue;
+                                    conflictWeights[varIndex]++;
+                                } 
                             } 
                             wcsp->revise(this);
                             THROWCONTRADICTION; 
@@ -1111,16 +1161,13 @@ public:
                             storeAssignment = true;
 
                             if(!isSquare){
+                                Cost mindelta = sumlb > 0 ? 0 : ReduceCostRow[arity_];
                                 for (int valInd = 0; valInd < NbValues; ++valInd) {
-                                    deltaCosts[valInd] += (-ReduceCostCol[valInd]);
+                                    deltaCosts[valInd] -= (ReduceCostCol[valInd] + mindelta);
                                 }
-                                Cost mindelta = *min_element(deltaCosts.begin(), deltaCosts.end());
-                                if (mindelta > 0){
-                                    for (auto& delta :deltaCosts) {
-                                        delta -= mindelta;
-                                    }
-                                    TotalCost += mindelta;
-                                    assigneddeltas += mindelta; 
+                                
+                                if (mindelta > 0){  
+                                    TotalCost += (mindelta *(sumub - arity_) - mindelta);
                                     if(TotalCost >= current_ub){
                                          wcsp->revise(this);
                                          THROWCONTRADICTION;
@@ -1300,7 +1347,6 @@ public:
 
     void dump(ostream& os, bool original = true) override
     {
-        assert(lb == MIN_COST); // TODO: how to dump with deltaCosts?
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
@@ -1313,18 +1359,49 @@ public:
                     os << " " << scope[i]->getCurrentVarId();
             os << " -1 gcc ";
         }
-        os << bounds.size();
+        int compt = 0;
         for (const auto& [key, bound] : bounds) {
+            if(capacity[mapDomainValToIndex[scope[0]->getValueName(scope[0]->toIndex(key))]] > 0) compt++;
+        }
+
+        os << compt;
+        for (const auto& [key, bound] : bounds) {
+            if(capacity[mapDomainValToIndex[scope[0]->getValueName(scope[0]->toIndex(key))]] == 0) continue;
             os << " " << key;
             os << " " << bound.first;
             os << " " << bound.second;
+        }
+        if(!isSquare){
+            Cost maxdelta = *max_element(deltaCosts.begin(), deltaCosts.end());
+            if (maxdelta > 0){
+                int current_val = 0;
+                unordered_map<Value, Cost> mapValuesDeltaCosts;
+                for(int valInd = 0; valInd < NbValues ; valInd++){
+                    int valIndex = NbValues - valInd;
+                    if(deltaCosts[valIndex] == 0) continue;
+                    Value value;
+                    for(int varIndex =  0; varIndex < arity_ ; varIndex++){
+                        auto* variable = scope[varIndex];
+                        value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+                        if(variable->canbe(value)){
+                            mapValuesDeltaCosts[value] = deltaCosts[valIndex];
+                            current_val++;
+                            break;
+                        }     
+                    }
+                }
+                os <<" " <<current_val;
+                for (auto& [key, delta] : mapValuesDeltaCosts) {               
+                    os << " " << key;
+                    os << " " << delta;
+                }
+            }
         }
         os << endl;
     }
 
     void dump_CFN(ostream& os, bool original = true) override
     {
-        assert(lb == MIN_COST); // TODO: how to dump with deltaCosts?
         bool printed = false;
         os << "\"F_";
 
@@ -1366,7 +1443,8 @@ public:
             os << "],\"type\":\"gcc\",\"params\":{\"bounds\":[";
         }
         printed = false;
-        for (const auto& [key, bound] : bounds) {
+        for (const auto& [key, bound] : bounds) {   
+            if(capacity[mapDomainValToIndex[scope[0]->getValueName(scope[0]->toIndex(key))]] == 0) continue;
             if (printed)
                 os << ",";
             os << "[" << key;
@@ -1375,7 +1453,41 @@ public:
             os << "]";
             printed = true;
         }
-        os << "]}},\n";
+        os << "],\"deltacosts\":[";
+        if(isSquare){
+            os << "]}},\n";
+        }
+        else{
+            Cost maxdelta = *max_element(deltaCosts.begin(), deltaCosts.end());
+            if(maxdelta > 0){
+                int current_val = 0;
+                unordered_map<Value, Cost> mapValuesDeltaCosts;
+                for(int valInd = 0; valInd < NbValues ; valInd++){
+                    int valIndex = NbValues - valInd;
+                    if(deltaCosts[valIndex] == 0) continue;
+                    Value value;
+                    for(int varIndex =  0; varIndex < arity_ ; varIndex++){
+                        auto* variable = scope[varIndex];
+                        value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
+                        if(variable->canbe(value)){
+                            mapValuesDeltaCosts[value] = deltaCosts[valIndex];
+                            current_val++;
+                            break;
+                        }     
+                    }
+                }
+                printed = false;
+                for (auto& [key, delta] : mapValuesDeltaCosts) {
+                    if (printed)
+                        os << ",";
+                    os << "[" << key;
+                    os << "," << delta;
+                    os << "]";
+                    printed = true;
+                }
+            }
+            os << "]}},\n";
+        }
     }
 };
 
