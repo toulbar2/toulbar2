@@ -214,7 +214,7 @@ void Supxyc::propagate()
         if (x->unassigned()) {
             Value xinf = x->getInf();
             Value yinf = y->getInf();
-            cost = max(yinf + cst - xinf - deltaCost, MIN_COST);
+            cost = max(yinf + cst - xinf - (Cost)deltaCost, MIN_COST);
             if (xinf == deltaValueXinf) {
                 Cost delta = cost - deltaCostXinf;
                 if (delta != MIN_COST) {
@@ -231,7 +231,7 @@ void Supxyc::propagate()
         if (y->unassigned()) {
             Value xsup = x->getSup();
             Value ysup = y->getSup();
-            cost = max(ysup + cst - xsup - deltaCost, MIN_COST);
+            cost = max(ysup + cst - xsup - (Cost)deltaCost, MIN_COST);
             if (ysup == deltaValueYsup) {
                 Cost delta = cost - deltaCostYsup;
                 if (delta != MIN_COST) {

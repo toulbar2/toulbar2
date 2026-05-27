@@ -241,19 +241,19 @@ const Cost MAX_COST = ((std::numeric_limits<Cost>::max() / 2) / MEDIUM_COST / ME
 #if __has_builtin(__builtin_saddl_overflow)
 inline bool Add(Cost a, Cost b, Cost* c)
 {
-    return __builtin_saddl_overflow(a, b, c);
+    return __builtin_sadd_overflow(a, b, c);
 }
 #endif
 #if __has_builtin(__builtin_ssubl_overflow)
 inline bool Sub(Cost a, Cost b, Cost* c)
 {
-    return __builtin_ssubl_overflow(a, b, c);
+    return __builtin_ssub_overflow(a, b, c);
 }
 #endif
 #if __has_builtin(__builtin_smull_overflow)
 inline bool Mul(Cost a, Cost b, Cost* c)
 {
-    return __builtin_smull_overflow(a, b, c);
+    return __builtin_smul_overflow(a, b, c);
 }
 #endif
 #else

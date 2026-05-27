@@ -3261,7 +3261,7 @@ void WCSP::read_uai2008(const char* fileName)
         for (k = 0; k < ntuples; k++) {
             file >> p;
             if (ToulBar2::sigma > 0.) {
-                Double noise = aleaGaussNoise(ToulBar2::sigma);
+                TProb noise = aleaGaussNoise(ToulBar2::sigma);
                 if (ToulBar2::verbose >= 1)
                     cout << "add noise " << noise << " to " << p << endl;
                 p = max((TProb)0., p + noise); // can create forbidden tuples
