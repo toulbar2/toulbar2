@@ -386,13 +386,17 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 
 bool ProteinNeighborhoodChoice::incrementK()
 {
-    if (ToulBar2::vnsKStagnation > 0
-        && ToulBar2::vnsKcur >= ToulBar2::vnsKStagnation) {
-        // Cas kStagnation : on repart de lastAggregatedCluster
-        int nextCluster = lastAggregatedCluster;
-        if (nextCluster == currentClusterIdx) {
-            // garde-fou boucle infinie : cluster racine seul dépasse kStagnation
-            nextCluster = (lastAggregatedCluster + 1) % (int)clusters.size();
+    double timeSpent = cpuTime() - clusterEntryTime;
+
+    if (ToulBar2::vnsTLimit > 0 && timeSpent >= ToulBar2::vnsTLimit) {
+        int nextCluster;
+        if (lastAggregatedCluster == currentClusterIdx) {
+            nextCluster = (currentClusterIdx + 1) % (int)clusters.size();
+        } else {
+            nextCluster = lastAggregatedCluster - 1;
+            if (nextCluster < 0) {
+                nextCluster += (int)clusters.size();
+            }
         }
         int jumpSize = nextCluster - currentClusterIdx;
         if (jumpSize <= 0) jumpSize += (int)clusters.size();
@@ -400,19 +404,21 @@ bool ProteinNeighborhoodChoice::incrementK()
         currentClusterIdx = nextCluster;
         nbVisitedClusters += jumpSize;
         clusterEntryTime = cpuTime();
-        needsKReset = true;
+        needsKReset = false;
 
         if (nbVisitedClusters >= (int)clusters.size()) {
             cycleComplete = true;
             nbVisitedClusters = 0;
         }
         if (ToulBar2::showvns >= 1) {
-            cout << "[Vns geode] kStagnation reached (k=" << ToulBar2::vnsKcur
-                 << "). Jumping to cluster_idx=" << currentClusterIdx << endl;
+            cout << "[Vns geode] tLimit reached (" << std::fixed << std::setprecision(1)
+                 << timeSpent << "s > " << ToulBar2::vnsTLimit
+                 << "s). Jumping to cluster_idx=" << currentClusterIdx
+                 << " (k remains unchanged)" << endl;
         }
+        return false;
 
     } else if (needsKReset) {
-        // Cas normal : boule complète épuisée
         currentClusterIdx = (currentClusterIdx + 1) % (int)clusters.size();
         nbVisitedClusters++;
         clusterEntryTime = cpuTime();

@@ -370,6 +370,7 @@ enum {
     OPT_reverse_order, // reverse .
     OPT_showvns,
     OPT_kstagnation,
+    OPT_tlimit,
     OPT_k_max,
     OPT_k_inc,
     //    OPT_vns_restart_strategy,
@@ -679,6 +680,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_reverse_order, (char*)"-reverse", SO_NONE }, // reverse .
     { OPT_showvns, (char*)"-showvns", SO_OPT },
     { OPT_kstagnation, (char*)"-kstagnation", SO_REQ_SEP },
+    { OPT_tlimit, (char*)"-tlimit", SO_REQ_SEP },
     { OPT_k_inc, (char*)"-kinc", SO_REQ_SEP },
     //    { OPT_vns_var_heur, (char*) "--variable-heuristic", SO_REQ_SEP },
     { OPT_neighbor_change, (char*)"--strategy", SO_NONE },
@@ -1498,6 +1500,11 @@ int _tmain(int argc, TCHAR* argv[])
             if (args.OptionId() == OPT_kstagnation) {
                 if (args.OptionArg() != NULL)
                     ToulBar2::vnsKStagnation = atoi(args.OptionArg());
+            }
+
+            if (args.OptionId() == OPT_tlimit) {
+                if (args.OptionArg() != NULL)
+                    ToulBar2::vnsTLimit = atof(args.OptionArg());
             }
 
 #ifdef OPENMPI
