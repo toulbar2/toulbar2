@@ -9,7 +9,10 @@ ENDIF() # otherwise domain Values encoded as int ()
 
 # COSTS encoding
 IF((LONG_COSTS AND SHORT_COSTS) OR (NOT LONG_COSTS AND NOT SHORT_COSTS) )
-  MESSAGE(FATAL_ERROR "Error: exectly one of the variables LONG_COSTS and LONG_COSTS must be set to ON")
+  MESSAGE(FATAL_ERROR "Error: exectly one of the variables LONG_COSTS and SHORT_COSTS must be set to ON")
+ENDIF()
+IF(XML AND NOT LONG_COSTS)
+  MESSAGE(FATAL_ERROR "Error: XML parser requires the variable LONG_COSTS must be set to ON")
 ENDIF()
 SET(INT_COST OFF)
 SET(LONGLONG_COST OFF)

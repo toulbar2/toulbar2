@@ -508,7 +508,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
 
     // Declaration des variables contenant les structures de données des problemes
     string pbname;
-    Long upperbound;
+    Cost upperbound;
     pbname = wcsp->getName();
     nbvar = wcsp->numberOfUnassignedVariables();
     domsize = 0;
@@ -574,7 +574,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
                 throw TimeOut();
             }
             executer_essai(problem, algo, population, taille, graine1, nessai, &initconfig);
-            if (wcsp->getLb() + problem->best_config->valuation < min(upperbound, initialUpperBound)) {
+            if (wcsp->getLb() + (Cost)problem->best_config->valuation < min(upperbound, initialUpperBound)) {
                 Cost previousUb = MIN_COST;
                 int depth = Store::getDepth();
                 try {
