@@ -372,6 +372,7 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     }
 
 
+    lastRepairTime = cpuTime();
     zone neighborhood;
     size_t actual_size = min(neighborhood_size, z.size());
     neighborhood.insert(z.begin(), next(z.begin(), actual_size));
@@ -386,16 +387,21 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 
 bool ProteinNeighborhoodChoice::incrementK()
 {
-    double timeSpent = cpuTime() - clusterEntryTime;
+    double timeSpent = cpuTime() - lastRepairTime;
 
     if (ToulBar2::vnsTLimit > 0 && timeSpent >= ToulBar2::vnsTLimit) {
         int nextCluster;
         if (lastAggregatedCluster == currentClusterIdx) {
+            // pas d'agrégation externe : on saute au cluster suivant
             nextCluster = (currentClusterIdx + 1) % (int)clusters.size();
         } else {
             nextCluster = lastAggregatedCluster - 1;
             if (nextCluster < 0) {
                 nextCluster += (int)clusters.size();
+            }
+            // garde-fou : si l'avant-dernier == cluster racine, on prend lastAggregated
+            if (nextCluster == currentClusterIdx) {
+                nextCluster = lastAggregatedCluster;
             }
         }
         int jumpSize = nextCluster - currentClusterIdx;
@@ -440,6 +446,12 @@ bool ProteinNeighborhoodChoice::incrementK()
 
 bool ProteinNeighborhoodChoice::shouldResetK()
 {
+    if (ToulBar2::vnsTLimit > 0) {
+        cycleComplete = false;
+        bool reset = needsKReset;
+        needsKReset = false;
+        return reset;
+    }
     if (cycleComplete) {
         cycleComplete = false;
         needsKReset = false;

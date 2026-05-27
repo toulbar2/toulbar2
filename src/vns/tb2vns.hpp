@@ -118,13 +118,14 @@ private:
     bool cycleComplete;
     double timeOnBestCluster;
     double clusterEntryTime;
+    double lastRepairTime;
     void buildClusters(int radius);
     int lastAggregatedCluster;
     void getDirectNeighbors(int varIdx, set<int>& neighbors) const;
 
 public:
     ProteinNeighborhoodChoice()
-        : currentClusterIdx(0), needsKReset(false), clustersBuilt(false), nbVisitedClusters(0), clustersVisitedAtBest(1), nbImprovements(0), cycleComplete(false), timeOnBestCluster(0.0), clusterEntryTime(0.0), lastAggregatedCluster(0) {}
+        : currentClusterIdx(0), needsKReset(false), clustersBuilt(false), nbVisitedClusters(0), clustersVisitedAtBest(1), nbImprovements(0), cycleComplete(false), timeOnBestCluster(0.0), clusterEntryTime(0.0), lastRepairTime(0.0), lastAggregatedCluster(0) {}
     virtual void init(WeightedCSP* wcsp_, LocalSearch* l_);
     virtual const zone getNeighborhood(size_t neighborhood_size);
     virtual const zone getNeighborhood(size_t neighborhood_size, zone z) const;
