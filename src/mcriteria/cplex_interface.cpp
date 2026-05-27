@@ -694,7 +694,7 @@ void MultiCFN::makeIloModel(IloEnv& env, IloModel& model, ILP_encoding encoding,
 void MultiCFN::getCplexSolution(IloCplex& cplex, std::vector<IloNumVarArray>& domain_vars, MultiCFN::Solution& solution)
 {
 
-    //IloNum const tolerance = cplex.getParam(IloCplex::Param::MIP::Tolerances::Integrality);
+    // IloNum const tolerance = cplex.getParam(IloCplex::Param::MIP::Tolerances::Integrality);
 
     cout << std::setprecision(15);
 

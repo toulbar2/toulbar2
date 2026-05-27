@@ -23,7 +23,7 @@ DecomposableGlobalCostFunction::DecomposableGlobalCostFunction(unsigned int _ari
 
 DecomposableGlobalCostFunction::~DecomposableGlobalCostFunction()
 {
-    if(scope) {
+    if (scope) {
         delete[] scope;
     }
 }
@@ -46,15 +46,15 @@ DecomposableGlobalCostFunction::FactoryDGCF(string type, unsigned int _arity, in
     if (type == "walldifferent" || type == "walldiff")
         return std::make_unique<WeightedAllDifferent>(_arity, _scope, file, mult);
     if (type == "wgcc")
-        return std::make_unique<WeightedGcc>(_arity, _scope, file, mult);    
+        return std::make_unique<WeightedGcc>(_arity, _scope, file, mult);
     if (type == "wregular")
-        return std::make_unique<WeightedRegular>(_arity, _scope, file, mult);    
+        return std::make_unique<WeightedRegular>(_arity, _scope, file, mult);
     if (type == "wsame")
-        return std::make_unique<WeightedSame>(_arity, _scope, file, mult);    
+        return std::make_unique<WeightedSame>(_arity, _scope, file, mult);
     if (type == "wsamegcc")
-        return std::make_unique<WeightedSameGcc>(_arity, _scope, file, mult);    
+        return std::make_unique<WeightedSameGcc>(_arity, _scope, file, mult);
     if (type == "wdiverse")
-        return std::make_unique<WeightedDiverse>(_arity, _scope, file, 0, mult);    
+        return std::make_unique<WeightedDiverse>(_arity, _scope, file, 0, mult);
     if (type == "whdiverse")
         return std::make_unique<WeightedDiverse>(_arity, _scope, file, 1, mult);
     if (type == "wtdiverse")
@@ -1557,7 +1557,7 @@ void WeightedSame::addToCostFunctionNetwork(WCSP* wcsp)
 
         wcsp->postBinaryConstraint(newVariable[value][0], newVariable[value][1], binaryCosts);
     }
-    for(int i = 0; i < nbValue; i ++) {
+    for (int i = 0; i < nbValue; i++) {
         delete[] newVariable[i];
     }
     delete[] newVariable;
@@ -1759,7 +1759,7 @@ void WeightedSameGcc::addToCostFunctionNetwork(WCSP* wcsp)
         positionVar++;
     }
 
-    for(auto value_ind = 0; value_ind < nbValue; value_ind ++) {
+    for (auto value_ind = 0; value_ind < nbValue; value_ind++) {
         delete[] newVariable[value_ind];
     }
     delete[] newVariable;

@@ -510,6 +510,43 @@ Global cost functions using a dedicated propagator:
                   }
               }
 
+  - :code:`"sgcckp"` with parameters array :code:`[metric: "var" cost: "cost" bounds: [(value lower_bound upper_bound)*]]` to express a hard global cardinality constraint (decomposes into :code:`knapsackv` cost functions) with for each value its lower and upper bound
+
+    - example: ::
+
+        name: {scope: [v1 v2 v3 v4]
+               type: sgcckp
+               params: {
+                  metric: hard
+                  cost: inf
+                  bounds: [[0 0 1] [1 2 3]]
+                  }
+              }
+
+  - :code:`"alldiff"` with parameters array :code:`[exceptedvalues: [(value)*] deltacosts: [(value cost)*]]` to express a hard alldifferent constraint with optional excepted values (and delta costs if propagation (EPTs) already done) 
+
+    - example: ::
+
+        name: {scope: [v1 v2 v3 v4]
+               type: alldiff
+               params: {
+                  exceptedvalues: [0]
+                  deltacosts: []
+                  }
+              }
+
+  - :code:`"gcc"` with parameters array :code:`[bounds: [(value lower_bound upper_bound)*], deltacosts: [(value cost)*]]` to express a hard global cardinality constraint with for each value its lower and upper bound (and delta costs if propagation (EPTs) already done)
+
+    - example: ::
+
+        name: {scope: [v1 v2 v3 v4]
+               type: gcc
+               params: {
+                  bounds: [[0 0 1] [1 2 3]]
+                  deltacosts: []
+                  }
+              }
+
   - :code:`"clique"` with parameters :code:`rhs: 1 values: [([(value)*])*]` to express a hard global clique constraint to restrict the number of variables taking their value into a given set of values (one set per variable) to at most 1 occurrence for all the variables. A clique of binary constraints must also be added to forbid any two variables from using both the restricted values.  
 
     - example: ::

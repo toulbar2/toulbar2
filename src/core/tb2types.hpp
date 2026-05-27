@@ -630,6 +630,7 @@ typedef enum {
     CONSTR_ORDER_LAG = 7,
     CONSTR_ORDER_ARITY = 8,
     CONSTR_ORDER_ARITY_DAC = 9,
+    CONSTR_ORDER_DAC_ARITY = 10,
     CONSTR_ORDER_THEMAX
 } ConstrOrdering;
 
@@ -851,6 +852,9 @@ public:
     static Cost deltaUbAbsolute; ///< \brief stops search if the absolute optimality gap reduces below a given value (command line option -agap)
     static Double deltaUbRelativeGap; ///< \brief stops search if the relative optimality gap reduces below a given value (command line option -rgap)
     static int singletonConsistency; ///< \brief in preprocessing, performs singleton soft local consistency (command line option -S)
+    static Double singletonAccuracy; ///< \brief in preprocessing, stopping accuracy condition for singleton node consistency (command line option -S)
+    static int ReducedCostsFiltering; ///< \brief in alldifferent and gcc, reduced costs filtering level condition (command line option -camb)
+    static int GilmoreLawler; ///< \brief in preprocessing, singleton node consistency using Gilmore-Lawler lower bound before/instead of EAC-like greedy lower bound (command line option -S -glb)
     static int vacValueHeuristic; ///< \brief VAC-based and Knapsack value (and variable) ordering heuristics (command line options -V and -A)
     static BEP* bep; ///< \internal do not use
     static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
@@ -968,15 +972,18 @@ public:
     static vector<Cost> initialLbBLP;
     static vector<Cost> initialUbBLP;
 
-    static Double getCostMultiplier() {
+    static Double getCostMultiplier()
+    {
         assert(costMultiplier_ == max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier))));
         return costMultiplier;
     }
-    static Cost getCostMultiplierInt() {
+    static Cost getCostMultiplierInt()
+    {
         assert(costMultiplier_ == max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier))));
         return costMultiplier_;
     }
-    static void setCostMultiplier(Double mult) {
+    static void setCostMultiplier(Double mult)
+    {
         costMultiplier = mult;
         costMultiplier_ = max(UNIT_COST, (Cost)floorl(std::abs(costMultiplier)));
         assert(costMultiplier_ >= 1);

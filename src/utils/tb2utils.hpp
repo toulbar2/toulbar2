@@ -186,12 +186,12 @@ void free_all(T& t)
 // warning! forbidden characters /#[]{}:, and spaces in cfn format for object names
 static inline std::string name2cfn(std::string s)
 {
-    for(auto it = s.begin(); it != s.end(); it ++) {
-        if(*it == '[' || *it == '{') {
+    for (auto it = s.begin(); it != s.end(); it++) {
+        if (*it == '[' || *it == '{') {
             *it = '(';
-        } else if(*it == ']' || *it == '}') {
+        } else if (*it == ']' || *it == '}') {
             *it = ')';
-        } else if(*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
+        } else if (*it == '/' || *it == '#' || *it == ':' || *it == ',' || *it == ' ' || *it == '\t') {
             *it = '_';
         }
     }

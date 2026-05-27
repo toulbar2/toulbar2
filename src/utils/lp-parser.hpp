@@ -32,13 +32,12 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <algorithm>
 
 #include <cstdint>
 #include <cmath>
 
 #include <type_traits>
-
-#include <algorithm>
 
 typedef long double Double;
 

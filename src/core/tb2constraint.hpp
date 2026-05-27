@@ -29,8 +29,14 @@ public:
     virtual bool isBinary() const { return false; } // return true if the cost function class is a BinaryConstraint
     virtual bool isTernary() const { return false; } // return true if the cost function class is a TernaryConstraint
     virtual bool isNary() const { return false; } // return true if the cost function class is a NaryConstraint
+    virtual bool isClause() const { return false; } // return true if the cost function class is a WeightedClause
     virtual bool isKnapsack() const { return false; } // return true if the cost function class is a KnapsackConstraint
+    virtual bool isAllDiff() const { return false; } // return true if the cost function class is a AllDifferentConstraint
+    virtual bool isAllDiffSquare() const { return false; } // return true if the cost function class is a AllDifferentConstraint and NbValues==arity
+    virtual bool isGCC() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint
+    virtual bool isGCCSquare() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint and NbValues==arity
     virtual bool isGlobal() const { return false; } // return true if it is a global cost function (flow-based monolithic propagation)
+    virtual std::vector<Value> getExceptedValues() const { return std::vector<Value>(); } // GS
     //    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 
     virtual bool connected() const
@@ -223,6 +229,8 @@ public:
             isincluded = isincluded && (getIndex(ctr->getVar(i)) >= 0);
         return isincluded;
     }
+    virtual bool implies(Constraint* ctr) { return false; } ///< \brief returns true if ctr is redundant wrt the constraint
+    virtual void projects(Constraint* ctr) {} ///< \brief projects the constraint on ctr
 
     void scopeCommon(TSCOPE& scope_out, Constraint* ctr)
     {
@@ -347,6 +355,9 @@ public:
     static bool cmpConstraintArityDAC(Constraint* c1, Constraint* c2);
     static bool cmpConstraintArityDAC(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
     static bool cmpConstraintArityDAC(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
+    static bool cmpConstraintDACArity(Constraint* c1, Constraint* c2);
+    static bool cmpConstraintDACArity(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2);
+    static bool cmpConstraintDACArity(DLink<Constraint*>* c1, DLink<Constraint*>* c2);
 
     // sort a list of constraints
     static int cmpConstraint(Constraint* c1, Constraint* c2);

@@ -230,7 +230,7 @@ void WCSP::minimumDegreeOrderingBGL(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) // SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -310,7 +310,7 @@ void WCSP::spanningTreeOrderingBGL(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) // SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G, maxt);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -377,7 +377,7 @@ void WCSP::DAGOrdering(vector<int>& order_inv)
     if (ToulBar2::verbose >= 0)
         cout << "DAG ordering"; // << endl;
 
-    int  n = numberOfVariables();
+    int n = numberOfVariables();
     set<int> roots; // first it assumes all variables as root
     for (int i = 0; i < n; ++i) {
         roots.insert(roots.end(), i);
@@ -404,7 +404,8 @@ void WCSP::DAGOrdering(vector<int>& order_inv)
             cout << " " << order_inv[i];
         }
     }
-    if (ToulBar2::verbose >= 0) cout << endl;
+    if (ToulBar2::verbose >= 0)
+        cout << endl;
 
     assert(order_inv.size() == numberOfVariables());
 }
@@ -415,7 +416,7 @@ void WCSP::reverseCuthillMcKeeOrderingBGL(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) // SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -448,7 +449,7 @@ void WCSP::maximumCardinalitySearch(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) // SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -538,7 +539,7 @@ void WCSP::minimumFillInOrdering(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) // SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -656,7 +657,7 @@ void WCSP::minimumDegreeOrdering(vector<int>& order_inv)
     for (unsigned int i = 0; i < vars.size(); i++)
         add_vertex(G);
     for (unsigned int i = 0; i < constrs.size(); i++)
-        if (constrs[i]->connected())
+        if (constrs[i]->connected() && constrs[i]->arity() < (int)vars.size()) // SdG: do not take into account global constraints applied on all the variables
             addConstraint(constrs[i], G);
     for (int i = 0; i < elimBinOrder; i++)
         if (elimBinConstrs[i]->connected())
@@ -946,7 +947,7 @@ void WCSP::addAMOConstraints()
             if (!constrs[i]->isKnapsack())
                 continue;
             else {
-                KnapsackConstraint *k = (KnapsackConstraint *)constrs[i];
+                KnapsackConstraint* k = (KnapsackConstraint*)constrs[i];
                 if (constrs[i]->arity() > 3 && constrs[i]->connected()) {
                     scope2.clear();
                     clq.clear();

@@ -170,7 +170,8 @@ public: /* static functions */
      * \brief set a CPU timeout for the computation of each solution
      * \param timeout the timeout in seconds, 0 by default, meaning no timeout
      */
-    static void setSolutionTimeout(int timeout) {
+    static void setSolutionTimeout(int timeout)
+    {
         _sol_timeout = timeout;
     }
 
@@ -178,7 +179,8 @@ public: /* static functions */
      * \brief set a global CPU timeout
      * \param timeout the timeout in seconds, 0 by default, meaning no timeout
      */
-    static void setGlobalTimeout(int timeout) {
+    static void setGlobalTimeout(int timeout)
+    {
         _global_timeout = timeout;
     }
 
@@ -186,7 +188,8 @@ public: /* static functions */
      * \brief set the maximum number of solution to compute
      * \param solCount maximum number of solution, 0 by default, meaning no limit
      */
-    static void setMaxSolutionCount(int solCount) {
+    static void setMaxSolutionCount(int solCount)
+    {
         _nsol_max = solCount;
     }
 
@@ -194,7 +197,8 @@ public: /* static functions */
      * \brief set the _vac parameter
      * \param vac enable VAC in preprocessing and during search, 0 by default, meaning no VAC
      */
-    static void setVAC(int vac) {
+    static void setVAC(int vac)
+    {
         _vac = vac;
     }
 
@@ -202,7 +206,8 @@ public: /* static functions */
      * \brief set the _seed parameter
      * \param random seed used in the solver, 1 by default
      */
-    static void setSeed(int seed) {
+    static void setSeed(int seed)
+    {
         _seed = seed;
     }
 
@@ -210,7 +215,8 @@ public: /* static functions */
      * \brief set the _verbose parameter
      * \param verbose verbosity level, -1 by default, meaning no output messages
      */
-    static void setVerbose(int verbose) {
+    static void setVerbose(int verbose)
+    {
         _verbose = verbose;
     }
 
@@ -218,10 +224,10 @@ public: /* static functions */
      * \brief set the _showSolutions parameter
      * \param showSolutions print intermediate solutions found during search, 0 by default, meaning solutions are not shown
      */
-    static void setShowSolutions(int showSolutions) {
+    static void setShowSolutions(int showSolutions)
+    {
         _showSolutions = showSolutions;
     }
-
 };
 
 #endif // BI_CRITERIA_HPP

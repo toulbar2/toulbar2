@@ -25,10 +25,12 @@ InternalError::InternalError()
 #ifdef OPENMPI
         mpi::communicator world;
         if (!ToulBar2::parallel || world.rank() == WeightedCSPSolver::MASTER) {
-            std::cout << std::endl << "s UNSUPPORTED" << std::endl;
+            std::cout << std::endl
+                      << "s UNSUPPORTED" << std::endl;
         }
 #else
-        std::cout << std::endl << "s UNSUPPORTED" << std::endl;
+        std::cout << std::endl
+                  << "s UNSUPPORTED" << std::endl;
 #endif
     }
 }

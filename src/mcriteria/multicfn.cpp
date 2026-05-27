@@ -1,17 +1,13 @@
 
+#include <random>
+
 #include "multicfn.hpp"
 
 // WCSP class
 #include "core/tb2wcsp.hpp"
-
-#include "core/tb2binconstr.hpp"
-#include "core/tb2ternaryconstr.hpp"
-#include "core/tb2naryconstr.hpp"
+#include "core/tb2alldifferent.hpp"
+#include "core/tb2gcc.hpp"
 #include "core/tb2knapsack.hpp"
-
-#include "core/tb2types.hpp"
-
-#include <random>
 
 using namespace std;
 
@@ -38,15 +34,13 @@ MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
     }
 }
 
-
 //---------------------------------------------------------------------------
 MultiCFN::~MultiCFN()
 {
-    for (auto ctr: cost_function) {
+    for (auto ctr : cost_function) {
         delete ctr;
     }
 }
-
 
 //---------------------------------------------------------------------------
 void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var)
@@ -93,6 +87,55 @@ bool MultiCFN::checkLinCostFuncConsistency(unsigned int func_ind, MultiCFN::Solu
     }
 
     return cost >= lcost_func->capacity;
+}
+
+//---------------------------------------------------------------------------
+bool MultiCFN::checkAllDiffCostFuncConsistency(unsigned int func_ind, MultiCFN::Solution& sol)
+{
+
+    mcriteria::AllDiffCostFunction* alldiffcost_func = dynamic_cast<mcriteria::AllDiffCostFunction*>(cost_function[func_ind]);
+
+    std::set<unsigned int> used;
+
+    for (unsigned int scope_ind = 0; scope_ind < alldiffcost_func->arity(); scope_ind++) {
+        mcriteria::Var& mcfn_var = var[alldiffcost_func->scope[scope_ind]];
+        unsigned int val = mcfn_var.str_to_index[sol[mcfn_var.name]];
+        if (used.find(val) != used.end() && alldiffcost_func->exceptedValues.find(val) == alldiffcost_func->exceptedValues.end()) {
+            return false;
+        } else {
+            used.insert(val);
+        }
+    }
+
+    return true;
+}
+
+//---------------------------------------------------------------------------
+bool MultiCFN::checkGCCCostFuncConsistency(unsigned int func_ind, MultiCFN::Solution& sol)
+{
+
+    mcriteria::GCCCostFunction* gcccost_func = dynamic_cast<mcriteria::GCCCostFunction*>(cost_function[func_ind]);
+
+    std::map<unsigned int, Double> used;
+
+    for (unsigned int scope_ind = 0; scope_ind < gcccost_func->arity(); scope_ind++) {
+        mcriteria::Var& mcfn_var = var[gcccost_func->scope[scope_ind]];
+        unsigned int val = mcfn_var.str_to_index[sol[mcfn_var.name]];
+        if (used.find(val) != used.end()) {
+            used[val] = used[val] + 1.;
+        } else {
+            used[val] = 1.;
+        }
+    }
+
+    for (auto bound : gcccost_func->bounds) {
+        unsigned int val = bound.first;
+        if (used.find(val) == used.end() || used[val] < bound.second.first || used[val] > bound.second.second) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 //---------------------------------------------------------------------------
@@ -261,7 +304,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
 
     if (cstr->isGlobal()) {
 
-        cout << "error, global cost functions are not supported except knapsack" << endl;
+        cout << "error, global cost functions are not supported except knapsack, alldifferent, and gcc" << endl;
 
     } else if (cstr->isKnapsack()) {
 
@@ -301,6 +344,60 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
                 unsigned int mcfn_val_ind = var[cost_func_ptr->scope[i]].str_to_index[val_name];
                 cost_func_ptr->weights[i][j] = make_pair(mcfn_val_ind, cost_func_ptr->weights[i][j].second);
             }
+        }
+
+    } else if (cstr->isAllDiff()) {
+
+        auto cstr_alldiff = dynamic_cast<AllDifferentConstraint*>(cstr);
+
+        mcriteria::AllDiffCostFunction* cost_func_ptr = new mcriteria::AllDiffCostFunction(this, networks.size() - 1);
+
+        cost_function.push_back(cost_func_ptr);
+
+        networks.back().push_back(cost_function.size() - 1); // add the function index to the network
+        network_index.push_back(networks.size() - 1);
+
+        cost_func_ptr->name = cstr->getName();
+
+        // read the scope
+        cost_func_ptr->scope.resize(cstr->arity());
+        for (unsigned int i = 0; i < static_cast<unsigned int>(cstr->arity()); i++) {
+            cost_func_ptr->scope[i] = var_index[cstr->getVar(i)->getName()];
+        }
+
+        // read the excepted values
+        for (Value value : cstr_alldiff->getExceptedValues()) {
+            EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(cstr_alldiff->getVar(0));
+            string val_name = tb2_var->getValueNameOrGenerate(tb2_var->toIndex(value));
+            unsigned int mcfn_val_ind = var[cost_func_ptr->scope[0]].str_to_index[val_name];
+            cost_func_ptr->exceptedValues.insert(mcfn_val_ind);
+        }
+
+    } else if (cstr->isGCC()) {
+
+        auto cstr_gcc = dynamic_cast<GlobalCardinalityConstraint*>(cstr);
+
+        mcriteria::GCCCostFunction* cost_func_ptr = new mcriteria::GCCCostFunction(this, networks.size() - 1);
+
+        cost_function.push_back(cost_func_ptr);
+
+        networks.back().push_back(cost_function.size() - 1); // add the function index to the network
+        network_index.push_back(networks.size() - 1);
+
+        cost_func_ptr->name = cstr->getName();
+
+        // read the scope
+        cost_func_ptr->scope.resize(cstr->arity());
+        for (unsigned int i = 0; i < static_cast<unsigned int>(cstr->arity()); i++) {
+            cost_func_ptr->scope[i] = var_index[cstr->getVar(i)->getName()];
+        }
+
+        // read the bounds
+        for (auto bound : cstr_gcc->getBounds()) {
+            EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(cstr_gcc->getVar(0));
+            string val_name = tb2_var->getValueNameOrGenerate(tb2_var->toIndex(bound.first));
+            unsigned int mcfn_val_ind = var[cost_func_ptr->scope[0]].str_to_index[val_name];
+            cost_func_ptr->bounds[mcfn_val_ind] = std::make_pair((Double)bound.second.first, (Double)bound.second.second);
         }
 
     } else {
@@ -624,8 +721,8 @@ void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const vec
             }
             if (vars.size() > 0) {
                 std::set_intersection(vars.begin(), vars.end(),
-                        union_of_scopes.begin(), union_of_scopes.end(),
-                        std::inserter(inter, inter.begin()));
+                    union_of_scopes.begin(), union_of_scopes.end(),
+                    std::inserter(inter, inter.begin()));
             } else {
                 inter.swap(union_of_scopes);
             }
@@ -638,13 +735,13 @@ void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const vec
             if (inter.size() > 0) {
                 std::set<unsigned int> temp_set;
                 std::set_intersection(inter.begin(), inter.end(),
-                        union_of_constrs.begin(), union_of_constrs.end(),
-                        std::inserter(temp_set, temp_set.begin()));
+                    union_of_constrs.begin(), union_of_constrs.end(),
+                    std::inserter(temp_set, temp_set.begin()));
                 inter.swap(temp_set);
             } else if (vars.size() > 0) {
                 std::set_intersection(vars.begin(), vars.end(),
-                        union_of_constrs.begin(), union_of_constrs.end(),
-                        std::inserter(inter, inter.begin()));
+                    union_of_constrs.begin(), union_of_constrs.end(),
+                    std::inserter(inter, inter.begin()));
             } else {
                 inter.swap(union_of_constrs);
             }
@@ -677,8 +774,7 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
 
         assert(isfinite(_doriginal_lbs[net_ind]));
         set<unsigned int> emptyset;
-        if ((vars.size() == 0 && scopes.size() == 0 && constrs.size() == 0) ||
-            (scopes.size() > 0 && scopes.count(emptyset) == 1)) {
+        if ((vars.size() == 0 && scopes.size() == 0 && constrs.size() == 0) || (scopes.size() > 0 && scopes.count(emptyset) == 1)) {
             global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
         }
 
@@ -730,7 +826,8 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
 
-        if (vars.size() > 0 && vars.count(var_ind) == 0) continue; // skip this variable if it is not part of the induced graph
+        if (vars.size() > 0 && vars.count(var_ind) == 0)
+            continue; // skip this variable if it is not part of the induced graph
 
         if (wcsp->getVarIndex(var[var_ind].name) == wcsp->numberOfVariables()) {
 
@@ -767,10 +864,13 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
     // export the cost functions
     for (unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind++) {
 
-        if (constrs.size() > 0 && constrs.count(func_ind) == 0) continue; // skip this function if it is not part of the partial graph
+        if (constrs.size() > 0 && constrs.count(func_ind) == 0)
+            continue; // skip this function if it is not part of the partial graph
         set<unsigned int> scope = set<unsigned int>(cost_function[func_ind]->scope.begin(), cost_function[func_ind]->scope.end());
-        if (scopes.size() > 0 && scopes.count(scope) == 0) continue; // skip this function if its scope is not part of the partial graph
-        if (vars.size() > 0 && !(std::includes(vars.begin(), vars.end(), scope.begin(), scope.end()))) continue;// skip this function if its scope is not included in the induced graph
+        if (scopes.size() > 0 && scopes.count(scope) == 0)
+            continue; // skip this function if its scope is not part of the partial graph
+        if (vars.size() > 0 && !(std::includes(vars.begin(), vars.end(), scope.begin(), scope.end())))
+            continue; // skip this function if its scope is not included in the induced graph
 
         switch (cost_function[func_ind]->getType()) {
         case mcriteria::CostFunction::Tuple:
@@ -778,6 +878,12 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
             break;
         case mcriteria::CostFunction::Linear:
             exportLinearCostFunction(wcsp, func_ind);
+            break;
+        case mcriteria::CostFunction::AllDiff:
+            exportAllDiffCostFunction(wcsp, func_ind);
+            break;
+        case mcriteria::CostFunction::GCC:
+            exportGCCCostFunction(wcsp, func_ind);
             break;
         default:
             break;
@@ -845,6 +951,66 @@ void MultiCFN::exportLinearCostFunction(WCSP* wcsp, unsigned int func_ind)
 
     istringstream file(args);
     unsigned int cst_ind = wcsp->postKnapsackConstraint(scope.data(), scope.size(), file, false, true, false, {});
+
+    wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);
+}
+
+//---------------------------------------------------------------------------
+void MultiCFN::exportAllDiffCostFunction(WCSP* wcsp, unsigned int func_ind)
+{
+
+    // cout << "exportation of an AllDifferent cost function" << endl;
+
+    mcriteria::AllDiffCostFunction* lcost_func = dynamic_cast<mcriteria::AllDiffCostFunction*>(cost_function[func_ind]);
+
+    // build the output wcsp's scope
+    vector<int> scope;
+    for (auto& var_ind : lcost_func->scope) {
+        scope.push_back(wcsp->getVarIndex(var[var_ind].name));
+    }
+
+    // output the arguments
+    string args;
+    args += to_string(int(lcost_func->exceptedValues.size()));
+    for (unsigned int val_ind : lcost_func->exceptedValues) {
+        mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[0]];
+        EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind]->scope[0]].name)));
+        Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[val_ind]));
+        args += to_string(" ") + to_string(val);
+    }
+
+    istringstream file(args);
+    unsigned int cst_ind = wcsp->postAllDifferentConstraint(scope.data(), scope.size(), file);
+
+    wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);
+}
+
+//---------------------------------------------------------------------------
+void MultiCFN::exportGCCCostFunction(WCSP* wcsp, unsigned int func_ind)
+{
+
+    // cout << "exportation of an AllDifferent cost function" << endl;
+
+    mcriteria::GCCCostFunction* lcost_func = dynamic_cast<mcriteria::GCCCostFunction*>(cost_function[func_ind]);
+
+    // build the output wcsp's scope
+    vector<int> scope;
+    for (auto& var_ind : lcost_func->scope) {
+        scope.push_back(wcsp->getVarIndex(var[var_ind].name));
+    }
+
+    // output the arguments
+    string args;
+    args += to_string(int(lcost_func->bounds.size()));
+    for (auto bound : lcost_func->bounds) {
+        mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[0]];
+        EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind]->scope[0]].name)));
+        Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[bound.first]));
+        args += to_string(" ") + to_string(val) + to_string(" ") + to_string((int)bound.second.first) + to_string(" ") + to_string((int)bound.second.second);
+    }
+
+    istringstream file(args);
+    unsigned int cst_ind = wcsp->postGlobalCardinalityConstraint(scope.data(), scope.size(), file);
 
     wcsp->getCtr(cst_ind)->setName(cost_function[func_ind]->name);
 }
@@ -1199,11 +1365,15 @@ void MultiCFN::extractSolution()
         _obj_values.push_back(cost);
     }
 
-/* make sure the linear constraints are verified */
+/* make sure the linear, alldiff, gcc constraints are verified */
 #ifndef NDEBUG
     for (size_t func_ind = 0; func_ind < cost_function.size(); func_ind++) {
         if (cost_function[func_ind]->getType() == mcriteria::CostFunction::Linear) {
             assert(checkLinCostFuncConsistency(func_ind, _solution));
+        } else if (cost_function[func_ind]->getType() == mcriteria::CostFunction::AllDiff) {
+            assert(checkAllDiffCostFuncConsistency(func_ind, _solution));
+        } else if (cost_function[func_ind]->getType() == mcriteria::CostFunction::GCC) {
+            assert(checkGCCCostFuncConsistency(func_ind, _solution));
         }
     }
 #endif
@@ -1259,6 +1429,10 @@ std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution
                 cost += func->getCost(tuple);
             } else if (func->getType() == mcriteria::CostFunction::Linear) {
                 assert(checkLinCostFuncConsistency(func_ind, solution));
+            } else if (func->getType() == mcriteria::CostFunction::AllDiff) {
+                assert(checkAllDiffCostFuncConsistency(func_ind, solution));
+            } else if (func->getType() == mcriteria::CostFunction::GCC) {
+                assert(checkGCCCostFuncConsistency(func_ind, solution));
             }
         }
 
@@ -1360,6 +1534,42 @@ void MultiCFN::print(ostream& os)
                 }
             }
             os << " >= " << lcost_func->capacity << endl;
+        } else if (cost_function[func_ind]->getType() == mcriteria::CostFunction::AllDiff) {
+
+            mcriteria::AllDiffCostFunction* lcost_func = dynamic_cast<mcriteria::AllDiffCostFunction*>(cost_function[func_ind]);
+
+            os << ", type: alldiff";
+
+            os << ", scope:";
+            for (unsigned int ind = 0; ind < lcost_func->scope.size(); ind++) {
+                unsigned int varInd = lcost_func->scope[ind];
+                os << " " << var[varInd].name;
+            }
+
+            os << ", exceptedValues:";
+            for (unsigned int val_ind : lcost_func->exceptedValues) {
+                os << " " << var[0].domain_str[val_ind];
+            }
+
+            os << endl;
+        } else if (cost_function[func_ind]->getType() == mcriteria::CostFunction::GCC) {
+
+            mcriteria::GCCCostFunction* lcost_func = dynamic_cast<mcriteria::GCCCostFunction*>(cost_function[func_ind]);
+
+            os << ", type: gcc";
+
+            os << ", scope:";
+            for (unsigned int ind = 0; ind < lcost_func->scope.size(); ind++) {
+                unsigned int varInd = lcost_func->scope[ind];
+                os << " " << var[varInd].name;
+            }
+
+            os << ", bounds:";
+            for (auto bound : lcost_func->bounds) {
+                os << " " << var[0].domain_str[bound.first] << " " << (int)bound.second.first << " " << (int)bound.second.second;
+            }
+
+            os << endl;
         }
     }
 
@@ -1571,15 +1781,78 @@ void mcriteria::LinearCostFunction::print(std::ostream& os)
 Double mcriteria::LinearCostFunction::getCost(std::vector<unsigned int>& tuple)
 {
 
-    Double cost = 0.;
+    Double weight = 0.;
 
     for (unsigned int ind = 0; ind < weights.size(); ind++) {
         for (unsigned int ind2 = 0; ind2 < weights[ind].size(); ind2++) {
             if (weights[ind][ind2].first == tuple[ind]) {
-                cost += weights[ind][ind2].second;
+                weight += weights[ind][ind2].second;
             }
         }
     }
 
-    return cost;
+    return (weight >= capacity) ? 0. : numeric_limits<Double>::infinity();
+}
+
+//---------------------------------------------------------------------------
+mcriteria::AllDiffCostFunction::AllDiffCostFunction(MultiCFN* multicfn, unsigned int net_index)
+    : mcriteria::CostFunction(multicfn, net_index)
+{
+}
+
+//---------------------------------------------------------------------------
+void mcriteria::AllDiffCostFunction::print(std::ostream& os)
+{
+}
+
+//---------------------------------------------------------------------------
+Double mcriteria::AllDiffCostFunction::getCost(std::vector<unsigned int>& tuple)
+{
+    std::set<unsigned int> used;
+
+    for (unsigned int scope_ind = 0; scope_ind < arity(); scope_ind++) {
+        unsigned int val = tuple[scope_ind];
+        if (used.find(val) != used.end() && exceptedValues.find(val) == exceptedValues.end()) {
+            return numeric_limits<Double>::infinity();
+        } else {
+            used.insert(val);
+        }
+    }
+
+    return 0.;
+}
+
+//---------------------------------------------------------------------------
+mcriteria::GCCCostFunction::GCCCostFunction(MultiCFN* multicfn, unsigned int net_index)
+    : mcriteria::CostFunction(multicfn, net_index)
+{
+}
+
+//---------------------------------------------------------------------------
+void mcriteria::GCCCostFunction::print(std::ostream& os)
+{
+}
+
+//---------------------------------------------------------------------------
+Double mcriteria::GCCCostFunction::getCost(std::vector<unsigned int>& tuple)
+{
+    std::map<unsigned int, Double> used;
+
+    for (unsigned int scope_ind = 0; scope_ind < arity(); scope_ind++) {
+        unsigned int val = tuple[scope_ind];
+        if (used.find(val) != used.end()) {
+            used[val] = used[val] + 1.;
+        } else {
+            used[val] = 1.;
+        }
+    }
+
+    for (auto bound : bounds) {
+        unsigned int val = bound.first;
+        if (used.find(val) == used.end() || used[val] < bound.second.first || used[val] > bound.second.second) {
+            return numeric_limits<Double>::infinity();
+        }
+    }
+
+    return 0.;
 }

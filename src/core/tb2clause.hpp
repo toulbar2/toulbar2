@@ -102,6 +102,7 @@ public:
     }
 
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
+    bool isClause() const FINAL { return true; }
     Long size() const FINAL
     {
         if (lb == MIN_COST)

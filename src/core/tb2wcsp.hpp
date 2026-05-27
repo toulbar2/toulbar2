@@ -404,6 +404,7 @@ public:
     void propagate(bool fromscratch = false); ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes. If fromscratch is true then propagates every cost function at least once.
     bool verify(); ///< \brief checks the propagation fix point is correctly reached \warning might change EAC supports
     bool propagated(); ///< \brief returns true if the propagation fix point is reached
+    void propagateConstraint(int constraintIndex) { getCtr(constraintIndex)->propagate(); } ///< \brief force propagation of a specific constraint
 
     bool isFullEAC(int varIndex) const { return vars[varIndex]->isFullEAC(); } ///< \brief returns true if variable varIndex is full EAC
     /// \brief returns true if all unassigned variables are full EAC, i.e., a valid solution can be directly extracted from EAC supports with cost equal to current lower bound (plus VAC thresholds if VAC is used)
@@ -540,6 +541,13 @@ public:
     }
     int postAllDifferentConstraint(int* scopeIndex, int arity, istream& file);
 
+    int postGlobalCardinalityConstraint(vector<int> scope, const string& arguments)
+    {
+        std::istringstream file(arguments);
+        return postGlobalCardinalityConstraint(scope.data(), scope.size(), file);
+    }
+    int postGlobalCardinalityConstraint(int* scopeIndex, int arity, istream& file);
+
     int postCliqueConstraint(vector<int> scope, const string& arguments)
     {
         std::istringstream file(arguments);
@@ -588,8 +596,8 @@ public:
     int postWAllDiff(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost) { return postWAllDiff(scope.data(), scope.size(), semantics, propagator, baseCost); } ///< \brief post a soft alldifferent cost function
     int postWAllDiff(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost); ///< \deprecated
     void postWAllDiff(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft alldifferent cost function decomposed as a cost function network
-    int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost,
-        const vector<BoundedObjValue>& values); ///< \brief post a soft global cardinality cost function
+    int postWGcc(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values) { return postWGcc(scope.data(), scope.size(), semantics, propagator, baseCost, values); } ///< \brief post a soft global cardinality cost function
+    int postWGcc(int* scopeIndex, int arity, const string& semantics, const string& propagator, Cost baseCost, const vector<BoundedObjValue>& values); ///< \deprecated
     void postWGcc(int* scopeIndex, int arity, string semantics, Cost baseCost, Value* values, int nbValues, int* lb, int* ub); ///< \deprecated post a soft global cardinality cost function decomposed as a cost function network
     int postWSame(int* scopeIndexG1, int arityG1, int* scopeIndexG2, int arityG2, const string& semantics, const string& propagator, Cost baseCost); ///< \brief post a soft same cost function (a group of variables being a permutation of another group with the same size)
     void postWSame(int* scopeIndex, int arity, string semantics, Cost baseCost); ///< \deprecated post a soft same cost function
@@ -840,15 +848,19 @@ public:
     void queueDEE(DLink<VariableWithTimeStamp>* link) { DEE.push(link, nbNodes); }
     void queueFEAC(DLink<VariableWithTimeStamp>* link) { FEAC.push(link, nbNodes); }
 
+    Queue* getQueueNC() { return &NC; }
     void propagateNC(); ///< \brief removes forbidden values
     void propagateIncDec(); ///< \brief ensures unary bound arc consistency supports (remove forbidden domain bounds)
+    Queue* getQueueAC() { return &AC; }
     void propagateAC(); ///< \brief ensures unary and binary and ternary arc consistency supports
+    Queue* getQueueDAC() { return &DAC; }
     void propagateDAC(); ///< \brief ensures unary and binary and ternary directed arc consistency supports
     void propagateTRWS(); ///< \brief iterates TRW-S until convergence
     void fillEAC2();
     Queue* getQueueEAC1() { return &EAC1; }
     void propagateEAC(); ///< \brief ensures unary existential arc consistency supports
     void propagateSeparator(); ///< \brief exploits graph-based learning
+    Queue* getQueueDEE() { return &DEE; }
     void propagateDEE(); ///< \brief removes dominated values (dead-end elimination and possibly soft neighborhood substitutability)
     void propagateFEAC(); ///< \brief seek if new EAC support is also FullEAC support (i.e., compatible with all its EAC value neighbors)
 

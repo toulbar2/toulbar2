@@ -369,10 +369,16 @@ Preprocessing
 
 -mst    find a maximum spanning tree ordering for DAC
 
--S=[integer]
+-S=[integer|float]
         preprocessing only: performs singleton consistency restricted 
         to the first variables following the DAC ordering (or all the
-        variables if no parameter is given).
+        variables if no parameter is given, change stopping accuracy
+        if floating-point value is given in [0,1[, default value is 0.0001).
+  
+-glb=[integer]
+        preprocessing only: in conjunction with option -S, performs
+        singleton node consistency using Gilmore-Lawler lower bound 
+        before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic.
 
 -M=[integer]
         preprocessing only: 
@@ -407,6 +413,9 @@ Preprocessing
 
 -minqual
         finds a minimal intersection constraint graph to achieve pairwise consistency (combine with option -pwc) (default option)
+
+-camb=[integer]
+        reduced costs filtering level for alldifferent and gcc constraints (default value is 0)
 
 
 Initial upper bounding
@@ -680,7 +689,7 @@ Branching, variable and value ordering
 -sortd  sorts domains in preprocessing based on increasing unary costs
         (works only for binary WCSPs).
 
--sortc  sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), decreasing DAC then increasing arity (10 - default option), or the opposite order if using a negative value.
+-sortc  sorts constraints in preprocessing based on lexicographic ordering (1), decreasing DAC ordering (2 - default option), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), or the opposite order if using a negative value.
 
 -solr   solution-based phase saving (reuse last found solution as preferred value assignment in the value ordering heuristic) (default option).
 

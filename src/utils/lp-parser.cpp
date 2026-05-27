@@ -214,7 +214,7 @@ struct function_element_token {
     }
 
     Double factor = 0.0;
-    std::string name = {}; //GQ: replace std::string_view by std::string to avoid memory issue with stream-buffer
+    std::string name = {}; // GQ: replace std::string_view by std::string to avoid memory issue with stream-buffer
     int read = 0;
 };
 
@@ -414,14 +414,8 @@ private:
         while (token[current_token_buffer]
                    .buffer[token[current_token_buffer].current]
             != '\0') {
-            if ((!starts_with_number ||
-                 (token[current_token_buffer].buffer[token[current_token_buffer].current - 1] != 'e'
-                  &&
-                  token[current_token_buffer].buffer[token[current_token_buffer].current - 1] != 'E'
-                 )
-                )
-                &&
-                is_separator(token[current_token_buffer].buffer[token[current_token_buffer].current]))
+            if ((!starts_with_number || (token[current_token_buffer].buffer[token[current_token_buffer].current - 1] != 'e' && token[current_token_buffer].buffer[token[current_token_buffer].current - 1] != 'E'))
+                && is_separator(token[current_token_buffer].buffer[token[current_token_buffer].current]))
                 break;
 
             if (starts_with_number && !is_number(token[current_token_buffer].buffer[token[current_token_buffer].current]))
@@ -430,8 +424,8 @@ private:
             ++token[current_token_buffer].current;
         }
 
-        //cout << std::string_view(&token[current_token_buffer].buffer[start],
-        //    token[current_token_buffer].current - start) << endl;
+        // cout << std::string_view(&token[current_token_buffer].buffer[start],
+        //     token[current_token_buffer].current - start) << endl;
 
         return std::string_view(&token[current_token_buffer].buffer[start],
             token[current_token_buffer].current - start);
@@ -576,13 +570,13 @@ std::optional<Double> read_real(const std::string_view buf) noexcept
         if (posexpneg != std::string_view::npos) {
             decimal += atoi(buffer + posexpneg + 2);
         }
-        //cout << "decimal:" << decimal << endl;
+        // cout << "decimal:" << decimal << endl;
         if (baryonyx::precision < decimal) {
             baryonyx::precision = decimal;
         }
     } else if (posexpneg != std::string_view::npos) {
         int decimal = atoi(buffer + posexpneg + 2);
-        //cout << "decimal:" << decimal << endl;
+        // cout << "decimal:" << decimal << endl;
         if (baryonyx::precision < decimal) {
             baryonyx::precision = decimal;
         }
@@ -1183,8 +1177,7 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p)
                         cerr << "Sorry, cannot assign variable " << p.m_problem.vars.names[elements[0].variable_index] << " to a fractional value " << (value / elements[0].factor) << endl;
                         throw BadConfiguration();
                     }
-                    if (val < p.m_problem.vars.values[elements[0].variable_index].min ||
-                        val > p.m_problem.vars.values[elements[0].variable_index].max) {
+                    if (val < p.m_problem.vars.values[elements[0].variable_index].min || val > p.m_problem.vars.values[elements[0].variable_index].max) {
                         cerr << "Infeasible problem! Variable " << p.m_problem.vars.names[elements[0].variable_index] << " in " << p.m_problem.vars.values[elements[0].variable_index].min << "," << p.m_problem.vars.values[elements[0].variable_index].max << " cannot be equal to " << val << endl;
                         throw Contradiction();
                     }
@@ -1223,8 +1216,7 @@ raw_problem_status parse(stream_buffer& buf, problem_parser& p)
             }
         }
 
-        if (p.m_problem.equal_constraints.size() + p.m_problem.greater_constraints.size() + p.m_problem.less_constraints.size() > 
-                static_cast<size_t>(INT_MAX))
+        if (p.m_problem.equal_constraints.size() + p.m_problem.greater_constraints.size() + p.m_problem.less_constraints.size() > static_cast<size_t>(INT_MAX))
             return baryonyx::file_format_error_tag::too_many_constraints;
     }
 

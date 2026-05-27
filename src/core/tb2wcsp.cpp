@@ -35,6 +35,7 @@
 #include "globals/tb2maxconstr.hpp"
 #include "tb2clause.hpp"
 #include "tb2alldifferent.hpp"
+#include "tb2gcc.hpp"
 #include "tb2clqcover.hpp"
 #include "tb2knapsack.hpp"
 #include "tb2globalwcsp.hpp"
@@ -167,6 +168,9 @@ int ToulBar2::DEE;
 int ToulBar2::DEE_;
 int ToulBar2::nbDecisionVars;
 int ToulBar2::singletonConsistency;
+Double ToulBar2::singletonAccuracy;
+int ToulBar2::GilmoreLawler;
+int ToulBar2::ReducedCostsFiltering;
 int ToulBar2::vacValueHeuristic;
 
 externalevent ToulBar2::setvalue;
@@ -444,6 +448,9 @@ void tb2init()
     ToulBar2::costfuncSeparate = true;
     ToulBar2::preprocessNary = 10;
     ToulBar2::singletonConsistency = 0;
+    ToulBar2::ReducedCostsFiltering = 0;
+    ToulBar2::singletonAccuracy = 0.0001;
+    ToulBar2::GilmoreLawler = 0;
     ToulBar2::minsumDiffusion = 0;
 
     ToulBar2::trwsAccuracy = -1; // 0.001;
@@ -511,7 +518,7 @@ void tb2init()
     ToulBar2::bisupport = 0.;
 
     // constraint/propagation ordering heuristics
-    ToulBar2::constrOrdering = CONSTR_ORDER_DAC;
+    ToulBar2::constrOrdering = CONSTR_ORDER_DAC_ARITY;
     ToulBar2::MSTDAC = false;
     ToulBar2::generation = false;
     ToulBar2::QueueComplexity = false;
@@ -587,7 +594,7 @@ void tb2init()
     ToulBar2::heuristicFreedom = false;
     ToulBar2::heuristicFreedomLimit = 5;
 
-    //TODO: backtrack with conflict-free learning
+    // TODO: backtrack with conflict-free learning
     ToulBar2::learning = false;
 
     // solver statistics
@@ -767,7 +774,7 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #endif
-    if (ToulBar2::vac && !ToulBar2::cfn && !ToulBar2::lp && string2Cost(ToulBar2::externalUB.c_str())==UNIT_COST) {
+    if (ToulBar2::vac && !ToulBar2::cfn && !ToulBar2::lp && string2Cost(ToulBar2::externalUB.c_str()) == UNIT_COST) {
         cout << "Warning! Do not need VAC in satisfaction (with option -ub=1)." << endl;
         ToulBar2::vac = 0;
     }
@@ -870,10 +877,10 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #ifdef OPENMPI
-//    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
-//        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
-//        throw BadConfiguration();
-//    }
+    //    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
+    //        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+    //        throw BadConfiguration();
+    //    }
     if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::btdMode >= 1) {
         cout << "Sorry: parallel hybrid best-first search does not work with exploiting tree decomposition (remove option -B)." << endl;
         throw BadConfiguration();
@@ -1073,7 +1080,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
 
-    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c) { return c == MIN_COST; })) {
         return INT_MAX;
     }
 
@@ -1274,7 +1281,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
 
-    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c) { return c == MIN_COST; })) {
         return INT_MAX;
     }
 
@@ -2425,6 +2432,21 @@ int WCSP::postGlobalConstraint(int* scopeIndex, int arity, const string& gcname,
             baseCost *= ToulBar2::costMultiplier;
         postWGcc(scopeIndex, arity, semantics, "DAG", baseCost, values);
         return -1;
+    } else if (gcname == "sgcckp") {
+        string semantics;
+        Cost baseCost;
+        int nvalues;
+        vector<BoundedObjValue> values;
+        file >> semantics >> baseCost >> nvalues;
+        for (int i = 0; i < nvalues; i++) {
+            int d, high, low;
+            file >> d >> low >> high;
+            values.push_back(BoundedObjValue(d, high, low));
+        }
+        if (mult)
+            baseCost *= ToulBar2::costMultiplier;
+        postWGcc(scopeIndex, arity, semantics, "knapsack", baseCost, values);
+        return -1;
     }
 
     GlobalConstraint* gc = postGlobalCostFunction(scopeIndex, arity, gcname, constrcounter);
@@ -2455,7 +2477,7 @@ GlobalConstraint* WCSP::postGlobalCostFunction(int* scopeIndex, int arity, const
     if (gcname == "salldiff") {
         gc = new AllDiffConstraint(this, scopeVars, arity);
     } else if (gcname == "sgcc") {
-        gc = new GlobalCardinalityConstraint(this, scopeVars, arity);
+        gc = new SoftGlobalCardinalityConstraint(this, scopeVars, arity);
     } else if (gcname == "ssame") {
         gc = new SameConstraint(this, scopeVars, arity);
     } else if (gcname == "sregular") {
@@ -2530,6 +2552,8 @@ void WCSP::postGlobalFunction(int* scopeIndex, int arity, const string& gcname, 
         decomposableGCF->addToCostFunctionNetwork(this);
     } else if (gcname == "alldiff") {
         postAllDifferentConstraint(scopeIndex, arity, file);
+    } else if (gcname == "gcc") {
+        postGlobalCardinalityConstraint(scopeIndex, arity, file);
     } else if (gcname == "clique") {
         postCliqueConstraint(scopeIndex, arity, file);
     } else if (gcname == "knapsackc") {
@@ -2619,6 +2643,37 @@ int WCSP::postAllDifferentConstraint(int* scopeIndex, int arity, istream& file)
     for (int i = 0; i < arity; i++)
         scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
     auto cc = new AllDifferentConstraint(this, scopeVars.data(), arity);
+    cc->read(file);
+    if (isDelayedNaryCtr)
+        delayedNaryCtr.push_back(cc->wcspIndex);
+    else {
+        BinaryConstraint* bctr;
+        TernaryConstraint* tctr = new TernaryConstraint(this);
+        elimTernConstrs.push_back(tctr);
+        for (int j = 0; j < 3; j++) {
+            if (!ToulBar2::vac)
+                bctr = new BinaryConstraint(this);
+            else
+                bctr = new VACBinaryConstraint(this);
+            elimBinConstrs.push_back(bctr);
+        }
+        cc->propagate();
+    }
+    return cc->wcspIndex;
+}
+
+int WCSP::postGlobalCardinalityConstraint(int* scopeIndex, int arity, istream& file)
+{
+    assert(ToulBar2::bilevel <= 1);
+#ifndef NDEBUG
+    for (int i = 0; i < arity; i++)
+        for (int j = i + 1; j < arity; j++)
+            assert(scopeIndex[i] != scopeIndex[j]);
+#endif
+    vector<EnumeratedVariable*> scopeVars(arity);
+    for (int i = 0; i < arity; i++)
+        scopeVars[i] = (EnumeratedVariable*)vars[scopeIndex[i]];
+    auto cc = new GlobalCardinalityConstraint(this, scopeVars.data(), arity);
     cc->read(file);
     if (isDelayedNaryCtr)
         delayedNaryCtr.push_back(cc->wcspIndex);
@@ -2819,8 +2874,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
                     }
                     assert(NotVarVal[i].size() >= 1);
                     assert(wsize + NotVarVal[i].size() == weights[i].size());
-                    VarVal[i].resize(wsize+1);
-                    weights[i].resize(wsize+1);
+                    VarVal[i].resize(wsize + 1);
+                    weights[i].resize(wsize + 1);
                     assert(weights[i].back() == 0);
                 }
             }
@@ -3168,7 +3223,7 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
     }
 
     if (propagator == "flow") {
-        GlobalCardinalityConstraint* gc = (GlobalCardinalityConstraint*)postGlobalCostFunction(scopeIndex, arity, "sgcc");
+        SoftGlobalCardinalityConstraint* gc = (SoftGlobalCardinalityConstraint*)postGlobalCostFunction(scopeIndex, arity, "sgcc");
         if (gc == NULL)
             return -1;
 
@@ -3744,7 +3799,7 @@ void WCSP::sortConstraints()
 
     vector<DLink<Constraint*>*> sorted;
     for (KnapsackList::iterator iter = knapsackList.begin(); iter != knapsackList.end(); ++iter) {
-        sorted.push_back((DLink<Constraint*>*) iter.getElt());
+        sorted.push_back((DLink<Constraint*>*)iter.getElt());
     }
     if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
         shuffle(sorted.begin(), sorted.end(), myrandom_generator);
@@ -3752,7 +3807,7 @@ void WCSP::sortConstraints()
         stable_sort(sorted.begin(), sorted.end(), Constraint::cmpConstraintLinkPointer);
     }
     for (unsigned int i = 0; i < sorted.size(); i++) {
-        knapsackList.erase((DLink<KnapsackConstraint*>*) sorted[i], true);
+        knapsackList.erase((DLink<KnapsackConstraint*>*)sorted[i], true);
         knapsackList.push_back((DLink<KnapsackConstraint*>*)sorted[i], true);
     }
 
@@ -3868,10 +3923,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
         Constraint* ctr = constrs[i];
         // allows tight nary/knapsack constraints with a few valid tuples
         bool fast = CUT(ctr->getDefCost(), getUb()) && ctr->size() <= abs(ToulBar2::hve);
-        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 &&
-            (fast
-             || (ctr->arity() <= ToulBar2::preprocessNary && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve))
-             || (ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight()))) {
+        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && (fast || (ctr->arity() <= ToulBar2::preprocessNary && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve)) || (ctr->isKnapsack() && ((KnapsackConstraint*)ctr)->isPseudoBoolean() && ((KnapsackConstraint*)ctr)->isTight()))) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3881,7 +3933,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                 ctr->first();
             else
                 ctr->firstlex();
-            while ((fast)?ctr->next(tuple, cost):ctr->nextlex(tuple, cost)) {
+            while ((fast) ? ctr->next(tuple, cost) : ctr->nextlex(tuple, cost)) {
                 if (cost + getLb() < getUb()) {
                     tuples.push_back(tuple);
                     costs.push_back(cost);
@@ -4051,7 +4103,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             listOfDualCosts[j][valj] += ctrextend->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
         }
         //        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
-        if (ctrextend->extension() && ctrextend->arity() <= 3) { //TODO: clear only arity 2?
+        if (ctrextend->extension() && ctrextend->arity() <= 3) { // TODO: clear only arity 2?
             ctrextend->clearFiniteCosts();
         }
         ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
@@ -4362,6 +4414,59 @@ void WCSP::preprocessing()
                     nary->keepAllowedTuples(getUb()); // can be very slow!
                     nary->preprojectall2();
                 }
+            } else if (constrs[i]->connected() && constrs[i]->isAllDiff()) {
+                std::vector<Value> exceptedVal = constrs[i]->getExceptedValues();
+                bool excepted = true;
+                if (exceptedVal.empty())
+                    excepted = false;
+
+                // projects on existing binary cost functions inside the scope of AllDifferent
+                Cost mult_ub = (getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, getUb() * MEDIUM_COST)) : getUb();
+                for (int j = 0; j < constrs[i]->arity(); j++) {
+                    EnumeratedVariable* xj = (EnumeratedVariable*)constrs[i]->getVar(j);
+                    if (xj->unassigned() && xj->getDegree() > 1) {
+                        ConstraintList* constrsj = xj->getConstrs();
+                        for (ConstraintList::iterator it = constrsj->begin(); it != constrsj->end(); ++it) {
+                            Constraint* ctr = (*it).constr;
+                            if (ctr->isBinary() && !ctr->isSep() && constrs[i]->scopeIncluded(ctr)) {
+                                BinaryConstraint* cjk = (BinaryConstraint*)ctr;
+                                EnumeratedVariable* xk = (EnumeratedVariable*)((cjk->getVar(0) == xj) ? cjk->getVar(1) : cjk->getVar(0));
+                                if (xj->isValueNames() && xk->isValueNames()) {
+                                    for (Value vj : getEnumDomain(xj->wcspIndex)) {
+                                        string svj = xj->getValueName(xj->toIndex(vj));
+                                        assert(svj.size() > 0);
+                                        unsigned int vkindex = xk->toIndex(svj);
+                                        Value vk = xk->toValue(vkindex);
+                                        // Guidio :
+                                        if (excepted) {
+                                            auto it = std::find(exceptedVal.begin(), exceptedVal.end(), vk);
+                                            if (it == exceptedVal.end()) {
+                                                if (xk->canbe(vk)) {
+                                                    Cost oldcost = cjk->getCost(xj, xk, vj, vk);
+                                                    cjk->addcost(xj, xk, vj, vk, mult_ub - oldcost);
+                                                }
+                                            }
+                                        }
+                                        // end
+                                    }
+
+                                } else {
+                                    for (Value vj : getEnumDomain(xj->wcspIndex)) {
+                                        if (xk->canbe(vj)) {
+                                            Cost oldcost = cjk->getCost(vj, vj);
+                                            cjk->addcost(vj, vj, mult_ub - oldcost);
+                                        }
+                                    }
+                                }
+                                if (constrs[i]->implies(cjk)) {
+                                    cjk->deconnect();
+                                } else {
+                                    cjk->propagate();
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         //		processTernary();
@@ -4540,7 +4645,7 @@ void WCSP::preprocessing()
                 }
             }
         }
-        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin)?numberOfConnectedKnapsackConstraints():0) + numberOfConnectedBinaryConstraints()) {
+        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin) ? numberOfConnectedKnapsackConstraints() : 0) + numberOfConnectedBinaryConstraints()) {
             if (ToulBar2::verbose) {
                 cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
             }
@@ -5250,8 +5355,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
             vector<pair<Value, Cost>> domcost = getEnumDomainAndCost(i);
-            if ((!original || size == (int)static_cast<EnumeratedVariable*>(vars[i])->getDomainInitSize()) &&
-                all_of(domcost.begin(), domcost.end(), [](auto e) { return e.second == MIN_COST; }))
+            if ((!original || size == (int)static_cast<EnumeratedVariable*>(vars[i])->getDomainInitSize()) && all_of(domcost.begin(), domcost.end(), [](auto e) { return e.second == MIN_COST; }))
                 continue; // skip (original) domain with zero cost
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
             os << name2cfn(vars[i]->getName()) << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
@@ -6558,7 +6662,7 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
         ctr->propagate();
         if (ToulBar2::verbose >= 1) {
             cout << endl
-                    << "Has result: ";
+                 << "Has result: ";
             if (ctr) {
                 cout << *ctr;
             } else {
@@ -6600,11 +6704,11 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
         assert(ctr_inout->isNary());
         Cost prevNegCost = getNegativeLb();
         ((NaryConstraint*)ctr_inout)->project(var);
-        if (ctr_inout->universal((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST)) {
+        if (ctr_inout->universal((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST)) {
             if (ToulBar2::isZ) {
                 Cost afterNegCost = getNegativeLb();
-                if (abs( afterNegCost - prevNegCost ) <= var->getDomainInitSize()) {
-                    decreaseLb( prevNegCost - afterNegCost );
+                if (abs(afterNegCost - prevNegCost) <= var->getDomainInitSize()) {
+                    decreaseLb(prevNegCost - afterNegCost);
                     assert(getNegativeLb() == prevNegCost);
                 }
             }
@@ -6614,7 +6718,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             ctr_inout->propagate();
             if (ToulBar2::verbose >= 1)
                 cout << endl
-                << "   has result*: " << *ctr_inout << endl;
+                     << "   has result*: " << *ctr_inout << endl;
         }
         return;
     }
@@ -6689,7 +6793,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
                 decreaseLb(negcost);
         }
-        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST); });
         if (!zeros) {
             ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
             ctr = getCtr(ctrIndex);
@@ -6725,7 +6829,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
                 decreaseLb(negcost);
         }
-        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST); });
         if (!zeros) {
             ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
             ctr = getCtr(ctrIndex);
@@ -6757,7 +6861,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
                 decreaseLb(negcost);
         }
-        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST); });
         if (!zeros) {
             for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
                 vxi = evars[0]->toIndex(*itv0);

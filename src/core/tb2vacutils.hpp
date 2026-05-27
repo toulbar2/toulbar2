@@ -105,7 +105,7 @@ public:
     int getKiller(Value v) { return killer[toIndex(v)]; }
     void setKiller(Value v, int i) { killer[toIndex(v)] = i; }
     const vector<pair<int, Value>>& getPBkillers(Value v) const { return PBkillers[toIndex(v)]; }
-    void setPBkillers(Value v, const vector<pair<int, Value>> & i) { PBkillers[toIndex(v)] = i; }
+    void setPBkillers(Value v, const vector<pair<int, Value>>& i) { PBkillers[toIndex(v)] = i; }
 
     Cost getVACCost(Value v)
     {

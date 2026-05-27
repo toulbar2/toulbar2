@@ -306,7 +306,6 @@ void CooperativeParallelDGVNS::VnsLdsCP(SolutionMessage& solmsg, double btime, P
                 wcsp->whenContradiction();
                 break;
             }
-
         }
     }
     // cout << env0.myrank <<" slave 2" << endl ;

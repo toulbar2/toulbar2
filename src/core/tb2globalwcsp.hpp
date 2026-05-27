@@ -528,13 +528,13 @@ public:
                 }
             }
             for (int i = 0; i < problem->getElimBinOrder(); i++) {
-                BinaryConstraint *c = (BinaryConstraint *)problem->getElimBinCtr(i);
+                BinaryConstraint* c = (BinaryConstraint*)problem->getElimBinCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }
             }
             for (int i = 0; i < problem->getElimTernOrder(); i++) {
-                TernaryConstraint *c = (TernaryConstraint *)problem->getElimTernCtr(i);
+                TernaryConstraint* c = (TernaryConstraint*)problem->getElimTernCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }
@@ -547,13 +547,13 @@ public:
                 }
             }
             for (int i = 0; i < negproblem->getElimBinOrder(); i++) {
-                BinaryConstraint *c = (BinaryConstraint *)negproblem->getElimBinCtr(i);
+                BinaryConstraint* c = (BinaryConstraint*)negproblem->getElimBinCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }
             }
             for (int i = 0; i < negproblem->getElimTernOrder(); i++) {
-                TernaryConstraint *c = (TernaryConstraint *)negproblem->getElimTernCtr(i);
+                TernaryConstraint* c = (TernaryConstraint*)negproblem->getElimTernCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }

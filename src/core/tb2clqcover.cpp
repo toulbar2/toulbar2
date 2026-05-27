@@ -258,7 +258,7 @@ void CliqueConstraint::initialize_binary()
             auto* cons = cle.constr;
             if (!cons->isBinary())
                 continue;
-            BinaryConstraint *bincons = (BinaryConstraint *)cons;
+            BinaryConstraint* bincons = (BinaryConstraint*)cons;
             auto& bcons = *bincons;
             auto& yvar = [&]() -> EnumeratedVariable& {
                 if (&xvar == bcons.getVar(0))

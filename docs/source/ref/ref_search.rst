@@ -8,6 +8,14 @@ Search algorithms in ToulBar2
 Complete search algorithms
 ============================
 
+DFS
+----------------
+
+**D**\epth **F**\irst **S**\earch is a branch and bound algorithm following a depth first traversal of the search tree.
+
+Command line options: :code:`-hbfs: -B=0`
+
+
 HBFS
 ----------------
 
@@ -15,7 +23,7 @@ HBFS
 It performs a compromise between Best First Search and Depth First Search.
 HBFS is the default search algorithm.
 
-Command line option: :code:`-O=0` (default value)
+Command line options: :code:`-hbfs -B=0` (default values)
 
 
 Parallel HBFS
@@ -23,16 +31,20 @@ Parallel HBFS
 
 Parallel version of HBFS.
 
+Command line options: :code:`-hbfs -B=0` (default values, compile with MPI)
+
 BTD-HBFS
 --------------
 
 Variant of Hybrif Best First Search with the use of a tree or path decomposition of the problem.
 
+Command line options: :code:`-hbfs -B=1`
+
 
 RDS-BTD
 --------------
 
-**R**\ussian **D**\oll **S**\earch exploiting a tree or path decomposition.
+**R**\ussian **D**\oll **S**\earch exploiting a tree or a path decomposition.
 
 Command line options:
 
@@ -56,13 +68,50 @@ Heuristic search algorithms
 TREEDEC
 ----------------
 
-Tree decomposition search using dynamic programming.
+Compute a tree decomposition and quit.
 
-
-DGVNS
+INCOP
 -----
 
-**D**\ecomposition **G**\uided **V**\ariable **N**\eighborhood **S**\earch: VNS heuristic where variables are chosen from clusters of a provided decomposition of the problem.
+Iterative local search with partialy-greedy 1-flip neighborhood.
+
+Command line option: :code:`-i`
+
+
+PILS
+----
+
+Iterative local search for binary (quadratic functions) WCSPs with greedy 1-flip neighborhood and cross-over between successive iterations exploiting problem decomposition. 
+
+Command line option: :code:`-pils=30`
+
+
+LR-BCD
+------
+
+Command line option: :code:`-lrbcd`
+
+
+LDS
+-----
+
+**L**\imited **D**\iscrepancy **S**\earch: iteratively, explore right branches first, making at most l discrepencies (right branches) along a search path. 
+
+Command line option: :code:`-l=128`
+
+
+DFS with Restarts
+-----------------
+
+**D**\epth **F**\irst **S**\earch with a Luby restart strategy (base = 100 bactracks) until a given limit in the number of backtracks is reached.
+
+Command line options: :code:`-L=10000`
+
+
+UDGVNS
+-----
+
+**U**\nified **D**\ecomposition **G**\uided **V**\ariable **N**\eighborhood **S**\earch: VNS heuristic where variables are chosen from clusters of a provided decomposition of the problem.
 
 Command line options:
 
@@ -71,20 +120,32 @@ Command line options:
 - :code:`-kmax` max neighborhood size
 - other options at <https://toulbar2.github.io/toulbar2/userdoc.html#variable-neighborhood-search-algorithms>
 
+
 LNS
 -------
 
-Large Neighborhood Search is obtained by running VNS with a fixed Neighborhood size (:code:`kmin=kmax`).
+Large Neighborhood Search is obtained by running VNS with a fixed neighborhood size (:code:`kmin=kmax`) and replacing LDS by DFS with bounded backtrackingss.
+
+Command line option: :code:`-vns -l: -bt=1000 -L=10000` (compile with MPI)
+
+
+UPDGVNS
+----------------
+
+Parallel version of UDGVNS.
+
+Command line option: :code:`-vns` (compile with MPI)
+
 
 RPDGVSN
 -------
 
-Replicated Parallel Decomposition Guided Variable Neighborhood Search.
+Replicated Parallel Decomposition Guided Variable Neighborhood Search. (NOT MAINTAINED)
 
 
 CPDGVSN
 -------
 
-Cooperative Parallel Decomposition Guided Variable Neighborhood Search. 
+Cooperative Parallel Decomposition Guided Variable Neighborhood Search. (NOT MAINTAINED)
 
 

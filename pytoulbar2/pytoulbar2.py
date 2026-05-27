@@ -403,19 +403,19 @@ class CFN:
                     params += ' ' + str(e[0]) + ' ' + str(e[1])
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
 
-    def AddAllDifferent(self, scope, encoding = 'binary', excepted = None, incremental = False):
+    def AddAllDifferent(self, scope, excepted = None, encoding = 'hungarian', incremental = False):
         """Add AllDifferent hard global constraint.
         
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
-            encoding (str): encoding used to represent AllDifferent (available choices are 'binary' or 'salldiff' or 'salldiffdp' or 'salldiffkp' or 'walldiff').
             excepted (None or list): list of excepted domain values which can be taken by any variable without violating the constraint.
+            encoding (str): encoding used to represent AllDifferent (available choices are 'binary' or 'hungarian' or 'salldiff' or 'salldiffdp' or 'salldiffkp' or 'walldiff').
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
         """
         if incremental and encoding != 'binary':
             raise RuntimeError("Implementation of AllDifferent constraint requires 'binary' encoding in incremental mode!")
-        if excepted is not None and encoding != 'binary':
+        if excepted is not None and encoding != 'binary' and encoding != 'hungarian':
             raise RuntimeError("Excepted domain values in AllDifferent constraint requires 'binary' encoding!")
         sscope = set(scope)
         if len(scope) != len(sscope):
@@ -447,6 +447,50 @@ class CFN:
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST)
             else:
                 raise RuntimeError("Unknown encoding for AllDifferent: "+encoding)
+
+    def AddGlobalCardinalityConstraint(self, scope, bounds, encoding = 'hungarian', incremental = False):
+        """Add a hard Global Cardinality Constraint.
+        
+        Args:
+            scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
+            bounds (list): list of triplets (domain value, lower bound capacity, upper bound capacity).
+            encoding (str): encoding used to represent the Gcc (available choices are 'hungarian' or 'sgcc' or 'sgccdp' or 'sgcckp' or 'wgcc').
+            incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
+            
+        """
+        if incremental:
+            raise RuntimeError("Implementation of GlobalCardinalityConstraint constraint in incremental mode not done!")
+        sscope = set(scope)
+        if len(scope) != len(sscope):
+            raise RuntimeError("Duplicate variable in scope:"+str(scope))
+        iscope = []
+        for i, v in enumerate(scope):
+            if isinstance(v, str):
+                v = self.VariableIndices.get(v, -1)
+            if (v < 0 or v >= len(self.VariableNames)):
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
+            iscope.append(v)
+        bbounds = []
+        for v,lb,ub in bounds:
+            bb = tb2.BoundedObjValue(v, ub, lb)
+            bbounds.append(bb)            
+        if (encoding=='hungarian'):
+            params = str(len(bounds))
+            for v,lb,ub in bounds:
+                params += ' ' + str(v)
+                params += ' ' + str(lb)
+                params += ' ' + str(ub)
+            self.CFN.wcsp.postGlobalCardinalityConstraint(iscope, params)
+        elif (encoding=='sgcc'):
+            self.CFN.wcsp.postWGcc(iscope, "var", "flow", tb2.MAX_COST, bbounds)
+        elif (encoding=='sgccdp'):
+            self.CFN.wcsp.postWGcc(iscope, "var", "DAG", tb2.MAX_COST, bbounds)
+        elif (encoding=='sgcckp'):
+            self.CFN.wcsp.postWGcc(iscope, "hard", "knapsack", tb2.MAX_COST, bbounds)
+        elif (encoding=='wgcc'):
+            self.CFN.wcsp.postWGcc(iscope, "hard", "network", tb2.MAX_COST, bbounds)
+        else:
+            raise RuntimeError("Unknown encoding for Global Cardinality Constraint: "+encoding)
 
     def AddGlobalFunction(self, scope, gcname, *parameters):
         """AddGlobalFunction creates a soft global cost function. 
@@ -860,7 +904,7 @@ class CFN:
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
 
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
-    def SolveNext(self, showSolutions = 0, timeLimit = 0):
+    def SolveNext(self, showSolutions = 0, timeLimit = 0, hbfs = 1, initHeuristics = True):
         """SolveNext solves the problem (i.e., finds its optimum and proves optimality). 
         It should be done after calling SolveFirst and modifying the problem if necessary using SetUB, Assign, MultipleAssign, Remove, Increase, Decrease, or adding an incremental cost function.
 
@@ -868,6 +912,8 @@ class CFN:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
                                                                3: variable and value names).  
             timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
+            hbfs (int): solves using hybrid best-first search (initial limit on the number of backtracks for DFS probes) or using depth-first search (when limit is set to zero)
+            initHeuristics (bool): if True (by default) then reinitialize weighted degree variable ordering heuristic and solution-based value heuristic
 
         Returns:
             The best solution found as a list of domain values, its associated cost, always strictly lower 
@@ -880,10 +926,14 @@ class CFN:
         self.Limit = None
         if (timeLimit > 0):
             self.CFN.timer(timeLimit)
+        if initHeuristics:
+            self.CFN.wcsp.resetWeightedDegree()
+            for i in range(self.CFN.wcsp.numberOfVariables()):
+                 self.CFN.wcsp.setBestValue(i, self.CFN.wcsp.getSup(i) + 1); # reset value heuristic
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)
-        tb2.option.hbfs = 1     # reinitialize this parameter which can be modified during hybridSolve()
+        tb2.option.hbfs = hbfs     # reinitialize this parameter which can be modified during hybridSolve()
         try:
             try:
                 tb2.store.store()
@@ -894,6 +944,7 @@ class CFN:
         except tb2.SolverOut as e:
             tb2.option.limit = False
             self.Limit = e
+            self.CFN.wcsp.whenContradiction()
         tb2.store.restore(initdepth)
         if self.CFN.wcsp.getSolutionCost() < initub:
             return self.CFN.solution(), self.CFN.wcsp.getDPrimalBound(), None   # warning! None: does not return number of found solutions because it is two slow to retrieve all solutions in python
@@ -1019,6 +1070,15 @@ class CFN:
 
         """
         self.CFN.wcsp.deconnect([self.VariableIndices[var] if isinstance(var, str) else var for var in vars])
+
+    def Propagate(self, constraintId):
+        """Propagate propagates a single constraint.
+
+        Args:
+            constraintId (int): index of a constraint in the model.
+
+        """
+        self.CFN.wcsp.propagateConstraint(constraintId)
         
     def ClearPropagationQueues(self):
         """ClearPropagationQueues resets propagation queues. It should be called when an exception Contradiction occurs.

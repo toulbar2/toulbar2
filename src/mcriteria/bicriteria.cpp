@@ -134,7 +134,7 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
     vector<Double> sol_values;
 
     // start the local or global timer if required
-    if(Bicriteria::_sol_timeout > 0 || Bicriteria::_global_timeout > 0) {
+    if (Bicriteria::_sol_timeout > 0 || Bicriteria::_global_timeout > 0) {
         ToulBar2::startCpuTime = cpuTime();
         if (Bicriteria::_sol_timeout > 0 && Bicriteria::_global_timeout > 0) {
             timer(min(Bicriteria::_sol_timeout, max(1, Bicriteria::_global_timeout - static_cast<int>(ToulBar2::startCpuTime - _startGlobalCpuTime))));
@@ -148,7 +148,7 @@ bool Bicriteria::solveScalarization(MultiCFN* multicfn, pair<Double, Double> wei
     bool result = solver->solve();
 
     // stop the timer
-    if(Bicriteria::_sol_timeout > 0 || Bicriteria::_global_timeout > 0) {
+    if (Bicriteria::_sol_timeout > 0 || Bicriteria::_global_timeout > 0) {
         timerStop();
     }
 
@@ -637,7 +637,7 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
     _weights.clear();
     _lower_bounds.clear();
 
-    //ToulBar2::cfn = true;
+    // ToulBar2::cfn = true;
 
     Point point1, point2;
 
@@ -734,10 +734,10 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
         lambda1 *= 2. / length;
         lambda2 *= 2. / length;
 
-        if (optim_dir.first == optim_dir.second && lambda1*lambda2 < 0) {
+        if (optim_dir.first == optim_dir.second && lambda1 * lambda2 < 0) {
             continue;
         }
-        if (optim_dir.first != optim_dir.second && lambda1*lambda2 > 0) {
+        if (optim_dir.first != optim_dir.second && lambda1 * lambda2 > 0) {
             continue;
         }
 
@@ -773,10 +773,10 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
             _lower_bounds.push_back(new_lb);
 
             // check if the scalarized cost is better before adding new weights
-            Double cost_new = new_weights.first*new_point.first + new_weights.second*new_point.second;
-            Double cost_prev = new_weights.first*top.first.first+new_weights.second*top.first.second;
+            Double cost_new = new_weights.first * new_point.first + new_weights.second * new_point.second;
+            Double cost_prev = new_weights.first * top.first.first + new_weights.second * top.first.second;
 
-            if(cost_new < cost_prev) {
+            if (cost_new < cost_prev) {
 
                 // add two new scalarizations
                 if (fabs(top.first.first - new_point.first) >= ToulBar2::epsilon && fabs(top.first.second - new_point.second) >= ToulBar2::epsilon) {
@@ -785,7 +785,6 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
                 if (fabs(top.second.first - new_point.first) >= ToulBar2::epsilon && fabs(top.second.second - new_point.second) >= ToulBar2::epsilon) {
                     pending.push(make_pair(new_point, top.second));
                 }
-
             }
         }
 
@@ -796,13 +795,12 @@ void Bicriteria::computeSupportedPoints(MultiCFN* multicfn, unsigned int first_c
         //   cout << "(" << point.first << "," << point.second << "), ";
         // }
         // cout << endl;
-    
+
         // leave the loop if max number of solution reached
         // or if global timeout reached
-        if((Bicriteria::_global_timeout > 0 && cpuTime() - _startGlobalCpuTime > Bicriteria::_global_timeout) || (Bicriteria::_nsol_max > 0 && static_cast<int>(_solutions.size()) >= Bicriteria::_nsol_max) ) {
+        if ((Bicriteria::_global_timeout > 0 && cpuTime() - _startGlobalCpuTime > Bicriteria::_global_timeout) || (Bicriteria::_nsol_max > 0 && static_cast<int>(_solutions.size()) >= Bicriteria::_nsol_max)) {
             break;
         }
-    
     }
 
     // cout << "Supported points: " << endl;

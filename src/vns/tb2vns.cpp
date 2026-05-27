@@ -97,6 +97,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         set<int> nbunvars;
         TreeDecomposition* td = new TreeDecomposition((WCSP*)wcsp);
         double time = cpuTime();
+        // TODO: deconnect AllDifferent temporally in order to recover the underlying constraint graph structure
         td->buildFromOrder();
         int nc = td->getNbOfClusters();
         for (int i = 0; i < nc; i++) {
@@ -243,7 +244,7 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 
 const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
-//    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
+    //    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;

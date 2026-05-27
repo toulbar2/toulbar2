@@ -49,7 +49,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     vector<vector<Value>> NotVarVal; // for each variable, a set of values having the same weight as the last value in VarVal for the corresponding variable (same dimensions as weights)
     vector<vector<StoreCost>> deltaCosts; // extended costs from unary costs to values in the cost function (same dimensions as weights)
     vector<vector<Double>> OptSol;
-    vector<map<Value,int>> VarValInv; // for each variable, a map to find the index of a Value ONLY in VarVal (EXCEPT for the last position) and NOT in NotVarVal
+    vector<map<Value, int>> VarValInv; // for each variable, a map to find the index of a Value ONLY in VarVal (EXCEPT for the last position) and NOT in NotVarVal
     vector<int> arrvar; // temporary data structure for propagate
     vector<vector<Cost>> Profit; // temporary data structure for propagate
     vector<Double> y_i, tempAMOy_i;
@@ -69,12 +69,12 @@ class KnapsackConstraint : public AbstractNaryConstraint {
     set<int> tempvars;
     vector<bool> Booleanvar; // true if initial domain is {0,1}
     vector<vector<int>> kTimeStamp;
-    vector<vector<int>> kVAC;// Store the number of quantum requested by each value
-    vector<vector<int>> DeleteValVAC; //Store, for each value, the VAC iteration in which it was removed. Is equal -1 if the value was removed before the enforcement of VAC and 0 if the value is still available.
-    int NbIteVAC; //Number of iteration of VAC
-    vector<bool> VACExtToLast; //Indicates if some cost has already been extended to values in NotVarVal. It is necessary to avoid extending the same cost multiple time. 
-    int kConstraintVAC; //Number of time a constraint is involved in a conflict resolution.
-    vector<vector<bool>> VACLastVALChecked; //Store for each value in Notvarval if the given value has already been processed by phase 2.
+    vector<vector<int>> kVAC; // Store the number of quantum requested by each value
+    vector<vector<int>> DeleteValVAC; // Store, for each value, the VAC iteration in which it was removed. Is equal -1 if the value was removed before the enforcement of VAC and 0 if the value is still available.
+    int NbIteVAC; // Number of iteration of VAC
+    vector<bool> VACExtToLast; // Indicates if some cost has already been extended to values in NotVarVal. It is necessary to avoid extending the same cost multiple time.
+    int kConstraintVAC; // Number of time a constraint is involved in a conflict resolution.
+    vector<vector<bool>> VACLastVALChecked; // Store for each value in Notvarval if the given value has already been processed by phase 2.
     bool istight = false;
     Tuple it_tuple; // temporary structure for firstlex/nextlex containing the current tuple (size of original scope)
     vector<int> it_iterators; // temporary structure for firstlex/nextlex containing basic iterator index inside each it_sortedValuesIdx vector
@@ -96,11 +96,11 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
     static Double Ceil(Double v)
     {
-//        Double res = floorl(v);
-//        if (res + ToulBar2::epsilon > v)
-//            return res;
-//        else
-//            return ceill(v);
+        //        Double res = floorl(v);
+        //        if (res + ToulBar2::epsilon > v)
+        //            return res;
+        //        else
+        //            return ceill(v);
         return ceill(v - ToulBar2::epsilon);
     }
     void Updatelastval0(int idx)
@@ -360,7 +360,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         it_sortedVariables.clear();
         it_sortedValuesIdx.resize(arity_);
         for (int i = 0; i < arity_; i++) {
-            EnumeratedVariable *var = (EnumeratedVariable *)getVar(i);
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
             if (var->unassigned()) {
                 it_sortedVariables.push_back(i);
             } else {
@@ -376,42 +376,42 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             }
         }
         sort(it_sortedVariables.begin(), it_sortedVariables.end(),
-                [&](int& x, int& y) {
-                    if (InitLargestWeight[x] == InitLargestWeight[y]) {
-                        return scope[x]->getDACOrder() < scope[y]->getDACOrder();
-                    } else {
-                        return InitLargestWeight[x] > InitLargestWeight[y];
-                    }
-             });
+            [&](int& x, int& y) {
+                if (InitLargestWeight[x] == InitLargestWeight[y]) {
+                    return scope[x]->getDACOrder() < scope[y]->getDACOrder();
+                } else {
+                    return InitLargestWeight[x] > InitLargestWeight[y];
+                }
+            });
         assert((int)it_sortedVariables.size() >= getNonAssigned());
         assert(it_sortedVariables.size() < 2 || InitLargestWeight[it_sortedVariables[0]] >= InitLargestWeight[it_sortedVariables[1]]);
         it_iterators.clear();
         it_sortedValuesIdx.resize(it_sortedVariables.size());
         for (unsigned int j = 0; j < it_sortedVariables.size(); j++) {
             int i = it_sortedVariables[j];
-            EnumeratedVariable *var = (EnumeratedVariable*)getVar(i);
+            EnumeratedVariable* var = (EnumeratedVariable*)getVar(i);
             assert(var->unassigned());
             it_sortedValuesIdx[j].clear();
-            for (unsigned int v = 0; v < VarVal[i].size() - 1; v++){
+            for (unsigned int v = 0; v < VarVal[i].size() - 1; v++) {
                 Value val = VarVal[i][v];
                 if (var->canbe(val)) {
                     it_sortedValuesIdx[j].push_back(make_pair(weights[i][v], var->toIndex(val)));
                 }
             }
-            for (unsigned int v = 0; v < NotVarVal[i].size(); v++){
+            for (unsigned int v = 0; v < NotVarVal[i].size(); v++) {
                 Value val = NotVarVal[i][v];
                 if (var->canbe(val)) {
                     it_sortedValuesIdx[j].push_back(make_pair(weights[i].back(), var->toIndex(val)));
                 }
             }
             sort(it_sortedValuesIdx[j].begin(), it_sortedValuesIdx[j].end(),
-                    [&](pair<Long, tValue>& x, pair<Long, tValue>& y) {
-                        if (x.first == y.first) {
-                            return x.second < y.second;
-                        } else {
-                            return x.first > y.first;
-                        }
-                 });
+                [&](pair<Long, tValue>& x, pair<Long, tValue>& y) {
+                    if (x.first == y.first) {
+                        return x.second < y.second;
+                    } else {
+                        return x.first > y.first;
+                    }
+                });
             assert(it_sortedValuesIdx[j].size() == var->getDomainSize());
             assert(it_sortedValuesIdx[j][0].first >= it_sortedValuesIdx[j][1].first);
             it_iterators.push_back(0);
@@ -421,7 +421,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
         it_rightWeights.clear();
         it_rightWeights.resize(it_sortedVariables.size() + 1, 0); // extra element with a zero weight
         for (int j = it_sortedVariables.size() - 1; j >= 0; --j) {
-            it_rightWeights[j] = it_rightWeights[j+1] + it_sortedValuesIdx[j][0].first;
+            it_rightWeights[j] = it_rightWeights[j + 1] + it_sortedValuesIdx[j][0].first;
         }
         assert(it_assignedWeight + it_rightWeights[0] >= capacity);
     }
@@ -447,7 +447,7 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             it_leftWeight -= it_sortedValuesIdx[j][it_iterators[j]].first;
             ++it_iterators[j];
             finished = it_iterators[j] < (int)it_sortedValuesIdx[j].size();
-            if (!finished || it_leftWeight + it_sortedValuesIdx[j][it_iterators[j]].first + it_rightWeights[j+1] < capacity) {
+            if (!finished || it_leftWeight + it_sortedValuesIdx[j][it_iterators[j]].first + it_rightWeights[j + 1] < capacity) {
                 if (j > 0) {
                     it_iterators[j] = 0;
                     j--;
@@ -497,7 +497,7 @@ public:
                 assert(VarVal[i].size() > 1);
                 assert(NotVarVal[i].size() >= 1);
                 assert(find(NotVarVal[i].begin(), NotVarVal[i].end(), VarVal[i].back()) != NotVarVal[i].end());
-                VarValInv.push_back(map<Value,int>());
+                VarValInv.push_back(map<Value, int>());
                 for (int j = 0; j < (int)VarVal[i].size() - 1; j++) {
                     VarValInv[i][VarVal[i][j]] = j;
                 }
@@ -512,10 +512,10 @@ public:
                 GreatestWeightIdx.emplace_back(max_element(weights[i].begin(), weights[i].end()) - weights[i].begin());
                 LowestWeightIdx.emplace_back(min_element(weights[i].begin(), weights[i].end()) - weights[i].begin());
                 InitLargestWeight.emplace_back(weights[i][GreatestWeightIdx[i]]);
-                //if (NotVarVal[i].empty()) {
-                //    lastval0.push_back(scope[i]->getInf() - 1);
-                //    lastval0ok.emplace_back(true);
-                //} else {
+                // if (NotVarVal[i].empty()) {
+                //     lastval0.push_back(scope[i]->getInf() - 1);
+                //     lastval0ok.emplace_back(true);
+                // } else {
                 lastval0.push_back(NotVarVal[i][0]);
                 lastval0ok.emplace_back(false);
                 //}
@@ -581,8 +581,8 @@ public:
     bool extension() const FINAL { return false; } // TODO: allows functional variable elimination but not other preprocessing
     bool isKnapsack() const FINAL { return true; }
 
-    bool isPseudoBoolean() const {return maxInitDomSize == 2;}
-    bool isTight() const {return istight;} // a pseudo-Boolean knapsack constraint is tight if its number of allowed tuples is less than or equal to its arity plus one
+    bool isPseudoBoolean() const { return maxInitDomSize == 2; }
+    bool isTight() const { return istight; } // a pseudo-Boolean knapsack constraint is tight if its number of allowed tuples is less than or equal to its arity plus one
 
     void queueKnapsack() { wcsp->queueKnapsack(&linkKnapsack); }
     void unqueueKnapsack() { wcsp->unqueueKnapsack(&linkKnapsack); }
@@ -594,7 +594,7 @@ public:
     {
         assert(varIndex >= 0);
         assert(varIndex < arity_);
-        return (Long) (0.95 + conflictWeights[varIndex]) + Constraint::getConflictWeight(); //TODO: Ceil(conflictWeights[varIndex]) might be too slow
+        return (Long)(0.95 + conflictWeights[varIndex]) + Constraint::getConflictWeight(); // TODO: Ceil(conflictWeights[varIndex]) might be too slow
     }
 
     //-----------------------------------------------------------------
@@ -604,17 +604,17 @@ public:
         for (int i = 0; i < arity_; i++) {
             pweights.push_back(std::vector<std::pair<unsigned int, Double>>());
 
-//            if (NotVarVal[i].empty()) {
-//                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-//                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
-//                    pweights.back().push_back(new_pair);
-//                }
-//            } else {
+            //            if (NotVarVal[i].empty()) {
+            //                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+            //                    auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j]);
+            //                    pweights.back().push_back(new_pair);
+            //                }
+            //            } else {
             for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
                 auto new_pair = std::make_pair(scope[i]->toIndex(VarVal[i][j]), weights[i][j] - weights[i].back());
                 pweights.back().push_back(new_pair);
             }
-//            }
+            //            }
         }
     }
 
@@ -624,7 +624,7 @@ public:
 
         Long wnot = 0;
         for (int i = 0; i < arity_; i++) {
-//            if (!NotVarVal[i].empty())
+            //            if (!NotVarVal[i].empty())
             wnot += weights[i].back();
         }
 
@@ -655,20 +655,21 @@ public:
                 }
             }
         }
-        kConstraintVAC=0;
+        kConstraintVAC = 0;
         NbIteVAC = 0;
     }
 
-    bool VACNeedPropagate(){
+    bool VACNeedPropagate()
+    {
         NbIteVAC++;
         bool removed = false;
-        int i=0;
-        while( i < arity_ && !removed) {
-        //for (int i= 0; i < arity_; ++i ) {
+        int i = 0;
+        while (i < arity_ && !removed) {
+            // for (int i= 0; i < arity_; ++i ) {
             if (assigned[i] == 0) {
-                //for (int j = 0; j < (int) VarVal[i].size() - 1; ++j) {
-                int j=0;
-                while(j < (int)VarVal[i].size() - 1 && !removed) {
+                // for (int j = 0; j < (int) VarVal[i].size() - 1; ++j) {
+                int j = 0;
+                while (j < (int)VarVal[i].size() - 1 && !removed) {
                     if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
                         DeleteValVAC[i][j] = NbIteVAC;
                         removed = true;
@@ -697,10 +698,10 @@ public:
     */
     Cost VACPass1(vector<pair<int, Value>>& Killer, vector<pair<int, Value>>& Killed, Cost lambda, Cost itThreshold)
     {
-        assert(kConstraintVAC==0);
+        assert(kConstraintVAC == 0);
         Killer.clear();
         Killed.clear();
-        //EmptyNotVarVal[i]=true only if all the values in NotVarVal[i] have been removed.
+        // EmptyNotVarVal[i]=true only if all the values in NotVarVal[i] have been removed.
         vector<bool> EmptyNotVarVal;
         for (int i = 0; i < arity_; ++i) {
             int k1 = 0;
@@ -714,18 +715,18 @@ public:
 
         // Check which values are still available.
         // Removed values take a large cost (delta + lambda).
-//        Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
-//        Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0 and satisfies the constraint
-//        bool verifsplit = false; // checks if there is atleast one split variable in OptSol
-//        int verifones = 0; // checks how many variables have a valid value set to one
+        //        Cost verifopt = -lb + assigneddeltas; // Used to check if the last optimal solution has still a cost of 0
+        //        Long verifweight = 0; // Used to check if the last optimal solution has still a cost of 0 and satisfies the constraint
+        //        bool verifsplit = false; // checks if there is atleast one split variable in OptSol
+        //        int verifones = 0; // checks how many variables have a valid value set to one
         int k1 = 0;
         Long MaxW = 0;
         vector<Long> GreatW;
         carity = 0;
         for (int i = 0; i < arity_; i++) {
             if (assigned[i] == 0) {
-//                Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
-//                Double storew = 0;
+                //                Double storec = 0; // Used to check if the last optimal solution has still a cost of 0
+                //                Double storew = 0;
                 nbValue[k1] = 0;
                 Updatelastval0(i);
                 GreatW.push_back(0);
@@ -734,12 +735,12 @@ public:
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
                         Profit[i][l] = deltaCosts[i][l] + lambda;
-                        if(DeleteValVAC[i][l]==0) { // if missing then add the current timestamp for this removed value
-                            DeleteValVAC[i][l]=NbIteVAC;
+                        if (DeleteValVAC[i][l] == 0) { // if missing then add the current timestamp for this removed value
+                            DeleteValVAC[i][l] = NbIteVAC;
                         }
                     } else if (DeleteValVAC[i][l] != -1) { // this value is still valid in the current domain
-                        assert(DeleteValVAC[i][l]==0);
-                        assert(((VACVariable *) scope[i])->getVACCost(VarVal[i][l]) == MIN_COST);
+                        assert(DeleteValVAC[i][l] == 0);
+                        assert(((VACVariable*)scope[i])->getVACCost(VarVal[i][l]) == MIN_COST);
                         current_val_idx[k1][nbValue[k1]] = l;
                         nbValue[k1] = nbValue[k1] + 1;
                         Profit[i][l] = deltaCosts[i][l];
@@ -748,25 +749,25 @@ public:
                     } else {
                         Profit[i][l] = deltaCosts[i][l] + lambda;
                     }
-//                    storec += Profit[i][l] * OptSol[i][l];
-//                    storew += weights[i][l] * OptSol[i][l];
-//                    assert(OptSol[i][l] >= 0. && OptSol[i][l] <= 1.);
-//                    if (OptSol[i][l] > 0. && OptSol[i][l] < 1.) {
-//                        verifsplit = true;
-//                    } else if (OptSol[i][l] == 1. && scope[i]->canbe(VarVal[i][l])) {
-//                        verifones++;
-//                    }
+                    //                    storec += Profit[i][l] * OptSol[i][l];
+                    //                    storew += weights[i][l] * OptSol[i][l];
+                    //                    assert(OptSol[i][l] >= 0. && OptSol[i][l] <= 1.);
+                    //                    if (OptSol[i][l] > 0. && OptSol[i][l] < 1.) {
+                    //                        verifsplit = true;
+                    //                    } else if (OptSol[i][l] == 1. && scope[i]->canbe(VarVal[i][l])) {
+                    //                        verifones++;
+                    //                    }
                 }
                 // Compute the cost of the last optimal solution
-//                verifopt += Ceil(storec);
-//                verifweight += Ceil(storew);
+                //                verifopt += Ceil(storec);
+                //                verifweight += Ceil(storew);
                 MaxW += GreatW.back();
                 current_scope_idx[k1] = i;
                 k1++;
                 carity++;
             }
         }
-        //If the constraint can't be satisfied then find an explanation
+        // If the constraint can't be satisfied then find an explanation
         if (MaxW < capacity) {
             Killer.push_back({ this->wcspIndex, 0 });
             for (int i = 0; i < carity; ++i) {
@@ -791,7 +792,7 @@ public:
             return -1;
         }
         NbIteVAC++;
-        //Apply bound consistency
+        // Apply bound consistency
         for (int i = 0; i < carity; ++i) {
             int currentvar = current_scope_idx[i];
             // Determine if at least one value of the current variable can be erased.
@@ -804,53 +805,53 @@ public:
                                 Killed.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][j] });
                             }
                         }
-                        DeleteValVAC[currentvar].back()=NbIteVAC;
+                        DeleteValVAC[currentvar].back() = NbIteVAC;
                     } else {
                         Killed.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
-                        DeleteValVAC[currentvar][currentval]=NbIteVAC;
+                        DeleteValVAC[currentvar][currentval] = NbIteVAC;
                     }
                     assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
-//                    if (OptSol[currentvar][currentval] == 1.) {
-//                        verifones--;
-//                    }
+                    //                    if (OptSol[currentvar][currentval] == 1.) {
+                    //                        verifones--;
+                    //                    }
                 }
             }
         }
-//SdG: it may contain finite costs due to previous VAC EPTs but lb remains zero
-//        if (lb == MIN_COST) { // it is just a hard constraint with all tuples either zero or top, no more pruning can be done.
-//            for (int i = 0; i < arity_; ++i) {
-//                for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
-//                    if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
-//                        //Values that are removed before this propagation.
-//                        DeleteValVAC[i][j] = NbIteVAC-1;
-//                    }
-//                }
-//                if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
-//                    DeleteValVAC[i].back() = NbIteVAC-1;
-//                }
-//            }
-//            assert(Killer.empty());
-//            Killer.insert(Killer.begin(), { this->wcspIndex, NbIteVAC });
-//
-//            return MIN_COST;
-//        }
+        // SdG: it may contain finite costs due to previous VAC EPTs but lb remains zero
+        //         if (lb == MIN_COST) { // it is just a hard constraint with all tuples either zero or top, no more pruning can be done.
+        //             for (int i = 0; i < arity_; ++i) {
+        //                 for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
+        //                     if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
+        //                         //Values that are removed before this propagation.
+        //                         DeleteValVAC[i][j] = NbIteVAC-1;
+        //                     }
+        //                 }
+        //                 if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
+        //                     DeleteValVAC[i].back() = NbIteVAC-1;
+        //                 }
+        //             }
+        //             assert(Killer.empty());
+        //             Killer.insert(Killer.begin(), { this->wcspIndex, NbIteVAC });
+        //
+        //             return MIN_COST;
+        //         }
         Long W = 0;
         Cost c = -lb + assigneddeltas;
         int iter = 0;
         Double xk = 0.;
-//        assert(0 <= verifones && verifones <= carity);
-//        if (verifopt <= MIN_COST && verifweight >= capacity && !verifsplit && verifones == carity) {
-//            // last optimal solution OptSol is integer and satisfies the constraint and the current domains and has a zero cost.
-//            W = verifweight;
-//            c = verifopt;
-//            Slopes.clear();
-//        } else {
-            ComputeSlopes(&W, &c);
-            if (W < capacity) {
-                // Find the optimal solution
-                FindOpt(Slopes, &W, &c, &xk, &iter);
-            }
-//        }
+        //        assert(0 <= verifones && verifones <= carity);
+        //        if (verifopt <= MIN_COST && verifweight >= capacity && !verifsplit && verifones == carity) {
+        //            // last optimal solution OptSol is integer and satisfies the constraint and the current domains and has a zero cost.
+        //            W = verifweight;
+        //            c = verifopt;
+        //            Slopes.clear();
+        //        } else {
+        ComputeSlopes(&W, &c);
+        if (W < capacity) {
+            // Find the optimal solution
+            FindOpt(Slopes, &W, &c, &xk, &iter);
+        }
+        //        }
         // Check if the optimal cost is greater than itThreshold
         // Warning! c can be negative due to rounding effects
         if (c >= itThreshold) {
@@ -871,7 +872,7 @@ public:
             }
             Killed.clear();
             Killer.push_back({ this->wcspIndex, 0 });
-            //Compute an explanation
+            // Compute an explanation
             for (int i = 0; i < carity; i++) {
                 int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
@@ -879,9 +880,9 @@ public:
                     if (OptSol[currentvar][currentval] == 0.) {
                         // C = opposite of reduced cost (optimistic)
                         Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(capacity, weights[currentvar][currentval]));
-//                        if (C!=0. && C!=lambda){
-//                            cout << "VACPass1 with C=" << C << " for variable " << scope[currentvar]->getName() << " and value " << VarVal[currentvar][currentval] << " when finding an explanantion for a soft conflict with theta=" << itThreshold << endl;
-//                        }
+                        //                        if (C!=0. && C!=lambda){
+                        //                            cout << "VACPass1 with C=" << C << " for variable " << scope[currentvar]->getName() << " and value " << VarVal[currentvar][currentval] << " when finding an explanantion for a soft conflict with theta=" << itThreshold << endl;
+                        //                        }
                         if (C > MIN_COST && scope[currentvar]->cannotbe(VarVal[currentvar][currentval])) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
@@ -935,7 +936,7 @@ public:
                 y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc * MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
             }
-            //Detect which values can be removed
+            // Detect which values can be removed
             for (int i = 0; i < carity; i++) {
                 int currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
@@ -949,16 +950,16 @@ public:
                         if (C <= -itThreshold + c && scope[currentvar]->canbe(VarVal[currentvar][currentval])) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    if (scope[currentvar]->canbe(NotVarVal[currentvar][l]) && DeleteValVAC[currentvar].back()==0) {
+                                    if (scope[currentvar]->canbe(NotVarVal[currentvar][l]) && DeleteValVAC[currentvar].back() == 0) {
                                         Killed.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
                                     }
                                 }
-                                DeleteValVAC[currentvar].back()=NbIteVAC;
+                                DeleteValVAC[currentvar].back() = NbIteVAC;
                             } else {
                                 assert(scope[currentvar]->canbe(VarVal[currentvar][currentval]));
-                                if(DeleteValVAC[currentvar][currentval]==0){
+                                if (DeleteValVAC[currentvar][currentval] == 0) {
                                     Killed.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
-                                    DeleteValVAC[currentvar][currentval]=NbIteVAC;
+                                    DeleteValVAC[currentvar][currentval] = NbIteVAC;
                                 }
                             }
                         }
@@ -968,12 +969,12 @@ public:
             for (int i = 0; i < arity_; ++i) {
                 for (int j = 0; j < (int)VarVal[i].size() - 1; ++j) {
                     if (DeleteValVAC[i][j] == 0 && scope[i]->cannotbe(VarVal[i][j])) {
-                        //Values that are removed before this propagation. 
-                        DeleteValVAC[i][j] = NbIteVAC-1;
+                        // Values that are removed before this propagation.
+                        DeleteValVAC[i][j] = NbIteVAC - 1;
                     }
                 }
                 if (EmptyNotVarVal[i] && DeleteValVAC[i].back() == 0) {
-                    DeleteValVAC[i].back() = NbIteVAC-1;
+                    DeleteValVAC[i].back() = NbIteVAC - 1;
                 }
             }
             assert(Killer.empty());
@@ -985,7 +986,7 @@ public:
 
     /* This function trace back the removal of the value TestedVal.
         It returns the cost of the optimal tuple using TestedVal.
-        Killer captures an explanation 
+        Killer captures an explanation
     */
     Cost VACPass2(int CurrIte, pair<int, Value> TestedVal, vector<pair<int, Value>>& Killer, Cost lambda, int kia)
     {
@@ -1004,7 +1005,7 @@ public:
             auto it2 = find(NotVarVal[TestedVar_idx].begin(), NotVarVal[TestedVar_idx].end(), TestedVal.second);
             if (it2 != NotVarVal[TestedVar_idx].end()) {
                 TestedVal_idx = (int)VarVal[TestedVar_idx].size() - 1;
-                VACLastVALChecked[TestedVar_idx][distance(NotVarVal[TestedVar_idx].begin(), it2)]=true;
+                VACLastVALChecked[TestedVar_idx][distance(NotVarVal[TestedVar_idx].begin(), it2)] = true;
             } else {
                 if ((Double)kia * lambda < MAX_COST)
                     return kia * lambda;
@@ -1014,7 +1015,7 @@ public:
         }
         assert(TestedVar_idx >= 0 && TestedVar_idx < (int)weights.size());
         assert(TestedVal_idx >= 0 && TestedVal_idx < (int)weights[TestedVar_idx].size());
-        assert(DeleteValVAC[TestedVar_idx][TestedVal_idx]>0);
+        assert(DeleteValVAC[TestedVar_idx][TestedVal_idx] > 0);
         k1 = 0;
         Long MaxW = weights[TestedVar_idx][TestedVal_idx];
         vector<Long> GreatW;
@@ -1045,7 +1046,7 @@ public:
                 carity++;
             }
         }
-        //If the constraint can't be satisfied then find an explanation and return a large cost
+        // If the constraint can't be satisfied then find an explanation and return a large cost
         if (MaxW < capacity) {
             k = 0;
             Killer.push_back({ this->wcspIndex, CurrIte });
@@ -1084,7 +1085,7 @@ public:
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
         Killer.push_back({ this->wcspIndex, CurrIte });
-        //If the optimal cost is greater than 0 then find an explanation
+        // If the optimal cost is greater than 0 then find an explanation
         if (c > MIN_COST) {
             Double y_cc = 0;
             if (!Slopes.empty())
@@ -1098,25 +1099,25 @@ public:
                 currentvar = current_scope_idx[i];
                 while (OptSol[currentvar][current_val_idx[i][k]] == 0.)
                     k++;
-                y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc *  MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
+                y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc * MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
             }
             for (int i = 0; i < carity; i++) {
                 currentvar = current_scope_idx[i];
                 for (int j = 0; j < nbValue[i]; ++j) {
                     currentval = current_val_idx[i][j];
-                    if (OptSol[currentvar][currentval] > 0. && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
-                            if (currentval == (int)VarVal[currentvar].size() - 1) {
-                                for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
-                                    Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
-                                }
-                            } else {
-                                Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
+                    if (OptSol[currentvar][currentval] > 0. && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval] != 0) {
+                        if (currentval == (int)VarVal[currentvar].size() - 1) {
+                            for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
+                                Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
+                            }
+                        } else {
+                            Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                         }
                     } else {
                         // C = opposite of reduced cost (optimistic)
-                        Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(capacity,weights[currentvar][currentval]));
-                        if (C > MIN_COST && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval]!=0) {
+                        Cost C = Ceil(y_i[i] - deltaCosts[currentvar][currentval] + y_cc * MIN(capacity, weights[currentvar][currentval]));
+                        if (C > MIN_COST && DeleteValVAC[currentvar][currentval] < CurrIte && DeleteValVAC[currentvar][currentval] != 0) {
                             if (currentval == (int)VarVal[currentvar].size() - 1) {
                                 for (int l = 0; l < (int)NotVarVal[currentvar].size(); ++l) {
                                     Killer.push_back({ scope[currentvar]->wcspIndex, NotVarVal[currentvar][l] });
@@ -1124,16 +1125,16 @@ public:
                             } else {
                                 Killer.push_back({ scope[currentvar]->wcspIndex, VarVal[currentvar][currentval] });
                             }
+                        }
                     }
                 }
             }
-            }
             return c;
-        } else 
+        } else
             return MIN_COST;
-        }
+    }
 
-    /* This function aims to derive a sequence of EPTs increasing the lower bound by at least lambda. 
+    /* This function aims to derive a sequence of EPTs increasing the lower bound by at least lambda.
         Either by propagating the constraint or by following the cost moves indicated in PBKiller.
     */
     void VACPass3(vector<pair<pair<int, Value>, Cost>>& EPT, Cost minlambda, vector<pair<int, Value>>& PBKiller)
@@ -1150,7 +1151,7 @@ public:
             // Find the optimal solution
             FindOpt(Slopes, &W, &c, &xk, &iter);
         }
-        
+
         // Check if the optimal relaxed cost is greater than lambda
         if (c > minlambda) {
             Double y_cc = 0;
@@ -1165,7 +1166,7 @@ public:
                 int currentvar = current_scope_idx[i];
                 while (OptSol[currentvar][current_val_idx[i][k]] == 0.)
                     k++;
-                y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc *  MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
+                y_i.push_back(Profit[currentvar][current_val_idx[i][k]] - y_cc * MIN(capacity, weights[currentvar][current_val_idx[i][k]]));
                 assert(y_i[i] < MAX_COST);
             }
             for (int i = 0; i < carity; i++) {
@@ -1212,16 +1213,16 @@ public:
                 assert(j >= 0);
                 assert(j < arity_);
                 assert(scope[j]->wcspIndex == PBKiller[i].first);
-                if(scope[j]->canbe(PBKiller[i].second)){
+                if (scope[j]->canbe(PBKiller[i].second)) {
                     EPT.push_back({ { PBKiller[i].first, PBKiller[i].second }, minlambda });
-                if (j < arity_) {
-                    auto it = VarValInv[j].find(PBKiller[i].second);
-                    if (it != VarValInv[j].end()) {
-                        deltaCosts[j][it->second] += minlambda;
-                    } else {
-                        if (!VACExtToLast[j]) {
-                            deltaCosts[j].back() += minlambda;
-                            VACExtToLast[j] = true;
+                    if (j < arity_) {
+                        auto it = VarValInv[j].find(PBKiller[i].second);
+                        if (it != VarValInv[j].end()) {
+                            deltaCosts[j][it->second] += minlambda;
+                        } else {
+                            if (!VACExtToLast[j]) {
+                                deltaCosts[j].back() += minlambda;
+                                VACExtToLast[j] = true;
                             }
                         }
                     }
@@ -1230,37 +1231,39 @@ public:
             projectLB(minlambda);
         }
     }
-    //If v is in NotVarVal then the function returns the available values in NotVarVal. Otherwise it returns v.
-    vector<Value> waslastValue(int var_idx, Value v){
+    // If v is in NotVarVal then the function returns the available values in NotVarVal. Otherwise it returns v.
+    vector<Value> waslastValue(int var_idx, Value v)
+    {
         vector<Value> LastVal;
-        int i=getIndex(wcsp->getVar(var_idx));
+        int i = getIndex(wcsp->getVar(var_idx));
         assert(i >= 0 && i < arity_);
         assert(scope[i]->wcspIndex == var_idx);
         if (VarValInv[i].find(v) == VarValInv[i].end()) {
             for (int k = 0; k < (int)NotVarVal[i].size(); ++k) {
                 if (scope[i]->canbe(NotVarVal[i][k]))
                     LastVal.push_back(NotVarVal[i][k]);
-                }
-        }else {
+            }
+        } else {
             LastVal.push_back(v);
         }
-        
+
         return LastVal;
     }
 
     // Returns whether the value v from variable var_idx has already been processed in phase 2.
-    bool getVACLastVALChecked(int var_idx, Value v){
-        int i=getIndex(wcsp->getVar(var_idx));
+    bool getVACLastVALChecked(int var_idx, Value v)
+    {
+        int i = getIndex(wcsp->getVar(var_idx));
         assert(i >= 0 && i < arity_);
         assert(scope[i]->wcspIndex == var_idx);
-        int j=0;
-        while(NotVarVal[i][j]!=v && j < (int)NotVarVal.size())
+        int j = 0;
+        while (NotVarVal[i][j] != v && j < (int)NotVarVal.size())
             j++;
         assert(j < (int)NotVarVal.size());
         return VACLastVALChecked[i][j];
     }
 
-    // Returns the number of quantum requested by value v 
+    // Returns the number of quantum requested by value v
     int getkVAC(Variable* var, Value v, Long timeStamp)
     {
         if (kVAC.empty()) {
@@ -1291,7 +1294,7 @@ public:
     }
     void IncreasekConstraintVAC(int addcount)
     {
-        kConstraintVAC+=addcount;
+        kConstraintVAC += addcount;
     }
     int getkConstraintVAC()
     {
@@ -1299,7 +1302,7 @@ public:
     }
     void setkVAC(Variable* var, Value v, int c, Long timeStamp)
     {
-        assert(c>=0);
+        assert(c >= 0);
         if (kVAC.empty()) {
             for (int i = 0; i < arity(); ++i) {
                 kVAC.push_back({});
@@ -1314,15 +1317,15 @@ public:
         assert(i >= 0 && i < arity_);
         assert(scope[i]->wcspIndex == var->wcspIndex);
         auto it = VarValInv[i].find(v);
-        // We use VACExtToLast to be sure that we don't increase kVAC[i].back() more than one time. 
+        // We use VACExtToLast to be sure that we don't increase kVAC[i].back() more than one time.
         if (it != VarValInv[i].end()) {
             kVAC[i][it->second] = c;
             kTimeStamp[i][it->second] = timeStamp;
-        } else if(!VACExtToLast[i]){
+        } else if (!VACExtToLast[i]) {
             kVAC[i].back() = c;
-            assert(kVAC[i].back()>=0);
+            assert(kVAC[i].back() >= 0);
             kTimeStamp[i].back() = timeStamp;
-            VACExtToLast[i]=true;
+            VACExtToLast[i] = true;
         }
     }
     void VACextend(VACVariable* x, Value v, Cost c)
@@ -1358,9 +1361,9 @@ public:
     }
     void ResetVACLastValTested()
     {
-        for( int i=0; i<arity_;i++){
-            fill(VACLastVALChecked[i].begin(),VACLastVALChecked[i].end(),false);
-    }
+        for (int i = 0; i < arity_; i++) {
+            fill(VACLastVALChecked[i].begin(), VACLastVALChecked[i].end(), false);
+        }
     }
 
     /// \brief projects from a knapsack constraint to a variable (possibly several values impacted!)
@@ -1396,7 +1399,7 @@ public:
     {
         assert(from != NULL);
         if (from == this) {
-            //get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
+            // get_current_scope(); // SdG: not needed because GreatestWeightIdx updated below
             if (sameweights || getNonAssigned() == arity_ || deconnected() || fastverifyAMO()) {
                 if (arity_ < (int)wcsp->numberOfVariables()) { // SdG: no need to increase weightedDegree of all problem variables
                     Constraint::incConflictWeight(1);
@@ -1407,13 +1410,13 @@ public:
                     varorder.push_back(i);
                 }
                 sort(varorder.begin(), varorder.end(),
-                        [&](int& x, int& y) {
-                    if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
-                        return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
-                    } else {
-                        return InitLargestWeight[x] < InitLargestWeight[y];
-                    }
-                });
+                    [&](int& x, int& y) {
+                        if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
+                            return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
+                        } else {
+                            return InitLargestWeight[x] < InitLargestWeight[y];
+                        }
+                    });
                 Long SumW = 0;
                 for (unsigned int i = 0; i < weights.size(); ++i) {
                     if (scope[i]->cannotbe(VarVal[i][GreatestWeightIdx[i]])) {
@@ -1489,7 +1492,7 @@ public:
             }
         } else if (deconnected()) {
             for (int i = 0; i < from->arity(); i++) {
-                //if (from->getVar(i)->unassigned()) { //TODO: compare if it is better to add this test or not
+                // if (from->getVar(i)->unassigned()) { //TODO: compare if it is better to add this test or not
                 int index = getIndex(from->getVar(i));
                 if (index >= 0) { // the last conflict constraint may be derived from two binary constraints (boosting search), each one derived from an n-ary constraint with a scope which does not include parameter constraint from
                     assert(index < arity_);
@@ -1518,16 +1521,16 @@ public:
             }
         }
         sort(OutScope.begin(), OutScope.end(),
-             [&](int& x, int& y) {
-            if (WeightedProfit[x] == WeightedProfit[y]) {
-                if (weights[x][1] == weights[y][1]) {
-                    return scope[x]->getDACOrder() > scope[y]->getDACOrder();
-                } else {
-                    return weights[x][1] > weights[y][1];
-                }
-            } else
-                return WeightedProfit[x] < WeightedProfit[y];
-        });
+            [&](int& x, int& y) {
+                if (WeightedProfit[x] == WeightedProfit[y]) {
+                    if (weights[x][1] == weights[y][1]) {
+                        return scope[x]->getDACOrder() > scope[y]->getDACOrder();
+                    } else {
+                        return weights[x][1] > weights[y][1];
+                    }
+                } else
+                    return WeightedProfit[x] < WeightedProfit[y];
+            });
         for (int i = 0; i < (int)OutScope.size(); ++i) {
             ROutScope.push_back(scope[OutScope[i]]->wcspIndex);
         }
@@ -1639,8 +1642,8 @@ public:
         Cost res = -lb + assigneddeltas;
         for (int i = 0; i < arity_; i++) {
             auto* var = (EnumeratedVariable*)getVar(i);
-//            if (ToulBar2::verbose >= 4)
-//                cout << var->getName() << " " << s[i] << " ";
+            //            if (ToulBar2::verbose >= 4)
+            //                cout << var->getName() << " " << s[i] << " ";
             if (CorrAMO[i] == 0) {
                 auto it = VarValInv[i].find(var->toValue(s[i]));
                 if (it == VarValInv[i].end()) {
@@ -1726,7 +1729,7 @@ public:
         //             }
         //         }
         assert(MaxWeight >= 0);
-        if (capacity <= 0 || MaxWeight==0)
+        if (capacity <= 0 || MaxWeight == 0)
             return 0.;
         return (double)((Double)capacity / (Double)MaxWeight); // * ucost ???
     }
@@ -1856,7 +1859,7 @@ public:
         }
         // TODO: reinitialize current knapsack constraint instead of creating a new constraint
         deconnect();
-        //unqueueKnapsack();
+        // unqueueKnapsack();
         BinaryConstraint* bctr;
         TernaryConstraint* tctr;
         if (!AMO.empty()) {
@@ -2096,14 +2099,14 @@ public:
                 if (connected()) {
                     if (fastuniversal()) {
                         deconnect();
-                        //unqueueKnapsack();
+                        // unqueueKnapsack();
                         if (!wcsp->vac && lb == MIN_COST) {
                             assert(assigneddeltas == MIN_COST);
 #ifndef NDEBUG
                             bool alldeltanull = true;
                             for (int r = 0; r < arity_ && alldeltanull; r++) {
                                 if (getVar(r)->unassigned()) {
-                                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
+                                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c) { return (c == MIN_COST); });
                                 }
                             }
                             assert(alldeltanull);
@@ -2142,7 +2145,7 @@ public:
                         lb = MIN_COST;
                     } else if (canbeProjectedInExtension()) {
                         deconnect(); // this constraint is removed from the current WCSP problem
-                        //unqueueKnapsack();
+                        // unqueueKnapsack();
                         projectNary();
                     } else if (AlwaysSatisfied) {
                         capacity = 0;
@@ -2264,13 +2267,13 @@ public:
                                         AbstractNaryConstraint* cc = ProjectAMOtoNary(minAMOCost, currentvar, i);
                                         cc->deconnect(true);
                                         if (cc->isKnapsack()) {
-//                                            ((KnapsackConstraint*)cc)->unqueueKnapsack();
+                                            //                                            ((KnapsackConstraint*)cc)->unqueueKnapsack();
                                         }
                                         toprop.push_back(cc->wcspIndex);
                                         Store::unfreeze();
                                         cc->reconnect();
                                         if (cc->isKnapsack()) {
-//                                            ((KnapsackConstraint*)cc)->queueKnapsack();
+                                            //                                            ((KnapsackConstraint*)cc)->queueKnapsack();
                                         }
                                     }
                                     nbVirtualVar[VirtualVar[currentvar] - 1] = 0;
@@ -2280,7 +2283,7 @@ public:
                         }
                         if (decoctr) {
                             deconnect();
-                            //unqueueKnapsack();
+                            // unqueueKnapsack();
                             assert(TobeProjected >= MIN_COST);
                             Constraint::projectLB(-lb + assigneddeltas);
                             lb = MIN_COST;
@@ -2306,7 +2309,7 @@ public:
                     deconnect(varIndex);
                     if (canbeProjectedInExtension()) {
                         deconnect(); // this constraint is removed from the current WCSP problem
-                        //unqueueKnapsack();
+                        // unqueueKnapsack();
                         projectNary();
                     }
                 }
@@ -2315,7 +2318,7 @@ public:
     }
     // Return True if a value has been deleted else return False
     // A knapsack constraint is said tight (tight=true) if each variable i has MaxWeight-maxweight(i)+minweight(i)=capacity
-    bool BoundConsistency(bool &tight)
+    bool BoundConsistency(bool& tight)
     {
         int k = 0, k2;
         bool b = false;
@@ -2383,20 +2386,20 @@ public:
 
     void VACObjConsistency(set<int>& findsupportvars)
     {
-//SdG: Warning! VAC-lin may perform extend/project on a given knapsack constraint without increasing its lb (i.e. lb=0 and deltaCosts<>0)
-//        if (lb == MIN_COST) {
-//            assert(assigneddeltas == MIN_COST);
-//#ifndef NDEBUG
-//            bool alldeltanull = true;
-//            for (int r = 0; r < arity_ && alldeltanull; r++) {
-//                if (getVar(r)->unassigned()) {
-//                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
-//                }
-//            }
-//            assert(alldeltanull);
-//#endif
-//            return;
-//        }
+        // SdG: Warning! VAC-lin may perform extend/project on a given knapsack constraint without increasing its lb (i.e. lb=0 and deltaCosts<>0)
+        //         if (lb == MIN_COST) {
+        //             assert(assigneddeltas == MIN_COST);
+        //#ifndef NDEBUG
+        //             bool alldeltanull = true;
+        //             for (int r = 0; r < arity_ && alldeltanull; r++) {
+        //                 if (getVar(r)->unassigned()) {
+        //                     alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
+        //                 }
+        //             }
+        //             assert(alldeltanull);
+        //#endif
+        //             return;
+        //         }
         get_current_scope();
         vector<int> LowestDeltaIdx(arity_, 0);
         vector<int> GreatestDeltaIdx(arity_, 0);
@@ -2450,7 +2453,7 @@ public:
             bool alldeltanull = true;
             for (int r = 0; r < arity_ && alldeltanull; r++) {
                 if (getVar(r)->unassigned()) {
-                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c){return (c == MIN_COST);});
+                    alldeltanull = std::all_of(deltaCosts[r].begin(), deltaCosts[r].end(), [](Cost c) { return (c == MIN_COST); });
                 }
             }
             assert(alldeltanull);
@@ -2706,39 +2709,39 @@ public:
             while (k > 0) {
                 k--;
                 // We don't consider dominated items : p_i < p_j && w_i > w_j   (i dominates j)
-//                if (VirtualVar[currentvar] == 0) {
-                    if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && MIN(weights[currentvar][arrvar[k]], capacity) < MIN(weights[currentvar][item1], capacity)) {
-                        // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
-                        // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
-                        // If it is dominated, we replace the last slope else we add a new one
-                        if (Slopes.empty() || Slopes.back()[0] != currentvar || Slopes.back()[3] >= Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (MIN(weights[currentvar][item1], capacity) - MIN(capacity, weights[currentvar][arrvar[k]])))
-                            Slopes.push_back({ Double(currentvar), Double(arrvar[k]), Double(item1), Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (MIN(capacity, weights[currentvar][item1]) - MIN(capacity, weights[currentvar][arrvar[k]])) });
-                        else {
-                            Slopes.back() = { Double(currentvar), Double(arrvar[k]), Slopes.back()[2], Double((Profit[currentvar][Slopes.back()[2]] - Profit[currentvar][arrvar[k]])) / (MIN(weights[currentvar][Slopes.back()[2]], capacity) - MIN(weights[currentvar][arrvar[k]], capacity)) };
-                            while (Slopes.size() > 1 && Slopes.end()[-2][0] == Slopes.back()[0] && Slopes.back()[3] >= Slopes.end()[-2][3]) {
-                                Slopes.end()[-2] = { Double(currentvar), Slopes.back()[1], Slopes.end()[-2][2], Double((Profit[currentvar][Slopes.end()[-2][2]] - Profit[currentvar][Slopes.back()[1]])) / (MIN(weights[currentvar][Slopes.end()[-2][2]], capacity) - MIN(weights[currentvar][Slopes.back()[1]], capacity)) };
-                                Slopes.pop_back();
-                            }
+                //                if (VirtualVar[currentvar] == 0) {
+                if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && MIN(weights[currentvar][arrvar[k]], capacity) < MIN(weights[currentvar][item1], capacity)) {
+                    // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
+                    // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
+                    // If it is dominated, we replace the last slope else we add a new one
+                    if (Slopes.empty() || Slopes.back()[0] != currentvar || Slopes.back()[3] >= Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (MIN(weights[currentvar][item1], capacity) - MIN(capacity, weights[currentvar][arrvar[k]])))
+                        Slopes.push_back({ Double(currentvar), Double(arrvar[k]), Double(item1), Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (MIN(capacity, weights[currentvar][item1]) - MIN(capacity, weights[currentvar][arrvar[k]])) });
+                    else {
+                        Slopes.back() = { Double(currentvar), Double(arrvar[k]), Slopes.back()[2], Double((Profit[currentvar][Slopes.back()[2]] - Profit[currentvar][arrvar[k]])) / (MIN(weights[currentvar][Slopes.back()[2]], capacity) - MIN(weights[currentvar][arrvar[k]], capacity)) };
+                        while (Slopes.size() > 1 && Slopes.end()[-2][0] == Slopes.back()[0] && Slopes.back()[3] >= Slopes.end()[-2][3]) {
+                            Slopes.end()[-2] = { Double(currentvar), Slopes.back()[1], Slopes.end()[-2][2], Double((Profit[currentvar][Slopes.end()[-2][2]] - Profit[currentvar][Slopes.back()[1]])) / (MIN(weights[currentvar][Slopes.end()[-2][2]], capacity) - MIN(weights[currentvar][Slopes.back()[1]], capacity)) };
+                            Slopes.pop_back();
                         }
-                        item1 = arrvar[k];
                     }
-//                } else {
-//                    if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && weights[currentvar][arrvar[k]] < weights[currentvar][item1]) {
-//                        // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
-//                        // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
-//                        // If it is dominated, we replace the last slope else we add a new one
-//                        if (Slopes.empty() || Slopes.back()[0] != currentvar || Slopes.back()[3] >= Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]))
-//                            Slopes.push_back({ Double(currentvar), Double(arrvar[k]), Double(item1), Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]) });
-//                        else {
-//                            Slopes.back() = { Double(currentvar), Double(arrvar[k]), Slopes.back()[2], Double((Profit[currentvar][Slopes.back()[2]] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][Slopes.back()[2]] - weights[currentvar][arrvar[k]]) };
-//                            while (Slopes.size() > 1 && Slopes.end()[-2][0] == Slopes.back()[0] && Slopes.back()[3] >= Slopes.end()[-2][3]) {
-//                                Slopes.end()[-2] = { Double(currentvar), Slopes.back()[1], Slopes.end()[-2][2], Double((Profit[currentvar][Slopes.end()[-2][2]] - Profit[currentvar][Slopes.back()[1]])) / (weights[currentvar][Slopes.end()[-2][2]] - weights[currentvar][Slopes.back()[1]]) };
-//                                Slopes.pop_back();
-//                            }
-//                        }
-//                        item1 = arrvar[k];
-//                    }
-//                }
+                    item1 = arrvar[k];
+                }
+                //                } else {
+                //                    if (Profit[currentvar][arrvar[k]] < Profit[currentvar][item1] && weights[currentvar][arrvar[k]] < weights[currentvar][item1]) {
+                //                        // If it is the first slope for the current variable, we directy add it : <Var, val1, val2, slope>
+                //                        // Else we compare the new slope with the precedent one to verify if the precedent value isn't dominated.
+                //                        // If it is dominated, we replace the last slope else we add a new one
+                //                        if (Slopes.empty() || Slopes.back()[0] != currentvar || Slopes.back()[3] >= Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]))
+                //                            Slopes.push_back({ Double(currentvar), Double(arrvar[k]), Double(item1), Double((Profit[currentvar][item1] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][item1] - weights[currentvar][arrvar[k]]) });
+                //                        else {
+                //                            Slopes.back() = { Double(currentvar), Double(arrvar[k]), Slopes.back()[2], Double((Profit[currentvar][Slopes.back()[2]] - Profit[currentvar][arrvar[k]])) / (weights[currentvar][Slopes.back()[2]] - weights[currentvar][arrvar[k]]) };
+                //                            while (Slopes.size() > 1 && Slopes.end()[-2][0] == Slopes.back()[0] && Slopes.back()[3] >= Slopes.end()[-2][3]) {
+                //                                Slopes.end()[-2] = { Double(currentvar), Slopes.back()[1], Slopes.end()[-2][2], Double((Profit[currentvar][Slopes.end()[-2][2]] - Profit[currentvar][Slopes.back()[1]])) / (weights[currentvar][Slopes.end()[-2][2]] - weights[currentvar][Slopes.back()[1]]) };
+                //                                Slopes.pop_back();
+                //                            }
+                //                        }
+                //                        item1 = arrvar[k];
+                //                    }
+                //                }
             }
             // Compute a first Solution
             if (Slopes.size() == 0 || Slopes.back()[0] != currentvar) {
@@ -2770,86 +2773,84 @@ public:
     {
         // Sort the Slopes in increasing order
         sort(Slopes.begin(), Slopes.end(),
-                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-            if (x[3] == y[3]) { // same slope value
-                if (x[0] == y[0]) { // same variable
-                    Long mx1 = weights[int(x[0])][int(x[1])];
-                    Long my1 = weights[int(y[0])][int(y[1])];
-                    assert(mx1 != my1);
-                    return mx1 < my1; // keep slopes ordered by weights inside a variable
-                } else {
-                    return scope[int(x[0])]->getDACOrder() > scope[int(y[0])]->getDACOrder(); // it favors absorbing more unary costs for the last variables in the DAC order
+            [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
+                if (x[3] == y[3]) { // same slope value
+                    if (x[0] == y[0]) { // same variable
+                        Long mx1 = weights[int(x[0])][int(x[1])];
+                        Long my1 = weights[int(y[0])][int(y[1])];
+                        assert(mx1 != my1);
+                        return mx1 < my1; // keep slopes ordered by weights inside a variable
+                    } else {
+                        return scope[int(x[0])]->getDACOrder() > scope[int(y[0])]->getDACOrder(); // it favors absorbing more unary costs for the last variables in the DAC order
+                    }
+                } else { // increasing slope order
+                    return x[3] < y[3];
                 }
-            } else { // increasing slope order
-                return x[3] < y[3];
-            }
-        });
+            });
 
         int currentVar;
         Long capacityLeft;
         while (*W < capacity) {
             assert(*iter < (int)Slopes.size());
             currentVar = int(Slopes[*iter][0]);
-//            if (VirtualVar[currentVar] == 0) {
-                if (*W + MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]) >= capacity) {
-                    capacityLeft = capacity - *W;
-                    *xk = Double(capacityLeft) / (MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]));
-                    OptSol[currentVar][Slopes[*iter][2]] = *xk;
-                    OptSol[currentVar][Slopes[*iter][1]] = 1. - *xk;
-                    *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
-                    *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
-                    assert(capacityLeft > 0);
-                    if (ToulBar2::vacValueHeuristic && *c > MIN_COST + ToulBar2::epsilon) {
-                        Value support = VarVal[currentVar][Slopes[*iter][2]];
-                        if (ToulBar2::weightedDegree && (ToulBar2::vacValueHeuristic & KNAPSACK_FRACTIONAL_HEUR) &&
-                            *xk > ToulBar2::epsilon && *xk < 1. - ToulBar2::epsilon &&
-                            scope[currentVar]->getCost(support) > MIN_COST) {
-                            if (ToulBar2::verbose >= 1) {
-                                cout << "Fractional KP variable found: " <<  scope[currentVar]->getName() << " weightedDegree: " << conflictWeights[currentVar] << " + " << 0.5 - abs(*xk - 0.5) << endl;
-                                cout << *scope[currentVar] << endl;
-                            }
-                            conflictWeights[currentVar] += 0.5 - abs(*xk - 0.5);
+            //            if (VirtualVar[currentVar] == 0) {
+            if (*W + MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]) >= capacity) {
+                capacityLeft = capacity - *W;
+                *xk = Double(capacityLeft) / (MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]));
+                OptSol[currentVar][Slopes[*iter][2]] = *xk;
+                OptSol[currentVar][Slopes[*iter][1]] = 1. - *xk;
+                *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
+                *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
+                assert(capacityLeft > 0);
+                if (ToulBar2::vacValueHeuristic && *c > MIN_COST + ToulBar2::epsilon) {
+                    Value support = VarVal[currentVar][Slopes[*iter][2]];
+                    if (ToulBar2::weightedDegree && (ToulBar2::vacValueHeuristic & KNAPSACK_FRACTIONAL_HEUR) && *xk > ToulBar2::epsilon && *xk < 1. - ToulBar2::epsilon && scope[currentVar]->getCost(support) > MIN_COST) {
+                        if (ToulBar2::verbose >= 1) {
+                            cout << "Fractional KP variable found: " << scope[currentVar]->getName() << " weightedDegree: " << conflictWeights[currentVar] << " + " << 0.5 - abs(*xk - 0.5) << endl;
+                            cout << *scope[currentVar] << endl;
                         }
-                        if (kpSupportOK) {
-                            Value oldsupport = scope[currentVar]->getSupport();
-                            if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
-                                kpSupport[currentVar] = support;
-                            }
-                        }
+                        conflictWeights[currentVar] += 0.5 - abs(*xk - 0.5);
                     }
-                } else {
-                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1.);
-                    OptSol[currentVar][Slopes[*iter][1]] = 0.;
-                    OptSol[currentVar][Slopes[*iter][2]] = 1.;
-                    *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
-                    *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
-                    if (kpSupportOK && *c > MIN_COST + ToulBar2::epsilon) {
-                        Value support = VarVal[currentVar][Slopes[*iter][2]];
+                    if (kpSupportOK) {
                         Value oldsupport = scope[currentVar]->getSupport();
                         if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
                             kpSupport[currentVar] = support;
                         }
                     }
-                    *iter = *iter + 1;
                 }
-//            } else {
-//                if (*W + weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]] >= capacity) {
-//                    capacityLeft = capacity - *W;
-//                    *xk = Double(capacityLeft) / (weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]]);
-//                    OptSol[currentVar][Slopes[*iter][2]] = *xk;
-//                    OptSol[currentVar][Slopes[*iter][1]] = 1. - *xk;
-//                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
-//                    *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
-//                    assert(capacityLeft > 0);
-//                } else {
-//                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1);
-//                    OptSol[currentVar][Slopes[*iter][1]] = 0.;
-//                    OptSol[currentVar][Slopes[*iter][2]] = 1.;
-//                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
-//                    *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
-//                    *iter = *iter + 1;
-//                }
-//            }
+            } else {
+                assert(OptSol[currentVar][Slopes[*iter][1]] == 1.);
+                OptSol[currentVar][Slopes[*iter][1]] = 0.;
+                OptSol[currentVar][Slopes[*iter][2]] = 1.;
+                *W += MIN(capacity, weights[currentVar][Slopes[*iter][2]]) - MIN(capacity, weights[currentVar][Slopes[*iter][1]]);
+                *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
+                if (kpSupportOK && *c > MIN_COST + ToulBar2::epsilon) {
+                    Value support = VarVal[currentVar][Slopes[*iter][2]];
+                    Value oldsupport = scope[currentVar]->getSupport();
+                    if (support != oldsupport && (scope[currentVar]->getCost(support) > MIN_COST || scope[currentVar]->getCost(oldsupport) > MIN_COST)) {
+                        kpSupport[currentVar] = support;
+                    }
+                }
+                *iter = *iter + 1;
+            }
+            //            } else {
+            //                if (*W + weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]] >= capacity) {
+            //                    capacityLeft = capacity - *W;
+            //                    *xk = Double(capacityLeft) / (weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]]);
+            //                    OptSol[currentVar][Slopes[*iter][2]] = *xk;
+            //                    OptSol[currentVar][Slopes[*iter][1]] = 1. - *xk;
+            //                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
+            //                    *c += Ceil(*xk * (Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]]));
+            //                    assert(capacityLeft > 0);
+            //                } else {
+            //                    assert(OptSol[currentVar][Slopes[*iter][1]] == 1);
+            //                    OptSol[currentVar][Slopes[*iter][1]] = 0.;
+            //                    OptSol[currentVar][Slopes[*iter][2]] = 1.;
+            //                    *W += weights[currentVar][Slopes[*iter][2]] - weights[currentVar][Slopes[*iter][1]];
+            //                    *c += Profit[currentVar][Slopes[*iter][2]] - Profit[currentVar][Slopes[*iter][1]];
+            //                    *iter = *iter + 1;
+            //                }
+            //            }
         }
     }
 
@@ -3025,8 +3026,7 @@ public:
                     if (assigned[i] == 0 && !isunassigned(i)) {
                         assign(i);
                         b = true;
-                    }
-                    else
+                    } else
                         assert(assigned[i] > 0 || scope[i]->unassigned());
                 } else {
                     if (assigned[i] == 0 && scope[i]->assigned()) {
@@ -3041,7 +3041,7 @@ public:
                     THROWCONTRADICTION;
                 } else if (canbeProjectedInExtension()) {
                     deconnect(); // this constraint is removed from the current WCSP problem
-                    //unqueueKnapsack();
+                    // unqueueKnapsack();
                     projectNary();
                 } else if (ToulBar2::LcLevel >= LC_AC) {
                     get_current_scope();
@@ -3069,7 +3069,7 @@ public:
 #endif
                     if (fastuniversal()) {
                         deconnect();
-                        //unqueueKnapsack();
+                        // unqueueKnapsack();
                         Cost TobeProjected = -lb + assigneddeltas;
                         Cost mindelta;
                         for (int i = 0; i < carity; i++) {
@@ -3200,8 +3200,8 @@ public:
                                     }
                                     sort(EDACORDER.begin(), EDACORDER.end(),
                                         [&](int& x, int& y) {
-                                            assert(current_scope_idx[x]<arity_);
-                                            assert(current_scope_idx[y]<arity_);
+                                            assert(current_scope_idx[x] < arity_);
+                                            assert(current_scope_idx[y] < arity_);
                                             return scope[current_scope_idx[x]]->getDACOrder() < scope[current_scope_idx[y]]->getDACOrder(); // SdG: favor projections to first variables in DAC order
                                         });
 
@@ -3283,7 +3283,7 @@ public:
                                 if (c > MIN_COST) {
                                     assert(W >= capacity);
                                     assert(xk >= 0 && xk <= 1);
-                                    assert((Slopes.empty() && iter==0) || iter < (int)Slopes.size());
+                                    assert((Slopes.empty() && iter == 0) || iter < (int)Slopes.size());
                                     // Compute the dual variable y_cc and y_i using the optimal primal solution
                                     Double y_cc = 0;
                                     if (!Slopes.empty())
@@ -3346,8 +3346,8 @@ public:
                                     ObjConsistency();
                                     // update supports if needed
                                     if (kpSupportOK) {
-                                        for (const auto & [xid, val] : kpSupport) {
-                                            EnumeratedVariable *x = scope[xid];
+                                        for (const auto& [xid, val] : kpSupport) {
+                                            EnumeratedVariable* x = scope[xid];
                                             if (x->canbe(val)) {
                                                 if (x->getCost(val) == MIN_COST) {
                                                     if (ToulBar2::verbose > 0 && x->getSupport() != val)
@@ -3466,7 +3466,7 @@ public:
 
                 // checks the minimum cost of the relaxed multiple-choice knapsack problem is zero
                 // sort list of slopes and greedily takes the minimum such that the constraint is satisfied
-                vector< tuple<int, Value, Long, Cost, Value, Long, Cost, Double>> slopes;
+                vector<tuple<int, Value, Long, Cost, Value, Long, Cost, Double>> slopes;
                 Long sumweight = 0;
                 Double totalcost = -lb + assigneddeltas;
                 for (int i = 0; i < arity_; i++) {
@@ -3485,7 +3485,7 @@ public:
                     }
                     assert(values.size() > 0);
                     // sort available values in ascending weights and if equal in decreasing (unary) cost
-                    sort(values.begin(), values.end(), [&](auto& x, auto& y) {return std::get<1>(x) < std::get<1>(y) || (std::get<1>(x) == std::get<1>(y) && std::get<2>(x) > std::get<2>(y));});
+                    sort(values.begin(), values.end(), [&](auto& x, auto& y) { return std::get<1>(x) < std::get<1>(y) || (std::get<1>(x) == std::get<1>(y) && std::get<2>(x) > std::get<2>(y)); });
                     if (ToulBar2::verbose >= 7) {
                         cout << i << " " << scope[i]->getName();
                         for (auto e : values) {
@@ -3494,12 +3494,12 @@ public:
                         cout << endl;
                     }
                     int prev = values.size() - 1;
-                    for (int j = values.size() - 2; j >= 0 ; j--) {
+                    for (int j = values.size() - 2; j >= 0; j--) {
                         assert(std::get<1>(values[j]) <= std::get<1>(values[prev]));
                         assert(std::get<1>(values[j]) < std::get<1>(values[prev]) || std::get<2>(values[j]) >= std::get<2>(values[prev]));
                         if (std::get<1>(values[j]) < std::get<1>(values[prev]) && std::get<2>(values[j]) < std::get<2>(values[prev])) {
                             auto tuple = make_tuple(i, std::get<0>(values[j]), std::get<1>(values[j]), std::get<2>(values[j]), std::get<0>(values[prev]), std::get<1>(values[prev]), std::get<2>(values[prev]), (Double)(std::get<2>(values[prev]) - std::get<2>(values[j])) / (std::get<1>(values[prev]) - std::get<1>(values[j])));
-                            while (slopes.size() > 0 && std::get<0>(slopes.back())==std::get<0>(tuple) && std::get<7>(slopes.back()) <= std::get<7>(tuple)) {
+                            while (slopes.size() > 0 && std::get<0>(slopes.back()) == std::get<0>(tuple) && std::get<7>(slopes.back()) <= std::get<7>(tuple)) {
                                 tuple = make_tuple(i, std::get<0>(values[j]), std::get<1>(values[j]), std::get<2>(values[j]), std::get<4>(slopes.back()), std::get<5>(slopes.back()), std::get<6>(slopes.back()), (Double)(std::get<6>(slopes.back()) - std::get<2>(values[j])) / (std::get<5>(slopes.back()) - std::get<1>(values[j])));
                                 slopes.pop_back();
                             }
@@ -3510,7 +3510,7 @@ public:
                     sumweight += std::get<1>(values[prev]);
                     totalcost += std::get<2>(values[prev]);
                 }
-                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return std::get<7>(x) < std::get<7>(y);});
+                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) { return std::get<7>(x) < std::get<7>(y); });
                 if (ToulBar2::verbose >= 7) {
                     cout << "weight0: " << sumweight << " cost0: " << totalcost << " slopes:";
                     for (auto e : slopes) {
@@ -3529,10 +3529,10 @@ public:
                     totalcost -= (Double)(sumweight - Original_capacity) * std::get<7>(slopes[i - 1]);
                 }
                 if (ToulBar2::verbose >= 7) {
-                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] KP " << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
+                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] KP " << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity) ? " relaxed" : "") << " cost: " << totalcost << endl;
                 }
                 if (ToulBar2::verbose >= 0 && totalcost >= 1.) {
-                    cout << "Warning! knapsack constraint (" << wcspIndex << ") with capacity " << Original_capacity << " has optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost greater than 1! (" << totalcost << ")" << endl;
+                    cout << "Warning! knapsack constraint (" << wcspIndex << ") with capacity " << Original_capacity << " has optimum" << ((sumweight > Original_capacity) ? " relaxed" : "") << " cost greater than 1! (" << totalcost << ")" << endl;
                 }
                 // SdG: cannot verify totalcost < 1. because we do not propagate increasing unary costs which are initially nonzero
             }
@@ -3540,7 +3540,7 @@ public:
             if (ToulBar2::LcLevel >= LC_FDAC || (ToulBar2::LcLevel >= LC_AC && (wcsp->vac || lb > MIN_COST))) {
                 // checks the minimum cost USING ONLY DELTACOST of the relaxed multiple-choice knapsack problem is zero
                 // sort list of slopes and greedily takes the minimum such that the constraint is satisfied
-                vector< tuple<int, Value, Long, Cost, Value, Long, Cost, Double>> slopes;
+                vector<tuple<int, Value, Long, Cost, Value, Long, Cost, Double>> slopes;
                 Long sumweight = 0;
                 Double totalcost = -lb + assigneddeltas;
                 for (int i = 0; i < arity_; i++) {
@@ -3559,7 +3559,7 @@ public:
                     }
                     assert(values.size() > 0);
                     // sort available values in ascending weights and if equal in decreasing (unary) cost
-                    sort(values.begin(), values.end(), [&](auto& x, auto& y) {return std::get<1>(x) < std::get<1>(y) || (std::get<1>(x) == std::get<1>(y) && std::get<2>(x) > std::get<2>(y));});
+                    sort(values.begin(), values.end(), [&](auto& x, auto& y) { return std::get<1>(x) < std::get<1>(y) || (std::get<1>(x) == std::get<1>(y) && std::get<2>(x) > std::get<2>(y)); });
                     if (ToulBar2::verbose >= 7) {
                         cout << i << " " << scope[i]->getName();
                         for (auto e : values) {
@@ -3568,12 +3568,12 @@ public:
                         cout << endl;
                     }
                     int prev = values.size() - 1;
-                    for (int j = values.size() - 2; j >= 0 ; j--) {
+                    for (int j = values.size() - 2; j >= 0; j--) {
                         assert(std::get<1>(values[j]) <= std::get<1>(values[prev]));
                         assert(std::get<1>(values[j]) < std::get<1>(values[prev]) || std::get<2>(values[j]) >= std::get<2>(values[prev]));
                         if (std::get<1>(values[j]) < std::get<1>(values[prev]) && std::get<2>(values[j]) < std::get<2>(values[prev])) {
                             auto tuple = make_tuple(i, std::get<0>(values[j]), std::get<1>(values[j]), std::get<2>(values[j]), std::get<0>(values[prev]), std::get<1>(values[prev]), std::get<2>(values[prev]), (Double)(std::get<2>(values[prev]) - std::get<2>(values[j])) / (std::get<1>(values[prev]) - std::get<1>(values[j])));
-                            while (slopes.size() > 0 && std::get<0>(slopes.back())==std::get<0>(tuple) && std::get<7>(slopes.back()) <= std::get<7>(tuple)) {
+                            while (slopes.size() > 0 && std::get<0>(slopes.back()) == std::get<0>(tuple) && std::get<7>(slopes.back()) <= std::get<7>(tuple)) {
                                 tuple = make_tuple(i, std::get<0>(values[j]), std::get<1>(values[j]), std::get<2>(values[j]), std::get<4>(slopes.back()), std::get<5>(slopes.back()), std::get<6>(slopes.back()), (Double)(std::get<6>(slopes.back()) - std::get<2>(values[j])) / (std::get<5>(slopes.back()) - std::get<1>(values[j])));
                                 slopes.pop_back();
                             }
@@ -3584,7 +3584,7 @@ public:
                     sumweight += std::get<1>(values[prev]);
                     totalcost += std::get<2>(values[prev]);
                 }
-                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) {return std::get<7>(x) < std::get<7>(y);});
+                stable_sort(slopes.begin(), slopes.end(), [&](auto& x, auto& y) { return std::get<7>(x) < std::get<7>(y); });
                 if (ToulBar2::verbose >= 7) {
                     cout << "weight0: " << sumweight << " cost0: " << totalcost << " slopes:";
                     for (auto e : slopes) {
@@ -3603,7 +3603,7 @@ public:
                     totalcost -= (Double)(sumweight - Original_capacity) * std::get<7>(slopes[i - 1]);
                 }
                 if (ToulBar2::verbose >= 7) {
-                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] KP " << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity)?" relaxed":"") << " cost: " << totalcost << endl;
+                    cout << "[" << Store::getDepth() << ",W" << wcsp->getIndex() << "] KP " << this << " capacity: " << Original_capacity << " weight: " << sumweight << " optimum" << ((sumweight > Original_capacity) ? " relaxed" : "") << " cost: " << totalcost << endl;
                 }
                 return totalcost < 1.;
             }
@@ -4063,4 +4063,3 @@ public:
 /* indent-tabs-mode: nil */
 /* c-default-style: "k&r" */
 /* End: */
-

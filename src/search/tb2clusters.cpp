@@ -1198,7 +1198,7 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in)
 
 TreeDecomposition::~TreeDecomposition()
 {
-    for(auto& c: clusters) {
+    for (auto& c : clusters) {
         if (c) {
             delete c;
         }
@@ -1394,7 +1394,7 @@ void TreeDecomposition::pathFusions(vector<int>& order)
             rds[i] = NULL;
         }
     }
-    for(auto&c : clusters) {
+    for (auto& c : clusters) {
         delete c;
     }
     clusters.clear();

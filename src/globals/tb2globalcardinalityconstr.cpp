@@ -4,17 +4,17 @@
 #define upper_bound first
 #define lower_bound second
 
-GlobalCardinalityConstraint::GlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
+SoftGlobalCardinalityConstraint::SoftGlobalCardinalityConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
     : FlowBasedGlobalConstraint(wcsp, scope_in, arity_in)
 {
     buildIndex();
 
-    modeEnum["var"] = GlobalCardinalityConstraint::VAR;
-    modeEnum["dec"] = GlobalCardinalityConstraint::VALUE;
-    modeEnum["wdec"] = GlobalCardinalityConstraint::WVALUE;
+    modeEnum["var"] = SoftGlobalCardinalityConstraint::VAR;
+    modeEnum["dec"] = SoftGlobalCardinalityConstraint::VALUE;
+    modeEnum["wdec"] = SoftGlobalCardinalityConstraint::WVALUE;
 }
 
-void GlobalCardinalityConstraint::buildIndex()
+void SoftGlobalCardinalityConstraint::buildIndex()
 {
     vector<Value> D;
     mapval.clear();
@@ -34,7 +34,7 @@ void GlobalCardinalityConstraint::buildIndex()
     // graph.setSize(arity_+D.size()+4);
 }
 
-void GlobalCardinalityConstraint::read(istream& file, bool mult)
+void SoftGlobalCardinalityConstraint::read(istream& file, bool mult)
 {
     // "var" => softvar
     // "dec" => softdec
@@ -84,7 +84,7 @@ void GlobalCardinalityConstraint::read(istream& file, bool mult)
     }
 }
 
-void GlobalCardinalityConstraint::organizeConfig()
+void SoftGlobalCardinalityConstraint::organizeConfig()
 {
 
     int sumlow = 0, sumhigh = 0;
@@ -119,7 +119,7 @@ void GlobalCardinalityConstraint::organizeConfig()
     }
 }
 
-Cost GlobalCardinalityConstraint::evalOriginal(const Tuple& s)
+Cost SoftGlobalCardinalityConstraint::evalOriginal(const Tuple& s)
 {
 
     Cost excess = 0, shortage = 0, cost = 0;
@@ -151,12 +151,12 @@ Cost GlobalCardinalityConstraint::evalOriginal(const Tuple& s)
     return cost;
 }
 
-size_t GlobalCardinalityConstraint::GetGraphAllocatedSize()
+size_t SoftGlobalCardinalityConstraint::GetGraphAllocatedSize()
 {
     return arity_ + nDistinctDomainValue + 4;
 }
 
-void GlobalCardinalityConstraint::buildGraph(Graph& g)
+void SoftGlobalCardinalityConstraint::buildGraph(Graph& g)
 {
 
     int n = g.size();
@@ -206,7 +206,7 @@ void GlobalCardinalityConstraint::buildGraph(Graph& g)
     }
 }
 
-Cost GlobalCardinalityConstraint::constructFlow(Graph& g)
+Cost SoftGlobalCardinalityConstraint::constructFlow(Graph& g)
 {
 
     // cout << "use the one\n";
@@ -229,7 +229,7 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph& g)
     // return fcost;
 }
 
-/*void GlobalCardinalityConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
+/*void SoftGlobalCardinalityConstraint::getDomainFromGraph(Graph &graph, int varindex, vector<int> &domain) {
 
         domain.clear();
         for (vector<List_Node >::iterator k = graph[varindex+1].begin();
@@ -253,7 +253,7 @@ Cost GlobalCardinalityConstraint::constructFlow(Graph& g)
 
 }*/
 
-void GlobalCardinalityConstraint::dump(ostream& os, bool original)
+void SoftGlobalCardinalityConstraint::dump(ostream& os, bool original)
 {
     assert(original); // TODO: case original is false
     int nvalues = 0;
@@ -286,7 +286,7 @@ void GlobalCardinalityConstraint::dump(ostream& os, bool original)
     }
 }
 
-string GlobalCardinalityConstraint::getName()
+string SoftGlobalCardinalityConstraint::getName()
 {
     string name = "sgcc";
     int nvalues = 0;
@@ -302,7 +302,7 @@ string GlobalCardinalityConstraint::getName()
     return name;
 }
 
-// void GlobalCardinalityConstraint::print(ostream& os) {
+// void SoftGlobalCardinalityConstraint::print(ostream& os) {
 //     int nvalues = 0;
 //
 //     os << "sgcc(";

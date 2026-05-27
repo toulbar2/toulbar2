@@ -68,8 +68,9 @@ void conflict() {}
 
 extern void newsolution(int wcspId, void* solver);
 
-inline void clean_ToulBar2_varOrder() {
-    if(ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) > 8) {
+inline void clean_ToulBar2_varOrder()
+{
+    if (ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) > 8) {
         delete[] ToulBar2::varOrder;
         ToulBar2::varOrder = NULL;
     }
@@ -274,10 +275,15 @@ enum {
     NO_OPT_RASPSreset,
     OPT_RASPSlds,
 
+    OPT_ReducedCostsFiltering,
+    NO_OPT_ReducedCostsFiltering,
+
     OPT_singletonConsistency,
+    OPT_GILMORELAWLER,
     OPT_GenAMOforPB,
     OPT_DynPB,
     NO_OPT_singletonConsistency,
+    NO_OPT_GILMORELAWLER,
     OPT_vacValueHeuristic,
     NO_OPT_vacValueHeuristic,
     OPT_preprocessTernary,
@@ -562,9 +568,16 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
     { OPT_trwsNIterComputeUb, (char*)"--trws-n-iters-compute-ub", SO_REQ_SEP },
 
+    // Reduced costs filtering for alldifferent and gcc
+    { OPT_ReducedCostsFiltering, (char*)"-camb", SO_OPT },
+    { NO_OPT_ReducedCostsFiltering, (char*)"-camb:", SO_NONE },
+
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
     { OPT_singletonConsistency, (char*)"-S", SO_OPT },
+    { NO_OPT_singletonConsistency, (char*)"-S:", SO_NONE },
+    { OPT_GILMORELAWLER, (char*)"-glb", SO_OPT },
+    { NO_OPT_GILMORELAWLER, (char*)"-glb:", SO_NONE },
     { OPT_GenAMOforPB, (char*)"-amo", SO_OPT },
     { OPT_DynPB, (char*)"-kpdp", SO_OPT },
     { OPT_preprocessTernary, (char*)"-t", SO_OPT },
@@ -925,7 +938,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::sortDomains)
         cout << " (default option)";
     cout << endl;
-    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
+    cout << "   -sortc : sorts constraints based on lexicographic ordering (1), decreasing DAC ordering (2), decreasing constraint tightness (3), DAC then tightness (4), tightness then DAC (5), randomly (6), DAC with special knapsack order (7), increasing arity (8), increasing arity then DAC (9), decreasing DAC then increasing arity (10), or the opposite order if using a negative value (default value is " << ToulBar2::constrOrdering << ")" << endl;
     cout << "   -solr : solution-based phase saving";
     if (ToulBar2::solutionBasedPhaseSaving)
         cout << " (default option)";
@@ -1025,10 +1038,11 @@ void help_msg(char* toulbar2filename)
     cout << "   -T=[decimal] : threshold cost value for VAC (default value is " << ToulBar2::costThreshold << ")" << endl;
     cout << "   -P=[decimal] : threshold cost value for VAC during the preprocessing phase (default value is " << ToulBar2::costThresholdPre << ")" << endl;
     cout << "   -C=[float] : multiplies all costs internally by this number when loading the problem (default value is " << ToulBar2::costMultiplier << ")" << endl;
-    cout << "   -S=[integer] : preprocessing only: performs restricted singleton consistency on at-most a given number of variables (all variables if no integer value is given)";
+    cout << "   -S=[float] : preprocessing only: performs restricted singleton consistency on at-most a given number of variables (all variables if no integer value is given, change stopping accuracy if floating-point value is given in [0,1[)";
     if (ToulBar2::singletonConsistency)
-        cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables)";
+        cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables and stopping accuracy of " << ToulBar2::singletonAccuracy << ")";
     cout << endl;
+    cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
     if (ToulBar2::FullEAC)
@@ -1048,6 +1062,10 @@ void help_msg(char* toulbar2filename)
     cout << "   -raspsini : reset weighted degree variable ordering heuristic after doing upper bound probing";
     if (ToulBar2::RASPSreset)
         cout << " (default option)";
+    cout << endl;
+    cout << "   -camb=[integer] : reduced costs filtering level for alldifferent and gcc constraints";
+    if (ToulBar2::ReducedCostsFiltering)
+        cout << " (default option " << ToulBar2::ReducedCostsFiltering << ")";
     cout << endl;
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
     cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";
@@ -1102,7 +1120,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
-    cout << "   -epsilon=[float] : floating-point precision (smaller than 1, default value is " << ToulBar2::epsilon << ") or epsilon-approximation factor (1 + epsilon) for computing the partition function (greater than 1, default value is " << (1.+Exp(ToulBar2::logepsilon)) << ")" << endl;
+    cout << "   -epsilon=[float] : floating-point precision (smaller than 1, default value is " << ToulBar2::epsilon << ") or epsilon-approximation factor (1 + epsilon) for computing the partition function (greater than 1, default value is " << (1. + Exp(ToulBar2::logepsilon)) << ")" << endl;
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")";
 #ifdef OPENMPI
@@ -1630,7 +1648,7 @@ int _tmain(int argc, TCHAR* argv[])
                         cout << "partial assignment to be checked ..." << certificateString << endl;
                 } else {
                     certificate = true;
-                    if(certificateFilename != NULL) {
+                    if (certificateFilename != NULL) {
                         free(certificateFilename);
                     }
                     certificateFilename = strdup("sol"); // workaround for compatibility issue with the dynamical allocation of certificateFilename ("sol" would be stored in program data)
@@ -1922,11 +1940,28 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::cardinality = false;
             }
 
+            if (args.OptionId() == OPT_GILMORELAWLER) {
+                if (args.OptionArg() != NULL) {
+                    int glb = atoi(args.OptionArg());
+                    ToulBar2::GilmoreLawler = glb;
+                } else {
+                    ToulBar2::GilmoreLawler = 1;
+                }
+            } else if (args.OptionId() == NO_OPT_GILMORELAWLER) {
+                ToulBar2::GilmoreLawler = 0;
+            }
+
             if (args.OptionId() == OPT_singletonConsistency) {
                 if (args.OptionArg() != NULL) {
                     int size = atol(args.OptionArg());
-                    if (size >= 0)
+                    if (size > 0)
                         ToulBar2::singletonConsistency = size;
+                    float accuracy = atof(args.OptionArg());
+                    if (accuracy >= 0. && accuracy < 1.) {
+                        ToulBar2::singletonAccuracy = accuracy;
+                        if (ToulBar2::singletonConsistency == 0)
+                            ToulBar2::singletonConsistency = INT_MAX;
+                    }
                 } else
                     ToulBar2::singletonConsistency = INT_MAX;
                 if (ToulBar2::debug && ToulBar2::singletonConsistency > 0)
@@ -1935,6 +1970,19 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "singleton consistency OFF" << endl;
                 ToulBar2::singletonConsistency = 0;
+            }
+
+            if (args.OptionId() == OPT_ReducedCostsFiltering) {
+                if (args.OptionArg() != NULL) {
+                    int rcf = atoi(args.OptionArg());
+                    if (rcf < 0 || rcf > 100)
+                        rcf = 10;
+                    ToulBar2::ReducedCostsFiltering = rcf;
+                } else {
+                    ToulBar2::ReducedCostsFiltering = 10;
+                }
+            } else if (args.OptionId() == NO_OPT_ReducedCostsFiltering) {
+                ToulBar2::ReducedCostsFiltering = 0;
             }
 
 #ifdef BOOST
@@ -3207,7 +3255,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading solution in file: " << problem << endl;
 
                 certificate = true;
-                if(certificateFilename) {
+                if (certificateFilename) {
                     free(certificateFilename);
                 }
                 certificateFilename = strdup(problem.c_str());
@@ -3650,7 +3698,7 @@ int _tmain(int argc, TCHAR* argv[])
 
     clean_ToulBar2_varOrder();
 
-    if(certificateFilename != NULL) {
+    if (certificateFilename != NULL) {
         free(certificateFilename);
     }
 

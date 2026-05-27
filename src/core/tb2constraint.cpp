@@ -679,6 +679,45 @@ bool Constraint::cmpConstraintArityDAC(DLink<Constraint*>* c1, DLink<Constraint*
     }
 }
 
+bool Constraint::cmpConstraintDACArity(Constraint* c1, Constraint* c2)
+{
+    int v1 = c1->getDACVar(0)->getDACOrder();
+    int v2 = c2->getDACVar(0)->getDACOrder();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        int v1 = c1->arity();
+        int v2 = c2->arity();
+        return (v1 < v2);
+    }
+}
+
+bool Constraint::cmpConstraintDACArity(DLink<ConstraintLink>* c1, DLink<ConstraintLink>* c2)
+{
+    int v1 = c1->content.constr->getSmallestDACIndexInScope(c1->content.scopeIndex);
+    int v2 = c2->content.constr->getSmallestDACIndexInScope(c2->content.scopeIndex);
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        int v1 = c1->content.constr->arity();
+        int v2 = c2->content.constr->arity();
+        return (v1 < v2);
+    }
+}
+
+bool Constraint::cmpConstraintDACArity(DLink<Constraint*>* c1, DLink<Constraint*>* c2)
+{
+    int v1 = c1->content->getDACVar(0)->getDACOrder();
+    int v2 = c2->content->getDACVar(0)->getDACOrder();
+    if (v1 != v2)
+        return (v1 > v2);
+    else {
+        int v1 = c1->content->arity();
+        int v2 = c2->content->arity();
+        return (v1 < v2);
+    }
+}
+
 // sort a list of constraints
 int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
 {
@@ -708,6 +747,9 @@ int Constraint::cmpConstraint(Constraint* c1, Constraint* c2)
         break;
     case CONSTR_ORDER_ARITY_DAC:
         result = cmpConstraintArityDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC_ARITY:
+        result = cmpConstraintDACArity(c1, c2);
         break;
     default:
         cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
@@ -750,6 +792,9 @@ int Constraint::cmpConstraintLink(DLink<ConstraintLink>* c1, DLink<ConstraintLin
     case CONSTR_ORDER_ARITY_DAC:
         result = cmpConstraintArityDAC(c1, c2);
         break;
+    case CONSTR_ORDER_DAC_ARITY:
+        result = cmpConstraintDACArity(c1, c2);
+        break;
     default:
         cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;
         throw BadConfiguration();
@@ -790,6 +835,9 @@ int Constraint::cmpConstraintLinkPointer(DLink<Constraint*>* c1, DLink<Constrain
         break;
     case CONSTR_ORDER_ARITY_DAC:
         result = cmpConstraintArityDAC(c1, c2);
+        break;
+    case CONSTR_ORDER_DAC_ARITY:
+        result = cmpConstraintDACArity(c1, c2);
         break;
     default:
         cerr << "Unknown constraint ordering value " << ToulBar2::constrOrdering << endl;

@@ -133,17 +133,50 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         istringstream file(arguments);
         wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false, {});
     } else if (globalname == "alldiff") {
-        istringstream file("");
+        istringstream file("0");
         wcsp.postAllDifferentConstraint(scopeIndexs, arity, file);
+    } else if (globalname == "gcc") {
+        string arguments;
+        unsigned int domsize = wcsp.getDomainSize(scopeIndexs[0]);
+        arguments.append(to_string(domsize));
+        int left = arity;
+        int sumlb = arity;
+        unsigned int pos = 0;
+        for (Value v : wcsp.getEnumDomain(scopeIndexs[0])) {
+            arguments.append(" ");
+            arguments.append(to_string(v));
+            arguments.append(" ");
+            pos++;
+            int rand = myrand() % (arity + 1); // random upper bound capacity
+            int capa = (pos == domsize && left > 0) ? left : rand;
+            int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
+            left -= capa;
+            sumlb -= demand;
+            arguments.append(to_string(0));
+            arguments.append(" ");
+            arguments.append(to_string(capa));
+        }
+        istringstream file(arguments);
+        wcsp.postGlobalCardinalityConstraint(scopeIndexs, arity, file);
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "salldiffkp" || globalname == "walldiff") {
         wcsp.postWAllDiff(scopeIndexs, arity, (globalname == "salldiffkp") ? "hardeq" : "var", (globalname == "salldiff") ? "flow" : ((globalname == "walldiff") ? "network" : ((globalname == "salldiffdp") ? "DAG" : "knapsack")), (globalname == "salldiffkp") ? wcsp.getUb() : Top);
-    } else if (globalname == "sgcc" || globalname == "sgccdp" || globalname == "wgcc") {
-        // soft alldiff
+    } else if (globalname == "sgcc" || globalname == "sgcckp" || globalname == "sgccdp" || globalname == "wgcc") {
+        // soft gcc
         vector<BoundedObjValue> values;
-        for (unsigned int i = 0; i < scopeVars[0]->getDomainInitSize(); i++) {
-            values.push_back(BoundedObjValue(i, 1));
+        unsigned int domsize = wcsp.getDomainSize(scopeIndexs[0]);
+        int left = arity;
+        int sumlb = arity;
+        unsigned int pos = 0;
+        for (Value v : wcsp.getEnumDomain(scopeIndexs[0])) {
+            pos++;
+            int rand = myrand() % (arity + 1); // random upper bound capacity
+            int capa = (pos == domsize && left > 0) ? left : rand;
+            int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
+            left -= capa;
+            sumlb -= demand;
+            values.push_back(BoundedObjValue(v, capa, 0));
         }
-        wcsp.postWGcc(scopeIndexs, arity, "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : "DAG"), Top, values);
+        wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
         // random parity automaton (XOR)
         vector<WeightedObjInt> init(1, WeightedObjInt(0));

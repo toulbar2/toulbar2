@@ -71,6 +71,11 @@ typedef long double Double;
 #include <random>
 extern std::mt19937 myrandom_generator;
 
+inline void myrearrange(vector<int>& V)
+{
+    shuffle(V.begin(), V.end(), myrandom_generator);
+}
+
 inline void mysrand(int seed_)
 {
     myrandom_generator.seed(seed_);
@@ -148,21 +153,21 @@ inline Double Log1p(Double x) { return log1pl(x); }
 #endif
 
 #ifdef QUAD_PROB
-//inline std::ostream& operator<<(std::ostream& os, const __float128& f)
+// inline std::ostream& operator<<(std::ostream& os, const __float128& f)
 //{
-//    char y[1024];
-//    quadmath_snprintf(y, 1000, "%.30Qg", f);
-//    os << y;
-//    return os;
-//}
+//     char y[1024];
+//     quadmath_snprintf(y, 1000, "%.30Qg", f);
+//     os << y;
+//     return os;
+// }
 
-//inline std::istream& operator>>(std::istream& is, __float128& f)
+// inline std::istream& operator>>(std::istream& is, __float128& f)
 //{
-//    char y[1024];
-//    is >> y;
-//    f = strtoflt128(y, NULL);
-//    return is;
-//}
+//     char y[1024];
+//     is >> y;
+//     f = strtoflt128(y, NULL);
+//     return is;
+// }
 
 inline boost::multiprecision::float128 Pow(boost::multiprecision::float128 x, boost::multiprecision::float128 y) { return pow(x, y); }
 inline boost::multiprecision::float128 Exp(boost::multiprecision::float128 x) { return exp(x); }

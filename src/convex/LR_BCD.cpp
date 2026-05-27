@@ -911,9 +911,9 @@ Cost Solver::lrBCD(string cmd, vector<Value>& solution)
 {
 
     cerr << "Error: this version of ToulBar2 has not been built with the LR-BCD solver." << endl;
-    
+
     throw BadConfiguration();
-    
+
     return MAX_COST;
 }
 
