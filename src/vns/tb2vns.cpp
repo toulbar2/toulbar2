@@ -182,7 +182,7 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
         z[j] = *iter;
         ++j;
     }
-    assert(j == l->unassignedVars->getSize());
+    assert((int)j == l->unassignedVars->getSize());
     shuffle(z.begin(), z.end(), myrandom_generator);
     assert(neighborhood_size <= z.size());
     neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
