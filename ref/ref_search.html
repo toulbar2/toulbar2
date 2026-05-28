@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search algorithms in ToulBar2 &mdash; toulbar2 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/toulbar2.css?v=4cefacce" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            toulbar2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../presentation.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmark libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userdoc.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refman.html">Reference Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pdfmanuals.html">Documentation in pdf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">toulbar2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+<div class=toulbar2header>
+
+  <div class="toulbar2logo">
+
+    <h1>toulbar2</h1>
+    <h2>An exact solver for cost function networks</h2>
+
+  </div>
+
+  <div class=toulbar2headerline>
+
+    <a href=../presentation.html>Presentation</a> |
+    <a href=../downloads.html>Downloads</a> |
+    <a href=../benchmarks.html>Benchmarks</a> |
+    <a href=../examples/tutorials.html>Tutorials</a> |
+    <a href=../examples/usecases.html>Use cases</a> |
+    <a href=../userdoc.html>User</a> |
+    <a href=../refman.html>Reference</a> |
+    <a href=../pdfmanuals.html>Doc in pdf</a> |
+    <a href=../publications.html>Publications</a>
+
+  </div>
+
+</div>
+
+<!-- News : see news_*.rst pages -->
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="search-algorithms-in-toulbar2">
+<span id="ref-search"></span><h1>Search algorithms in ToulBar2<a class="headerlink" href="#search-algorithms-in-toulbar2" title="Link to this heading"></a></h1>
+<section id="complete-search-algorithms">
+<h2>Complete search algorithms<a class="headerlink" href="#complete-search-algorithms" title="Link to this heading"></a></h2>
+<section id="dfs">
+<h3>DFS<a class="headerlink" href="#dfs" title="Link to this heading"></a></h3>
+<p><strong>D</strong>epth <strong>F</strong>irst <strong>S</strong>earch is a branch and bound algorithm following a depth first traversal of the search tree.</p>
+<p>Command line options: <code class="code docutils literal notranslate"><span class="pre">-hbfs:</span> <span class="pre">-B=0</span></code></p>
+</section>
+<section id="hbfs">
+<h3>HBFS<a class="headerlink" href="#hbfs" title="Link to this heading"></a></h3>
+<p><strong>H</strong>ybrid <strong>B</strong>est <strong>F</strong>irst <strong>S</strong>earch is a branch and bound algorithm.
+It performs a compromise between Best First Search and Depth First Search.
+HBFS is the default search algorithm.</p>
+<p>Command line options: <code class="code docutils literal notranslate"><span class="pre">-hbfs</span> <span class="pre">-B=0</span></code> (default values)</p>
+</section>
+<section id="parallel-hbfs">
+<h3>Parallel HBFS<a class="headerlink" href="#parallel-hbfs" title="Link to this heading"></a></h3>
+<p>Parallel version of HBFS.</p>
+<p>Command line options: <code class="code docutils literal notranslate"><span class="pre">-hbfs</span> <span class="pre">-B=0</span></code> (default values, compile with MPI)</p>
+</section>
+<section id="btd-hbfs">
+<h3>BTD-HBFS<a class="headerlink" href="#btd-hbfs" title="Link to this heading"></a></h3>
+<p>Variant of Hybrif Best First Search with the use of a tree or path decomposition of the problem.</p>
+<p>Command line options: <code class="code docutils literal notranslate"><span class="pre">-hbfs</span> <span class="pre">-B=1</span></code></p>
+</section>
+<section id="rds-btd">
+<h3>RDS-BTD<a class="headerlink" href="#rds-btd" title="Link to this heading"></a></h3>
+<p><strong>R</strong>ussian <strong>D</strong>oll <strong>S</strong>earch exploiting a tree or a path decomposition.</p>
+<p>Command line options:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">-B=2</span></code> (RDS with tree decomposition)</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">-B=3</span></code> (RDS with path decomposition)</p></li>
+</ul>
+<p>Reference:
+-  <a class="reference external" href="http://miat.inrae.fr/degivry/Sanchez09a.pdf">Russian doll search with tree decomposition</a>,</p>
+<blockquote>
+<div><p>M Sanchez, D Allouche, S de Givry, and T Schiex,
+In Proc. of IJCAI-09, Pasadena (CA), USA, 2009.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="heuristic-search-algorithms">
+<h2>Heuristic search algorithms<a class="headerlink" href="#heuristic-search-algorithms" title="Link to this heading"></a></h2>
+<section id="treedec">
+<h3>TREEDEC<a class="headerlink" href="#treedec" title="Link to this heading"></a></h3>
+<p>Compute a tree decomposition and quit.</p>
+</section>
+<section id="incop">
+<h3>INCOP<a class="headerlink" href="#incop" title="Link to this heading"></a></h3>
+<p>Iterative local search with partialy-greedy 1-flip neighborhood.</p>
+<p>Command line option: <code class="code docutils literal notranslate"><span class="pre">-i</span></code></p>
+</section>
+<section id="pils">
+<h3>PILS<a class="headerlink" href="#pils" title="Link to this heading"></a></h3>
+<p>Iterative local search for binary (quadratic functions) WCSPs with greedy 1-flip neighborhood and cross-over between successive iterations exploiting problem decomposition.</p>
+<p>Command line option: <code class="code docutils literal notranslate"><span class="pre">-pils=30</span></code></p>
+</section>
+<section id="lr-bcd">
+<h3>LR-BCD<a class="headerlink" href="#lr-bcd" title="Link to this heading"></a></h3>
+<p>Command line option: <code class="code docutils literal notranslate"><span class="pre">-lrbcd</span></code></p>
+</section>
+<section id="lds">
+<h3>LDS<a class="headerlink" href="#lds" title="Link to this heading"></a></h3>
+<p><strong>L</strong>imited <strong>D</strong>iscrepancy <strong>S</strong>earch: iteratively, explore right branches first, making at most l discrepencies (right branches) along a search path.</p>
+<p>Command line option: <code class="code docutils literal notranslate"><span class="pre">-l=128</span></code></p>
+</section>
+<section id="dfs-with-restarts">
+<h3>DFS with Restarts<a class="headerlink" href="#dfs-with-restarts" title="Link to this heading"></a></h3>
+<p><strong>D</strong>epth <strong>F</strong>irst <strong>S</strong>earch with a Luby restart strategy (base = 100 bactracks) until a given limit in the number of backtracks is reached.</p>
+<p>Command line options: <code class="code docutils literal notranslate"><span class="pre">-L=10000</span></code></p>
+</section>
+<section id="udgvns">
+<h3>UDGVNS<a class="headerlink" href="#udgvns" title="Link to this heading"></a></h3>
+<p><strong>U</strong>nified <strong>D</strong>ecomposition <strong>G</strong>uided <strong>V</strong>ariable <strong>N</strong>eighborhood <strong>S</strong>earch: VNS heuristic where variables are chosen from clusters of a provided decomposition of the problem.</p>
+<p>Command line options:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">-vns</span></code> select Variable Neighborhood Search algorithm</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">-kmin</span></code> min neighborhood size</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">-kmax</span></code> max neighborhood size</p></li>
+<li><p>other options at &lt;<a class="reference external" href="https://toulbar2.github.io/toulbar2/userdoc.html#variable-neighborhood-search-algorithms">https://toulbar2.github.io/toulbar2/userdoc.html#variable-neighborhood-search-algorithms</a>&gt;</p></li>
+</ul>
+</section>
+<section id="lns">
+<h3>LNS<a class="headerlink" href="#lns" title="Link to this heading"></a></h3>
+<p>Large Neighborhood Search is obtained by running VNS with a fixed neighborhood size (<code class="code docutils literal notranslate"><span class="pre">kmin=kmax</span></code>) and replacing LDS by DFS with bounded backtrackingss.</p>
+<p>Command line option: <code class="code docutils literal notranslate"><span class="pre">-vns</span> <span class="pre">-l:</span> <span class="pre">-bt=1000</span> <span class="pre">-L=10000</span></code> (compile with MPI)</p>
+</section>
+<section id="updgvns">
+<h3>UPDGVNS<a class="headerlink" href="#updgvns" title="Link to this heading"></a></h3>
+<p>Parallel version of UDGVNS.</p>
+<p>Command line option: <code class="code docutils literal notranslate"><span class="pre">-vns</span></code> (compile with MPI)</p>
+</section>
+<section id="rpdgvsn">
+<h3>RPDGVSN<a class="headerlink" href="#rpdgvsn" title="Link to this heading"></a></h3>
+<p>Replicated Parallel Decomposition Guided Variable Neighborhood Search. (NOT MAINTAINED)</p>
+</section>
+<section id="cpdgvsn">
+<h3>CPDGVSN<a class="headerlink" href="#cpdgvsn" title="Link to this heading"></a></h3>
+<p>Cooperative Parallel Decomposition Guided Variable Neighborhood Search. (NOT MAINTAINED)</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, INRAE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+        News system by <a href="https://giscus.app">giscus</a>.
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
