@@ -9,4 +9,5 @@ __pycache__
 docs/_build
 docs/_pyvenv
 docs/source/_files
+docs/source/conf.py
 /Debug/
