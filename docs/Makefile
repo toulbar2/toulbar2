@@ -33,7 +33,6 @@ readme_latex:
 	sed -i '/PyPi version/d' $(FILESDIR)/README.md
 	sed -i '/img.shields.io/d' $(FILESDIR)/README.md
 
-
 readme_html:
 	rm -f $(FILESDIR)/README.md
 	make readme
