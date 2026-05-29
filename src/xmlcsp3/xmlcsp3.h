@@ -676,7 +676,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
         } else {
             //problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
-            problem->postAllDifferentConstraint(vars, "0");
+            problem->postAllDifferentConstraint(vars, "0 0");
         }
     }
 
@@ -782,6 +782,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 for (Value v : except) {
                     params += to_string(" ") + to_string(v);
                 }
+                params += " 0";
                 problem->postAllDifferentConstraint(vars, params);
 //            }
         }
@@ -1662,6 +1663,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
+        params += " 0";
         problem->postGlobalCardinalityConstraint(vars, params);
         if (count != (int)vars.size()) {
             for (int k = 0; k < (int)values.size(); ++k) if(occurs[k] > 0) {
@@ -1786,6 +1788,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
+        params += " 0";
         problem->postGlobalCardinalityConstraint(vars, params);
         if (countlb > 0 && countlb != (int)vars.size()) {
             for (int k = 0; k < (int)values.size(); ++k) {

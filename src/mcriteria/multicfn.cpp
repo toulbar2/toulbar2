@@ -373,6 +373,8 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             cost_func_ptr->exceptedValues.insert(mcfn_val_ind);
         }
 
+        //TODO: read delta costs
+
     } else if (cstr->isGCC()) {
 
         auto cstr_gcc = dynamic_cast<GlobalCardinalityConstraint*>(cstr);
@@ -399,6 +401,8 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             unsigned int mcfn_val_ind = var[cost_func_ptr->scope[0]].str_to_index[val_name];
             cost_func_ptr->bounds[mcfn_val_ind] = std::make_pair((Double)bound.second.first, (Double)bound.second.second);
         }
+
+        //TODO: read delta costs
 
     } else {
 
@@ -978,7 +982,7 @@ void MultiCFN::exportAllDiffCostFunction(WCSP* wcsp, unsigned int func_ind)
         Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[val_ind]));
         args += to_string(" ") + to_string(val);
     }
-
+    args += " 0";
     istringstream file(args);
     unsigned int cst_ind = wcsp->postAllDifferentConstraint(scope.data(), scope.size(), file);
 
@@ -1008,7 +1012,7 @@ void MultiCFN::exportGCCCostFunction(WCSP* wcsp, unsigned int func_ind)
         Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[bound.first]));
         args += to_string(" ") + to_string(val) + to_string(" ") + to_string((int)bound.second.first) + to_string(" ") + to_string((int)bound.second.second);
     }
-
+    args += " 0";
     istringstream file(args);
     unsigned int cst_ind = wcsp->postGlobalCardinalityConstraint(scope.data(), scope.size(), file);
 

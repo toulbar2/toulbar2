@@ -133,7 +133,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         istringstream file(arguments);
         wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false, {});
     } else if (globalname == "alldiff") {
-        istringstream file("0");
+        istringstream file("0 0");
         wcsp.postAllDifferentConstraint(scopeIndexs, arity, file);
     } else if (globalname == "gcc") {
         string arguments;
@@ -156,6 +156,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             arguments.append(" ");
             arguments.append(to_string(capa));
         }
+        arguments.append(" 0");
         istringstream file(arguments);
         wcsp.postGlobalCardinalityConstraint(scopeIndexs, arity, file);
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "salldiffkp" || globalname == "walldiff") {
