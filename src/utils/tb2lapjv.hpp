@@ -6,7 +6,6 @@
 #ifndef TB2LAPJV_HPP_
 #define TB2LAPJV_HPP_
 
-#include <bits/stdc++.h>
 #include <vector>
 #include <algorithm>
 #include <cmath>
