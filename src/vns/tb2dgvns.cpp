@@ -161,6 +161,9 @@ bool VNSSolver::solve(bool first)
             while (!complete && k <= ToulBar2::vnsKmax && bestUb > ToulBar2::vnsOptimum) {
                 // neighborhood and partial instantiation
                 set<int> neighborhood = h->getNeighborhood(k);
+                if (ToulBar2::vnsAdaptive) {
+                    k = (int)neighborhood.size();
+                }
                 if (ToulBar2::verbose >= 1) {
                     cout << "LDS " << lds << " Neighborhood " << k << ": ";
                     for (set<int>::iterator it = neighborhood.begin(); it != neighborhood.end(); it++)
@@ -207,7 +210,9 @@ bool VNSSolver::solve(bool first)
                 // updating
                 if (lastUb >= bestUb) {   // on rentre dans la branche (pas d'amélioration) .
                     if (h->incrementK()) {
-
+                        if (ToulBar2::vnsAdaptive && ToulBar2::vnsKcur > ToulBar2::vnsKmax) {
+                            break;
+                        }
                         rank++;
                         if (h->shouldResetK()) { // si true on fait la mise à jour .
                             k = ToulBar2::vnsKmin;

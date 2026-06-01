@@ -941,6 +941,8 @@ public:
     static string vnsOrderFile; ///< \brief TSP cluster ordering file (.tsp)
     static int vnsKStagnation; ///< \brief k threshold for stagnation detection in geodesic VNS (0: disabled, command line option -kstagnation)
     static double vnsTLimit; ///< \brief time limit per cluster in geodesic VNS (0: disabled, command line option -tlimit)
+    static bool vnsAdaptive; ///< \brief adaptive neighborhood size in geodesic VNS (command line option -adaptive)
+
     static VNSInc vnsKinc; ///< \brief neighborhood size increment strategy for VNS-like methods (1: Increment by 1, 2: Multiply by 2, 3: Luby operator, 4: Increment by 1 until maximum cluster size then considers all variables) (command line option -kinc)
 
     static int vnsLDScur; ///< \internal do not use (current LDS discrepancy value, used only for debugging display)
