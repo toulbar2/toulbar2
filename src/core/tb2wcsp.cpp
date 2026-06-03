@@ -616,6 +616,9 @@ void tb2reinit()
     ToulBar2::newsolution = NULL;
     ToulBar2::timeOut = NULL;
 
+    ToulBar2::DEE_ = 0;
+    ToulBar2::elimDegree_ = -1;
+
     ToulBar2::interrupted = false;
 
     WeightedCSPConstraint::MasterWeightedCSP = NULL;
