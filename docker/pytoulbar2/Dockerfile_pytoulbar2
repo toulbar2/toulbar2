@@ -23,7 +23,7 @@
 #
 ###############################################################################
 
-FROM debian:buster-slim
+FROM debian:trixie-slim
 
 RUN apt-get update -yq \
 && apt-get install git-core -y \
@@ -33,7 +33,7 @@ RUN apt-get update -yq \
 && apt-get clean -y
 
 RUN python3 -m pip install --upgrade pip \
-&& python3 -m pip install pytoulbar2
+&& python3 -m pip install pytoulbar2 --break-system-packages
 
 RUN mkdir /WORK
 
