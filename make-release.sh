@@ -18,11 +18,11 @@ if output=$(git status --porcelain) && [ -z "$output" ]; then
     ./cmake-script/genVersionFile.sh
 
     # update __init__.py version number, pytb2 would follow tb2 releases
-    sed -i "s/__version__ = .*/__version__ = \"$pytb2_ver\" # hash $(git rev-parse HEAD) /" pytoulbar2/__init__.py # pytb2 version
-    sed -i "s/__toulbar2_version__ = .*/__toulbar2_version__ = \"$ver\"/" pytoulbar2/__init__.py # tb2 version
-    sed -i "s/__wrapper_version__ = .*/__wrapper_version__ = \"0\"/" pytoulbar2/__init__.py
+    sed -i "s/__version__ = .*/__version__ = \"$pytb2_ver\" # hash $(git rev-parse HEAD) /" ./pytoulbar2/__init__.py # pytb2 version
+    sed -i "s/__toulbar2_version__ = .*/__toulbar2_version__ = \"$ver\"/" ./pytoulbar2/__init__.py # tb2 version
+    sed -i "s/__wrapper_version__ = .*/__wrapper_version__ = \"0\"/" ./pytoulbar2/__init__.py
 
-    git add /src/ToulbarVersion.hpp
+    git add ./src/ToulbarVersion.hpp
     git commit -m "[release] Added version file for release $ver"
     git tag -a $ver -m"$mes"  # debian likes numerical tags
     git tag -a v$ver -m"$mes" # github want non numerical tags
