@@ -32,8 +32,7 @@ RUN apt-get update -yq \
 && apt-get install python3-pip -y \
 && apt-get clean -y
 
-RUN python3 -m pip install --upgrade pip \
-&& python3 -m pip install pytoulbar2 --break-system-packages
+RUN python3 -m pip install pytoulbar2 --break-system-packages
 
 RUN mkdir /WORK
 
