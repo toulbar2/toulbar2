@@ -567,7 +567,7 @@ void tb2init()
 
     // (parallel) hybrid best-first search
     ToulBar2::hbfs = 1;
-    ToulBar2::hbfsGlobalLimit = 16384;
+    ToulBar2::hbfsGlobalLimit = 32768;
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;

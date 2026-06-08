@@ -22,7 +22,7 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
-const Long hbfsgloballimit = 16384;
+const Long hbfsgloballimit = 32768;
 const int raspsangle = 10;
 const Long raspsbacktracks = 1000;
 const double relativegap = 0.0001;
