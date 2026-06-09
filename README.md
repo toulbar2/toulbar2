@@ -7,8 +7,6 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/pytoulbar2?logo=python&label=pytoulbar2)](https://pypi.org/project/pytoulbar2)
 </div>
 
-<!-- ![GitHub Release](https://img.shields.io/github/v/release/toulbar2/toulbar2?label=toulbar2) -->
-
 <!-- (_README_1)= -->
 ## What is toulbar2? 
 
