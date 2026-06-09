@@ -383,7 +383,12 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
              << " | cluster aggregate=";
         for (int c = 0; c < aggregated; c++) {
             int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
-            cout << aggIdx << (c < aggregated - 1 ? ";" : "");
+            if (!ToulBar2::vnsOrderFile.empty()) {
+                cout << clusterRootWcspIdx[aggIdx];
+            } else {
+                cout << aggIdx;
+            }
+            cout << (c < aggregated - 1 ? ";" : "");
         }
         cout << endl;
     }
