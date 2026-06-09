@@ -3,7 +3,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/github/v/release/toulbar2/toulbar2?label=latest)](https://github.com/toulbar2/toulbar2/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/toulbar2/toulbar2?label=latest&color=green)](https://github.com/toulbar2/toulbar2/releases/latest)
 [![PyPI - Version](https://img.shields.io/pypi/v/pytoulbar2?logo=python&label=pytoulbar2)](https://pypi.org/project/pytoulbar2)
 </div>
 
