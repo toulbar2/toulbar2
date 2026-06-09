@@ -22,6 +22,8 @@ if output=$(git status --porcelain) && [ -z "$output" ]; then
     sed -i "s/__toulbar2_version__ = .*/__toulbar2_version__ = \"$ver\"/" ./pytoulbar2/__init__.py # tb2 version
     sed -i "s/__wrapper_version__ = .*/__wrapper_version__ = \"0\"/" ./pytoulbar2/__init__.py
     git add ./pytoulbar2/__init__.py
+    
+    sed -i "s/version=.*/version=\"$ver\", # hash $(git rev-parse HEAD) /" ./setup.py
     git add ./setup.py
 
     git commit -m "[release] Added version file for release $ver"
