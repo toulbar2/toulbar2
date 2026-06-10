@@ -465,10 +465,8 @@ bool ProteinNeighborhoodChoice::incrementK()
     }
 
     if (ToulBar2::vnsAdaptive) {
-        // agrège le cluster suivant et met à jour currentZoneSize
-        int nextIdx = (lastAggregatedCluster + 1) % (int)clusters.size();
+        // reconstruire la zone courante (sans le prochain cluster)
         set<int> newZone;
-        // reconstruire la zone courante
         int idx = currentClusterIdx;
         int aggregated = 0;
         while (aggregated <= (lastAggregatedCluster - currentClusterIdx + (int)clusters.size()) % (int)clusters.size()) {
@@ -476,8 +474,23 @@ bool ProteinNeighborhoodChoice::incrementK()
             idx = (idx + 1) % (int)clusters.size();
             aggregated++;
         }
-        // ajouter le prochain cluster
-        for (int v : clusters[nextIdx]) newZone.insert(v);
+        int sizeBeforeAdd = (int)newZone.size();
+
+        // agréger le(s) cluster(s) suivant(s) jusqu'à ce qu'au moins une variable nouvelle soit ajoutée
+        int nextIdx = (lastAggregatedCluster + 1) % (int)clusters.size();
+        int skipped = 0;
+        while (true) {
+            for (int v : clusters[nextIdx]) newZone.insert(v);
+            if ((int)newZone.size() > sizeBeforeAdd) break; // nouvelle variable trouvée
+            if (ToulBar2::showvns >= 1) {
+                cout << "[Vns geode] adaptive: cluster_idx=" << nextIdx
+                     << " brings no new variable, skipping." << endl;
+            }
+            skipped++;
+            if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable
+            nextIdx = (nextIdx + 1) % (int)clusters.size();
+        }
+
         currentZoneSize = (int)newZone.size();
         lastAggregatedCluster = nextIdx;
         needsKReset = true;
@@ -499,7 +512,8 @@ bool ProteinNeighborhoodChoice::incrementK()
         }
         if (ToulBar2::showvns >= 1) {
             cout << "[Vns geode] adaptive: zone size=" << currentZoneSize
-                 << " | last_aggregated=" << lastAggregatedCluster << endl;
+                 << " | last_aggregated=" << lastAggregatedCluster
+                 << (skipped > 0 ? " (skipped " + to_string(skipped) + " empty cluster(s))" : "") << endl;
         }
     }
     
