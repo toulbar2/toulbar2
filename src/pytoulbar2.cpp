@@ -46,7 +46,10 @@
 //  python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
 //  python3 -c "import sys; sys.path.append('.'); import random; import pytb2 as tb2; tb2.init(); m = tb2.Solver(); tb2.option.verbose = 0; tb2.option.elimDegree_preprocessing=1; tb2.check(); x=m.wcsp.makeEnumeratedVariable('x', 1, 10); y=m.wcsp.makeEnumeratedVariable('y', 1, 10); z=m.wcsp.makeEnumeratedVariable('z', 1, 10); w=m.wcsp.makeEnumeratedVariable('w', 1, 10); m.wcsp.postUnaryConstraint(x, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(y, [random.randint(0,10) for i in range(10)]); m.wcsp.postUnaryConstraint(z, [random.randint(0,10) for i in range(10)]); m.wcsp.postBinaryConstraint(x,y, [random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(x,z,[random.randint(0,10) for i in range(10) for j in range(10)]); m.wcsp.postBinaryConstraint(y,z,[random.randint(0,10) for i in range(10) for j in range(10)]); nary = m.wcsp.postNaryConstraintBegin([x,y,z,w], 10, 1); m.wcsp.postNaryConstraintTuple(nary, [1,1,1,1], 0); m.wcsp.postNaryConstraintEnd(nary); m.wcsp.sortConstraints(); res = m.solve(); print(res); print(m.wcsp.getDPrimalBound()); print(m.solution());"
 
+#include "core/tb2types.hpp"
+#include "utils/tb2system.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 
 // PYBIND11_MAKE_OPAQUE(std::vector<int>);
@@ -62,6 +65,219 @@ namespace py = pybind11;
 #include "mcriteria/bicriteria.hpp"
 
 extern void newsolution(int wcspId, void* solver);
+
+// post several unary cost functions at once
+// all variables are expected to have the same domain size
+// scopes is expected to be a 1-dimensional integer array
+// costs is expected to be a 2 dimensional array: n_variables x domain_size 
+void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental) {
+
+    /* Request a buffer descriptor from Python */
+    py::buffer_info scopes_info = scopes.request();
+    py::buffer_info costs_info = costs.request();
+
+    // check scope size
+    std::cout << "scopes ndim: " << scopes_info.ndim <<", " <<  scopes_info.format << std::endl;
+    if(scopes_info.ndim != 1 || (scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l")) {
+        std::cerr << "Error, scopes must be provided as a 1-dimensional vector of integer indices!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    // check costs data types
+    if(costs_info.ndim != 2 || (costs_info.format != "f" && costs_info.format != "d")) {
+        // error, costs must be floating point values
+        std::cerr << "error, costs must be a 2-dimensional floating point vector!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    // check consistency between costs sizes and scopes sizes
+    if(costs_info.shape[0] != scopes_info.shape[0]) {
+        // error, costs must be floating point values
+        std::cerr << "error, costs must be floating point values!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    // temp copy of the scope for ease of use
+    std::vector<int> unary_scopes(scopes_info.shape[0]);
+
+    // read the scopes
+    size_t stride = scopes_info.strides[0]/scopes_info.itemsize;
+    switch(scopes_info.itemsize) {
+        case 1: {
+            uint8_t* temp_ptr8 = static_cast<uint8_t*>(scopes_info.ptr);
+            for(int i = 0; i < scopes_info.shape[0]; i ++) {
+                unary_scopes[i] = temp_ptr8[i*stride]; 
+            } }
+            break;
+        case 2: {
+            uint16_t* temp_ptr16 = static_cast<uint16_t*>(scopes_info.ptr);
+            for(int i = 0; i < scopes_info.shape[0]; i ++) {
+                unary_scopes[i] = temp_ptr16[i*stride]; 
+            } }
+            break;
+        case 4: {
+            uint32_t* temp_ptr32 = static_cast<uint32_t*>(scopes_info.ptr);
+            for(int i = 0; i < scopes_info.shape[0]; i ++) {
+                unary_scopes[i] = temp_ptr32[i*stride]; 
+            } }
+            break;
+        case 8: {
+            uint64_t* temp_ptr64 = static_cast<uint64_t*>(scopes_info.ptr);
+            for(int i = 0; i < scopes_info.shape[0]; i ++) {
+                unary_scopes[i] = temp_ptr64[i*stride]; 
+            } }
+            break;
+        default:
+            std::cerr << "error, unsupported data types for scopes!" << std::endl;
+            throw BadConfiguration();
+            break;
+    }
+
+    // read the costs and create the cost functions
+    size_t s1 = costs_info.strides[0]/costs_info.itemsize; // var ind
+    size_t s2 = costs_info.strides[1]/costs_info.itemsize; // val ind
+    if(costs_info.itemsize == sizeof(double)) {
+        double* temp_ptr = static_cast<double*>(costs_info.ptr);    
+        vector<Double> costs(costs_info.shape[1]);
+        for(int i = 0; i < costs_info.shape[0]; i ++) {
+            for(int j = 0; j < costs_info.shape[1]; j ++) {
+                costs[j] = temp_ptr[i*s1+j*s2];
+            }
+            s.postUnaryConstraint(unary_scopes[i], costs, incremental);
+        }
+    } else if(costs_info.itemsize == sizeof(float)) {
+        double* temp_ptr = static_cast<double*>(costs_info.ptr);    
+        vector<Double> costs(costs_info.shape[1]);
+        for(int i = 0; i < costs_info.shape[0]; i ++) {
+            for(int j = 0; j < costs_info.shape[1]; j ++) {
+                costs[j] = temp_ptr[i*s1+j*s2];
+            }
+            s.postUnaryConstraint(unary_scopes[i], costs, incremental);
+        }
+    } else { // unsupported
+        std::cerr << "error, costs must be float or double!" << std::endl;
+        throw BadConfiguration();
+    }
+
+}
+
+// post several ternary cost functions with the same costs tensor
+int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)  {
+
+    // scope indices
+    int xIndex, yIndex, zIndex;
+
+    int result = -1;
+
+    // costs
+    vector<Double> ternary_costs;
+
+    /* Request a buffer descriptor from Python */
+    py::buffer_info scopes_info = scopes.request();
+    py::buffer_info costs_info = costs.request();
+
+    // check scope size
+    if(scopes_info.ndim != 2 || scopes_info.shape[1] != 3) {
+        std::cerr << "Error, must provide a list of scopes with size 3!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    // check scopes data type
+    if(scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l") {
+        std::cerr << "error, scopes must be integers values!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    if(costs_info.ndim != 3 || (costs_info.format != "f" && costs_info.format != "d")) {
+        // error, costs must be floating point values
+        std::cerr << "error, costs must be a 3x3x3 tensor of floating point values!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    ternary_costs.resize(costs_info.shape[0]*costs_info.shape[1]*costs_info.shape[2]);
+
+    // read the costs
+    size_t s1 = costs_info.strides[0]/costs_info.itemsize;
+    size_t s2 = costs_info.strides[1]/costs_info.itemsize;
+    size_t s3 = costs_info.strides[2]/costs_info.itemsize;
+    if(costs_info.itemsize == sizeof(double)) {
+        double* temp_ptr = static_cast<double*>(costs_info.ptr);    
+        size_t cost_ind = 0;
+        for(int i = 0; i < costs_info.shape[0]; i ++) {
+            for(int j = 0; j < costs_info.shape[1]; j ++) {
+                for(int k = 0; k < costs_info.shape[2]; k ++) {
+                    ternary_costs[cost_ind] = temp_ptr[i*s1+j*s2+k*s3];
+                    cost_ind ++;
+                }
+            }
+        }
+    } else if(costs_info.itemsize == sizeof(float)) {
+        float* temp_ptr = static_cast<float*>(costs_info.ptr);
+        size_t cost_ind = 0;
+        for(int i = 0; i < costs_info.shape[0]; i ++) {
+            for(int j = 0; j < costs_info.shape[1]; j ++) {
+                for(int k = 0; k < costs_info.shape[2]; k ++) {
+                    ternary_costs[cost_ind] = temp_ptr[i*s1+j*s2+k*s3];
+                    cost_ind ++;
+                }
+            }
+        }
+    } else { // unsupported
+        std::cerr << "error, costs must be float or double!" << std::endl;
+        throw BadConfiguration();
+    }
+
+    // read the scopes and create the cost functions
+    size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
+    size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
+    switch(scopes_info.itemsize) {
+        case 1: {
+            uint8_t* temp_ptr8 = static_cast<uint8_t*>(scopes_info.ptr);
+            result = s.postTernaryConstraint(temp_ptr8[0], temp_ptr8[ss2], temp_ptr8[ss2*2], ternary_costs, incremental);
+            for(int i = 1; i < scopes_info.shape[0]; i ++) {
+                xIndex = temp_ptr8[i*ss1];
+                yIndex = temp_ptr8[i*ss1+ss2];
+                zIndex = temp_ptr8[i*ss1+ss2*2];
+                s.postTernaryConstraint(xIndex, yIndex, zIndex, ternary_costs, incremental);
+            } }
+            break;
+        case 2: {
+            uint16_t* temp_ptr16 = static_cast<uint16_t*>(scopes_info.ptr);
+            result = s.postTernaryConstraint(temp_ptr16[0], temp_ptr16[ss2], temp_ptr16[ss2*2], ternary_costs, incremental);
+            for(int i = 1; i < scopes_info.shape[0]; i ++) {
+                xIndex = temp_ptr16[i*ss1];
+                yIndex = temp_ptr16[i*ss1+ss2];
+                zIndex = temp_ptr16[i*ss1+ss2*2];
+                s.postTernaryConstraint(xIndex, yIndex, zIndex, ternary_costs, incremental);
+            } }
+            break;
+        case 4: {
+            uint32_t* temp_ptr32 = static_cast<uint32_t*>(scopes_info.ptr);
+            result = s.postTernaryConstraint(temp_ptr32[0], temp_ptr32[ss2], temp_ptr32[ss2*2], ternary_costs, incremental);
+            for(int i = 1; i < scopes_info.shape[0]; i ++) {
+                xIndex = temp_ptr32[i*ss1];
+                yIndex = temp_ptr32[i*ss1+ss2];
+                zIndex = temp_ptr32[i*ss1+ss2*2];
+                s.postTernaryConstraint(xIndex, yIndex, zIndex, ternary_costs, incremental);
+            } }
+            break;
+        case 8: {
+            uint64_t* temp_ptr64 = static_cast<uint64_t*>(scopes_info.ptr);
+            result = s.postTernaryConstraint(temp_ptr64[0], temp_ptr64[ss2], temp_ptr64[ss2*2], ternary_costs, incremental);
+            for(int i = 1; i < scopes_info.shape[0]; i ++) {
+                xIndex = temp_ptr64[i*ss1];
+                yIndex = temp_ptr64[i*ss1+ss2];
+                zIndex = temp_ptr64[i*ss1+ss2*2];
+                s.postTernaryConstraint(xIndex, yIndex, zIndex, ternary_costs, incremental);
+            } }
+            break;
+        default:
+            std::cerr << "error, unsupported data types for scopes!" << std::endl;
+            throw BadConfiguration();
+            break;
+    }
+    return result; // return index of the first added cost function
+}
 
 PYBIND11_MODULE(pytb2, m)
 {
@@ -458,6 +674,17 @@ PYBIND11_MODULE(pytb2, m)
                 return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
+
+        // vectorize functions, numpy-compatible
+        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
+                s.postUnaryConstraint(xIndex, costs, incremental);
+            },
+            py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
+
+        .def("postUnaryVecConstraints", postUnaryVecConstraints, py::arg("scopes"), py::arg("costs"), py::arg("incremental") = false)
+
+        .def("postTernaryVecConstraints", postTernaryVecConstraints, py::arg("scopes"), py::arg("costs"), py::arg("incremental") = false)
+
         .def(
             "postNaryConstraintBegin", [](WeightedCSP& s, vector<int> scope, Cost defval, Long nbtuples, bool forcenary) {
                 return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
