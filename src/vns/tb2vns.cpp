@@ -482,9 +482,8 @@ bool ProteinNeighborhoodChoice::incrementK()
         while (true) {
             for (int v : clusters[nextIdx]) newZone.insert(v);
             if ((int)newZone.size() > sizeBeforeAdd) break; // nouvelle variable trouvée
-            if (ToulBar2::showvns >= 1) {
-                cout << "[Vns geode] adaptive: cluster_idx=" << nextIdx
-                     << " brings no new variable, skipping." << endl;
+            if (ToulBar2::showvns >= 2) {
+                cout << "[Vns geode] No new variable detected in the added cluster " << nextIdx << "." << endl;
             }
             skipped++;
             if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable
@@ -511,10 +510,21 @@ bool ProteinNeighborhoodChoice::incrementK()
             return true;
         }
         if (ToulBar2::showvns >= 1) {
+            int total = (lastAggregatedCluster - currentClusterIdx + (int)clusters.size()) % (int)clusters.size() + 1;
             cout << "[Vns geode] adaptive: zone size=" << currentZoneSize
-                 << " | last_aggregated=" << lastAggregatedCluster
-                 << (skipped > 0 ? " (skipped " + to_string(skipped) + " empty cluster(s))" : "") << endl;
+                 << " | clusters aggregated: ";
+            for (int c = 0; c < total; c++) {
+                int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
+                if (!ToulBar2::vnsOrderFile.empty()) {
+                    cout << clusterRootWcspIdx[aggIdx];
+                } else {
+                    cout << aggIdx;
+                }
+                cout << (c < total - 1 ? ";" : "");
+            }
+            cout << endl;
         }
+
     }
     
 
