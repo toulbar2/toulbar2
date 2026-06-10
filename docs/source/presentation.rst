@@ -16,12 +16,15 @@ toulbar2 won several medals in competitions on Max-CSP/COP (`CPAI08 <http://www.
 
 toulbar2 is now also able to collaborate with ML code that can learn an additive graphical model (with constraints) from data (see example at `cfn-learn <https://forgemia.inra.fr/thomas.schiex/cfn-learn>`_).
 
-News 📣
-=======
+.. only:: html
 
-.. include:: news/news_home.rst
+  News 📣
+  =======
+
+  .. include:: news/news_home.rst
 
 .. _authors:
+
 
 Authors
 =======
