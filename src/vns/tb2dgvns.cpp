@@ -191,6 +191,7 @@ bool VNSSolver::solve(bool first)
                 
                 
                 double timeBeforeRepair = cpuTime();
+                Long btBefore = getNbBacktracks();
                 if (ToulBar2::lds)
                     complete = repair_recursiveSolve(lds, variables, values, bestUb);
                 else
@@ -204,6 +205,7 @@ bool VNSSolver::solve(bool first)
                         << " lds=" << lds
                         << " time=" << std::fixed << std::setprecision(3)
                         << (cpuTime() - timeBeforeRepair) << "s"
+                        << " bt=" << (getNbBacktracks() - btBefore)
                         << endl;
                 }
 
