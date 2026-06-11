@@ -66,6 +66,17 @@ namespace py = pybind11;
 
 extern void newsolution(int wcspId, void* solver);
 
+// create n enumerated variables
+// var names are formed from base_name plus an index
+// return the index of the first variable created
+int makeEnumeratedVariableVec(WeightedCSP& s, int n, std::string base_name, Value iinf, Value isup) {
+    int result = s.makeEnumeratedVariable(base_name+"_0", iinf, isup);
+    for(size_t ind = 1; ind < n; ind ++) {
+        s.makeEnumeratedVariable(base_name+"_"+to_string(ind), iinf, isup);
+    }
+    return result;
+}
+
 // post several unary cost functions at once
 // all variables are expected to have the same domain size
 // scopes is expected to be a 1-dimensional integer array
@@ -77,7 +88,6 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    std::cout << "scopes ndim: " << scopes_info.ndim <<", " <<  scopes_info.format << std::endl;
     if(scopes_info.ndim != 1 || (scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l")) {
         std::cerr << "Error, scopes must be provided as a 1-dimensional vector of integer indices!" << std::endl;
         throw BadConfiguration();
@@ -674,16 +684,17 @@ PYBIND11_MODULE(pytb2, m)
                 return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
-
-        // vectorize functions, numpy-compatible
         .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
                 s.postUnaryConstraint(xIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
 
+        // vectorize functions, numpy-compatible
         .def("postUnaryVecConstraints", postUnaryVecConstraints, py::arg("scopes"), py::arg("costs"), py::arg("incremental") = false)
 
         .def("postTernaryVecConstraints", postTernaryVecConstraints, py::arg("scopes"), py::arg("costs"), py::arg("incremental") = false)
+
+        .def("makeEnumeratedVariableVec", makeEnumeratedVariableVec, py::arg("n"), py::arg("base_name"), py::arg("iinf"), py::arg("isup"))
 
         .def(
             "postNaryConstraintBegin", [](WeightedCSP& s, vector<int> scope, Cost defval, Long nbtuples, bool forcenary) {

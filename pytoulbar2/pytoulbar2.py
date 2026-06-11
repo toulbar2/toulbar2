@@ -149,7 +149,7 @@ class CFN:
             for vn in values:
                 self.CFN.wcsp.addValueName(vIdx, vn)
         else:
-                raise RuntimeError("Incorrect domain:"+str(values))
+            raise RuntimeError("Incorrect domain:"+str(values))
         self.VariableIndices[name] = vIdx
         self.VariableNames.append(name)
         return vIdx
