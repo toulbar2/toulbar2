@@ -129,7 +129,7 @@ class CFN:
             Index of the created variable in the problem (int).
             
         Note:
-            Symbolic values are implicitely associated to integer values (starting from zero) in the other functions.
+            Symbolic values are implicitly associated to integer values (starting from zero) in the other functions.
             In case of numerical values, the initial domain size is equal to max(values)-min(values)+1 and not equal to len(values).
             Otherwise (symbolic case), the initial domain size is equal to len(values).
 
@@ -149,7 +149,7 @@ class CFN:
             for vn in values:
                 self.CFN.wcsp.addValueName(vIdx, vn)
         else:
-                raise RuntimeError("Incorrect domain:"+str(values))
+            raise RuntimeError("Incorrect domain:"+str(values))
         self.VariableIndices[name] = vIdx
         self.VariableNames.append(name)
         return vIdx
