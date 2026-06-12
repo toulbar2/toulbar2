@@ -122,6 +122,8 @@ private:
     void buildClusters(int radius);
     int lastAggregatedCluster;
     int currentZoneSize;
+    set<int> visitedClusters;
+
     void getDirectNeighbors(int varIdx, set<int>& neighbors) const;
 
 public:
