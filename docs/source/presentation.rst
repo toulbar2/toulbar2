@@ -6,8 +6,6 @@ Presentation
 
 .. _about_toulbar2:
 
-.. include:: news/news_home.rst
-
 **toulbar2** is an open-source C++ solver for cost function networks. It solves various combinatorial optimization problems.
 
 The constraints and objective function are factorized in local functions on discrete variables. Each function returns a cost (a finite positive integer) for any assignment of its variables. Constraints are represented as functions with costs in {0, :math:`\infty`} where :math:`\infty` is a large integer representing forbidden assignments. toulbar2 looks for a non-forbidden assignment of all variables that minimizes the sum of all functions.
@@ -18,7 +16,15 @@ toulbar2 won several medals in competitions on Max-CSP/COP (`CPAI08 <http://www.
 
 toulbar2 is now also able to collaborate with ML code that can learn an additive graphical model (with constraints) from data (see example at `cfn-learn <https://forgemia.inra.fr/thomas.schiex/cfn-learn>`_).
 
+.. only:: html
+
+  News 📣
+  =======
+
+  .. include:: news/news_home.rst
+
 .. _authors:
+
 
 Authors
 =======
