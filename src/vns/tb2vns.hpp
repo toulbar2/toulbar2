@@ -107,7 +107,7 @@ public:
 // - Amélioration trouvée → init() est rappelée → on revient au cluster racine du cycle.
 class ProteinNeighborhoodChoice : public NeighborhoodStructure {
 private:
-    vector<vector<int>> clusters;       // clusters[i] = boule géodésique du i-ème cluster (compact)
+    vector<vector<int>> clusters;       // clusters[i] = boule géodésique du i-ème cluster .
     vector<int> clusterRootWcspIdx;     // clusterRootWcspIdx[i] = indice WCSP de la racine du i-ème cluster
     int currentClusterIdx;               // indice dans le vecteur compact (0 à clusters.size()-1)
     bool needsKReset;

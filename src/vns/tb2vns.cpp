@@ -268,9 +268,14 @@ void ProteinNeighborhoodChoice::printBilan()
 
 void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 {
+
+    // Nota Bene : init est appelé pour construire les clusters et intervenir à chaque amélioration .
     this->wcsp = wcsp_;
     this->l = l_;
-
+    
+    // les clusters sont construis qu'une seule fois .
+    // on rentre ici lorsque le moteur a trouvé une amélioration (h->init(wcsp, this)) .
+    // on va donc repartir du cluster racine du cycle, car on n'a pas modifié currentClusterIdx .
     if (clustersBuilt) {
         needsKReset = false;
         cycleComplete = false;
@@ -323,17 +328,29 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
              << " max_size=" << maxSize << " (cluster_idx=" << maxClusterIdx << ", var=" << clusterRootWcspIdx[maxClusterIdx] << ")"
              << " | radius=" << ToulBar2::vnsGeode
              << " | reverse=" << (ToulBar2::vnsReverseOrder ? "true" : "false") << endl;
-        cout << "[Vns geode] Start: cluster=0 (var=" << clusterRootWcspIdx[0] << ")" << endl;
     }
 
-    currentClusterIdx = 0;
+    if (!ToulBar2::vnsOrderFile.empty()) {
+        currentClusterIdx = maxClusterIdx;
+    } else {
+        currentClusterIdx = 0;
+    }
+
+    if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
+        cout << "[Vns geode] Start: cluster=" << currentClusterIdx
+             << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")";
+        if (!ToulBar2::vnsOrderFile.empty()) cout << " [TSP mode: largest first]";
+        else cout << " [Natural mode]";
+        cout << endl;
+    }
+
     needsKReset = false;
     cycleComplete = false;
     nbVisitedClusters = 0;
     timeOnBestCluster = 0.0;
     clusterEntryTime = cpuTime();
     if (ToulBar2::vnsAdaptive) {
-        currentZoneSize = (int)clusters[0].size();
+        currentZoneSize = (int)clusters[currentClusterIdx].size();
     }
 
     if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
@@ -430,6 +447,9 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, 
 
 bool ProteinNeighborhoodChoice::incrementK()
 {
+    // Nota Bene : 
+    // on rentre ici lorsque le moteur n'a pas trouvé d'amélioration h->incrementK().
+    // currentClusterIdx avance au cluster suivant
     double timeSpent = cpuTime() - lastRepairTime;
 
     if (ToulBar2::vnsTLimit > 0 && timeSpent >= ToulBar2::vnsTLimit) {
@@ -494,15 +514,15 @@ bool ProteinNeighborhoodChoice::incrementK()
 
         // agréger le(s) cluster(s) suivant(s) jusqu'à ce qu'au moins une variable nouvelle soit ajoutée
         int nextIdx = (lastAggregatedCluster + 1) % (int)clusters.size();
-        int skipped = 0;
+        
         while (true) {
             for (int v : clusters[nextIdx]) newZone.insert(v);
             if ((int)newZone.size() > sizeBeforeAdd) break; // nouvelle variable trouvée
             if (ToulBar2::showvns >= 2) {
                 cout << "[Vns geode] No new variable detected in the added cluster " << nextIdx << "." << endl;
             }
-            skipped++;
-            if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable
+            
+            if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable pour éviter la boucle infinie .
             nextIdx = (nextIdx + 1) % (int)clusters.size();
         }
 
@@ -530,11 +550,12 @@ bool ProteinNeighborhoodChoice::incrementK()
             cout << "[Vns geode] adaptive: zone size=" << currentZoneSize
                  << " | clusters aggregated: ";
             for (int c = 0; c < total; c++) {
+                // aggIdx (index agrégé) va convertire la position relative en index réel avec le modulo pour gérer le cas circulaire.
                 int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
                 if (!ToulBar2::vnsOrderFile.empty()) {
-                    cout << clusterRootWcspIdx[aggIdx];
+                    cout << clusterRootWcspIdx[aggIdx]; // mode TSP .
                 } else {
-                    cout << aggIdx;
+                    cout << aggIdx; // mode naturel .
                 }
                 cout << (c < total - 1 ? ";" : "");
             }
@@ -597,8 +618,8 @@ bool ProteinNeighborhoodChoice::shouldResetK()
 
 void ProteinNeighborhoodChoice::buildClusters(int radius)
 {
+    // Nota Bene : construction des clusters .
     // BFS depuis chaque variable non-affectée, jusqu'à profondeur "radius".
-    // CHOIX B (vecteur compact) :
     // - clusters[i] = boule géodésique du i-ème cluster non vide
     // - clusterRootWcspIdx[i] = indice WCSP de la variable racine
     clusters.clear();
@@ -609,8 +630,8 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
             continue;  // on saute les variables affectées
 
         set<int> ball;
-        queue<pair<int, int>> bfsQueue;
-        ball.insert(i);
+        queue<pair<int, int>> bfsQueue; // file d'attente ou chaque element est une paire (variable,profondeur) indiquant à quelle distance elle se trouve de la racine .
+        ball.insert(i); // on demare avec la variable racine i
         bfsQueue.push(make_pair((int)i, 0));
         set<int> neighbors;
         while (!bfsQueue.empty()) {
@@ -618,7 +639,7 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
             int depth = bfsQueue.front().second;
             bfsQueue.pop();
             if (depth >= radius)
-                continue;
+                continue; // si on a atteint la profondeur demandée, on ne quitte pas de la boucle, on passe au suivant dans la file .
 
             getDirectNeighbors(currVar, neighbors);
             for (int n : neighbors) {
@@ -637,6 +658,7 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
 
     if (ToulBar2::vnsOrderFile != "") {
         ifstream file(ToulBar2::vnsOrderFile.c_str());
+        // file est vrai si le fichier est ouvert correctement .
         if (!file) {
             cerr << "Error: Cannot open TSP file: " << ToulBar2::vnsOrderFile << endl;
             exit(EXIT_FAILURE);
