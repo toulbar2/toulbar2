@@ -10,8 +10,21 @@ class Var:
 def Variable(lb, ub, name):
     return Var(model.AddVariable(name, range(lb, ub+1)))
     
+def VariableInDomain(dom, name):
+    lb = min(dom)
+    ub = max(dom)
+    x = Var(model.AddVariable(name, range(lb, ub+1)))
+    set_in(x, dom)
+    return x
+    
 def Boolean():
     return Variable(0, 1, 'BOOL__' + str(model.GetNbVars()) + '__')
+
+def VarArrayBoolean(nb, name):
+    l = []
+    for i in range(nb):
+        l.append(Variable(0, 1, name + '_' + str(i) + '_'))
+    return l
 
 def VarArray(nb, lb, ub, name):
     l = []
@@ -62,16 +75,17 @@ def array_bool_xor(x):
 
 def array_int_element(x, y, z):
     int_le(1,x)
-    int_le(x,len(y))   
-    for e in y:
-        u = u | set([e] if type(e) is int else model.Domain(e.ind))
-    set_in(z, u)
+    int_le(x,len(y))
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
+    u = set([])  
+    for e in y:
+        u = u | set([e] if type(e) is int else model.Domain(e.ind))
+    set_in(z, u)        
     for i, e in enumerate(y):
         if type(e) is int:
             e = Constant(e)
@@ -499,15 +513,40 @@ def Maximize(x):
     if type(x) is Var:
         model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
 
+#-----------------------------------------
 # Specific global constraints for toulbar2
+#-----------------------------------------
 
-def all_different_int(x):
+def fzn_all_different_int(x):
     if len(x) >= 2:  # Some models specified alldiff on 1 variable
         model.AddAllDifferent(scope(x))  # [Variable(e,e,str(e)) if type(e) is int else e for e in x])
+        
+def fzn_global_cardinality(x, values, counts):
+    assert(len(values) == len(counts))
+    l = []
+    for j in range(len(values)):
+        if type(counts[j]) is Var:
+            if len(model.Domain(counts[j].ind)) > 1:
+                model.AddGeneralizedLinearConstraint([[scope(x[i]), values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
+            else:
+                l.append((values[j], model.Domain(counts[j].ind)[0], model.Domain(counts[j].ind)[0]))
+        else:
+            l.append((values[j], counts[j], counts[j]))
+    if len(l) > 0:
+        model.AddGlobalCardinalityConstraint(scope(x), l)
+        
+def fzn_global_cardinality_closed(x, values, counts):
+    assert(len(values) == len(counts))
+    for i in range(len(x)):
+        set_in(x[i], values)
+    fzn_global_cardinality(x, values, counts)
 
-def table_int(x,t):
-    model.AddCompactFunction(scope(x), model.Top, [list(e) for e in t], [0]*len(t)) # x in t
+def fzn_table_int(x,t):
+    n = len(x)
+    assert(len(t) % n == 0)
+    nbtuples = len(t) // n
+    model.AddCompactFunction(scope(x), model.Top, [[t[i+j] for j in range(n)] for i in range(0,nbtuples,n)], [0]*nbtuples) # x in t
     
-def table_bool(x,t):
-    table_int(x, t)
+def fzn_table_bool(x,t):
+    fzn_table_int(x, t)
 

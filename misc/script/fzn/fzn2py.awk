@@ -85,7 +85,7 @@ parameter {
 /^var {[-]*[0-9]+(,[-]*[0-9]+)*}:/{
 	sub("{","[",$2);
 	sub("}:","]",$2);
-	print "    " $3 " = Variable(" $2 ",'" $3 "')";
+	print "    " $3 " = VariableInDomain(" $2 ",'" $3 "')";
 	if (match($0,"::_output_")) output[$3] = 1;
 	if ($4 == "=") print "    int_eq(" $3 " , " $5 ")";
 }
@@ -109,7 +109,7 @@ parameter {
 		exit(2);
 	}
 	name = $6;
-	print "    " name " = VarArray(" isup ",'" name "')";
+	print "    " name " = VarArrayBoolean(" isup ",'" name "')";
 	if (match($0,"::_output_")) {
 		output[ name ] = isup;
 		outputstring[ name ] = substr($0, RSTART+RLENGTH);
@@ -216,7 +216,7 @@ parameter {
 	sub("{","[",$5);
 	sub("}:","]",$5);
 	name = $6;
-	print "    " name " = [Variable(" $5 ",'" name "_" i "') for i in range(" isup ")]";
+	print "    " name " = [VariableInDomain(" $5 ",'" name "_" i "') for i in range(" isup ")]";
 	if (match($0,"::_output_")) {
 		output[ name ] = isup;
 		outputstring[ name ] = substr($0, RSTART+RLENGTH);
