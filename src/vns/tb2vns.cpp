@@ -335,6 +335,8 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     } else {
         currentClusterIdx = 0;
     }
+    startClusterIdx = currentClusterIdx;
+
 
     if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
         cout << "[Vns geode] Start: cluster=" << currentClusterIdx
@@ -532,19 +534,24 @@ bool ProteinNeighborhoodChoice::incrementK()
 
         if (nextIdx == currentClusterIdx) {
             if (ToulBar2::showvns >= 1) {
-                cout << "[Vns geode] Full topological cycle completed. Increasing LDS." << endl;
+                cout << "[Vns geode] Full topological cycle completed. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
             }
+            currentClusterIdx = startClusterIdx;
+            lastAggregatedCluster = startClusterIdx;
             ToulBar2::vnsKcur = ToulBar2::vnsKmax + 1;
             needsKReset = false;
             return true;
         } else if ((int)newZone.size() >= ToulBar2::vnsKmax) {
             if (ToulBar2::showvns >= 1) {
-                cout << "[Vns geode] Zone size reached kmax. Increasing LDS." << endl;
+                cout << "[Vns geode] Zone size reached kmax. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
             }
+            currentClusterIdx = startClusterIdx;
+            lastAggregatedCluster = startClusterIdx;
             ToulBar2::vnsKcur = ToulBar2::vnsKmax + 1;
             needsKReset = false;
             return true;
         }
+
         if (ToulBar2::showvns >= 1) {
             int total = (lastAggregatedCluster - currentClusterIdx + (int)clusters.size()) % (int)clusters.size() + 1;
             cout << "[Vns geode] adaptive: zone size=" << currentZoneSize
