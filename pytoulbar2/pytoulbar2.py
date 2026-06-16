@@ -225,7 +225,7 @@ class CFN:
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
             defcost (decimal cost): default cost.
-            tuples (list): array of assignments (each assignment is a list of domain values, following the scope order).
+            tuples (list): array of assignments (each assignment is a list of domain values, following the scope order) (warning: assignments with domain values outside initial domains are ignored).
             tcosts (list): array of corresponding decimal costs (tcosts and tuples have the same size).
             incremental (bool): if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).  
 
@@ -257,29 +257,61 @@ class CFN:
             return
         assert(len(iscope) >= 1)
         if (len(iscope) == 1):
-            costs = [defcost] * self.CFN.wcsp.getDomainInitSize(iscope[0])
+            sizex = self.CFN.wcsp.getDomainInitSize(iscope[0])
+            costs = [defcost] * sizex
             for i, tuple in enumerate(tuples):
-                costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0])] = tcosts[i]
+                idx = self.CFN.wcsp.toIndex(iscope[0], tuple[0])
+                if idx < 0 or idx >= sizex:
+                    continue
+                costs[idx] = tcosts[i]
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
         elif (len(iscope) == 2):
-            costs = [defcost] * (self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]))
+            sizex = self.CFN.wcsp.getDomainInitSize(iscope[0])
+            sizey = self.CFN.wcsp.getDomainInitSize(iscope[1])
+            costs = [defcost] * (sizex * sizey)
             for i, tuple in enumerate(tuples):
-                costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) + self.CFN.wcsp.toIndex(iscope[1], tuple[1])] = tcosts[i]
+                idx = self.CFN.wcsp.toIndex(iscope[0], tuple[0])
+                if idx < 0 or idx >= sizex:
+                    continue
+                idy = self.CFN.wcsp.toIndex(iscope[1], tuple[1])
+                if idy < 0 or idy >= sizey:
+                    continue
+                costs[idx * sizey + idy] = tcosts[i]
             self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, incremental)
         elif (len(iscope) == 3):
-            costs = [defcost] * (self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]))
+            sizex = self.CFN.wcsp.getDomainInitSize(iscope[0])
+            sizey = self.CFN.wcsp.getDomainInitSize(iscope[1])
+            sizez = self.CFN.wcsp.getDomainInitSize(iscope[2])
+            costs = [defcost] * (sizex * sizey * sizez)
             for i, tuple in enumerate(tuples):
-                costs[self.CFN.wcsp.toIndex(iscope[0], tuple[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]) + self.CFN.wcsp.toIndex(iscope[1], tuple[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]) + self.CFN.wcsp.toIndex(iscope[2], tuple[2])] = tcosts[i]
+                idx = self.CFN.wcsp.toIndex(iscope[0], tuple[0])
+                if idx < 0 or idx >= sizex:
+                    continue
+                idy = self.CFN.wcsp.toIndex(iscope[1], tuple[1])
+                if idy < 0 or idy >= sizey:
+                    continue
+                idz = self.CFN.wcsp.toIndex(iscope[2], tuple[2])
+                if idz < 0 or idz >= sizez:
+                    continue
+                costs[idx * sizey * sizez + idy * sizez + idz] = tcosts[i]
             self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, incremental)
         else:
             if incremental:
                 raise NameError('Sorry, incremental ' + str(len(iscope)) + '-arity cost functions not implemented yet in toulbar2.')
             
             self.CFN.wcsp.postNullaryConstraint(mincost)
-            idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, tb2.MAX_COST if isinf(defcost) else int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
+            idnary = self.CFN.wcsp.postNaryConstraintBegin(iscope, tb2.MAX_COST if isinf(defcost) else int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
-                self.CFN.wcsp.postNaryConstraintTuple(idx, [self.CFN.wcsp.toValue(iscope[x], self.CFN.wcsp.toIndex(iscope[x], v)) for x,v in enumerate(tuple)], tb2.MAX_COST if isinf(tcosts[i]) else int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
-            self.CFN.wcsp.postNaryConstraintEnd(idx)
+                _tuple_ = []
+                for x,v in enumerate(tuple):
+                    idx = self.CFN.wcsp.toIndex(iscope[x], v)
+                    if idx < 0 or idx >= self.CFN.wcsp.getDomainInitSize(iscope[x]):
+                        break
+                    _tuple_.append(self.CFN.wcsp.toValue(iscope[x], idx))
+                if len(_tuple_) != len(iscope):
+                    continue
+                self.CFN.wcsp.postNaryConstraintTuple(idnary, _tuple_, tb2.MAX_COST if isinf(tcosts[i]) else int((tcosts[i] - mincost) * 10 ** tb2.option.decimalPoint))
+            self.CFN.wcsp.postNaryConstraintEnd(idnary)
         
     def AddLinearConstraint(self, coefs, scope, operand = '==', rightcoef = 0):
         """AddLinearConstraint creates a linear constraint with integer coefficients.
