@@ -550,3 +550,16 @@ def fzn_table_int(x,t):
 def fzn_table_bool(x,t):
     fzn_table_int(x, t)
 
+def fzn_regular(x, Q, S, d, q0, F):
+    parameters = [Q+1, 1, q0, 0, len(F)]
+    for e in F:
+        parameters.append(e)
+        parameters.append(0)
+    parameters.append(len(d))
+    for i in range(Q):
+        for j in range(S):
+            parameters.append(i)
+            parameters.append(j)
+            parameters.append(d[i*S+j])
+    model.AddGlobalFunction(scope(x), 'wregular', parameters)
+

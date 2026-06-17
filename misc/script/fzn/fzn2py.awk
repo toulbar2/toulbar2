@@ -96,6 +96,7 @@ parameter {
 	sub(",1[+]",",",$2);
 	iinf = $2;
 	sub(",.*","",iinf);
+	iinf=int(iinf);
 	if (iinf != 1) {
 		print "ERROR ASSUMING MINIMUM INDEX VALUE EQUAL TO ONE IN ARRAY DEFINITION",$0;
 		error = 1;
@@ -103,6 +104,7 @@ parameter {
 	}
 	isup = $2;
 	sub(".*,","",isup);
+	isup=int(isup);
 	if (isup < iinf) {
 		print "ERROR WRONG RANGE INDEX VALUE IN ARRAY DEFINITION",$0;
 		error = 2;
@@ -130,6 +132,7 @@ parameter {
 	sub(",1[+]",",",$2);
 	iinf = $2;
 	sub(",.*","",iinf);
+	iinf=int(iinf);
 	if (iinf != 1) {
 		print "ERROR ASSUMING MINIMUM INDEX VALUE EQUAL TO ONE IN ARRAY DEFINITION",$0;
 		error = 1;
@@ -137,6 +140,7 @@ parameter {
 	}
 	isup = $2;
 	sub(".*,","",isup);
+	isup=int(isup);
 	if (isup < iinf) {
 		print "ERROR WRONG RANGE INDEX VALUE IN ARRAY DEFINITION",$0;
 		error = 2;
@@ -164,6 +168,7 @@ parameter {
 	sub(",1[+]",",",$2);
 	iinf = $2;
 	sub(",.*","",iinf);
+	iinf=int(iinf);
 	if (iinf != 1) {
 		print "ERROR ASSUMING MINIMUM INDEX VALUE EQUAL TO ONE IN ARRAY DEFINITION",$0;
 		error = 1;
@@ -171,6 +176,7 @@ parameter {
 	}
 	isup = $2;
 	sub(".*,","",isup);
+	isup=int(isup);
 	if (isup < iinf) {
 		print "ERROR WRONG RANGE INDEX VALUE IN ARRAY DEFINITION",$0;
 		error = 2;
@@ -201,6 +207,7 @@ parameter {
 	sub(",1[+]",",",$2);
 	iinf = $2;
 	sub(",.*","",iinf);
+	iinf=int(iinf);
 	if (iinf != 1) {
 		print "ERROR ASSUMING MINIMUM INDEX VALUE EQUAL TO ONE IN ARRAY DEFINITION",$0;
 		error = 1;
@@ -208,6 +215,7 @@ parameter {
 	}
 	isup = $2;
 	sub(".*,","",isup);
+	isup=int(isup);
 	if (isup < iinf) {
 		print "ERROR WRONG RANGE INDEX VALUE IN ARRAY DEFINITION",$0;
 		error = 2;
