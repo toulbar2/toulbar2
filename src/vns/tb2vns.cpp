@@ -285,8 +285,8 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         clusterEntryTime = cpuTime();
         nbImprovements++;
         if (ToulBar2::vnsAdaptive) {
-            lastAggregatedCluster = currentClusterIdx;
-            currentZoneSize = (int)clusters[currentClusterIdx].size();
+            currentClusterIdx = lastAggregatedCluster;
+            currentZoneSize = (int)clusters[lastAggregatedCluster].size();
         }
 
         if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
@@ -533,7 +533,18 @@ bool ProteinNeighborhoodChoice::incrementK()
         needsKReset = true;
 
         if (nextIdx == currentClusterIdx) {
+            int totalFull = (int)clusters.size();
+            for (int c = 0; c < totalFull; c++) {
+                visitedClusters.insert((currentClusterIdx + c) % (int)clusters.size());
+            }
             if (ToulBar2::showvns >= 1) {
+                cout << "[Vns geode] adaptive: zone size=" << (int)newZone.size() << " | clusters aggregated: ";
+                for (int c = 0; c < totalFull; c++) {
+                    int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
+                    cout << (!ToulBar2::vnsOrderFile.empty() ? clusterRootWcspIdx[aggIdx] : aggIdx);
+                    cout << (c < totalFull - 1 ? ";" : "");
+                }
+                cout << endl;
                 cout << "[Vns geode] Full topological cycle completed. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
             }
             currentClusterIdx = startClusterIdx;
@@ -542,11 +553,20 @@ bool ProteinNeighborhoodChoice::incrementK()
             needsKReset = false;
             return true;
         } else if ((int)newZone.size() >= ToulBar2::vnsKmax) {
-            if (ToulBar2::showvns >= 1) {
-                cout << "[Vns geode] Zone size reached kmax. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
+            int totalKmax = (nextIdx - currentClusterIdx + (int)clusters.size()) % (int)clusters.size() + 1;
+            for (int c = 0; c < totalKmax; c++) {
+                visitedClusters.insert((currentClusterIdx + c) % (int)clusters.size());
             }
-            currentClusterIdx = startClusterIdx;
-            lastAggregatedCluster = startClusterIdx;
+            if (ToulBar2::showvns >= 1) {
+                cout << "[Vns geode] adaptive: zone size=" << (int)newZone.size() << " | clusters aggregated: ";
+                for (int c = 0; c < totalKmax; c++) {
+                    int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
+                    cout << (!ToulBar2::vnsOrderFile.empty() ? clusterRootWcspIdx[aggIdx] : aggIdx);
+                    cout << (c < totalKmax - 1 ? ";" : "");
+                }
+                cout << endl;
+                cout << "[Vns geode] Zone size reached kmax. Increasing LDS." << endl;
+            }
             ToulBar2::vnsKcur = ToulBar2::vnsKmax + 1;
             needsKReset = false;
             return true;

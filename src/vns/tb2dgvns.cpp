@@ -193,7 +193,7 @@ bool VNSSolver::solve(bool first)
                 double timeBeforeRepair = cpuTime();
                 Long btBefore = getNbBacktracks();
                 if (ToulBar2::lds)
-                    complete = repair_recursiveSolve(lds, variables, values, bestUb);
+                    complete = repair_recursiveSolve(lds, variables, values, bestUb); 
                 else
                     complete = repair_recursiveSolve(variables, values, bestUb);
                 pair<int,int> klds_key = make_pair(ToulBar2::vnsLDScur, k);
@@ -321,8 +321,8 @@ bool VNSSolver::solve(bool first)
     // [dernière modif] Affichage du résumé VNS final après la fin de toutes les itérations.
     
     if (ToulBar2::verbose >= 0 && !timePerKLDS.empty()) {
-        cout << "VNS summary: final k=" << ToulBar2::vnsKcur << " best solution k=" << bestSolutionK << " final UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
-
+        //cout << "VNS summary: final k=" << ToulBar2::vnsKcur << " best solution k=" << bestSolutionK << " final UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
+        cout << "VNS summary: best solution k=" << bestSolutionK << " final UB=" << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->Cost2ADCost(bestUb) << std::setprecision(DECIMAL_POINT) << endl;
         // calcul des stats globales
         int total_visits = 0;
         double sum_k_weighted = 0.0;
