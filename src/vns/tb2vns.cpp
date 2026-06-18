@@ -692,14 +692,28 @@ void ProteinNeighborhoodChoice::buildClusters(int radius)
         }
         vector<vector<int>> tspClusters;
         vector<int> tspClusterRootWcspIdx;
+        set<int> seenIndices;
         int varIdx;
+        int tspCount = 0;
+        int originalNbClusters = (int)clusters.size();
         while (file >> varIdx) {
+            tspCount++;
             auto it = std::find(clusterRootWcspIdx.begin(), clusterRootWcspIdx.end(), varIdx);
             if (it != clusterRootWcspIdx.end()) {
                 int originalIndex = std::distance(clusterRootWcspIdx.begin(), it);
-                tspClusters.push_back(clusters[originalIndex]);
-                tspClusterRootWcspIdx.push_back(clusterRootWcspIdx[originalIndex]);
+                if (seenIndices.find(originalIndex) == seenIndices.end()) {
+                    seenIndices.insert(originalIndex);
+                    tspClusters.push_back(clusters[originalIndex]);
+                    tspClusterRootWcspIdx.push_back(clusterRootWcspIdx[originalIndex]);
+                }
             }
+        }
+        if (tspCount != originalNbClusters || (int)tspClusters.size() != originalNbClusters) {
+            cerr << "Error: TSP file mismatch: " << tspCount << " entries in file, "
+                 << originalNbClusters << " clusters in model, "
+                 << tspClusters.size() << " valid matches found." << endl;
+            cerr << "TSP file must be an exact permutation of all cluster root variables." << endl;
+            exit(EXIT_FAILURE);
         }
         clusters = tspClusters;
         clusterRootWcspIdx = tspClusterRootWcspIdx;
