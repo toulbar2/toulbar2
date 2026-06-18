@@ -112,11 +112,13 @@ class CFN:
     def flatten(S):
         """Warning: this recursive method might exceed maximum recursion depth
         """
-        if S == []:
-            return S
-        if isinstance(S[0], list):
-            return CFN.flatten(S[0]) + CFN.flatten(S[1:])
-        return S[:1] + CFN.flatten(S[1:])
+        res = []
+        for el in S:
+            if hasattr(el, "__iter__") and not isinstance(el, str):
+                res.extend(CFN.flatten(el))
+            else:
+                res.append(el)
+        return res
 
     def AddVariable(self, name, values):
         """AddVariable creates a new discrete variable.
@@ -554,7 +556,7 @@ class CFN:
             if (v < 0 or v >= len(self.VariableNames)):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
-        params = str(list(parameters))[1:-1].replace(',','').replace('\'','')
+        params = str(CFN.flatten(list(parameters)))[1:-1].replace(',','').replace('\'','')
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
 
     def AddWeightedCSPConstraint(self, problem, lb, ub, duplicateHard = False, strongDuality = False):
