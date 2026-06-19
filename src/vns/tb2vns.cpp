@@ -331,11 +331,12 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     }
 
     if (!ToulBar2::vnsOrderFile.empty()) {
-        currentClusterIdx = maxClusterIdx;
+        currentClusterIdx = maxClusterIdx; // maxClusterIdx calculé sur le vecteur déjà réordonné par TSP
     } else {
         currentClusterIdx = 0;
     }
     startClusterIdx = currentClusterIdx;
+    lastAggregatedCluster = currentClusterIdx;
 
 
     if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
