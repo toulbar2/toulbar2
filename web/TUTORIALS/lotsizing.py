@@ -3,10 +3,6 @@
 
 import sys
 import pytoulbar2
-
-
-import sys
-import sys
 import os
 import re
 
