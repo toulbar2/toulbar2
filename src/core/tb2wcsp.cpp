@@ -309,6 +309,7 @@ bool ToulBar2::vnsParallelLimit;
 bool ToulBar2::vnsParallelSync;
 string ToulBar2::vnsOptimumS;
 bool ToulBar2::vnsReverseOrder;  // reverse .
+bool ToulBar2::vnsTSPLargestFirst;
 int ToulBar2::showvns; 
 string ToulBar2::vnsOrderFile;
 int ToulBar2::vnsKStagnation;
@@ -546,6 +547,7 @@ void tb2init()
     ToulBar2::vnsKmax = 0;
     ToulBar2::vnsGeode = 1;
     ToulBar2::vnsReverseOrder = false; // reverse .
+    ToulBar2::vnsTSPLargestFirst = false;
     ToulBar2::showvns = 0;
     ToulBar2::vnsOrderFile = "";
     ToulBar2::vnsKStagnation = 0;

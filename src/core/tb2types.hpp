@@ -937,6 +937,7 @@ public:
     static int vnsKmax; ///< \brief maximum neighborhood size for VNS-like methods (command line option -kmax)
     static int vnsGeode;  ///< \brief geodesic radius for graph neighborhood decomposition (command line option -geode)
     static bool vnsReverseOrder; ///< \brief reverse neighborhood order (command line option -vreverse) // reverse .
+    static bool vnsTSPLargestFirst; ///< \brief in TSP mode, start from largest cluster (command line option -tsplargest)
     static int showvns; ///< \brief shows VNS progression (0: disabled, 1: essential, 2: detailed)
     static string vnsOrderFile; ///< \brief TSP cluster ordering file (.tsp)
     static int vnsKStagnation; ///< \brief k threshold for stagnation detection in geodesic VNS (0: disabled, command line option -kstagnation)

@@ -330,19 +330,19 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
              << " | reverse=" << (ToulBar2::vnsReverseOrder ? "true" : "false") << endl;
     }
 
-    if (!ToulBar2::vnsOrderFile.empty()) {
-        currentClusterIdx = maxClusterIdx; // maxClusterIdx calculé sur le vecteur déjà réordonné par TSP
+    if (!ToulBar2::vnsOrderFile.empty() && ToulBar2::vnsTSPLargestFirst) {
+        currentClusterIdx = maxClusterIdx;
     } else {
         currentClusterIdx = 0;
     }
     startClusterIdx = currentClusterIdx;
     lastAggregatedCluster = currentClusterIdx;
 
-
     if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
         cout << "[Vns geode] Start: cluster=" << currentClusterIdx
              << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")";
-        if (!ToulBar2::vnsOrderFile.empty()) cout << " [TSP mode: largest first]";
+        if (!ToulBar2::vnsOrderFile.empty() && ToulBar2::vnsTSPLargestFirst) cout << " [TSP mode: largest first]";
+        else if (!ToulBar2::vnsOrderFile.empty()) cout << " [TSP mode: order from file]";
         else cout << " [Natural mode]";
         cout << endl;
     }
@@ -524,6 +524,7 @@ bool ProteinNeighborhoodChoice::incrementK()
             if (ToulBar2::showvns >= 2) {
                 cout << "[Vns geode] No new variable detected in the added cluster " << nextIdx << "." << endl;
             }
+            
             
             if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable pour éviter la boucle infinie .
             nextIdx = (nextIdx + 1) % (int)clusters.size();

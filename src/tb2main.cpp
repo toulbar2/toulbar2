@@ -368,6 +368,7 @@ enum {
     OPT_k_min,
     OPT_geode,
     OPT_reverse_order, // reverse .
+    OPT_tsp_largest_first,
     OPT_showvns,
     OPT_kstagnation,
     OPT_tlimit,
@@ -679,6 +680,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_k_max, (char*)"--kmax", SO_REQ_SEP },
     { OPT_geode, (char*)"-geode", SO_REQ_SEP },
     { OPT_reverse_order, (char*)"-reverse", SO_NONE }, // reverse .
+    { OPT_tsp_largest_first, (char*)"-tsplargest", SO_NONE },
     { OPT_showvns, (char*)"-showvns", SO_OPT },
     { OPT_kstagnation, (char*)"-kstagnation", SO_REQ_SEP },
     { OPT_tlimit, (char*)"-tlimit", SO_REQ_SEP },
@@ -1450,6 +1452,10 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_reverse_order) {
                 ToulBar2::vnsReverseOrder = true;
+            }
+
+            if (args.OptionId() == OPT_tsp_largest_first) {
+                ToulBar2::vnsTSPLargestFirst = true;
             }
 
             if (args.OptionId() == OPT_k_inc) {
