@@ -407,11 +407,12 @@ const zone ProteinNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
         needsKReset = true;
     }
 
+    int actual_k = ToulBar2::vnsAdaptive ? (int)z.size() : (int)min(neighborhood_size, z.size());
+
     if (ToulBar2::showvns >= 2 || ToulBar2::verbose >= 1) {
         cout << "[Vns geode] cluster_idx=" << currentClusterIdx
              << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")"
-             << " | k=" << neighborhood_size
-             << " | cluster size=" << z.size()
+             << " | k=" << actual_k
              << " | cluster aggregate=";
         for (int c = 0; c < aggregated; c++) {
             int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
@@ -484,7 +485,6 @@ bool ProteinNeighborhoodChoice::incrementK()
             currentZoneSize = (int)clusters[currentClusterIdx].size();
         }
 
-
         if (nbVisitedClusters >= (int)clusters.size()) {
             cycleComplete = true;
             nbVisitedClusters = 0;
@@ -500,10 +500,31 @@ bool ProteinNeighborhoodChoice::incrementK()
             }
         }
         return false;
-
     }
 
     if (ToulBar2::vnsAdaptive) {
+        
+        // [LA VRAIE SOLUTION] : Élagage naturel post-évaluation
+        int currentAggregatedCount = (lastAggregatedCluster - currentClusterIdx + (int)clusters.size()) % (int)clusters.size() + 1;
+        
+        if (currentZoneSize >= ToulBar2::vnsKmax || currentAggregatedCount >= (int)clusters.size()) {
+            if (ToulBar2::showvns >= 1) {
+                if (currentZoneSize >= ToulBar2::vnsKmax)
+                    cout << "[Vns geode] Zone evaluated reached kmax. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
+                else
+                    cout << "[Vns geode] Full topological cycle evaluated. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
+            }
+            
+            // ---> LE RESET TOTAL DE L'ÉTAT <---
+            currentClusterIdx = startClusterIdx;
+            lastAggregatedCluster = startClusterIdx;
+            currentZoneSize = (int)clusters[startClusterIdx].size(); // <-- C'est LA ligne qui manquait !
+            
+            ToulBar2::vnsKcur = ToulBar2::vnsKmax + 1;
+            needsKReset = false;
+            return true;
+        }
+
         // reconstruire la zone courante (sans le prochain cluster)
         set<int> newZone;
         int idx = currentClusterIdx;
@@ -524,9 +545,7 @@ bool ProteinNeighborhoodChoice::incrementK()
             if (ToulBar2::showvns >= 2) {
                 cout << "[Vns geode] No new variable detected in the added cluster " << nextIdx << "." << endl;
             }
-            
-            
-            if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable pour éviter la boucle infinie .
+            if (nextIdx == currentClusterIdx) break; // cycle complet sans nouvelle variable
             nextIdx = (nextIdx + 1) % (int)clusters.size();
         }
 
@@ -534,66 +553,20 @@ bool ProteinNeighborhoodChoice::incrementK()
         lastAggregatedCluster = nextIdx;
         needsKReset = true;
 
-        if (nextIdx == currentClusterIdx) {
-            int totalFull = (int)clusters.size();
-            for (int c = 0; c < totalFull; c++) {
-                visitedClusters.insert((currentClusterIdx + c) % (int)clusters.size());
-            }
-            if (ToulBar2::showvns >= 1) {
-                cout << "[Vns geode] adaptive: zone size=" << (int)newZone.size() << " | clusters aggregated: ";
-                for (int c = 0; c < totalFull; c++) {
-                    int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
-                    cout << (!ToulBar2::vnsOrderFile.empty() ? clusterRootWcspIdx[aggIdx] : aggIdx);
-                    cout << (c < totalFull - 1 ? ";" : "");
-                }
-                cout << endl;
-                cout << "[Vns geode] Full topological cycle completed. Increasing LDS. Restarting from cluster " << startClusterIdx << "." << endl;
-            }
-            currentClusterIdx = startClusterIdx;
-            lastAggregatedCluster = startClusterIdx;
-            ToulBar2::vnsKcur = ToulBar2::vnsKmax + 1;
-            needsKReset = false;
-            return true;
-        } else if ((int)newZone.size() >= ToulBar2::vnsKmax) {
-            int totalKmax = (nextIdx - currentClusterIdx + (int)clusters.size()) % (int)clusters.size() + 1;
-            for (int c = 0; c < totalKmax; c++) {
-                visitedClusters.insert((currentClusterIdx + c) % (int)clusters.size());
-            }
-            if (ToulBar2::showvns >= 1) {
-                cout << "[Vns geode] adaptive: zone size=" << (int)newZone.size() << " | clusters aggregated: ";
-                for (int c = 0; c < totalKmax; c++) {
-                    int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
-                    cout << (!ToulBar2::vnsOrderFile.empty() ? clusterRootWcspIdx[aggIdx] : aggIdx);
-                    cout << (c < totalKmax - 1 ? ";" : "");
-                }
-                cout << endl;
-                cout << "[Vns geode] Zone size reached kmax. Increasing LDS." << endl;
-            }
-            ToulBar2::vnsKcur = ToulBar2::vnsKmax + 1;
-            needsKReset = false;
-            return true;
-        }
-
         if (ToulBar2::showvns >= 1) {
             int total = (lastAggregatedCluster - currentClusterIdx + (int)clusters.size()) % (int)clusters.size() + 1;
-            cout << "[Vns geode] adaptive: zone size=" << currentZoneSize
-                 << " | clusters aggregated: ";
+            cout << "[Vns geode] adaptive: zone size=" << currentZoneSize << " | clusters aggregated: ";
             for (int c = 0; c < total; c++) {
-                // aggIdx (index agrégé) va convertire la position relative en index réel avec le modulo pour gérer le cas circulaire.
                 int aggIdx = (currentClusterIdx + c) % (int)clusters.size();
-                if (!ToulBar2::vnsOrderFile.empty()) {
-                    cout << clusterRootWcspIdx[aggIdx]; // mode TSP .
-                } else {
-                    cout << aggIdx; // mode naturel .
-                }
+                cout << (!ToulBar2::vnsOrderFile.empty() ? clusterRootWcspIdx[aggIdx] : aggIdx);
                 cout << (c < total - 1 ? ";" : "");
             }
             cout << endl;
         }
+        
+        return true;
 
     }
-    
-
     else if (needsKReset) {
         if (!ToulBar2::vnsAdaptive) {
             currentClusterIdx = (currentClusterIdx + 1) % (int)clusters.size();
@@ -614,7 +587,6 @@ bool ProteinNeighborhoodChoice::incrementK()
     }
     return true;
 }
-
 
 bool ProteinNeighborhoodChoice::shouldResetK()
 {
