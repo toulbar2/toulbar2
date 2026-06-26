@@ -1379,7 +1379,11 @@ public:
                     os << " " << key;
                     os << " " << delta;
                 }
+            } else {
+                os << " " << 0;
             }
+        } else {
+            os << " " << 0;
         }
         os << endl;
     }
