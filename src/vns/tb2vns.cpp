@@ -330,7 +330,7 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
              << " | reverse=" << (ToulBar2::vnsReverseOrder ? "true" : "false") << endl;
     }
 
-    if (!ToulBar2::vnsOrderFile.empty() && ToulBar2::vnsTSPLargestFirst) {
+    if (!ToulBar2::vnsOrderFile.empty() && ToulBar2::vnsCmax) {
         currentClusterIdx = maxClusterIdx;
     } else {
         currentClusterIdx = 0;
@@ -341,7 +341,7 @@ void ProteinNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
     if (ToulBar2::showvns >= 1 || ToulBar2::verbose >= 1) {
         cout << "[Vns geode] Start: cluster=" << currentClusterIdx
              << " (var=" << clusterRootWcspIdx[currentClusterIdx] << ")";
-        if (!ToulBar2::vnsOrderFile.empty() && ToulBar2::vnsTSPLargestFirst) cout << " [TSP mode: largest first]";
+        if (!ToulBar2::vnsOrderFile.empty() && ToulBar2::vnsCmax) cout << " [TSP mode: largest first]";
         else if (!ToulBar2::vnsOrderFile.empty()) cout << " [TSP mode: order from file]";
         else cout << " [Natural mode]";
         cout << endl;

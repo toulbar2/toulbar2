@@ -249,7 +249,7 @@ bool VNSSolver::solve(bool first)
                     if (ToulBar2::vnsNeighborVarHeur == GRAPH || ToulBar2::vnsNeighborVarHeur == PROTEIN) 
                         h->init(wcsp, this);  
                     restart = 1;
-                    lds = ToulBar2::vnsLDSmin;
+                    //lds = ToulBar2::vnsLDSmin;
                     bestUb = lastUb;
                     for (int v = 0; v < (int)wcsp->numberOfVariables(); v++) {
                         assert(lastSolution.find(v) != lastSolution.end());
