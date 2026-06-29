@@ -47,9 +47,9 @@ class CFN:
         
         Variables (dict): associative array returning the original domain (list or iterable) associated to a given variable name (str).
         
-        VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).
+        VariableIndices (dict): associative array returning the index (int) associated to a given variable name (str).
         
-        VariableNames (list): array of created variable names (str) sorted by their index number.
+        VariableNames (dict): associative array returning the variable name (str) associated to a given index (int).
         
     See pytoulbar2test.py example in src repository.
     
@@ -94,7 +94,7 @@ class CFN:
 
         self.Variables = {}
         self.VariableIndices = {}
-        self.VariableNames = []
+        self.VariableNames = {}
         
         self.CFN = tb2.Solver() # initialize VAC algorithm depending on tb2.option.vac
         self.InternalCFNs = list() # keep alive internal CFNs created by AddWeightedCSPConstraint
@@ -153,7 +153,7 @@ class CFN:
         else:
             raise RuntimeError("Incorrect domain:"+str(values))
         self.VariableIndices[name] = vIdx
-        self.VariableNames.append(name)
+        self.VariableNames[vIdx] = name
         return vIdx
 
     def AddFunction(self, scope, costs, incremental = False):
@@ -177,7 +177,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
@@ -244,7 +244,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
@@ -340,7 +340,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
         sscope = set(iscope)
@@ -416,7 +416,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
 
@@ -458,7 +458,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         if (len(iscope) >= 2):
@@ -509,7 +509,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         bbounds = []
@@ -553,10 +553,11 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         params = str(CFN.flatten(list(parameters)))[1:-1].replace(',','').replace('\'','')
+        print('regular: ',params)
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
 
     def AddWeightedCSPConstraint(self, problem, lb, ub, duplicateHard = False, strongDuality = False):
@@ -576,13 +577,12 @@ class CFN:
             m=tb2.CFN(); m.Read("master.cfn");s=tb2.CFN();s.Read("slave.cfn");m.AddWeightedCSPConstraint(s, lb, ub);m.Solve()
         """
         iscope = []
-        for i, v in enumerate(problem.VariableNames):
-            if isinstance(v, str):
-                vname = v
-                v = self.VariableIndices.get(vname, -1)
-                if (v < 0 or v >= len(self.VariableNames)):
-                    v = self.AddVariable(vname, [(problem.CFN.wcsp.getValueName(i, value) if len(problem.CFN.wcsp.getValueName(i, value)) > 0 else value) for value in problem.Domain(vname)])
-            if (v < 0 or v >= len(self.VariableNames)):
+        for i in range(problem.GetNbVars()):
+            vname = problem.CFN.wcsp.getName(i)
+            v = self.VariableIndices.get(vname, -1)
+            if v < 0 or v >= self.GetNbVars():
+                v = self.AddVariable(vname, [problem.CFN.wcsp.getValueName(i, value) if len(problem.CFN.wcsp.getValueName(i, value)) > 0 else value for value in problem.Domain(i)])
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         multicfn = MultiCFN()
@@ -604,13 +604,13 @@ class CFN:
         """
         self.CFN.read(filename)
         self.VariableIndices = {}
-        self.VariableNames = []
+        self.VariableNames = {}
         self.Variables = {}
-        for i in range(self.CFN.wcsp.numberOfVariables()):
+        for i in range(GetNbVars()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
-            self.VariableNames.append(name)
-            self.Variables[name] = self.Domain(name)
+            self.VariableNames[i] = name
+            self.Variables[name] = self.Domain(i)
 
     def Parse(self, certificate):
         """Parse performs a list of elementary reduction operations on domains of variables.
@@ -1147,13 +1147,13 @@ class CFN:
         multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), [set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in scope]) for scope in scopes], list(constrs))
         
         self.VariableIndices = {}
-        self.VariableNames = []
+        self.VariableNames = {}
         self.Variables = {}
-        for i in range(self.CFN.wcsp.numberOfVariables()):
+        for i in range(GetNbVars()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
-            self.VariableNames.append(name)
-            self.Variables[name] = self.Domain(name)
+            self.VariableNames[i] = name
+            self.Variables[name] = self.Domain(i)
         
         return
 

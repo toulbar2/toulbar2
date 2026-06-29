@@ -43,6 +43,12 @@ def Constant(v):
         Constants[v] = Variable(v, v, 'CONST__' + str(v) + '__')
         return Constants[v]
 
+def ConstantNewVariable(v):
+    if type(v) is Var:
+        return v
+    else:
+        return Variable(v, v, 'CONST__' + str(v) + '__' + str(model.GetNbVars()) + '__')
+
 def scope(s):
     if type(s) is int:
         return [Constant(s).ind]
@@ -50,6 +56,14 @@ def scope(s):
         return [s.ind]
     else:
         return [Constant(x).ind if type(x) is int else x.ind for x in s]
+
+def scopeWithDuplicateConstantVariables(s):
+    if type(s) is int:
+        return [ConstantNewVariable(s).ind]
+    elif type(s) is Var:
+        return [s.ind]
+    else:
+        return [ConstantNewVariable(x).ind if type(x) is int else x.ind for x in s]
 
 def get_values(assignment, vars):
     return [assignment[e.ind] for e in vars]
@@ -527,7 +541,8 @@ def fzn_global_cardinality(x, values, counts):
     for j in range(len(values)):
         if type(counts[j]) is Var:
             if len(model.Domain(counts[j].ind)) > 1:
-                model.AddGeneralizedLinearConstraint([[scope(x[i]), values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
+                print('linear:', [[x[i].ind if type(x[i]) is Var else Constant(x[i]).ind, values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
+                model.AddGeneralizedLinearConstraint([[x[i].ind if type(x[i]) is Var else Constant(x[i]).ind, values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
             else:
                 l.append((values[j], model.Domain(counts[j].ind)[0], model.Domain(counts[j].ind)[0]))
         else:
@@ -550,16 +565,27 @@ def fzn_table_int(x,t):
 def fzn_table_bool(x,t):
     fzn_table_int(x, t)
 
-def fzn_regular(x, Q, S, d, q0, F):
-    parameters = [Q+1, 1, q0, 0, len(F)]
+def fzn_regular(X, Q, S, d, q0, F):
+    parameters = [Q+1, 1, (q0, 0), len(F)]
     for e in F:
-        parameters.append(e)
-        parameters.append(0)
-    parameters.append(len(d))
+        parameters.append((e,0))
+    assert(len(d) == Q * S)
+    parameters.append(Q * S)
     for i in range(Q):
         for j in range(S):
-            parameters.append(i)
-            parameters.append(j)
+            parameters.append((i+1, j+1, d[i*S+j], 0))
+    model.AddGlobalFunction(scopeWithDuplicateConstantVariables(X), 'wregular', parameters)
+
+def fzn_sregular(X, Q, S, d, q0, F):
+    parameters = ['var', 1, Q+1, 1, q0, len(F)]
+    for e in F:
+        parameters.append(e)
+    assert(len(d) == Q * S)
+    parameters.append(Q * S)
+    for i in range(Q):
+        for j in range(S):
+            parameters.append(i+1)
+            parameters.append(j+1)
             parameters.append(d[i*S+j])
-    model.AddGlobalFunction(scope(x), 'wregular', parameters)
+    model.AddGlobalFunction(scopeWithDuplicateConstantVariables(X), 'sregular', parameters)
 
