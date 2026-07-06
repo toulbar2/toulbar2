@@ -21,11 +21,11 @@ void start_timers(){};
 void stop_timers(Timer type){};
 
 #else
-static struct rusage res;
-static struct timeval tp;
-static Time virtual_utime, virtual_stime;
+thread_local static struct rusage res;
+thread_local static struct timeval tp;
+thread_local static Time virtual_utime, virtual_stime;
 Time virtual_ulapse, virtual_slapse;
-static Time real_time;
+thread_local static Time real_time;
 Time real_lapse;
 
 void start_timers()

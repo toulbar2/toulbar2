@@ -305,11 +305,11 @@ public:
         return *this;
     }
 
-    static StoreStack<T, T> mystore;
+    thread_local static StoreStack<T, T> mystore;
 };
 
 template <class T>
-StoreStack<T, T> StoreBasic<T>::mystore(STORE_SIZE);
+thread_local StoreStack<T, T> StoreBasic<T>::mystore(STORE_SIZE);
 
 typedef StoreBasic<Value> StoreValue;
 #if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
@@ -341,15 +341,15 @@ protected:
     virtual ~Store() = 0; // Trick to avoid any instantiation of Store
 
 public:
-    static int depth;
-    static StoreStack<BTList<Value>, DLink<Value>*> storeDomain;
+    thread_local static int depth;
+    thread_local static StoreStack<BTList<Value>, DLink<Value>*> storeDomain;
 #ifdef SHORT_VALUE
     static StoreStack<BTList<int>, DLink<int>*> storeIndexList;
 #endif
-    static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> storeConstraint;
-    static StoreStack<BTList<Variable*>, DLink<Variable*>*> storeVariable;
-    static StoreStack<BTList<Separator*>, DLink<Separator*>*> storeSeparator;
-    static StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> storeKnapsack;
+    thread_local static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> storeConstraint;
+    thread_local static StoreStack<BTList<Variable*>, DLink<Variable*>*> storeVariable;
+    thread_local static StoreStack<BTList<Separator*>, DLink<Separator*>*> storeSeparator;
+    thread_local static StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> storeKnapsack;
 
     /// \return the current (backtrack / tree search) depth
     static int getDepth()

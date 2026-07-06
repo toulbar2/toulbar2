@@ -13,7 +13,7 @@
  *
  */
 
-int Cluster::clusterCounter = 0;
+thread_local int Cluster::clusterCounter = 0;
 
 bool CmpClusterStructBasic::operator()(const Cluster* lhs, const Cluster* rhs) const
 {
@@ -34,7 +34,7 @@ bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
  *
  */
 
-WCSP* CmpVarStruct::wcsp = NULL;
+thread_local WCSP* CmpVarStruct::wcsp = NULL;
 
 bool CmpVarStruct::operator()(const int lhs, const int rhs) const
 {
@@ -899,7 +899,7 @@ void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 // side-effect: remember last solution
 void Cluster::getSolution(TAssign& sol)
 {
-    static Tuple s; // FIXME: unsafe???
+    thread_local static Tuple s; // FIXME: unsafe???
 
     TVars::iterator it, iter_begin, iter_end;
 
@@ -2042,9 +2042,9 @@ void TreeDecomposition::setDuplicates(bool init)
     if (ToulBar2::approximateCountingBTD)
         return;
 
-    static unsigned int curCtr = 0;
-    static int curElimBin = 0;
-    static int curElimTern = 0;
+    thread_local static unsigned int curCtr = 0;
+    thread_local static int curElimBin = 0;
+    thread_local static int curElimTern = 0;
 
     if (init) {
         curCtr = 0;

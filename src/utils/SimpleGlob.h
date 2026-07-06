@@ -883,7 +883,7 @@ int CSimpleGlobTempl<SOCHAR>::AppendName(
 
     // add the directory slash if desired
     if (a_bIsDir && (m_uiFlags & SG_GLOB_MARK) == SG_GLOB_MARK) {
-        const static SOCHAR szDirSlash[] = { SG_PATH_CHAR, 0 };
+        const thread_local static SOCHAR szDirSlash[] = { SG_PATH_CHAR, 0 };
         SimpleGlobUtil::strcpy_s(m_pBuffer + m_uiBufferLen - 2,
             m_uiBufferSize - (m_uiBufferLen - 2), szDirSlash);
     }
@@ -917,7 +917,7 @@ bool CSimpleGlobTempl<SOCHAR>::GrowArgvArray(
     int a_nNewLen)
 {
     if (a_nNewLen >= m_nArgsSize) {
-        static const int SG_ARGV_INITIAL_SIZE = 32;
+        thread_local static const int SG_ARGV_INITIAL_SIZE = 32;
         int nNewSize = (m_nArgsSize > 0) ? m_nArgsSize * 2 : SG_ARGV_INITIAL_SIZE;
         while (a_nNewLen >= nNewSize) {
             nNewSize *= 2;
@@ -936,7 +936,7 @@ bool CSimpleGlobTempl<SOCHAR>::GrowStringBuffer(
     size_t a_uiMinSize)
 {
     if (a_uiMinSize >= m_uiBufferSize) {
-        static const int SG_BUFFER_INITIAL_SIZE = 1024;
+        thread_local static const int SG_BUFFER_INITIAL_SIZE = 1024;
         size_t uiNewSize = (m_uiBufferSize > 0) ? m_uiBufferSize * 2 : SG_BUFFER_INITIAL_SIZE;
         while (a_uiMinSize >= uiNewSize) {
             uiNewSize *= 2;

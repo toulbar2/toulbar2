@@ -27,9 +27,9 @@ extern void setvalue(int wcspId, int varIndex, Value value, void* solver);
 extern void tb2setvalue(int wcspId, int varIndex, Value value, void* solver);
 extern void newsolution(int wcspId, void* solver);
 
-const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
+thread_local const string Solver::CPOperation[CP_MAX] = { "ASSIGN", "REMOVE", "INCREASE", "DECREASE", "RANGEREMOVAL" };
 
-Solver* Solver::CurrentSolver;
+thread_local Solver* Solver::CurrentSolver;
 
 /*
  * Solver constructors
@@ -3649,7 +3649,7 @@ bool Solver::solve(bool first)
                                 for (int ctrIndex : ((WCSP*)wcsp)->delayedCtrBLP[2]) {
                                     Constraint* ctr = ((WCSP*)wcsp)->getCtr(ctrIndex);
                                     assert(ctr->deconnected());
-                                    static vector<Cost> costs;
+                                    thread_local static vector<Cost> costs;
                                     Constraint* incCtr = NULL;
                                     if (ctr->isBinary()) {
                                         costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);
@@ -3969,7 +3969,7 @@ void Solver::endSolve(bool isSolution, Cost cost, bool isComplete)
     ToulBar2::DEE_ = 0;
     ToulBar2::elimDegree_ = -1;
 
-    static string solType[4] = { "Optimum: ", "Primal bound: ", "Guaranteed primal bound: ", "Primal bound: " };
+    thread_local static string solType[4] = { "Optimum: ", "Primal bound: ", "Guaranteed primal bound: ", "Primal bound: " };
 
     int isLimited = (!isComplete) | ((ToulBar2::deltaUb != MIN_COST) << 1);
 
@@ -4569,7 +4569,7 @@ Solver::SolutionTrie::TrieNode::~TrieNode()
         delete sons[i];
 }
 
-vector<size_t> Solver::SolutionTrie::TrieNode::widths;
+thread_local vector<size_t> Solver::SolutionTrie::TrieNode::widths;
 
 bool Solver::SolutionTrie::TrieNode::present(Value v)
 {
@@ -4622,7 +4622,7 @@ void Solver::SolutionTrie::TrieNode::printTrie(vector<Value>& sol)
     }
 }
 
-size_t Solver::SolutionTrie::TrieNode::nbSolutions = 0;
+thread_local size_t Solver::SolutionTrie::TrieNode::nbSolutions = 0;
 
 void Solver::SolutionTrie::insertSolution(const vector<Value>& sol)
 {

@@ -184,7 +184,7 @@ private:
 
     int run{ 0 };
     int id{ 0 };
-    static int nextid;
+    thread_local static int nextid;
 
 public:
     struct state {

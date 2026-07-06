@@ -55,7 +55,7 @@ class UTF8String {
 public:
     typedef unsigned char Byte;
 
-    static const int npos = INT_MAX;
+    thread_local static const int npos = INT_MAX;
 
     UTF8String()
     {

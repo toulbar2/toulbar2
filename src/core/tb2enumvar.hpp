@@ -46,7 +46,7 @@ public:
     void addValueName(const string& vname) { valueNames.push_back(vname); }
     const string& getValueName(int index) const
     {
-        static const string None = std::string("");
+        thread_local static const string None = std::string("");
         if (isValueNames())
             return valueNames[index];
         else

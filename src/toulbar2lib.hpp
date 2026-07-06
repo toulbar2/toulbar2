@@ -525,10 +525,10 @@ ostream& operator<<(ostream& os, WeightedCSP& wcsp); ///< \see WeightedCSP::prin
 class WeightedCSPSolver {
 public:
 #ifdef OPENMPI
-    static const int MASTER = 0; // Master MPI rank number
-    static const int WORKTAG = 1; // MPI tag value for still working
-    static const int DIETAG = 2; // MPI tag value for stop working
-    static const int IDLETAG = 3; // MPI tag value for no more working
+    thread_local static const int MASTER = 0; // Master MPI rank number
+    thread_local static const int WORKTAG = 1; // MPI tag value for still working
+    thread_local static const int DIETAG = 2; // MPI tag value for stop working
+    thread_local static const int IDLETAG = 3; // MPI tag value for no more working
 #endif
     static WeightedCSPSolver* makeWeightedCSPSolver(Cost initUpperBound, WeightedCSP* wcsp = NULL); ///< \brief WeightedCSP Solver factory
 

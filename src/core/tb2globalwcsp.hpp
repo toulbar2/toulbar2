@@ -29,20 +29,20 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     vector<Long> conflictWeights; // used by weighted degree heuristics
 
 public:
-    static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
-    static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
-    static bool _protected_;
-    static int preprocessFunctional;
-    static int elimDegree;
-    static int elimDegree_preprocessing;
-    static int elimDegree_;
-    static int elimDegree_preprocessing_;
-    static int DEE;
-    static int DEE_;
-    static bool FullEAC;
-    static bool RASPS;
-    static int useRASPS;
-    static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
+    thread_local static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
+    thread_local static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
+    thread_local static bool _protected_;
+    thread_local static int preprocessFunctional;
+    thread_local static int elimDegree;
+    thread_local static int elimDegree_preprocessing;
+    thread_local static int elimDegree_;
+    thread_local static int elimDegree_preprocessing_;
+    thread_local static int DEE;
+    thread_local static int DEE_;
+    thread_local static bool FullEAC;
+    thread_local static bool RASPS;
+    thread_local static int useRASPS;
+    thread_local static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
     {
         assert(!_protected_);
         if (master) {

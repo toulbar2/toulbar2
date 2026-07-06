@@ -24,7 +24,7 @@ typedef int (Solver::*intFunctionCall_t)();
 
 class Solver : public WeightedCSPSolver {
 public:
-    static Solver* CurrentSolver; // Current solver used by open node heuristics
+    thread_local static Solver* CurrentSolver; // Current solver used by open node heuristics
 
     class OpenNode {
     private:
@@ -123,8 +123,8 @@ public:
             vector<vector<TrieNode*>> insertNode(Value v, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos);
             bool present(Value v);
             void printTrie(vector<Value>& sol);
-            static size_t nbSolutions;
-            static vector<size_t> widths;
+            thread_local static size_t nbSolutions;
+            thread_local static vector<size_t> widths;
         };
 
         SolutionTrie(){};
@@ -151,7 +151,7 @@ public:
         CP_REMOVE_RANGE = 4,
         CP_MAX
     } ChoicePointOp;
-    static const string CPOperation[CP_MAX]; // for pretty print
+    thread_local static const string CPOperation[CP_MAX]; // for pretty print
 
     struct ChoicePoint {
     private:

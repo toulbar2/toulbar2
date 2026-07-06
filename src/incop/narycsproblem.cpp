@@ -249,7 +249,7 @@ void wcspdomaines_file_read(WCSP* wcsp, int nbvar, vector<Value>* tabdomaines, v
 int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
     vector<int>* connexions, vector<Value>* tabdomaines)
 {
-    static Tuple tuple;
+    thread_local static Tuple tuple;
     assert(wcsp->getUb() > wcsp->getLb());
     Cost gap = wcsp->getUb() - wcsp->getLb();
     int nbconst_ = 0;

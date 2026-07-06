@@ -10,7 +10,7 @@
 #include "tb2clqcover.hpp"
 #include "search/tb2clusters.hpp"
 
-int CliqueConstraint::nextid{ 0 };
+thread_local int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in, vector<vector<int>> clq_in,
@@ -106,7 +106,7 @@ void CliqueConstraint::propagate()
 void CliqueConstraint::propagate_incremental()
 {
     ++run;
-    static const bool debug{ false };
+    thread_local static const bool debug{ false };
 
     if (!connected())
         return;
@@ -165,7 +165,7 @@ void CliqueConstraint::get_current_scope(std::vector<EnumeratedVariable*>& s,
 
 void CliqueConstraint::gather_unary_0s()
 {
-    static const bool debug{ false };
+    thread_local static const bool debug{ false };
 
     if (debug)
         cout << "------------------------------\ngather_unary_0s state = \n"
@@ -314,7 +314,7 @@ void CliqueConstraint::gather_binary()
 void CliqueConstraint::assign(int idx)
 {
     ++run;
-    static const bool debug{ false };
+    thread_local static const bool debug{ false };
 
     auto* x = scope[idx];
 
@@ -349,7 +349,7 @@ void CliqueConstraint::assign(int idx)
 
 void CliqueConstraint::handle_low_arity()
 {
-    static const bool debug{ false };
+    thread_local static const bool debug{ false };
 
     if (debug)
         cout << "in handle_low_arity state = " << state{ this } << "\n";
@@ -399,7 +399,7 @@ void CliqueConstraint::handle_low_arity()
 
 void CliqueConstraint::remove(int idx)
 {
-    static const bool debug{ false };
+    thread_local static const bool debug{ false };
 
     if (!connected(idx))
         return;
@@ -423,7 +423,7 @@ void CliqueConstraint::decrease(int idx)
 
 void CliqueConstraint::projectFromZero(int idx)
 {
-    static const bool debug{ false };
+    thread_local static const bool debug{ false };
 
     if (!connected(idx))
         return;

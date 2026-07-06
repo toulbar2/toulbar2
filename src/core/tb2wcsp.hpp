@@ -34,8 +34,8 @@ class KnapsackConstraint;
  */
 
 class WCSP FINAL : public WeightedCSP {
-    static int wcspCounter; ///< count the number of instances of WCSP class
-    static vector<Cost> pow10Cache; ///< precomputed powers of 10 as Costs
+    thread_local static int wcspCounter; ///< count the number of instances of WCSP class
+    thread_local static vector<Cost> pow10Cache; ///< precomputed powers of 10 as Costs
     int instance; ///< instance number
     string name; ///< problem name
     void* solver; ///< special hook to access solver information
@@ -80,7 +80,7 @@ class WCSP FINAL : public WeightedCSP {
     friend class VACExtension;
 
 public:
-    static map<int, WCSP*> CollectionOfWCSP;
+    thread_local static map<int, WCSP*> CollectionOfWCSP;
     /// \brief variable elimination information used in backward phase to get a solution during search
     /// \warning restricted to at most two neighbor variables
     typedef struct {

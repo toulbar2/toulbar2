@@ -69,7 +69,7 @@ public:
     }
     virtual const string& getValueName(int index) const
     {
-        static const string None = std::string("");
+        thread_local static const string None = std::string("");
         return None;
     }
     virtual unsigned int getDomainSize() const = 0;

@@ -76,7 +76,8 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<ToulBar2, std::unique_ptr<ToulBar2, py::nodelete>>(m, "option")
         .def_readonly_static("version", &ToulBar2::version)
-        .def_readwrite_static("verbose", &ToulBar2::verbose)
+        .def_property_static("verbose", [](py::object) { return ToulBar2::verbose; }, [](py::object, int verbose) { ToulBar2::verbose = verbose; }
+        )
         .def_readwrite_static("debug", &ToulBar2::debug)
         .def_readwrite_static("externalUB", &ToulBar2::externalUB)
         .def_readwrite_static("showSolutions", &ToulBar2::showSolutions)
@@ -276,6 +277,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite_static("negCostBLP", &ToulBar2::negCostBLP)
         .def_readwrite_static("initialLbBLP", &ToulBar2::initialLbBLP)
         .def_readwrite_static("initialUbBLP", &ToulBar2::initialUbBLP);
+
     m.def("check", &tb2checkOptions); // should be called after setting the options (and before reading a problem)
 
     py::class_<Store, std::unique_ptr<Store, py::nodelete>>(m, "store")
