@@ -20,6 +20,7 @@
 #ifndef TB2TYPES_HPP_
 #define TB2TYPES_HPP_
 
+#include <thread>
 #include "tb2config.hpp"
 
 // #define INT_COST
@@ -971,6 +972,10 @@ public:
     TB2_THREAD_LOCAL static vector<Cost> negCostBLP;
     TB2_THREAD_LOCAL static vector<Cost> initialLbBLP;
     TB2_THREAD_LOCAL static vector<Cost> initialUbBLP;
+
+#ifndef TOULBAR2_MULTITHREAD
+    static std::thread::id current_thread_id;
+#endif
 
     static Double getCostMultiplier()
     {
