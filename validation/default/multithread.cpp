@@ -42,16 +42,22 @@ int main() {
 
     srand(14);
 
+    // multi thread version
     std::vector<std::thread> threads;
-
     for(size_t inst_id = 0; inst_id < instances.size(); inst_id ++) {
         std::thread tb2_thread(solve, path+instances[inst_id], &solutions[inst_id]);
         threads.push_back(std::move(tb2_thread));
     }
-
     for(size_t inst_id = 0; inst_id < instances.size(); inst_id ++) {
         threads[inst_id].join();
     }
+    //----------------------
+
+    // single thread version
+    // for(size_t inst_id = 0; inst_id < instances.size(); inst_id ++) {
+    //     solve(path+instances[inst_id], &solutions[inst_id]);
+    // }
+    //----------------------
 
     std::cout << "solutions:" << std::endl;
     for(size_t inst_id = 0; inst_id < instances.size(); inst_id ++) {

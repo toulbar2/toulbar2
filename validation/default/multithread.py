@@ -22,16 +22,20 @@ instances = ['max.cfn', 'magic3.wcsp', 'knapsack.wcsp', 'cap131.wcsp', 'golomb4-
 lock = Lock()
 results = [None for _ in range(len(instances))]
 
-# Start each thread
+# multi threads version
 threads = []
-for id, inst in enumerate(instances):
+for id, inst in enumerate(instances): # Start each thread
     t = Thread(target=solve_instance, args=(path+inst, id, results))
     t.start()
     threads.append(t)
-
-# Wait for all threads to finish
-for t in threads:
+for t in threads: # Wait for all threads to finish
     t.join()
+#-------------------
+
+# single thread version
+# for id, inst in enumerate(instances):
+#     solve_instance(path+inst, id, results)
+#-------------------
 
 print('\nsolutions:')
 for id, sol in enumerate(results):
