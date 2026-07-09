@@ -7,6 +7,8 @@
 #include <sys/resource.h>
 #endif
 
+#include "tb2config.hpp"
+
 // extern "C" int getrusage(__rusage_who, struct rusage *rusage);
 
 /*
@@ -21,11 +23,11 @@ void start_timers(){};
 void stop_timers(Timer type){};
 
 #else
-thread_local static struct rusage res;
-thread_local static struct timeval tp;
-thread_local static Time virtual_utime, virtual_stime;
+TB2_THREAD_LOCAL static struct rusage res;
+TB2_THREAD_LOCAL static struct timeval tp;
+TB2_THREAD_LOCAL static Time virtual_utime, virtual_stime;
 Time virtual_ulapse, virtual_slapse;
-thread_local static Time real_time;
+TB2_THREAD_LOCAL static Time real_time;
 Time real_lapse;
 
 void start_timers()

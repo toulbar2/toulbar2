@@ -790,7 +790,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
     char *path, *tok;
     if (!stat(bin_name, &st)) {
         char* end = (char*)strrchr(bin_name, PATH_SEP_CHR);
-        thread_local static char bin_path[512];
+        TB2_THREAD_LOCAL static char bin_path[512];
         if (end) {
             *end = 0;
             strncpy(buffer, bin_name, buflen);
@@ -807,7 +807,7 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
     while (tok) {
         snprintf(buffer, buflen, "%s%c%s", tok, PATH_SEP_CHR, bin_name);
         if (!stat(buffer, &st)) {
-            thread_local static char bin_path[512];
+            TB2_THREAD_LOCAL static char bin_path[512];
             strncpy(buffer, tok, buflen);
             free(path);
             snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);

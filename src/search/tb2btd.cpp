@@ -741,7 +741,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
                                 for (int ctrIndex : ((WCSP*)wcsp)->delayedCtrBLP[1]) {
                                     Constraint* ctr = ((WCSP*)wcsp)->getCtr(ctrIndex);
                                     assert(ctr->deconnected());
-                                    thread_local static vector<Cost> costs;
+                                    TB2_THREAD_LOCAL static vector<Cost> costs;
                                     Constraint* incCtr = NULL;
                                     if (ctr->isBinary()) {
                                         costs.resize(ctr->getDomainInitSizeProduct(), MIN_COST);

@@ -1559,7 +1559,7 @@ bool EnumeratedVariable::canbeMerged(EnumeratedVariable* x)
 // only in preprocessing
 void EnumeratedVariable::mergeTo(BinaryConstraint* xy, map<Value, Value>& functional)
 {
-    thread_local static Tuple oldtuple, newtuple, tuple;
+    TB2_THREAD_LOCAL static Tuple oldtuple, newtuple, tuple;
     assert(Store::getDepth() == 0);
     assert(unassigned());
     EnumeratedVariable* x = (EnumeratedVariable*)xy->getVarDiffFrom(this);

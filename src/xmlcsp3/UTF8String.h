@@ -55,7 +55,7 @@ namespace XCSP3Core {
     public:
         typedef unsigned char Byte;
 
-        thread_local static const int npos = INT_MAX;
+        static const int npos = INT_MAX;
 
         UTF8String();
 

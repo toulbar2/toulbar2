@@ -10,23 +10,23 @@
 using namespace std;
 
 //--------------------------------------------------------------------------------------------
-thread_local vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
-thread_local vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
-thread_local vector<MultiCFN::Solution> Bicriteria::_solutions = vector<MultiCFN::Solution>();
-thread_local vector<Double> Bicriteria::_lower_bounds = vector<Double>();
+TB2_THREAD_LOCAL vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
+TB2_THREAD_LOCAL vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
+TB2_THREAD_LOCAL vector<MultiCFN::Solution> Bicriteria::_solutions = vector<MultiCFN::Solution>();
+TB2_THREAD_LOCAL vector<Double> Bicriteria::_lower_bounds = vector<Double>();
 
-thread_local unsigned int Bicriteria::_first_cfn_index = 0;
-thread_local unsigned int Bicriteria::_second_cfn_index = 0;
+TB2_THREAD_LOCAL unsigned int Bicriteria::_first_cfn_index = 0;
+TB2_THREAD_LOCAL unsigned int Bicriteria::_second_cfn_index = 0;
 
 // parameters default values
-thread_local int Bicriteria::_showSolutions = 0;
-thread_local int Bicriteria::_vac = 0;
-thread_local int Bicriteria::_seed = 1;
-thread_local int Bicriteria::_verbose = -1;
-thread_local int Bicriteria::_sol_timeout = 0;
-thread_local int Bicriteria::_global_timeout = 0;
-thread_local int Bicriteria::_nsol_max = 0;
-thread_local double Bicriteria::_startGlobalCpuTime = 0.;
+TB2_THREAD_LOCAL int Bicriteria::_showSolutions = 0;
+TB2_THREAD_LOCAL int Bicriteria::_vac = 0;
+TB2_THREAD_LOCAL int Bicriteria::_seed = 1;
+TB2_THREAD_LOCAL int Bicriteria::_verbose = -1;
+TB2_THREAD_LOCAL int Bicriteria::_sol_timeout = 0;
+TB2_THREAD_LOCAL int Bicriteria::_global_timeout = 0;
+TB2_THREAD_LOCAL int Bicriteria::_nsol_max = 0;
+TB2_THREAD_LOCAL double Bicriteria::_startGlobalCpuTime = 0.;
 
 //--------------------------------------------------------------------------------------------
 void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)

@@ -39,7 +39,7 @@ Constraint::Constraint(WCSP* w, int elimCtrIndex)
 
 bool Constraint::checkEACGreedySolution(int index, Value support)
 {
-    thread_local static Tuple t;
+    TB2_THREAD_LOCAL static Tuple t;
     int a = arity();
     t.resize(a);
     for (int i = 0; i < a; i++) {
@@ -217,7 +217,7 @@ void Constraint::assignCluster()
 /// \warning always returns 0 for cost functions in intention
 Cost Constraint::getMinCost()
 {
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     if (!extension())
         return MIN_COST;
 
@@ -246,7 +246,7 @@ Cost Constraint::getMinCost()
 
 Cost Constraint::getCost()
 {
-    thread_local static Tuple t;
+    TB2_THREAD_LOCAL static Tuple t;
     int a = arity();
     t.resize(a);
     for (int i = 0; i < a; i++) {
@@ -262,7 +262,7 @@ Cost Constraint::getCost()
 /// \warning always returns false for cost functions in intention
 bool Constraint::universal(Cost zero)
 {
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     if (!extension())
         return false;
 
@@ -290,7 +290,7 @@ bool Constraint::universal(Cost zero)
 /// \warning always returns MAX_COST for cost functions in intention
 Cost Constraint::getMaxFiniteCost()
 {
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     if (!extension())
         return MAX_COST;
 
@@ -311,7 +311,7 @@ Cost Constraint::getMaxFiniteCost()
 /// \warning always returns false for cost functions in intention
 bool Constraint::ishard()
 {
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     if (!extension())
         return false;
 
@@ -327,7 +327,7 @@ bool Constraint::ishard()
 /// \warning always returns false for cost functions in intention
 bool Constraint::isfinite()
 {
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     if (!extension())
         return false;
 
@@ -344,7 +344,7 @@ bool Constraint::verifySeparate(Constraint* ctr1, Constraint* ctr2)
 {
     assert(scopeIncluded(ctr1));
     assert(scopeIncluded(ctr2));
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     Cost cost, c1, c2;
     firstlex();
     if (ToulBar2::verbose >= 3) {
@@ -408,7 +408,7 @@ bool Constraint::findConditionalIndependences()
 
 Constraint* Constraint::copy()
 {
-    thread_local static Tuple t;
+    TB2_THREAD_LOCAL static Tuple t;
     int scope[this->arity()];
     for (int i = 0; i < arity(); i++)
         scope[i] = getVar(i)->wcspIndex;

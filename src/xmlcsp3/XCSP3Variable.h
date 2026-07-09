@@ -117,7 +117,7 @@ namespace XCSP3Core {
      */
     class XParameterVariable : public XVariable {
     public :
-        thread_local static int max; // Max parameter number for current group
+        TB2_THREAD_LOCAL static int max; // Max parameter number for current group
         int number; // -1 if %...
         XParameterVariable(std::string lid);
     };

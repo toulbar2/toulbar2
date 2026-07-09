@@ -234,7 +234,7 @@ bool NaryConstraint::reviseEACGreedySolution(int index, Value support)
 /// Set new default cost to df (df <= Top), keep existing costs SMALLER than this default cost in a Map or a table
 void NaryConstraint::keepAllowedTuples(Cost df)
 {
-    thread_local static Tuple t;
+    TB2_THREAD_LOCAL static Tuple t;
     assert(CUT(wcsp->getUb(), df));
     if (pf) {
         TUPLES* pfnew = new TUPLES;
@@ -323,7 +323,7 @@ void NaryConstraint::first(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
 bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz)
 {
-    thread_local static Tuple t1, t;
+    TB2_THREAD_LOCAL static Tuple t1, t;
     int a = arity_, i = a - 1, k;
     bool finished = false;
     bool neweq = true;
@@ -438,7 +438,7 @@ bool NaryConstraint::separability(EnumeratedVariable* vx, EnumeratedVariable* vz
 
 void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 {
-    thread_local static Tuple t, tX, tZ;
+    TB2_THREAD_LOCAL static Tuple t, tX, tZ;
     Cost cost, minCost = MAX_COST;
     int a = arity_;
     t.resize(a);
@@ -738,7 +738,7 @@ void NaryConstraint::separate(EnumeratedVariable* vx, EnumeratedVariable* vz)
 
 void NaryConstraint::addtoTuples(EnumeratedVariable* x, Value v, Cost costi)
 {
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     Cost Top = wcsp->getUb();
     int tindex = getIndex(x);
     assert(tindex >= 0);
@@ -765,7 +765,7 @@ void NaryConstraint::addtoTuples(EnumeratedVariable* x, Value v, Cost costi)
 void NaryConstraint::addtoTuples(Cost costi)
 {
     assert(costi >= MIN_COST || getMinCost() >= -costi);
-    thread_local static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     Cost Top = wcsp->getUb();
     Cost cost;
     Cost olddf = default_cost;
@@ -1137,7 +1137,7 @@ void NaryConstraint::projectxyz(EnumeratedVariable* x,
     TUPLES& fproj)
 {
     assert(CUT(default_cost, wcsp->getUb()));
-    thread_local static Tuple t;
+    TB2_THREAD_LOCAL static Tuple t;
     Tuple txyz(3, 0);
     Cost c;
     TUPLES::iterator itproj;
@@ -1188,7 +1188,7 @@ void NaryConstraint::projectxy(EnumeratedVariable* x,
     TUPLES& fproj)
 {
     assert(CUT(default_cost, wcsp->getUb()));
-    thread_local static Tuple t;
+    TB2_THREAD_LOCAL static Tuple t;
     Tuple txy(2, 0);
     Cost c;
     TUPLES::iterator itproj;
