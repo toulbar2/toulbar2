@@ -363,7 +363,7 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
             break;
         case 8: {
             uint64_t* temp_ptr64 = static_cast<uint64_t*>(scopes_info.ptr);
-            for(int i = 1; i < scopes_info.shape[0]; i ++) {
+            for(int i = 0; i < scopes_info.shape[0]; i ++) {
                 ternary_scopes[i][0] = temp_ptr64[i*ss1];
                 ternary_scopes[i][1] = temp_ptr64[i*ss1+ss2];
                 ternary_scopes[i][2] = temp_ptr64[i*ss1+ss2*2];
@@ -395,7 +395,7 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
                 }
             }
             int result_temp = s.postTernaryConstraint(ternary_scopes[i][0], ternary_scopes[i][1], ternary_scopes[i][2], ternary_costs, incremental);
-            if(i == 0) {
+            if(result < 0) {
                 result = result_temp;
             }
         }
@@ -412,7 +412,7 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
                 }
             }
             int result_temp = s.postTernaryConstraint(ternary_scopes[i][0], ternary_scopes[i][1], ternary_scopes[i][2], ternary_costs, incremental);
-            if(i == 0) {
+            if(result < 0) {
                 result = result_temp;
             }
         }
