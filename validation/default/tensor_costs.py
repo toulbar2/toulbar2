@@ -21,8 +21,10 @@ sol1 = model.Solve()
 
 # creation of the problem through tensors
 model = tb2.CFN()
-model.CFN.wcsp.makeEnumeratedVariableVec(10, 'x', 0, dom_size-1)
-model.CFN.wcsp.postMultBinaryVecConstraints(np.array(scopes), binary_costs)
+# model.CFN.wcsp.makeEnumeratedVariableVec(10, 'x', 0, dom_size-1)
+model.AddVariables(10, 'x', 0, dom_size-1)
+# model.CFN.wcsp.postMultBinaryVecConstraints(np.array(scopes), binary_costs)
+model.AddFunctions(np.array(scopes), binary_costs)
 sol2 = model.Solve()
 
 assert(abs(sol1[1]-sol2[1]) <= 1e-3)
@@ -47,9 +49,12 @@ sol1 = model.Solve()
 
 # creation of the problem through tensors
 model = tb2.CFN()
-model.CFN.wcsp.makeEnumeratedVariableVec(10, 'x', 0, dom_size-1)
-model.CFN.wcsp.postBinaryVecConstraints(np.array(scopes), binary_costs)
-model.CFN.wcsp.postUnaryVecConstraints(np.arange(n_var), unary_costs)
+# model.CFN.wcsp.makeEnumeratedVariableVec(10, 'x', 0, dom_size-1)
+model.AddVariables(10, 'x', 0, dom_size-1)
+# model.CFN.wcsp.postBinaryVecConstraints(np.array(scopes), binary_costs)
+model.AddAkinFunctions(np.array(scopes), binary_costs)
+# model.CFN.wcsp.postUnaryVecConstraints(np.arange(n_var), unary_costs)
+model.AddFunctions(np.arange(n_var), unary_costs)
 sol2 = model.Solve()
 
 assert(abs(sol1[1]-sol2[1]) <= 1e-3)
