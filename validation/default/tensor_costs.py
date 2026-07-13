@@ -1,6 +1,10 @@
 import pytoulbar2 as tb2
 
-import numpy as np
+try :
+    import numpy as np
+except Exception:
+    print("Skipping cost tensor test as numpy is not installed..")
+    exit()
 
 np.random.seed(42)
 
