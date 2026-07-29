@@ -541,20 +541,55 @@ def fzn_global_cardinality(x, values, counts):
     for j in range(len(values)):
         if type(counts[j]) is Var:
             if len(model.Domain(counts[j].ind)) > 1:
-                print('linear:', [[x[i].ind if type(x[i]) is Var else Constant(x[i]).ind, values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
-                model.AddGeneralizedLinearConstraint([[x[i].ind if type(x[i]) is Var else Constant(x[i]).ind, values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
+                model.AddGeneralizedLinearConstraint([scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
             else:
                 l.append((values[j], model.Domain(counts[j].ind)[0], model.Domain(counts[j].ind)[0]))
         else:
             l.append((values[j], counts[j], counts[j]))
     if len(l) > 0:
         model.AddGlobalCardinalityConstraint(scope(x), l)
-        
+
 def fzn_global_cardinality_closed(x, values, counts):
     assert(len(values) == len(counts))
     for i in range(len(x)):
         set_in(x[i], values)
     fzn_global_cardinality(x, values, counts)
+        
+def fzn_global_cardinality_low_up(x, values, lb, ub):
+    assert(len(values) == len(lb))
+    assert(len(values) == len(ub))
+    l = []
+    for j in range(len(values)):
+        if (type(lb[j]) is Var) or (type(ub[j]) is Var):
+            mylb = 0
+            myub = len(x)
+            if type(lb[j]) is Var:
+                if len(model.Domain(lb[j].ind)) > 1:
+                    model.AddGeneralizedLinearConstraint([[scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[lb[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '>=', 0)
+                else:
+                    mylb = model.Domain(lb[j].ind)[0]
+            else:
+                mylb = lb[j]
+            if type(ub[j]) is Var:
+                if len(model.Domain(ub[j].ind)) > 1:
+                    model.AddGeneralizedLinearConstraint([[scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[ub[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '<=', 0)
+                else:
+                    myub = model.Domain(ub[j].ind)[0]
+            else:
+                myub = ub[j]
+            if mylb > 0 or myub < len(x):
+                l.append((values[j], mylb, myub))
+        else:
+            l.append((values[j], lb[j], ub[j]))
+    if len(l) > 0:
+        model.AddGlobalCardinalityConstraint(scope(x), l)
+        
+def fzn_global_cardinality_low_up_closed(x, values, lb, ub):
+    assert(len(values) == len(lb))
+    assert(len(values) == len(ub))
+    for i in range(len(x)):
+        set_in(x[i], values)
+    fzn_global_cardinality_low_up(x, values, lb, ub)
 
 def fzn_table_int(x,t):
     n = len(x)

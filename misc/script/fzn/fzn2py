@@ -41,11 +41,11 @@ if [[ "$uname" == "Darwin" ]]; then
 fi
 
 if [[ "$extention" == "xz" ]]; then
-    xzcat $INPUT | $SED 's/;$//' | $SED 's/:: output_/::_output_/g' | $SED 's/:: [a-zA-Z0-9_]+([(].*[)])*//g' | $SED 's/^predicate .*$//' | $SED 's/%.*$//' | $SED 's/false/0/g' | $SED 's/true/1/g' | $SED 's/([-]*[0-9]+)[.][.]([-]*[0-9]+)/range(\1,1+\2)/g' | $SED 's/([a-zA-Z0-9_]+)[[]([0-9+]+)[]]/\1[\2-1]/g' | gawk -f $MZNNJ_DIR/fzn2py.awk --assign MZNNJ_DIR=$MZNNJ_DIR | $SED 's/\{/\[/g' | $SED 's/\}/\]/g'
+    xzcat $INPUT | $SED 's/;$//' | $SED 's/:: output_/::_output_/g' | $SED 's/::[^_][a-zA-Z0-9_]+([(].*[)])*//g' | $SED 's/^predicate .*$//' | $SED 's/%.*$//' | $SED 's/false/0/g' | $SED 's/true/1/g' | $SED 's/([-]*[0-9]+)[.][.]([-]*[0-9]+)/range(\1,1+\2)/g' | $SED 's/([a-zA-Z0-9_]+)[[]([0-9+]+)[]]/\1[\2-1]/g' | gawk -f $MZNNJ_DIR/fzn2py.awk --assign MZNNJ_DIR=$MZNNJ_DIR | $SED 's/\{/\[/g' | $SED 's/\}/\]/g'
 elif [[ "$extention" == "gz" ]]; then
-    zcat $INPUT | $SED 's/;$//' | $SED 's/:: output_/::_output_/g' | $SED 's/:: [a-zA-Z0-9_]+([(].*[)])*//g' | $SED 's/^predicate .*$//' | $SED 's/%.*$//' | $SED 's/false/0/g' | $SED 's/true/1/g' | $SED 's/([-]*[0-9]+)[.][.]([-]*[0-9]+)/range(\1,1+\2)/g' | $SED 's/([a-zA-Z0-9_]+)[[]([0-9+]+)[]]/\1[\2-1]/g' | gawk -f $MZNNJ_DIR/fzn2py.awk --assign MZNNJ_DIR=$MZNNJ_DIR | $SED 's/\{/\[/g' | $SED 's/\}/\]/g'
+    zcat $INPUT | $SED 's/;$//' | $SED 's/:: output_/::_output_/g' | $SED 's/::[^_][a-zA-Z0-9_]+([(].*[)])*//g' | $SED 's/^predicate .*$//' | $SED 's/%.*$//' | $SED 's/false/0/g' | $SED 's/true/1/g' | $SED 's/([-]*[0-9]+)[.][.]([-]*[0-9]+)/range(\1,1+\2)/g' | $SED 's/([a-zA-Z0-9_]+)[[]([0-9+]+)[]]/\1[\2-1]/g' | gawk -f $MZNNJ_DIR/fzn2py.awk --assign MZNNJ_DIR=$MZNNJ_DIR | $SED 's/\{/\[/g' | $SED 's/\}/\]/g'
 else
-    cat $INPUT | $SED 's/;$//' | $SED 's/:: output_/::_output_/g' | $SED 's/:: [a-zA-Z0-9_]+([(].*[)])*//g' | $SED 's/^predicate .*$//' | $SED 's/%.*$//' | $SED 's/false/0/g' | $SED 's/true/1/g' | $SED 's/([-]*[0-9]+)[.][.]([-]*[0-9]+)/range(\1,1+\2)/g' | $SED 's/([a-zA-Z0-9_]+)[[]([0-9+]+)[]]/\1[\2-1]/g' | less # gawk -f $MZNNJ_DIR/fzn2py.awk --assign MZNNJ_DIR=$MZNNJ_DIR | $SED 's/\{/\[/g' | $SED 's/\}/\]/g'
+    cat $INPUT | $SED 's/;$//' | $SED 's/:: output_/::_output_/g' | $SED 's/::[^_][a-zA-Z0-9_]+([(].*[)])*//g' | $SED 's/^predicate .*$//' | $SED 's/%.*$//' | $SED 's/false/0/g' | $SED 's/true/1/g' | $SED 's/([-]*[0-9]+)[.][.]([-]*[0-9]+)/range(\1,1+\2)/g' | $SED 's/([a-zA-Z0-9_]+)[[]([0-9+]+)[]]/\1[\2-1]/g' | gawk -f $MZNNJ_DIR/fzn2py.awk --assign MZNNJ_DIR=$MZNNJ_DIR | $SED 's/\{/\[/g' | $SED 's/\}/\]/g'
 fi
 
 # Check if any of the piped statements failed.

@@ -557,7 +557,6 @@ class CFN:
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         params = str(CFN.flatten(list(parameters)))[1:-1].replace(',','').replace('\'','')
-        print('regular: ',params)
         self.CFN.wcsp.postGlobalFunction(iscope, gcname, params)
 
     def AddWeightedCSPConstraint(self, problem, lb, ub, duplicateHard = False, strongDuality = False):
@@ -880,7 +879,12 @@ class CFN:
             self.CFN.timer(timeLimit)
         if self.UbInit is not None:
             self.CFN.wcsp.updateDUb(self.UbInit)
-        self.CFN.wcsp.sortConstraints()
+        try:
+            self.CFN.wcsp.sortConstraints()
+        except tb2.Contradiction:
+            self.CFN.wcsp.whenContradiction()
+            #print('% Sorry, problem has no solution.')
+            return None
         if len(tb2.option.vnsOptimumS) > 0:
             tb2.option.setVnsOptimum(self.CFN.wcsp.DoubletoCost(float(tb2.option.vnsOptimumS)))
         if bestSol is not None:
@@ -917,14 +921,14 @@ class CFN:
         assert(self.Depth() == 0)
         self.Limit = None
         self.Incremental = True
-        self.CFN.wcsp.sortConstraints()
-        ub = self.CFN.wcsp.getUb()
-        self.CFN.beginSolve(ub)
         try:
+            self.CFN.wcsp.sortConstraints()
+            ub = self.CFN.wcsp.getUb()
+            self.CFN.beginSolve(ub)
             ub = self.CFN.preprocessing(ub)
         except tb2.Contradiction:
             self.CFN.wcsp.whenContradiction()
-            print('Problem has no solution!')
+            #print('% Sorry, problem has no solution.')
             return None
         return self.CFN.wcsp.Cost2ADCost(ub)
 
