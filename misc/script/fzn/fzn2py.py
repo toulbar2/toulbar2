@@ -541,7 +541,7 @@ def fzn_global_cardinality(x, values, counts):
     for j in range(len(values)):
         if type(counts[j]) is Var:
             if len(model.Domain(counts[j].ind)) > 1:
-                model.AddGeneralizedLinearConstraint([scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
+                model.AddGeneralizedLinearConstraint([[scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
             else:
                 l.append((values[j], model.Domain(counts[j].ind)[0], model.Domain(counts[j].ind)[0]))
         else:
