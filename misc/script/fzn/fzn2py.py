@@ -3,6 +3,9 @@
 
 MAXCOEF = 2147483647
 
+DelayedObjective = None
+objective = None
+
 class Var:
     def __init__(self, index):
         self.ind = index
@@ -262,10 +265,27 @@ def int_ne_reif(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) #  [(z == (x != y))]
 
 def int_lin_eq(coef,vars,res):
-    if type(res) is int:
-        model.AddLinearConstraint(coef, scope(vars), '==', res)
+    global DelayedObjective
+    global objective
+    if (objective is res) or (objective in vars):
+        if DelayedObjective is not None:
+            raise Exception('Variable objective cannot be in two or more linear equality constraints!')
+        if objective is res:
+            DelayedObjective = (coef,vars,1)
+        else:
+            pos = vars.index(objective)
+            divide = -coef[pos]
+            del coef[pos]
+            del vars[pos]
+            if (type(res) is not int) or res !=0:
+                coef.append(-1)
+                vars.append(res)
+            DelayedObjective = (coef,vars,divide)
     else:
-        model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
+        if type(res) is int:
+            model.AddLinearConstraint(coef, scope(vars), '==', res)
+        else:
+            model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
 
 def bool_lin_eq(coef,vars,res):
     int_lin_eq(coef,vars,res)
@@ -520,12 +540,30 @@ def set_in_reif(x,dom,z):
     model.AddFunction(scope([z, x]), costs) # (z == Disjunction([(x == v) for v in dom]))
     
 def Minimize(x):
+    global DelayedObjective
+    global objective
+    assert((DelayedObjective is None) or (x is objective))
     if type(x) is Var:
-        model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
+        if DelayedObjective:
+            coef,vars,divide = DelayedObjective
+            for i,mult in enumerate(coef):
+                xind = scope(vars[i])[0]
+                model.AddFunction([xind], [(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+        else:
+            model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
     
 def Maximize(x):
+    global DelayedObjective
+    global objective
+    assert((DelayedObjective is None) or (x is objective))
     if type(x) is Var:
-        model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
+        if DelayedObjective:
+            coef,vars,divide = DelayedObjective
+            for i,mult in enumerate(coef):
+                xind = scope(vars[i])[0]
+                model.AddFunction([xind], [-(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+        else:
+            model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
 
 #-----------------------------------------
 # Specific global constraints for toulbar2
