@@ -530,7 +530,7 @@ public:
     Cost preprocessing(Cost ub);
     void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
-    pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
+    pair<Cost, Cost> hybridSolve() { int hbfs_copy = ToulBar2::hbfs ; pair<Cost, Cost> res = hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); ToulBar2::hbfs = hbfs_copy; return res; }
     void endSolve(bool isSolution, Cost cost, bool isComplete);
     // end of internal solve methods
 
