@@ -353,7 +353,7 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
             break;
     }
 
-    // read the costs and post the ternary functions
+    // read the costs and post the binary functions
     std::vector<Double> binary_costs(costs_info.shape[1]*costs_info.shape[2]);
 
     size_t s1 = costs_info.strides[0]/costs_info.itemsize; // n cost functions
