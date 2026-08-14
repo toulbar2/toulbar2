@@ -1037,10 +1037,6 @@ PYBIND11_MODULE(pytb2, m)
                 return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def("postUnaryConstraint", [](WeightedCSP& s, int xIndex, vector<Double>& costs, bool incremental) {
-                s.postUnaryConstraint(xIndex, costs, incremental);
-            },
-            py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
 
         // vectorized functions, numpy-compatible
         .def("postUnaryVecConstraints", postUnaryVecConstraints, py::arg("scopes"), py::arg("costs"), py::arg("incremental") = false)
