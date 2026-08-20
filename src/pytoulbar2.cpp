@@ -66,6 +66,20 @@ namespace py = pybind11;
 
 extern void newsolution(int wcspId, void* solver);
 
+// return true if the data type is equivalent to a a signed integer 
+inline bool is_dtype_sintegers(py::buffer_info& buf_info) {
+    return buf_info.item_type_is_equivalent_to<int8_t>() || 
+           buf_info.item_type_is_equivalent_to<int16_t>() || 
+           buf_info.item_type_is_equivalent_to<int32_t>() ||
+           buf_info.item_type_is_equivalent_to<int64_t>();
+}
+
+// return true if the data type is equivalent to a floating point type 
+inline bool is_dtype_floating_point(py::buffer_info& buf_info) {
+    return buf_info.item_type_is_equivalent_to<float>() || 
+           buf_info.item_type_is_equivalent_to<double>();
+}
+
 // create n enumerated variables
 // var names are formed from base_name plus an index
 // return the index of the first variable created
@@ -106,12 +120,12 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    if(scopes_info.ndim != 1 || (scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l")) {
+    if(scopes_info.ndim != 1 || !is_dtype_sintegers(scopes_info)) {
         std::cerr << "Error, scopes must be provided as a 1-dimensional vector of integer indices!" << std::endl;
         throw BadConfiguration();
     }
     // check costs data types
-    if(costs_info.ndim != 2 || (costs_info.format != "f" && costs_info.format != "d")) {
+    if(costs_info.ndim != 2 || !is_dtype_floating_point(costs_info)) {
         // error, costs must be floating point values
         std::cerr << "error, costs must be a 2-dimensional floating point vector!" << std::endl;
         throw BadConfiguration();
@@ -125,23 +139,17 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
 
     // read the scopes
     std::vector<int> unary_scopes;
-    switch(scopes_info.itemsize) {
-        case 1:
-            extractUnaryScopes<uint8_t>(unary_scopes, scopes_info);
-            break;
-        case 2:
-            extractUnaryScopes<uint16_t>(unary_scopes, scopes_info);
-            break;
-        case 4:
-            extractUnaryScopes<uint32_t>(unary_scopes, scopes_info);
-            break;
-        case 8:
-            extractUnaryScopes<uint64_t>(unary_scopes, scopes_info);
-            break;
-        default:
-            std::cerr << "error, unsupported data types for scopes!" << std::endl;
-            throw BadConfiguration();
-            break;
+    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+        extractUnaryScopes<int8_t>(unary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+        extractUnaryScopes<int16_t>(unary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+        extractUnaryScopes<int32_t>(unary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+        extractUnaryScopes<int64_t>(unary_scopes, scopes_info);
+    } else {
+        std::cerr << "error, unsupported data types for scopes!" << std::endl;
+        throw BadConfiguration();
     }
 
     // read the costs and create the cost functions
@@ -149,9 +157,9 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     size_t s2 = costs_info.strides[1]/costs_info.itemsize; // val ind
     vector<Double> unary_costs(costs_info.shape[1]);
     for(int i = 0; i < costs_info.shape[0]; i ++) {
-        if(costs_info.itemsize == sizeof(double)) {
+        if(costs_info.item_type_is_equivalent_to<double>()) {
             extractUnaryCosts<double>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.itemsize == sizeof(float)) {
+        } else if(costs_info.item_type_is_equivalent_to<float>()) {
             extractUnaryCosts<float>(i, unary_costs, costs_info, s1, s2);
         } else { // unsupported
             std::cerr << "error, costs must be float or double!" << std::endl;
@@ -204,11 +212,11 @@ int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
         throw BadConfiguration();
     }
     // check scopes data type
-    if(scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l") {
+    if(!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be integers values!" << std::endl;
         throw BadConfiguration();
     }
-    if(costs_info.ndim != 2 || (costs_info.format != "f" && costs_info.format != "d")) {
+    if(costs_info.ndim != 2 || !is_dtype_floating_point(costs_info)) {
         // error, costs must be floating point values
         std::cerr << "error, costs must be a (dom_size x dom_size x dom_size) tensor of floating point values!" << std::endl;
         throw BadConfiguration();
@@ -216,9 +224,9 @@ int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
 
     // read the costs
     vector<Double> binary_costs;
-    if(costs_info.itemsize == sizeof(double)) {
+    if(costs_info.item_type_is_equivalent_to<double>()) {
         extractBinaryCosts<double>(binary_costs, costs_info);
-    } else if(costs_info.itemsize == sizeof(float)) {
+    } else if(costs_info.item_type_is_equivalent_to<float>()) {
         extractBinaryCosts<float>(binary_costs, costs_info);
     } else { // unsupported
         std::cerr << "error, costs must be float or double!" << std::endl;
@@ -229,23 +237,17 @@ int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
     size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
     for(int i = 0; i < scopes_info.shape[0]; i ++) {
-        switch(scopes_info.itemsize) {
-            case 1:
-                extractBinaryScopes<uint8_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
-                break;
-            case 2:
-                extractBinaryScopes<uint16_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
-                break;
-            case 4:
-                extractBinaryScopes<uint32_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
-                break;
-            case 8:
-                extractBinaryScopes<uint64_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
-                break;
-            default:
-                std::cerr << "error, unsupported data types for scopes!" << std::endl;
-                throw BadConfiguration();
-                break;
+        if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+            extractBinaryScopes<int8_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
+        } else if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+            extractBinaryScopes<int16_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
+        } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+            extractBinaryScopes<int32_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
+        } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+            extractBinaryScopes<int64_t>(i, scopes_info, ss1, ss2, xIndex, yIndex);
+        } else {
+            std::cerr << "error, unsupported data types for scopes!" << std::endl;
+            throw BadConfiguration();
         }
         int temp_result = s.postBinaryConstraint(xIndex, yIndex, binary_costs, incremental);
         if(i == 0) {
@@ -305,7 +307,7 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
         throw BadConfiguration();
     }
     // check scopes data type
-    if(scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l") {
+    if(!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be integers values!" << std::endl;
         throw BadConfiguration();
     }
@@ -315,30 +317,24 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
         throw BadConfiguration();
     }
     // costs must be floating point values
-    if(costs_info.format != "f" && costs_info.format != "d") {
+    if(!costs_info.item_type_is_equivalent_to<float>() && !costs_info.item_type_is_equivalent_to<double>()) {
         std::cerr << "error, costs must be a tensor of floating point values!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the scopes and create the cost functions
     vector<vector<int>> binary_scopes;
-    switch(scopes_info.itemsize) {
-        case 1:
-            extractBinaryScopes<uint8_t>(binary_scopes, scopes_info);
-            break;
-        case 2:
-            extractBinaryScopes<uint16_t>(binary_scopes, scopes_info);
-            break;
-        case 4:
-            extractBinaryScopes<uint32_t>(binary_scopes, scopes_info);
-            break;
-        case 8:
-            extractBinaryScopes<uint64_t>(binary_scopes, scopes_info);
-            break;
-        default:
-            std::cerr << "error, unsupported data types for scopes!" << std::endl;
-            throw BadConfiguration();
-            break;
+    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+        extractBinaryScopes<int8_t>(binary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+        extractBinaryScopes<int16_t>(binary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+        extractBinaryScopes<int32_t>(binary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+        extractBinaryScopes<int64_t>(binary_scopes, scopes_info);
+    }  else {
+        std::cerr << "error, unsupported data types for scopes!" << std::endl;
+        throw BadConfiguration();
     }
 
     // read the costs and post the binary functions
@@ -347,9 +343,9 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
     size_t s2 = costs_info.strides[1]/costs_info.itemsize;
     size_t s3 = costs_info.strides[2]/costs_info.itemsize;
     for(size_t func_ind = 0; func_ind < binary_scopes.size(); func_ind ++) {
-        if(costs_info.itemsize == sizeof(double)) {
+        if(costs_info.item_type_is_equivalent_to<double>()) {
             extractBinaryCosts<double>(func_ind, binary_costs, costs_info, s1, s2, s3);
-        } else if(costs_info.itemsize == sizeof(float)) {
+        } else if(costs_info.item_type_is_equivalent_to<float>()) {
             extractBinaryCosts<float>(func_ind, binary_costs, costs_info, s1, s2, s3);
         } else { // unsupported cost types
             std::cerr << "error, costs must be float or double!" << std::endl;
@@ -411,11 +407,11 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
         throw BadConfiguration();
     }
     // check scopes data type
-    if(scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l") {
-        std::cerr << "error, scopes must be integers values!" << std::endl;
+    if(!is_dtype_sintegers(scopes_info)) {
+        std::cerr << "error, scopes must be unsigned integer values!" << std::endl;
         throw BadConfiguration();
     }
-    if(costs_info.ndim != 3 || (costs_info.format != "f" && costs_info.format != "d")) {
+    if(costs_info.ndim != 3 || !is_dtype_floating_point(costs_info)) {
         // error, costs must be floating point values
         std::cerr << "error, costs must be a 3x3x3 tensor of floating point values!" << std::endl;
         throw BadConfiguration();
@@ -423,9 +419,9 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
 
     // read the costs table
     vector<Double> ternary_costs;
-    if(costs_info.itemsize == sizeof(double)) {
+    if(costs_info.item_type_is_equivalent_to<double>()) {
         extractTernaryCosts<double>(ternary_costs, costs_info);
-    } else if(costs_info.itemsize == sizeof(float)) {
+    } else if(costs_info.item_type_is_equivalent_to<float>()) {
         extractTernaryCosts<float>(ternary_costs, costs_info);
     } else { // unsupported
         std::cerr << "error, costs must be float or double!" << std::endl;
@@ -436,23 +432,17 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
     size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
     size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
     for(int i = 0; i < scopes_info.shape[0]; i ++) {
-        switch(scopes_info.itemsize) {
-            case 1:
-                extractTernaryScopes<uint8_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-                break;
-            case 2:
-                extractTernaryScopes<uint16_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-                break;
-            case 4:
-                extractTernaryScopes<uint32_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-                break;
-            case 8:
-                extractTernaryScopes<uint64_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-                break;
-            default:
-                std::cerr << "error, unsupported data types for scopes!" << std::endl;
-                throw BadConfiguration();
-            break;
+        if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+            extractTernaryScopes<uint8_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
+        } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+            extractTernaryScopes<uint16_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
+        } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+            extractTernaryScopes<uint32_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
+        } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+            extractTernaryScopes<uint64_t>(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
+        } else {
+            std::cerr << "error, unsupported data types for scopes!" << std::endl;
+            throw BadConfiguration();
         }
         int temp_res = s.postTernaryConstraint(xIndex, yIndex, zIndex, ternary_costs, incremental);
         if(i == 0) {
@@ -516,7 +506,7 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
         throw BadConfiguration();
     }
     // check scopes data type
-    if(scopes_info.format != "b" && scopes_info.format != "h" && scopes_info.format != "i" && scopes_info.format != "l") {
+    if(!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be integers values!" << std::endl;
         throw BadConfiguration();
     }
@@ -526,30 +516,24 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
         throw BadConfiguration();
     }
     // costs must be floating point values
-    if(costs_info.format != "f" && costs_info.format != "d") {
+    if(!is_dtype_floating_point(costs_info)) {
         std::cerr << "error, costs must be a tensor of floating point values!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the scopes and create the cost functions
     vector<vector<int>> ternary_scopes;
-    switch(scopes_info.itemsize) {
-        case 1:
-            extractTernaryScopes<uint8_t>(ternary_scopes, scopes_info);
-            break;
-        case 2:
-            extractTernaryScopes<uint16_t>(ternary_scopes, scopes_info);
-            break;
-        case 4:
-            extractTernaryScopes<uint32_t>(ternary_scopes, scopes_info);
-            break;
-        case 8:
-            extractTernaryScopes<uint64_t>(ternary_scopes, scopes_info);
-            break;
-        default:
-            std::cerr << "error, unsupported data types for scopes!" << std::endl;
-            throw BadConfiguration();
-            break;
+    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    extractTernaryScopes<int8_t>(ternary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+        extractTernaryScopes<int16_t>(ternary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+        extractTernaryScopes<int32_t>(ternary_scopes, scopes_info);
+    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+        extractTernaryScopes<int64_t>(ternary_scopes, scopes_info);
+    } else {
+        std::cerr << "error, unsupported data types for scopes!" << std::endl;
+        throw BadConfiguration();
     }
 
     // read the costs and post the ternary functions
@@ -560,9 +544,9 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
     size_t s3 = costs_info.strides[2]/costs_info.itemsize;
     size_t s4 = costs_info.strides[3]/costs_info.itemsize;
     for(int i = 0; i < costs_info.shape[0]; i ++) { // cost function loop
-        if(costs_info.itemsize == sizeof(double)) {
+        if(costs_info.item_type_is_equivalent_to<double>()) {
             extractTernaryCosts<double>(i, ternary_costs, costs_info,  s1,  s2,  s3, s4);
-        } else if(costs_info.itemsize == sizeof(float)) {
+        } else if(costs_info.item_type_is_equivalent_to<float>()) {
             extractTernaryCosts<float>(i, ternary_costs, costs_info,  s1,  s2,  s3, s4);
         } else { // unsupported
             std::cerr << "error, costs must be float or double!" << std::endl;
