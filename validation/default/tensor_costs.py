@@ -52,10 +52,11 @@ assert(abs(sol1[1]-sol2[1]) <= 1e-4)
 binary_costs = np.random.rand(dom_size, dom_size)
 unary_costs  = np.random.rand(n_var, dom_size)
 
+
 # classical way to create the problem
 print("\n\n****** Problem 3: Another complete graph with a single random binary table")
 starttime = time.process_time()
-model = tb2.CFN(resolution=3, verbose=0)
+model = tb2.CFN(resolution=1, verbose=0)
 for i in range(n_var):
     model.AddVariable('x_'+str(i), range(dom_size))
 for ind, scope in enumerate(scopes):
@@ -71,7 +72,7 @@ print(f"CPU time: {endtime - starttime:.4f} seconds")
 # creation of the problem through tensors
 print("\n\n****** Problem 4: Same complete graph with a single random binary tensor")
 starttime = time.process_time()
-model = tb2.CFN(resolution=3, verbose=0)
+model = tb2.CFN(resolution=1, verbose=0)
 # model.CFN.wcsp.makeEnumeratedVariableVec(n_var, 'x', 0, dom_size-1)
 model.AddVariables(n_var, 'x', 0, dom_size-1)
 # model.CFN.wcsp.postBinaryVecConstraints(np.array(scopes), binary_costs)
@@ -132,7 +133,7 @@ for i in range(n_var):
     model.AddVariable('x_'+str(i), range(dom_size))
 for ind, scope in enumerate(scopes):
     model.AddFunction(scope, ternary_costs[0].flatten())
-model.Dump('pb7.cfn')
+# model.Dump('pb7.cfn')
 sol7 = model.Solve()
 endtime = time.process_time()
 print(sol7)
@@ -147,10 +148,49 @@ model = tb2.CFN(resolution=3, verbose=0)
 model.AddVariables(n_var, 'x', 0, dom_size-1)
 # model.CFN.wcsp.postMultBinaryVecConstraints(np.array(scopes), binary_costs)
 model.AddAkinFunctions(np.array(scopes), ternary_costs[0])
-model.Dump('pb8.cfn')
+# model.Dump('pb8.cfn')
 sol8 = model.Solve()
 endtime = time.process_time()
 print(sol8)
 print(f"CPU time: {endtime - starttime:.4f} seconds")
 
 assert(abs(sol8[1]-sol7[1]) <= 1e-4)
+
+
+
+# test with several binary integer cost tables
+n_var = 8 if len(sys.argv) <= 1 else int(sys.argv[1])
+dom_size = 3
+scopes = [[i,j] for j in range(n_var) for i in range(n_var) if i < j]
+binary_costs = np.random.randint(0, 100, (len(scopes), dom_size, dom_size), dtype=np.int64)
+
+# classical way to create the problem
+print("\n\n****** Problem 9: Complete graph with random integer binary tables")
+starttime = time.process_time()
+model = tb2.CFN(resolution=3, verbose=0)
+for i in range(n_var):
+    model.AddVariable('x_'+str(i), range(dom_size))
+for ind, scope in enumerate(scopes):
+    model.AddFunction(scope, binary_costs[ind].flatten())
+#model.Dump('pb9.cfn')
+sol9 = model.Solve()
+endtime = time.process_time()
+print(sol9)
+print(f"CPU time: {endtime - starttime:.4f} seconds")
+
+
+# creation of the problem through tensors
+print("\n\n****** Problem 10: Same complete graph with random binary integer tensors")
+starttime = time.process_time()
+model = tb2.CFN(resolution=3, verbose=0)
+# model.CFN.wcsp.makeEnumeratedVariableVec(n_var, 'x', 0, dom_size-1)
+model.AddVariables(n_var, 'x', 0, dom_size-1)
+# model.CFN.wcsp.postMultBinaryVecConstraints(np.array(scopes), binary_costs)
+model.AddFunctions(np.array(scopes), binary_costs)
+#model.Dump('pb10.cfn')
+sol10 = model.Solve()
+endtime = time.process_time()
+print(sol10)
+print(f"CPU time: {endtime - starttime:.4f} seconds")
+
+assert(abs(sol10[1]*1e3-sol9[1]) <= 1e-4)
