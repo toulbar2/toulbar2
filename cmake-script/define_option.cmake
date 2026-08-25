@@ -47,6 +47,7 @@ ENDIF()
 
 IF(MULTI_THREAD)
   SET(TOULBAR2_MULTITHREAD ON)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
 ENDIF()
 
 # header configuration options

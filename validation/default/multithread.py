@@ -3,7 +3,7 @@ import random
 from threading import Thread, Lock
 import pytoulbar2 as pytb2
 
-def solve_instance(instance, id, results):
+def solve_instance(instance, id):
     print('start solving', instance)
     pytb2.tb2.init()
     cfn = pytb2.CFN(verbose = -1)
@@ -25,7 +25,7 @@ results = [None for _ in range(len(instances))]
 # multi threads version
 threads = []
 for id, inst in enumerate(instances): # Start each thread
-    t = Thread(target=solve_instance, args=(path+inst, id, results))
+    t = Thread(target=solve_instance, args=(path+inst, id))
     t.start()
     threads.append(t)
 for t in threads: # Wait for all threads to finish
@@ -34,7 +34,7 @@ for t in threads: # Wait for all threads to finish
 
 # single thread version
 # for id, inst in enumerate(instances):
-#     solve_instance(path+inst, id, results)
+#     solve_instance(path+inst, id)
 #-------------------
 
 print('\nsolutions:')

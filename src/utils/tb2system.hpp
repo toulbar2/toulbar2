@@ -69,7 +69,7 @@ typedef long double Double;
 // -------------------------------------------------------------------- */
 
 #include <random>
-extern std::mt19937 myrandom_generator;
+extern TB2_THREAD_LOCAL std::mt19937 myrandom_generator;
 
 inline void myrearrange(vector<int>& V)
 {

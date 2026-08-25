@@ -26,9 +26,9 @@ void stop_timers(Timer type){};
 TB2_THREAD_LOCAL static struct rusage res;
 TB2_THREAD_LOCAL static struct timeval tp;
 TB2_THREAD_LOCAL static Time virtual_utime, virtual_stime;
-Time virtual_ulapse, virtual_slapse;
+TB2_THREAD_LOCAL Time virtual_ulapse, virtual_slapse;
 TB2_THREAD_LOCAL static Time real_time;
-Time real_lapse;
+TB2_THREAD_LOCAL Time real_lapse;
 
 void start_timers()
 {

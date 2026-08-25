@@ -20,9 +20,9 @@ using namespace std;
 #include "narycsproblem.h"
 #include "autotuning2.h"
 
-extern ofstream* ofile; // le fichier de sortie
+extern TB2_THREAD_LOCAL ofstream* ofile; // le fichier de sortie
 
-extern Stat_GWW* Statistiques;
+extern TB2_THREAD_LOCAL Stat_GWW* Statistiques;
 
 INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     : CSProblem(nbvar, nbconst)

@@ -17,7 +17,7 @@ const char* PrintFormatProb = "%Lf";
 const char* PrintFormatProb = "%lf";
 #endif
 
-std::mt19937 myrandom_generator{ std::random_device{}() };
+TB2_THREAD_LOCAL std::mt19937 myrandom_generator{ std::random_device{}() };
 
 InternalError::InternalError()
 {
