@@ -605,7 +605,7 @@ class CFN:
         self.VariableIndices = {}
         self.VariableNames = {}
         self.Variables = {}
-        for i in range(GetNbVars()):
+        for i in range(self.GetNbVars()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
             self.VariableNames[i] = name
@@ -1151,7 +1151,7 @@ class CFN:
         self.VariableIndices = {}
         self.VariableNames = {}
         self.Variables = {}
-        for i in range(GetNbVars()):
+        for i in range(self.GetNbVars()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
             self.VariableNames[i] = name
