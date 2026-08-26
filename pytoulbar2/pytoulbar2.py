@@ -156,10 +156,26 @@ class CFN:
         self.VariableNames[vIdx] = name
         return vIdx
 
+    
+    def AddVariables(self, n_var: int, base_name: str, min_dom: int, max_dom: int) -> int:
+        """AddVariables creates a list of n_var discrete variables with same domains.
+
+        Args:
+            n_var (int): number of variables to create.
+            base_name (str): base name. variables will be named "base_name"_idx where idx is an integer index between 0 and n_var-1.
+            min_dom (int): minimum value of the domain.
+            max_dom (int): maximum value of the domain.
+
+        Returns:
+            Index of the first variable of the list (int).
+
+        """
+        return self.CFN.wcsp.makeEnumeratedVariableVec(n_var, base_name, min_dom, max_dom)
+
     def AddFunction(self, scope, costs, incremental = False):
         """AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
         The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable and also GetDomainInitSize). 
-     
+    
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
             costs (list): array of decimal costs for all possible assignments (iterating first over the domain values of the last variable in the scope).
@@ -219,6 +235,78 @@ class CFN:
                             tuple[j] = self.CFN.wcsp.toValue(iscope[j], 0)
                         break
             self.CFN.wcsp.postNaryConstraintEnd(idx)
+
+    def AddFunctions(self, scopes, costs, incremental = False):
+        """AddFunctions creates multiple unary, binary or ternary cost functions in extension. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 1 dimensional (unary functions) or 2 dimensional objects (binary and ternary functions) with variable indices. 
+        Unary costs are given as a 2 dimensional array (n_functions x domain_size).
+        Binary costs are given as a 3 dimensional array of size n_functions x domain_size x domain_size.
+        Ternary costs are given as a 4 dimensional array of size n_functions x domain_size x domain_size x domain_size
+    
+        Args:
+            scopes : input variables (integer index) of the function as a 1 (unary) or 2 (binary and ternary) dimensional array.
+            costs : array of decimal costs for all possible assignments (iterating first over the domain values of the last variable in the scope).
+            incremental (bool): if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).  
+
+        Example:
+            AddFunctions(np.array([0,1,4]), np.array([ [0.3,0.2], [0.3,1.5], [0.2,0.1]])) encodes 3 unary cost functions with scopes [0], [1] and [4] and with costs tables [0.3,0.2], [0.3,1.5] and [0.2,0.1].
+            AddFunctions(np.array([[0,1],[2,3]]), np.array( [ [[0.5, 1.2],[0.3, 0.8]], [[1.3, 1.1],[0.4, 1.7]] ])) encodes two binary cost functions with scopes respectively [0,1] and [2,3] and with cost tables respectively [[0.5, 1.2],[0.3, 0.8]] and [[1.3, 1.1],[0.4, 1.7]].
+
+        """
+        try:
+            memoryview(scopes)
+            memoryview(costs)
+        except TypeError:
+            raise RuntimeError("Scopes and costs must be compatible with the array interface (i.e. numpy tensors-like)")
+        # check arity
+        if scopes.ndim == 1: # unary cost functions
+            if costs.ndim == 2:            
+                self.CFN.wcsp.postUnaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, unary costs must be 2-dimensional")
+        elif scopes.ndim == 2 and scopes.shape[1] == 2: # binary
+            if costs.ndim == 3: # one cost table per function
+                self.CFN.wcsp.postMultBinaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs of binary functions must be 2 dimensional")
+        elif scopes.ndim == 2 and scopes.shape[1] == 3: # ternary
+            if costs.ndim == 4: # one cost table per function
+                self.CFN.wcsp.postMultTernaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs of ternary functions must be 3 dimensional")
+        else:
+            raise RuntimeError("Error, invalid scopes dimensionality" + str(scopes.ndim) + " and or shape " + str(scopes.shape))
+
+    def AddAkinFunctions(self, scopes, costs, incremental = False):
+        """AddAkinFunctions creates multiple binary or ternary cost functions in extension with a single cost table. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 2 dimensional objects with variable indices. 
+        Binary costs are given as a 2 dimensional array of size domain_size x domain_size.
+        Ternary costs are given as a 3 dimensional array of size domain_size x domain_size x domain_size.
+    
+        Args:
+            scopes : input variables (integer index) of the function as a 2 dimensional array.
+            costs : 2 dimensional (binary) or 3 dimensional (ternary) array of decimal costs for all possible assignments (first dimension corresponding to the first variable in the scope).
+            incremental (bool): if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).  
+
+        Example:
+            AddAkinFunctions(np.array([[0,1],[2,3]]), np.array( [[0.5, 1.2],[0.3, 0.8]] )) encodes two binary cost functions with scopes respectively [0,1] and [2,3] and with the same single cost table [[0.5, 1.2],[0.3, 0.8]].
+        """
+        try:
+            memoryview(scopes)
+            memoryview(costs)
+        except TypeError:
+            raise RuntimeError("Scopes and costs must be compatible with the array interface (i.e. numpy tensors-like)")
+        if scopes.ndim == 2 and scopes.shape[1] == 2: # binary
+            if costs.ndim == 2: # one cost table for all functions
+                self.CFN.wcsp.postBinaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs must be 2 dimensional")
+        elif scopes.ndim == 2 and scopes.shape[1] == 3: # ternary
+            if costs.ndim == 3: # one cost table for all functions
+                self.CFN.wcsp.postTernaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs must be 3 dimensional")
+        else:
+            raise RuntimeError("Error, invalid scopes dimensionality" + str(scopes.ndim) + " and or shape " + str(scopes.shape))
+
 
     def AddCompactFunction(self, scope, defcost, tuples, tcosts, incremental = False):
         """AddCompactFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
