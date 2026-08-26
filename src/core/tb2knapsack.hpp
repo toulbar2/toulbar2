@@ -2094,7 +2094,7 @@ public:
                 }
                 get_current_scope();
                 if (!fastverify()) {
-                    THROWCONTRADICTION;
+                    THROWCONTRADICTION; //TODO: if all variables are assigned and Original_UB<wcsp->getUb() then returns eval cost
                 }
                 if (connected()) {
                     if (fastuniversal()) {

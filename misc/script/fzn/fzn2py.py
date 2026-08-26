@@ -3,6 +3,9 @@
 
 MAXCOEF = 2147483647
 
+DelayedObjective = None
+objective = None
+
 class Var:
     def __init__(self, index):
         self.ind = index
@@ -43,6 +46,12 @@ def Constant(v):
         Constants[v] = Variable(v, v, 'CONST__' + str(v) + '__')
         return Constants[v]
 
+def ConstantNewVariable(v):
+    if type(v) is Var:
+        return v
+    else:
+        return Variable(v, v, 'CONST__' + str(v) + '__' + str(model.GetNbVars()) + '__')
+
 def scope(s):
     if type(s) is int:
         return [Constant(s).ind]
@@ -50,6 +59,14 @@ def scope(s):
         return [s.ind]
     else:
         return [Constant(x).ind if type(x) is int else x.ind for x in s]
+
+def scopeWithDuplicateConstantVariables(s):
+    if type(s) is int:
+        return [ConstantNewVariable(s).ind]
+    elif type(s) is Var:
+        return [s.ind]
+    else:
+        return [ConstantNewVariable(x).ind if type(x) is int else x.ind for x in s]
 
 def get_values(assignment, vars):
     return [assignment[e.ind] for e in vars]
@@ -248,10 +265,27 @@ def int_ne_reif(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) #  [(z == (x != y))]
 
 def int_lin_eq(coef,vars,res):
-    if type(res) is int:
-        model.AddLinearConstraint(coef, scope(vars), '==', res)
+    global DelayedObjective
+    global objective
+    if (objective is res) or (objective in vars):
+        if DelayedObjective is not None:
+            raise Exception('Variable objective cannot be in two or more linear equality constraints!')
+        if objective is res:
+            DelayedObjective = (coef,vars,1)
+        else:
+            pos = vars.index(objective)
+            divide = -coef[pos]
+            del coef[pos]
+            del vars[pos]
+            if (type(res) is not int) or res !=0:
+                coef.append(-1)
+                vars.append(res)
+            DelayedObjective = (coef,vars,divide)
     else:
-        model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
+        if type(res) is int:
+            model.AddLinearConstraint(coef, scope(vars), '==', res)
+        else:
+            model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
 
 def bool_lin_eq(coef,vars,res):
     int_lin_eq(coef,vars,res)
@@ -506,12 +540,30 @@ def set_in_reif(x,dom,z):
     model.AddFunction(scope([z, x]), costs) # (z == Disjunction([(x == v) for v in dom]))
     
 def Minimize(x):
+    global DelayedObjective
+    global objective
+    assert((DelayedObjective is None) or (x is objective))
     if type(x) is Var:
-        model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
+        if DelayedObjective:
+            coef,vars,divide = DelayedObjective
+            for i,mult in enumerate(coef):
+                xind = scope(vars[i])[0]
+                model.AddFunction([xind], [(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+        else:
+            model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
     
 def Maximize(x):
+    global DelayedObjective
+    global objective
+    assert((DelayedObjective is None) or (x is objective))
     if type(x) is Var:
-        model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
+        if DelayedObjective:
+            coef,vars,divide = DelayedObjective
+            for i,mult in enumerate(coef):
+                xind = scope(vars[i])[0]
+                model.AddFunction([xind], [-(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+        else:
+            model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
 
 #-----------------------------------------
 # Specific global constraints for toulbar2
@@ -527,19 +579,55 @@ def fzn_global_cardinality(x, values, counts):
     for j in range(len(values)):
         if type(counts[j]) is Var:
             if len(model.Domain(counts[j].ind)) > 1:
-                model.AddGeneralizedLinearConstraint([[scope(x[i]), values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
+                model.AddGeneralizedLinearConstraint([[scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[counts[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '==', 0)
             else:
                 l.append((values[j], model.Domain(counts[j].ind)[0], model.Domain(counts[j].ind)[0]))
         else:
             l.append((values[j], counts[j], counts[j]))
     if len(l) > 0:
         model.AddGlobalCardinalityConstraint(scope(x), l)
-        
+
 def fzn_global_cardinality_closed(x, values, counts):
     assert(len(values) == len(counts))
     for i in range(len(x)):
         set_in(x[i], values)
     fzn_global_cardinality(x, values, counts)
+        
+def fzn_global_cardinality_low_up(x, values, lb, ub):
+    assert(len(values) == len(lb))
+    assert(len(values) == len(ub))
+    l = []
+    for j in range(len(values)):
+        if (type(lb[j]) is Var) or (type(ub[j]) is Var):
+            mylb = 0
+            myub = len(x)
+            if type(lb[j]) is Var:
+                if len(model.Domain(lb[j].ind)) > 1:
+                    model.AddGeneralizedLinearConstraint([[scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[lb[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '>=', 0)
+                else:
+                    mylb = model.Domain(lb[j].ind)[0]
+            else:
+                mylb = lb[j]
+            if type(ub[j]) is Var:
+                if len(model.Domain(ub[j].ind)) > 1:
+                    model.AddGeneralizedLinearConstraint([[scope(x[i])[0], values[j], 1] for i in range(len(x))] + [[ub[j].ind, v, -v] for v in model.Domain(counts[j].ind)], '<=', 0)
+                else:
+                    myub = model.Domain(ub[j].ind)[0]
+            else:
+                myub = ub[j]
+            if mylb > 0 or myub < len(x):
+                l.append((values[j], mylb, myub))
+        else:
+            l.append((values[j], lb[j], ub[j]))
+    if len(l) > 0:
+        model.AddGlobalCardinalityConstraint(scope(x), l)
+        
+def fzn_global_cardinality_low_up_closed(x, values, lb, ub):
+    assert(len(values) == len(lb))
+    assert(len(values) == len(ub))
+    for i in range(len(x)):
+        set_in(x[i], values)
+    fzn_global_cardinality_low_up(x, values, lb, ub)
 
 def fzn_table_int(x,t):
     n = len(x)
@@ -550,16 +638,27 @@ def fzn_table_int(x,t):
 def fzn_table_bool(x,t):
     fzn_table_int(x, t)
 
-def fzn_regular(x, Q, S, d, q0, F):
-    parameters = [Q+1, 1, q0, 0, len(F)]
+def fzn_regular(X, Q, S, d, q0, F):
+    parameters = [Q+1, 1, (q0, 0), len(F)]
     for e in F:
-        parameters.append(e)
-        parameters.append(0)
-    parameters.append(len(d))
+        parameters.append((e,0))
+    assert(len(d) == Q * S)
+    parameters.append(Q * S)
     for i in range(Q):
         for j in range(S):
-            parameters.append(i)
-            parameters.append(j)
+            parameters.append((i+1, j+1, d[i*S+j], 0))
+    model.AddGlobalFunction(scopeWithDuplicateConstantVariables(X), 'wregular', parameters)
+
+def fzn_sregular(X, Q, S, d, q0, F):
+    parameters = ['var', 1, Q+1, 1, q0, len(F)]
+    for e in F:
+        parameters.append(e)
+    assert(len(d) == Q * S)
+    parameters.append(Q * S)
+    for i in range(Q):
+        for j in range(S):
+            parameters.append(i+1)
+            parameters.append(j+1)
             parameters.append(d[i*S+j])
-    model.AddGlobalFunction(scope(x), 'wregular', parameters)
+    model.AddGlobalFunction(scopeWithDuplicateConstantVariables(X), 'sregular', parameters)
 

@@ -1019,6 +1019,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintSum(id, trees, coefs, cond);
     }
 
+    //TODO: if len(values)=1 and cond is integer (and EQ?) then post GCC instead of Knapsack (or use buildCardinality)
     void buildConstraintCount(vector<int> &vars, vector<int> &values, XCondition &cond) {
         int rightcoef = 0;
         string params = "";

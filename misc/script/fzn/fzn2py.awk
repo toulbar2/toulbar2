@@ -13,6 +13,8 @@ BEGIN {
 	print "";
 	print "def get_model():"
 	print "    global model";
+	print "    global DelayedObjective";
+	print "    global objective";
 	print "    model = tb2.CFN(verbose=" VERBOSITY ")";
 	parameter = 1;
 	error = 0;
@@ -111,18 +113,18 @@ parameter {
 		exit(2);
 	}
 	name = $6;
-	print "    " name " = VarArrayBoolean(" isup ",'" name "')";
 	if (match($0,"::_output_")) {
 		output[ name ] = isup;
 		outputstring[ name ] = substr($0, RSTART+RLENGTH);
 	}
 	if ($7 == "=") {
+		printf "    " name " = ";
 		sub(".*= ","");
 		sub("::_output_.*","");
 		gsub(" ","");
-		for (i=0; i<isup; i++) {
-			print "    int_eq(" name "[" i "] , " $0 "[" i "])";
-		}
+		print $0;
+	} else {
+		print "    " name " = VarArrayBoolean(" isup ",'" name "')";
 	}
 }
 
@@ -147,18 +149,19 @@ parameter {
 		exit(2);
 	}
 	name = $6;
-	print "    " name " = VarArray(" isup ",-" MAXINT "," MAXINT ",'" name "')";
+	
 	if (match($0,"::_output_")) {
 		output[ name ] = isup;
 		outputstring[ name ] = substr($0, RSTART+RLENGTH);
 	}
 	if ($7 == "=") {
+		printf "    " name " = ";
 		sub(".*= ","");
 		sub("::_output_.*","");
 		gsub(" ","");
-		for (i=0; i<isup; i++) {
-			print "    int_eq(" name "[" i "] , " $0 "[" i "])";
-		}
+		print $0;
+	} else {
+		print "    " name " = VarArray(" isup ",-" MAXINT "," MAXINT ",'" name "')";
 	}
 }
 
@@ -186,18 +189,18 @@ parameter {
 	sub("[)]:","",$5);
 	sub(",1[+]",",",$5);
 	name = $6;
-	print "    " name " = VarArray(" isup "," $5 ",'" name "')";
 	if (match($0,"::_output_")) {
 		output[ name ] = isup;
 		outputstring[ name ] = substr($0, RSTART+RLENGTH);
 	}
 	if ($7 == "=") {
+		printf "    " name " = ";
 		sub(".*= ","");
 		sub("::_output_.*","");
 		gsub(" ","");
-		for (i=0; i<isup; i++) {
-			print "    int_eq(" name "[" i "] , " $0 "[" i "])";
-		}
+		print $0;
+	} else {
+		print "    " name " = VarArray(" isup "," $5 ",'" name "')";
 	}
 }
 
@@ -224,18 +227,18 @@ parameter {
 	sub("{","[",$5);
 	sub("}:","]",$5);
 	name = $6;
-	print "    " name " = [VariableInDomain(" $5 ",'" name "_" i "') for i in range(" isup ")]";
 	if (match($0,"::_output_")) {
 		output[ name ] = isup;
 		outputstring[ name ] = substr($0, RSTART+RLENGTH);
 	}
 	if ($7 == "=") {
+		printf "    " name " = ";
 		sub(".*= ","");
 		sub("::_output_.*","");
 		gsub(" ","");
-		for (i=0; i<isup; i++) {
-			print "    int_eq(" name "[" i "] , " $0 "[" i "])";
-		}
+		print $0;
+	} else {
+		print "    " name " = [VariableInDomain(" $5 ",'" name "_" i "') for i in range(" isup ")]";
 	}
 }
 

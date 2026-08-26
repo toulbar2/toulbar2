@@ -1,5 +1,5 @@
 predicate fzn_regular(
-  array [int] of var int: x,
+  array [int] of var int: X,
   int: Q,
   int: S,
   array [int] of int: d,
@@ -8,11 +8,11 @@ predicate fzn_regular(
 );
 
 predicate fzn_regular(
-  array [int] of var int: x,
+  array [int] of var int: X,
   int: Q,
   int: S,
   array [int, int] of int: d,
   int: q0,
   set of int: F,
-) = fzn_regular(x, Q, S, array1d(d), q0, F);
+) = fzn_regular(X, Q, S, array1d(d), q0, F);
 

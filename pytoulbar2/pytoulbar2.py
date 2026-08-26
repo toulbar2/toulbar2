@@ -9,7 +9,7 @@ DESCRIPTION
 """
 from math import isinf
 import traceback
-try :
+try:
     import pytoulbar2.pytb2 as tb2
     tb2.init()
 except Exception:
@@ -47,9 +47,9 @@ class CFN:
         
         Variables (dict): associative array returning the original domain (list or iterable) associated to a given variable name (str).
         
-        VariableIndices (dict): associative array returning the variable name (str) associated to a given index (int).
+        VariableIndices (dict): associative array returning the index (int) associated to a given variable name (str).
         
-        VariableNames (list): array of created variable names (str) sorted by their index number.
+        VariableNames (dict): associative array returning the variable name (str) associated to a given index (int).
         
     See pytoulbar2test.py example in src repository.
     
@@ -58,7 +58,7 @@ class CFN:
         if init:
             tb2.reinit()
 
-        try :
+        try:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             self.rank = self.comm.Get_rank()
@@ -75,7 +75,7 @@ class CFN:
         tb2.option.verbose = verbose   # verbosity level of toulbar2 (-1:no message, 0:search statistics, 1:search tree, 2-7: propagation information)
 
         # default options (can be modified later by the user)
-        tb2.option.FullEAC = False   # if True, exploit VAC integrality variable orderding heuristic or just Full-EAC heuristic if VAC diseable
+        tb2.option.FullEAC = False   # if True, exploit VAC integrality variable ordering heuristic or just Full-EAC heuristic if VAC diseable
         tb2.option.VACthreshold = False  # if True, reuse VAC auto-threshold value found in preprocessing during search 
         tb2.option.useRASPS = 0   # if 1 or greater, perform iterative RASPS depth-first search (or LDS if greater than 1) in preprocessing during 1000 backtracks to find a good initial upperbound (to be used with VAC)
         tb2.option.weightedTightness = 0   # if 1 or 2, variable ordering heuristic exploiting cost distribution information (0: none, 1: mean cost, 2: median cost)
@@ -94,7 +94,7 @@ class CFN:
 
         self.Variables = {}
         self.VariableIndices = {}
-        self.VariableNames = []
+        self.VariableNames = {}
         
         self.CFN = tb2.Solver() # initialize VAC algorithm depending on tb2.option.vac
         self.InternalCFNs = list() # keep alive internal CFNs created by AddWeightedCSPConstraint
@@ -153,13 +153,29 @@ class CFN:
         else:
             raise RuntimeError("Incorrect domain:"+str(values))
         self.VariableIndices[name] = vIdx
-        self.VariableNames.append(name)
+        self.VariableNames[vIdx] = name
         return vIdx
+
+    
+    def AddVariables(self, n_var: int, base_name: str, min_dom: int, max_dom: int) -> int:
+        """AddVariables creates a list of n_var discrete variables with same domains.
+
+        Args:
+            n_var (int): number of variables to create.
+            base_name (str): base name. variables will be named "base_name"_idx where idx is an integer index between 0 and n_var-1.
+            min_dom (int): minimum value of the domain.
+            max_dom (int): maximum value of the domain.
+
+        Returns:
+            Index of the first variable of the list (int).
+
+        """
+        return self.CFN.wcsp.makeEnumeratedVariableVec(n_var, base_name, min_dom, max_dom)
 
     def AddFunction(self, scope, costs, incremental = False):
         """AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
         The costs are given by a flat array the size of which corresponds to the product of initial domain sizes (see note in AddVariable and also GetDomainInitSize). 
-     
+    
         Args:
             scope (list): input variables of the function. A variable can be represented by its name (str) or its index (int).
             costs (list): array of decimal costs for all possible assignments (iterating first over the domain values of the last variable in the scope).
@@ -177,7 +193,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
@@ -220,6 +236,78 @@ class CFN:
                         break
             self.CFN.wcsp.postNaryConstraintEnd(idx)
 
+    def AddFunctions(self, scopes, costs, incremental = False):
+        """AddFunctions creates multiple unary, binary or ternary cost functions in extension. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 1 dimensional (unary functions) or 2 dimensional objects (binary and ternary functions) with variable indices. 
+        Unary costs are given as a 2 dimensional array (n_functions x domain_size).
+        Binary costs are given as a 3 dimensional array of size n_functions x domain_size x domain_size.
+        Ternary costs are given as a 4 dimensional array of size n_functions x domain_size x domain_size x domain_size
+    
+        Args:
+            scopes : input variables (integer index) of the function as a 1 (unary) or 2 (binary and ternary) dimensional array.
+            costs : array of decimal costs for all possible assignments (iterating first over the domain values of the last variable in the scope).
+            incremental (bool): if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).  
+
+        Example:
+            AddFunctions(np.array([0,1,4]), np.array([ [0.3,0.2], [0.3,1.5], [0.2,0.1]])) encodes 3 unary cost functions with scopes [0], [1] and [4] and with costs tables [0.3,0.2], [0.3,1.5] and [0.2,0.1].
+            AddFunctions(np.array([[0,1],[2,3]]), np.array( [ [[0.5, 1.2],[0.3, 0.8]], [[1.3, 1.1],[0.4, 1.7]] ])) encodes two binary cost functions with scopes respectively [0,1] and [2,3] and with cost tables respectively [[0.5, 1.2],[0.3, 0.8]] and [[1.3, 1.1],[0.4, 1.7]].
+
+        """
+        try:
+            memoryview(scopes)
+            memoryview(costs)
+        except TypeError:
+            raise RuntimeError("Scopes and costs must be compatible with the array interface (i.e. numpy tensors-like)")
+        # check arity
+        if scopes.ndim == 1: # unary cost functions
+            if costs.ndim == 2:            
+                self.CFN.wcsp.postUnaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, unary costs must be 2-dimensional")
+        elif scopes.ndim == 2 and scopes.shape[1] == 2: # binary
+            if costs.ndim == 3: # one cost table per function
+                self.CFN.wcsp.postMultBinaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs of binary functions must be 2 dimensional")
+        elif scopes.ndim == 2 and scopes.shape[1] == 3: # ternary
+            if costs.ndim == 4: # one cost table per function
+                self.CFN.wcsp.postMultTernaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs of ternary functions must be 3 dimensional")
+        else:
+            raise RuntimeError("Error, invalid scopes dimensionality" + str(scopes.ndim) + " and or shape " + str(scopes.shape))
+
+    def AddAkinFunctions(self, scopes, costs, incremental = False):
+        """AddAkinFunctions creates multiple binary or ternary cost functions in extension with a single cost table. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 2 dimensional objects with variable indices. 
+        Binary costs are given as a 2 dimensional array of size domain_size x domain_size.
+        Ternary costs are given as a 3 dimensional array of size domain_size x domain_size x domain_size.
+    
+        Args:
+            scopes : input variables (integer index) of the function as a 2 dimensional array.
+            costs : 2 dimensional (binary) or 3 dimensional (ternary) array of decimal costs for all possible assignments (first dimension corresponding to the first variable in the scope).
+            incremental (bool): if True then the function is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).  
+
+        Example:
+            AddAkinFunctions(np.array([[0,1],[2,3]]), np.array( [[0.5, 1.2],[0.3, 0.8]] )) encodes two binary cost functions with scopes respectively [0,1] and [2,3] and with the same single cost table [[0.5, 1.2],[0.3, 0.8]].
+        """
+        try:
+            memoryview(scopes)
+            memoryview(costs)
+        except TypeError:
+            raise RuntimeError("Scopes and costs must be compatible with the array interface (i.e. numpy tensors-like)")
+        if scopes.ndim == 2 and scopes.shape[1] == 2: # binary
+            if costs.ndim == 2: # one cost table for all functions
+                self.CFN.wcsp.postBinaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs must be 2 dimensional")
+        elif scopes.ndim == 2 and scopes.shape[1] == 3: # ternary
+            if costs.ndim == 3: # one cost table for all functions
+                self.CFN.wcsp.postTernaryVecConstraints(scopes, costs, incremental)
+            else:
+                raise RuntimeError("Error, costs must be 3 dimensional")
+        else:
+            raise RuntimeError("Error, invalid scopes dimensionality" + str(scopes.ndim) + " and or shape " + str(scopes.shape))
+
+
     def AddCompactFunction(self, scope, defcost, tuples, tcosts, incremental = False):
         """AddCompactFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
         The costs are given by a list of assignments with the corresponding list of costs, all the other assignments taking the default cost. 
@@ -244,7 +332,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
@@ -340,7 +428,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
         sscope = set(iscope)
@@ -353,10 +441,10 @@ class CFN:
                 if v in sscope:
                     coefs_[index[v]] += coefs[i]
                 else:
-                	index[v] = len(iscope_)
-                	coefs_.append(coefs[i])
-                	iscope_.append(v)
-                	sscope.add(v)
+                    index[v] = len(iscope_)
+                    coefs_.append(coefs[i])
+                    iscope_.append(v)
+                    sscope.add(v)
             assert(len(iscope_) == len(sscope))
             coefs = coefs_
             iscope = iscope_
@@ -416,7 +504,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
 
@@ -458,7 +546,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         if (len(iscope) >= 2):
@@ -509,7 +597,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         bbounds = []
@@ -553,7 +641,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= len(self.VariableNames)):
+            if (v < 0 or v >= self.GetNbVars()):
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         params = str(CFN.flatten(list(parameters)))[1:-1].replace(',','').replace('\'','')
@@ -576,14 +664,13 @@ class CFN:
             m=tb2.CFN(); m.Read("master.cfn");s=tb2.CFN();s.Read("slave.cfn");m.AddWeightedCSPConstraint(s, lb, ub);m.Solve()
         """
         iscope = []
-        for i, v in enumerate(problem.VariableNames):
-            if isinstance(v, str):
-                vname = v
-                v = self.VariableIndices.get(vname, -1)
-                if (v < 0 or v >= len(self.VariableNames)):
-                    v = self.AddVariable(vname, [(problem.CFN.wcsp.getValueName(i, value) if len(problem.CFN.wcsp.getValueName(i, value)) > 0 else value) for value in problem.Domain(vname)])
-            if (v < 0 or v >= len(self.VariableNames)):
-                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
+        for i in range(problem.GetNbVars()):
+            vname = problem.CFN.wcsp.getName(i)
+            v = self.VariableIndices.get(vname, -1)
+            if v < 0 or v >= self.GetNbVars():
+                v = self.AddVariable(vname, [problem.CFN.wcsp.getValueName(i, value) if len(problem.CFN.wcsp.getValueName(i, value)) > 0 else value for value in problem.Domain(i)])
+            if v < 0 or v >= self.GetNbVars():
+                raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+vname)
             iscope.append(v)
         multicfn = MultiCFN()
         multicfn.PushCFN(problem, -1)
@@ -604,13 +691,13 @@ class CFN:
         """
         self.CFN.read(filename)
         self.VariableIndices = {}
-        self.VariableNames = []
+        self.VariableNames = {}
         self.Variables = {}
-        for i in range(self.CFN.wcsp.numberOfVariables()):
+        for i in range(self.GetNbVars()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
-            self.VariableNames.append(name)
-            self.Variables[name] = self.Domain(name)
+            self.VariableNames[i] = name
+            self.Variables[name] = self.Domain(i)
 
     def Parse(self, certificate):
         """Parse performs a list of elementary reduction operations on domains of variables.
@@ -808,7 +895,7 @@ class CFN:
             Name of the CFN (string).
         """
 
-        return self.CFN.wcsp.getName(name)
+        return self.CFN.wcsp.getName()
 
     def SetName(self, name):
         """SetName set the name of the CFN.
@@ -880,7 +967,12 @@ class CFN:
             self.CFN.timer(timeLimit)
         if self.UbInit is not None:
             self.CFN.wcsp.updateDUb(self.UbInit)
-        self.CFN.wcsp.sortConstraints()
+        try:
+            self.CFN.wcsp.sortConstraints()
+        except tb2.Contradiction:
+            self.CFN.wcsp.whenContradiction()
+            #print('% Sorry, problem has no solution.')
+            return None
         if len(tb2.option.vnsOptimumS) > 0:
             tb2.option.setVnsOptimum(self.CFN.wcsp.DoubletoCost(float(tb2.option.vnsOptimumS)))
         if bestSol is not None:
@@ -917,14 +1009,14 @@ class CFN:
         assert(self.Depth() == 0)
         self.Limit = None
         self.Incremental = True
-        self.CFN.wcsp.sortConstraints()
-        ub = self.CFN.wcsp.getUb()
-        self.CFN.beginSolve(ub)
         try:
+            self.CFN.wcsp.sortConstraints()
+            ub = self.CFN.wcsp.getUb()
+            self.CFN.beginSolve(ub)
             ub = self.CFN.preprocessing(ub)
         except tb2.Contradiction:
             self.CFN.wcsp.whenContradiction()
-            print('Problem has no solution!')
+            #print('% Sorry, problem has no solution.')
             return None
         return self.CFN.wcsp.Cost2ADCost(ub)
 
@@ -947,7 +1039,7 @@ class CFN:
         self.CFN.wcsp.enforceUb()   # this might generate a Contradiction exception
 
     # incremental solving: find the next (optimal) solution after a problem modification (see also SetUB)
-    def SolveNext(self, showSolutions = 0, timeLimit = 0, hbfs = 1, initHeuristics = True):
+    def SolveNext(self, showSolutions = 0, timeLimit = 0, initHeuristics = True):
         """SolveNext solves the problem (i.e., finds its optimum and proves optimality). 
         It should be done after calling SolveFirst and modifying the problem if necessary using SetUB, Assign, MultipleAssign, Remove, Increase, Decrease, or adding an incremental cost function.
 
@@ -955,7 +1047,6 @@ class CFN:
             showSolutions (int): prints solution(s) found (0: show nothing, 1: domain values, 2: variable names with their assigned values,
                                                                3: variable and value names).  
             timeLimit (int): CPU-time limit in seconds (or 0 if no time limit)
-            hbfs (int): solves using hybrid best-first search (initial limit on the number of backtracks for DFS probes) or using depth-first search (when limit is set to zero)
             initHeuristics (bool): if True (by default) then reinitialize weighted degree variable ordering heuristic and solution-based value heuristic
 
         Returns:
@@ -972,11 +1063,10 @@ class CFN:
         if initHeuristics:
             self.CFN.wcsp.resetWeightedDegree()
             for i in range(self.CFN.wcsp.numberOfVariables()):
-                 self.CFN.wcsp.setBestValue(i, self.CFN.wcsp.getSup(i) + 1); # reset value heuristic
+                 self.CFN.wcsp.setBestValue(i, self.CFN.wcsp.getSup(i) + 1) # reset value heuristic
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)
-        tb2.option.hbfs = hbfs     # reinitialize this parameter which can be modified during hybridSolve()
         try:
             try:
                 tb2.store.store()
@@ -1147,13 +1237,13 @@ class CFN:
         multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), [set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in scope]) for scope in scopes], list(constrs))
         
         self.VariableIndices = {}
-        self.VariableNames = []
+        self.VariableNames = {}
         self.Variables = {}
-        for i in range(self.CFN.wcsp.numberOfVariables()):
+        for i in range(self.GetNbVars()):
             name = self.CFN.wcsp.getName(i)
             self.VariableIndices[name] = i
-            self.VariableNames.append(name)
-            self.Variables[name] = self.Domain(name)
+            self.VariableNames[i] = name
+            self.Variables[name] = self.Domain(i)
         
         return
 
