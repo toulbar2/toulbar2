@@ -344,17 +344,17 @@ std::thread::id ToulBar2::current_thread_id;
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
-    // prevent running the single-thread version into multiple threads
-    #ifndef TOULBAR2_MULTITHREAD
-        if(ToulBar2::current_thread_id == std::thread::id()) {
-            ToulBar2::current_thread_id = std::this_thread::get_id();
-        } else {
-            if(std::this_thread::get_id() != ToulBar2::current_thread_id) {
-                std::cerr << "Error: this version of ToulBar2 cannot run in multiple threads. Please build with MULTI_THREAD option!" << std::endl;
-                throw BadConfiguration();
-            }
+// prevent running the single-thread version into multiple threads
+#ifndef TOULBAR2_MULTITHREAD
+    if (ToulBar2::current_thread_id == std::thread::id()) {
+        ToulBar2::current_thread_id = std::this_thread::get_id();
+    } else {
+        if (std::this_thread::get_id() != ToulBar2::current_thread_id) {
+            std::cerr << "Error: this version of ToulBar2 cannot run in multiple threads. Please build with MULTI_THREAD option!" << std::endl;
+            throw BadConfiguration();
         }
-    #endif
+    }
+#endif
 
     // backtrack trailing mechanism
     Store::depth = 0;

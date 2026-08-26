@@ -33,9 +33,9 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& cost; // node lower bound
-            ar& first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
-            ar& last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
+            ar & cost; // node lower bound
+            ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
+            ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
         }
 #endif
         Cost cost; // global lower bound associated to the open node
@@ -160,10 +160,10 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& varIndex;
-            ar& value;
-            ar& op;
-            ar& reverse;
+            ar & varIndex;
+            ar & value;
+            ar & op;
+            ar & reverse;
         }
 #endif
     public:
@@ -214,16 +214,16 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& hbfs;
-            ar& nbNodes;
-            ar& nbBacktracks;
-            ar& nbDEE;
-            ar& nbRecomputationNodes;
-            ar& lb;
-            ar& ub;
-            ar& open;
-            ar& cp;
-            ar& sol;
+            ar & hbfs;
+            ar & nbNodes;
+            ar & nbBacktracks;
+            ar & nbDEE;
+            ar & nbRecomputationNodes;
+            ar & lb;
+            ar & ub;
+            ar & open;
+            ar & cp;
+            ar & sol;
         }
 
     public:
@@ -530,7 +530,13 @@ public:
     Cost preprocessing(Cost ub);
     void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
-    pair<Cost, Cost> hybridSolve() { int hbfs_copy = ToulBar2::hbfs ; pair<Cost, Cost> res = hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); ToulBar2::hbfs = hbfs_copy; return res; }
+    pair<Cost, Cost> hybridSolve()
+    {
+        int hbfs_copy = ToulBar2::hbfs;
+        pair<Cost, Cost> res = hybridSolve(NULL, wcsp->getLb(), wcsp->getUb());
+        ToulBar2::hbfs = hbfs_copy;
+        return res;
+    }
     void endSolve(bool isSolution, Cost cost, bool isComplete);
     // end of internal solve methods
 

@@ -2354,15 +2354,15 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     // common ending section for all readers
 
-    //#ifdef BOOST
-    //    if (ToulBar2::addAMOConstraints!=-1) {
-    //        propagate(); // CHOOSE: initial propagation must be done beforehand (with full propagation for knapsack constraints)
-    //        ToulBar2::addAMOConstraints_ = true;
-    //        propagate(); // OR CHOOSE: initial propagation must be done beforehand (but only bound propagation for knapsack constraints)
-    //        addAMOConstraints();
-    //        ToulBar2::addAMOConstraints_ = false;
-    //    }
-    //#endif
+    // #ifdef BOOST
+    //     if (ToulBar2::addAMOConstraints!=-1) {
+    //         propagate(); // CHOOSE: initial propagation must be done beforehand (with full propagation for knapsack constraints)
+    //         ToulBar2::addAMOConstraints_ = true;
+    //         propagate(); // OR CHOOSE: initial propagation must be done beforehand (but only bound propagation for knapsack constraints)
+    //         addAMOConstraints();
+    //         ToulBar2::addAMOConstraints_ = false;
+    //     }
+    // #endif
 
     // Diverse variables structure and variables allocation and initialization
     if (ToulBar2::divNbSol > 1) {

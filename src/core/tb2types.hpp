@@ -35,7 +35,7 @@
 #include "utils/tb2integer.hpp"
 #ifdef QUAD_PROB
 #include <boost/multiprecision/float128.hpp>
-//#include <quadmath.h> // only with gcc/g++
+// #include <quadmath.h> // only with gcc/g++
 #endif
 
 using std::cerr;

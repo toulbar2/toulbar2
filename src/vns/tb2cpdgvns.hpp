@@ -27,14 +27,14 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
-        ar& cluster;
-        ar& numberclu;
-        ar& k;
-        ar& kmax;
-        ar& sec;
-        ar& msec;
-        ar& bestUb;
-        ar& bestSolution;
+        ar & cluster;
+        ar & numberclu;
+        ar & k;
+        ar & kmax;
+        ar & sec;
+        ar & msec;
+        ar & bestUb;
+        ar & bestSolution;
     }
 
 public:

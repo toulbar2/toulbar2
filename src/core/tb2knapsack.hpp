@@ -2094,7 +2094,7 @@ public:
                 }
                 get_current_scope();
                 if (!fastverify()) {
-                    THROWCONTRADICTION; //TODO: if all variables are assigned and Original_UB<wcsp->getUb() then returns eval cost
+                    THROWCONTRADICTION; // TODO: if all variables are assigned and Original_UB<wcsp->getUb() then returns eval cost
                 }
                 if (connected()) {
                     if (fastuniversal()) {
@@ -2389,7 +2389,7 @@ public:
         // SdG: Warning! VAC-lin may perform extend/project on a given knapsack constraint without increasing its lb (i.e. lb=0 and deltaCosts<>0)
         //         if (lb == MIN_COST) {
         //             assert(assigneddeltas == MIN_COST);
-        //#ifndef NDEBUG
+        // #ifndef NDEBUG
         //             bool alldeltanull = true;
         //             for (int r = 0; r < arity_ && alldeltanull; r++) {
         //                 if (getVar(r)->unassigned()) {
@@ -2397,7 +2397,7 @@ public:
         //                 }
         //             }
         //             assert(alldeltanull);
-        //#endif
+        // #endif
         //             return;
         //         }
         get_current_scope();

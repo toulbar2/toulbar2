@@ -66,72 +66,74 @@ namespace py = pybind11;
 
 extern void newsolution(int wcspId, void* solver);
 
-// return true if the data type is equivalent to a a signed integer 
-inline bool is_dtype_sintegers(py::buffer_info& buf_info) {
-    return buf_info.item_type_is_equivalent_to<int8_t>() || 
-           buf_info.item_type_is_equivalent_to<int16_t>() || 
-           buf_info.item_type_is_equivalent_to<int32_t>() ||
-           buf_info.item_type_is_equivalent_to<int64_t>();
+// return true if the data type is equivalent to a a signed integer
+inline bool is_dtype_sintegers(py::buffer_info& buf_info)
+{
+    return buf_info.item_type_is_equivalent_to<int8_t>() || buf_info.item_type_is_equivalent_to<int16_t>() || buf_info.item_type_is_equivalent_to<int32_t>() || buf_info.item_type_is_equivalent_to<int64_t>();
 }
 
-// return true if the data type is equivalent to a floating point type 
-inline bool is_dtype_floating_point(py::buffer_info& buf_info) {
-    return buf_info.item_type_is_equivalent_to<float>() || 
-           buf_info.item_type_is_equivalent_to<double>();
+// return true if the data type is equivalent to a floating point type
+inline bool is_dtype_floating_point(py::buffer_info& buf_info)
+{
+    return buf_info.item_type_is_equivalent_to<float>() || buf_info.item_type_is_equivalent_to<double>();
 }
 
 // create n enumerated variables
 // var names are formed from base_name plus an index
 // return the index of the first variable created
-int makeEnumeratedVariableVec(WeightedCSP& s, int n, std::string base_name, Value iinf, Value isup) {
-    int result = s.makeEnumeratedVariable(base_name+"_0", iinf, isup);
-    for(size_t ind = 1; ind < static_cast<size_t>(n); ind ++) {
-        s.makeEnumeratedVariable(base_name+"_"+to_string(ind), iinf, isup);
+int makeEnumeratedVariableVec(WeightedCSP& s, int n, std::string base_name, Value iinf, Value isup)
+{
+    int result = s.makeEnumeratedVariable(base_name + "_0", iinf, isup);
+    for (size_t ind = 1; ind < static_cast<size_t>(n); ind++) {
+        s.makeEnumeratedVariable(base_name + "_" + to_string(ind), iinf, isup);
     }
     return result;
 }
 
-template<typename T>
-inline void extractUnaryScopes(std::vector<int>& unary_scopes, py::buffer_info& scopes_info) {
+template <typename T>
+inline void extractUnaryScopes(std::vector<int>& unary_scopes, py::buffer_info& scopes_info)
+{
     unary_scopes.resize(scopes_info.shape[0]);
-    size_t stride = scopes_info.strides[0]/scopes_info.itemsize;
+    size_t stride = scopes_info.strides[0] / scopes_info.itemsize;
     T* temp_ptr = static_cast<T*>(scopes_info.ptr);
-    for(int i = 0; i < scopes_info.shape[0]; i ++) {
-        unary_scopes[i] = static_cast<int>(temp_ptr[i*stride]); 
+    for (int i = 0; i < scopes_info.shape[0]; i++) {
+        unary_scopes[i] = static_cast<int>(temp_ptr[i * stride]);
     }
 }
 
-template<typename T>
-inline void extractUnaryCosts(size_t func_ind, vector<Double>& costs,  py::buffer_info& costs_info, size_t s1, size_t s2) {    
-    T* temp_ptr = static_cast<T*>(costs_info.ptr);    
-    for(int j = 0; j < costs_info.shape[1]; j ++) {
-        costs[j] = static_cast<Double>(temp_ptr[func_ind*s1+j*s2]);
+template <typename T>
+inline void extractUnaryCosts(size_t func_ind, vector<Double>& costs, py::buffer_info& costs_info, size_t s1, size_t s2)
+{
+    T* temp_ptr = static_cast<T*>(costs_info.ptr);
+    for (int j = 0; j < costs_info.shape[1]; j++) {
+        costs[j] = static_cast<Double>(temp_ptr[func_ind * s1 + j * s2]);
     }
 }
 
 // post several unary cost functions at once
 // all variables are expected to have the same domain size
 // scopes is expected to be a 1-dimensional integer array
-// costs is expected to be a 2 dimensional array: n_variables x domain_size 
-void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental) {
+// costs is expected to be a 2 dimensional array: n_variables x domain_size
+void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)
+{
 
     /* Request a buffer descriptor from Python */
     py::buffer_info scopes_info = scopes.request();
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    if(scopes_info.ndim != 1 || !is_dtype_sintegers(scopes_info)) {
+    if (scopes_info.ndim != 1 || !is_dtype_sintegers(scopes_info)) {
         std::cerr << "Error, scopes must be provided as a 1-dimensional vector of integer indices!" << std::endl;
         throw BadConfiguration();
     }
     // check costs data types
-    if(costs_info.ndim != 2) {
+    if (costs_info.ndim != 2) {
         // error, costs must be floating point values
         std::cerr << "error, costs must be a 2-dimensional vector!" << std::endl;
         throw BadConfiguration();
     }
     // check consistency between costs sizes and scopes sizes
-    if(costs_info.shape[0] != scopes_info.shape[0]) {
+    if (costs_info.shape[0] != scopes_info.shape[0]) {
         // error, costs must be floating point values
         std::cerr << "error, costs and scopes must have same size!" << std::endl;
         throw BadConfiguration();
@@ -139,13 +141,13 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
 
     // read the scopes
     std::vector<int> unary_scopes;
-    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
         extractUnaryScopes<int8_t>(unary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
         extractUnaryScopes<int16_t>(unary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
         extractUnaryScopes<int32_t>(unary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
         extractUnaryScopes<int64_t>(unary_scopes, scopes_info);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -153,23 +155,23 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     }
 
     // read the costs and create the cost functions
-    size_t s1 = costs_info.strides[0]/costs_info.itemsize; // var ind
-    size_t s2 = costs_info.strides[1]/costs_info.itemsize; // val ind
+    size_t s1 = costs_info.strides[0] / costs_info.itemsize; // var ind
+    size_t s2 = costs_info.strides[1] / costs_info.itemsize; // val ind
     vector<Double> unary_costs(costs_info.shape[1]);
-    for(int i = 0; i < costs_info.shape[0]; i ++) {
-        if(costs_info.item_type_is_equivalent_to<float>()) {
+    for (int i = 0; i < costs_info.shape[0]; i++) {
+        if (costs_info.item_type_is_equivalent_to<float>()) {
             extractUnaryCosts<float>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<double>()) {
+        } else if (costs_info.item_type_is_equivalent_to<double>()) {
             extractUnaryCosts<double>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<long double>()) {
+        } else if (costs_info.item_type_is_equivalent_to<long double>()) {
             extractUnaryCosts<long double>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
+        } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
             extractUnaryCosts<int8_t>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<int16_t>()) {
+        } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
             extractUnaryCosts<int16_t>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<int32_t>()) {
+        } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
             extractUnaryCosts<int32_t>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<int64_t>()) {
+        } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
             extractUnaryCosts<int64_t>(i, unary_costs, costs_info, s1, s2);
         } else { // unsupported
             std::cerr << "error, unsupported data types for costs!" << std::endl;
@@ -180,37 +182,40 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
 }
 
 // extract a binary cost function table
-template<typename T>
-inline void extractBinaryCosts(std::vector<Double>& binary_costs, py::buffer_info& costs_info) {
-    binary_costs.resize(costs_info.shape[0]*costs_info.shape[1]);
-    size_t s1 = costs_info.strides[0]/costs_info.itemsize;
-    size_t s2 = costs_info.strides[1]/costs_info.itemsize;
-    T* temp_ptr = static_cast<T*>(costs_info.ptr);    
+template <typename T>
+inline void extractBinaryCosts(std::vector<Double>& binary_costs, py::buffer_info& costs_info)
+{
+    binary_costs.resize(costs_info.shape[0] * costs_info.shape[1]);
+    size_t s1 = costs_info.strides[0] / costs_info.itemsize;
+    size_t s2 = costs_info.strides[1] / costs_info.itemsize;
+    T* temp_ptr = static_cast<T*>(costs_info.ptr);
     size_t cost_ind = 0;
-    for(int i = 0; i < costs_info.shape[0]; i ++) {
-        for(int j = 0; j < costs_info.shape[1]; j ++) {
-            binary_costs[cost_ind] = static_cast<Double>(temp_ptr[i*s1+j*s2]);
-            cost_ind ++;
+    for (int i = 0; i < costs_info.shape[0]; i++) {
+        for (int j = 0; j < costs_info.shape[1]; j++) {
+            binary_costs[cost_ind] = static_cast<Double>(temp_ptr[i * s1 + j * s2]);
+            cost_ind++;
         }
     }
 }
 
 // extract a single binary scope given a cost function index
-template<typename T>
-inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex) {
+template <typename T>
+inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex)
+{
     T* temp_ptr = static_cast<T*>(scopes_info.ptr);
-    xIndex = temp_ptr[func_ind*ss1];
-    yIndex = temp_ptr[func_ind*ss1+ss2];
+    xIndex = temp_ptr[func_ind * ss1];
+    yIndex = temp_ptr[func_ind * ss1 + ss2];
 }
 
-inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex) {
-    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex)
+{
+    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
         extractBinaryScopes<int8_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
-    } else if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
         extractBinaryScopes<int16_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
-    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
         extractBinaryScopes<int32_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
-    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
         extractBinaryScopes<int64_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -220,7 +225,8 @@ inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, s
 
 // post several binary cost functions with a single costs tensor
 // scopes are provided as a n_func*2 matrix
-int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)  {
+int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)
+{
 
     // scope indices
     int xIndex, yIndex;
@@ -231,88 +237,89 @@ int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    if(scopes_info.ndim != 2 || scopes_info.shape[1] != 2) {
+    if (scopes_info.ndim != 2 || scopes_info.shape[1] != 2) {
         std::cerr << "Error, must provide a list of scopes with size 2!" << std::endl;
         throw BadConfiguration();
     }
     // check scopes data type
-    if(!is_dtype_sintegers(scopes_info)) {
+    if (!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be integers values!" << std::endl;
         throw BadConfiguration();
     }
-    if(costs_info.ndim != 2) {
+    if (costs_info.ndim != 2) {
         // error, costs must be floating point values
         std::cerr << "error, costs must be a (dom_size x dom_size x dom_size) tensor!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the costs
-    size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
-    size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
+    size_t ss1 = scopes_info.strides[0] / scopes_info.itemsize;
+    size_t ss2 = scopes_info.strides[1] / scopes_info.itemsize;
     vector<Double> binary_costs;
-    if(costs_info.item_type_is_equivalent_to<int8_t>()) {
+    if (costs_info.item_type_is_equivalent_to<int8_t>()) {
         extractBinaryCosts<int8_t>(binary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
         extractBinaryCosts<int16_t>(binary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
         extractBinaryCosts<int32_t>(binary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
         extractBinaryCosts<int64_t>(binary_costs, costs_info);
-    }  else if(costs_info.item_type_is_equivalent_to<float>()) {
+    } else if (costs_info.item_type_is_equivalent_to<float>()) {
         extractBinaryCosts<float>(binary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<double>()) {
+    } else if (costs_info.item_type_is_equivalent_to<double>()) {
         extractBinaryCosts<double>(binary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
         extractBinaryCosts<long double>(binary_costs, costs_info);
     } else { // unsupported
         std::cerr << "error, costs must be float or double!" << std::endl;
         throw BadConfiguration();
     }
     // read the scopes and create the cost functions
-    for(int i = 0; i < scopes_info.shape[0]; i ++) {
+    for (int i = 0; i < scopes_info.shape[0]; i++) {
         extractBinaryScopes(i, scopes_info, ss1, ss2, xIndex, yIndex);
         int temp_result = s.postBinaryConstraint(xIndex, yIndex, binary_costs, incremental);
-        if(i == 0) {
+        if (i == 0) {
             result = temp_result;
         }
     }
-    
+
     return result; // return index of the first added cost function
 }
 
-
 // extract multiple binary costs function scopes
-template<typename T>
-void extractBinaryScopes(vector<vector<int>>& binary_scopes, py::buffer_info& scopes_info) {
+template <typename T>
+void extractBinaryScopes(vector<vector<int>>& binary_scopes, py::buffer_info& scopes_info)
+{
     binary_scopes.resize(scopes_info.shape[0], std::vector<int>(2));
     T* temp_ptr = static_cast<T*>(scopes_info.ptr);
-    size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
-    size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
-    for(int i = 0; i < scopes_info.shape[0]; i ++) {
-        binary_scopes[i][0] = temp_ptr[i*ss1];
-        binary_scopes[i][1] = temp_ptr[i*ss1+ss2];
+    size_t ss1 = scopes_info.strides[0] / scopes_info.itemsize;
+    size_t ss2 = scopes_info.strides[1] / scopes_info.itemsize;
+    for (int i = 0; i < scopes_info.shape[0]; i++) {
+        binary_scopes[i][0] = temp_ptr[i * ss1];
+        binary_scopes[i][1] = temp_ptr[i * ss1 + ss2];
     }
 }
 
 // extract a binary cost function table
-template<typename T>
-int extractBinaryCosts(py::buffer_info& costs_info, vector<vector<int>>& binary_scopes, WeightedCSP& s, bool incremental) {
+template <typename T>
+int extractBinaryCosts(py::buffer_info& costs_info, vector<vector<int>>& binary_scopes, WeightedCSP& s, bool incremental)
+{
     int result = -1;
-    T* temp_ptr = static_cast<T*>(costs_info.ptr);    
-    size_t s1 = costs_info.strides[0]/costs_info.itemsize; // n cost functions
-    size_t s2 = costs_info.strides[1]/costs_info.itemsize;
-    size_t s3 = costs_info.strides[2]/costs_info.itemsize;
-    std::vector<Double> binary_costs(costs_info.shape[1]*costs_info.shape[2]);
-    for(size_t func_ind = 0; func_ind < binary_scopes.size(); func_ind ++) {
+    T* temp_ptr = static_cast<T*>(costs_info.ptr);
+    size_t s1 = costs_info.strides[0] / costs_info.itemsize; // n cost functions
+    size_t s2 = costs_info.strides[1] / costs_info.itemsize;
+    size_t s3 = costs_info.strides[2] / costs_info.itemsize;
+    std::vector<Double> binary_costs(costs_info.shape[1] * costs_info.shape[2]);
+    for (size_t func_ind = 0; func_ind < binary_scopes.size(); func_ind++) {
         size_t cost_ind = 0;
-        for(int j = 0; j < costs_info.shape[1]; j ++) {
-            for(int k = 0; k < costs_info.shape[2]; k ++) {
-                binary_costs[cost_ind] = static_cast<Double>(temp_ptr[func_ind*s1+j*s2+k*s3]);
-                cost_ind ++;
+        for (int j = 0; j < costs_info.shape[1]; j++) {
+            for (int k = 0; k < costs_info.shape[2]; k++) {
+                binary_costs[cost_ind] = static_cast<Double>(temp_ptr[func_ind * s1 + j * s2 + k * s3]);
+                cost_ind++;
             }
         }
         int result_temp = s.postBinaryConstraint(binary_scopes[func_ind][0], binary_scopes[func_ind][1], binary_costs, incremental);
-        if(result < 0) {
+        if (result < 0) {
             result = result_temp;
         }
     }
@@ -322,7 +329,8 @@ int extractBinaryCosts(py::buffer_info& costs_info, vector<vector<int>>& binary_
 // post several binary cost functions from tensors
 // scopes are provided as a n_func*2 matrix
 // costs are provided as a n_func*dom_size*dom_size tensor
-int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)  {
+int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)
+{
 
     // scope indices
     int result = -1;
@@ -332,55 +340,55 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    if(scopes_info.ndim != 2 || scopes_info.shape[1] != 2) {
+    if (scopes_info.ndim != 2 || scopes_info.shape[1] != 2) {
         std::cerr << "Error, must provide a list of scopes with size 2!" << std::endl;
         throw BadConfiguration();
     }
     // check that there are as many scopes are cost tables
-    if(scopes_info.shape[0] != costs_info.shape[0]) {
+    if (scopes_info.shape[0] != costs_info.shape[0]) {
         std::cerr << "Error, must provide the same number of scopes and cost tables!" << std::endl;
         throw BadConfiguration();
     }
     // check scopes data type
-    if(!is_dtype_sintegers(scopes_info)) {
+    if (!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be integers values!" << std::endl;
         throw BadConfiguration();
     }
     // check costs shape
-    if(costs_info.ndim != 3) {
+    if (costs_info.ndim != 3) {
         std::cerr << "Error, must provide costs as a n_function x dom_size_1 x dom_size_2 tensor!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the scopes and create the cost functions
     vector<vector<int>> binary_scopes;
-    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
         extractBinaryScopes<int8_t>(binary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
         extractBinaryScopes<int16_t>(binary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
         extractBinaryScopes<int32_t>(binary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
         extractBinaryScopes<int64_t>(binary_scopes, scopes_info);
-    }  else {
+    } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the costs and post the binary functions
-    if(costs_info.item_type_is_equivalent_to<float>()) {
+    if (costs_info.item_type_is_equivalent_to<float>()) {
         result = extractBinaryCosts<float>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<double>()) {
+    } else if (costs_info.item_type_is_equivalent_to<double>()) {
         result = extractBinaryCosts<double>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
         result = extractBinaryCosts<long double>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
         result = extractBinaryCosts<int8_t>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
         result = extractBinaryCosts<int16_t>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
         result = extractBinaryCosts<int32_t>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
         result = extractBinaryCosts<int64_t>(costs_info, binary_scopes, s, incremental);
     } else { // unsupported cost types
         std::cerr << "error, unsupported costs data type!" << std::endl;
@@ -390,42 +398,45 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
     return result; // return index of the first added cost function
 }
 
-template<typename T>
-void extractTernaryCosts(vector<Double>& ternary_costs, py::buffer_info& costs_info) {
-    ternary_costs.resize(costs_info.shape[0]*costs_info.shape[1]*costs_info.shape[2]);
+template <typename T>
+void extractTernaryCosts(vector<Double>& ternary_costs, py::buffer_info& costs_info)
+{
+    ternary_costs.resize(costs_info.shape[0] * costs_info.shape[1] * costs_info.shape[2]);
     // read the costs
-    size_t s1 = costs_info.strides[0]/costs_info.itemsize;
-    size_t s2 = costs_info.strides[1]/costs_info.itemsize;
-    size_t s3 = costs_info.strides[2]/costs_info.itemsize;
-    T* temp_ptr = static_cast<T*>(costs_info.ptr);    
+    size_t s1 = costs_info.strides[0] / costs_info.itemsize;
+    size_t s2 = costs_info.strides[1] / costs_info.itemsize;
+    size_t s3 = costs_info.strides[2] / costs_info.itemsize;
+    T* temp_ptr = static_cast<T*>(costs_info.ptr);
     size_t cost_ind = 0;
-    for(int i = 0; i < costs_info.shape[0]; i ++) {
-        for(int j = 0; j < costs_info.shape[1]; j ++) {
-            for(int k = 0; k < costs_info.shape[2]; k ++) {
-                ternary_costs[cost_ind] = static_cast<Double>(temp_ptr[i*s1+j*s2+k*s3]);
-                cost_ind ++;
+    for (int i = 0; i < costs_info.shape[0]; i++) {
+        for (int j = 0; j < costs_info.shape[1]; j++) {
+            for (int k = 0; k < costs_info.shape[2]; k++) {
+                ternary_costs[cost_ind] = static_cast<Double>(temp_ptr[i * s1 + j * s2 + k * s3]);
+                cost_ind++;
             }
         }
     }
 }
 
 // extract a single binary scope given a cost function index
-template<typename T>
-inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex, int& zIndex) {
+template <typename T>
+inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex, int& zIndex)
+{
     T* temp_ptr = static_cast<T*>(scopes_info.ptr);
-    xIndex = temp_ptr[func_ind*ss1];
-    yIndex = temp_ptr[func_ind*ss1+ss2];
-    zIndex = temp_ptr[func_ind*ss1+ss2*2];
+    xIndex = temp_ptr[func_ind * ss1];
+    yIndex = temp_ptr[func_ind * ss1 + ss2];
+    zIndex = temp_ptr[func_ind * ss1 + ss2 * 2];
 }
 
-inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex, int& zIndex) {
-    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
+inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex, int& zIndex)
+{
+    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
         extractTernaryScopes<uint8_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
         extractTernaryScopes<uint16_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
         extractTernaryScopes<uint32_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
         extractTernaryScopes<uint64_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -435,7 +446,8 @@ inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, 
 
 // post several ternary cost functions with a single costs tensor
 // scopes are provided as a n_func*3 matrix
-int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)  {
+int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)
+{
 
     // scope indices
     int xIndex, yIndex, zIndex;
@@ -446,39 +458,39 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    if(scopes_info.ndim != 2 || scopes_info.shape[1] != 3) {
+    if (scopes_info.ndim != 2 || scopes_info.shape[1] != 3) {
         std::cerr << "Error, must provide a list of scopes with size 3!" << std::endl;
         throw BadConfiguration();
     }
     // check scopes data type
-    if(!is_dtype_sintegers(scopes_info)) {
+    if (!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be unsigned integer values!" << std::endl;
         throw BadConfiguration();
     }
-    if(costs_info.ndim != 3) {
+    if (costs_info.ndim != 3) {
         // error, costs must be floating point values
         std::cerr << "error, costs must be a 3x3x3 tensor!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the costs table
-    size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
-    size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
+    size_t ss1 = scopes_info.strides[0] / scopes_info.itemsize;
+    size_t ss2 = scopes_info.strides[1] / scopes_info.itemsize;
 
     vector<Double> ternary_costs;
-    if(costs_info.item_type_is_equivalent_to<double>()) {
+    if (costs_info.item_type_is_equivalent_to<double>()) {
         extractTernaryCosts<double>(ternary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<float>()) {
+    } else if (costs_info.item_type_is_equivalent_to<float>()) {
         extractTernaryCosts<float>(ternary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
         extractTernaryCosts<long double>(ternary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
         extractTernaryCosts<int8_t>(ternary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
         extractTernaryCosts<int16_t>(ternary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
         extractTernaryCosts<int32_t>(ternary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
         extractTernaryCosts<int64_t>(ternary_costs, costs_info);
     } else { // unsupported
         std::cerr << "error, unsupported costs data type!" << std::endl;
@@ -486,10 +498,10 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
     }
 
     // read the scopes and create the cost functions
-    for(int i = 0; i < scopes_info.shape[0]; i ++) {
+    for (int i = 0; i < scopes_info.shape[0]; i++) {
         extractTernaryScopes(i, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
         int temp_res = s.postTernaryConstraint(xIndex, yIndex, zIndex, ternary_costs, incremental);
-        if(i == 0) {
+        if (i == 0) {
             result = temp_res;
         }
     }
@@ -498,56 +510,58 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
 }
 
 // extract multiple binary costs function scopes
-template<typename T>
-inline void extractTernaryScopes(vector<vector<int>>& ternary_scopes, py::buffer_info& scopes_info) {
+template <typename T>
+inline void extractTernaryScopes(vector<vector<int>>& ternary_scopes, py::buffer_info& scopes_info)
+{
     ternary_scopes.resize(scopes_info.shape[0], std::vector<int>(3));
     T* temp_ptr = static_cast<T*>(scopes_info.ptr);
-    size_t ss1 = scopes_info.strides[0]/scopes_info.itemsize;
-    size_t ss2 = scopes_info.strides[1]/scopes_info.itemsize;
-    for(int i = 0; i < scopes_info.shape[0]; i ++) {
-        ternary_scopes[i][0] = temp_ptr[i*ss1];
-        ternary_scopes[i][1] = temp_ptr[i*ss1+ss2];
-        ternary_scopes[i][2] = temp_ptr[i*ss1+ss2*2];
+    size_t ss1 = scopes_info.strides[0] / scopes_info.itemsize;
+    size_t ss2 = scopes_info.strides[1] / scopes_info.itemsize;
+    for (int i = 0; i < scopes_info.shape[0]; i++) {
+        ternary_scopes[i][0] = temp_ptr[i * ss1];
+        ternary_scopes[i][1] = temp_ptr[i * ss1 + ss2];
+        ternary_scopes[i][2] = temp_ptr[i * ss1 + ss2 * 2];
     }
 }
 
 // extract a ternary cost function table
-template<typename T>
-int extractTernaryCosts(vector<vector<int>>& ternary_scopes, py::buffer_info& costs_info, WeightedCSP& s, bool incremental) {
+template <typename T>
+int extractTernaryCosts(vector<vector<int>>& ternary_scopes, py::buffer_info& costs_info, WeightedCSP& s, bool incremental)
+{
 
-    int result = -1;    
+    int result = -1;
 
-    size_t s1 = costs_info.strides[0]/costs_info.itemsize; // n cost functions
-    size_t s2 = costs_info.strides[1]/costs_info.itemsize;
-    size_t s3 = costs_info.strides[2]/costs_info.itemsize;
-    size_t s4 = costs_info.strides[3]/costs_info.itemsize;
+    size_t s1 = costs_info.strides[0] / costs_info.itemsize; // n cost functions
+    size_t s2 = costs_info.strides[1] / costs_info.itemsize;
+    size_t s3 = costs_info.strides[2] / costs_info.itemsize;
+    size_t s4 = costs_info.strides[3] / costs_info.itemsize;
 
-    std::vector<Double> ternary_costs(costs_info.shape[1]*costs_info.shape[2]*costs_info.shape[3]);
+    std::vector<Double> ternary_costs(costs_info.shape[1] * costs_info.shape[2] * costs_info.shape[3]);
 
     T* temp_ptr = static_cast<T*>(costs_info.ptr);
-    for(int i = 0; i < costs_info.shape[0]; i ++) { // cost function loop
+    for (int i = 0; i < costs_info.shape[0]; i++) { // cost function loop
         size_t cost_ind = 0;
-        for(int j = 0; j < costs_info.shape[1]; j ++) {
-            for(int k = 0; k < costs_info.shape[2]; k ++) {
-                for(int l = 0; l < costs_info.shape[3]; l ++) {
-                    ternary_costs[cost_ind] = static_cast<Double>(temp_ptr[i*s1+j*s2+k*s3+l*s4]);
-                    cost_ind ++;
+        for (int j = 0; j < costs_info.shape[1]; j++) {
+            for (int k = 0; k < costs_info.shape[2]; k++) {
+                for (int l = 0; l < costs_info.shape[3]; l++) {
+                    ternary_costs[cost_ind] = static_cast<Double>(temp_ptr[i * s1 + j * s2 + k * s3 + l * s4]);
+                    cost_ind++;
                 }
             }
         }
         int result_temp = s.postTernaryConstraint(ternary_scopes[i][0], ternary_scopes[i][1], ternary_scopes[i][2], ternary_costs, incremental);
-        if(result < 0) {
+        if (result < 0) {
             result = result_temp;
         }
     }
     return result;
 }
 
-
 // post several ternary cost functions from tensors
 // scopes are provided as a n_func*3 matrix
 // costs are provided as a n_func*dom_size*dom_size*dom_size tensor
-int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)  {
+int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& costs, bool incremental)
+{
 
     // scope indices
     int result = -1;
@@ -557,64 +571,62 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
     py::buffer_info costs_info = costs.request();
 
     // check scope size
-    if(scopes_info.ndim != 2 || scopes_info.shape[1] != 3) {
+    if (scopes_info.ndim != 2 || scopes_info.shape[1] != 3) {
         std::cerr << "Error, must provide a list of scopes with size 3!" << std::endl;
         throw BadConfiguration();
     }
     // check that there are as many scopes are cost tables
-    if(scopes_info.shape[0] != costs_info.shape[0]) {
+    if (scopes_info.shape[0] != costs_info.shape[0]) {
         std::cerr << "Error, must provide the same number of scopes and cost tables!" << std::endl;
         throw BadConfiguration();
     }
     // check scopes data type
-    if(!is_dtype_sintegers(scopes_info)) {
+    if (!is_dtype_sintegers(scopes_info)) {
         std::cerr << "error, scopes must be integers values!" << std::endl;
         throw BadConfiguration();
     }
     // check costs shape
-    if(costs_info.ndim != 4) {
+    if (costs_info.ndim != 4) {
         std::cerr << "Error, must provide costs as a n_function x dom_size_1 x dom_size_2 x dom_size_3 tensor!" << std::endl;
         throw BadConfiguration();
     }
 
     // read the scopes and create the cost functions
     vector<vector<int>> ternary_scopes;
-    if(scopes_info.item_type_is_equivalent_to<int8_t>()) {
-    extractTernaryScopes<int8_t>(ternary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+        extractTernaryScopes<int8_t>(ternary_scopes, scopes_info);
+    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
         extractTernaryScopes<int16_t>(ternary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
         extractTernaryScopes<int32_t>(ternary_scopes, scopes_info);
-    } else if(scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
         extractTernaryScopes<int64_t>(ternary_scopes, scopes_info);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
         throw BadConfiguration();
     }
 
-    if(costs_info.item_type_is_equivalent_to<float>()) {
-        result = extractTernaryCosts<float>(ternary_scopes, costs_info,  s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<double>()) {
-        result = extractTernaryCosts<double>(ternary_scopes, costs_info,  s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<long double>()) {
+    if (costs_info.item_type_is_equivalent_to<float>()) {
+        result = extractTernaryCosts<float>(ternary_scopes, costs_info, s, incremental);
+    } else if (costs_info.item_type_is_equivalent_to<double>()) {
+        result = extractTernaryCosts<double>(ternary_scopes, costs_info, s, incremental);
+    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
         result = extractTernaryCosts<long double>(ternary_scopes, costs_info, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
-        result = extractTernaryCosts<int8_t>(ternary_scopes, costs_info,  s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
+        result = extractTernaryCosts<int8_t>(ternary_scopes, costs_info, s, incremental);
+    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
         result = extractTernaryCosts<int16_t>(ternary_scopes, costs_info, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
         result = extractTernaryCosts<int32_t>(ternary_scopes, costs_info, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
         result = extractTernaryCosts<int64_t>(ternary_scopes, costs_info, s, incremental);
     } else { // unsupported
         std::cerr << "error, unsupported costs data type!" << std::endl;
         throw BadConfiguration();
-    } 
+    }
 
     return result; // return index of the first added cost function
 }
-
-
 
 PYBIND11_MODULE(pytb2, m)
 {
@@ -655,13 +667,11 @@ PYBIND11_MODULE(pytb2, m)
             }
         })
 
-        .def_property_readonly_static("version", [](py::object) {return ToulBar2::version;})
+        .def_property_readonly_static("version", [](py::object) { return ToulBar2::version; })
         .def_property_static("verbose", [](py::object) { return ToulBar2::verbose; }, [](py::object, int verbose) { ToulBar2::verbose = verbose; })
         .def_property_static("debug", [](py::object) { return ToulBar2::debug; }, [](py::object, int debug) { ToulBar2::debug = debug; })
         .def_property_static("externalUB", [](py::object) { return ToulBar2::externalUB; }, [](py::object, string externalUB) { ToulBar2::externalUB = externalUB; })
         .def_property_static("showSolutions", [](py::object) { return ToulBar2::showSolutions; }, [](py::object, int showSolutions) { ToulBar2::showSolutions = showSolutions; })
-
-
 
         .def_property_static("showHidden", [](py::object) { return ToulBar2::showHidden; }, [](py::object, bool showHidden) { ToulBar2::showHidden = showHidden; })
         .def_property_static("allSolutions", [](py::object) { return ToulBar2::allSolutions; }, [](py::object, Long allSolutions) { ToulBar2::allSolutions = allSolutions; })
@@ -752,7 +762,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_property_static("divWidth", [](py::object) { return ToulBar2::divWidth; }, [](py::object, unsigned int divWidth) { ToulBar2::divWidth = divWidth; })
         .def_property_static("divMethod", [](py::object) { return ToulBar2::divMethod; }, [](py::object, unsigned int divMethod) { ToulBar2::divMethod = divMethod; })
         .def_property_static("divRelax", [](py::object) { return ToulBar2::divRelax; }, [](py::object, unsigned int divRelax) { ToulBar2::divRelax = divRelax; })
-        
+
         .def_property_static("btdMode", [](py::object) { return ToulBar2::btdMode; }, [](py::object, int btdMode) { ToulBar2::btdMode = btdMode; })
         .def_property_static("btdSubTree", [](py::object) { return ToulBar2::btdSubTree; }, [](py::object, int btdSubTree) { ToulBar2::btdSubTree = btdSubTree; })
         .def_property_static("btdRootCluster", [](py::object) { return ToulBar2::btdRootCluster; }, [](py::object, int btdRootCluster) { ToulBar2::btdRootCluster = btdRootCluster; })
@@ -803,8 +813,8 @@ PYBIND11_MODULE(pytb2, m)
         .def_property_static("vnsNeighborSizeSync", [](py::object) { return ToulBar2::vnsNeighborSizeSync; }, [](py::object, bool vnsNeighborSizeSync) { ToulBar2::vnsNeighborSizeSync = vnsNeighborSizeSync; })
         .def_property_static("vnsParallelLimit", [](py::object) { return ToulBar2::vnsParallelLimit; }, [](py::object, bool vnsParallelLimit) { ToulBar2::vnsParallelLimit = vnsParallelLimit; })
         .def_property_static("vnsParallelSync", [](py::object) { return ToulBar2::vnsParallelSync; }, [](py::object, bool vnsParallelSync) { ToulBar2::vnsParallelSync = vnsParallelSync; })
-        .def_property_static("vnsOptimumS", [](py::object) { return ToulBar2::vnsOptimumS; }, [](py::object, string bestsol) { ToulBar2::vnsOptimumS = bestsol; ToulBar2::newsolution = newsolution;})
-        .def_property_static("vnsOptimum", [](py::object) { return ToulBar2::vnsOptimum; }, [](py::object, const Cost cost) { ToulBar2::vnsOptimum = cost; ToulBar2::newsolution = newsolution;})
+        .def_property_static("vnsOptimumS", [](py::object) { return ToulBar2::vnsOptimumS; }, [](py::object, string bestsol) { ToulBar2::vnsOptimumS = bestsol; ToulBar2::newsolution = newsolution; })
+        .def_property_static("vnsOptimum", [](py::object) { return ToulBar2::vnsOptimum; }, [](py::object, const Cost cost) { ToulBar2::vnsOptimum = cost; ToulBar2::newsolution = newsolution; })
         .def_property_static("parallel", [](py::object) { return ToulBar2::parallel; }, [](py::object, bool parallel) { ToulBar2::parallel = parallel; })
         .def_property_static("hbfs", [](py::object) { return ToulBar2::hbfs; }, [](py::object, Long hbfs) { ToulBar2::hbfs = hbfs; })
         .def_property_static("hbfsGlobalLimit", [](py::object) { return ToulBar2::hbfsGlobalLimit; }, [](py::object, Long hbfsGlobalLimit) { ToulBar2::hbfsGlobalLimit = hbfsGlobalLimit; })
@@ -826,7 +836,6 @@ PYBIND11_MODULE(pytb2, m)
         .def_property_static("negCostBLP", [](py::object) { return ToulBar2::negCostBLP; }, [](py::object, vector<Cost> negCostBLP) { ToulBar2::negCostBLP = negCostBLP; })
         .def_property_static("initialLbBLP", [](py::object) { return ToulBar2::initialLbBLP; }, [](py::object, vector<Cost> initialLbBLP) { ToulBar2::initialLbBLP = initialLbBLP; })
         .def_property_static("initialUbBLP", [](py::object) { return ToulBar2::initialUbBLP; }, [](py::object, vector<Cost> initialUbBLP) { ToulBar2::initialUbBLP = initialUbBLP; });
-
 
     m.def("check", &tb2checkOptions); // should be called after setting the options (and before reading a problem)
 
@@ -850,7 +859,7 @@ PYBIND11_MODULE(pytb2, m)
 
     py::class_<BoundedObjValue>(m, "BoundedObjValue")
         .def(py::init<Value, unsigned int, unsigned int>())
-        
+
         .def_readwrite("val", &BoundedObjValue::val)
         .def_readwrite("upper", &BoundedObjValue::upper)
         .def_readwrite("lower", &BoundedObjValue::lower);
@@ -1002,16 +1011,8 @@ PYBIND11_MODULE(pytb2, m)
                 s.postUnaryConstraint(xIndex, costs, incremental);
             },
             py::arg("xIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def(
-            "postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) {
-                return s.postBinaryConstraint(xIndex, yIndex, costs, incremental);
-            },
-            py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
-        .def(
-            "postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) {
-                return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental);
-            },
-            py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def("postBinaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, vector<Double>& costs, bool incremental) { return s.postBinaryConstraint(xIndex, yIndex, costs, incremental); }, py::arg("xIndex"), py::arg("yIndex"), py::arg("costs"), py::arg("incremental") = false)
+        .def("postTernaryConstraint", [](WeightedCSP& s, int xIndex, int yIndex, int zIndex, vector<Double>& costs, bool incremental) { return s.postTernaryConstraint(xIndex, yIndex, zIndex, costs, incremental); }, py::arg("xIndex"), py::arg("yIndex"), py::arg("zIndex"), py::arg("costs"), py::arg("incremental") = false)
 
         // vectorized functions, numpy-compatible
         .def("postUnaryVecConstraints", postUnaryVecConstraints, py::arg("scopes"), py::arg("costs"), py::arg("incremental") = false)
@@ -1026,11 +1027,7 @@ PYBIND11_MODULE(pytb2, m)
 
         .def("makeEnumeratedVariableVec", makeEnumeratedVariableVec, py::arg("n"), py::arg("base_name"), py::arg("iinf"), py::arg("isup"))
 
-        .def(
-            "postNaryConstraintBegin", [](WeightedCSP& s, vector<int> scope, Cost defval, Long nbtuples, bool forcenary) {
-                return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary);
-            },
-            py::arg("scope"), py::arg("defval"), py::arg("nbtuples"), py::arg("forcenary") = !NARY2CLAUSE)
+        .def("postNaryConstraintBegin", [](WeightedCSP& s, vector<int> scope, Cost defval, Long nbtuples, bool forcenary) { return s.postNaryConstraintBegin(scope, defval, nbtuples, forcenary); }, py::arg("scope"), py::arg("defval"), py::arg("nbtuples"), py::arg("forcenary") = !NARY2CLAUSE)
         .def("postNaryConstraintTuple", (void(WeightedCSP::*)(int ctrindex, vector<Value>& tuple, Cost cost)) & WeightedCSP::postNaryConstraintTuple)
         .def("postNaryConstraintEnd", &WeightedCSP::postNaryConstraintEnd)
         .def("postSupxyc", &WeightedCSP::postSupxyc)
@@ -1039,16 +1036,8 @@ PYBIND11_MODULE(pytb2, m)
         .def("postAllDifferentConstraint", (int(WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postAllDifferentConstraint)
         .def("postGlobalCardinalityConstraint", (int(WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postGlobalCardinalityConstraint)
         .def("postCliqueConstraint", (int(WeightedCSP::*)(vector<int> scope, const string& arguments)) & WeightedCSP::postCliqueConstraint)
-        .def(
-            "postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) {
-                return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict);
-            },
-            py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = 0, py::arg("conflict") = false)
-        .def(
-            "postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) {
-                return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality);
-            },
-            py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
+        .def("postKnapsackConstraint", [](WeightedCSP& s, vector<int> scope, const string& arguments, bool isclique, int kp, bool conflict) { return s.postKnapsackConstraint(scope, arguments, isclique, kp, conflict); }, py::arg("scope"), py::arg("arguments"), py::arg("isclique") = false, py::arg("kp") = 0, py::arg("conflict") = false)
+        .def("postWeightedCSPConstraint", [](WeightedCSP& s, vector<int> scope, WeightedCSP* problem, WeightedCSP* negproblem, Cost lb, Cost ub, bool duplicateHard, bool strongDuality) { return s.postWeightedCSPConstraint(scope, problem, negproblem, lb, ub, duplicateHard, strongDuality); }, py::arg("scope"), py::arg("problem"), py::arg("negproblem"), py::arg("lb") = MIN_COST, py::arg("ub") = MAX_COST, py::arg("duplicateHard") = false, py::arg("strongDuality") = false)
         .def("postWAmong", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, const vector<Value>& values, int lb, int ub)) & WeightedCSP::postWAmong)
         .def("postWVarAmong", (void(WeightedCSP::*)(vector<int> scope, const string& semantics, Cost baseCost, vector<Value>& values)) & WeightedCSP::postWVarAmong)
         .def("postWRegular", (int(WeightedCSP::*)(vector<int> scope, const string& semantics, const string& propagator, Cost baseCost, int nbStates, const vector<WeightedObjInt>& initial_States, const vector<WeightedObjInt>& accepting_States, const vector<DFATransition>& Wtransitions)) & WeightedCSP::postWRegular)
@@ -1121,8 +1110,7 @@ PYBIND11_MODULE(pytb2, m)
             }
 #endif
             tb2checkOptions();
-            return wcsp.read_wcsp(fileName);
-        });
+            return wcsp.read_wcsp(fileName); });
 
     py::class_<WeightedCSPSolver>(m, "Solver")
         .def(py::init([](Cost ub, WeightedCSP* wcsp) {
@@ -1189,8 +1177,7 @@ PYBIND11_MODULE(pytb2, m)
             timerStop();
         })
 #endif
-        .def(
-            "solve", [](WeightedCSPSolver& s, bool first) {
+        .def("solve", [](WeightedCSPSolver& s, bool first) {
             bool res = false;
             try {
                 res = s.solve(first);

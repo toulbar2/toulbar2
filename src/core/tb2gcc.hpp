@@ -1004,8 +1004,8 @@ public:
                                 for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                     int varIndex = NoAssignedVar[varInd];
                                     auto* variable = scope[varIndex];
-                                    //if (variable->getCost(variable->getSupport()) > MIN_COST)
-                                        //variable->findSupport();
+                                    // if (variable->getCost(variable->getSupport()) > MIN_COST)
+                                    // variable->findSupport();
                                     Value optimalValue = storeLastAssignment[varIndex];
                                     if (variable->getSupport() != optimalValue) {
                                         if (ToulBar2::verbose > 0)

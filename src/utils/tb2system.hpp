@@ -16,7 +16,7 @@
 
 #ifdef QUAD_PROB
 #include <boost/multiprecision/float128.hpp>
-//#include <quadmath.h>
+// #include <quadmath.h>
 #endif
 
 /*
@@ -323,7 +323,7 @@ inline double aleaGaussNoise(double s)
 #endif
 
 #ifndef SIZE_MAX
-#define SIZE_MAX ((size_t)-1)
+#define SIZE_MAX ((size_t) - 1)
 #endif
 
 #endif /* TB2SYSTEM_HPP_ */

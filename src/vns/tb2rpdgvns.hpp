@@ -30,11 +30,11 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
-        ar& cluster;
-        ar& k;
-        ar& lds;
-        ar& bestUb;
-        ar& bestSolution;
+        ar & cluster;
+        ar & k;
+        ar & lds;
+        ar & bestUb;
+        ar & bestSolution;
     }
 
 public:
@@ -69,8 +69,8 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
-        ar& bestUb;
-        ar& bestSolution;
+        ar & bestUb;
+        ar & bestSolution;
     }
 
 public:

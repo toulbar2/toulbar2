@@ -19,8 +19,8 @@
  */
 
 #ifdef __WIN32__
-void start_timers(){};
-void stop_timers(Timer type){};
+void start_timers() {};
+void stop_timers(Timer type) {};
 
 #else
 TB2_THREAD_LOCAL static struct rusage res;

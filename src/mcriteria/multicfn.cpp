@@ -373,7 +373,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             cost_func_ptr->exceptedValues.insert(mcfn_val_ind);
         }
 
-        //TODO: read delta costs
+        // TODO: read delta costs
 
     } else if (cstr->isGCC()) {
 
@@ -402,7 +402,7 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
             cost_func_ptr->bounds[mcfn_val_ind] = std::make_pair((Double)bound.second.first, (Double)bound.second.second);
         }
 
-        //TODO: read delta costs
+        // TODO: read delta costs
 
     } else {
 
