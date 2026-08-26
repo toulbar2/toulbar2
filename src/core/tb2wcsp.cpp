@@ -63,33 +63,33 @@ typedef boost::subgraph<boost::adjacency_list<boost::setS, boost::vecS, boost::u
  *
  */
 
-int Store::depth = 0;
-StoreStack<BTList<Value>, DLink<Value>*> Store::storeDomain(STORE_SIZE);
+TB2_THREAD_LOCAL int Store::depth = 0;
+TB2_THREAD_LOCAL StoreStack<BTList<Value>, DLink<Value>*> Store::storeDomain(STORE_SIZE);
 #ifdef SHORT_VALUE
-StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
 #endif
-StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
-StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
-StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
-StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> Store::storeKnapsack(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> Store::storeKnapsack(STORE_SIZE);
 
-int WCSP::wcspCounter = 0;
+TB2_THREAD_LOCAL int WCSP::wcspCounter = 0;
 
-map<int, WCSP*> WCSP::CollectionOfWCSP;
+TB2_THREAD_LOCAL map<int, WCSP*> WCSP::CollectionOfWCSP;
 
-WCSP* WeightedCSPConstraint::MasterWeightedCSP;
-map<int, WeightedCSPConstraint*> WeightedCSPConstraint::WeightedCSPConstraints;
-bool WeightedCSPConstraint::_protected_;
-int WeightedCSPConstraint::preprocessFunctional;
-int WeightedCSPConstraint::elimDegree;
-int WeightedCSPConstraint::elimDegree_preprocessing;
-int WeightedCSPConstraint::elimDegree_;
-int WeightedCSPConstraint::elimDegree_preprocessing_;
-int WeightedCSPConstraint::DEE;
-int WeightedCSPConstraint::DEE_;
-bool WeightedCSPConstraint::FullEAC;
-bool WeightedCSPConstraint::RASPS;
-int WeightedCSPConstraint::useRASPS;
+TB2_THREAD_LOCAL WCSP* WeightedCSPConstraint::MasterWeightedCSP;
+TB2_THREAD_LOCAL map<int, WeightedCSPConstraint*> WeightedCSPConstraint::WeightedCSPConstraints;
+TB2_THREAD_LOCAL bool WeightedCSPConstraint::_protected_;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::preprocessFunctional;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree_preprocessing;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree_;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree_preprocessing_;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::DEE;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::DEE_;
+TB2_THREAD_LOCAL bool WeightedCSPConstraint::FullEAC;
+TB2_THREAD_LOCAL bool WeightedCSPConstraint::RASPS;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::useRASPS;
 
 vector<Cost> initpow10Cache()
 {
@@ -102,244 +102,260 @@ vector<Cost> initpow10Cache()
     return cache;
 }
 
-vector<Cost> WCSP::pow10Cache = initpow10Cache();
+TB2_THREAD_LOCAL vector<Cost> WCSP::pow10Cache = initpow10Cache();
 
-int ToulBar2::verbose;
-bool ToulBar2::FullEAC;
-bool ToulBar2::VACthreshold;
-int ToulBar2::nbTimesIsVAC;
-int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
-bool ToulBar2::RASPS;
-int ToulBar2::useRASPS;
-bool ToulBar2::RASPSreset;
-int ToulBar2::RASPSnbStrictACVariables;
-Cost ToulBar2::RASPSlastitThreshold;
-bool ToulBar2::RASPSsaveitThresholds;
-vector<pair<Cost, Double>> ToulBar2::RASPSitThresholds;
-int ToulBar2::RASPSangle;
-Long ToulBar2::RASPSnbBacktracks;
-int ToulBar2::debug;
-string ToulBar2::externalUB;
-int ToulBar2::showSolutions;
-bool ToulBar2::showHidden;
-int ToulBar2::writeSolution;
-FILE* ToulBar2::solutionFile;
-long ToulBar2::solutionFileRewindPos;
-Long ToulBar2::allSolutions;
-int ToulBar2::dumpWCSP;
-bool ToulBar2::dumpOriginalAfterPreprocessing;
-bool ToulBar2::approximateCountingBTD;
-int ToulBar2::elimDegree;
-int ToulBar2::elimDegree_preprocessing;
-int ToulBar2::elimDegree_;
-int ToulBar2::elimDegree_preprocessing_;
-int ToulBar2::elimSpaceMaxMB;
-int ToulBar2::preprocessTernaryRPC;
-int ToulBar2::hve;
-int ToulBar2::pwc;
-bool ToulBar2::pwcMinimalDualGraph;
-int ToulBar2::preprocessFunctional;
-bool ToulBar2::costfuncSeparate;
-int ToulBar2::preprocessNary;
-LcLevelType ToulBar2::LcLevel;
-LcLevelType ToulBar2::LcLevel_prev;
-int ToulBar2::maxEACIter;
-bool ToulBar2::QueueComplexity;
-bool ToulBar2::binaryBranching;
-bool ToulBar2::lastConflict;
-int ToulBar2::dichotomicBranching;
-unsigned int ToulBar2::dichotomicBranchingSize;
-bool ToulBar2::sortDomains;
-int ToulBar2::constrOrdering;
-map<int, ValueCost*> ToulBar2::sortedDomains;
-bool ToulBar2::solutionBasedPhaseSaving;
-Double ToulBar2::bisupport;
-int ToulBar2::lds;
-bool ToulBar2::limited;
-Long ToulBar2::restart;
-Long ToulBar2::backtrackLimit;
-bool ToulBar2::generation;
-int ToulBar2::minsumDiffusion;
-bool ToulBar2::Static_variable_ordering;
-int ToulBar2::weightedDegree;
-int ToulBar2::weightedTightness;
-bool ToulBar2::MSTDAC;
-int ToulBar2::DEE;
-int ToulBar2::DEE_;
-int ToulBar2::nbDecisionVars;
-int ToulBar2::singletonConsistency;
-Double ToulBar2::singletonAccuracy;
-int ToulBar2::GilmoreLawler;
-int ToulBar2::ReducedCostsFiltering;
-int ToulBar2::vacValueHeuristic;
+TB2_THREAD_LOCAL int ToulBar2::verbose;
+TB2_THREAD_LOCAL bool ToulBar2::FullEAC;
+TB2_THREAD_LOCAL bool ToulBar2::VACthreshold;
+TB2_THREAD_LOCAL int ToulBar2::nbTimesIsVAC;
+TB2_THREAD_LOCAL int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
+TB2_THREAD_LOCAL bool ToulBar2::RASPS;
+TB2_THREAD_LOCAL int ToulBar2::useRASPS;
+TB2_THREAD_LOCAL bool ToulBar2::RASPSreset;
+TB2_THREAD_LOCAL int ToulBar2::RASPSnbStrictACVariables;
+TB2_THREAD_LOCAL Cost ToulBar2::RASPSlastitThreshold;
+TB2_THREAD_LOCAL bool ToulBar2::RASPSsaveitThresholds;
+TB2_THREAD_LOCAL vector<pair<Cost, Double>> ToulBar2::RASPSitThresholds;
+TB2_THREAD_LOCAL int ToulBar2::RASPSangle;
+TB2_THREAD_LOCAL Long ToulBar2::RASPSnbBacktracks;
+TB2_THREAD_LOCAL int ToulBar2::debug;
+TB2_THREAD_LOCAL string ToulBar2::externalUB;
+TB2_THREAD_LOCAL int ToulBar2::showSolutions;
+TB2_THREAD_LOCAL bool ToulBar2::showHidden;
+TB2_THREAD_LOCAL int ToulBar2::writeSolution;
+TB2_THREAD_LOCAL FILE* ToulBar2::solutionFile;
+TB2_THREAD_LOCAL long ToulBar2::solutionFileRewindPos;
+TB2_THREAD_LOCAL Long ToulBar2::allSolutions;
+TB2_THREAD_LOCAL int ToulBar2::dumpWCSP;
+TB2_THREAD_LOCAL bool ToulBar2::dumpOriginalAfterPreprocessing;
+TB2_THREAD_LOCAL bool ToulBar2::approximateCountingBTD;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree_preprocessing;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree_;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree_preprocessing_;
+TB2_THREAD_LOCAL int ToulBar2::elimSpaceMaxMB;
+TB2_THREAD_LOCAL int ToulBar2::preprocessTernaryRPC;
+TB2_THREAD_LOCAL int ToulBar2::hve;
+TB2_THREAD_LOCAL int ToulBar2::pwc;
+TB2_THREAD_LOCAL bool ToulBar2::pwcMinimalDualGraph;
+TB2_THREAD_LOCAL int ToulBar2::preprocessFunctional;
+TB2_THREAD_LOCAL bool ToulBar2::costfuncSeparate;
+TB2_THREAD_LOCAL int ToulBar2::preprocessNary;
+TB2_THREAD_LOCAL LcLevelType ToulBar2::LcLevel;
+TB2_THREAD_LOCAL LcLevelType ToulBar2::LcLevel_prev;
+TB2_THREAD_LOCAL int ToulBar2::maxEACIter;
+TB2_THREAD_LOCAL bool ToulBar2::QueueComplexity;
+TB2_THREAD_LOCAL bool ToulBar2::binaryBranching;
+TB2_THREAD_LOCAL bool ToulBar2::lastConflict;
+TB2_THREAD_LOCAL int ToulBar2::dichotomicBranching;
+TB2_THREAD_LOCAL unsigned int ToulBar2::dichotomicBranchingSize;
+TB2_THREAD_LOCAL bool ToulBar2::sortDomains;
+TB2_THREAD_LOCAL int ToulBar2::constrOrdering;
+TB2_THREAD_LOCAL map<int, ValueCost*> ToulBar2::sortedDomains;
+TB2_THREAD_LOCAL bool ToulBar2::solutionBasedPhaseSaving;
+TB2_THREAD_LOCAL Double ToulBar2::bisupport;
+TB2_THREAD_LOCAL int ToulBar2::lds;
+TB2_THREAD_LOCAL bool ToulBar2::limited;
+TB2_THREAD_LOCAL Long ToulBar2::restart;
+TB2_THREAD_LOCAL Long ToulBar2::backtrackLimit;
+TB2_THREAD_LOCAL bool ToulBar2::generation;
+TB2_THREAD_LOCAL int ToulBar2::minsumDiffusion;
+TB2_THREAD_LOCAL bool ToulBar2::Static_variable_ordering;
+TB2_THREAD_LOCAL int ToulBar2::weightedDegree;
+TB2_THREAD_LOCAL int ToulBar2::weightedTightness;
+TB2_THREAD_LOCAL bool ToulBar2::MSTDAC;
+TB2_THREAD_LOCAL int ToulBar2::DEE;
+TB2_THREAD_LOCAL int ToulBar2::DEE_;
+TB2_THREAD_LOCAL int ToulBar2::nbDecisionVars;
+TB2_THREAD_LOCAL int ToulBar2::singletonConsistency;
+TB2_THREAD_LOCAL Double ToulBar2::singletonAccuracy;
+TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler;
+TB2_THREAD_LOCAL int ToulBar2::ReducedCostsFiltering;
+TB2_THREAD_LOCAL int ToulBar2::vacValueHeuristic;
 
-externalevent ToulBar2::setvalue;
-externalevent ToulBar2::setmin;
-externalevent ToulBar2::setmax;
-externalevent ToulBar2::removevalue;
-externalcostevent ToulBar2::setminobj;
-externalsolution ToulBar2::newsolution;
-Pedigree* ToulBar2::pedigree;
-Haplotype* ToulBar2::haplotype;
+TB2_THREAD_LOCAL externalevent ToulBar2::setvalue;
+TB2_THREAD_LOCAL externalevent ToulBar2::setmin;
+TB2_THREAD_LOCAL externalevent ToulBar2::setmax;
+TB2_THREAD_LOCAL externalevent ToulBar2::removevalue;
+TB2_THREAD_LOCAL externalcostevent ToulBar2::setminobj;
+TB2_THREAD_LOCAL externalsolution ToulBar2::newsolution;
+TB2_THREAD_LOCAL Pedigree* ToulBar2::pedigree;
+TB2_THREAD_LOCAL Haplotype* ToulBar2::haplotype;
 
-bool ToulBar2::cfn;
-bool ToulBar2::gz;
-bool ToulBar2::bz2;
-bool ToulBar2::xz;
-bool ToulBar2::bayesian;
-int ToulBar2::uai;
-string ToulBar2::evidence_file;
-string ToulBar2::stdin_format;
-FILE* ToulBar2::solution_uai_file;
-string ToulBar2::solution_uai_filename;
-string ToulBar2::problemsaved_filename;
-TLogProb ToulBar2::markov_log;
-bool ToulBar2::xmlflag;
-bool ToulBar2::xmlcop;
-string ToulBar2::map_file;
-bool ToulBar2::maxsateval;
-bool ToulBar2::uaieval;
+TB2_THREAD_LOCAL bool ToulBar2::cfn;
+TB2_THREAD_LOCAL bool ToulBar2::gz;
+TB2_THREAD_LOCAL bool ToulBar2::bz2;
+TB2_THREAD_LOCAL bool ToulBar2::xz;
+TB2_THREAD_LOCAL bool ToulBar2::bayesian;
+TB2_THREAD_LOCAL int ToulBar2::uai;
+TB2_THREAD_LOCAL string ToulBar2::evidence_file;
+TB2_THREAD_LOCAL string ToulBar2::stdin_format;
+TB2_THREAD_LOCAL FILE* ToulBar2::solution_uai_file;
+TB2_THREAD_LOCAL string ToulBar2::solution_uai_filename;
+TB2_THREAD_LOCAL string ToulBar2::problemsaved_filename;
+TB2_THREAD_LOCAL TLogProb ToulBar2::markov_log;
+TB2_THREAD_LOCAL bool ToulBar2::xmlflag;
+TB2_THREAD_LOCAL bool ToulBar2::xmlcop;
+TB2_THREAD_LOCAL string ToulBar2::map_file;
+TB2_THREAD_LOCAL bool ToulBar2::maxsateval;
+TB2_THREAD_LOCAL bool ToulBar2::uaieval;
 
-int ToulBar2::resolution;
-bool ToulBar2::resolution_Update;
-TProb ToulBar2::errorg;
-TLogProb ToulBar2::NormFactor;
+TB2_THREAD_LOCAL int ToulBar2::resolution;
+TB2_THREAD_LOCAL bool ToulBar2::resolution_Update;
+TB2_THREAD_LOCAL TProb ToulBar2::errorg;
+TB2_THREAD_LOCAL TLogProb ToulBar2::NormFactor;
 /// Allele frequencies of founders
 /// - 0: 			equal frequencies
 /// - 1: 			probs depending on the frequencies found in the problem
 /// - otherwise:  read probability distribution from command line
-int ToulBar2::foundersprob_class;
-vector<TProb> ToulBar2::allelefreqdistrib;
-bool ToulBar2::consecutiveAllele;
-int ToulBar2::pedigreeCorrectionMode;
-int ToulBar2::pedigreePenalty;
+TB2_THREAD_LOCAL int ToulBar2::foundersprob_class;
+TB2_THREAD_LOCAL vector<TProb> ToulBar2::allelefreqdistrib;
+TB2_THREAD_LOCAL bool ToulBar2::consecutiveAllele;
+TB2_THREAD_LOCAL int ToulBar2::pedigreeCorrectionMode;
+TB2_THREAD_LOCAL int ToulBar2::pedigreePenalty;
 
-int ToulBar2::vac;
-int ToulBar2::vac_prev;
-Cost ToulBar2::costThreshold;
-Cost ToulBar2::costThresholdPre;
-string ToulBar2::costThresholdS;
-string ToulBar2::costThresholdPreS;
-Double ToulBar2::trwsAccuracy;
-bool ToulBar2::trwsOrder;
-unsigned int ToulBar2::trwsNIter;
-unsigned int ToulBar2::trwsNIterNoChange;
-unsigned int ToulBar2::trwsNIterComputeUb;
-Double ToulBar2::costMultiplier;
-Cost ToulBar2::costMultiplier_;
-unsigned int ToulBar2::decimalPoint;
-string ToulBar2::deltaUbS;
-Cost ToulBar2::deltaUb;
-Cost ToulBar2::deltaUbAbsolute;
-Double ToulBar2::deltaUbRelativeGap;
+TB2_THREAD_LOCAL int ToulBar2::vac;
+TB2_THREAD_LOCAL int ToulBar2::vac_prev;
+TB2_THREAD_LOCAL Cost ToulBar2::costThreshold;
+TB2_THREAD_LOCAL Cost ToulBar2::costThresholdPre;
+TB2_THREAD_LOCAL string ToulBar2::costThresholdS;
+TB2_THREAD_LOCAL string ToulBar2::costThresholdPreS;
+TB2_THREAD_LOCAL Double ToulBar2::trwsAccuracy;
+TB2_THREAD_LOCAL bool ToulBar2::trwsOrder;
+TB2_THREAD_LOCAL unsigned int ToulBar2::trwsNIter;
+TB2_THREAD_LOCAL unsigned int ToulBar2::trwsNIterNoChange;
+TB2_THREAD_LOCAL unsigned int ToulBar2::trwsNIterComputeUb;
+TB2_THREAD_LOCAL Double ToulBar2::costMultiplier;
+TB2_THREAD_LOCAL Cost ToulBar2::costMultiplier_;
+TB2_THREAD_LOCAL unsigned int ToulBar2::decimalPoint;
+TB2_THREAD_LOCAL string ToulBar2::deltaUbS;
+TB2_THREAD_LOCAL Cost ToulBar2::deltaUb;
+TB2_THREAD_LOCAL Cost ToulBar2::deltaUbAbsolute;
+TB2_THREAD_LOCAL Double ToulBar2::deltaUbRelativeGap;
 
-unsigned int ToulBar2::divNbSol;
-unsigned int ToulBar2::divBound;
-unsigned int ToulBar2::divWidth;
-unsigned int ToulBar2::divMethod;
-unsigned int ToulBar2::divRelax;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divNbSol;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divBound;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divWidth;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divMethod;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divRelax;
 
-BEP* ToulBar2::bep;
-bool ToulBar2::wcnf;
-bool ToulBar2::qpbo;
-Double ToulBar2::qpboQuadraticCoefMultiplier;
-bool ToulBar2::opb;
-bool ToulBar2::cardinality;
-bool ToulBar2::lp;
+TB2_THREAD_LOCAL BEP* ToulBar2::bep;
+TB2_THREAD_LOCAL bool ToulBar2::wcnf;
+TB2_THREAD_LOCAL bool ToulBar2::qpbo;
+TB2_THREAD_LOCAL Double ToulBar2::qpboQuadraticCoefMultiplier;
+TB2_THREAD_LOCAL bool ToulBar2::opb;
+TB2_THREAD_LOCAL bool ToulBar2::cardinality;
+TB2_THREAD_LOCAL bool ToulBar2::lp;
 
-int ToulBar2::addAMOConstraints;
-bool ToulBar2::addAMOConstraints_;
-int ToulBar2::knapsackDP;
-bool ToulBar2::VAClin;
+TB2_THREAD_LOCAL int ToulBar2::addAMOConstraints;
+TB2_THREAD_LOCAL bool ToulBar2::addAMOConstraints_;
+TB2_THREAD_LOCAL int ToulBar2::knapsackDP;
+TB2_THREAD_LOCAL bool ToulBar2::VAClin;
 
-char* ToulBar2::varOrder;
-int ToulBar2::btdMode;
-int ToulBar2::btdSubTree;
-int ToulBar2::btdRootCluster;
-int ToulBar2::rootHeuristic;
-bool ToulBar2::reduceHeight;
+TB2_THREAD_LOCAL char* ToulBar2::varOrder;
+TB2_THREAD_LOCAL int ToulBar2::btdMode;
+TB2_THREAD_LOCAL int ToulBar2::btdSubTree;
+TB2_THREAD_LOCAL int ToulBar2::btdRootCluster;
+TB2_THREAD_LOCAL int ToulBar2::rootHeuristic;
+TB2_THREAD_LOCAL bool ToulBar2::reduceHeight;
 
-double ToulBar2::startCpuTime;
-double ToulBar2::startRealTime;
-double ToulBar2::startRealTimeAfterPreProcessing;
+TB2_THREAD_LOCAL double ToulBar2::startCpuTime;
+TB2_THREAD_LOCAL double ToulBar2::startRealTime;
+TB2_THREAD_LOCAL double ToulBar2::startRealTimeAfterPreProcessing;
 
-int ToulBar2::splitClusterMaxSize;
-double ToulBar2::boostingBTD;
-int ToulBar2::maxSeparatorSize;
-int ToulBar2::minProperVarSize;
+TB2_THREAD_LOCAL int ToulBar2::splitClusterMaxSize;
+TB2_THREAD_LOCAL double ToulBar2::boostingBTD;
+TB2_THREAD_LOCAL int ToulBar2::maxSeparatorSize;
+TB2_THREAD_LOCAL int ToulBar2::minProperVarSize;
 
-bool ToulBar2::heuristicFreedom;
-int ToulBar2::heuristicFreedomLimit;
+TB2_THREAD_LOCAL bool ToulBar2::heuristicFreedom;
+TB2_THREAD_LOCAL int ToulBar2::heuristicFreedomLimit;
 
-bool ToulBar2::isZ;
-TLogProb ToulBar2::logZ;
-TLogProb ToulBar2::logU;
-TLogProb ToulBar2::logepsilon;
-Double ToulBar2::epsilon;
-bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
+TB2_THREAD_LOCAL bool ToulBar2::isZ;
+TB2_THREAD_LOCAL TLogProb ToulBar2::logZ;
+TB2_THREAD_LOCAL TLogProb ToulBar2::logU;
+TB2_THREAD_LOCAL TLogProb ToulBar2::logepsilon;
+TB2_THREAD_LOCAL Double ToulBar2::epsilon;
+TB2_THREAD_LOCAL bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 
-externalfunc ToulBar2::timeOut;
-std::atomic<bool> ToulBar2::interrupted;
+TB2_THREAD_LOCAL externalfunc ToulBar2::timeOut;
+TB2_THREAD_LOCAL std::atomic<bool> ToulBar2::interrupted;
 
-bool ToulBar2::learning;
+TB2_THREAD_LOCAL bool ToulBar2::learning;
 
-int ToulBar2::seed;
-Double ToulBar2::sigma;
+TB2_THREAD_LOCAL int ToulBar2::seed;
+TB2_THREAD_LOCAL Double ToulBar2::sigma;
 
-string ToulBar2::incop_cmd;
-string ToulBar2::pils_cmd;
-string ToulBar2::lrBCD_cmd;
+TB2_THREAD_LOCAL string ToulBar2::incop_cmd;
+TB2_THREAD_LOCAL string ToulBar2::pils_cmd;
+TB2_THREAD_LOCAL string ToulBar2::lrBCD_cmd;
 
-string ToulBar2::clusterFile;
-ofstream ToulBar2::vnsOutput;
+TB2_THREAD_LOCAL string ToulBar2::clusterFile;
+TB2_THREAD_LOCAL ofstream ToulBar2::vnsOutput;
 
-SearchMethod ToulBar2::searchMethod;
+TB2_THREAD_LOCAL SearchMethod ToulBar2::searchMethod;
 
-VNSSolutionInitMethod ToulBar2::vnsInitSol;
-int ToulBar2::vnsLDSmin;
-int ToulBar2::vnsLDSmax;
-VNSInc ToulBar2::vnsLDSinc;
-int ToulBar2::vnsKmin;
-int ToulBar2::vnsKmax;
-VNSInc ToulBar2::vnsKinc;
+TB2_THREAD_LOCAL VNSSolutionInitMethod ToulBar2::vnsInitSol;
+TB2_THREAD_LOCAL int ToulBar2::vnsLDSmin;
+TB2_THREAD_LOCAL int ToulBar2::vnsLDSmax;
+TB2_THREAD_LOCAL VNSInc ToulBar2::vnsLDSinc;
+TB2_THREAD_LOCAL int ToulBar2::vnsKmin;
+TB2_THREAD_LOCAL int ToulBar2::vnsKmax;
+TB2_THREAD_LOCAL VNSInc ToulBar2::vnsKinc;
 
-int ToulBar2::vnsLDScur;
-int ToulBar2::vnsKcur;
-VNSVariableHeuristic ToulBar2::vnsNeighborVarHeur;
-bool ToulBar2::vnsNeighborChange;
-bool ToulBar2::vnsNeighborSizeSync;
-bool ToulBar2::vnsParallelLimit;
-bool ToulBar2::vnsParallelSync;
-string ToulBar2::vnsOptimumS;
-Cost ToulBar2::vnsOptimum;
-bool ToulBar2::parallel;
+TB2_THREAD_LOCAL int ToulBar2::vnsLDScur;
+TB2_THREAD_LOCAL int ToulBar2::vnsKcur;
+TB2_THREAD_LOCAL VNSVariableHeuristic ToulBar2::vnsNeighborVarHeur;
+TB2_THREAD_LOCAL bool ToulBar2::vnsNeighborChange;
+TB2_THREAD_LOCAL bool ToulBar2::vnsNeighborSizeSync;
+TB2_THREAD_LOCAL bool ToulBar2::vnsParallelLimit;
+TB2_THREAD_LOCAL bool ToulBar2::vnsParallelSync;
+TB2_THREAD_LOCAL string ToulBar2::vnsOptimumS;
+TB2_THREAD_LOCAL Cost ToulBar2::vnsOptimum;
+TB2_THREAD_LOCAL bool ToulBar2::parallel;
 
-Long ToulBar2::hbfs;
-Long ToulBar2::hbfsGlobalLimit;
-Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
-Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
-ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
-ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
-Long ToulBar2::sortBFS; // number of visited open nodes before sorting the remaining open nodes
+TB2_THREAD_LOCAL Long ToulBar2::hbfs;
+TB2_THREAD_LOCAL Long ToulBar2::hbfsGlobalLimit;
+TB2_THREAD_LOCAL Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
+TB2_THREAD_LOCAL Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
+TB2_THREAD_LOCAL ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
+TB2_THREAD_LOCAL ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
+TB2_THREAD_LOCAL Long ToulBar2::sortBFS; // number of visited open nodes before sorting the remaining open nodes
 #ifdef OPENMPI
 bool ToulBar2::burst;
 #endif
-Long ToulBar2::eps;
-string ToulBar2::epsFilename;
+TB2_THREAD_LOCAL Long ToulBar2::eps;
+TB2_THREAD_LOCAL string ToulBar2::epsFilename;
 
-bool ToulBar2::verifyOpt;
-Cost ToulBar2::verifiedOptimum;
+TB2_THREAD_LOCAL bool ToulBar2::verifyOpt;
+TB2_THREAD_LOCAL Cost ToulBar2::verifiedOptimum;
 
-int ToulBar2::bilevel;
-vector<unsigned int> ToulBar2::decimalPointBLP;
-vector<Double> ToulBar2::costMultiplierBLP;
-vector<Cost> ToulBar2::negCostBLP;
-vector<Cost> ToulBar2::initialLbBLP;
-vector<Cost> ToulBar2::initialUbBLP;
+TB2_THREAD_LOCAL int ToulBar2::bilevel;
+TB2_THREAD_LOCAL vector<unsigned int> ToulBar2::decimalPointBLP;
+TB2_THREAD_LOCAL vector<Double> ToulBar2::costMultiplierBLP;
+TB2_THREAD_LOCAL vector<Cost> ToulBar2::negCostBLP;
+TB2_THREAD_LOCAL vector<Cost> ToulBar2::initialLbBLP;
+TB2_THREAD_LOCAL vector<Cost> ToulBar2::initialUbBLP;
+
+#ifndef TOULBAR2_MULTITHREAD
+std::thread::id ToulBar2::current_thread_id;
+#endif
 
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
+    // prevent running the single-thread version into multiple threads
+    #ifndef TOULBAR2_MULTITHREAD
+        if(ToulBar2::current_thread_id == std::thread::id()) {
+            ToulBar2::current_thread_id = std::this_thread::get_id();
+        } else {
+            if(std::this_thread::get_id() != ToulBar2::current_thread_id) {
+                std::cerr << "Error: this version of ToulBar2 cannot run in multiple threads. Please build with MULTI_THREAD option!" << std::endl;
+                throw BadConfiguration();
+            }
+        }
+    #endif
+
     // backtrack trailing mechanism
     Store::depth = 0;
 
@@ -1528,7 +1544,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
 /// \warning valid only for global cost function in extension
 void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost)
 {
-    static Tuple s;
+    TB2_THREAD_LOCAL static Tuple s;
     if (ToulBar2::vac)
         histogram(cost);
     Constraint* ctr = getCtr(ctrindex);
@@ -6258,7 +6274,7 @@ void WCSP::propagate(bool fromscratch)
 
 void WCSP::restoreSolution(Cluster* c)
 {
-    static Tuple tctr;
+    TB2_THREAD_LOCAL static Tuple tctr;
     int elimo = getElimOrder();
     for (int i = elimo - 1; i >= 0; i--) {
         elimInfo ei = elimInfos[i];

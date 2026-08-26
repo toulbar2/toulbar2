@@ -17,7 +17,7 @@ const char* PrintFormatProb = "%Lf";
 const char* PrintFormatProb = "%lf";
 #endif
 
-std::mt19937 myrandom_generator{ std::random_device{}() };
+TB2_THREAD_LOCAL std::mt19937 myrandom_generator{ std::random_device{}() };
 
 InternalError::InternalError()
 {
@@ -55,7 +55,7 @@ InternalError::InternalError()
 
 double cpuTime()
 {
-    static struct rusage buf;
+    TB2_THREAD_LOCAL static struct rusage buf;
 
     getrusage(RUSAGE_SELF, &buf);
     double res = (double)(buf.ru_utime.tv_sec + buf.ru_stime.tv_sec) + (buf.ru_utime.tv_usec + buf.ru_stime.tv_usec) / 1000000.;
@@ -81,7 +81,7 @@ void timeOut(int sig)
     ToulBar2::interrupted = true;
 }
 
-static struct itimerval thetimer = { { 0, 0 }, { 0, 0 } };
+TB2_THREAD_LOCAL static struct itimerval thetimer = { { 0, 0 }, { 0, 0 } };
 
 /* set a timer (in seconds) */
 void timer(int t)

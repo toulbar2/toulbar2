@@ -19,7 +19,7 @@ typedef ConstraintSet TCtrs;
 
 // sort variables by their DAC order
 struct CmpVarStruct {
-    static WCSP* wcsp;
+    TB2_THREAD_LOCAL static WCSP* wcsp;
     bool operator()(const int lhs, const int rhs) const;
 };
 typedef set<int, CmpVarStruct> TVarsSorted;
@@ -133,7 +133,7 @@ public:
 
 class Cluster {
 private:
-    static int clusterCounter; ///< count the number of instances of Cluster class
+    TB2_THREAD_LOCAL static int clusterCounter; ///< count the number of instances of Cluster class
     int instance; ///< instance number
     TreeDecomposition* td;
     WCSP* wcsp;

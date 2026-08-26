@@ -17,6 +17,7 @@ using namespace std;
 #include "timer.h"
 #include "incop.h"
 #include "incoputil.h"
+#include "tb2config.hpp"
 
 #include <math.h>
 #include <unistd.h>
@@ -24,12 +25,12 @@ using namespace std;
 #include <stdlib.h>
 // #include <signal.h>
 
-ofstream* ofile = NULL; // le fichier de sortie
+TB2_THREAD_LOCAL ofstream* ofile = NULL; // le fichier de sortie
 
-Stat_GWW* Statistiques; //  l'objet pour les statistiques en variable globale
+TB2_THREAD_LOCAL Stat_GWW* Statistiques; //  l'objet pour les statistiques en variable globale
 // alloué dans le main() avec npb et nbessais
 
-int TRACEMODE = 0; // variable globale : niveau de trace
+TB2_THREAD_LOCAL int TRACEMODE = 0; // variable globale : niveau de trace
 
 // struct sigaction Action;  // trombe_ajout : pour les signaux
 

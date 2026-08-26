@@ -2,6 +2,10 @@
 
 file ( GLOB_RECURSE validation_scripts validation/*.py )
 
+IF(NOT MULTI_THREAD)
+    list(FILTER validation_scripts EXCLUDE REGEX ".*multithread.py")
+ENDIF()
+
 # init default value :
 set (command_line_option ${Default_test_option})
 set (test_timeout ${Default_test_timeout})

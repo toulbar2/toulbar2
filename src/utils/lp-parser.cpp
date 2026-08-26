@@ -270,7 +270,7 @@ struct raw_problem_status {
 
 class stream_buffer {
 public:
-    constexpr static int stream_buffer_size = 10;
+    TB2_THREAD_LOCAL constexpr static int stream_buffer_size = 10;
 
     using string_view_array = std::array<std::string_view, stream_buffer_size>;
 

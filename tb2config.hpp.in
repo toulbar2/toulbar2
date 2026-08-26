@@ -39,3 +39,12 @@
 
 // LR-BCD (Eigen)
 #cmakedefine LR_BCD_BUILD
+
+// TOULBAR2_MULTITHREAD
+#cmakedefine TOULBAR2_MULTITHREAD
+
+#ifdef TOULBAR2_MULTITHREAD
+    #define TB2_THREAD_LOCAL thread_local
+#else
+    #define TB2_THREAD_LOCAL
+#endif

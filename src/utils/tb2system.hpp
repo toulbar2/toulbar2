@@ -69,7 +69,7 @@ typedef long double Double;
 // -------------------------------------------------------------------- */
 
 #include <random>
-extern std::mt19937 myrandom_generator;
+extern TB2_THREAD_LOCAL std::mt19937 myrandom_generator;
 
 inline void myrearrange(vector<int>& V)
 {
@@ -82,47 +82,47 @@ inline void mysrand(int seed_)
 }
 inline int myrand()
 {
-    static std::uniform_int_distribution<int> myrandom_uidistribution(0, INT_MAX - 1);
+    TB2_THREAD_LOCAL static std::uniform_int_distribution<int> myrandom_uidistribution(0, INT_MAX - 1);
     return myrandom_uidistribution(myrandom_generator);
 }
 inline Long myrandl()
 {
-    static std::uniform_int_distribution<Long> myrandom_uldistribution(0, LONG_MAX - 1);
+    TB2_THREAD_LOCAL static std::uniform_int_distribution<Long> myrandom_uldistribution(0, LONG_MAX - 1);
     return myrandom_uldistribution(myrandom_generator);
 }
 inline Long myrandln()
 {
-    static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX, LONG_MAX - 1);
+    TB2_THREAD_LOCAL static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX, LONG_MAX - 1);
     return myrandom_umdistribution(myrandom_generator);
 }
 inline double mydrand()
 {
-    static std::uniform_real_distribution<double> myrandom_uddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<double> myrandom_uddistribution(0.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double mydrandl()
 {
-    static std::uniform_real_distribution<Double> myrandom_uddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<Double> myrandom_uddistribution(0.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double myurand()
 {
-    static std::uniform_real_distribution<double> myrandom_uddistribution(-1.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<double> myrandom_uddistribution(-1.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double myurandl()
 {
-    static std::uniform_real_distribution<Double> myrandom_uddistribution(-1.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<Double> myrandom_uddistribution(-1.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double mynrand()
 {
-    static std::normal_distribution<double> myrandom_nddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::normal_distribution<double> myrandom_nddistribution(0.0, 1.0);
     return myrandom_nddistribution(myrandom_generator);
 }
 inline double mynrandl()
 {
-    static std::normal_distribution<Double> myrandom_nddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::normal_distribution<Double> myrandom_nddistribution(0.0, 1.0);
     return myrandom_nddistribution(myrandom_generator);
 }
 

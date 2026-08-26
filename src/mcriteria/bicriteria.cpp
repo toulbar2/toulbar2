@@ -10,23 +10,23 @@
 using namespace std;
 
 //--------------------------------------------------------------------------------------------
-vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
-vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
-vector<MultiCFN::Solution> Bicriteria::_solutions = vector<MultiCFN::Solution>();
-vector<Double> Bicriteria::_lower_bounds = vector<Double>();
+TB2_THREAD_LOCAL vector<Bicriteria::Weights> Bicriteria::_weights = vector<Weights>();
+TB2_THREAD_LOCAL vector<Bicriteria::Point> Bicriteria::_points = vector<Point>();
+TB2_THREAD_LOCAL vector<MultiCFN::Solution> Bicriteria::_solutions = vector<MultiCFN::Solution>();
+TB2_THREAD_LOCAL vector<Double> Bicriteria::_lower_bounds = vector<Double>();
 
-unsigned int Bicriteria::_first_cfn_index = 0;
-unsigned int Bicriteria::_second_cfn_index = 0;
+TB2_THREAD_LOCAL unsigned int Bicriteria::_first_cfn_index = 0;
+TB2_THREAD_LOCAL unsigned int Bicriteria::_second_cfn_index = 0;
 
 // parameters default values
-int Bicriteria::_showSolutions = 0;
-int Bicriteria::_vac = 0;
-int Bicriteria::_seed = 1;
-int Bicriteria::_verbose = -1;
-int Bicriteria::_sol_timeout = 0;
-int Bicriteria::_global_timeout = 0;
-int Bicriteria::_nsol_max = 0;
-double Bicriteria::_startGlobalCpuTime = 0.;
+TB2_THREAD_LOCAL int Bicriteria::_showSolutions = 0;
+TB2_THREAD_LOCAL int Bicriteria::_vac = 0;
+TB2_THREAD_LOCAL int Bicriteria::_seed = 1;
+TB2_THREAD_LOCAL int Bicriteria::_verbose = -1;
+TB2_THREAD_LOCAL int Bicriteria::_sol_timeout = 0;
+TB2_THREAD_LOCAL int Bicriteria::_global_timeout = 0;
+TB2_THREAD_LOCAL int Bicriteria::_nsol_max = 0;
+TB2_THREAD_LOCAL double Bicriteria::_startGlobalCpuTime = 0.;
 
 //--------------------------------------------------------------------------------------------
 void Bicriteria::sortSolutions(pair<OptimDir, OptimDir> optim_dir)

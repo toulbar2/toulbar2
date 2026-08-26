@@ -10,7 +10,7 @@
 #include "tb2clqcover.hpp"
 #include "search/tb2clusters.hpp"
 
-int CliqueConstraint::nextid{ 0 };
+TB2_THREAD_LOCAL int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in, vector<vector<int>> clq_in,

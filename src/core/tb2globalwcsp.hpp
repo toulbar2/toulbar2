@@ -29,20 +29,20 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     vector<Long> conflictWeights; // used by weighted degree heuristics
 
 public:
-    static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
-    static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
-    static bool _protected_;
-    static int preprocessFunctional;
-    static int elimDegree;
-    static int elimDegree_preprocessing;
-    static int elimDegree_;
-    static int elimDegree_preprocessing_;
-    static int DEE;
-    static int DEE_;
-    static bool FullEAC;
-    static bool RASPS;
-    static int useRASPS;
-    static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
+    TB2_THREAD_LOCAL static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
+    TB2_THREAD_LOCAL static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
+    TB2_THREAD_LOCAL static bool _protected_;
+    TB2_THREAD_LOCAL static int preprocessFunctional;
+    TB2_THREAD_LOCAL static int elimDegree;
+    TB2_THREAD_LOCAL static int elimDegree_preprocessing;
+    TB2_THREAD_LOCAL static int elimDegree_;
+    TB2_THREAD_LOCAL static int elimDegree_preprocessing_;
+    TB2_THREAD_LOCAL static int DEE;
+    TB2_THREAD_LOCAL static int DEE_;
+    TB2_THREAD_LOCAL static bool FullEAC;
+    TB2_THREAD_LOCAL static bool RASPS;
+    TB2_THREAD_LOCAL static int useRASPS;
+    TB2_THREAD_LOCAL static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
     {
         assert(!_protected_);
         if (master) {

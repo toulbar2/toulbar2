@@ -42,8 +42,8 @@ WeightedCSP* CurrentWeightedCSP = NULL;
 // global weighted csp constraint exploiting toulbar2 propagation
 class IlcWeightedCSPI : public IlcConstraintI {
 public:
-    static vector<IlcWeightedCSPI*> AllIlcWeightedCSPI;
-    static int wcspCounter;
+    TB2_THREAD_LOCAL static vector<IlcWeightedCSPI*> AllIlcWeightedCSPI;
+    TB2_THREAD_LOCAL static int wcspCounter;
 
     IlcIntVar obj; // objective function
     int size; // |vars|

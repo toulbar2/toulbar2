@@ -20,9 +20,9 @@ using namespace std;
 #include "narycsproblem.h"
 #include "autotuning2.h"
 
-extern ofstream* ofile; // le fichier de sortie
+extern TB2_THREAD_LOCAL ofstream* ofile; // le fichier de sortie
 
-extern Stat_GWW* Statistiques;
+extern TB2_THREAD_LOCAL Stat_GWW* Statistiques;
 
 INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     : CSProblem(nbvar, nbconst)
@@ -249,7 +249,7 @@ void wcspdomaines_file_read(WCSP* wcsp, int nbvar, vector<Value>* tabdomaines, v
 int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
     vector<int>* connexions, vector<Value>* tabdomaines)
 {
-    static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     assert(wcsp->getUb() > wcsp->getLb());
     Cost gap = wcsp->getUb() - wcsp->getLb();
     int nbconst_ = 0;
