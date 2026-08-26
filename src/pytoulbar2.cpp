@@ -97,7 +97,7 @@ inline void extractUnaryScopes(std::vector<int>& unary_scopes, py::buffer_info& 
     size_t stride = scopes_info.strides[0]/scopes_info.itemsize;
     T* temp_ptr = static_cast<T*>(scopes_info.ptr);
     for(int i = 0; i < scopes_info.shape[0]; i ++) {
-        unary_scopes[i] = temp_ptr[i*stride]; 
+        unary_scopes[i] = static_cast<int>(temp_ptr[i*stride]); 
     }
 }
 
@@ -157,10 +157,10 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     size_t s2 = costs_info.strides[1]/costs_info.itemsize; // val ind
     vector<Double> unary_costs(costs_info.shape[1]);
     for(int i = 0; i < costs_info.shape[0]; i ++) {
-        if(costs_info.item_type_is_equivalent_to<double>()) {
-            extractUnaryCosts<double>(i, unary_costs, costs_info, s1, s2);
-        } else if(costs_info.item_type_is_equivalent_to<float>()) {
+        if(costs_info.item_type_is_equivalent_to<float>()) {
             extractUnaryCosts<float>(i, unary_costs, costs_info, s1, s2);
+        } else if(costs_info.item_type_is_equivalent_to<double>()) {
+            extractUnaryCosts<double>(i, unary_costs, costs_info, s1, s2);
         } else if(costs_info.item_type_is_equivalent_to<long double>()) {
             extractUnaryCosts<long double>(i, unary_costs, costs_info, s1, s2);
         } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
@@ -258,10 +258,10 @@ int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
         extractBinaryCosts<int32_t>(binary_costs, costs_info);
     } else if(costs_info.item_type_is_equivalent_to<int64_t>()) {
         extractBinaryCosts<int64_t>(binary_costs, costs_info);
-    }  else if(costs_info.item_type_is_equivalent_to<double>()) {
-        extractBinaryCosts<double>(binary_costs, costs_info);
-    } else if(costs_info.item_type_is_equivalent_to<float>()) {
+    }  else if(costs_info.item_type_is_equivalent_to<float>()) {
         extractBinaryCosts<float>(binary_costs, costs_info);
+    } else if(costs_info.item_type_is_equivalent_to<double>()) {
+        extractBinaryCosts<double>(binary_costs, costs_info);
     } else if(costs_info.item_type_is_equivalent_to<long double>()) {
         extractBinaryCosts<long double>(binary_costs, costs_info);
     } else { // unsupported
@@ -368,10 +368,10 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
     }
 
     // read the costs and post the binary functions
-    if(costs_info.item_type_is_equivalent_to<double>()) {
-        result = extractBinaryCosts<double>(costs_info, binary_scopes, s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<float>()) {
+    if(costs_info.item_type_is_equivalent_to<float>()) {
         result = extractBinaryCosts<float>(costs_info, binary_scopes, s, incremental);
+    } else if(costs_info.item_type_is_equivalent_to<double>()) {
+        result = extractBinaryCosts<double>(costs_info, binary_scopes, s, incremental);
     } else if(costs_info.item_type_is_equivalent_to<long double>()) {
         result = extractBinaryCosts<long double>(costs_info, binary_scopes, s, incremental);
     } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
@@ -592,10 +592,10 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
         throw BadConfiguration();
     }
 
-    if(costs_info.item_type_is_equivalent_to<double>()) {
-        result = extractTernaryCosts<double>(ternary_scopes, costs_info,  s, incremental);
-    } else if(costs_info.item_type_is_equivalent_to<float>()) {
+    if(costs_info.item_type_is_equivalent_to<float>()) {
         result = extractTernaryCosts<float>(ternary_scopes, costs_info,  s, incremental);
+    } else if(costs_info.item_type_is_equivalent_to<double>()) {
+        result = extractTernaryCosts<double>(ternary_scopes, costs_info,  s, incremental);
     } else if(costs_info.item_type_is_equivalent_to<long double>()) {
         result = extractTernaryCosts<long double>(ternary_scopes, costs_info, s, incremental);
     } else if(costs_info.item_type_is_equivalent_to<int8_t>()) {
