@@ -42,7 +42,7 @@ public:
     TB2_THREAD_LOCAL static bool FullEAC;
     TB2_THREAD_LOCAL static bool RASPS;
     TB2_THREAD_LOCAL static int useRASPS;
-    TB2_THREAD_LOCAL static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
+    static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
     {
         assert(!_protected_);
         if (master) {
