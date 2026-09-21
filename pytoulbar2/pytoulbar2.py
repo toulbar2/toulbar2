@@ -170,7 +170,8 @@ class CFN:
             Index of the first variable of the list (int).
 
         """
-        assert(max_dom > min_dom)
+        if min_dom > max_dom:
+            raise RuntimeError("Error, the domain min value must be smaller than the domain max value")        
         first_var_ind = self.CFN.wcsp.makeEnumeratedVariableVec(n_var, base_name, min_dom, max_dom)
         values = list(range(min_dom, max_dom+1))
         self.Variables.update({ (base_name+str(v_ind)):values for v_ind in range(n_var)})
@@ -242,7 +243,7 @@ class CFN:
                         break
             self.CFN.wcsp.postNaryConstraintEnd(idx)
 
-    def AddFunctions(self, scopes, costs, incremental = False):
+    def AddFunctions(self, scopes, costs, incremental: bool = False):
         """AddFunctions creates multiple unary, binary or ternary cost functions in extension. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 1 dimensional (unary functions) or 2 dimensional objects (binary and ternary functions) with variable indices. 
         Unary costs are given as a 2 dimensional array (n_functions x domain_size).
         Binary costs are given as a 3 dimensional array of size n_functions x domain_size x domain_size.
@@ -263,6 +264,9 @@ class CFN:
             memoryview(costs)
         except TypeError:
             raise RuntimeError("Scopes and costs must be compatible with the array interface (i.e. numpy tensors-like)")
+        # number of scopes verification
+        if scopes.shape[0] != costs.shape[0]:            
+            raise RuntimeError("Error, must provide same number of scopes and costs tables")
         # check arity
         if scopes.ndim == 1: # unary cost functions
             if costs.ndim == 2:            
@@ -282,7 +286,7 @@ class CFN:
         else:
             raise RuntimeError("Error, invalid scopes dimensionality" + str(scopes.ndim) + " and or shape " + str(scopes.shape))
 
-    def AddAkinFunctions(self, scopes, costs, incremental = False):
+    def AddAkinFunctions(self, scopes, costs, incremental: bool = False):
         """AddAkinFunctions creates multiple binary or ternary cost functions in extension with a single cost table. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 2 dimensional objects with variable indices. 
         Binary costs are given as a 2 dimensional array of size domain_size x domain_size.
         Ternary costs are given as a 3 dimensional array of size domain_size x domain_size x domain_size.
