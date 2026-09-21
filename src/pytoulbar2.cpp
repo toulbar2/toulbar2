@@ -83,9 +83,12 @@ inline bool is_dtype_floating_point(py::buffer_info& buf_info)
 // return the index of the first variable created
 int makeEnumeratedVariableVec(WeightedCSP& s, int n, std::string base_name, Value iinf, Value isup)
 {
-    int result = s.makeEnumeratedVariable(base_name + "_0", iinf, isup);
+    int result = s.makeEnumeratedVariable(base_name+"0", iinf, isup);
     for (size_t ind = 1; ind < static_cast<size_t>(n); ind++) {
-        s.makeEnumeratedVariable(base_name + "_" + to_string(ind), iinf, isup);
+        size_t tb2var_ind = s.makeEnumeratedVariable(base_name + to_string(ind), iinf, isup);
+        for(Value val_ind = iinf; val_ind <= isup; val_ind ++) { // add default value names
+            s.addValueName(tb2var_ind, std::string("v")+std::to_string(val_ind));  
+        }
     }
     return result;
 }
