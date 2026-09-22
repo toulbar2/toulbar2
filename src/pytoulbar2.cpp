@@ -66,16 +66,79 @@ namespace py = pybind11;
 
 extern void newsolution(int wcspId, void* solver);
 
+// alternative to item_type_is_equivalent_to if pybind11 version is not recent enough
+template <typename T>
+bool item_type_is_equivalent_to(const py::buffer_info& info) {
+// Warning, this has been generated from Google Gemini
+#if PYBIND11_VERSION_HEX >= 0x020C0000 // v2.12.0 or greater
+    return info.item_type_is_equivalent_to<T>();
+#else
+    // 1. Strict byte size check
+    if (info.itemsize != sizeof(T)) {
+        return false;
+    }
+    // 2. Resolve the incoming Python format string down to its base family character
+    char actual_family = '\0';
+    if (!info.format.empty()) {
+        std::string_view fmt = info.format;
+        size_t offset = 0;
+        
+        // Skip standard byte-order, size, and alignment prefixes (@, =, <, >, !)
+        if (fmt[0] == '@' || fmt[0] == '=' || fmt[0] == '<' || fmt[0] == '>' || fmt[0] == '!') {
+            if (fmt.size() > 1) {
+                offset = 1;
+            }
+        }
+        char base_char = fmt[offset];
+        switch (base_char) {
+            // Floating point family ('f'=float, 'd'=double, 'g'=long double)
+            case 'f': case 'd': case 'g': 
+                actual_family = 'f'; 
+                break;
+            // Signed integer family (b=char, h=short, i=int, l=long, q=long long, n=ssize_t)
+            case 'b': case 'h': case 'i': case 'l': case 'q': case 'n': 
+                actual_family = 'i'; 
+                break;
+            // Unsigned integer family (B=uchar, H=ushort, I=uint, L=ulong, Q=ulong long, N=size_t)
+            case 'B': case 'H': case 'I': case 'L': case 'Q': case 'N': 
+                actual_family = 'u'; 
+                break;
+            // Boolean family
+            case '?': 
+                actual_family = '?'; 
+                break;
+            // Default fallback for complexes ('Z') or custom types
+            default: 
+                actual_family = base_char; 
+                break;
+        }
+    }
+    // 3. Resolve the expected C++ compile-time type family
+    char expected_family = '\0';
+    if constexpr (std::is_floating_point_v<T>) {
+        expected_family = 'f';
+    } else if constexpr (std::is_same_v<T, bool>) {
+        expected_family = '?';
+    } else if constexpr (std::is_integral_v<T>) {
+        expected_family = std::is_signed_v<T> ? 'i' : 'u';
+    } else {
+        // Strict raw string match fallback for non-primitive / structured types
+        return info.format == py::format_descriptor<T>::format();
+    }
+    return expected_family == actual_family;
+#endif
+}
+
 // return true if the data type is equivalent to a a signed integer
 inline bool is_dtype_sintegers(py::buffer_info& buf_info)
 {
-    return buf_info.item_type_is_equivalent_to<int8_t>() || buf_info.item_type_is_equivalent_to<int16_t>() || buf_info.item_type_is_equivalent_to<int32_t>() || buf_info.item_type_is_equivalent_to<int64_t>();
+    return item_type_is_equivalent_to<int8_t>(buf_info) ||    item_type_is_equivalent_to<int16_t>(buf_info) || item_type_is_equivalent_to<int32_t>(buf_info) || item_type_is_equivalent_to<int64_t>(buf_info);
 }
 
 // return true if the data type is equivalent to a floating point type
 inline bool is_dtype_floating_point(py::buffer_info& buf_info)
 {
-    return buf_info.item_type_is_equivalent_to<float>() || buf_info.item_type_is_equivalent_to<double>();
+    return item_type_is_equivalent_to<float>(buf_info) || item_type_is_equivalent_to<double>(buf_info);
 }
 
 // create n enumerated variables
@@ -83,9 +146,12 @@ inline bool is_dtype_floating_point(py::buffer_info& buf_info)
 // return the index of the first variable created
 int makeEnumeratedVariableVec(WeightedCSP& s, int n, std::string base_name, Value iinf, Value isup)
 {
-    int result = s.makeEnumeratedVariable(base_name + "_0", iinf, isup);
+    int result = s.makeEnumeratedVariable(base_name+"0", iinf, isup);
     for (size_t ind = 1; ind < static_cast<size_t>(n); ind++) {
-        s.makeEnumeratedVariable(base_name + "_" + to_string(ind), iinf, isup);
+        size_t tb2var_ind = s.makeEnumeratedVariable(base_name + to_string(ind), iinf, isup);
+        for(Value val_ind = iinf; val_ind <= isup; val_ind ++) { // add default value names
+            s.addValueName(tb2var_ind, std::string("v")+std::to_string(val_ind));  
+        }
     }
     return result;
 }
@@ -141,13 +207,13 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
 
     // read the scopes
     std::vector<int> unary_scopes;
-    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (item_type_is_equivalent_to<int8_t>(scopes_info)) {
         extractUnaryScopes<int8_t>(unary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(scopes_info)) {
         extractUnaryScopes<int16_t>(unary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(scopes_info)) {
         extractUnaryScopes<int32_t>(unary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(scopes_info)) {
         extractUnaryScopes<int64_t>(unary_scopes, scopes_info);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -159,19 +225,19 @@ void postUnaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     size_t s2 = costs_info.strides[1] / costs_info.itemsize; // val ind
     vector<Double> unary_costs(costs_info.shape[1]);
     for (int i = 0; i < costs_info.shape[0]; i++) {
-        if (costs_info.item_type_is_equivalent_to<float>()) {
+        if (item_type_is_equivalent_to<float>(costs_info)) {
             extractUnaryCosts<float>(i, unary_costs, costs_info, s1, s2);
-        } else if (costs_info.item_type_is_equivalent_to<double>()) {
+        } else if (item_type_is_equivalent_to<double>(costs_info)) {
             extractUnaryCosts<double>(i, unary_costs, costs_info, s1, s2);
-        } else if (costs_info.item_type_is_equivalent_to<long double>()) {
+        } else if (item_type_is_equivalent_to<long double>(costs_info)) {
             extractUnaryCosts<long double>(i, unary_costs, costs_info, s1, s2);
-        } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
+        } else if (item_type_is_equivalent_to<int8_t>(costs_info)) {
             extractUnaryCosts<int8_t>(i, unary_costs, costs_info, s1, s2);
-        } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
+        } else if (item_type_is_equivalent_to<int16_t>(costs_info)) {
             extractUnaryCosts<int16_t>(i, unary_costs, costs_info, s1, s2);
-        } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
+        } else if (item_type_is_equivalent_to<int32_t>(costs_info)) {
             extractUnaryCosts<int32_t>(i, unary_costs, costs_info, s1, s2);
-        } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
+        } else if (item_type_is_equivalent_to<int64_t>(costs_info)) {
             extractUnaryCosts<int64_t>(i, unary_costs, costs_info, s1, s2);
         } else { // unsupported
             std::cerr << "error, unsupported data types for costs!" << std::endl;
@@ -209,13 +275,13 @@ inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, s
 
 inline void extractBinaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex)
 {
-    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (item_type_is_equivalent_to<int8_t>(scopes_info)) {
         extractBinaryScopes<int8_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
-    } else if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (item_type_is_equivalent_to<int8_t>(scopes_info)) {
         extractBinaryScopes<int16_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
-    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(scopes_info)) {
         extractBinaryScopes<int32_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
-    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(scopes_info)) {
         extractBinaryScopes<int64_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -256,19 +322,19 @@ int postBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& cos
     size_t ss1 = scopes_info.strides[0] / scopes_info.itemsize;
     size_t ss2 = scopes_info.strides[1] / scopes_info.itemsize;
     vector<Double> binary_costs;
-    if (costs_info.item_type_is_equivalent_to<int8_t>()) {
+    if (item_type_is_equivalent_to<int8_t>(costs_info)) {
         extractBinaryCosts<int8_t>(binary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(costs_info)) {
         extractBinaryCosts<int16_t>(binary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(costs_info)) {
         extractBinaryCosts<int32_t>(binary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(costs_info)) {
         extractBinaryCosts<int64_t>(binary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<float>()) {
+    } else if (item_type_is_equivalent_to<float>(costs_info)) {
         extractBinaryCosts<float>(binary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<double>()) {
+    } else if (item_type_is_equivalent_to<double>(costs_info)) {
         extractBinaryCosts<double>(binary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (item_type_is_equivalent_to<long double>(costs_info)) {
         extractBinaryCosts<long double>(binary_costs, costs_info);
     } else { // unsupported
         std::cerr << "error, costs must be float or double!" << std::endl;
@@ -362,13 +428,13 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
 
     // read the scopes and create the cost functions
     vector<vector<int>> binary_scopes;
-    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (item_type_is_equivalent_to<int8_t>(scopes_info)) {
         extractBinaryScopes<int8_t>(binary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(scopes_info)) {
         extractBinaryScopes<int16_t>(binary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(scopes_info)) {
         extractBinaryScopes<int32_t>(binary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(scopes_info)) {
         extractBinaryScopes<int64_t>(binary_scopes, scopes_info);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -376,19 +442,19 @@ int postMultBinaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer&
     }
 
     // read the costs and post the binary functions
-    if (costs_info.item_type_is_equivalent_to<float>()) {
+    if (item_type_is_equivalent_to<float>(costs_info)) {
         result = extractBinaryCosts<float>(costs_info, binary_scopes, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<double>()) {
+    } else if (item_type_is_equivalent_to<double>(costs_info)) {
         result = extractBinaryCosts<double>(costs_info, binary_scopes, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (item_type_is_equivalent_to<long double>(costs_info)) {
         result = extractBinaryCosts<long double>(costs_info, binary_scopes, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (item_type_is_equivalent_to<int8_t>(costs_info)) {
         result = extractBinaryCosts<int8_t>(costs_info, binary_scopes, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(costs_info)) {
         result = extractBinaryCosts<int16_t>(costs_info, binary_scopes, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(costs_info)) {
         result = extractBinaryCosts<int32_t>(costs_info, binary_scopes, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(costs_info)) {
         result = extractBinaryCosts<int64_t>(costs_info, binary_scopes, s, incremental);
     } else { // unsupported cost types
         std::cerr << "error, unsupported costs data type!" << std::endl;
@@ -430,13 +496,13 @@ inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, 
 
 inline void extractTernaryScopes(size_t func_ind, py::buffer_info& scopes_info, size_t ss1, size_t ss2, int& xIndex, int& yIndex, int& zIndex)
 {
-    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (item_type_is_equivalent_to<int8_t>(scopes_info)) {
         extractTernaryScopes<uint8_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(scopes_info)) {
         extractTernaryScopes<uint16_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(scopes_info)) {
         extractTernaryScopes<uint32_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
-    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(scopes_info)) {
         extractTernaryScopes<uint64_t>(func_ind, scopes_info, ss1, ss2, xIndex, yIndex, zIndex);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
@@ -478,19 +544,19 @@ int postTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer& co
     size_t ss2 = scopes_info.strides[1] / scopes_info.itemsize;
 
     vector<Double> ternary_costs;
-    if (costs_info.item_type_is_equivalent_to<double>()) {
+    if (item_type_is_equivalent_to<double>(costs_info)) {
         extractTernaryCosts<double>(ternary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<float>()) {
+    } else if (item_type_is_equivalent_to<float>(costs_info)) {
         extractTernaryCosts<float>(ternary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (item_type_is_equivalent_to<long double>(costs_info)) {
         extractTernaryCosts<long double>(ternary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (item_type_is_equivalent_to<int8_t>(costs_info)) {
         extractTernaryCosts<int8_t>(ternary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(costs_info)) {
         extractTernaryCosts<int16_t>(ternary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(costs_info)) {
         extractTernaryCosts<int32_t>(ternary_costs, costs_info);
-    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(costs_info)) {
         extractTernaryCosts<int64_t>(ternary_costs, costs_info);
     } else { // unsupported
         std::cerr << "error, unsupported costs data type!" << std::endl;
@@ -593,32 +659,32 @@ int postMultTernaryVecConstraints(WeightedCSP& s, py::buffer& scopes, py::buffer
 
     // read the scopes and create the cost functions
     vector<vector<int>> ternary_scopes;
-    if (scopes_info.item_type_is_equivalent_to<int8_t>()) {
+    if (item_type_is_equivalent_to<int8_t>(scopes_info)) {
         extractTernaryScopes<int8_t>(ternary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(scopes_info)) {
         extractTernaryScopes<int16_t>(ternary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(scopes_info)) {
         extractTernaryScopes<int32_t>(ternary_scopes, scopes_info);
-    } else if (scopes_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(scopes_info)) {
         extractTernaryScopes<int64_t>(ternary_scopes, scopes_info);
     } else {
         std::cerr << "error, unsupported data types for scopes!" << std::endl;
         throw BadConfiguration();
     }
 
-    if (costs_info.item_type_is_equivalent_to<float>()) {
+    if (item_type_is_equivalent_to<float>(costs_info)) {
         result = extractTernaryCosts<float>(ternary_scopes, costs_info, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<double>()) {
+    } else if (item_type_is_equivalent_to<double>(costs_info)) {
         result = extractTernaryCosts<double>(ternary_scopes, costs_info, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<long double>()) {
+    } else if (item_type_is_equivalent_to<long double>(costs_info)) {
         result = extractTernaryCosts<long double>(ternary_scopes, costs_info, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int8_t>()) {
+    } else if (item_type_is_equivalent_to<int8_t>(costs_info)) {
         result = extractTernaryCosts<int8_t>(ternary_scopes, costs_info, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int16_t>()) {
+    } else if (item_type_is_equivalent_to<int16_t>(costs_info)) {
         result = extractTernaryCosts<int16_t>(ternary_scopes, costs_info, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int32_t>()) {
+    } else if (item_type_is_equivalent_to<int32_t>(costs_info)) {
         result = extractTernaryCosts<int32_t>(ternary_scopes, costs_info, s, incremental);
-    } else if (costs_info.item_type_is_equivalent_to<int64_t>()) {
+    } else if (item_type_is_equivalent_to<int64_t>(costs_info)) {
         result = extractTernaryCosts<int64_t>(ternary_scopes, costs_info, s, incremental);
     } else { // unsupported
         std::cerr << "error, unsupported costs data type!" << std::endl;

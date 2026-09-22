@@ -74,11 +74,24 @@ The first line is only useful for Linux distributions that ship "old" versions o
 
 Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
 
+```
     pip3 install pybind11
     mkdir build
     cd build
     cmake -DPYTB2=ON ..
     make
+```
+
+Pybind11 should preferably be installed in a virtual or conda environment.
+⚠️ On Ubuntu, it might be necessary to install package `python3-dev`.
+
+```
+    mkdir build && cd build
+    python3 -m venv ./pytb2_env
+    source ./pytb2_env/bin/activate
+    pip install pybind11[global]
+
+```
 
 Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/pytoulbar2/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
 
