@@ -149,10 +149,13 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             pos++;
             int rand = myrand() % (arity + 1); // random upper bound capacity
             int capa = (pos == domsize && left > 0) ? left : rand;
+           // if(capa == 0) capa += 1;
             int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
+            if(demand == arity) demand -= 1;
             left -= capa;
             sumlb -= demand;
-            arguments.append(to_string(0));
+            //arguments.append(to_string(0));
+            arguments.append(to_string(demand));
             arguments.append(" ");
             arguments.append(to_string(capa));
         }
@@ -172,12 +175,14 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             pos++;
             int rand = myrand() % (arity + 1); // random upper bound capacity
             int capa = (pos == domsize && left > 0) ? left : rand;
+           // if(capa == 0) capa += 1;
             int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
             left -= capa;
+            if(demand == arity) demand -= 1;
             sumlb -= demand;
-            values.push_back(BoundedObjValue(v, capa, 0));
+            values.push_back(BoundedObjValue(v, capa, demand));
         }
-        wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : Top, values);
+        wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : 1000000, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
         // random parity automaton (XOR)
         vector<WeightedObjInt> init(1, WeightedObjInt(0));

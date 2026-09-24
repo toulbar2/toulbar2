@@ -51,7 +51,7 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_opt
     rm -f toulbar2_verif
     rm -f sol
-    randomfile="sgcckp-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
+    randomfile="sgcc-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
     ./Debug/bin/Linux/toulbar2 -random=$randomfile -C=$K -nopre -k=0 -z -v=-1 > /dev/null
     cp problem.wcsp problemKP.wcsp
     ./Debug/bin/Linux/toulbar2 problem.wcsp "${@:1}" -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt

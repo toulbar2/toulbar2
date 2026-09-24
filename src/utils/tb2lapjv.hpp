@@ -204,14 +204,14 @@ augmenting_path_gcc(intptr_t dim_val,
     // Seed shortest-path costs with the reduced cost from source row i to
     // every column:  rc(i,j) = cost(i,j) - u[i] - v[j].
     for (intptr_t j = 0; j < dim_val; ++j) {
-        // if(capacity[j] > 0){
+        if(capacity[j] > 0){
         path[j] = -1;
         Cost r = cost[i * dim_val + j] - u[i] - v[j];
         if (r < shortestPathCost[j]) {
             shortestPathCost[j] = r;
             path[j] = i;
         }
-        // }
+        }
     }
 
     /* --- Main label-setting (Dijkstra) loop ------------------------------- */
@@ -362,7 +362,7 @@ static Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         // For every settled column j, shift v[j] so that the reduced cost
         // of its incoming arc (from the path) remains 0 after the update.
         for (intptr_t j = 0; j < dim_val; ++j) {
-            if (!SC[j])
+            if (!SC[j] || capacity[j] == 0 )
                 continue;
             v[j] -= (minVal - shortestPathCost[j]);
         }
@@ -781,17 +781,66 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
         // (c) Re-check feasibility; continue if another infeasible column exists.
         notFeasVal = checkFlow(dim_val, demand, count_col);
     }
-    return lapjv_ub(dim_var, dim_val, cost, b, usol, vsol,
-        MAX_COST, count_col, findConflict);
+    //total_cost2 = lapjv_ub(dim_var, dim_val, cost, b, usol, vsol,
+        //MAX_COST, count_col, findConflict);
 
-    /*for(int val = 0; val < dim_val; val++){
-        if(count_col[val] == 0){
-                total_cost += vsol[val];
+    total_cost = 0;
+    for (int var = 0; var < dim_var; var++)
+        total_cost += cost[dim_val * var + b[var]];
+    
+    if ( total_cost >= MAX_COST)
+        return MAX_COST;
+
+    {
+        const int ROW = 0;
+        const int COL = dim_var;
+        const int T   = dim_var + dim_val;
+        const int NB_NODES = dim_var + dim_val + 1;
+
+        vector<vector<pair<int, Cost>>> adj(NB_NODES);
+
+        for (int val = 0; val < dim_val; val++) {
+            for (int var : VarList[val]) {
+                Cost c = cost[dim_val * var + val];
+                adj[ROW + var].push_back({ COL + val, c });      // arc always present
+                if (b[var] == val)
+                    adj[COL + val].push_back({ ROW + var, -c }); // arc iff used in b[]
+            }
+            if (count_col[val] < capacity[val])
+                adj[COL + val].push_back({ T, (Cost)0 });         // capacity not saturated
+            if (count_col[val] > demand[val])
+                adj[T].push_back({ COL + val, (Cost)0 });         // above the floor
         }
+
+        vector<Cost> dist(NB_NODES, MAX_COST);
+        dist[T] = 0;
+
+        bool updated = true;
+        for (int iter = 0; iter < NB_NODES - 1 && updated; iter++) {
+            updated = false;
+            for (int u = 0; u < NB_NODES; u++) {
+                for (auto& e : adj[u]) {
+                    int to = e.first;
+                    Cost c = e.second;
+                    if (dist[u] + c < dist[to]) {
+                        dist[to] = dist[u] + c;
+                        updated = true;
+                    }
+                }
+            }
+        }
+
+
+        for (int var = 0; var < dim_var; var++)
+            usol[var] = -dist[ROW + var];
+        for (int val = 0; val < dim_val; val++)
+            vsol[val] = dist[COL + val];
     }
 
-    return total_cost;*/
+    return total_cost;
 }
+
+
 
 #endif // LAPJV_HPP_
 
