@@ -6,6 +6,8 @@
  *      Phd. Student : LITIO, University of Oran. GREYC, University of Caen.
  */
 
+#include "tb2config.hpp"
+
 #ifdef BOOST
 #include "tb2vns.hpp"
 #include "core/tb2wcsp.hpp"
@@ -61,9 +63,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         }
         assert(nbunvars.size() == wcsp->numberOfUnassignedVariables());
         TCDGraph::vertex_iterator v, vend, v2;
-        int num = 0;
         for (tie(v, vend) = vertices(m_graph); v != vend; ++v) {
-            num++;
             string name;
             vector<int> cl;
             ostringstream ss(name);
@@ -97,7 +97,7 @@ void ClustersNeighborhoodStructure::load_decomposition()
         set<int> nbunvars;
         TreeDecomposition* td = new TreeDecomposition((WCSP*)wcsp);
         double time = cpuTime();
-        //TODO: deconnect AllDifferent temporally in order to recover the underlying constraint graph structure
+        // TODO: deconnect AllDifferent or GCC temporally in order to recover the underlying constraint graph structure
         td->buildFromOrder();
         int nc = td->getNbOfClusters();
         for (int i = 0; i < nc; i++) {
@@ -178,11 +178,11 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
     zone neighborhood;
     vector<int> z(l->unassignedVars->getSize());
     unsigned int j = 0;
-
     for (BTList<Value>::iterator iter = l->unassignedVars->begin(); iter != l->unassignedVars->end(); ++iter) {
         z[j] = *iter;
         ++j;
     }
+    assert((int)j == l->unassignedVars->getSize());
     shuffle(z.begin(), z.end(), myrandom_generator);
     assert(neighborhood_size <= z.size());
     neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
@@ -244,7 +244,7 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
 
 const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
 {
-    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
+    //    assert(neighborhood_size <= wcsp->numberOfUnassignedVariables());
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;

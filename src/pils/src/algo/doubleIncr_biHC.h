@@ -49,7 +49,6 @@ public:
 
     unsigned nBest;
     Cost bestDelta;
-    std::pair<int, int> bestNeigh;
     std::vector< Node* > iBest(neighborhoodSize);
     unsigned r, old_value = 0;
     unsigned flatLocal = 0;

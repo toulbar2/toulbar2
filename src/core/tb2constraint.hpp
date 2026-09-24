@@ -36,7 +36,7 @@ public:
     virtual bool isGCC() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint
     virtual bool isGCCSquare() const { return false; } // return true if the cost function class is a GlobalCardinalityConstraint and NbValues==arity
     virtual bool isGlobal() const { return false; } // return true if it is a global cost function (flow-based monolithic propagation)
-    virtual std::vector<Value> getExceptedValues() const {return std::vector<Value>();} //GS
+    virtual std::vector<Value> getExceptedValues() const { return std::vector<Value>(); } // GS
     //    virtual bool isTriangle() const {return false;} // return true if it is a triangle of three binary cost functions (maxRPC/PIC)
 
     virtual bool connected() const
@@ -230,7 +230,7 @@ public:
         return isincluded;
     }
     virtual bool implies(Constraint* ctr) { return false; } ///< \brief returns true if ctr is redundant wrt the constraint
-    virtual void projects(Constraint* ctr) { } ///< \brief projects the constraint on ctr
+    virtual void projects(Constraint* ctr) {} ///< \brief projects the constraint on ctr
 
     void scopeCommon(TSCOPE& scope_out, Constraint* ctr)
     {

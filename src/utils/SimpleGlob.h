@@ -883,7 +883,7 @@ int CSimpleGlobTempl<SOCHAR>::AppendName(
 
     // add the directory slash if desired
     if (a_bIsDir && (m_uiFlags & SG_GLOB_MARK) == SG_GLOB_MARK) {
-        const static SOCHAR szDirSlash[] = { SG_PATH_CHAR, 0 };
+        const TB2_THREAD_LOCAL static SOCHAR szDirSlash[] = { SG_PATH_CHAR, 0 };
         SimpleGlobUtil::strcpy_s(m_pBuffer + m_uiBufferLen - 2,
             m_uiBufferSize - (m_uiBufferLen - 2), szDirSlash);
     }

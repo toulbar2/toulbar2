@@ -4,6 +4,8 @@
  * Contains also ToulBar2 options expressed by global variable definitions
  */
 
+#include "tb2config.hpp"
+
 #include "tb2wcsp.hpp"
 #include "tb2enumvar.hpp"
 #include "tb2intervar.hpp"
@@ -45,6 +47,7 @@ using std::ifstream;
 using std::isinf;
 using std::istringstream;
 using std::setprecision;
+
 #ifdef BOOST
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -60,33 +63,33 @@ typedef boost::subgraph<boost::adjacency_list<boost::setS, boost::vecS, boost::u
  *
  */
 
-int Store::depth = 0;
-StoreStack<BTList<Value>, DLink<Value>*> Store::storeDomain(STORE_SIZE);
+TB2_THREAD_LOCAL int Store::depth = 0;
+TB2_THREAD_LOCAL StoreStack<BTList<Value>, DLink<Value>*> Store::storeDomain(STORE_SIZE);
 #ifdef SHORT_VALUE
-StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<int>, DLink<int>*> Store::storeIndexList(STORE_SIZE);
 #endif
-StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
-StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
-StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
-StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> Store::storeKnapsack(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> Store::storeConstraint(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<Variable*>, DLink<Variable*>*> Store::storeVariable(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<Separator*>, DLink<Separator*>*> Store::storeSeparator(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> Store::storeKnapsack(STORE_SIZE);
 
-int WCSP::wcspCounter = 0;
+TB2_THREAD_LOCAL int WCSP::wcspCounter = 0;
 
-map<int, WCSP*> WCSP::CollectionOfWCSP;
+TB2_THREAD_LOCAL map<int, WCSP*> WCSP::CollectionOfWCSP;
 
-WCSP* WeightedCSPConstraint::MasterWeightedCSP;
-map<int, WeightedCSPConstraint*> WeightedCSPConstraint::WeightedCSPConstraints;
-bool WeightedCSPConstraint::_protected_;
-int WeightedCSPConstraint::preprocessFunctional;
-int WeightedCSPConstraint::elimDegree;
-int WeightedCSPConstraint::elimDegree_preprocessing;
-int WeightedCSPConstraint::elimDegree_;
-int WeightedCSPConstraint::elimDegree_preprocessing_;
-int WeightedCSPConstraint::DEE;
-int WeightedCSPConstraint::DEE_;
-bool WeightedCSPConstraint::FullEAC;
-bool WeightedCSPConstraint::RASPS;
-int WeightedCSPConstraint::useRASPS;
+TB2_THREAD_LOCAL WCSP* WeightedCSPConstraint::MasterWeightedCSP;
+TB2_THREAD_LOCAL map<int, WeightedCSPConstraint*> WeightedCSPConstraint::WeightedCSPConstraints;
+TB2_THREAD_LOCAL bool WeightedCSPConstraint::_protected_;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::preprocessFunctional;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree_preprocessing;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree_;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::elimDegree_preprocessing_;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::DEE;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::DEE_;
+TB2_THREAD_LOCAL bool WeightedCSPConstraint::FullEAC;
+TB2_THREAD_LOCAL bool WeightedCSPConstraint::RASPS;
+TB2_THREAD_LOCAL int WeightedCSPConstraint::useRASPS;
 
 vector<Cost> initpow10Cache()
 {
@@ -99,244 +102,260 @@ vector<Cost> initpow10Cache()
     return cache;
 }
 
-vector<Cost> WCSP::pow10Cache = initpow10Cache();
+TB2_THREAD_LOCAL vector<Cost> WCSP::pow10Cache = initpow10Cache();
 
-int ToulBar2::verbose;
-bool ToulBar2::FullEAC;
-bool ToulBar2::VACthreshold;
-int ToulBar2::nbTimesIsVAC;
-int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
-bool ToulBar2::RASPS;
-int ToulBar2::useRASPS;
-bool ToulBar2::RASPSreset;
-int ToulBar2::RASPSnbStrictACVariables;
-Cost ToulBar2::RASPSlastitThreshold;
-bool ToulBar2::RASPSsaveitThresholds;
-vector<pair<Cost, Double>> ToulBar2::RASPSitThresholds;
-int ToulBar2::RASPSangle;
-Long ToulBar2::RASPSnbBacktracks;
-int ToulBar2::debug;
-string ToulBar2::externalUB;
-int ToulBar2::showSolutions;
-bool ToulBar2::showHidden;
-int ToulBar2::writeSolution;
-FILE* ToulBar2::solutionFile;
-long ToulBar2::solutionFileRewindPos;
-Long ToulBar2::allSolutions;
-int ToulBar2::dumpWCSP;
-bool ToulBar2::dumpOriginalAfterPreprocessing;
-bool ToulBar2::approximateCountingBTD;
-int ToulBar2::elimDegree;
-int ToulBar2::elimDegree_preprocessing;
-int ToulBar2::elimDegree_;
-int ToulBar2::elimDegree_preprocessing_;
-int ToulBar2::elimSpaceMaxMB;
-int ToulBar2::preprocessTernaryRPC;
-int ToulBar2::hve;
-int ToulBar2::pwc;
-bool ToulBar2::pwcMinimalDualGraph;
-int ToulBar2::preprocessFunctional;
-bool ToulBar2::costfuncSeparate;
-int ToulBar2::preprocessNary;
-LcLevelType ToulBar2::LcLevel;
-LcLevelType ToulBar2::LcLevel_prev;
-int ToulBar2::maxEACIter;
-bool ToulBar2::QueueComplexity;
-bool ToulBar2::binaryBranching;
-bool ToulBar2::lastConflict;
-int ToulBar2::dichotomicBranching;
-unsigned int ToulBar2::dichotomicBranchingSize;
-bool ToulBar2::sortDomains;
-int ToulBar2::constrOrdering;
-map<int, ValueCost*> ToulBar2::sortedDomains;
-bool ToulBar2::solutionBasedPhaseSaving;
-Double ToulBar2::bisupport;
-int ToulBar2::lds;
-bool ToulBar2::limited;
-Long ToulBar2::restart;
-Long ToulBar2::backtrackLimit;
-bool ToulBar2::generation;
-int ToulBar2::minsumDiffusion;
-bool ToulBar2::Static_variable_ordering;
-int ToulBar2::weightedDegree;
-int ToulBar2::weightedTightness;
-bool ToulBar2::MSTDAC;
-int ToulBar2::DEE;
-int ToulBar2::DEE_;
-int ToulBar2::nbDecisionVars;
-int ToulBar2::singletonConsistency; 
-Double ToulBar2::singletonAccuracy;
-int ToulBar2::GilmoreLawler;
-int ToulBar2::ReducedCostsFiltering;
-int ToulBar2::vacValueHeuristic;
+TB2_THREAD_LOCAL int ToulBar2::verbose;
+TB2_THREAD_LOCAL bool ToulBar2::FullEAC;
+TB2_THREAD_LOCAL bool ToulBar2::VACthreshold;
+TB2_THREAD_LOCAL int ToulBar2::nbTimesIsVAC;
+TB2_THREAD_LOCAL int ToulBar2::nbTimesIsVACitThresholdMoreThanOne;
+TB2_THREAD_LOCAL bool ToulBar2::RASPS;
+TB2_THREAD_LOCAL int ToulBar2::useRASPS;
+TB2_THREAD_LOCAL bool ToulBar2::RASPSreset;
+TB2_THREAD_LOCAL int ToulBar2::RASPSnbStrictACVariables;
+TB2_THREAD_LOCAL Cost ToulBar2::RASPSlastitThreshold;
+TB2_THREAD_LOCAL bool ToulBar2::RASPSsaveitThresholds;
+TB2_THREAD_LOCAL vector<pair<Cost, Double>> ToulBar2::RASPSitThresholds;
+TB2_THREAD_LOCAL int ToulBar2::RASPSangle;
+TB2_THREAD_LOCAL Long ToulBar2::RASPSnbBacktracks;
+TB2_THREAD_LOCAL int ToulBar2::debug;
+TB2_THREAD_LOCAL string ToulBar2::externalUB;
+TB2_THREAD_LOCAL int ToulBar2::showSolutions;
+TB2_THREAD_LOCAL bool ToulBar2::showHidden;
+TB2_THREAD_LOCAL int ToulBar2::writeSolution;
+TB2_THREAD_LOCAL FILE* ToulBar2::solutionFile;
+TB2_THREAD_LOCAL long ToulBar2::solutionFileRewindPos;
+TB2_THREAD_LOCAL Long ToulBar2::allSolutions;
+TB2_THREAD_LOCAL int ToulBar2::dumpWCSP;
+TB2_THREAD_LOCAL bool ToulBar2::dumpOriginalAfterPreprocessing;
+TB2_THREAD_LOCAL bool ToulBar2::approximateCountingBTD;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree_preprocessing;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree_;
+TB2_THREAD_LOCAL int ToulBar2::elimDegree_preprocessing_;
+TB2_THREAD_LOCAL int ToulBar2::elimSpaceMaxMB;
+TB2_THREAD_LOCAL int ToulBar2::preprocessTernaryRPC;
+TB2_THREAD_LOCAL int ToulBar2::hve;
+TB2_THREAD_LOCAL int ToulBar2::pwc;
+TB2_THREAD_LOCAL bool ToulBar2::pwcMinimalDualGraph;
+TB2_THREAD_LOCAL int ToulBar2::preprocessFunctional;
+TB2_THREAD_LOCAL bool ToulBar2::costfuncSeparate;
+TB2_THREAD_LOCAL int ToulBar2::preprocessNary;
+TB2_THREAD_LOCAL LcLevelType ToulBar2::LcLevel;
+TB2_THREAD_LOCAL LcLevelType ToulBar2::LcLevel_prev;
+TB2_THREAD_LOCAL int ToulBar2::maxEACIter;
+TB2_THREAD_LOCAL bool ToulBar2::QueueComplexity;
+TB2_THREAD_LOCAL bool ToulBar2::binaryBranching;
+TB2_THREAD_LOCAL bool ToulBar2::lastConflict;
+TB2_THREAD_LOCAL int ToulBar2::dichotomicBranching;
+TB2_THREAD_LOCAL unsigned int ToulBar2::dichotomicBranchingSize;
+TB2_THREAD_LOCAL bool ToulBar2::sortDomains;
+TB2_THREAD_LOCAL int ToulBar2::constrOrdering;
+TB2_THREAD_LOCAL map<int, ValueCost*> ToulBar2::sortedDomains;
+TB2_THREAD_LOCAL bool ToulBar2::solutionBasedPhaseSaving;
+TB2_THREAD_LOCAL Double ToulBar2::bisupport;
+TB2_THREAD_LOCAL int ToulBar2::lds;
+TB2_THREAD_LOCAL bool ToulBar2::limited;
+TB2_THREAD_LOCAL Long ToulBar2::restart;
+TB2_THREAD_LOCAL Long ToulBar2::backtrackLimit;
+TB2_THREAD_LOCAL bool ToulBar2::generation;
+TB2_THREAD_LOCAL int ToulBar2::minsumDiffusion;
+TB2_THREAD_LOCAL bool ToulBar2::Static_variable_ordering;
+TB2_THREAD_LOCAL int ToulBar2::weightedDegree;
+TB2_THREAD_LOCAL int ToulBar2::weightedTightness;
+TB2_THREAD_LOCAL bool ToulBar2::MSTDAC;
+TB2_THREAD_LOCAL int ToulBar2::DEE;
+TB2_THREAD_LOCAL int ToulBar2::DEE_;
+TB2_THREAD_LOCAL int ToulBar2::nbDecisionVars;
+TB2_THREAD_LOCAL int ToulBar2::singletonConsistency;
+TB2_THREAD_LOCAL Double ToulBar2::singletonAccuracy;
+TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler;
+TB2_THREAD_LOCAL int ToulBar2::ReducedCostsFiltering;
+TB2_THREAD_LOCAL int ToulBar2::vacValueHeuristic;
 
-externalevent ToulBar2::setvalue;
-externalevent ToulBar2::setmin;
-externalevent ToulBar2::setmax;
-externalevent ToulBar2::removevalue;
-externalcostevent ToulBar2::setminobj;
-externalsolution ToulBar2::newsolution;
-Pedigree* ToulBar2::pedigree;
-Haplotype* ToulBar2::haplotype;
+TB2_THREAD_LOCAL externalevent ToulBar2::setvalue;
+TB2_THREAD_LOCAL externalevent ToulBar2::setmin;
+TB2_THREAD_LOCAL externalevent ToulBar2::setmax;
+TB2_THREAD_LOCAL externalevent ToulBar2::removevalue;
+TB2_THREAD_LOCAL externalcostevent ToulBar2::setminobj;
+TB2_THREAD_LOCAL externalsolution ToulBar2::newsolution;
+TB2_THREAD_LOCAL Pedigree* ToulBar2::pedigree;
+TB2_THREAD_LOCAL Haplotype* ToulBar2::haplotype;
 
-bool ToulBar2::cfn;
-bool ToulBar2::gz;
-bool ToulBar2::bz2;
-bool ToulBar2::xz;
-bool ToulBar2::bayesian;
-int ToulBar2::uai;
-string ToulBar2::evidence_file;
-string ToulBar2::stdin_format;
-FILE* ToulBar2::solution_uai_file;
-string ToulBar2::solution_uai_filename;
-string ToulBar2::problemsaved_filename;
-TLogProb ToulBar2::markov_log;
-bool ToulBar2::xmlflag;
-bool ToulBar2::xmlcop;
-string ToulBar2::map_file;
-bool ToulBar2::maxsateval;
-bool ToulBar2::uaieval;
+TB2_THREAD_LOCAL bool ToulBar2::cfn;
+TB2_THREAD_LOCAL bool ToulBar2::gz;
+TB2_THREAD_LOCAL bool ToulBar2::bz2;
+TB2_THREAD_LOCAL bool ToulBar2::xz;
+TB2_THREAD_LOCAL bool ToulBar2::bayesian;
+TB2_THREAD_LOCAL int ToulBar2::uai;
+TB2_THREAD_LOCAL string ToulBar2::evidence_file;
+TB2_THREAD_LOCAL string ToulBar2::stdin_format;
+TB2_THREAD_LOCAL FILE* ToulBar2::solution_uai_file;
+TB2_THREAD_LOCAL string ToulBar2::solution_uai_filename;
+TB2_THREAD_LOCAL string ToulBar2::problemsaved_filename;
+TB2_THREAD_LOCAL TLogProb ToulBar2::markov_log;
+TB2_THREAD_LOCAL bool ToulBar2::xmlflag;
+TB2_THREAD_LOCAL bool ToulBar2::xmlcop;
+TB2_THREAD_LOCAL string ToulBar2::map_file;
+TB2_THREAD_LOCAL bool ToulBar2::maxsateval;
+TB2_THREAD_LOCAL bool ToulBar2::uaieval;
 
-int ToulBar2::resolution;
-bool ToulBar2::resolution_Update;
-TProb ToulBar2::errorg;
-TLogProb ToulBar2::NormFactor;
+TB2_THREAD_LOCAL int ToulBar2::resolution;
+TB2_THREAD_LOCAL bool ToulBar2::resolution_Update;
+TB2_THREAD_LOCAL TProb ToulBar2::errorg;
+TB2_THREAD_LOCAL TLogProb ToulBar2::NormFactor;
 /// Allele frequencies of founders
 /// - 0: 			equal frequencies
 /// - 1: 			probs depending on the frequencies found in the problem
 /// - otherwise:  read probability distribution from command line
-int ToulBar2::foundersprob_class;
-vector<TProb> ToulBar2::allelefreqdistrib;
-bool ToulBar2::consecutiveAllele;
-int ToulBar2::pedigreeCorrectionMode;
-int ToulBar2::pedigreePenalty;
+TB2_THREAD_LOCAL int ToulBar2::foundersprob_class;
+TB2_THREAD_LOCAL vector<TProb> ToulBar2::allelefreqdistrib;
+TB2_THREAD_LOCAL bool ToulBar2::consecutiveAllele;
+TB2_THREAD_LOCAL int ToulBar2::pedigreeCorrectionMode;
+TB2_THREAD_LOCAL int ToulBar2::pedigreePenalty;
 
-int ToulBar2::vac;
-int ToulBar2::vac_prev;
-Cost ToulBar2::costThreshold;
-Cost ToulBar2::costThresholdPre;
-string ToulBar2::costThresholdS;
-string ToulBar2::costThresholdPreS;
-Double ToulBar2::trwsAccuracy;
-bool ToulBar2::trwsOrder;
-unsigned int ToulBar2::trwsNIter;
-unsigned int ToulBar2::trwsNIterNoChange;
-unsigned int ToulBar2::trwsNIterComputeUb;
-Double ToulBar2::costMultiplier;
-Cost ToulBar2::costMultiplier_;
-unsigned int ToulBar2::decimalPoint;
-string ToulBar2::deltaUbS;
-Cost ToulBar2::deltaUb;
-Cost ToulBar2::deltaUbAbsolute;
-Double ToulBar2::deltaUbRelativeGap;
+TB2_THREAD_LOCAL int ToulBar2::vac;
+TB2_THREAD_LOCAL int ToulBar2::vac_prev;
+TB2_THREAD_LOCAL Cost ToulBar2::costThreshold;
+TB2_THREAD_LOCAL Cost ToulBar2::costThresholdPre;
+TB2_THREAD_LOCAL string ToulBar2::costThresholdS;
+TB2_THREAD_LOCAL string ToulBar2::costThresholdPreS;
+TB2_THREAD_LOCAL Double ToulBar2::trwsAccuracy;
+TB2_THREAD_LOCAL bool ToulBar2::trwsOrder;
+TB2_THREAD_LOCAL unsigned int ToulBar2::trwsNIter;
+TB2_THREAD_LOCAL unsigned int ToulBar2::trwsNIterNoChange;
+TB2_THREAD_LOCAL unsigned int ToulBar2::trwsNIterComputeUb;
+TB2_THREAD_LOCAL Double ToulBar2::costMultiplier;
+TB2_THREAD_LOCAL Cost ToulBar2::costMultiplier_;
+TB2_THREAD_LOCAL unsigned int ToulBar2::decimalPoint;
+TB2_THREAD_LOCAL string ToulBar2::deltaUbS;
+TB2_THREAD_LOCAL Cost ToulBar2::deltaUb;
+TB2_THREAD_LOCAL Cost ToulBar2::deltaUbAbsolute;
+TB2_THREAD_LOCAL Double ToulBar2::deltaUbRelativeGap;
 
-unsigned int ToulBar2::divNbSol;
-unsigned int ToulBar2::divBound;
-unsigned int ToulBar2::divWidth;
-unsigned int ToulBar2::divMethod;
-unsigned int ToulBar2::divRelax;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divNbSol;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divBound;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divWidth;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divMethod;
+TB2_THREAD_LOCAL unsigned int ToulBar2::divRelax;
 
-BEP* ToulBar2::bep;
-bool ToulBar2::wcnf;
-bool ToulBar2::qpbo;
-Double ToulBar2::qpboQuadraticCoefMultiplier;
-bool ToulBar2::opb;
-bool ToulBar2::cardinality;
-bool ToulBar2::lp;
+TB2_THREAD_LOCAL BEP* ToulBar2::bep;
+TB2_THREAD_LOCAL bool ToulBar2::wcnf;
+TB2_THREAD_LOCAL bool ToulBar2::qpbo;
+TB2_THREAD_LOCAL Double ToulBar2::qpboQuadraticCoefMultiplier;
+TB2_THREAD_LOCAL bool ToulBar2::opb;
+TB2_THREAD_LOCAL bool ToulBar2::cardinality;
+TB2_THREAD_LOCAL bool ToulBar2::lp;
 
-int ToulBar2::addAMOConstraints;
-bool ToulBar2::addAMOConstraints_;
-int ToulBar2::knapsackDP;
-bool ToulBar2::VAClin;
+TB2_THREAD_LOCAL int ToulBar2::addAMOConstraints;
+TB2_THREAD_LOCAL bool ToulBar2::addAMOConstraints_;
+TB2_THREAD_LOCAL int ToulBar2::knapsackDP;
+TB2_THREAD_LOCAL bool ToulBar2::VAClin;
 
-char* ToulBar2::varOrder;
-int ToulBar2::btdMode;
-int ToulBar2::btdSubTree;
-int ToulBar2::btdRootCluster;
-int ToulBar2::rootHeuristic;
-bool ToulBar2::reduceHeight;
+TB2_THREAD_LOCAL char* ToulBar2::varOrder;
+TB2_THREAD_LOCAL int ToulBar2::btdMode;
+TB2_THREAD_LOCAL int ToulBar2::btdSubTree;
+TB2_THREAD_LOCAL int ToulBar2::btdRootCluster;
+TB2_THREAD_LOCAL int ToulBar2::rootHeuristic;
+TB2_THREAD_LOCAL bool ToulBar2::reduceHeight;
 
-double ToulBar2::startCpuTime;
-double ToulBar2::startRealTime;
-double ToulBar2::startRealTimeAfterPreProcessing;
+TB2_THREAD_LOCAL double ToulBar2::startCpuTime;
+TB2_THREAD_LOCAL double ToulBar2::startRealTime;
+TB2_THREAD_LOCAL double ToulBar2::startRealTimeAfterPreProcessing;
 
-int ToulBar2::splitClusterMaxSize;
-double ToulBar2::boostingBTD;
-int ToulBar2::maxSeparatorSize;
-int ToulBar2::minProperVarSize;
+TB2_THREAD_LOCAL int ToulBar2::splitClusterMaxSize;
+TB2_THREAD_LOCAL double ToulBar2::boostingBTD;
+TB2_THREAD_LOCAL int ToulBar2::maxSeparatorSize;
+TB2_THREAD_LOCAL int ToulBar2::minProperVarSize;
 
-bool ToulBar2::heuristicFreedom;
-int ToulBar2::heuristicFreedomLimit;
+TB2_THREAD_LOCAL bool ToulBar2::heuristicFreedom;
+TB2_THREAD_LOCAL int ToulBar2::heuristicFreedomLimit;
 
-bool ToulBar2::isZ;
-TLogProb ToulBar2::logZ;
-TLogProb ToulBar2::logU;
-TLogProb ToulBar2::logepsilon;
-Double ToulBar2::epsilon;
-bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
+TB2_THREAD_LOCAL bool ToulBar2::isZ;
+TB2_THREAD_LOCAL TLogProb ToulBar2::logZ;
+TB2_THREAD_LOCAL TLogProb ToulBar2::logU;
+TB2_THREAD_LOCAL TLogProb ToulBar2::logepsilon;
+TB2_THREAD_LOCAL Double ToulBar2::epsilon;
+TB2_THREAD_LOCAL bool ToulBar2::Berge_Dec; // berge decomposition flag  > 0 if wregular found in the problem
 
-externalfunc ToulBar2::timeOut;
-std::atomic<bool> ToulBar2::interrupted;
+TB2_THREAD_LOCAL externalfunc ToulBar2::timeOut;
+TB2_THREAD_LOCAL std::atomic<bool> ToulBar2::interrupted;
 
-bool ToulBar2::learning;
+TB2_THREAD_LOCAL bool ToulBar2::learning;
 
-int ToulBar2::seed;
-Double ToulBar2::sigma;
+TB2_THREAD_LOCAL int ToulBar2::seed;
+TB2_THREAD_LOCAL Double ToulBar2::sigma;
 
-string ToulBar2::incop_cmd;
-string ToulBar2::pils_cmd;
-string ToulBar2::lrBCD_cmd;
+TB2_THREAD_LOCAL string ToulBar2::incop_cmd;
+TB2_THREAD_LOCAL string ToulBar2::pils_cmd;
+TB2_THREAD_LOCAL string ToulBar2::lrBCD_cmd;
 
-string ToulBar2::clusterFile;
-ofstream ToulBar2::vnsOutput;
+TB2_THREAD_LOCAL string ToulBar2::clusterFile;
+TB2_THREAD_LOCAL ofstream ToulBar2::vnsOutput;
 
-SearchMethod ToulBar2::searchMethod;
+TB2_THREAD_LOCAL SearchMethod ToulBar2::searchMethod;
 
-VNSSolutionInitMethod ToulBar2::vnsInitSol;
-int ToulBar2::vnsLDSmin;
-int ToulBar2::vnsLDSmax;
-VNSInc ToulBar2::vnsLDSinc;
-int ToulBar2::vnsKmin;
-int ToulBar2::vnsKmax;
-VNSInc ToulBar2::vnsKinc;
+TB2_THREAD_LOCAL VNSSolutionInitMethod ToulBar2::vnsInitSol;
+TB2_THREAD_LOCAL int ToulBar2::vnsLDSmin;
+TB2_THREAD_LOCAL int ToulBar2::vnsLDSmax;
+TB2_THREAD_LOCAL VNSInc ToulBar2::vnsLDSinc;
+TB2_THREAD_LOCAL int ToulBar2::vnsKmin;
+TB2_THREAD_LOCAL int ToulBar2::vnsKmax;
+TB2_THREAD_LOCAL VNSInc ToulBar2::vnsKinc;
 
-int ToulBar2::vnsLDScur;
-int ToulBar2::vnsKcur;
-VNSVariableHeuristic ToulBar2::vnsNeighborVarHeur;
-bool ToulBar2::vnsNeighborChange;
-bool ToulBar2::vnsNeighborSizeSync;
-bool ToulBar2::vnsParallelLimit;
-bool ToulBar2::vnsParallelSync;
-string ToulBar2::vnsOptimumS;
-Cost ToulBar2::vnsOptimum;
-bool ToulBar2::parallel;
+TB2_THREAD_LOCAL int ToulBar2::vnsLDScur;
+TB2_THREAD_LOCAL int ToulBar2::vnsKcur;
+TB2_THREAD_LOCAL VNSVariableHeuristic ToulBar2::vnsNeighborVarHeur;
+TB2_THREAD_LOCAL bool ToulBar2::vnsNeighborChange;
+TB2_THREAD_LOCAL bool ToulBar2::vnsNeighborSizeSync;
+TB2_THREAD_LOCAL bool ToulBar2::vnsParallelLimit;
+TB2_THREAD_LOCAL bool ToulBar2::vnsParallelSync;
+TB2_THREAD_LOCAL string ToulBar2::vnsOptimumS;
+TB2_THREAD_LOCAL Cost ToulBar2::vnsOptimum;
+TB2_THREAD_LOCAL bool ToulBar2::parallel;
 
-Long ToulBar2::hbfs;
-Long ToulBar2::hbfsGlobalLimit;
-Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
-Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
-ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
-ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
-Long ToulBar2::sortBFS; // number of visited open nodes before sorting the remaining open nodes
+TB2_THREAD_LOCAL Long ToulBar2::hbfs;
+TB2_THREAD_LOCAL Long ToulBar2::hbfsGlobalLimit;
+TB2_THREAD_LOCAL Long ToulBar2::hbfsAlpha; // inverse of minimum node redundancy goal limit
+TB2_THREAD_LOCAL Long ToulBar2::hbfsBeta; // inverse of maximum node redundancy goal limit
+TB2_THREAD_LOCAL ptrdiff_t ToulBar2::hbfsCPLimit; // limit on the number of choice points stored inside open node list
+TB2_THREAD_LOCAL ptrdiff_t ToulBar2::hbfsOpenNodeLimit; // limit on the number of open nodes
+TB2_THREAD_LOCAL Long ToulBar2::sortBFS; // number of visited open nodes before sorting the remaining open nodes
 #ifdef OPENMPI
 bool ToulBar2::burst;
 #endif
-Long ToulBar2::eps;
-string ToulBar2::epsFilename;
+TB2_THREAD_LOCAL Long ToulBar2::eps;
+TB2_THREAD_LOCAL string ToulBar2::epsFilename;
 
-bool ToulBar2::verifyOpt;
-Cost ToulBar2::verifiedOptimum;
+TB2_THREAD_LOCAL bool ToulBar2::verifyOpt;
+TB2_THREAD_LOCAL Cost ToulBar2::verifiedOptimum;
 
-int ToulBar2::bilevel;
-vector<unsigned int> ToulBar2::decimalPointBLP;
-vector<Double> ToulBar2::costMultiplierBLP;
-vector<Cost> ToulBar2::negCostBLP;
-vector<Cost> ToulBar2::initialLbBLP;
-vector<Cost> ToulBar2::initialUbBLP;
+TB2_THREAD_LOCAL int ToulBar2::bilevel;
+TB2_THREAD_LOCAL vector<unsigned int> ToulBar2::decimalPointBLP;
+TB2_THREAD_LOCAL vector<Double> ToulBar2::costMultiplierBLP;
+TB2_THREAD_LOCAL vector<Cost> ToulBar2::negCostBLP;
+TB2_THREAD_LOCAL vector<Cost> ToulBar2::initialLbBLP;
+TB2_THREAD_LOCAL vector<Cost> ToulBar2::initialUbBLP;
+
+#ifndef TOULBAR2_MULTITHREAD
+std::thread::id ToulBar2::current_thread_id;
+#endif
 
 /// \brief initialization of ToulBar2 global variables needed by numberjack/toulbar2
 void tb2init()
 {
+// prevent running the single-thread version into multiple threads
+#ifndef TOULBAR2_MULTITHREAD
+    if (ToulBar2::current_thread_id == std::thread::id()) {
+        ToulBar2::current_thread_id = std::this_thread::get_id();
+    } else {
+        if (std::this_thread::get_id() != ToulBar2::current_thread_id) {
+            std::cerr << "Error: this version of ToulBar2 cannot run in multiple threads. Please build with MULTI_THREAD option!" << std::endl;
+            throw BadConfiguration();
+        }
+    }
+#endif
+
     // backtrack trailing mechanism
     Store::depth = 0;
 
@@ -564,7 +583,7 @@ void tb2init()
 
     // (parallel) hybrid best-first search
     ToulBar2::hbfs = 1;
-    ToulBar2::hbfsGlobalLimit = 16384;
+    ToulBar2::hbfsGlobalLimit = 32768;
     ToulBar2::hbfsAlpha = 20LL; // i.e., alpha = 1/20 = 0.05
     ToulBar2::hbfsBeta = 10LL; // i.e., beta = 1/10 = 0.1
     ToulBar2::hbfsCPLimit = CHOICE_POINT_LIMIT;
@@ -591,7 +610,7 @@ void tb2init()
     ToulBar2::heuristicFreedom = false;
     ToulBar2::heuristicFreedomLimit = 5;
 
-    //TODO: backtrack with conflict-free learning
+    // TODO: backtrack with conflict-free learning
     ToulBar2::learning = false;
 
     // solver statistics
@@ -612,6 +631,9 @@ void tb2reinit()
     ToulBar2::setminobj = NULL;
     ToulBar2::newsolution = NULL;
     ToulBar2::timeOut = NULL;
+
+    ToulBar2::DEE_ = 0;
+    ToulBar2::elimDegree_ = -1;
 
     ToulBar2::interrupted = false;
 
@@ -771,7 +793,7 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #endif
-    if (ToulBar2::vac && !ToulBar2::cfn && !ToulBar2::lp && string2Cost(ToulBar2::externalUB.c_str())==UNIT_COST) {
+    if (ToulBar2::vac && !ToulBar2::cfn && !ToulBar2::lp && string2Cost(ToulBar2::externalUB.c_str()) == UNIT_COST) {
         cout << "Warning! Do not need VAC in satisfaction (with option -ub=1)." << endl;
         ToulBar2::vac = 0;
     }
@@ -874,10 +896,10 @@ void tb2checkOptions()
         throw BadConfiguration();
     }
 #ifdef OPENMPI
-//    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
-//        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
-//        throw BadConfiguration();
-//    }
+    //    if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::burst && ToulBar2::btdMode >= 1) {
+    //        cout << "Sorry: burst mode does not work with parallel hybrid best-first search exploiting tree decomposition (add option -burst:)." << endl;
+    //        throw BadConfiguration();
+    //    }
     if (ToulBar2::parallel && ToulBar2::hbfs && ToulBar2::btdMode >= 1) {
         cout << "Sorry: parallel hybrid best-first search does not work with exploiting tree decomposition (remove option -B)." << endl;
         throw BadConfiguration();
@@ -1077,7 +1099,7 @@ int WCSP::postBinaryConstraint(int xIndex, int yIndex, vector<Cost>& costs)
 
     assert(costs.size() == (x->getDomainInitSize() * y->getDomainInitSize()));
 
-    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c) { return c == MIN_COST; })) {
         return INT_MAX;
     }
 
@@ -1278,7 +1300,7 @@ int WCSP::postTernaryConstraint(int xIndex, int yIndex, int zIndex, vector<Cost>
     EnumeratedVariable* y = (EnumeratedVariable*)vars[yIndex];
     EnumeratedVariable* z = (EnumeratedVariable*)vars[zIndex];
 
-    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c){ return c == MIN_COST;})) {
+    if (ToulBar2::bilevel == 5 || std::all_of(costs.begin(), costs.end(), [](Cost c) { return c == MIN_COST; })) {
         return INT_MAX;
     }
 
@@ -1522,7 +1544,7 @@ int WCSP::postNaryConstraintBegin(int* scopeIndex, int arity, Cost defval, Long 
 /// \warning valid only for global cost function in extension
 void WCSP::postNaryConstraintTuple(int ctrindex, Value* tuple, int arity, Cost cost)
 {
-    static Tuple s;
+    TB2_THREAD_LOCAL static Tuple s;
     if (ToulBar2::vac)
         histogram(cost);
     Constraint* ctr = getCtr(ctrindex);
@@ -2871,8 +2893,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
                     }
                     assert(NotVarVal[i].size() >= 1);
                     assert(wsize + NotVarVal[i].size() == weights[i].size());
-                    VarVal[i].resize(wsize+1);
-                    weights[i].resize(wsize+1);
+                    VarVal[i].resize(wsize + 1);
+                    weights[i].resize(wsize + 1);
                     assert(weights[i].back() == 0);
                 }
             }
@@ -3217,41 +3239,6 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
         }
         postWGcc(scopeIndex, arity, semantics, baseCost, values_, nbValues, lb, ub);
         return INT_MIN;
-    }
-
-    if (propagator == "knapsack") {
-        if (semantics == "hard") {
-            for (auto& iter : values) {
-                if ((int)iter.upper < arity) {
-                    string params = to_string(-(int)(iter.upper));
-                    for (int variable = 0; variable < arity; ++variable) {
-                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(iter.val)) {
-                            params += to_string(" 1 ") + to_string(iter.val) + to_string(" -1");
-                        } else {
-                            params += to_string(" 0");
-                        }
-                    }
-                    istringstream file(params);
-                    postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
-                }
-                if ((int)iter.lower > 0) {
-                    string params = to_string(iter.lower);
-                    for (int variable = 0; variable < arity; ++variable) {
-                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(iter.val)) {
-                            params += to_string(" 1 ") + to_string(iter.val) + to_string(" 1");
-                        } else {
-                            params += to_string(" 0");
-                        }
-                    }
-                    istringstream file(params);
-                    postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
-                }
-            }
-            return INT_MIN;
-        } else {
-            cerr << "Error: post GlobalCardinalityConstraint with knapsack propagator cannot be a soft constraint! (use instead semantics=\"hard\" and baseCost=" << getUb() << ")" << endl;
-            throw WrongFileFormat();
-        }
     }
 
     if (propagator == "flow") {
@@ -3831,7 +3818,7 @@ void WCSP::sortConstraints()
 
     vector<DLink<Constraint*>*> sorted;
     for (KnapsackList::iterator iter = knapsackList.begin(); iter != knapsackList.end(); ++iter) {
-        sorted.push_back((DLink<Constraint*>*) iter.getElt());
+        sorted.push_back((DLink<Constraint*>*)iter.getElt());
     }
     if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
         shuffle(sorted.begin(), sorted.end(), myrandom_generator);
@@ -3839,7 +3826,7 @@ void WCSP::sortConstraints()
         stable_sort(sorted.begin(), sorted.end(), Constraint::cmpConstraintLinkPointer);
     }
     for (unsigned int i = 0; i < sorted.size(); i++) {
-        knapsackList.erase((DLink<KnapsackConstraint*>*) sorted[i], true);
+        knapsackList.erase((DLink<KnapsackConstraint*>*)sorted[i], true);
         knapsackList.push_back((DLink<KnapsackConstraint*>*)sorted[i], true);
     }
 
@@ -3955,10 +3942,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
         Constraint* ctr = constrs[i];
         // allows tight nary/knapsack constraints with a few valid tuples
         bool fast = CUT(ctr->getDefCost(), getUb()) && ctr->size() <= abs(ToulBar2::hve);
-        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 &&
-            (fast
-             || (ctr->arity() <= ToulBar2::preprocessNary && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve))
-             || (ctr->isKnapsack() && ((KnapsackConstraint *)ctr)->isPseudoBoolean() && ((KnapsackConstraint *)ctr)->isTight()))) {
+        if (ctr->connected() && !ctr->isSep() && ctr->arity() >= 3 && (fast || (ctr->arity() <= ToulBar2::preprocessNary && ctr->getDomainSizeProduct() <= 2L * abs(ToulBar2::hve)) || (ctr->isKnapsack() && ((KnapsackConstraint*)ctr)->isPseudoBoolean() && ((KnapsackConstraint*)ctr)->isTight()))) {
             Tuple tuple;
             Cost cost;
             vector<Tuple> tuples;
@@ -3968,7 +3952,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
                 ctr->first();
             else
                 ctr->firstlex();
-            while ((fast)?ctr->next(tuple, cost):ctr->nextlex(tuple, cost)) {
+            while ((fast) ? ctr->next(tuple, cost) : ctr->nextlex(tuple, cost)) {
                 if (cost + getLb() < getUb()) {
                     tuples.push_back(tuple);
                     costs.push_back(cost);
@@ -4138,7 +4122,7 @@ pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncodin
             listOfDualCosts[j][valj] += ctrextend->evalsubstr(listOfDualDomains[j][valj], listOfCtrs[j]);
         }
         //        ctrincluding->sumScopeIncluded(ctrextend); //TODO: checks it does not overflow!
-        if (ctrextend->extension() && ctrextend->arity() <= 3) { //TODO: clear only arity 2?
+        if (ctrextend->extension() && ctrextend->arity() <= 3) { // TODO: clear only arity 2?
             ctrextend->clearFiniteCosts();
         }
         ctrextend->deconnect(true); // binary cost functions may be reused later (if inside ternary cost functions) and should be empty
@@ -4451,37 +4435,38 @@ void WCSP::preprocessing()
                 }
             } else if (constrs[i]->connected() && constrs[i]->isAllDiff()) {
                 std::vector<Value> exceptedVal = constrs[i]->getExceptedValues();
-                bool excepted = true ;
-                if(exceptedVal.empty()) excepted = false;
+                bool excepted = true;
+                if (exceptedVal.empty())
+                    excepted = false;
 
                 // projects on existing binary cost functions inside the scope of AllDifferent
                 Cost mult_ub = (getUb() < (MAX_COST / MEDIUM_COST)) ? (max(LARGE_COST, getUb() * MEDIUM_COST)) : getUb();
-                for (int j=0; j < constrs[i]->arity(); j++) {
-                    EnumeratedVariable *xj = (EnumeratedVariable *)constrs[i]->getVar(j);
-                    if (xj->unassigned() && xj->getDegree() >  1) {
-                        ConstraintList *constrsj = xj->getConstrs();
+                for (int j = 0; j < constrs[i]->arity(); j++) {
+                    EnumeratedVariable* xj = (EnumeratedVariable*)constrs[i]->getVar(j);
+                    if (xj->unassigned() && xj->getDegree() > 1) {
+                        ConstraintList* constrsj = xj->getConstrs();
                         for (ConstraintList::iterator it = constrsj->begin(); it != constrsj->end(); ++it) {
                             Constraint* ctr = (*it).constr;
                             if (ctr->isBinary() && !ctr->isSep() && constrs[i]->scopeIncluded(ctr)) {
-                                BinaryConstraint *cjk = (BinaryConstraint*)ctr;
-                                EnumeratedVariable *xk = (EnumeratedVariable *)((cjk->getVar(0)==xj)?cjk->getVar(1):cjk->getVar(0));
+                                BinaryConstraint* cjk = (BinaryConstraint*)ctr;
+                                EnumeratedVariable* xk = (EnumeratedVariable*)((cjk->getVar(0) == xj) ? cjk->getVar(1) : cjk->getVar(0));
                                 if (xj->isValueNames() && xk->isValueNames()) {
                                     for (Value vj : getEnumDomain(xj->wcspIndex)) {
                                         string svj = xj->getValueName(xj->toIndex(vj));
                                         assert(svj.size() > 0);
                                         unsigned int vkindex = xk->toIndex(svj);
                                         Value vk = xk->toValue(vkindex);
-                                        // Guidio : 
-                                        if(excepted){
-                                             auto it = std::find(exceptedVal.begin(), exceptedVal.end(), vk);
-                                             if(it == exceptedVal.end()){
+                                        // Guidio :
+                                        if (excepted) {
+                                            auto it = std::find(exceptedVal.begin(), exceptedVal.end(), vk);
+                                            if (it == exceptedVal.end()) {
                                                 if (xk->canbe(vk)) {
                                                     Cost oldcost = cjk->getCost(xj, xk, vj, vk);
-                                                     cjk->addcost(xj, xk, vj, vk, mult_ub - oldcost);
+                                                    cjk->addcost(xj, xk, vj, vk, mult_ub - oldcost);
                                                 }
                                             }
                                         }
-                                        //end
+                                        // end
                                     }
 
                                 } else {
@@ -4679,7 +4664,7 @@ void WCSP::preprocessing()
                 }
             }
         }
-        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin)?numberOfConnectedKnapsackConstraints():0) + numberOfConnectedBinaryConstraints()) {
+        if (ToulBar2::FullEAC && ToulBar2::vac > 1 && numberOfConnectedConstraints() > ((ToulBar2::VAClin) ? numberOfConnectedKnapsackConstraints() : 0) + numberOfConnectedBinaryConstraints()) {
             if (ToulBar2::verbose) {
                 cout << "Warning: VAC during search and Full EAC variable ordering heuristic not implemented with non binary cost functions in extension left by the hidden encoding due to memory limit (option -vacint has been removed)." << endl;
             }
@@ -5389,8 +5374,7 @@ void WCSP::dump_CFN(ostream& os, bool original)
         if (vars[i]->enumerated() && (original || vars[i]->unassigned())) {
             int size = vars[i]->getDomainSize();
             vector<pair<Value, Cost>> domcost = getEnumDomainAndCost(i);
-            if ((!original || size == (int)static_cast<EnumeratedVariable*>(vars[i])->getDomainInitSize()) &&
-                all_of(domcost.begin(), domcost.end(), [](auto e) { return e.second == MIN_COST; }))
+            if ((!original || size == (int)static_cast<EnumeratedVariable*>(vars[i])->getDomainInitSize()) && all_of(domcost.begin(), domcost.end(), [](auto e) { return e.second == MIN_COST; }))
                 continue; // skip (original) domain with zero cost
             os << "\"F_" << ((original) ? i : vars[i]->getCurrentVarId()) << "\":{\"scope\":[\"";
             os << name2cfn(vars[i]->getName()) << "\"],\"defaultcost\":" << ((original) ? DCost2Decimal(Cost2RDCost(ub)) : "inf") << ",\n";
@@ -6290,7 +6274,7 @@ void WCSP::propagate(bool fromscratch)
 
 void WCSP::restoreSolution(Cluster* c)
 {
-    static Tuple tctr;
+    TB2_THREAD_LOCAL static Tuple tctr;
     int elimo = getElimOrder();
     for (int i = elimo - 1; i >= 0; i--) {
         elimInfo ei = elimInfos[i];
@@ -6619,36 +6603,46 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                             Cost c = MIN_COST;
                             if (ctr2->isTernary()) {
                                 c = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
-                            } else {
-                                assert(ctr2->isNary());
+                            } else if (ctr2->isNary()) {
                                 t[0] = vxi;
                                 t[1] = vyi;
                                 t[2] = vzi;
                                 c = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
+                            } else {
+                                t[ctr2->getIndex(x)] = vxi;
+                                t[ctr2->getIndex(y)] = vyi;
+                                t[ctr2->getIndex(z)] = vzi;
+                                c = ((AbstractNaryConstraint*)ctr2)->eval(t);
                             }
                             costsum += ((BinaryConstraint*)ctr1)->getCost(x, y, vx, vy) + c;
                         } else if (arityI == 3) {
-                            assert(ctr1->isTernary());
-                            assert(ctr2->isTernary());
                             Cost c1 = MIN_COST;
                             Cost c2 = MIN_COST;
                             if (ctr1->isTernary()) {
                                 c1 = ((TernaryConstraint*)ctr1)->getCost(x, y, z, vx, vy, vz);
-                            } else {
-                                assert(ctr1->isNary());
+                            } else if (ctr1->isNary()) {
                                 t[0] = vxi;
                                 t[1] = vyi;
                                 t[2] = vzi;
                                 c1 = ((NaryConstraint*)ctr1)->eval(t, scopeTernary);
+                            } else {
+                                t[ctr1->getIndex(x)] = vxi;
+                                t[ctr1->getIndex(y)] = vyi;
+                                t[ctr1->getIndex(z)] = vzi;
+                                c1 = ((AbstractNaryConstraint*)ctr1)->eval(t);
                             }
                             if (ctr2->isTernary()) {
                                 c2 = ((TernaryConstraint*)ctr2)->getCost(x, y, z, vx, vy, vz);
-                            } else {
-                                assert(ctr2->isNary());
+                            } else if (ctr2->isNary()) {
                                 t[0] = vxi;
                                 t[1] = vyi;
                                 t[2] = vzi;
                                 c2 = ((NaryConstraint*)ctr2)->eval(t, scopeTernary);
+                            } else {
+                                t[ctr2->getIndex(x)] = vxi;
+                                t[ctr2->getIndex(y)] = vyi;
+                                t[ctr2->getIndex(z)] = vzi;
+                                c2 = ((AbstractNaryConstraint*)ctr2)->eval(t);
                             }
                             costsum += c1 + c2;
                         } else {
@@ -6661,6 +6655,8 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
                 }
         ctrIndex = postTernaryConstraint(x->wcspIndex, y->wcspIndex, z->wcspIndex, costs);
     } else if (arityU == 2) {
+        assert(ctr1->isBinary());
+        assert(ctr2->isBinary());
         BinaryConstraint* bctr1 = (BinaryConstraint*)ctr1;
         BinaryConstraint* bctr2 = (BinaryConstraint*)ctr2;
         for (vxi = 0; vxi < x->getDomainInitSize(); vxi++)
@@ -6680,19 +6676,19 @@ Constraint* WCSP::sum(Constraint* ctr1, Constraint* ctr2)
     delete[] scopeU;
     delete[] scopeUi;
     delete[] scopeI;
-    if (ctrIndex >= 0 && ctrIndex != INT_MAX) {
+    if (ctrIndex != -INT_MAX && ctrIndex != INT_MAX) {
         ctr = getCtr(ctrIndex);
         ctr->propagate();
-    }
-    if (ToulBar2::verbose >= 1) {
-        cout << endl
-             << "Has result: ";
-        if (ctr) {
-            cout << *ctr;
-        } else {
-            cout << "Null";
+        if (ToulBar2::verbose >= 1) {
+            cout << endl
+                 << "Has result: ";
+            if (ctr) {
+                cout << *ctr;
+            } else {
+                cout << "Null";
+            }
+            cout << endl;
         }
-        cout << endl;
     }
     return ctr;
 }
@@ -6727,11 +6723,11 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
         assert(ctr_inout->isNary());
         Cost prevNegCost = getNegativeLb();
         ((NaryConstraint*)ctr_inout)->project(var);
-        if (ctr_inout->universal((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST)) {
+        if (ctr_inout->universal((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST)) {
             if (ToulBar2::isZ) {
                 Cost afterNegCost = getNegativeLb();
-                if (abs( afterNegCost - prevNegCost ) <= var->getDomainInitSize()) {
-                    decreaseLb( prevNegCost - afterNegCost );
+                if (abs(afterNegCost - prevNegCost) <= var->getDomainInitSize()) {
+                    decreaseLb(prevNegCost - afterNegCost);
                     assert(getNegativeLb() == prevNegCost);
                 }
             }
@@ -6741,7 +6737,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             ctr_inout->propagate();
             if (ToulBar2::verbose >= 1)
                 cout << endl
-                << "   has result*: " << *ctr_inout << endl;
+                     << "   has result*: " << *ctr_inout << endl;
         }
         return;
     }
@@ -6816,7 +6812,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
                 decreaseLb(negcost);
         }
-        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST); });
         if (!zeros) {
             ctrIndex = postTernaryConstraint(ivars[0], ivars[1], ivars[2], costs);
             ctr = getCtr(ctrIndex);
@@ -6852,7 +6848,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
                 decreaseLb(negcost);
         }
-        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST); });
         if (!zeros) {
             ctrIndex = postBinaryConstraint(ivars[0], ivars[1], costs);
             ctr = getCtr(ctrIndex);
@@ -6884,7 +6880,7 @@ void WCSP::project(Constraint*& ctr_inout, EnumeratedVariable* var, Constraint* 
             if (!ToulBar2::isZ || abs(negcost) > var->getDomainInitSize())
                 decreaseLb(negcost);
         }
-        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ)?var->getDomainInitSize():MIN_COST); });
+        bool zeros = std::all_of(costs.begin(), costs.end(), [&var](Cost c) { return c <= ((ToulBar2::isZ) ? var->getDomainInitSize() : MIN_COST); });
         if (!zeros) {
             for (EnumeratedVariable::iterator itv0 = evars[0]->begin(); itv0 != evars[0]->end(); ++itv0) {
                 vxi = evars[0]->toIndex(*itv0);

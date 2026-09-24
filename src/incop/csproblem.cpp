@@ -13,7 +13,7 @@ using namespace std;
 #include "incop.h"
 #include "csproblem.h"
 
-extern ofstream* ofile; // le fichier de sortie
+extern TB2_THREAD_LOCAL ofstream* ofile; // le fichier de sortie
 
 void CSProblem::init_domains(int nbvar, int s)
 {

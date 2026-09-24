@@ -10,7 +10,7 @@
 #include "tb2clqcover.hpp"
 #include "search/tb2clusters.hpp"
 
-int CliqueConstraint::nextid{ 0 };
+TB2_THREAD_LOCAL int CliqueConstraint::nextid{ 0 };
 
 CliqueConstraint::CliqueConstraint(WCSP* wcsp, EnumeratedVariable** scope_in,
     int arity_in, vector<vector<int>> clq_in,
@@ -258,7 +258,7 @@ void CliqueConstraint::initialize_binary()
             auto* cons = cle.constr;
             if (!cons->isBinary())
                 continue;
-            BinaryConstraint *bincons = (BinaryConstraint *)cons;
+            BinaryConstraint* bincons = (BinaryConstraint*)cons;
             auto& bcons = *bincons;
             auto& yvar = [&]() -> EnumeratedVariable& {
                 if (&xvar == bcons.getVar(0))

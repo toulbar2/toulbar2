@@ -1,5 +1,6 @@
 .vscode
 .pc
+.cache
 build
 pytoulbar2/*.so
 src/ToulbarVersion.hpp
@@ -8,4 +9,5 @@ __pycache__
 docs/_build
 docs/_pyvenv
 docs/source/_files
+docs/source/conf.py
 /Debug/

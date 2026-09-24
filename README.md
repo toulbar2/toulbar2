@@ -1,8 +1,11 @@
 # toulbar2
 ## Exact optimization for cost function networks and additive graphical models 
 
-[![Build Status](https://travis-ci.com/toulbar2/toulbar2.svg?branch=master)](https://app.travis-ci.com/github/toulbar2/toulbar2)
-[![PyPi version](https://img.shields.io/pypi/v/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi wheel](https://img.shields.io/pypi/wheel/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)[![PyPi python versions](https://img.shields.io/pypi/pyversions/pytoulbar2.svg)](https://pypi.org/project/pytoulbar2)
+<div align="center">
+
+[![GitHub Release](https://img.shields.io/github/v/release/toulbar2/toulbar2?label=latest&color=green)](https://github.com/toulbar2/toulbar2/releases/latest)
+[![PyPI - Version](https://img.shields.io/pypi/v/pytoulbar2?logo=python&label=pytoulbar2)](https://pypi.org/project/pytoulbar2)
+</div>
 
 <!-- (_README_1)= -->
 ## What is toulbar2? 
@@ -24,16 +27,19 @@ graphical models:
 * 2010 UAI APPROXIMATE INFERENCE CHALLENGE [UAI 2010][uai2010] (winner on 1200-second MPE task)
 * The Probabilistic Inference Challenge [PIC 2011][pic2011] (second place by ficolofo on 1-hour MAP task)
 * UAI 2014 Inference Competition [UAI 2014][uai2014] (winner on all MAP task categories, see Proteus, Robin, and IncTb entries)
-* [XCSP3][xcsp] Competitions (second place on Mini COP and Parallel COP tracks in 2022, first place on Mini COP in 2023, third place in 2024)
+* [XCSP3][xcsp] Competitions (*first place* on Mini COP in 2023 *and 2025*, second place on Mini COP and Parallel COP tracks in 2022, third place in 2024)
 * UAI 2022 Inference Competition [UAI 2022][uai2022] (winner on all MPE and MMAP task categories)
+* Pseudo-Boolean Competition 2025 [PB25][pbo25] (OPT-LIN ranking 39/46 ; PARTIAL-LIN ranking 6/9, but it gave the best known answer from an incomplete solver point of view in [185][partiallin25] instances among 208)
 
-[cpai08]: http://www.cril.univ-artois.fr/CPAI08/
+[cpai08]: http://www.cril.univ-artois.fr/CPAI08
 [uai2008]: http://graphmod.ics.uci.edu/uai08/Evaluation/Report
 [uai2010]: http://www.cs.huji.ac.il/project/UAI10/summary.php
 [pic2011]: http://www.cs.huji.ac.il/project/PASCAL/board.php
 [uai2014]: https://personal.utdallas.edu/~vibhav.gogate/uai14-competition/leaders.html 
 [xcsp]: https://xcsp.org/competitions
 [uai2022]: https://uaicompetition.github.io/uci-2022/results/final-leader-board
+[pbo25]: https://www.cril.univ-artois.fr/PB25
+[partiallin25]: https://www.cril.univ-artois.fr/PB25/results/globalbybench.php?idev=118&idcat=119
 
 toulbar2 is now also able to collaborate with ML code that can learn
 an additive graphical model (with constraints) from data (see the
@@ -83,12 +89,12 @@ Download the latest release from GitHub
 (https://github.com/toulbar2/toulbar2) or similarly use tag versions,
 e.g.:
 
-    git clone --branch 1.2.0 https://github.com/toulbar2/toulbar2.git
+    git clone --branch 1.2.2 https://github.com/toulbar2/toulbar2.git
 
 <!-- (_README_5)= -->
 ## Installation from sources
 
-Compilation requires git, cmake and a C++-20 capable compiler (in C++20 mode). 
+Compilation requires git, cmake and a C++-17 capable compiler (in C++17 mode). 
 
 Required library:
 * libgmp-dev
@@ -101,7 +107,6 @@ Recommended libraries (default use):
 * zlib1g-dev
 * liblzma-dev
 * libbz2-dev
-* libeigen3-dev
 
 Optional libraries:
 * libjemalloc-dev
@@ -113,6 +118,7 @@ Optional libraries:
 * libicudata
 * libxml2-dev
 * libxcsp3parser
+* libeigen3-dev
 
 On MacOS, run ./misc/script/MacOS-requirements-install.sh to install the recommended libraries. For Mac with ARM64, add option -DBoost=OFF to cmake.
 
@@ -127,8 +133,9 @@ Commands for statically compiling toulbar2 on Linux in directory toulbar2/src wi
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
-    g++ -o toulbar2 -std=c++20 -O3 -DNDEBUG -march=native -flto -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
+    echo '#define Toulbar_VERSION "1.2.2"' > ToulbarVersion.hpp
+    echo -n "" > tb2config.hpp
+    g++ -o toulbar2 -std=c++17 -O3 -DNDEBUG -march=native -flto -static -static-libgcc -static-libstdc++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY \
      -I. -I./pils/src tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lgmp -lz -lbz2 -llzma
 
@@ -136,8 +143,9 @@ Use OPENMPI flag and MPI compiler for a parallel version of toulbar2 (must be ru
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
-    mpicxx -o toulbar2 -std=c++20 -O3 -DNDEBUG -march=native -flto -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
+    echo '#define Toulbar_VERSION "1.2.2"' > ToulbarVersion.hpp
+    echo -n "" > tb2config.hpp
+    mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -march=native -flto -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DWCSPFORMATONLY -DOPENMPI \
      -I. -I./pils/src tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lgmp -lz -lbz2 -llzma
 
@@ -147,10 +155,11 @@ Replace WCSPFORMATONLY by XMLFLAG3 and add libxcsp3parser.a from xcsp.org in you
 
     bash
     cd src
-    echo '#define Toulbar_VERSION "1.2.0"' > ToulbarVersion.hpp
-    mpicxx -o toulbar2 -std=c++20 -O3 -DNDEBUG -march=native -flto -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
+    echo '#define Toulbar_VERSION "1.2.2"' > ToulbarVersion.hpp
+    echo -n "" > tb2config.hpp
+    mpicxx -o toulbar2 -std=c++17 -O3 -DNDEBUG -march=native -flto -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -DXMLFLAG3 -DOPENMPI \
      -I/usr/include/libxml2 -I. -I./pils/src -I./xmlcsp3 tb2*.cpp applis/*.cpp convex/*.cpp core/*.cpp globals/*.cpp incop/*.cpp mcriteria/*.cpp pils/src/exe/*.cpp search/*.cpp utils/*.cpp vns/*.cpp ToulbarVersion.cpp \
      -lboost_graph -lboost_iostreams -lboost_serialization -lboost_mpi -lxml2 -licuuc -licui18n -licudata libxcsp3parser.a -lgmp -lz -lbz2 -llzma -lm -lpthread -ldl
 
-Copyright (C) 2006-2025, toulbar2 team.
+Copyright (C) 2006-2026, toulbar2 team.
 toulbar2 is currently maintained by Simon de Givry, INRAE - MIAT, Toulouse, France (simon.de-givry@inrae.fr)

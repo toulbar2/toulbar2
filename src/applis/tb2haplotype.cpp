@@ -182,7 +182,6 @@ void Haplotype::readPedigree(const char* fileName, WCSP* wcsp)
 {
     int individual;
     int nbindividuals = 0;
-    int nbtypings = 0;
     //  map<int, int> allelesInv;
     map<int, map<int, int>> allelesInv; // allelesInv[locus,val]=allele
     map<int, int> nballeles; // nballeles[i] number of allele for the marker i
@@ -340,7 +339,6 @@ void Haplotype::readPedigree(const char* fileName, WCSP* wcsp)
             }
             // A MODIFIER : met dans genotypes les individu qui le sont pour au moins 1 marqueur => les ajouter si tout les marqueurs ou faire une variable genotypes pour chaque marqueur (proposition la plus pertinante?)
             if (allele1 > 0 || allele2 > 0) {
-                nbtypings++;
                 genotypes.push_back(individual);
             }
         }

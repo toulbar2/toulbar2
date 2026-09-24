@@ -133,7 +133,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         istringstream file(arguments);
         wcsp.postKnapsackConstraint(scopeIndexs, arity, file, false, false, false, {});
     } else if (globalname == "alldiff") {
-        istringstream file("0");
+        istringstream file("0 0");
         wcsp.postAllDifferentConstraint(scopeIndexs, arity, file);
     } else if (globalname == "gcc") {
         string arguments;
@@ -142,20 +142,21 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         int left = arity;
         int sumlb = arity;
         unsigned int pos = 0;
-        for (Value v :  wcsp.getEnumDomain(scopeIndexs[0])) {
+        for (Value v : wcsp.getEnumDomain(scopeIndexs[0])) {
             arguments.append(" ");
             arguments.append(to_string(v));
             arguments.append(" ");
             pos++;
-            int rand = myrand() % (arity+1); // random upper bound capacity 
-            int capa = (pos==domsize && left > 0)?left:rand; 
-            int demand = myrand() % (min(capa, sumlb)+1); // random lower bound capacity 
+            int rand = myrand() % (arity + 1); // random upper bound capacity
+            int capa = (pos == domsize && left > 0) ? left : rand;
+            int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
             left -= capa;
             sumlb -= demand;
             arguments.append(to_string(0));
             arguments.append(" ");
             arguments.append(to_string(capa));
         }
+        arguments.append(" 0");
         istringstream file(arguments);
         wcsp.postGlobalCardinalityConstraint(scopeIndexs, arity, file);
     } else if (globalname == "salldiff" || globalname == "salldiffdp" || globalname == "salldiffkp" || globalname == "walldiff") {
@@ -167,11 +168,11 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         int left = arity;
         int sumlb = arity;
         unsigned int pos = 0;
-        for (Value v :  wcsp.getEnumDomain(scopeIndexs[0])) {
+        for (Value v : wcsp.getEnumDomain(scopeIndexs[0])) {
             pos++;
-            int rand = myrand() % (arity+1); // random upper bound capacity 
-            int capa = (pos==domsize && left > 0)?left:rand; 
-            int demand = myrand() % (min(capa, sumlb)+1); // random lower bound capacity 
+            int rand = myrand() % (arity + 1); // random upper bound capacity
+            int capa = (pos == domsize && left > 0) ? left : rand;
+            int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
             left -= capa;
             sumlb -= demand;
             values.push_back(BoundedObjValue(v, capa, 0));

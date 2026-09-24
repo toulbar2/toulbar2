@@ -34,15 +34,13 @@ MultiCFN::MultiCFN(vector<WCSP*>& wcsps, vector<Double>& weights)
     }
 }
 
-
 //---------------------------------------------------------------------------
 MultiCFN::~MultiCFN()
 {
-    for (auto ctr: cost_function) {
+    for (auto ctr : cost_function) {
         delete ctr;
     }
 }
-
 
 //---------------------------------------------------------------------------
 void MultiCFN::checkVariablesConsistency(EnumeratedVariable* tb2_var, mcriteria::Var& multicfn_var)
@@ -368,12 +366,14 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         }
 
         // read the excepted values
-        for (Value value : cstr_alldiff->getExceptedValues() ) {
+        for (Value value : cstr_alldiff->getExceptedValues()) {
             EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(cstr_alldiff->getVar(0));
             string val_name = tb2_var->getValueNameOrGenerate(tb2_var->toIndex(value));
             unsigned int mcfn_val_ind = var[cost_func_ptr->scope[0]].str_to_index[val_name];
             cost_func_ptr->exceptedValues.insert(mcfn_val_ind);
         }
+
+        // TODO: read delta costs
 
     } else if (cstr->isGCC()) {
 
@@ -395,12 +395,14 @@ void MultiCFN::addCostFunction(WCSP* wcsp, Constraint* cstr)
         }
 
         // read the bounds
-        for (auto bound : cstr_gcc->getBounds() ) {
+        for (auto bound : cstr_gcc->getBounds()) {
             EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(cstr_gcc->getVar(0));
             string val_name = tb2_var->getValueNameOrGenerate(tb2_var->toIndex(bound.first));
             unsigned int mcfn_val_ind = var[cost_func_ptr->scope[0]].str_to_index[val_name];
-            cost_func_ptr->bounds[mcfn_val_ind] = std::make_pair((Double) bound.second.first, (Double) bound.second.second);
+            cost_func_ptr->bounds[mcfn_val_ind] = std::make_pair((Double)bound.second.first, (Double)bound.second.second);
         }
+
+        // TODO: read delta costs
 
     } else {
 
@@ -723,8 +725,8 @@ void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const vec
             }
             if (vars.size() > 0) {
                 std::set_intersection(vars.begin(), vars.end(),
-                        union_of_scopes.begin(), union_of_scopes.end(),
-                        std::inserter(inter, inter.begin()));
+                    union_of_scopes.begin(), union_of_scopes.end(),
+                    std::inserter(inter, inter.begin()));
             } else {
                 inter.swap(union_of_scopes);
             }
@@ -737,13 +739,13 @@ void MultiCFN::exportToWCSP(WCSP* wcsp, const set<unsigned int>& vars, const vec
             if (inter.size() > 0) {
                 std::set<unsigned int> temp_set;
                 std::set_intersection(inter.begin(), inter.end(),
-                        union_of_constrs.begin(), union_of_constrs.end(),
-                        std::inserter(temp_set, temp_set.begin()));
+                    union_of_constrs.begin(), union_of_constrs.end(),
+                    std::inserter(temp_set, temp_set.begin()));
                 inter.swap(temp_set);
             } else if (vars.size() > 0) {
                 std::set_intersection(vars.begin(), vars.end(),
-                        union_of_constrs.begin(), union_of_constrs.end(),
-                        std::inserter(inter, inter.begin()));
+                    union_of_constrs.begin(), union_of_constrs.end(),
+                    std::inserter(inter, inter.begin()));
             } else {
                 inter.swap(union_of_constrs);
             }
@@ -776,8 +778,7 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
 
         assert(isfinite(_doriginal_lbs[net_ind]));
         set<unsigned int> emptyset;
-        if ((vars.size() == 0 && scopes.size() == 0 && constrs.size() == 0) ||
-            (scopes.size() > 0 && scopes.count(emptyset) == 1)) {
+        if ((vars.size() == 0 && scopes.size() == 0 && constrs.size() == 0) || (scopes.size() > 0 && scopes.count(emptyset) == 1)) {
             global_lb += _doriginal_lbs[net_ind] * weights[net_ind];
         }
 
@@ -829,7 +830,8 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
     // create new variables only if they do not exist yet
     for (unsigned int var_ind = 0; var_ind < nbVariables(); var_ind++) {
 
-        if (vars.size() > 0 && vars.count(var_ind) == 0) continue; // skip this variable if it is not part of the induced graph
+        if (vars.size() > 0 && vars.count(var_ind) == 0)
+            continue; // skip this variable if it is not part of the induced graph
 
         if (wcsp->getVarIndex(var[var_ind].name) == wcsp->numberOfVariables()) {
 
@@ -866,10 +868,13 @@ void MultiCFN::exportToWCSP_(WCSP* wcsp, const set<unsigned int>& vars, const se
     // export the cost functions
     for (unsigned int func_ind = 0; func_ind < cost_function.size(); func_ind++) {
 
-        if (constrs.size() > 0 && constrs.count(func_ind) == 0) continue; // skip this function if it is not part of the partial graph
+        if (constrs.size() > 0 && constrs.count(func_ind) == 0)
+            continue; // skip this function if it is not part of the partial graph
         set<unsigned int> scope = set<unsigned int>(cost_function[func_ind]->scope.begin(), cost_function[func_ind]->scope.end());
-        if (scopes.size() > 0 && scopes.count(scope) == 0) continue; // skip this function if its scope is not part of the partial graph
-        if (vars.size() > 0 && !(std::includes(vars.begin(), vars.end(), scope.begin(), scope.end()))) continue;// skip this function if its scope is not included in the induced graph
+        if (scopes.size() > 0 && scopes.count(scope) == 0)
+            continue; // skip this function if its scope is not part of the partial graph
+        if (vars.size() > 0 && !(std::includes(vars.begin(), vars.end(), scope.begin(), scope.end())))
+            continue; // skip this function if its scope is not included in the induced graph
 
         switch (cost_function[func_ind]->getType()) {
         case mcriteria::CostFunction::Tuple:
@@ -977,7 +982,7 @@ void MultiCFN::exportAllDiffCostFunction(WCSP* wcsp, unsigned int func_ind)
         Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[val_ind]));
         args += to_string(" ") + to_string(val);
     }
-
+    args += " 0";
     istringstream file(args);
     unsigned int cst_ind = wcsp->postAllDifferentConstraint(scope.data(), scope.size(), file);
 
@@ -1005,9 +1010,9 @@ void MultiCFN::exportGCCCostFunction(WCSP* wcsp, unsigned int func_ind)
         mcriteria::Var* own_var = &var[cost_function[func_ind]->scope[0]];
         EnumeratedVariable* tb2_var = dynamic_cast<EnumeratedVariable*>(wcsp->getVar(wcsp->getVarIndex(var[cost_function[func_ind]->scope[0]].name)));
         Value val = tb2_var->toValue(tb2_var->toIndex(own_var->domain_str[bound.first]));
-        args += to_string(" ") + to_string(val) + to_string(" ") + to_string((int) bound.second.first) + to_string(" ") + to_string((int) bound.second.second);
+        args += to_string(" ") + to_string(val) + to_string(" ") + to_string((int)bound.second.first) + to_string(" ") + to_string((int)bound.second.second);
     }
-
+    args += " 0";
     istringstream file(args);
     unsigned int cst_ind = wcsp->postGlobalCardinalityConstraint(scope.data(), scope.size(), file);
 
@@ -1388,8 +1393,6 @@ void MultiCFN::extractSolution()
 void MultiCFN::outputNetSolutionCosts(size_t index, MultiCFN::Solution& solution)
 {
 
-    Double cost = _doriginal_lbs[index];
-
     for (auto func_ind : networks[index]) {
 
         auto& func = cost_function[func_ind];
@@ -1400,8 +1403,6 @@ void MultiCFN::outputNetSolutionCosts(size_t index, MultiCFN::Solution& solution
             string var_name = var[var_ind].name;
             tuple.push_back(var[var_ind].str_to_index[solution[var_name]]);
         }
-
-        cost += func->getCost(tuple);
 
         if (fabs(func->getCost(tuple)) > 0.1) {
             cout << "func " << func_ind << " (" << func->name << ") = " << func->getCost(tuple) << endl;
@@ -1414,8 +1415,6 @@ std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution
 {
 
     vector<Double> obj_values;
-
-    int cpt = 0;
 
     for (unsigned int net_ind = 0; net_ind < networks.size(); net_ind++) {
 
@@ -1439,8 +1438,6 @@ std::vector<Double> MultiCFN::computeSolutionValues(MultiCFN::Solution& solution
             } else if (func->getType() == mcriteria::CostFunction::GCC) {
                 assert(checkGCCCostFuncConsistency(func_ind, solution));
             }
-
-            cpt++;
         }
 
         obj_values.push_back(cost);
@@ -1573,7 +1570,7 @@ void MultiCFN::print(ostream& os)
 
             os << ", bounds:";
             for (auto bound : lcost_func->bounds) {
-                os << " " << var[0].domain_str[bound.first] << " " << (int) bound.second.first << " " << (int) bound.second.second;
+                os << " " << var[0].domain_str[bound.first] << " " << (int)bound.second.first << " " << (int)bound.second.second;
             }
 
             os << endl;
@@ -1798,7 +1795,7 @@ Double mcriteria::LinearCostFunction::getCost(std::vector<unsigned int>& tuple)
         }
     }
 
-    return (weight >= capacity)? 0. : numeric_limits<Double>::infinity();
+    return (weight >= capacity) ? 0. : numeric_limits<Double>::infinity();
 }
 
 //---------------------------------------------------------------------------

@@ -74,8 +74,6 @@ namespace XCSP3Core {
     class XInteger : public XVariable {
     public :
         int value;
-
-
         XInteger(std::string lid, int n) : XVariable(lid, NULL), value(n) { }
 
     };
@@ -92,9 +90,14 @@ namespace XCSP3Core {
     class XEInterval : public XVariable {
     public :
         int min, max;
-
-
         XEInterval(std::string lid, int mn, int mx) : XVariable(lid, NULL), min(mn), max(mx) { }
+    };
+
+    class XSet : public XVariable
+    {
+    public :
+        XSet(std::string lid) : XVariable(lid, NULL) { }
+
     };
 
 
@@ -114,7 +117,7 @@ namespace XCSP3Core {
      */
     class XParameterVariable : public XVariable {
     public :
-        static int max; // Max parameter number for current group
+        TB2_THREAD_LOCAL static int max; // Max parameter number for current group
         int number; // -1 if %...
         XParameterVariable(std::string lid);
     };

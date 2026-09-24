@@ -25,7 +25,7 @@
 #
 ###############################################################################
 
-FROM debian:buster-slim
+FROM debian:trixie-slim
 
 RUN apt-get update -yq \
 && apt-get install git-core -y \
@@ -43,7 +43,8 @@ RUN apt-get update -yq \
 && apt-get install pkg-config -y \
 && apt-get install python3 -y \
 && apt-get install python3-pip -y \
-&& pip3 install pybind11 \
+&& apt-get install bc -y \
+&& pip3 install pybind11[global] --break-system-packages \
 && apt-get clean -y
 
 RUN git clone https://github.com/toulbar2/toulbar2.git
@@ -51,10 +52,10 @@ RUN git clone https://github.com/toulbar2/toulbar2.git
 RUN cd toulbar2 \
 && mkdir build \
 && cd build \
-&& cmake -DPYTB2=ON -DXML=ON .. \
-&& make
+&& cmake -DPYTB2=ON .. \
+&& make -j5
 
-RUN cp /toulbar2/build/lib/Linux/pytb2.cpython-37m-x86_64-linux-gnu.so /toulbar2/pytoulbar2/pytb2.cpython-37m-x86_64-linux-gnu.so
+RUN cp /toulbar2/build/lib/Linux/pytb2.cpython-*-x86_64-linux-gnu.so /toulbar2/pytoulbar2/pytb2.cpython-*-x86_64-linux-gnu.so
 
 RUN CMDFILE=/WORK.sh \
 && echo "#!/bin/bash" > $CMDFILE \

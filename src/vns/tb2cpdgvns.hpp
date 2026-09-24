@@ -8,6 +8,9 @@
 
 #ifndef TB2CPDGVNS_HPP_
 #define TB2CPDGVNS_HPP_
+
+#include "tb2config.hpp"
+
 #ifdef OPENMPI
 
 #include "tb2vns.hpp"
@@ -24,14 +27,14 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
-        ar& cluster;
-        ar& numberclu;
-        ar& k;
-        ar& kmax;
-        ar& sec;
-        ar& msec;
-        ar& bestUb;
-        ar& bestSolution;
+        ar & cluster;
+        ar & numberclu;
+        ar & k;
+        ar & kmax;
+        ar & sec;
+        ar & msec;
+        ar & bestUb;
+        ar & bestSolution;
     }
 
 public:

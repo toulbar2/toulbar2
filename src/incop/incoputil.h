@@ -66,6 +66,5 @@ void ecriture_fin_gww(int nb_chang_seuil, int nb_mouv);
 void ecriture_meilleure_valeur(string& method, Long valeur, Long seuil, int nbmouv, int maxvoisins);
 void ecriture_fin_lsrun(double avgnhtries, double avgsqnhtries);
 void ecriture_stat_essai();
-void ofile_name(char* filename, int argc, char** argv);
 
 #endif /* INCOP_UTIL_H_ */

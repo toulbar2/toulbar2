@@ -18,9 +18,9 @@ using namespace std;
 #include "incoputil.h"
 
 // les variables globales
-extern Stat_GWW* Statistiques; // defini dans incoputil
-extern int TRACEMODE; // indicateur de trace
-extern ofstream* ofile; // le fichier de sortie
+extern TB2_THREAD_LOCAL Stat_GWW* Statistiques; // defini dans incoputil
+extern TB2_THREAD_LOCAL int TRACEMODE; // indicateur de trace
+extern TB2_THREAD_LOCAL ofstream* ofile; // le fichier de sortie
 
 // les constructeurs et destructeurs
 

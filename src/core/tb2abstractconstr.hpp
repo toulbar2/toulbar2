@@ -529,14 +529,14 @@ public:
     int getTrueNonAssigned() const
     {
         int nbunassigned = 0;
-        for (int i=0; i<arity_; i++) {
+        for (int i = 0; i < arity_; i++) {
             if (getVar(i)->unassigned()) {
                 nbunassigned++;
             }
         }
         return nbunassigned;
     }
-    Long getDomainInitSizeProduct(); // warning! return LONGLONG_MAX if overflow occurs
+    Long getDomainInitSizeProduct() const; // warning! return LONGLONG_MAX if overflow occurs
 
     Variable* getVar(int varCtrIndex) const FINAL
     {
@@ -618,7 +618,8 @@ public:
 
     Cost evalsubstr(const Tuple& s, Constraint* ctr) FINAL;
     Cost evalsubstr(const Tuple& s, NaryConstraint* ctr) FINAL;
-    template <class T> Cost evalsubstrAny(const Tuple& s, T* ctr);
+    template <class T>
+    Cost evalsubstrAny(const Tuple& s, T* ctr);
     Cost getCost() FINAL
     {
         for (int i = 0; i < arity_; i++) {

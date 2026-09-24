@@ -21,8 +21,8 @@ using namespace std;
 #include <math.h>
 #include <unistd.h>
 
-extern ofstream* ofile; // le fichier de sortie
-extern Stat_GWW* Statistiques;
+extern TB2_THREAD_LOCAL ofstream* ofile; // le fichier de sortie
+extern TB2_THREAD_LOCAL Stat_GWW* Statistiques;
 
 Tuning::Tuning(int pinit, int seed1, int nbessai, int maxtun, int bmin, int bmax)
 {

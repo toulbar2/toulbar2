@@ -20,9 +20,9 @@ using namespace std;
 #include "narycsproblem.h"
 #include "autotuning2.h"
 
-extern ofstream* ofile; // le fichier de sortie
+extern TB2_THREAD_LOCAL ofstream* ofile; // le fichier de sortie
 
-extern Stat_GWW* Statistiques;
+extern TB2_THREAD_LOCAL Stat_GWW* Statistiques;
 
 INCOP::NaryCSProblem::NaryCSProblem(int nbvar, int nbconst)
     : CSProblem(nbvar, nbconst)
@@ -249,7 +249,7 @@ void wcspdomaines_file_read(WCSP* wcsp, int nbvar, vector<Value>* tabdomaines, v
 int wcspdata_constraint_read(WCSP* wcsp, int nbconst, vector<INCOP::NaryVariable*>* vv, vector<INCOP::NaryConstraint*>* vct,
     vector<int>* connexions, vector<Value>* tabdomaines)
 {
-    static Tuple tuple;
+    TB2_THREAD_LOCAL static Tuple tuple;
     assert(wcsp->getUb() > wcsp->getLb());
     Cost gap = wcsp->getUb() - wcsp->getLb();
     int nbconst_ = 0;
@@ -466,7 +466,7 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     // remove multiples space in cmd
     removeSpaces(cmd);
 
-    sprintf(line, "bin/Linux/narycsp %s %s %s", outputfile.c_str(), filename.c_str(), cmd.c_str());
+    snprintf(line, 1024, "bin/Linux/narycsp %s %s %s", outputfile.c_str(), filename.c_str(), cmd.c_str());
 
     argc = split(line, ' ', &argv);
 
@@ -609,8 +609,8 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
         Statistiques->current_try++;
         //      ecriture_stat_probleme();
     }
-   
-    for(size_t pop_id = 0; pop_id < static_cast<size_t>(taille); pop_id ++) {
+
+    for (size_t pop_id = 0; pop_id < static_cast<size_t>(taille); pop_id++) {
         delete population[pop_id];
     }
 
@@ -618,10 +618,10 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     delete[] tabdomaines;
     delete[] connexions;
 
-    for(auto& cst: constraints) {
+    for (auto& cst : constraints) {
         delete cst;
     }
-    for(auto& var: variables) {
+    for (auto& var : variables) {
         delete var;
     }
 
@@ -638,11 +638,10 @@ Cost Solver::narycsp(string cmd, vector<Value>& bestsolution)
     }
 
     // free the options string
-    for(int i = 0; i < argc; i ++) {
+    for (int i = 0; i < argc; i++) {
         free(argv[i]);
     }
     free(argv);
-
 
     return result;
 }

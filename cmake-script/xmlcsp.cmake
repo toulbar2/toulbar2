@@ -7,7 +7,7 @@ IF(XML)
                                              )
 
  # ==> XML Flag used for code preprocessing (define ...)
-        SET(XMLFLAG "XMLFLAG")
+        SET(XMLFLAG ON)
 
 #  libxml2detection 
 # required : libxml2   libxml2-dev

@@ -6,6 +6,10 @@
 #ifndef MULTI_CFN_HPP
 #define MULTI_CFN_HPP
 
+#include "toulbar2lib.hpp"
+
+#include "tb2config.hpp"
+
 #ifdef ILOGCPLEX
 #include <ilcplex/ilocplex.h>
 #endif
@@ -62,7 +66,9 @@ class CostFunction {
 
 public:
     enum Type { Tuple,
-        Linear, AllDiff, GCC };
+        Linear,
+        AllDiff,
+        GCC };
 
 public:
     /*!
@@ -534,7 +540,7 @@ private: /* private methods */
      */
     void exportGCCCostFunction(WCSP* wcsp, unsigned int func_ind);
 
-   /*!
+    /*!
      * \brief  extract the solution and the objective values from the created wcsp
      */
     void extractSolution();

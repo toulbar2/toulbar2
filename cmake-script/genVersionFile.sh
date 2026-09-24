@@ -7,8 +7,8 @@ then
     git config --local core.hooksPath $ROOT/git-hooks
     FILE=$ROOT/src/ToulbarVersion.hpp
     PCKGVER=$ROOT/src/MyCPackConf.cmake
-    VERSION=`git describe --abbrev=0 --tags --always`
-    LONG_VERSION=`git describe --tags --always`
+    VERSION=`git describe --abbrev=0 --tags --match "v*" --always`
+    LONG_VERSION=`git describe --tags --match "v*" --always`
     MAJOR=`echo $VERSION| cut -d"." -f1`
     MINOR=`echo $VERSION| cut -d"." -f2`
     PATCH=`echo $VERSION| cut -d"." -f3`

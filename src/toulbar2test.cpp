@@ -1,6 +1,9 @@
 
 /**
  * Test toulbar2 API
+ *
+ * warning: compile with the same compilation flags as for creating libtb2.so
+ * e.g., g++ -DBOOST -DLONGDOUBLE_PROB -DLONGLONG_COST -I./src -o sudoku sudoku_tutorial.cpp -L./build/lib/Linux -ltb2
  */
 
 #include "toulbar2lib.hpp"

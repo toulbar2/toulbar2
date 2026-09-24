@@ -144,9 +144,9 @@ typedef struct {
  * - disj \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
  * - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
  * - Global cost functions using a dedicated propagator:
- *     - alldiff \e nb_excepted_values (\e excepted_value)* to express a hard alldifferent constraint with a possible list of excepted values that can be assigned several times (or 0 if no excepted values)
+ *     - alldiff \e nb_excepted_values (\e excepted_value)* nb_delta_costs (\e value cost)* to express a hard alldifferent constraint with a possible list of excepted values that can be assigned several times (or 0 if no excepted values) (and a possible list of delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after excepted values will be interpreted as no delta costs))
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
- *     - gcc \e nb_values (\e value \e lower_bound \e upper_bound)* to express a hard global cardinality constraint with for each value its lower and upper bound capacity
+ *     - gcc \e nb_values (\e value \e lower_bound \e upper_bound)* nb_delta_costs (\e value cost)* to express a hard global cardinality constraint with for each value its lower and upper bound capacity (and a possible list of delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after excepted values will be interpreted as no delta costs))
  *     - knapsack \e capacity (\e weight)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator)
  *     - knapsackc \e capacity (\e weight)* \e nb_AMO (\e nb_variables (\e variable \e value)*)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) combined with a list of non-overlapping at-most-one constraints
  *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
@@ -208,9 +208,9 @@ typedef struct {
  * - quadratic cost function \f$x0 * x1\f$ in extension with variable domains \f$\{0,1\}\f$ (equivalent to a soft clause \f$\neg x0 \vee \neg x1\f$): \code 2 0 1 0 1 1 1 1 \endcode
  * - simple arithmetic hard constraint \f$x1 < x2\f$: \code 2 1 2 -1 < 0 0 \endcode
  * - hard temporal disjunction\f$x1 \geq x2 + 2 \vee x2 \geq x1 + 1\f$: \code 2 1 2 -1 disj 1 2 UB \endcode
- * - hard alldifferent({x0,x1,x2,x3}) with no excepted values: \code 4 0 1 2 3 -1 alldiff 0 \endcode
+ * - hard alldifferent({x0,x1,x2,x3}) with no excepted values: \code 4 0 1 2 3 -1 alldiff 0 0\endcode
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
- * - gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 gcc 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
+ * - hard gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 gcc 4 1 0 2 2 1 3 3 2 4 4 3 5 0\endcode
  * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
  * - knapsackc constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$, \f$x1 + x2 <= 1\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsackc 10 2 3 4 5 1 2 1 1 2 1\endcode
  * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5\endcode
@@ -2354,15 +2354,15 @@ Cost WCSP::read_wcsp(const char* fileName)
 
     // common ending section for all readers
 
-    //#ifdef BOOST
-    //    if (ToulBar2::addAMOConstraints!=-1) {
-    //        propagate(); // CHOOSE: initial propagation must be done beforehand (with full propagation for knapsack constraints)
-    //        ToulBar2::addAMOConstraints_ = true;
-    //        propagate(); // OR CHOOSE: initial propagation must be done beforehand (but only bound propagation for knapsack constraints)
-    //        addAMOConstraints();
-    //        ToulBar2::addAMOConstraints_ = false;
-    //    }
-    //#endif
+    // #ifdef BOOST
+    //     if (ToulBar2::addAMOConstraints!=-1) {
+    //         propagate(); // CHOOSE: initial propagation must be done beforehand (with full propagation for knapsack constraints)
+    //         ToulBar2::addAMOConstraints_ = true;
+    //         propagate(); // OR CHOOSE: initial propagation must be done beforehand (but only bound propagation for knapsack constraints)
+    //         addAMOConstraints();
+    //         ToulBar2::addAMOConstraints_ = false;
+    //     }
+    // #endif
 
     // Diverse variables structure and variables allocation and initialization
     if (ToulBar2::divNbSol > 1) {
@@ -3286,8 +3286,8 @@ void WCSP::read_uai2008(const char* fileName)
                     cumul += costsProb[k + k2];
                 }
                 assert(cumul <= 1.);
-                for (; k2 < domsize ; k2++) {
-                    if (!errorp && abs( cumul + costsProb[k + k2] - (TProb)1. ) > (TProb)ToulBar2::epsilon) {
+                for (; k2 < domsize; k2++) {
+                    if (!errorp && abs(cumul + costsProb[k + k2] - (TProb)1.) > (TProb)ToulBar2::epsilon) {
                         cout << "Warning! Conditional probability table for variable " << getName((*it).back()) << " must have been normalized. Try option -epsilon with less precision to remove this warning (e.g., -epsilon=1e-4)." << endl;
                         errorp = true;
                     }
@@ -3696,10 +3696,11 @@ void WCSP::read_wcnf(const char* fileName)
     Cost inclowerbound = MIN_COST;
     updateUb((MAX_COST - UNIT_COST) / MEDIUM_COST / MEDIUM_COST);
 
+    bool oldformat = false;
     int maxarity = 0;
     vector<TemporaryUnaryConstraint> unaryconstrs;
 
-    int nbvar, nbclauses;
+    int nbvar = 0, nbclauses = 0;
     string dummy, sflag;
 
     file >> sflag;
@@ -3707,52 +3708,63 @@ void WCSP::read_wcnf(const char* fileName)
         getline(file, dummy);
         file >> sflag;
     }
-    if (sflag != "p") {
+    if (sflag != "p" && sflag != "h" && !sflag.empty() && !std::all_of(sflag.begin(), sflag.end(), ::isdigit)) {
         cerr << "Wrong wcnf format in " << fileName << endl;
         throw WrongFileFormat();
     }
+    if (sflag == "p") {
+        oldformat = true;
+    }
 
-    string format, strtop;
-    Cost top;
-    file >> format;
-    file >> nbvar;
-    file >> nbclauses;
-    if (format == "wcnf") {
-        getline(file, strtop);
-        if (strtop.size() > 0 && string2Cost((char*)strtop.c_str()) > 0) {
-            if (ToulBar2::verbose >= 0)
-                cout << "c (Weighted) Partial Max-SAT input format" << endl;
-            top = string2Cost((char*)strtop.c_str());
-            if (top < MAX_COST / K)
-                top = top * K;
-            else
-                top = MAX_COST;
-            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
-            updateUb(top + ToulBar2::deltaUb);
+    string format = "", strtop;
+    Cost top = getUb();
+
+    if (oldformat) {
+        file >> format;
+        file >> nbvar;
+        file >> nbclauses;
+        if (format == "wcnf") {
+            getline(file, strtop);
+            if (strtop.size() > 0 && string2Cost((char*)strtop.c_str()) > 0) {
+                if (ToulBar2::verbose >= 0)
+                    cout << "c (Weighted) Partial Max-SAT input format" << endl;
+                top = string2Cost((char*)strtop.c_str());
+                if (top < MAX_COST / K)
+                    top = top * K;
+                else
+                    top = MAX_COST;
+                ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+                updateUb(top + ToulBar2::deltaUb);
+            } else {
+                if (ToulBar2::verbose >= 0)
+                    cout << "c Weighted Max-SAT input format" << endl;
+            }
         } else {
             if (ToulBar2::verbose >= 0)
-                cout << "c Weighted Max-SAT input format" << endl;
+                cout << "c Max-SAT input format" << endl;
+            Cost top = (nbclauses + 1) * K;
+            ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
+            updateUb(top + ToulBar2::deltaUb);
+        }
+
+        // create Boolean variables
+        for (int i = 0; i < nbvar; i++) {
+            string varname;
+            varname = to_string("x") + to_string(i);
+            DEBONLY(int theindex =)
+            makeEnumeratedVariable(varname, 0, 1);
+            assert(theindex == i);
         }
     } else {
         if (ToulBar2::verbose >= 0)
-            cout << "c Max-SAT input format" << endl;
-        Cost top = (nbclauses + 1) * K;
-        ToulBar2::deltaUb = max(ToulBar2::deltaUbAbsolute, (Cost)(ToulBar2::deltaUbRelativeGap * (Double)min(top, getUb())));
-        updateUb(top + ToulBar2::deltaUb);
-    }
-
-    // create Boolean variables
-    for (int i = 0; i < nbvar; i++) {
-        string varname;
-        varname = to_string("x") + to_string(i);
-        DEBONLY(int theindex =)
-        makeEnumeratedVariable(varname, 0, 1);
-        assert(theindex == i);
+            cout << "c new Max-SAT input format" << endl;
+        format = "2022";
     }
 
     // Read each clause
     Tuple tup;
-    for (int ic = 0; ic < nbclauses; ic++) {
+    int ic = 0;
+    while (file && (!oldformat || ic < nbclauses)) {
         vector<int> scopeIndex;
         tup.clear();
         int arity = 0;
@@ -3762,6 +3774,31 @@ void WCSP::read_wcnf(const char* fileName)
         Cost cost = UNIT_COST;
         if (format == "wcnf")
             file >> cost;
+        if (format == "2022") {
+            string strcost;
+            if (ic > 0) {
+                file >> strcost;
+                while (strcost[0] == 'c') {
+                    getline(file, dummy);
+                    file >> strcost;
+                }
+                if (!file) {
+                    break;
+                }
+            } else {
+                strcost = sflag;
+            }
+            if (strcost == "h") {
+                cost = top;
+            } else {
+                cost = string2Cost((char*)strcost.c_str());
+                if (cost <= 0) {
+                    cerr << "Wrong cost (" << strcost << ") in clause number " << ic << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+        ic++;
         bool tautology = false;
         do {
             file >> j;
@@ -3802,6 +3839,21 @@ void WCSP::read_wcnf(const char* fileName)
             continue;
 
         maxarity = max(maxarity, arity);
+
+        // create Boolean variables if needed
+        if (!scopeIndex.empty()) {
+            int maxvarindex = *std::max_element(scopeIndex.begin(), scopeIndex.end());
+            if (nbvar < maxvarindex + 1) {
+                for (int i = nbvar; i < maxvarindex + 1; i++) {
+                    string varname;
+                    varname = to_string("x") + to_string(i);
+                    DEBONLY(int theindex =)
+                    makeEnumeratedVariable(varname, 0, 1);
+                    assert(theindex == i);
+                }
+                nbvar = maxvarindex + 1;
+            }
+        }
 
         if (arity > 3) {
             // #ifdef CLAUSE2KNAPSACK
@@ -3854,6 +3906,7 @@ void WCSP::read_wcnf(const char* fileName)
             throw WrongFileFormat();
         }
     }
+    nbclauses = ic;
 
     file >> dummy;
     if (file) {
@@ -4230,7 +4283,7 @@ void WCSP::read_opb(const char* fileName)
         if (token.back() == ':') {
             readToken(file, token);
         }
-        Cost top = string2Cost(token.substr((token[0]=='s')?5:0).c_str());
+        Cost top = string2Cost(token.substr((token[0] == 's') ? 5 : 0).c_str());
         if (top > MIN_COST) {
             updateUb(top);
         }
@@ -4369,7 +4422,7 @@ void WCSP::read_opb(const char* fileName)
                 if (token.size() == 1) {
                     readToken(file, token, &opsize);
                 }
-                Cost cost = string2Cost((char*)token.substr((token[0] == '[')? 1 : 0).c_str());
+                Cost cost = string2Cost((char*)token.substr((token[0] == '[') ? 1 : 0).c_str());
                 assert(cost >= MIN_COST);
                 if (token.back() != ']') {
                     readToken(file, token, &opsize);
@@ -4414,9 +4467,9 @@ void WCSP::read_opb(const char* fileName)
                 coef = string2Cost((char*)token.c_str());
                 maxarity = max(maxarity, (int)scopeIndex.size());
                 nblinear++;
-                if (ToulBar2::cardinality && !soft && op == "=" && all_of(coefs.begin(), coefs.end(), [](Cost c) { return c==1;})) {
+                if (ToulBar2::cardinality && !soft && op == "=" && all_of(coefs.begin(), coefs.end(), [](Cost c) { return c == 1; })) {
                     postWSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==", coef);
-                } else if (ToulBar2::cardinality && !soft && op == "=" && coef == 0 && coefs.back() == -1 && all_of(coefs.begin(), coefs.begin() + coefs.size() - 1, [](Cost c) { return c==1;})) {
+                } else if (ToulBar2::cardinality && !soft && op == "=" && coef == 0 && coefs.back() == -1 && all_of(coefs.begin(), coefs.begin() + coefs.size() - 1, [](Cost c) { return c == 1; })) {
                     postWVarSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==");
                 } else {
                     if (op == "<=" || op == "=") {
@@ -4710,9 +4763,9 @@ void WCSP::read_lp(const char* fileName)
             cerr << "This resolution cannot be ensured on the data type used to represent linear constraint coefficients! (see option -precision)" << endl;
             throw BadConfiguration();
         }
-        if (ToulBar2::cardinality && multiplier==1. && baryonyx::Floor(ctr.value)==baryonyx::Ceil(ctr.value) && all_of(ctr.elements.begin(), ctr.elements.end(), [](baryonyx::function_element &e) { return baryonyx::Floor(e.factor)==baryonyx::Ceil(e.factor) && baryonyx::Floor(e.factor)==1.;})) {
+        if (ToulBar2::cardinality && multiplier == 1. && baryonyx::Floor(ctr.value) == baryonyx::Ceil(ctr.value) && all_of(ctr.elements.begin(), ctr.elements.end(), [](baryonyx::function_element& e) { return baryonyx::Floor(e.factor) == baryonyx::Ceil(e.factor) && baryonyx::Floor(e.factor) == 1.; })) {
             postWSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==", baryonyx::Floor(ctr.value));
-        } else if (ToulBar2::cardinality && multiplier==1. && baryonyx::Floor(ctr.value)==baryonyx::Ceil(ctr.value) && baryonyx::Floor(ctr.value)==0. && baryonyx::Floor(ctr.elements.back().factor)==baryonyx::Ceil(ctr.elements.back().factor) && baryonyx::Floor(ctr.elements.back().factor)==-1. && all_of(ctr.elements.begin(), ctr.elements.begin() + ctr.elements.size() - 1, [](baryonyx::function_element &e) { return baryonyx::Floor(e.factor)==baryonyx::Ceil(e.factor) && baryonyx::Floor(e.factor)==1.;})) {
+        } else if (ToulBar2::cardinality && multiplier == 1. && baryonyx::Floor(ctr.value) == baryonyx::Ceil(ctr.value) && baryonyx::Floor(ctr.value) == 0. && baryonyx::Floor(ctr.elements.back().factor) == baryonyx::Ceil(ctr.elements.back().factor) && baryonyx::Floor(ctr.elements.back().factor) == -1. && all_of(ctr.elements.begin(), ctr.elements.begin() + ctr.elements.size() - 1, [](baryonyx::function_element& e) { return baryonyx::Floor(e.factor) == baryonyx::Ceil(e.factor) && baryonyx::Floor(e.factor) == 1.; })) {
             postWVarSum(scopeIndex.data(), scopeIndex.size(), "hard", getUb(), "==");
         } else {
             params = to_string(static_cast<long long int>(-baryonyx::Ceil(ctr.value * multiplier)));

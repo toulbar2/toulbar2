@@ -42,8 +42,8 @@ WeightedCSP* CurrentWeightedCSP = NULL;
 // global weighted csp constraint exploiting toulbar2 propagation
 class IlcWeightedCSPI : public IlcConstraintI {
 public:
-    static vector<IlcWeightedCSPI*> AllIlcWeightedCSPI;
-    static int wcspCounter;
+    TB2_THREAD_LOCAL static vector<IlcWeightedCSPI*> AllIlcWeightedCSPI;
+    TB2_THREAD_LOCAL static int wcspCounter;
 
     IlcIntVar obj; // objective function
     int size; // |vars|
@@ -479,7 +479,7 @@ int main(int argc, char** argv)
         model.add(vars);
         for (int i = 0; i < nbvar; i++) {
             char* name = new char[16];
-            sprintf(name, "x%d", i);
+            snprintf(name, 16, "x%d", i);
             vars[i].setName(name);
         }
 

@@ -22,7 +22,7 @@
 
 const int maxdiscrepancy = 4;
 const Long maxrestarts = 10000;
-const Long hbfsgloballimit = 16384;
+const Long hbfsgloballimit = 32768;
 const int raspsangle = 10;
 const Long raspsbacktracks = 1000;
 const double relativegap = 0.0001;
@@ -68,8 +68,9 @@ void conflict() {}
 
 extern void newsolution(int wcspId, void* solver);
 
-inline void clean_ToulBar2_varOrder() {
-    if(ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) > 8) {
+inline void clean_ToulBar2_varOrder()
+{
+    if (ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) > 8) {
         delete[] ToulBar2::varOrder;
         ToulBar2::varOrder = NULL;
     }
@@ -567,7 +568,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_trwsNIterNoChange, (char*)"--trws-n-iters-no-change", SO_REQ_SEP },
     { OPT_trwsNIterComputeUb, (char*)"--trws-n-iters-compute-ub", SO_REQ_SEP },
 
-    //Reduced costs filtering for alldifferent and gcc
+    // Reduced costs filtering for alldifferent and gcc
     { OPT_ReducedCostsFiltering, (char*)"-camb", SO_OPT },
     { NO_OPT_ReducedCostsFiltering, (char*)"-camb:", SO_NONE },
 
@@ -789,15 +790,15 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
     char *path, *tok;
     if (!stat(bin_name, &st)) {
         char* end = (char*)strrchr(bin_name, PATH_SEP_CHR);
-        static char bin_path[512];
+        TB2_THREAD_LOCAL static char bin_path[512];
         if (end) {
             *end = 0;
             strncpy(buffer, bin_name, buflen);
-            sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
+            snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);
         } else {
             strcpy(buffer, ".");
             // path separator added to the path value
-            sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
+            snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);
         }
         return (bin_path);
     }
@@ -806,10 +807,10 @@ char* find_bindir(const char* bin_name, char* buffer, size_t buflen)
     while (tok) {
         snprintf(buffer, buflen, "%s%c%s", tok, PATH_SEP_CHR, bin_name);
         if (!stat(buffer, &st)) {
-            static char bin_path[512];
+            TB2_THREAD_LOCAL static char bin_path[512];
             strncpy(buffer, tok, buflen);
             free(path);
-            sprintf(bin_path, "%s%c", buffer, PATH_SEP_CHR);
+            snprintf(bin_path, 512, "%s%c", buffer, PATH_SEP_CHR);
             return bin_path;
         }
         tok = strtok(NULL, PATH_DELIM);
@@ -1064,8 +1065,8 @@ void help_msg(char* toulbar2filename)
     cout << endl;
     cout << "   -camb=[integer] : reduced costs filtering level for alldifferent and gcc constraints";
     if (ToulBar2::ReducedCostsFiltering)
-        cout << " (default option " << ToulBar2::ReducedCostsFiltering<< ")";
-    cout<<endl;
+        cout << " (default option " << ToulBar2::ReducedCostsFiltering << ")";
+    cout << endl;
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
     cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";
     if (ToulBar2::trwsOrder)
@@ -1119,7 +1120,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
     cout << "   -logz : computes log of probability of evidence (i.e. log partition function or log(Z) or PR task) for graphical models only (problem file extension .uai)" << endl;
-    cout << "   -epsilon=[float] : floating-point precision (smaller than 1, default value is " << ToulBar2::epsilon << ") or epsilon-approximation factor (1 + epsilon) for computing the partition function (greater than 1, default value is " << (1.+Exp(ToulBar2::logepsilon)) << ")" << endl;
+    cout << "   -epsilon=[float] : floating-point precision (smaller than 1, default value is " << ToulBar2::epsilon << ") or epsilon-approximation factor (1 + epsilon) for computing the partition function (greater than 1, default value is " << (1. + Exp(ToulBar2::logepsilon)) << ")" << endl;
     cout << endl;
     cout << "   -hbfs=[integer] : hybrid best-first search, restarting from the root after a given number of backtracks (default value is " << hbfsgloballimit << ")";
 #ifdef OPENMPI
@@ -1618,10 +1619,10 @@ int _tmain(int argc, TCHAR* argv[])
                 int varElimOrder = atoi(args.OptionArg());
                 if (varElimOrder >= 0) {
                     char buf[512];
-                    sprintf(buf, "%s", args.OptionArg());
+                    snprintf(buf, 512, "%s", args.OptionArg());
                     clean_ToulBar2_varOrder();
                     ToulBar2::varOrder = new char[strlen(buf) + 1];
-                    sprintf(ToulBar2::varOrder, "%s", buf);
+                    snprintf(ToulBar2::varOrder, strlen(buf) + 1, "%s", buf);
                     if (ToulBar2::debug)
                         cout << "variable order read from file " << args.OptionArg() << endl;
                 } else {
@@ -1631,7 +1632,7 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_problemsaved_filename) {
                 char buf[512];
-                sprintf(buf, "%s", args.OptionArg());
+                snprintf(buf, 512, "%s", args.OptionArg());
                 ToulBar2::problemsaved_filename = to_string(buf);
                 //                if (!ToulBar2::dumpWCSP) ToulBar2::dumpWCSP = 1;
                 if (ToulBar2::debug)
@@ -1647,7 +1648,7 @@ int _tmain(int argc, TCHAR* argv[])
                         cout << "partial assignment to be checked ..." << certificateString << endl;
                 } else {
                     certificate = true;
-                    if(certificateFilename != NULL) {
+                    if (certificateFilename != NULL) {
                         free(certificateFilename);
                     }
                     certificateFilename = strdup("sol"); // workaround for compatibility issue with the dynamical allocation of certificateFilename ("sol" would be stored in program data)
@@ -1970,12 +1971,12 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "singleton consistency OFF" << endl;
                 ToulBar2::singletonConsistency = 0;
             }
-            
 
             if (args.OptionId() == OPT_ReducedCostsFiltering) {
                 if (args.OptionArg() != NULL) {
                     int rcf = atoi(args.OptionArg());
-                    if(rcf < 0 || rcf > 100) rcf = 10;
+                    if (rcf < 0 || rcf > 100)
+                        rcf = 10;
                     ToulBar2::ReducedCostsFiltering = rcf;
                 } else {
                     ToulBar2::ReducedCostsFiltering = 10;
@@ -1983,8 +1984,6 @@ int _tmain(int argc, TCHAR* argv[])
             } else if (args.OptionId() == NO_OPT_ReducedCostsFiltering) {
                 ToulBar2::ReducedCostsFiltering = 0;
             }
-
-
 
 #ifdef BOOST
             if (args.OptionId() == OPT_GenAMOforPB) {
@@ -3212,7 +3211,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading variable order in file: " << problem << endl;
                 clean_ToulBar2_varOrder();
                 ToulBar2::varOrder = new char[problem.length() + 1];
-                sprintf(ToulBar2::varOrder, "%s", problem.c_str());
+                snprintf(ToulBar2::varOrder, problem.length() + 1, "%s", problem.c_str());
             }
 
             //////////////////////TREE DECOMPOSITION AND VARIABLE ORDERING ////////////////////////////////////
@@ -3223,7 +3222,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading tree decomposition in file: " << problem << endl;
                 clean_ToulBar2_varOrder();
                 ToulBar2::varOrder = new char[problem.length() + 1];
-                sprintf(ToulBar2::varOrder, "%s", problem.c_str());
+                snprintf(ToulBar2::varOrder, problem.length() + 1, "%s", problem.c_str());
                 if (!WCSP::isAlreadyTreeDec(ToulBar2::varOrder)) {
                     cerr << "Input tree decomposition file is not valid! (first cluster must be a root, i.e., parentID=-1)" << endl;
                     throw WrongFileFormat();
@@ -3256,7 +3255,7 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "loading solution in file: " << problem << endl;
 
                 certificate = true;
-                if(certificateFilename) {
+                if (certificateFilename) {
                     free(certificateFilename);
                 }
                 certificateFilename = strdup(problem.c_str());
@@ -3293,7 +3292,21 @@ int _tmain(int argc, TCHAR* argv[])
     ToulBar2::startCpuTime = cpuTime();
     ToulBar2::startRealTime = realTime();
 #ifndef __WIN32__
-    signal(SIGINT, timeOut);
+#ifdef OPENMPI
+    if (!ToulBar2::parallel || world.rank() == WeightedCSPSolver::MASTER) {
+#endif
+        signal(SIGINT, timeOut);
+        if (ToulBar2::maxsateval) {
+            signal(SIGTERM, timeOut);
+        }
+#ifdef OPENMPI
+    } else {
+        signal(SIGINT, SIG_IGN);
+        if (ToulBar2::maxsateval) {
+            signal(SIGTERM, SIG_IGN);
+        }
+    }
+#endif
     if (timeout > 0)
         timer(timeout);
 #endif
@@ -3521,7 +3534,7 @@ int _tmain(int argc, TCHAR* argv[])
                     varOrder += "\n";
                     clean_ToulBar2_varOrder();
                     ToulBar2::varOrder = new char[varOrder.size() + 1];
-                    sprintf(ToulBar2::varOrder, "%s", varOrder.c_str());
+                    snprintf(ToulBar2::varOrder, varOrder.size() + 1, "%s", varOrder.c_str());
                     if (ToulBar2::verbose >= 1)
                         cout << "Build tree decomposition from covering:" << endl
                              << ToulBar2::varOrder << endl;
@@ -3671,7 +3684,7 @@ int _tmain(int argc, TCHAR* argv[])
       string strfile(argv[1]);
       int pos = strfile.find_last_of(".");
       string strfilewcsp = strfile.substr(0,pos) + ".ub";
-      sprintf(line,"echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
+      snprintf(line, 1024, "echo %d > %s",(int)solver->getWCSP()->getUb(),strfilewcsp.c_str());
       system(line); */
 
 #ifndef NDEBUG
@@ -3685,7 +3698,7 @@ int _tmain(int argc, TCHAR* argv[])
 
     clean_ToulBar2_varOrder();
 
-    if(certificateFilename != NULL) {
+    if (certificateFilename != NULL) {
         free(certificateFilename);
     }
 

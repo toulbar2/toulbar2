@@ -39,6 +39,8 @@
 
 #include <type_traits>
 
+#include "tb2config.hpp"
+
 typedef long double Double;
 
 namespace baryonyx {
@@ -53,7 +55,7 @@ Double Floor(Double v);
 Double Ceil(Double v);
 
 struct string_buffer {
-    constexpr static std::size_t string_buffer_node_length = 1024 * 1024;
+    TB2_THREAD_LOCAL constexpr static std::size_t string_buffer_node_length = 1024 * 1024;
 
     using value_type = std::array<char, string_buffer_node_length>;
     using container_type = std::forward_list<value_type>;

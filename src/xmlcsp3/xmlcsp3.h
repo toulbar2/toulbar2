@@ -448,6 +448,45 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         problem->postBinaryConstraint(varx, vary, costs);
     }
 
+    void buildConstraintPrimitive3(OrderType op, int varx, int vark, int vary) {
+        assert(varx != vary);
+        assert(varx != vark);
+        assert(vark != vary);
+        vector<Cost> costs;
+        for (unsigned int a = 0; a < problem->getDomainInitSize(varx); a++) {
+            for (unsigned int kk = 0; kk < problem->getDomainInitSize(vark); kk++) {
+                int k = problem->toValue(vark, kk);
+                for (unsigned int b = 0; b < problem->getDomainInitSize(vary); b++) {
+                    switch (op) {
+                    case OrderType::LE:
+                        costs.push_back((problem->toValue(varx, a) + k <= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::LT:
+                        costs.push_back((problem->toValue(varx, a) + k < problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::GE:
+                        costs.push_back((problem->toValue(varx, a) + k >= problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::GT:
+                        costs.push_back((problem->toValue(varx, a) + k > problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        costs.push_back((problem->toValue(varx, a) + k == problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    case OrderType::NE:
+                        costs.push_back((problem->toValue(varx, a) + k != problem->toValue(vary, b))?MIN_COST:MAX_COST_XML3);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << op << " not implemented!" << endl;
+                        throw WrongFileFormat();
+                    }
+                }
+            }
+        }
+        problem->postTernaryConstraint(varx, vark, vary, costs);
+    }
+
     void buildConstraintPrimitiveMult(OrderType op, int varx, int mult, int vary) {
         assert(varx != vary);
         vector<Cost> costs;
@@ -637,7 +676,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
         } else {
             //problem->postWAllDiff(vars, "hard", "knapsack", MAX_COST_XML3);
-            problem->postAllDifferentConstraint(vars, "0");
+            problem->postAllDifferentConstraint(vars, "0 0");
         }
     }
 
@@ -743,6 +782,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 for (Value v : except) {
                     params += to_string(" ") + to_string(v);
                 }
+                params += " 0";
                 problem->postAllDifferentConstraint(vars, params);
 //            }
         }
@@ -979,12 +1019,16 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         buildConstraintSum(id, trees, coefs, cond);
     }
 
+    //TODO: if len(values)=1 and cond is integer (and EQ?) then post GCC instead of Knapsack (or use buildCardinality)
     void buildConstraintCount(vector<int> &vars, vector<int> &values, XCondition &cond) {
         int rightcoef = 0;
         string params = "";
         string params2 = "";
+        string countname = "";
         int domsize;
         int nbval;
+        int varcount;
+        int condvar;
         switch (cond.operandType) {
             case OperandType::VARIABLE:
                 vars.push_back(getMyVar(cond.var));
@@ -1020,6 +1064,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
+                            //params += to_string(" ") + to_string(domsize);
                             nbval=0;
                             params2="";
                             for (int idval=0; idval < domsize; idval++) {
@@ -1093,31 +1138,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
                     case OrderType::NE:
-                        params = to_string(1);
-                        params2="";
-                        for (unsigned int i=0; i < vars.size()-1; i++) {
-                            domsize = problem->getDomainInitSize(vars[i]);
-                            //params += to_string(" ") + to_string(domsize);
-                            nbval=0;
-                            params2="";
-                            for (int idval=0; idval < domsize; idval++) {
-                                int value = problem->toValue(vars[i], idval);
-                                auto it = find(values.begin(), values.end(), value);
-                                if (it != values.end()) {
-                                    nbval+=1;
-                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
-                                }
-                            }
-                            params+=to_string(" ")+to_string(nbval)+params2;
-                        }
-                        domsize=problem->getDomainInitSize(vars.back());
-                        params += to_string(" ") + to_string(domsize);
-                        for (int idval=0; idval < domsize; idval++) {
-                            int value = problem->toValue(vars.back(), idval);
-                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
-                        }
-                        problem->postKnapsackConstraint(vars, params, false, true, false);
-                        params = to_string(1);
+                        countname = IMPLICIT_VAR_TAG + to_string("Count") + to_string(problem->numberOfVariables());
+                        varcount = problem->makeEnumeratedVariable(countname, 0, vars.size()-1);
+                        mapping[countname] = varcount;
+                        condvar = vars.back();
+                        vars.pop_back();
+                        vars.push_back(varcount);
+                        params = to_string(0);
                         params2="";
                         for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
@@ -1141,6 +1168,31 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
                         }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
+                        params = to_string(0);
+                        params2="";
+                        for (unsigned int i=0; i < vars.size()-1; i++) {
+                            domsize = problem->getDomainInitSize(vars[i]);
+                            //params += to_string(" ") + to_string(domsize);
+                            nbval=0;
+                            params2="";
+                            for (int idval=0; idval < domsize; idval++) {
+                                int value = problem->toValue(vars[i], idval);
+                                auto it = find(values.begin(), values.end(), value);
+                                if (it != values.end()) {
+                                    nbval+=1;
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
+                                }
+                            }
+                            params+=to_string(" ")+to_string(nbval)+params2;
+                        }
+                        domsize=problem->getDomainInitSize(vars.back());
+                        params += to_string(" ") + to_string(domsize);
+                        for (int idval=0; idval < domsize; idval++) {
+                            int value = problem->toValue(vars.back(), idval);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
+                        }
+                        problem->postKnapsackConstraint(vars, params, false, true, false);
+                        buildConstraintPrimitive(OrderType::NE, vars.back(), 0, condvar);
                         break;
                     case OrderType::EQ:
                         params = to_string(0);
@@ -1282,27 +1334,13 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                         problem->postKnapsackConstraint(vars, params, false, true, false);
                         break;
                     case OrderType::NE:
-                        params = to_string(rightcoef+1);
+                        countname = IMPLICIT_VAR_TAG + to_string("Count") + to_string(problem->numberOfVariables());
+                        varcount = problem->makeEnumeratedVariable(countname, 0, vars.size());
+                        mapping[countname] = varcount;
+                        vars.push_back(varcount);
+                        params = to_string(0);
                         params2="";
-                        for (unsigned int i=0; i < vars.size(); i++) {
-                            domsize = problem->getDomainInitSize(vars[i]);
-                            //params += to_string(" ") + to_string(domsize);
-                            nbval=0;
-                            params2="";
-                            for (int idval=0; idval < domsize; idval++) {
-                                int value = problem->toValue(vars[i], idval);
-                                auto it = find(values.begin(), values.end(), value);
-                                if (it != values.end()) {
-                                    nbval+=1;
-                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
-                                }
-                            }
-                            params+=to_string(" ")+to_string(nbval)+params2;
-                        }
-                        problem->postKnapsackConstraint(vars, params, false, true, false);
-                        params = to_string(-rightcoef+1);
-                        params2="";
-                        for (unsigned int i=0; i < vars.size(); i++) {
+                        for (unsigned int i=0; i < vars.size()-1; i++) {
                             domsize = problem->getDomainInitSize(vars[i]);
                             //params += to_string(" ") + to_string(domsize);
                             nbval=0;
@@ -1317,7 +1355,38 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                             }
                             params+=to_string(" ")+to_string(nbval)+params2;
                         }
+                        domsize=problem->getDomainInitSize(vars.back());
+                        params += to_string(" ") + to_string(domsize);
+                        for (int idval=0; idval < domsize; idval++) {
+                            int value = problem->toValue(vars.back(), idval);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
+                        }
                         problem->postKnapsackConstraint(vars, params, false, true, false);
+                        params = to_string(0);
+                        params2="";
+                        for (unsigned int i=0; i < vars.size()-1; i++) {
+                            domsize = problem->getDomainInitSize(vars[i]);
+                            //params += to_string(" ") + to_string(domsize);
+                            nbval=0;
+                            params2="";
+                            for (int idval=0; idval < domsize; idval++) {
+                                int value = problem->toValue(vars[i], idval);
+                                auto it = find(values.begin(), values.end(), value);
+                                if (it != values.end()) {
+                                    nbval+=1;
+                                    params2 += to_string(" ") + to_string(value) + to_string(" ") + to_string(1);
+                                }
+                            }
+                            params+=to_string(" ")+to_string(nbval)+params2;
+                        }
+                        domsize=problem->getDomainInitSize(vars.back());
+                        params += to_string(" ") + to_string(domsize);
+                        for (int idval=0; idval < domsize; idval++) {
+                            int value = problem->toValue(vars.back(), idval);
+                            params += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
+                        }
+                        problem->postKnapsackConstraint(vars, params, false, true, false);
+                        buildConstraintPrimitive(OrderType::NE, vars.back(), rightcoef);
                         break;
                     case OrderType::EQ:
                         params = to_string(-rightcoef);
@@ -1595,18 +1664,15 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
+        params += " 0";
         problem->postGlobalCardinalityConstraint(vars, params);
-        /*if (count != (int)vars.size()) {
-            string params2="";
-            int domsize;
-            int nbval;
+        if (count != (int)vars.size()) {
             for (int k = 0; k < (int)values.size(); ++k) if(occurs[k] > 0) {
                 params=to_string(occurs[k]);
                 for (int i = 0; i < (int)vars.size(); ++i) {
-                    domsize = problem->getDomainInitSize(vars[i]);
-                    nbval=0;
-                    params2="";
-                    //params +=to_string(" ")+to_string(domsize);
+                    int domsize = problem->getDomainInitSize(vars[i]);
+                    int nbval=0;
+                    string params2="";
                     for (int idval=0; idval < domsize; idval++) {
                         int value = problem->toValue(vars[i], idval);
                         if(value==values[k]){
@@ -1618,7 +1684,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-        }*/
+        }
     }
 
     void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XVariable *> &occurs, bool closed) override {
@@ -1713,7 +1779,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             if (closed) myvalues.insert(values[k]);
             params += to_string(" ") + to_string(values[k]) + to_string(" ") + to_string(occurs[k].min) + to_string(" ") + to_string(occurs[k].max);
         }
-        if (countlb > (int)vars.size() || (closed && (countub < (int)vars.size()))) throw Contradiction();
+        if (countlb > countub || countlb > (int)vars.size() || (closed && (countub < (int)vars.size()))) throw Contradiction();
         if (closed) {
             for (int i = 0; i < (int)vars.size(); ++i) {
                 for (Value v : problem->getEnumDomain(vars[i])) {
@@ -1723,27 +1789,29 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
             }
         }
+        params += " 0";
         problem->postGlobalCardinalityConstraint(vars, params);
-        /*for (int k = 0; k < (int)values.size(); ++k) {
-            if(occurs[k].min > 0){
-                params=to_string(occurs[k].min)+ to_string(" ");
-                for (int i = 0; i < (int)vars.size(); ++i) {
-                    int domsize = problem->getDomainInitSize(vars[i]);
-                    nbval=0;
-                    params2="";
-                    //params +=to_string(" ")+to_string(domsize);
-                    for (int idval=0; idval < domsize; idval++) {
-                        int value = problem->toValue(vars[i], idval);
-                        if(value==values[k]){
-                            params2 += to_string(" ") + to_string(value) + to_string(" 1");
-                            nbval++;
+        if (countlb > 0 && countlb != (int)vars.size()) {
+            for (int k = 0; k < (int)values.size(); ++k) {
+                if(occurs[k].min > 0){
+                    params=to_string(occurs[k].min);
+                    for (int i = 0; i < (int)vars.size(); ++i) {
+                        int domsize = problem->getDomainInitSize(vars[i]);
+                        int nbval=0;
+                        string params2="";
+                        for (int idval=0; idval < domsize; idval++) {
+                            int value = problem->toValue(vars[i], idval);
+                            if(value==values[k]){
+                                params2 += to_string(" ") + to_string(value) + to_string(" 1");
+                                nbval++;
+                            }
                         }
+                        params+=to_string(" ")+to_string(nbval)+params2;
                     }
-                    params+=to_string(" ")+to_string(nbval)+params2;
+                    problem->postKnapsackConstraint(vars, params, false, true, false);
                 }
-                problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-        }*/
+        }
     }
 
     void buildConstraintMinMax(bool max, vector<int> &vars, int varargmax, XCondition &cond) {
@@ -2207,6 +2275,18 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         problem->postBinaryConstraint(varvalue, varindex, costs);
     }
 
+    void buildConstraintElement(string id, vector<int> &list, int startIndex, XVariable *index, RankType rank, int value) override {
+        assert(startIndex == 0);
+        assert(rank == RankType::ANY);
+        int varindex = getMyVar(index->id);
+        assert(problem->getDomainInitSize(varindex) <= list.size());
+        for (unsigned int b=0; b < list.size(); b++) {
+            if (problem->canbe(varindex, (Value)b) && value != list[b]) {
+                problem->remove(varindex, b);
+            }
+        }
+    }
+
     void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *value) override {
         int varvalue = getMyVar(value->id);
         vector<int> vars;
@@ -2312,7 +2392,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
             }
     }
 
-    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable* value) override {
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, string value) {
         vector<vector<int> > vars;
         for (unsigned int i=0; i<matrix.size(); i++) {
             vars.push_back(vector<int>());
@@ -2322,7 +2402,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(startColIndex == 0);
         int varrowindex = getMyVar(rowIndex->id);
         int varcolindex = getMyVar(colIndex->id);
-        int varvalue = getMyVar(value->id);
+        int varvalue = getMyVar(value);
         assert(varcolindex != varrowindex);
         assert(varrowindex != varvalue);
         assert(varcolindex != varvalue);
@@ -2360,6 +2440,10 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable* value) override {
+        buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, value->id);
+    }
+
     void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int value) override {
         vector<vector<int> > vars;
         for (unsigned int i=0; i<matrix.size(); i++) {
@@ -2391,12 +2475,66 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
-    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) override {
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int minValue, int maxValue) {
+        vector<vector<int> > vars;
+        for (unsigned int i=0; i<matrix.size(); i++) {
+            vars.push_back(vector<int>());
+            toMyVariables(matrix[i],vars[i]);
+        }
         assert(startRowIndex == 0);
         assert(startColIndex == 0);
         int varrowindex = getMyVar(rowIndex->id);
         int varcolindex = getMyVar(colIndex->id);
-        int varvalue = getMyVar(value->id);
+        assert(varcolindex != varrowindex);
+        assert(problem->getDomainInitSize(varrowindex) <= vars.size());
+        for (unsigned int i=0; i<vars.size(); i++) {
+            if (problem->canbe(varrowindex, (Value)i)) {
+                for (unsigned int j=0; j<vars[i].size(); j++) {
+                    if (problem->canbe(varcolindex, (Value)j)) {
+                        assert(varrowindex != vars[i][j]);
+                        assert(varcolindex != vars[i][j]);
+                        vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex) * (size_t)problem->getDomainInitSize(vars[i][j]), MIN_COST);
+                        for (unsigned int b=0; b < problem->getDomainInitSize(vars[i][j]); b++) {
+                            if (problem->toValue(vars[i][j], b) < minValue || problem->toValue(vars[i][j], b) > maxValue) {
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) * problem->getDomainInitSize(vars[i][j]) + problem->toIndex(varcolindex, (Value)j) * problem->getDomainInitSize(vars[i][j]) + b] = MAX_COST_XML3;
+                            }
+                        }
+                        problem->postTernaryConstraint(varrowindex, varcolindex, vars[i][j], costs);
+                    }
+                }
+            }
+        }
+    }
+
+    void buildConstraintElement(string id, vector<vector<XVariable*> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XCondition &xc) override {
+        switch (xc.operandType) {
+        case OperandType::INTEGER:
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.val);
+            break;
+        case OperandType::VARIABLE:
+            if (xc.op == OrderType::EQ || xc.op == OrderType::IN) {
+                buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.var);
+            } else {
+                cerr << "Sorry order type " << xc.op << " not implemented in matrix element constraint!" << endl;
+                throw WrongFileFormat();
+            }
+            break;
+        case OperandType::INTERVAL:
+            assert(xc.op == OrderType::IN);
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.min, xc.max);
+            break;
+        default:
+            cerr << "Sorry operand type " << xc.operandType << " not implemented in matrix element constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, string value) {
+        assert(startRowIndex == 0);
+        assert(startColIndex == 0);
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        int varvalue = getMyVar(value);
         assert(varcolindex != varrowindex);
         assert(varrowindex != varvalue);
         assert(varcolindex != varvalue);
@@ -2415,6 +2553,77 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     }
                 }
             }
+        }
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) override {
+        buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, value->id);
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int value) {
+        assert(startRowIndex == 0);
+        assert(startColIndex == 0);
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        assert(varcolindex != varrowindex);
+        assert(problem->getDomainInitSize(varrowindex) <= matrix.size());
+        vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex), MIN_COST);
+        for (unsigned int i=0; i<matrix.size(); i++) {
+            if (problem->canbe(varrowindex, (Value)i)) {
+                for (unsigned int j=0; j<matrix[i].size(); j++) {
+                    if (problem->canbe(varcolindex, (Value)j)) {
+                        if (matrix[i][j] != value) {
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) + problem->toIndex(varcolindex, (Value)j)] = MAX_COST_XML3;
+                        }
+                    }
+                }
+            }
+        }
+        problem->postBinaryConstraint(varrowindex, varcolindex, costs);
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, int minValue, int maxValue) {
+        assert(startRowIndex == 0);
+        assert(startColIndex == 0);
+        int varrowindex = getMyVar(rowIndex->id);
+        int varcolindex = getMyVar(colIndex->id);
+        assert(varcolindex != varrowindex);
+        assert(problem->getDomainInitSize(varrowindex) <= matrix.size());
+        vector<Cost> costs((size_t)problem->getDomainInitSize(varrowindex) * (size_t)problem->getDomainInitSize(varcolindex), MIN_COST);
+        for (unsigned int i=0; i<matrix.size(); i++) {
+            if (problem->canbe(varrowindex, (Value)i)) {
+                for (unsigned int j=0; j<matrix[i].size(); j++) {
+                    if (problem->canbe(varcolindex, (Value)j)) {
+                        if (matrix[i][j] < minValue || matrix[i][j] > maxValue) {
+                                costs[problem->toIndex(varrowindex, (Value)i) * problem->getDomainInitSize(varcolindex) + problem->toIndex(varcolindex, (Value)j)] = MAX_COST_XML3;
+                        }
+                    }
+                }
+            }
+        }
+        problem->postBinaryConstraint(varrowindex, varcolindex, costs);
+    }
+
+    void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XCondition &xc) override {
+        switch (xc.operandType) {
+        case OperandType::INTEGER:
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.val);
+            break;
+        case OperandType::VARIABLE:
+            if (xc.op == OrderType::EQ ||xc.op == OrderType::IN) {
+                buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.var);
+            } else {
+                cerr << "Sorry order type " << xc.op << " not implemented in matrix element constraint!" << endl;
+                throw WrongFileFormat();
+            }
+            break;
+        case OperandType::INTERVAL:
+            assert(xc.op == OrderType::IN);
+            buildConstraintElement(id, matrix, startRowIndex, rowIndex, startColIndex, colIndex, xc.min, xc.max);
+            break;
+        default:
+            cerr << "Sorry operand type " << xc.operandType << " not implemented in matrix element constraint!" << endl;
+            throw WrongFileFormat();
         }
     }
 
@@ -2486,6 +2695,17 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         assert(vars.size() <= lengths.size() + 1);
         for (unsigned int i = 0; i < vars.size()-1; i++) {
             buildConstraintPrimitive(order, vars[i], lengths[i], vars[i+1]);
+        }
+    }
+
+    void buildConstraintOrdered(string id, vector<XVariable *> &list, vector<XVariable*> &lengths, OrderType order) override {
+        vector<int> vars;
+        toMyVariables(list,vars);
+        vector<int> varlengths;
+        toMyVariables(lengths,varlengths);
+        assert(vars.size() <= varlengths.size() + 1);
+        for (unsigned int i = 0; i < vars.size()-1; i++) {
+            buildConstraintPrimitive3(order, vars[i], varlengths[i], vars[i+1]);
         }
     }
 
@@ -2966,6 +3186,29 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void buildConstraintNoOverlap(string id, vector<vector<XVariable *>> &origins, vector<XVariable *> &varLengths, vector<int> &intLengths, bool zeroIgnored) override {
+        assert(origins.size() == varLengths.size());
+        assert(origins.size() == intLengths.size());
+        assert(origins.size() >= 1);
+        if (origins[0].size()==2) {
+            unsigned int n = origins.size();
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = i+1 ; j < n; j++) {
+                    if (!zeroIgnored) {
+                        Tree tree("or(or(le(add(" + origins[i][0]->id + "," + varLengths[i]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + varLengths[j]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + to_string(intLengths[i]) + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + to_string(intLengths[j]) + ")," + origins[i][1]->id + ")))");
+                        buildConstraintIntension(id, &tree);
+                    } else {
+                        Tree tree("or(eq(" + varLengths[i]->id + ",0),eq(" + varLengths[j]->id + ",0),eq(" + to_string(intLengths[i]) + ",0),eq(" + to_string(intLengths[j]) + ",0),or(le(add(" + origins[i][0]->id + "," + varLengths[i]->id + ")," + origins[j][0]->id + "),le(add(" + origins[j][0]->id + "," + varLengths[j]->id + ")," + origins[i][0]->id + ")),or(le(add(" + origins[i][1]->id + "," + to_string(intLengths[i]) + ")," + origins[j][1]->id + "),le(add(" + origins[j][1]->id + "," + to_string(intLengths[j]) + ")," + origins[i][1]->id + ")))");
+                        buildConstraintIntension(id, &tree);
+                    }
+                }
+            }
+        } else {
+            cerr << "Sorry " << origins[0].size() << " dimension not implemented in NoOverlap constraint!" << endl;
+            throw WrongFileFormat();
+        }
+    }
+
     void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths, vector<int> &heights, XCondition &cond) override {
         vector<int> vars;
         toMyVariables(origins, vars);
@@ -2999,6 +3242,318 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     paramspos += to_string(" ") + to_string(nbval) + valparamspos;
                     paramsneg += to_string(" ") + to_string(nbval) + valparamsneg;
                     scope.push_back(vars[i]);
+                    nbvar++;
+                }
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+    }
+
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, vector<int> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        vector<int> varlengths;
+        toMyVariables(lengths, varlengths);
+//        vector<int> varends;
+//        toMyVariables(ends, varends);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+//            buildConstraintPrimitive3(OrderType::EQ, vars[i], varlengths[i], varends[i]);
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string extravarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                vector<Cost> costs;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    for (Value l : problem->getEnumDomain(varlengths[i])) {
+                        if (time >= value && time < value + l) {
+                            costs.push_back(MAX_COST_XML3);
+                            costs.push_back(MIN_COST);
+                        } else {
+                            costs.push_back(MIN_COST);
+                            costs.push_back(MAX_COST_XML3);
+                        }
+                    }
+                }
+                problem->postTernaryConstraint(vars[i], varlengths[i], extravar, costs);
+                string valparamspos;
+                string valparamsneg;
+                paramspos += to_string(" ") + to_string(1) + to_string(" ") + to_string(1) + to_string(" ") + to_string(heights[i]);
+                paramsneg += to_string(" ") + to_string(1) + to_string(" ") + to_string(1) + to_string(" ") + to_string(-heights[i]);
+                scope.push_back(extravar);
+                nbvar++;
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+    }
+
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths, vector<XVariable *> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        vector<int> varheights;
+        toMyVariables(heights, varheights);
+//        vector<int> varends;
+//        toMyVariables(ends, varends);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+//            buildConstraintPrimitive3(OrderType::EQ, vars[i], varlengths[i], varends[i]);
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+            assert(problem->getInf(varheights[i]) >= 0);
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string extravarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                vector<Cost> costs;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    if (time >= value && time < value + lengths[i]) {
+                        costs.push_back(MAX_COST_XML3);
+                        costs.push_back(MIN_COST);
+                    } else {
+                        costs.push_back(MIN_COST);
+                        costs.push_back(MAX_COST_XML3);
+                    }
+                }
+                problem->postBinaryConstraint(vars[i], extravar, costs);
+                string extraheightvarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extraheightvar = problem->makeEnumeratedVariable(extraheightvarname, min(0, problem->getInf(varheights[i])), problem->getSup(varheights[i]));
+                mapping[extraheightvarname] = extraheightvar;
+                buildConstraintMult(extravar, varheights[i], extraheightvar);
+                string valparamspos;
+                string valparamsneg;
+                int nbval = 0;
+                for (Value value : problem->getEnumDomain(extraheightvar)) {
+                    if (value != 0) {
+                        valparamspos += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
+                        valparamsneg += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
+                        nbval++;
+                    }
+                }
+                if (nbval > 0) {
+                    paramspos += to_string(" ") + to_string(nbval) + valparamspos;
+                    paramsneg += to_string(" ") + to_string(nbval) + valparamsneg;
+                    scope.push_back(extraheightvar);
+                    nbvar++;
+                }
+            }
+            if (nbvar > 0) {
+                switch (cond.operandType) {
+                case OperandType::INTEGER:
+                    switch (cond.op) {
+                    case OrderType::LE:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::LT:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val + 1) + paramsneg, false, true, false);
+                        break;
+                    case OrderType::GE:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::GT:
+                        problem->postKnapsackConstraint(scope, to_string(cond.val + 1) + paramspos, false, true, false);
+                        break;
+                    case OrderType::IN:
+                    case OrderType::EQ:
+                        problem->postKnapsackConstraint(scope, to_string(-cond.val) + paramsneg, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(cond.val) + paramspos, false, true, false);
+                        break;
+                    case OrderType::NE:
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::INTERVAL:
+                    switch (cond.op) {
+                    case OrderType::IN:
+                        problem->postKnapsackConstraint(scope, to_string(cond.min) + paramspos, false, true, false);
+                        problem->postKnapsackConstraint(scope, to_string(-cond.max) + paramsneg, false, true, false);
+                        break;
+                    default:
+                        cerr << "Sorry operator " << cond.op << " not implemented in cumulative constraint with interval!" << endl;
+                        throw WrongFileFormat();
+                    }
+                    break;
+                case OperandType::VARIABLE:
+                default:
+                    cerr << "Sorry operand type VARIABLE not implemented in cumulative constraint!" << endl;
+                    throw WrongFileFormat();
+                }
+            }
+        }
+    }
+
+    void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *>& lengths, vector<XVariable *> &heights, XCondition &cond) override {
+        vector<int> vars;
+        toMyVariables(origins, vars);
+        vector<int> varlengths;
+        toMyVariables(lengths, varlengths);
+        vector<int> varheights;
+        toMyVariables(heights, varheights);
+//        vector<int> varends;
+//        toMyVariables(ends, varends);
+        int mininf = INT_MAX;
+        int maxsup = -INT_MAX;
+        for (unsigned int i=0; i<vars.size(); i++) {
+//            buildConstraintPrimitive3(OrderType::EQ, vars[i], varlengths[i], varends[i]);
+            if (problem->getInf(vars[i]) < mininf) {
+                mininf = problem->getInf(vars[i]);
+            }
+            if (problem->getSup(vars[i]) > maxsup) {
+                maxsup = problem->getSup(vars[i]);
+            }
+            assert(problem->getInf(varheights[i]) >= 0);
+        }
+        for (Value time = mininf; time <= maxsup; time++) {
+            string paramspos;
+            string paramsneg;
+            vector<int> scope;
+            int nbvar = 0;
+            for (unsigned int i = 0; i < vars.size(); i++) {
+                string extravarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extravar = problem->makeEnumeratedVariable(extravarname, 0, 1);
+                mapping[extravarname] = extravar;
+                vector<Cost> costs;
+                for (Value value : problem->getEnumDomain(vars[i])) {
+                    for (Value l : problem->getEnumDomain(varlengths[i])) {
+                        if (time >= value && time < value + l) {
+                            costs.push_back(MAX_COST_XML3);
+                            costs.push_back(MIN_COST);
+                        } else {
+                            costs.push_back(MIN_COST);
+                            costs.push_back(MAX_COST_XML3);
+                        }
+                    }
+                }
+                problem->postTernaryConstraint(vars[i], varlengths[i], extravar, costs);
+                string extraheightvarname = IMPLICIT_VAR_TAG + to_string("Cumulative") + to_string(problem->numberOfVariables());
+                int extraheightvar = problem->makeEnumeratedVariable(extraheightvarname, min(0, problem->getInf(varheights[i])), problem->getSup(varheights[i]));
+                mapping[extraheightvarname] = extraheightvar;
+                buildConstraintMult(extravar, varheights[i], extraheightvar);
+                string valparamspos;
+                string valparamsneg;
+                int nbval = 0;
+                for (Value value : problem->getEnumDomain(extraheightvar)) {
+                    if (value != 0) {
+                        valparamspos += to_string(" ") + to_string(value) + to_string(" ") + to_string(value);
+                        valparamsneg += to_string(" ") + to_string(value) + to_string(" ") + to_string(-value);
+                        nbval++;
+                    }
+                }
+                if (nbval > 0) {
+                    paramspos += to_string(" ") + to_string(nbval) + valparamspos;
+                    paramsneg += to_string(" ") + to_string(nbval) + valparamsneg;
+                    scope.push_back(extraheightvar);
                     nbvar++;
                 }
             }

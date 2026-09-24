@@ -13,7 +13,7 @@
  *
  */
 
-int Cluster::clusterCounter = 0;
+TB2_THREAD_LOCAL int Cluster::clusterCounter = 0;
 
 bool CmpClusterStructBasic::operator()(const Cluster* lhs, const Cluster* rhs) const
 {
@@ -34,7 +34,7 @@ bool CmpClusterStruct::operator()(const Cluster* lhs, const Cluster* rhs) const
  *
  */
 
-WCSP* CmpVarStruct::wcsp = NULL;
+TB2_THREAD_LOCAL WCSP* CmpVarStruct::wcsp = NULL;
 
 bool CmpVarStruct::operator()(const int lhs, const int rhs) const
 {
@@ -899,7 +899,7 @@ void Cluster::getElimVarOrder(vector<int>& elimVarOrder)
 // side-effect: remember last solution
 void Cluster::getSolution(TAssign& sol)
 {
-    static Tuple s; // FIXME: unsafe???
+    TB2_THREAD_LOCAL static Tuple s; // FIXME: unsafe???
 
     TVars::iterator it, iter_begin, iter_end;
 
@@ -1114,11 +1114,11 @@ void Cluster::dump()
     char fatherFilename[128];
     char sepSizeFilename[128];
 
-    sprintf(clusterVarsFilename, "%s.info/%d.vars", getWCSP()->getName().c_str(), getId());
-    sprintf(sepVarsFilename, "%s.info/%d.sep", getWCSP()->getName().c_str(), getId());
-    sprintf(sonsFilename, "%s.info/%d.sons", getWCSP()->getName().c_str(), getId());
-    sprintf(fatherFilename, "%s.info/%d.father", getWCSP()->getName().c_str(), getId());
-    sprintf(sepSizeFilename, "%s.info/%d.sepsize", getWCSP()->getName().c_str(), getId());
+    snprintf(clusterVarsFilename, 128, "%s.info/%d.vars", getWCSP()->getName().c_str(), getId());
+    snprintf(sepVarsFilename, 128, "%s.info/%d.sep", getWCSP()->getName().c_str(), getId());
+    snprintf(sonsFilename, 128, "%s.info/%d.sons", getWCSP()->getName().c_str(), getId());
+    snprintf(fatherFilename, 128, "%s.info/%d.father", getWCSP()->getName().c_str(), getId());
+    snprintf(sepSizeFilename, 128, "%s.info/%d.sepsize", getWCSP()->getName().c_str(), getId());
 
     ofstream clusterVarsFile(clusterVarsFilename);
     ofstream sepVarsFile(sepVarsFilename);
@@ -1198,7 +1198,7 @@ TreeDecomposition::TreeDecomposition(WCSP* wcsp_in)
 
 TreeDecomposition::~TreeDecomposition()
 {
-    for(auto& c: clusters) {
+    for (auto& c : clusters) {
         if (c) {
             delete c;
         }
@@ -1394,7 +1394,7 @@ void TreeDecomposition::pathFusions(vector<int>& order)
             rds[i] = NULL;
         }
     }
-    for(auto&c : clusters) {
+    for (auto& c : clusters) {
         delete c;
     }
     clusters.clear();
@@ -2042,9 +2042,9 @@ void TreeDecomposition::setDuplicates(bool init)
     if (ToulBar2::approximateCountingBTD)
         return;
 
-    static unsigned int curCtr = 0;
-    static int curElimBin = 0;
-    static int curElimTern = 0;
+    TB2_THREAD_LOCAL static unsigned int curCtr = 0;
+    TB2_THREAD_LOCAL static int curElimBin = 0;
+    TB2_THREAD_LOCAL static int curElimTern = 0;
 
     if (init) {
         curCtr = 0;
@@ -2409,8 +2409,6 @@ void TreeDecomposition::buildFromOrderNext(vector<int>& order)
 void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet& totalusedctrs, TVars& inusedvars, TVars& currentusedvars, vector<Variable*>& currentRevElimOrder, ConstraintSet& currentusedctrs)
 {
     vector<TVars> listeVars(wcsp->numberOfVariables()); // liste des voisins d'ordre superieur de chaque variable
-    int nbcstr = 0;
-    double time, timetot = 0;
     while (inusedvars.size() > 0) {
         int maxsize = -1;
         Variable* maxvar = NULL; /* next variable */
@@ -2447,15 +2445,11 @@ void TreeDecomposition::maxchord(int sizepart, vector<int>& order, ConstraintSet
                     if (scopectr.size() == 0) { // all edges of the ctr are in the sub graph => the cstr is added in this current part
                         if (included(sc, listeVars[maxvar->wcspIndex])) {
                             ConstraintSet subctr;
-                            nbcstr++;
                             currentusedctrs.insert(ctr);
                             totalusedctrs.insert(ctr);
-                            time = cpuTime();
                             subctr = ctr->subConstraint();
                             ctrSum(totalusedctrs, subctr);
                             ctrSum(currentusedctrs, subctr);
-                            time = time - cpuTime();
-                            timetot += time;
                             sum(currentusedvars, sc);
                             currentusedvars.insert(maxvar->wcspIndex);
                         }
@@ -2767,14 +2761,14 @@ void TreeDecomposition::dump(Cluster* c)
 {
     if (!c) {
         char tmpName[256];
-        sprintf(tmpName, "%s.info", getWCSP()->getName().c_str());
+        snprintf(tmpName, 256, "%s.info", getWCSP()->getName().c_str());
 #ifdef __WIN32__
         mkdir(tmpName);
 #else
         mkdir(tmpName, 0777);
 #endif
 
-        sprintf(tmpName, "%s.info/root", getWCSP()->getName().c_str());
+        snprintf(tmpName, 256, "%s.info/root", getWCSP()->getName().c_str());
 
         ofstream rootFile(tmpName);
         if (roots.empty()) {

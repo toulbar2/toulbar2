@@ -51,6 +51,8 @@ class CMakeBuild(build_ext):
         cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE"]
         cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN")]
 
+        cmake_args += ["-DMULTI_THREAD=ON"]
+
         if platform.system() == "Windows":
             cmake_args += ["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(build_type.upper(), extdir)]
             if sys.maxsize > 2**32:
@@ -75,7 +77,7 @@ def read_version():
 
 setup(
     name="pytoulbar2",
-    version="0.0.0.4", # hash 4efdb276c87feac01c4c45637c0d915013b4b108
+    version="1.4.0.0", # hash 4d13826c2c519fb618cdf6828721fac130897df0 
     author="ToulBar2 team",
     author_email="thomas.schiex@inrae.fr",
     description="ToulBar2 Python package",

@@ -24,7 +24,7 @@ typedef int (Solver::*intFunctionCall_t)();
 
 class Solver : public WeightedCSPSolver {
 public:
-    static Solver* CurrentSolver; // Current solver used by open node heuristics
+    TB2_THREAD_LOCAL static Solver* CurrentSolver; // Current solver used by open node heuristics
 
     class OpenNode {
     private:
@@ -33,9 +33,9 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& cost; // node lower bound
-            ar& first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
-            ar& last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
+            ar & cost; // node lower bound
+            ar & first; // pointer of type intptr_t = ptrdiff_t based on signed integer type
+            ar & last; // means the "last" choice point in CPStore = vector<ChoicePoint> is at the adr (last-1)
         }
 #endif
         Cost cost; // global lower bound associated to the open node
@@ -50,7 +50,14 @@ public:
             , last(last_)
         {
         }
-        bool operator<(const OpenNode& right) const { int res = 0; if (ToulBar2::sortBFS) return ((cost > right.cost) || (cost == right.cost && (res = Solver::recHeuristicCmp(*this, first, right, right.first)) == 2) || (cost == right.cost && res == 1 && last >= right.last)); else return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last))); } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
+        bool operator<(const OpenNode& right) const
+        {
+            int res = 0;
+            if (ToulBar2::sortBFS)
+                return ((cost > right.cost) || (cost == right.cost && (res = Solver::recHeuristicCmp(*this, first, right, right.first)) == 2) || (cost == right.cost && res == 1 && last >= right.last));
+            else
+                return (cost > right.cost) || (cost == right.cost && ((last - first) < (right.last - right.first) || ((last - first) == (right.last - right.first) && last >= right.last)));
+        } // reverse order to get the open node with first, the smallest lower bound, and next, the deepest depth, and next, the oldest time-stamp
 
         Cost getCost(Cost delta = MIN_COST) const { return MAX(MIN_COST, cost - delta); }
     };
@@ -116,8 +123,8 @@ public:
             vector<vector<TrieNode*>> insertNode(Value v, unsigned int pos, vector<vector<TrieNode*>> nodesAtPos);
             bool present(Value v);
             void printTrie(vector<Value>& sol);
-            static size_t nbSolutions;
-            static vector<size_t> widths;
+            TB2_THREAD_LOCAL static size_t nbSolutions;
+            TB2_THREAD_LOCAL static vector<size_t> widths;
         };
 
         SolutionTrie(){};
@@ -153,10 +160,10 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& varIndex;
-            ar& value;
-            ar& op;
-            ar& reverse;
+            ar & varIndex;
+            ar & value;
+            ar & op;
+            ar & reverse;
         }
 #endif
     public:
@@ -207,16 +214,16 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int version)
         {
-            ar& hbfs;
-            ar& nbNodes;
-            ar& nbBacktracks;
-            ar& nbDEE;
-            ar& nbRecomputationNodes;
-            ar& lb;
-            ar& ub;
-            ar& open;
-            ar& cp;
-            ar& sol;
+            ar & hbfs;
+            ar & nbNodes;
+            ar & nbBacktracks;
+            ar & nbDEE;
+            ar & nbRecomputationNodes;
+            ar & lb;
+            ar & ub;
+            ar & open;
+            ar & cp;
+            ar & sol;
         }
 
     public:
@@ -334,13 +341,14 @@ public:
     // returns 0 if left preferred or 1 if equal or 2 if right preferred
     // prefer open nodes with best (smallest dom/max_at_any_depth(wdeg+1)) variable heuristic values first (lexicographic order)
     // in case of prefix equality, prefer the shortest (included) open node to favor discrepancy first
-    static int recHeuristicCmp(const OpenNode& left, ptrdiff_t curLeft, const OpenNode& right, ptrdiff_t curRight) {
+    static int recHeuristicCmp(const OpenNode& left, ptrdiff_t curLeft, const OpenNode& right, ptrdiff_t curRight)
+    {
         if (curLeft < left.last) {
             if (curRight < right.last) {
                 int varLeft = (*Solver::CurrentSolver->cp)[curLeft].varIndex;
-                int varRight  = (*Solver::CurrentSolver->cp)[curRight].varIndex;
-                double heurLeft = (double) Solver::CurrentSolver->getWCSP()->getDomainSize(varLeft) / (double)(Solver::CurrentSolver->heuristics[varLeft] + 1);
-                double heurRight = (double) Solver::CurrentSolver->getWCSP()->getDomainSize(varRight) / (double)(Solver::CurrentSolver->heuristics[varRight] + 1);
+                int varRight = (*Solver::CurrentSolver->cp)[curRight].varIndex;
+                double heurLeft = (double)Solver::CurrentSolver->getWCSP()->getDomainSize(varLeft) / (double)(Solver::CurrentSolver->heuristics[varLeft] + 1);
+                double heurRight = (double)Solver::CurrentSolver->getWCSP()->getDomainSize(varRight) / (double)(Solver::CurrentSolver->heuristics[varRight] + 1);
                 if (heurLeft < heurRight - (double)ToulBar2::epsilon * heurRight) {
                     return 0;
                 } else if (heurLeft < heurRight + (double)ToulBar2::epsilon * heurRight) {
@@ -351,7 +359,7 @@ public:
                     } else if (costLeft < costRight) {
                         return 2;
                     } else {
-                        return recHeuristicCmp(left, curLeft+1, right, curRight+1);
+                        return recHeuristicCmp(left, curLeft + 1, right, curRight + 1);
                     }
                 } else {
                     return 2;
@@ -362,7 +370,7 @@ public:
         } else { // cur=last
             if (curRight < right.last) {
                 return 0;
-            } else { //right=last
+            } else { // right=last
                 return 1;
             }
         }
@@ -522,7 +530,13 @@ public:
     Cost preprocessing(Cost ub);
     void recursiveSolve(Cost lb = MIN_COST);
     void recursiveSolveLDS(int discrepancy);
-    pair<Cost, Cost> hybridSolve() { return hybridSolve(NULL, wcsp->getLb(), wcsp->getUb()); }
+    pair<Cost, Cost> hybridSolve()
+    {
+        int hbfs_copy = ToulBar2::hbfs;
+        pair<Cost, Cost> res = hybridSolve(NULL, wcsp->getLb(), wcsp->getUb());
+        ToulBar2::hbfs = hbfs_copy;
+        return res;
+    }
     void endSolve(bool isSolution, Cost cost, bool isComplete);
     // end of internal solve methods
 

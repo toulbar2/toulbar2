@@ -3,7 +3,7 @@
 # version 0.9 -# David allouche 17/10/10
 ##########################################
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.5)
 IF(APPLE)
     cmake_minimum_required(VERSION 3.13)
 ENDIF(APPLE)
@@ -21,6 +21,13 @@ set (CONTACT "https://github.com/toulbar2/toulbar2") #used in packaging
 # default name for packaging
 SET(Toulbar2_NAME "toulbar2")
 SET(CMAKE_MACOSX_RPATH 1)
+
+# build type
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 ##########################################
 # PROJECT NAME
 ##########################################
@@ -39,7 +46,7 @@ include(CMakeDependentOption)
 #	OPTION(TOULBAR2 "toulbar2 solver compilation [default: on]" ON) 
 OPTION(MENDELSOFT "mendelsoft compilation and packaging ONLY ==> remove other exe and lib compilation [default:off]" OFF)
 OPTION(LIBTB2 "lib toulbar2 compilation [default: off]" OFF)
-OPTION(PYTB2 "Python3 toulbar2 module compilation (MPI off) [default: off]" OFF)
+OPTION(PYTB2 "Python3 toulbar2 module compilation [default: off]" OFF)
 OPTION(ILOG  "ilog solver binding [default: off]" OFF)
 OPTION(XML "add a reader for the XCSP2/3 xml input format [default: off]" OFF)
 OPTION(XCSP3 "select XCSP3 format instead of XCSP2 [default: on]" ON)
@@ -64,6 +71,7 @@ OPTION(COVER_TEST "cover test [default:on]" ON)
 OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 OPTION(LR_BCD "embed the LR-BCD solver to produce initial solutions and lower bound estimates (requires Eigen3 library) [default:off]" OFF)
+OPTION(MULTI_THREAD "allow the solver to be executed in multiple threads simultaneously [default:off]" OFF)
 
 MARK_AS_ADVANCED(FORCE BUILD_API_DOC_LATEX)
 MARK_AS_ADVANCED(FORCE CPLEX CPLEX_LOCATION ILOG XML XCSP3 verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS BINARYWCSP TERNARYWCSP)
@@ -88,28 +96,17 @@ ELSE()
    message("Conan file not found in ${CMAKE_CURRENT_SOURCE_DIR} - assuming conan free build.")
 ENDIF()
 
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release CACHE STRING
-      "Choose the build type, options are: None Debug Release RelWithDebInfo MinSizeRel."
-    FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+MESSAGE(STATUS "compile flags: ${CMAKE_CXX_FLAGS}")
 
-IF(QUAD_PROBABILITY)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++17" )
-ELSE(QUAD_PROBABILITY)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17" )
-ENDIF(QUAD_PROBABILITY)
 # -fsanitize=address -fsanitize=undefined -Wconversion -Wsign-conversion
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftrapping-math -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native" ) #  -flto
 
-IF(QUAD_PROBABILITY)
-  SET (all_depends  ${all_depends} "quadmath") 
-ENDIF(QUAD_PROBABILITY)
 
+SET(ILOGCPLEX OFF)
 IF(CPLEX)
   MESSAGE("CPLEX location: ${CPLEX_LOCATION}")
-  SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DILOGCPLEX -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
+  SET(CPLEXFLAGS "-fPIC -fexceptions -fno-strict-aliasing -DIL_STD -DILOSTRICTPOD -pthread -I${CPLEX_LOCATION}/cplex/include -I${CPLEX_LOCATION}/concert/include")
   SET(CPLEXLIB "-L${CPLEX_LOCATION}/cplex/lib/x86-64_linux/static_pic -L${CPLEX_LOCATION}/concert/lib/x86-64_linux/static_pic") 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPLEXFLAGS}")
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CPLEXLIB}")
@@ -120,13 +117,16 @@ IF(CPLEX)
   SET (all_depends  ${all_depends} "m") 
   SET (all_depends  ${all_depends} "pthread") 
   SET (all_depends  ${all_depends} "dl") 
+  SET(ILOGCPLEX ON)
   SET(STATIC OFF)
 ENDIF(CPLEX)
 
+# LR-BCD Solver configuration
+SET(LR_BCD_BUILD OFF)
 IF(LR_BCD)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLR_BCD_BUILD")
-  find_package (Eigen3 3.0 REQUIRED NO_MODULE)
+  find_package (Eigen3 REQUIRED NO_MODULE)
   SET (all_depends  ${all_depends} "Eigen3::Eigen")
+  SET(LR_BCD_BUILD ON)
 ENDIF(LR_BCD)
 
 if(verbose) 
@@ -220,11 +220,10 @@ include(${My_cmake_script}/source_files.cmake)
 
 IF(PYTB2)
   SET(WITH_MEM_JEMALLOC OFF)
-  SET(MPI OFF)
   SET(LIBTB2 ON)
   SET(Python3_FIND_STRATEGY LOCATION)
   SET(Python3_FIND_FRAMEWORK NEVER)
-  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development)
+  FIND_PACKAGE(Python3 COMPONENTS Interpreter Development.Module)
 
   if(NOT Python3_Interpreter_FOUND)
     MESSAGE(STATUS "Python3_Interpreter NOT FOUND")
@@ -243,20 +242,21 @@ IF(PYTB2)
 
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
 
-  EXECUTE_PROCESS(
-    COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
-    OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  
-    IF ("${Pybind11_INCLUDES}" STREQUAL "" )
-      MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
-    ELSE()
-      MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
-    ENDIF()
-
+  ### New cmake and python and pybind11
+  IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0) 
+	  FIND_PACKAGE(pybind11 REQUIRED)
+  ELSE() ### older cmake versions
+    EXECUTE_PROCESS(
+      COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
+      OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
     
-### New cmake and python and pybind11
-#  FIND_PACKAGE(pybind11 CONFIG)
-###
+      IF ("${Pybind11_INCLUDES}" STREQUAL "" )
+        MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
+      ELSE()
+        MESSAGE(STATUS "Pybind11 includes: ${Pybind11_INCLUDES}")
+      ENDIF()
+  ENDIF()
+
 ENDIF(PYTB2)
 
 IF(WITH_MEM_JEMALLOC)
@@ -279,6 +279,7 @@ IF(Boost)
   INCLUDE(${My_cmake_script}/Boost_option.cmake)
   LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+  SET(BOOST ON)
 ENDIF(Boost)
 
 IF(MPI) 
@@ -291,9 +292,11 @@ IF(MPI)
   INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
   FIND_PACKAGE(Boost REQUIRED COMPONENTS serialization mpi)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-  SET(mpiflag OPENMPI)
+  SET(OPENMPI ON)
 ENDIF(MPI)
 
+SET(XMLFLAG OFF)
+SET(XMLFLAG3 OFF)
 IF(XCSP3)
   INCLUDE(${My_cmake_script}/xmlcsp3.cmake)
 ELSE(XCSP3)
@@ -308,6 +311,7 @@ ENDIF(XCSP3)
 
 INCLUDE_DIRECTORIES ( ${CMAKE_CURRENT_SOURCE_DIR}/${My_Source} )
 
+
 IF(TOULBAR2)
   ADD_LIBRARY(tb2-objects OBJECT ${LIBTB2FILES})
   ADD_EXECUTABLE(toulbar2${EXE} ${My_Source}/tb2main.cpp $<TARGET_OBJECTS:tb2-objects>)
@@ -315,9 +319,12 @@ IF(TOULBAR2)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} PUBLIC "-static")
   ENDIF(STATIC)
   ADD_LIBRARY(tb2-archive STATIC $<TARGET_OBJECTS:tb2-objects>)
+
+  # tb2version.hpp
   ADD_CUSTOM_TARGET(gen_version ALL /bin/sh ${CMAKE_CURRENT_SOURCE_DIR}/cmake-script/genVersionFile.sh)
   SET_SOURCE_FILES_PROPERTIES(ToulbarVersion.hpp PROPERTIES GENERATED 1)
   ADD_DEPENDENCIES(toulbar2${EXE} gen_version)
+
   IF(MPI)
     TARGET_LINK_LIBRARIES(toulbar2${EXE} PUBLIC ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
     IF(MPI_COMPILE_FLAGS)
@@ -331,6 +338,7 @@ IF(TOULBAR2)
   ENDIF(MPI)
 
   INSTALL( TARGETS toulbar2${EXE} DESTINATION bin)
+
 ENDIF(TOULBAR2)
 
 ##########################################
@@ -357,24 +365,26 @@ IF(LIBTB2)
     SET_TARGET_PROPERTIES(tb2-PIC-objects PROPERTIES COMPILE_FLAGS "-fPIC")
   ENDIF(NOT WIN64)
   IF(XML)
-    MESSAGE(STATUS "Warning! Recompile libxcsp3parser.a with option -fPIC")
+    MESSAGE(WARNING "Warning! Recompile libxcsp3parser.a with option -fPIC")
   ENDIF(XML)
   ADD_LIBRARY(tb2 SHARED $<TARGET_OBJECTS:tb2-PIC-objects>)
 
   IF(PYTB2)
-### Old cmake, python and pybind11
-    ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0) ### New cmake, python and pybind11
+      pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+    ELSE() ### Old cmake, python and pybind11
+      ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+      SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
+    ENDIF()
+
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES PREFIX "")
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES OUTPUT_NAME "pytb2")
     SET_TARGET_PROPERTIES(pytb2 PROPERTIES SUFFIX ${Python3_SUFFIX})
-    SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
-    IF(APPLE)
-        target_link_options(pytb2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
-    ENDIF(APPLE)
 
-### New cmake, python and pybind11
-#    pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
-###
+    IF(APPLE)
+      target_link_options(pytb2 PRIVATE -undefined dynamic_lookup) # activate specific linking options. Thanks to alex rudnick 
+    ENDIF(APPLE)
 
   ### Create a copy of the pytoulbar2 library
   ADD_CUSTOM_TARGET(copy_pytb2 ALL
@@ -397,6 +407,9 @@ IF(LIBTB2)
   
   IF(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+    IF(PYTB2)
+      TARGET_LINK_LIBRARIES(pytb2 ${all_depends} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+    ENDIF(PYTB2)
     IF(MPI_COMPILE_FLAGS)
       SET_TARGET_PROPERTIES(tb2 PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
     ENDIF(MPI_COMPILE_FLAGS)
@@ -406,7 +419,7 @@ IF(LIBTB2)
   ELSE(MPI)
     TARGET_LINK_LIBRARIES(tb2 ${all_depends})
     IF(PYTB2)
-      TARGET_LINK_LIBRARIES(pytb2 ${all_depends})
+      TARGET_LINK_LIBRARIES(pytb2 PUBLIC ${all_depends})
     ENDIF(PYTB2)
   ENDIF(MPI)
   
@@ -487,13 +500,14 @@ IF (BUILD_API_DOC OR BUILD_SPHINX_DOC)
   include(${My_cmake_script}/UseDoxygen.cmake)  
 ENDIF (BUILD_API_DOC OR BUILD_SPHINX_DOC)
 
-ADD_CUSTOM_TARGET(man ALL)
+ADD_CUSTOM_TARGET(man ALL
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+)
 
 ADD_CUSTOM_COMMAND(
-  TARGET man
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1 ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
-  OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/toulbar2.1
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/toulbar2.1
   )
 
 ##########################################

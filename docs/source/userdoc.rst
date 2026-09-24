@@ -62,6 +62,8 @@ See examples at https://forgemia.inra.fr/thomas.schiex/cfn-learn.
 How do I install it ?
 =====================
 
+.. _install-binaries:
+
 toulbar2 is an open source solver distributed under the MIT license as a set of C++ sources managed with git at http://github.com/toulbar2/toulbar2. If you want
 to use a released version, then you can download there source archives of a specific release that should be easy to compile on most Linux systems.
 
@@ -728,7 +730,7 @@ Console output
         sets the verbosity level (default 0).
 
 -Z=[integer]
-        debug mode (save problem at each node if verbosity
+        debug mode (during DFS, print current search depth and a rough estimate of remaining search tree size ; during HBFS, print also lb, ub, number of open nodes, size of open node memory, total number of visited nodes) (save problem at each node if verbosity
         option -v=num :math:`>= 1` and -Z=num :math:`>=3`)
 
 -s=[integer]

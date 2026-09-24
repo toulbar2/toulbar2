@@ -1,19 +1,28 @@
 
 .. raw:: html
 
-    <div class= toulbar2news>
+    <div style="justify-content: center; align-items: center;">
 
-        </br>
-        <span style="color:Firebrick; font-weight:bold;"> New! </span>
+    <fieldset style = "overflow-y: scroll; overflow: -moz-scrollbars-vertical; height: 150px; padding-bottom: 1rem; margin:0rem;">
 
-        toulbar2 won medals at <a href="https://xcsp.org/competitions/">XCSP 2024</a> and <a href="https://uaicompetition.github.io/uci-2022/results/final-leader-board">UAI 2022</a> Competitions!</br>
-        
-        <span style="color:Firebrick; font-weight:bold;"> New! </span>
+    <div style="margin-left: 1.2rem; margin-right: 1.2rem; padding-top: -2rem; margin-bottom: -3rem; position: relative; top: -2.9rem;">
 
-        Your Sudoku solved on your smartphone by toulbar2
-        (<a href="examples/vsapp_apk.html">APK</a>)</br>
+    <script src="https://giscus.app/client.js"
+        data-repo="toulbar2/tb2news"
+        data-repo-id="R_kgDOPiZpEA"
+        data-mapping="number"
+        data-term="2"
+        data-reactions-enabled="0"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+    </script>
 
-        </br>
-        
     </div>
 
+    </fieldset> 
+
+    </div>

@@ -85,12 +85,12 @@ WFA::WFA(int nbSymbols, string forbiddenPattern, Cost cost)
     }
 }
 
-WFA::~WFA() {
+WFA::~WFA()
+{
 
-    for(auto transition: transitions) {
+    for (auto transition : transitions) {
         delete transition;
     }
-
 }
 
 ////////////////////////////////////////////////////////////////////////

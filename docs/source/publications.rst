@@ -180,6 +180,12 @@ What are the algorithms inside toulbar2 ?
   `Assignment problems in cost function networks <https://miat.inrae.fr/degivry/Sewa26a.pdf>`_,
   G Sewa, D Allouche, S de Givry, G Katsirelos, P Montalbano, and T Schiex
   In Proc. of AAAI-26, Singapore, 2026.  
+ 
+- **Global Cardinality Constraint (gcc)**
+
+  `Singleton Node Consistency for Quadratic Assignment Problems in Cost Function Networks <https://miat.inrae.fr/degivry/Sewa26b.pdf>`_,
+  G Sewa, D Allouche, S de Givry, G Katsirelos, and T Schiex
+  In Proc. of CPAIOR-26, Rabat, Morocco, 2026.  
    
 toulbar2 for Combinatorial Optimization in Life Sciences
 --------------------------------------------------------

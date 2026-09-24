@@ -2,6 +2,10 @@
 
 file ( GLOB_RECURSE validation_scripts validation/*.py )
 
+IF(NOT MULTI_THREAD)
+    list(FILTER validation_scripts EXCLUDE REGEX ".*multithread.py")
+ENDIF()
+
 # init default value :
 set (command_line_option ${Default_test_option})
 set (test_timeout ${Default_test_timeout})
@@ -12,6 +16,12 @@ UNSET(error_regexp)
 FOREACH (UTEST ${validation_scripts})
 
     STRING(REPLACE "${PROJECT_SOURCE_DIR}/validation/" "" TNAME ${UTEST})
+
+    # skip tests with wcspconstraint as it requires specfic formatting in cfn format
+    IF(NOT Boost AND ${UTEST} MATCHES ".*weightedcspconstraint.py")
+        MESSAGE(STATUS "skipping test " ${UTEST})
+        continue()
+    ENDIF()
 
     ADD_TEST(NAME validation_pytb2_${TNAME} COMMAND ${Python3_EXECUTABLE} ${UTEST})
     

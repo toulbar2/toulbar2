@@ -1,9 +1,12 @@
+
+#include "tb2config.hpp"
+
 #ifdef LR_BCD_BUILD
 
 #define _USE_MATH_DEFINES
 
 #include <vector>
-//#include <random>
+// #include <random>
 #include <algorithm>
 #include <cmath>
 #include <float.h>
@@ -908,9 +911,9 @@ Cost Solver::lrBCD(string cmd, vector<Value>& solution)
 {
 
     cerr << "Error: this version of ToulBar2 has not been built with the LR-BCD solver." << endl;
-    
+
     throw BadConfiguration();
-    
+
     return MAX_COST;
 }
 

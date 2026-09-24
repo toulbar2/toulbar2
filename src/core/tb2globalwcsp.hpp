@@ -29,19 +29,19 @@ class WeightedCSPConstraint : public AbstractNaryConstraint {
     vector<Long> conflictWeights; // used by weighted degree heuristics
 
 public:
-    static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
-    static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
-    static bool _protected_;
-    static int preprocessFunctional;
-    static int elimDegree;
-    static int elimDegree_preprocessing;
-    static int elimDegree_;
-    static int elimDegree_preprocessing_;
-    static int DEE;
-    static int DEE_;
-    static bool FullEAC;
-    static bool RASPS;
-    static int useRASPS;
+    TB2_THREAD_LOCAL static WCSP* MasterWeightedCSP; // Master problem used by value and variable ordering heuristics
+    TB2_THREAD_LOCAL static map<int, WeightedCSPConstraint*> WeightedCSPConstraints;
+    TB2_THREAD_LOCAL static bool _protected_;
+    TB2_THREAD_LOCAL static int preprocessFunctional;
+    TB2_THREAD_LOCAL static int elimDegree;
+    TB2_THREAD_LOCAL static int elimDegree_preprocessing;
+    TB2_THREAD_LOCAL static int elimDegree_;
+    TB2_THREAD_LOCAL static int elimDegree_preprocessing_;
+    TB2_THREAD_LOCAL static int DEE;
+    TB2_THREAD_LOCAL static int DEE_;
+    TB2_THREAD_LOCAL static bool FullEAC;
+    TB2_THREAD_LOCAL static bool RASPS;
+    TB2_THREAD_LOCAL static int useRASPS;
     static void protect(bool master = true) ///< \brief deactivate some preprocessing/propagation features not compatible with our channeling mechanism
     {
         assert(!_protected_);
@@ -528,13 +528,13 @@ public:
                 }
             }
             for (int i = 0; i < problem->getElimBinOrder(); i++) {
-                BinaryConstraint *c = (BinaryConstraint *)problem->getElimBinCtr(i);
+                BinaryConstraint* c = (BinaryConstraint*)problem->getElimBinCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }
             }
             for (int i = 0; i < problem->getElimTernOrder(); i++) {
-                TernaryConstraint *c = (TernaryConstraint *)problem->getElimTernCtr(i);
+                TernaryConstraint* c = (TernaryConstraint*)problem->getElimTernCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }
@@ -547,13 +547,13 @@ public:
                 }
             }
             for (int i = 0; i < negproblem->getElimBinOrder(); i++) {
-                BinaryConstraint *c = (BinaryConstraint *)negproblem->getElimBinCtr(i);
+                BinaryConstraint* c = (BinaryConstraint*)negproblem->getElimBinCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }
             }
             for (int i = 0; i < negproblem->getElimTernOrder(); i++) {
-                TernaryConstraint *c = (TernaryConstraint *)negproblem->getElimTernCtr(i);
+                TernaryConstraint* c = (TernaryConstraint*)negproblem->getElimTernCtr(i);
                 if (c->connected() && !c->isSep()) {
                     res += c->getTightness();
                 }

@@ -12,9 +12,11 @@
 #define FINAL
 #endif
 
+#include "tb2config.hpp"
+
 #ifdef QUAD_PROB
 #include <boost/multiprecision/float128.hpp>
-//#include <quadmath.h>
+// #include <quadmath.h>
 #endif
 
 /*
@@ -67,9 +69,10 @@ typedef long double Double;
 // -------------------------------------------------------------------- */
 
 #include <random>
-extern std::mt19937 myrandom_generator;
+extern TB2_THREAD_LOCAL std::mt19937 myrandom_generator;
 
-inline void myrearrange(vector<int>& V){
+inline void myrearrange(vector<int>& V)
+{
     shuffle(V.begin(), V.end(), myrandom_generator);
 }
 
@@ -79,47 +82,47 @@ inline void mysrand(int seed_)
 }
 inline int myrand()
 {
-    static std::uniform_int_distribution<int> myrandom_uidistribution(0, INT_MAX - 1);
+    TB2_THREAD_LOCAL static std::uniform_int_distribution<int> myrandom_uidistribution(0, INT_MAX - 1);
     return myrandom_uidistribution(myrandom_generator);
 }
 inline Long myrandl()
 {
-    static std::uniform_int_distribution<Long> myrandom_uldistribution(0, LONG_MAX - 1);
+    TB2_THREAD_LOCAL static std::uniform_int_distribution<Long> myrandom_uldistribution(0, LONG_MAX - 1);
     return myrandom_uldistribution(myrandom_generator);
 }
 inline Long myrandln()
 {
-    static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX, LONG_MAX - 1);
+    TB2_THREAD_LOCAL static std::uniform_int_distribution<Long> myrandom_umdistribution(-LONG_MAX, LONG_MAX - 1);
     return myrandom_umdistribution(myrandom_generator);
 }
 inline double mydrand()
 {
-    static std::uniform_real_distribution<double> myrandom_uddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<double> myrandom_uddistribution(0.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double mydrandl()
 {
-    static std::uniform_real_distribution<Double> myrandom_uddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<Double> myrandom_uddistribution(0.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double myurand()
 {
-    static std::uniform_real_distribution<double> myrandom_uddistribution(-1.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<double> myrandom_uddistribution(-1.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double myurandl()
 {
-    static std::uniform_real_distribution<Double> myrandom_uddistribution(-1.0, 1.0);
+    TB2_THREAD_LOCAL static std::uniform_real_distribution<Double> myrandom_uddistribution(-1.0, 1.0);
     return myrandom_uddistribution(myrandom_generator);
 }
 inline double mynrand()
 {
-    static std::normal_distribution<double> myrandom_nddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::normal_distribution<double> myrandom_nddistribution(0.0, 1.0);
     return myrandom_nddistribution(myrandom_generator);
 }
 inline double mynrandl()
 {
-    static std::normal_distribution<Double> myrandom_nddistribution(0.0, 1.0);
+    TB2_THREAD_LOCAL static std::normal_distribution<Double> myrandom_nddistribution(0.0, 1.0);
     return myrandom_nddistribution(myrandom_generator);
 }
 
@@ -150,21 +153,21 @@ inline Double Log1p(Double x) { return log1pl(x); }
 #endif
 
 #ifdef QUAD_PROB
-//inline std::ostream& operator<<(std::ostream& os, const __float128& f)
+// inline std::ostream& operator<<(std::ostream& os, const __float128& f)
 //{
-//    char y[1024];
-//    quadmath_snprintf(y, 1000, "%.30Qg", f);
-//    os << y;
-//    return os;
-//}
+//     char y[1024];
+//     quadmath_snprintf(y, 1000, "%.30Qg", f);
+//     os << y;
+//     return os;
+// }
 
-//inline std::istream& operator>>(std::istream& is, __float128& f)
+// inline std::istream& operator>>(std::istream& is, __float128& f)
 //{
-//    char y[1024];
-//    is >> y;
-//    f = strtoflt128(y, NULL);
-//    return is;
-//}
+//     char y[1024];
+//     is >> y;
+//     f = strtoflt128(y, NULL);
+//     return is;
+// }
 
 inline boost::multiprecision::float128 Pow(boost::multiprecision::float128 x, boost::multiprecision::float128 y) { return pow(x, y); }
 inline boost::multiprecision::float128 Exp(boost::multiprecision::float128 x) { return exp(x); }
@@ -320,7 +323,7 @@ inline double aleaGaussNoise(double s)
 #endif
 
 #ifndef SIZE_MAX
-#define SIZE_MAX ((size_t)-1)
+#define SIZE_MAX ((size_t) - 1)
 #endif
 
 #endif /* TB2SYSTEM_HPP_ */

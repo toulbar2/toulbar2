@@ -32,3 +32,34 @@ The following code using the pytoulbar2 library solves the bicriteria weighted l
 
 .. literalinclude:: ../../../web/TUTORIALS/bicriteria_latinsquare.py
 
+
+C++ model
+============
+
+The following code using the C++ toulbar2 library API solves the weighted latin square problem.
+
+:download:`bicriteria_latinsquare.cpp<../../../web/TUTORIALS/bicriteria_latinsquare.cpp>`
+
+.. highlight:: c++
+
+.. literalinclude:: ../../../web/TUTORIALS/bicriteria_latinsquare.cpp
+
+The above code can be compiled with the following command:
+
+
+.. code-block:: bash
+
+   g++ -O3 -std=c++17 -Wall -DBOOST -DLONGLONG_COST -DLONGDOUBLE_PROB -I $YOUR_TB2_INCLUDE_PATH main.cpp -c -o main.o
+
+.. role:: bash(code)
+   :language: bash
+
+Where :bash:`$YOUR_TB2_INCLUDE_PATH` is the path to the ToulBar2 src directory.
+And the compiled program is obtained via : 
+
+.. code-block:: bash
+
+   g++ -O3 -std=c++17 -Wall -DBOOST -DLONGLONG_COST -DLONGDOUBLE_PROB main.o -o main -L $YOUR_LIBTB2_PATH -ltb2 -lgmp -lboost_graph -lboost_iostreams -lz -llzma
+
+Where :bash:`$YOUR_LIBTB2_PATH` is the path to the ToulBar2 compiled library.
+When running the program, do not forget to set the :bash:`$(LD_LIBRARY_PATH)` environment variable in Linux.

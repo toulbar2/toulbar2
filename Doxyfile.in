@@ -429,6 +429,10 @@ GENERATE_BUGLIST       = NO
 
 GENERATE_DEPRECATEDLIST= NO
 
+# do something for deprecation notice without generating a deprecated page
+# -> see https://stackoverflow.com/questions/25041727/how-to-include-deprecated-text-but-have-no-deprecated-list-page
+ALIASES = deprecated="<b>Deprecated</b>"
+
 # The ENABLED_SECTIONS tag can be used to enable conditional 
 # documentation sections, marked by \if sectionname ... \endif.
 

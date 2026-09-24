@@ -28,6 +28,8 @@
 #ifndef TB2STORE_HPP_
 #define TB2STORE_HPP_
 
+#include "tb2config.hpp"
+
 #include "core/tb2types.hpp"
 
 #ifndef NUMBERJACK
@@ -303,11 +305,11 @@ public:
         return *this;
     }
 
-    static StoreStack<T, T> mystore;
+    TB2_THREAD_LOCAL static StoreStack<T, T> mystore;
 };
 
 template <class T>
-StoreStack<T, T> StoreBasic<T>::mystore(STORE_SIZE);
+TB2_THREAD_LOCAL StoreStack<T, T> StoreBasic<T>::mystore(STORE_SIZE);
 
 typedef StoreBasic<Value> StoreValue;
 #if (!defined(INT_COST) || defined(SHORT_VALUE)) && (!defined(SHORT_COST) || !defined(SHORT_VALUE))
@@ -339,15 +341,15 @@ protected:
     virtual ~Store() = 0; // Trick to avoid any instantiation of Store
 
 public:
-    static int depth;
-    static StoreStack<BTList<Value>, DLink<Value>*> storeDomain;
+    TB2_THREAD_LOCAL static int depth;
+    TB2_THREAD_LOCAL static StoreStack<BTList<Value>, DLink<Value>*> storeDomain;
 #ifdef SHORT_VALUE
     static StoreStack<BTList<int>, DLink<int>*> storeIndexList;
 #endif
-    static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> storeConstraint;
-    static StoreStack<BTList<Variable*>, DLink<Variable*>*> storeVariable;
-    static StoreStack<BTList<Separator*>, DLink<Separator*>*> storeSeparator;
-    static StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> storeKnapsack;
+    TB2_THREAD_LOCAL static StoreStack<BTList<ConstraintLink>, DLink<ConstraintLink>*> storeConstraint;
+    TB2_THREAD_LOCAL static StoreStack<BTList<Variable*>, DLink<Variable*>*> storeVariable;
+    TB2_THREAD_LOCAL static StoreStack<BTList<Separator*>, DLink<Separator*>*> storeSeparator;
+    TB2_THREAD_LOCAL static StoreStack<BTList<KnapsackConstraint*>, DLink<KnapsackConstraint*>*> storeKnapsack;
 
     /// \return the current (backtrack / tree search) depth
     static int getDepth()

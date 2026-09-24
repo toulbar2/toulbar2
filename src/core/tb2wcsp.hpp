@@ -34,8 +34,8 @@ class KnapsackConstraint;
  */
 
 class WCSP FINAL : public WeightedCSP {
-    static int wcspCounter; ///< count the number of instances of WCSP class
-    static vector<Cost> pow10Cache; ///< precomputed powers of 10 as Costs
+    TB2_THREAD_LOCAL static int wcspCounter; ///< count the number of instances of WCSP class
+    TB2_THREAD_LOCAL static vector<Cost> pow10Cache; ///< precomputed powers of 10 as Costs
     int instance; ///< instance number
     string name; ///< problem name
     void* solver; ///< special hook to access solver information
@@ -80,7 +80,7 @@ class WCSP FINAL : public WeightedCSP {
     friend class VACExtension;
 
 public:
-    static map<int, WCSP*> CollectionOfWCSP;
+    TB2_THREAD_LOCAL static map<int, WCSP*> CollectionOfWCSP;
     /// \brief variable elimination information used in backward phase to get a solution during search
     /// \warning restricted to at most two neighbor variables
     typedef struct {
@@ -404,7 +404,7 @@ public:
     void propagate(bool fromscratch = false); ///< \brief (if authorized) propagates until a fix point is reached (or throws a contradiction) and then increases \ref WCSP::nbNodes. If fromscratch is true then propagates every cost function at least once.
     bool verify(); ///< \brief checks the propagation fix point is correctly reached \warning might change EAC supports
     bool propagated(); ///< \brief returns true if the propagation fix point is reached
-    void propagateConstraint(int constraintIndex) {getCtr(constraintIndex)->propagate();} ///< \brief force propagation of a specific constraint
+    void propagateConstraint(int constraintIndex) { getCtr(constraintIndex)->propagate(); } ///< \brief force propagation of a specific constraint
 
     bool isFullEAC(int varIndex) const { return vars[varIndex]->isFullEAC(); } ///< \brief returns true if variable varIndex is full EAC
     /// \brief returns true if all unassigned variables are full EAC, i.e., a valid solution can be directly extracted from EAC supports with cost equal to current lower bound (plus VAC thresholds if VAC is used)

@@ -34,34 +34,34 @@ public: /* types and enum */
         Optim_Min };
 
 private: /* static members to store solutions and points */
-    static std::vector<Point> _points; // points in the objective space
+    TB2_THREAD_LOCAL static std::vector<Point> _points; // points in the objective space
 
-    static std::vector<Weights> _weights; // the weights used to compute the points
+    TB2_THREAD_LOCAL static std::vector<Weights> _weights; // the weights used to compute the points
 
-    static std::vector<MultiCFN::Solution> _solutions; // solutions computed
+    TB2_THREAD_LOCAL static std::vector<MultiCFN::Solution> _solutions; // solutions computed
 
-    static std::vector<Double> _lower_bounds; // lower_bounds returned for each solution, equals sol_cost[0]*sol_weight[0]+sol_cost[1]*sol_weight[1]
+    TB2_THREAD_LOCAL static std::vector<Double> _lower_bounds; // lower_bounds returned for each solution, equals sol_cost[0]*sol_weight[0]+sol_cost[1]*sol_weight[1]
 
-    static unsigned int _first_cfn_index;
+    TB2_THREAD_LOCAL static unsigned int _first_cfn_index;
 
-    static unsigned int _second_cfn_index;
+    TB2_THREAD_LOCAL static unsigned int _second_cfn_index;
 
 private: /* static members to for parameters and global start time */
-    static int _showSolutions; // save ToulBar2 showSolutions print intermediate solutions found
+    TB2_THREAD_LOCAL static int _showSolutions; // save ToulBar2 showSolutions print intermediate solutions found
 
-    static int _vac; // save ToulBar2 vac
+    TB2_THREAD_LOCAL static int _vac; // save ToulBar2 vac
 
-    static int _seed; // save ToulBar2 seed
+    TB2_THREAD_LOCAL static int _seed; // save ToulBar2 seed
 
-    static int _verbose; // save ToulBar2 verbosity
+    TB2_THREAD_LOCAL static int _verbose; // save ToulBar2 verbosity
 
-    static int _sol_timeout; // timeout in seconds for each solution
+    TB2_THREAD_LOCAL static int _sol_timeout; // timeout in seconds for each solution
 
-    static int _global_timeout; // timeout in seconds for the resolution
+    TB2_THREAD_LOCAL static int _global_timeout; // timeout in seconds for the resolution
 
-    static int _nsol_max; // limit on number of compute solutions
+    TB2_THREAD_LOCAL static int _nsol_max; // limit on number of compute solutions
 
-    static double _startGlobalCpuTime; // global CPU-time consumed by computing a Pareto front
+    TB2_THREAD_LOCAL static double _startGlobalCpuTime; // global CPU-time consumed by computing a Pareto front
 
 private: /* static functions */
     /*!
@@ -170,7 +170,8 @@ public: /* static functions */
      * \brief set a CPU timeout for the computation of each solution
      * \param timeout the timeout in seconds, 0 by default, meaning no timeout
      */
-    static void setSolutionTimeout(int timeout) {
+    static void setSolutionTimeout(int timeout)
+    {
         _sol_timeout = timeout;
     }
 
@@ -178,7 +179,8 @@ public: /* static functions */
      * \brief set a global CPU timeout
      * \param timeout the timeout in seconds, 0 by default, meaning no timeout
      */
-    static void setGlobalTimeout(int timeout) {
+    static void setGlobalTimeout(int timeout)
+    {
         _global_timeout = timeout;
     }
 
@@ -186,7 +188,8 @@ public: /* static functions */
      * \brief set the maximum number of solution to compute
      * \param solCount maximum number of solution, 0 by default, meaning no limit
      */
-    static void setMaxSolutionCount(int solCount) {
+    static void setMaxSolutionCount(int solCount)
+    {
         _nsol_max = solCount;
     }
 
@@ -194,7 +197,8 @@ public: /* static functions */
      * \brief set the _vac parameter
      * \param vac enable VAC in preprocessing and during search, 0 by default, meaning no VAC
      */
-    static void setVAC(int vac) {
+    static void setVAC(int vac)
+    {
         _vac = vac;
     }
 
@@ -202,7 +206,8 @@ public: /* static functions */
      * \brief set the _seed parameter
      * \param random seed used in the solver, 1 by default
      */
-    static void setSeed(int seed) {
+    static void setSeed(int seed)
+    {
         _seed = seed;
     }
 
@@ -210,7 +215,8 @@ public: /* static functions */
      * \brief set the _verbose parameter
      * \param verbose verbosity level, -1 by default, meaning no output messages
      */
-    static void setVerbose(int verbose) {
+    static void setVerbose(int verbose)
+    {
         _verbose = verbose;
     }
 
@@ -218,10 +224,10 @@ public: /* static functions */
      * \brief set the _showSolutions parameter
      * \param showSolutions print intermediate solutions found during search, 0 by default, meaning solutions are not shown
      */
-    static void setShowSolutions(int showSolutions) {
+    static void setShowSolutions(int showSolutions)
+    {
         _showSolutions = showSolutions;
     }
-
 };
 
 #endif // BI_CRITERIA_HPP
