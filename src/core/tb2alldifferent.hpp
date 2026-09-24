@@ -1073,7 +1073,7 @@ public:
                                     }
                                     if (mindelta > 0) {
 
-                                        jonker += (mindelta * (NbValues - arity_)) - mindelta;
+                                        jonker += mindelta * (NbValues - arity_ - 1);
 
                                         if (jonker >= current_ub) {
                                             wcsp->revise(this);
@@ -1302,7 +1302,7 @@ public:
                                         TotalCost += (mindelta * (NbValues - arity_ - nbexcep + (nbexcep * arity_)) - mindelta);
 
                                     } else {
-                                        TotalCost += (mindelta * (NbValues - arity_) - mindelta);
+                                        TotalCost += mindelta * (NbValues - arity_ - 1);
                                     }
                                     if (TotalCost >= current_ub) {
                                         wcsp->revise(this);

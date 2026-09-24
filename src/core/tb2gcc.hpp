@@ -268,7 +268,7 @@ public:
                         auto* variable = scope[varIndex];
                         value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
                         if (variable->canbe(value)) {
-                            variable->remove(value);
+                            variable->project(value, wcsp->getUb(), true);
                         }
                     }
                 } else {
@@ -285,7 +285,7 @@ public:
                         auto* variable = scope[varIndex];
                         value = variable->toValue(variable->toIndex(UnionVarDomain[valIndex]));
                         if (variable->canbe(value)) {
-                            variable->remove(value);
+                           variable->project(value, wcsp->getUb(), true);
                         }
                     }
                 }

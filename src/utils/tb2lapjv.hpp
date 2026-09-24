@@ -698,6 +698,8 @@ static intptr_t checkFlow(intptr_t dim_val,
  *               without creating a new infeasibility elsewhere.
  *            b. Apply sendFlow() to reroute that flow.
  *            c. Re-check feasibility with checkFlow().
+ * Step 5.  Compute optimal dual solution (usol, vsol) via Bellman-Ford on the 
+ *          residual graph.
  *
  * Parameters
  * ----------
@@ -781,8 +783,6 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
         // (c) Re-check feasibility; continue if another infeasible column exists.
         notFeasVal = checkFlow(dim_val, demand, count_col);
     }
-    //total_cost2 = lapjv_ub(dim_var, dim_val, cost, b, usol, vsol,
-        //MAX_COST, count_col, findConflict);
 
     total_cost = 0;
     for (int var = 0; var < dim_var; var++)
@@ -791,52 +791,49 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
     if ( total_cost >= MAX_COST)
         return MAX_COST;
 
-    {
-        const int ROW = 0;
-        const int COL = dim_var;
-        const int T   = dim_var + dim_val;
-        const int NB_NODES = dim_var + dim_val + 1;
+    /* Step 5: compute optimal dual solution (usol, vsol) via Bellman-Ford on the residual graph of b */
 
-        vector<vector<pair<int, Cost>>> adj(NB_NODES);
+    int T  = dim_var + dim_val;
+    int NB_NODES = dim_var + dim_val + 1;
 
-        for (int val = 0; val < dim_val; val++) {
-            for (int var : VarList[val]) {
-                Cost c = cost[dim_val * var + val];
-                adj[ROW + var].push_back({ COL + val, c });      // arc always present
-                if (b[var] == val)
-                    adj[COL + val].push_back({ ROW + var, -c }); // arc iff used in b[]
-            }
-            if (count_col[val] < capacity[val])
-                adj[COL + val].push_back({ T, (Cost)0 });         // capacity not saturated
-            if (count_col[val] > demand[val])
-                adj[T].push_back({ COL + val, (Cost)0 });         // above the floor
+    vector<vector<pair<int, Cost>>> adj(NB_NODES);
+
+    for (int val = 0; val < dim_val; val++) {
+        for (int var : VarList[val]) {
+            Cost c = cost[dim_val * var + val];
+            adj[var].push_back({ dim_var + val, c });      // arc always present
+            if (b[var] == val)
+                adj[dim_var + val].push_back({var, -c }); // arc iff used in b[]
         }
+        if (count_col[val] < capacity[val])
+            adj[dim_var + val].push_back({ T, 0 });         // capacity not saturated
+        if (count_col[val] > demand[val])
+            adj[T].push_back({ dim_var + val, 0 });         // above the floor
+    }
 
-        vector<Cost> dist(NB_NODES, MAX_COST);
-        dist[T] = 0;
+    vector<Cost> dist(NB_NODES, MAX_COST);
+    dist[T] = 0;
 
-        bool updated = true;
-        for (int iter = 0; iter < NB_NODES - 1 && updated; iter++) {
-            updated = false;
-            for (int u = 0; u < NB_NODES; u++) {
-                for (auto& e : adj[u]) {
-                    int to = e.first;
-                    Cost c = e.second;
-                    if (dist[u] + c < dist[to]) {
-                        dist[to] = dist[u] + c;
-                        updated = true;
-                    }
+    bool updated = true;
+    for (int iter = 0; iter < NB_NODES - 1 && updated; iter++) {
+        updated = false;
+        for (int u = 0; u < NB_NODES; u++) {
+            for (auto& e : adj[u]) {
+                int to = e.first;
+                Cost c = e.second;
+                if (dist[u] + c < dist[to]) {
+                    dist[to] = dist[u] + c;
+                    updated = true;
                 }
             }
         }
-
-
-        for (int var = 0; var < dim_var; var++)
-            usol[var] = -dist[ROW + var];
-        for (int val = 0; val < dim_val; val++)
-            vsol[val] = dist[COL + val];
     }
 
+    for (int var = 0; var < dim_var; var++)
+        usol[var] = -dist[var];
+    for (int val = 0; val < dim_val; val++)
+        vsol[val] = dist[dim_var + val];
+    
     return total_cost;
 }
 

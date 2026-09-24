@@ -22,7 +22,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
     Cost Top = wcsp.getUb();
 
     if (costMax < Top)
-        Top = ToulBar2::costMultiplier * costMax;
+        Top = ToulBar2::costMultiplier * costMax * 1000;
 
     for (i = 0; i < arity; i++) {
         scopeIndexs[i] = indexs[i];
@@ -151,7 +151,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             int capa = (pos == domsize && left > 0) ? left : rand;
            // if(capa == 0) capa += 1;
             int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
-            if(demand == arity) demand -= 1;
+            //if(demand == arity) demand -= 1;
             left -= capa;
             sumlb -= demand;
             //arguments.append(to_string(0));
@@ -178,11 +178,11 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
            // if(capa == 0) capa += 1;
             int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
             left -= capa;
-            if(demand == arity) demand -= 1;
+            //if(demand == arity) demand -= 1;
             sumlb -= demand;
             values.push_back(BoundedObjValue(v, capa, demand));
         }
-        wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : 1000000, values);
+        wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {
         // random parity automaton (XOR)
         vector<WeightedObjInt> init(1, WeightedObjInt(0));
