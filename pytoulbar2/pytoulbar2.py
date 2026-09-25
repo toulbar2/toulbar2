@@ -591,7 +591,7 @@ class CFN:
         if incremental:
             raise RuntimeError("Implementation of GlobalCardinalityConstraint constraint in incremental mode not done!")
         sscope = set(scope)
-        if len(scope) != len(sscope):
+        if len(scope) != len(sscope) and encoding != 'sgcckp':
             raise RuntimeError("Duplicate variable in scope:"+str(scope))
         iscope = []
         for i, v in enumerate(scope):

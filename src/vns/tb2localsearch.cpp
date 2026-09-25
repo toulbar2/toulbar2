@@ -141,7 +141,7 @@ bool LocalSearch::repair_recursiveSolve(int discrepancy, vector<int>& variables,
     Long hbfs_ = ToulBar2::hbfs;
     ToulBar2::hbfs = 0; // HBFS not compatible with LDS
     bool solutionBasedPhaseSaving_ = ToulBar2::solutionBasedPhaseSaving;
-    ToulBar2::solutionBasedPhaseSaving = false; // VNS prefers randomization inside neighborhood search
+//    ToulBar2::solutionBasedPhaseSaving = false; // VNS prefers randomization inside neighborhood search
     int storedepth = Store::getDepth();
     Cost lb = wcsp->getLb();
     Store::store();

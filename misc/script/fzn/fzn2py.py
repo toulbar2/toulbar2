@@ -4,22 +4,40 @@
 MAXCOEF = 2147483647
 
 DelayedObjective = None
+DelayedObjectiveName = None
+DelayedObjectiveRange = None
+DelayedObjectiveDomain = None
 objective = None
+obj = None
 
 class Var:
     def __init__(self, index):
         self.ind = index
     
 def Variable(lb, ub, name):
+    global DelayedObjectiveName
+    global DelayedObjectiveRange
+    if name == 'objective' or name == 'obj':
+        DelayedObjectiveName = name
+        DelayedObjectiveRange = range(lb, ub+1)
+        return None
     return Var(model.AddVariable(name, range(lb, ub+1)))
-    
+
 def VariableInDomain(dom, name):
+    global DelayedObjectiveName
+    global DelayedObjectiveRange
+    global DelayedObjectiveDomain
     lb = min(dom)
     ub = max(dom)
+    if name == 'objective' or name == 'obj':
+        DelayedObjectiveName = name
+        DelayedObjectiveRange = range(lb, ub+1)
+        DelayedObjectiveDomain = dom
+        return None
     x = Var(model.AddVariable(name, range(lb, ub+1)))
     set_in(x, dom)
     return x
-    
+
 def Boolean():
     return Variable(0, 1, 'BOOL__' + str(model.GetNbVars()) + '__')
 
@@ -69,7 +87,7 @@ def scopeWithDuplicateConstantVariables(s):
         return [ConstantNewVariable(x).ind if type(x) is int else x.ind for x in s]
 
 def get_values(assignment, vars):
-    return [assignment[e.ind] for e in vars]
+    return [assignment[e.ind] if type(e) is Var else e for e in vars]
     
 def array_bool_and(x,y):
     if ((type(y) is int) and y != 0):
@@ -146,24 +164,29 @@ def bool_le_reif(x, y, z):
 
 def bool_lt(x, y):
     int_eq(x, 0)
-    int_neq(y, 0) # [(x == 0), (y != 0)]
+    int_ne(y, 0) # [(x == 0), (y != 0)]
 
 def bool_lt_reif(x, y, z):
     int_lt_reif(x, y, z) #  [((x == 0) | (z == 0)), ((y != 0) | (z == 0)), ((x != 0) | (y == 0) | (z != 0))]
 
 def bool_not(x, y):
-    int_neq(x,y) # [((x == 0) | (y == 0)), ((x != 0) | (y != 0))]
+    int_ne(x,y) # [((x == 0) | (y == 0)), ((x != 0) | (y != 0))]
 
 def bool_or(x, y, z):
     int_lin_le_reif([-1,-1], [x,y], -1, z) # (z == (x | y ))
 
 def bool_xor(x, y, z):
-    int_neq_reif(x, y, z) # (z == (x != y))
+    int_ne_reif(x, y, z) # (z == (x != y))
 
 def int_eq(x,y):
     model.AddLinearConstraint([1,-1], scope([x,y]), '==', 0) # (x == y)
 
 def int_eq_reif(x,y,z):
+    if x == y:
+        int_eq(z,1)
+        return
+    if x == z or y == z:
+        return int_eq(x,y)
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -267,6 +290,7 @@ def int_ne_reif(x,y,z):
 def int_lin_eq(coef,vars,res):
     global DelayedObjective
     global objective
+    global obj
     if (objective is res) or (objective in vars):
         if DelayedObjective is not None:
             raise Exception('Variable objective cannot be in two or more linear equality constraints!')
@@ -274,6 +298,20 @@ def int_lin_eq(coef,vars,res):
             DelayedObjective = (coef,vars,1)
         else:
             pos = vars.index(objective)
+            divide = -coef[pos]
+            del coef[pos]
+            del vars[pos]
+            if (type(res) is not int) or res !=0:
+                coef.append(-1)
+                vars.append(res)
+            DelayedObjective = (coef,vars,divide)
+    elif (obj is res) or (obj in vars):
+        if DelayedObjective is not None:
+            raise Exception('Variable obj cannot be in two or more linear equality constraints!')
+        if obj is res:
+            DelayedObjective = (coef,vars,1)
+        else:
+            pos = vars.index(obj)
             divide = -coef[pos]
             del coef[pos]
             del vars[pos]
@@ -415,6 +453,8 @@ def int_lin_ne_reif(coef,vars,res,z):
     # (z == (res != Sum(vars,coef)))
 
 def int_abs(x,y):
+    if x == y:
+        return int_le(0,x)
     if type(x) is Var:
         sizex = model.GetDomainInitSize(x.ind)
         if type(y) is int:
@@ -448,6 +488,12 @@ def int_div(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) # (z == (x / y))
 
 def int_min(x,y,z):
+    if x == y:
+        return int_eq(x,z)
+    if x == z:
+        return int_le(x,y)
+    if y == z:
+        return int_le(y,x)
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -466,6 +512,12 @@ def int_min(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) # (z == Min([x, y]))
 
 def int_max(x,y,z):
+    if x == y:
+        return int_eq(x,z)
+    if x == z:
+        return int_le(y,x)
+    if y == z:
+        return int_le(x,y)
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -542,27 +594,39 @@ def set_in_reif(x,dom,z):
 def Minimize(x):
     global DelayedObjective
     global objective
-    assert((DelayedObjective is None) or (x is objective))
-    if type(x) is Var:
+    global obj
+    assert((DelayedObjective is None) or (x is objective) or (x is obj))
+    if x is None or type(x) is Var:
         if DelayedObjective:
             coef,vars,divide = DelayedObjective
             for i,mult in enumerate(coef):
                 xind = scope(vars[i])[0]
                 model.AddFunction([xind], [(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
         else:
+            if DelayedObjectiveName:
+                assert(DelayedObjectiveRange)
+                x = Var(model.AddVariable(DelayedObjectiveName, DelayedObjectiveRange))
+                if DelayedObjectiveDomain:
+                    set_in(x, DelayedObjectiveDomain)
             model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
     
 def Maximize(x):
     global DelayedObjective
     global objective
-    assert((DelayedObjective is None) or (x is objective))
-    if type(x) is Var:
+    global obj
+    assert((DelayedObjective is None) or (x is objective) or (x is obj))
+    if x is None or type(x) is Var:
         if DelayedObjective:
             coef,vars,divide = DelayedObjective
             for i,mult in enumerate(coef):
                 xind = scope(vars[i])[0]
                 model.AddFunction([xind], [-(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
         else:
+            if DelayedObjectiveName:
+                assert(DelayedObjectiveRange)
+                x = Var(model.AddVariable(DelayedObjectiveName, DelayedObjectiveRange))
+                if DelayedObjectiveDomain:
+                    set_in(x, DelayedObjectiveDomain)
             model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
 
 #-----------------------------------------
@@ -570,8 +634,8 @@ def Maximize(x):
 #-----------------------------------------
 
 def fzn_all_different_int(x):
-    if len(x) >= 2:  # Some models specified alldiff on 1 variable
-        model.AddAllDifferent(scope(x))  # [Variable(e,e,str(e)) if type(e) is int else e for e in x])
+    if len(set(x)) >= 2:  # Some models specified alldiff on 1 variable
+        model.AddAllDifferent(scope(set(x)))  # [Variable(e,e,str(e)) if type(e) is int else e for e in x])
         
 def fzn_global_cardinality(x, values, counts):
     assert(len(values) == len(counts))
@@ -585,7 +649,7 @@ def fzn_global_cardinality(x, values, counts):
         else:
             l.append((values[j], counts[j], counts[j]))
     if len(l) > 0:
-        model.AddGlobalCardinalityConstraint(scope(x), l)
+        model.AddGlobalCardinalityConstraint(scope(x), l, encoding = 'hungarian' if len(set(x)) == len(x) else 'sgcckp')
 
 def fzn_global_cardinality_closed(x, values, counts):
     assert(len(values) == len(counts))
@@ -617,10 +681,10 @@ def fzn_global_cardinality_low_up(x, values, lb, ub):
                 myub = ub[j]
             if mylb > 0 or myub < len(x):
                 l.append((values[j], mylb, myub))
-        else:
+        elif lb[j] > 0 or ub[j] < len(x):
             l.append((values[j], lb[j], ub[j]))
     if len(l) > 0:
-        model.AddGlobalCardinalityConstraint(scope(x), l)
+        model.AddGlobalCardinalityConstraint(scope(x), l, 'hungarian' if len(set(x)) == len(x) else 'sgcckp')
         
 def fzn_global_cardinality_low_up_closed(x, values, lb, ub):
     assert(len(values) == len(lb))

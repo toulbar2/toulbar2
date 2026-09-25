@@ -1357,7 +1357,7 @@ public:
         vector<bool> alreadyUsed(NbValues, false);
         for (int i = 0; i < arity_; i++) {
             int valIndex = mapDomainValToIndex[scope[i]->getValueName(scope[i]->toIndex(storeLastAssignment[i]))];
-            if ((alreadyUsed[valIndex] && (!excepted || find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end())) || scope[i]->cannotbe(storeLastAssignment[i]) || scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
+            if ((alreadyUsed[valIndex] && (!excepted || find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end())) || scope[i]->cannotbe(storeLastAssignment[i]) || (ToulBar2::LcLevel >= LC_DAC && scope[i]->getCost(storeLastAssignment[i]) > MIN_COST)) {
                 if (alreadyUsed[valIndex]) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " used twice!" << endl;
                 } else if (scope[i]->cannotbe(storeLastAssignment[i])) {

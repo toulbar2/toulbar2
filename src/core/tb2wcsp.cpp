@@ -769,7 +769,7 @@ void tb2checkOptions()
     }
     if (ToulBar2::lds && ToulBar2::solutionBasedPhaseSaving && ToulBar2::searchMethod == DFBB) {
         // cout << "Warning! Solution based phase saving is not recommended with Limited Discrepancy Search." << endl;
-        ToulBar2::solutionBasedPhaseSaving = false;
+        //ToulBar2::solutionBasedPhaseSaving = false;
     }
     if (ToulBar2::hbfs && ToulBar2::btdMode >= 2) {
         cout << "Warning! Hybrid best-first search not compatible with RDS-like search methods." << endl;
@@ -3222,9 +3222,11 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
 {
     assert(ToulBar2::bilevel <= 1);
 #ifndef NDEBUG
-    for (int i = 0; i < arity; i++)
-        for (int j = i + 1; j < arity; j++)
-            assert(scopeIndex[i] != scopeIndex[j]);
+    if (propagator != "knapsack") {
+        for (int i = 0; i < arity; i++)
+            for (int j = i + 1; j < arity; j++)
+                assert(scopeIndex[i] != scopeIndex[j]);
+    }
 #endif
     if (propagator == "network") {
         string semantics_ = semantics;
@@ -3239,6 +3241,51 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
         }
         postWGcc(scopeIndex, arity, semantics, baseCost, values_, nbValues, lb, ub);
         return INT_MIN;
+    }
+
+    if (propagator == "knapsack") {
+        if (CUT(baseCost, getUb()) && semantics == "hard") {
+            set<Value> setofvalues;
+            for (int variable = 0; variable < arity; ++variable) {
+                ((EnumeratedVariable*)getVar(scopeIndex[variable]))->getDomain(setofvalues);
+            }
+            int sumlow = 0;
+            int sumhigh = 0;
+            for (unsigned int i = 0; i < values.size(); i++) {
+                sumlow += values[i].lower;
+                sumhigh += values[i].upper;
+            }
+            if (arity < sumlow || (arity > sumhigh && setofvalues.size() == values.size())) {
+                THROWCONTRADICTION;
+            }
+            for (unsigned int i = 0; i < values.size(); i++) {
+                Value value = values[i].val;
+                string params = to_string(-values[i].upper);
+                for (int variable = 0; variable < arity; ++variable) {
+                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
+                        params += to_string(" 1 ") + to_string(value) + to_string(" -1");
+                    } else {
+                        params += to_string(" 0");
+                    }
+                }
+                istringstream file(params);
+                postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
+                params = to_string(values[i].lower);
+                for (int variable = 0; variable < arity; ++variable) {
+                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
+                        params += to_string(" 1 ") + to_string(value) + to_string(" 1");
+                    } else {
+                        params += to_string(" 0");
+                    }
+                }
+                istringstream file2(params);
+                postKnapsackConstraint(scopeIndex, arity, file2, false, true, false, {});
+            }
+            return INT_MIN;
+        } else {
+            cerr << "Error: post GCC with knapsack propagator cannot be a soft constraint! (use instead semantics=\"hard\" and baseCost=" << getUb() << ")" << endl;
+            throw WrongFileFormat();
+        }
     }
 
     if (propagator == "flow") {
