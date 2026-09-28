@@ -14,7 +14,8 @@ BEGIN {
 	print "def get_model():"
 	print "    global model";
 	print "    global DelayedObjective";
-	print "    global objective";
+    print "    global objective";
+    print "    global obj";
 	print "    model = tb2.CFN(verbose=" VERBOSITY ")";
 	parameter = 1;
 	error = 0;
