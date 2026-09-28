@@ -160,6 +160,22 @@ std::ostream& operator<<(std::ostream& os, vector<T> const& v)
 //     return res;
 // }
 
+
+inline int opposite(unsigned int v)
+{
+    return -static_cast<int>(v);
+}
+
+inline long opposite(unsigned long v)
+{
+    return -static_cast<long>(v);
+}
+
+inline long long opposite(unsigned long long v)
+{
+    return -static_cast<long long>(v);
+}
+
 template <class T>
 inline std::string to_string(const T& t)
 {

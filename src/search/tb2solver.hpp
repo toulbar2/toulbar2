@@ -432,6 +432,8 @@ protected:
     void initVarHeuristic();
     int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized();
     int getVarMinDomainDivMaxWeightedDegreeLastConflict();
+    int getVarMinDomainDivMaxWeightedDegreeLastConflictRandomizedLDS(int discrepancy);
+    int getVarMinDomainDivMaxWeightedDegreeLastConflictLDS(int discrepancy);
     int getVarMinDomainDivMaxWeightedDegreeRandomized();
     int getVarMinDomainDivMaxWeightedDegree();
     int getVarMinDomainDivMaxDegreeLastConflictRandomized();
@@ -513,6 +515,9 @@ public:
     Solver(Cost initUpperBound, WeightedCSP* wcsp = NULL);
 
     virtual ~Solver();
+
+    TB2_THREAD_LOCAL static Value __support__;
+    static int cmpValueCostSupport(const void* p1, const void* p2); //SdG: cannot use a nice lambda function but instead this ugly static function with an extra static member __support__
 
     Cost read_wcsp(const char* fileName);
     void read_random(int n, int m, vector<int>& p, int seed, bool forceSubModular = false, string globalname = "");

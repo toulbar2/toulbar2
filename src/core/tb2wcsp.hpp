@@ -644,6 +644,7 @@ public:
         return solution;
     }
     vector<pair<Double, vector<Value>>> getSolutions() const { return solutions; }
+    Long numberOfSolutions() const { return solutions.size(); }
     void initSolutionCost() { solutionCost = MAX_COST; }
     void setSolution(Cost cost, TAssign* sol = NULL)
     {
