@@ -243,13 +243,15 @@ IF(PYTB2)
   MESSAGE(STATUS "Python3 suffix: ${Python3_SUFFIX}")
 
   ### New cmake and python and pybind11
-  IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0) 
-	  FIND_PACKAGE(pybind11 REQUIRED)
+  IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0)
+    FIND_PACKAGE(pybind11 CONFIG REQUIRED)
   ELSE() ### older cmake versions
     EXECUTE_PROCESS(
       COMMAND ${Python3_EXECUTABLE} -m pybind11 --includes 
       OUTPUT_VARIABLE Pybind11_INCLUDES OUTPUT_STRIP_TRAILING_WHITESPACE)
     
+      MESSAGE(STATUS "pybind11 include output: ${Pybind11_INCLUDES}")
+
       IF ("${Pybind11_INCLUDES}" STREQUAL "" )
         MESSAGE(FATAL_ERROR "Error, Pybind11 not found.")
       ELSE()
@@ -372,9 +374,9 @@ IF(LIBTB2)
   IF(PYTB2)
 
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27.0) ### New cmake, python and pybind11
-      pybind11_add_module(pytb2 MODULE ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+      pybind11_add_module(pytb2 MODULE "${My_Source}/pytoulbar2.cpp" $<TARGET_OBJECTS:tb2-PIC-objects>)
     ELSE() ### Old cmake, python and pybind11
-      ADD_LIBRARY(pytb2 SHARED ${My_Source}/pytoulbar2.cpp $<TARGET_OBJECTS:tb2-PIC-objects>)
+      ADD_LIBRARY(pytb2 SHARED "${My_Source}/pytoulbar2.cpp" $<TARGET_OBJECTS:tb2-PIC-objects>)
       SET_TARGET_PROPERTIES(pytb2 PROPERTIES COMPILE_FLAGS ${Pybind11_INCLUDES})
     ENDIF()
 

@@ -67,33 +67,41 @@ For the most recent binary or the Python API, compile from source.
 
 An alpha-release Python interface can be tested through pip on Linux and MacOS:
 
+```
     python3 -m pip install --upgrade pip
     python3 -m pip install pytoulbar2
+```
 
 The first line is only useful for Linux distributions that ship "old" versions of pip.
 
-Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
+### Compilation globally (globally/system-wide)
+
+Commands for compiling the Python API on Linux/MacOS with cmake (Python module in `build/lib/\*/pytb2.cpython\*.so`):
 
 ```
-    pip3 install pybind11
-    mkdir build
-    cd build
+    sudo apt install pybind11-dev
+    mkdir build && cd build
     cmake -DPYTB2=ON ..
     make
 ```
 
-Pybind11 should preferably be installed in a virtual or conda environment.
+Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/pytoulbar2/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
+
+### Compilation in a virtual environment (recommended)
+
+Pybind11 can be compiled and installed in a virtual or conda environment.
 ⚠️ On Ubuntu, it might be necessary to install package `python3-dev`.
 
 ```
-    mkdir build && cd build
+    mkdir ./build && cd ./build
     python3 -m venv ./pytb2_env
     source ./pytb2_env/bin/activate
     pip install pybind11[global]
+    cmake .. -DPYTB2=ON && cmake --build .
 
 ```
 
-Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/pytoulbar2/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
+
 
 <!-- (_README_4)= -->
 ## Download
