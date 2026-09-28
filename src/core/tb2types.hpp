@@ -555,10 +555,10 @@ struct WeightedObjInt {
 // A value with upper and lower limit
 struct BoundedObjValue {
     Value val;
-    unsigned int upper;
-    unsigned int lower;
+    int upper;
+    int lower;
 
-    BoundedObjValue(Value val_, unsigned int upper_, unsigned int lower_ = 0)
+    BoundedObjValue(Value val_, int upper_, int lower_ = 0)
         : val(val_)
         , upper(upper_)
         , lower(lower_)

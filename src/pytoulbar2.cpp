@@ -858,7 +858,7 @@ PYBIND11_MODULE(pytb2, m)
         .def_readwrite("weight", &DFATransition::weight);
 
     py::class_<BoundedObjValue>(m, "BoundedObjValue")
-        .def(py::init<Value, unsigned int, unsigned int>())
+        .def(py::init<Value, int, int>())
 
         .def_readwrite("val", &BoundedObjValue::val)
         .def_readwrite("upper", &BoundedObjValue::upper)
