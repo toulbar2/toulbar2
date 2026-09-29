@@ -22,7 +22,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
     Cost Top = wcsp.getUb();
 
     if (costMax < Top)
-        Top = ToulBar2::costMultiplier * costMax;
+        Top = ToulBar2::costMultiplier * costMax * 1000;
 
     for (i = 0; i < arity; i++) {
         scopeIndexs[i] = indexs[i];
@@ -152,7 +152,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
             left -= capa;
             sumlb -= demand;
-            arguments.append(to_string(0));
+            arguments.append(to_string(demand));
             arguments.append(" ");
             arguments.append(to_string(capa));
         }
@@ -175,7 +175,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
             left -= capa;
             sumlb -= demand;
-            values.push_back(BoundedObjValue(v, capa, 0));
+            values.push_back(BoundedObjValue(v, capa, demand));
         }
         wcsp.postWGcc(scopeIndexs, arity, (globalname == "sgcckp") ? "hard" : "var", (globalname == "sgcc") ? "flow" : ((globalname == "wgcc") ? "network" : ((globalname == "sgccdp") ? "DAG" : "knapsack")), (globalname == "sgcckp") ? wcsp.getUb() : Top, values);
     } else if (globalname == "sregular" || globalname == "sregulardp" || globalname == "wregular") {

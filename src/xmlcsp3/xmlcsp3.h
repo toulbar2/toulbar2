@@ -1666,7 +1666,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
         params += " 0";
         problem->postGlobalCardinalityConstraint(vars, params);
-        if (count != (int)vars.size()) {
+        /*if (count != (int)vars.size()) {
             for (int k = 0; k < (int)values.size(); ++k) if(occurs[k] > 0) {
                 params=to_string(occurs[k]);
                 for (int i = 0; i < (int)vars.size(); ++i) {
@@ -1684,7 +1684,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                 }
                 problem->postKnapsackConstraint(vars, params, false, true, false);
             }
-        }
+        }*/
     }
 
     void buildConstraintCardinality(string id, vector<XVariable *> &list, vector<int> values, vector<XVariable *> &occurs, bool closed) override {
@@ -1791,7 +1791,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
         params += " 0";
         problem->postGlobalCardinalityConstraint(vars, params);
-        if (countlb > 0 && countlb != (int)vars.size()) {
+        /*if (countlb > 0 && countlb != (int)vars.size()) {
             for (int k = 0; k < (int)values.size(); ++k) {
                 if(occurs[k].min > 0){
                     params=to_string(occurs[k].min);
@@ -1811,7 +1811,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
                     problem->postKnapsackConstraint(vars, params, false, true, false);
                 }
             }
-        }
+        }*/
     }
 
     void buildConstraintMinMax(bool max, vector<int> &vars, int varargmax, XCondition &cond) {

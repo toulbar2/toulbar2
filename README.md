@@ -3,7 +3,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/github/v/release/toulbar2/toulbar2?label=latest&color=green)](https://github.com/toulbar2/toulbar2/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/toulbar2/toulbar2?filter=v*&label=latest&color=green)](https://github.com/toulbar2/toulbar2/releases)
 [![PyPI - Version](https://img.shields.io/pypi/v/pytoulbar2?logo=python&label=pytoulbar2)](https://pypi.org/project/pytoulbar2)
 </div>
 
@@ -54,8 +54,7 @@ on [GitHub](https://github.com/toulbar2/CFN-learn).
 <!-- (_README_2)= -->
 ## Installation from binaries
 
-You can install toulbar2 directly using the package manager in Debian
-and Debian derived Linux distributions (Ubuntu, Mint,...):
+You can install toulbar2 directly using the package manager in Debian and Debian derived Linux distributions (Ubuntu, Mint,...):
 
     sudo apt-get update
     sudo apt-get install toulbar2 toulbar2-doc
@@ -63,24 +62,40 @@ and Debian derived Linux distributions (Ubuntu, Mint,...):
 For the most recent binary or the Python API, compile from source.
 
 <!-- (_README_3)= -->
-## Python interface
+## Python interface pytoulbar2
 
-An alpha-release Python interface can be tested through pip on Linux and MacOS:
+pytoulbar2, the toulbar2 Python interface, can be installed using pip on Linux and MacOS (preferably in a virtual or conda environment):
 
+```
     python3 -m pip install --upgrade pip
     python3 -m pip install pytoulbar2
+```
 
 The first line is only useful for Linux distributions that ship "old" versions of pip.
 
-Commands for compiling the Python API on Linux/MacOS with cmake (Python module in lib/\*/pytb2.cpython\*.so):
+### pytoulbar2 compilation (advanced)
 
-    pip3 install pybind11
-    mkdir build
-    cd build
-    cmake -DPYTB2=ON ..
-    make
+The pytoulbar2 package can be compiled from toulbar2 sources with the pybind11 module.
 
-Move the cpython library and the experimental [pytoulbar2.py](https://github.com/toulbar2/toulbar2/raw/master/pytoulbar2/pytoulbar2.py) python class wrapper in the folder of the python script that does "import pytoulbar2".
+- pybind11 can be installed globally:
+
+```
+    sudo apt install pybind11-dev
+```
+
+- or in a virtual environment (recommended):
+
+```
+    python3 -m venv ./pybind11_env
+    source ./pybind11_env/bin/activate
+    pip install pybind11[global]
+```
+
+⚠️ On Ubuntu, it might be necessary to install python development and virtual environment packages `python3-dev` and `python3.12-venv`. 
+
+Then, pytoulbar2 binaries can be compiled with cmake: `cmake .. -DPYTB2=ON && cmake --build .`.
+
+Finally, add your toulbar2_build_path to the `PYTHONPATH` env variable: `export PYTHONPATH=your_tb2_path/build` and the pytoulbar2 interface should be operational.
 
 <!-- (_README_4)= -->
 ## Download
