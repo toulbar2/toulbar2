@@ -557,6 +557,15 @@ def int_plus(x,y,z):
     model.AddLinearConstraint([1,-1,-1], scope([z,x,y]), '==', 0) # (z == (x + y))
 
 def int_times(x,y,z):
+    if x == y and x == z:
+        set_in(x, [0,1])
+        return
+    if x == y:
+        return model.AddFunction(scope([z,x]), [0 if zval == xval * xval else model.Top for zval in model.Domain(z.ind) for xval in model.Domain(x.ind)])
+    if x == z:
+        return model.AddFunction(scope([z,y]), [0 if zval == 0 or yval == 1 else model.Top for zval in model.Domain(z.ind) for yval in model.Domain(y.ind)])
+    if y == z:
+        return model.AddFunction(scope([z,x]), [0 if zval == 0 or xval == 1 else model.Top for zval in model.Domain(z.ind) for xval in model.Domain(x.ind)])
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
