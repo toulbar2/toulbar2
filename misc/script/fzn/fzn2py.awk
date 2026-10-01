@@ -13,9 +13,7 @@ BEGIN {
 	print "";
 	print "def get_model():"
 	print "    global model";
-	print "    global DelayedObjective";
-    print "    global objective";
-    print "    global obj";
+	print "    global DelayedLinEq";
 	print "    model = tb2.CFN(verbose=" VERBOSITY ")";
 	parameter = 1;
 	error = 0;
@@ -261,6 +259,9 @@ parameter {
 
 END {
 	if (!error) {
+	print "    for coef,vars,rhs in DelayedLinEq.values():";
+	print "        model.AddLinearConstraint(coef, scope(vars), '==', rhs)";
+	
 	output_vars = "";
 
 	n = asorti(output,varnames);

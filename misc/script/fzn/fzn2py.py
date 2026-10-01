@@ -3,12 +3,11 @@
 
 MAXCOEF = 2147483647
 
-DelayedObjective = None
+DelayedLinEq = dict() # warning: fzn2py automatically replaces {} by []
+DelayedLinEqVars = dict() # warning: fzn2py automatically replaces {} by []
 DelayedObjectiveName = None
 DelayedObjectiveRange = None
 DelayedObjectiveDomain = None
-objective = None
-obj = None
 
 class Var:
     def __init__(self, index):
@@ -288,42 +287,18 @@ def int_ne_reif(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) #  [(z == (x != y))]
 
 def int_lin_eq(coef,vars,res):
-    global DelayedObjective
-    global objective
-    global obj
-    if (objective is res) or (objective in vars):
-        if DelayedObjective is not None:
-            raise Exception('Variable objective cannot be in two or more linear equality constraints!')
-        if objective is res:
-            DelayedObjective = (coef,vars,1)
-        else:
-            pos = vars.index(objective)
-            divide = -coef[pos]
-            del coef[pos]
-            del vars[pos]
-            if (type(res) is not int) or res !=0:
-                coef.append(-1)
-                vars.append(res)
-            DelayedObjective = (coef,vars,divide)
-    elif (obj is res) or (obj in vars):
-        if DelayedObjective is not None:
-            raise Exception('Variable obj cannot be in two or more linear equality constraints!')
-        if obj is res:
-            DelayedObjective = (coef,vars,1)
-        else:
-            pos = vars.index(obj)
-            divide = -coef[pos]
-            del coef[pos]
-            del vars[pos]
-            if (type(res) is not int) or res !=0:
-                coef.append(-1)
-                vars.append(res)
-            DelayedObjective = (coef,vars,divide)
+    global DelayedLinEq
+    global DelayedLinEqVars
+    for v in vars:
+        if v not in DelayedLinEqVars:
+            DelayedLinEqVars[v] = set()
+        DelayedLinEqVars[v].add(len(DelayedLinEq))
+    if type(res) is int:
+        #model.AddLinearConstraint(coef, scope(vars), '==', res)
+        DelayedLinEq[len(DelayedLinEq)] = (coef, vars, res)
     else:
-        if type(res) is int:
-            model.AddLinearConstraint(coef, scope(vars), '==', res)
-        else:
-            model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
+        #model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
+        DelayedLinEq[len(DelayedLinEq)] = ([-1] + coef, [res] + vars, 0)
 
 def bool_lin_eq(coef,vars,res):
     int_lin_eq(coef,vars,res)
@@ -599,18 +574,53 @@ def set_in_reif(x,dom,z):
             if bool(zval) == (xval in dom):
                 costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
     model.AddFunction(scope([z, x]), costs) # (z == Disjunction([(x == v) for v in dom]))
-    
+
 def Minimize(x):
-    global DelayedObjective
-    global objective
-    global obj
-    assert((DelayedObjective is None) or (x is objective) or (x is obj))
+    global DelayedLinEq
+    global DelayedLinEqVars
     if x is None or type(x) is Var:
-        if DelayedObjective:
-            coef,vars,divide = DelayedObjective
+        if x in DelayedLinEqVars and len(DelayedLinEqVars[x]) == 1:
+            idx = list(DelayedLinEqVars[x])[0]
+            coef,vars,rhs = DelayedLinEq[idx]
+            assert(type(rhs) is int)
+            del DelayedLinEq[idx]
+            for var in vars:
+                DelayedLinEqVars[var].remove(idx)
+            pos = vars.index(x)
+            divide = -coef[pos]
+            del coef[pos]
+            del vars[pos]
+            ok = True
+            while ok:
+                ok = False
+                for i,v in enumerate(vars):
+                    if v in DelayedLinEqVars and len(DelayedLinEqVars[v]) == 1:
+                        ok = True
+                        idx = list(DelayedLinEqVars[v])[0]
+                        vcoef,vvars,vrhs = DelayedLinEq[idx]
+                        assert(type(vrhs) is int)
+                        del DelayedLinEq[idx]
+                        for var in vvars:
+                            DelayedLinEqVars[var].remove(idx)
+                        vpos = vvars.index(v)
+                        vdivide = -vcoef[vpos]
+                        del vcoef[vpos]
+                        del vvars[vpos]
+                        for j in range(len(vcoef)):
+                            vcoef[j] *= coef[i]
+                            vcoef[j] //= vdivide
+                        vrhs *= coef[i]
+                        vrhs //= vdivide
+                        del coef[i]
+                        del vars[i]
+                        coef.extend(vcoef)
+                        vars.extend(vvars)
+                        rhs += vrhs
             for i,mult in enumerate(coef):
                 xind = scope(vars[i])[0]
                 model.AddFunction([xind], [(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+            if rhs != 0:
+                model.AddFunction([],[-rhs // divide])
         else:
             if DelayedObjectiveName:
                 assert(DelayedObjectiveRange)
@@ -620,16 +630,51 @@ def Minimize(x):
             model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
     
 def Maximize(x):
-    global DelayedObjective
-    global objective
-    global obj
-    assert((DelayedObjective is None) or (x is objective) or (x is obj))
+    global DelayedLinEq
+    global DelayedLinEqVars
     if x is None or type(x) is Var:
-        if DelayedObjective:
-            coef,vars,divide = DelayedObjective
+        if x in DelayedLinEqVars and len(DelayedLinEqVars[x]) == 1:
+            idx = list(DelayedLinEqVars[x])[0]
+            coef,vars,rhs = DelayedLinEq[idx]
+            assert(type(rhs) is int)
+            del DelayedLinEq[idx]
+            for var in vars:
+                DelayedLinEqVars[var].remove(idx)
+            pos = vars.index(x)
+            divide = -coef[pos]
+            del coef[pos]
+            del vars[pos]
+            ok = True
+            while ok:
+                ok = False
+                for i,v in enumerate(vars):
+                    if v in DelayedLinEqVars and len(DelayedLinEqVars[v]) == 1:
+                        ok = True
+                        idx = list(DelayedLinEqVars[v])[0]
+                        vcoef,vvars,vrhs = DelayedLinEq[idx]
+                        assert(type(vrhs) is int)
+                        del DelayedLinEq[idx]
+                        for var in vvars:
+                            DelayedLinEqVars[var].remove(idx)
+                        vpos = vvars.index(v)
+                        vdivide = -vcoef[vpos]
+                        del vcoef[vpos]
+                        del vvars[vpos]
+                        for j in range(len(vcoef)):
+                            vcoef[j] *= coef[i]
+                            vcoef[j] //= vdivide
+                        vrhs *= coef[i]
+                        vrhs //= vdivide
+                        del coef[i]
+                        del vars[i]
+                        coef.extend(vcoef)
+                        vars.extend(vvars)
+                        rhs += vrhs
             for i,mult in enumerate(coef):
                 xind = scope(vars[i])[0]
                 model.AddFunction([xind], [-(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+            if rhs != 0:
+                model.AddFunction([],[rhs // divide])
         else:
             if DelayedObjectiveName:
                 assert(DelayedObjectiveRange)
