@@ -5,7 +5,7 @@ BEGIN {
 	MAXINT = 10000;
 	VERBOSITY = 0;
 	SHOWSOLUTIONS = 3;
-	TIMELIMIT = 1200;
+	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
 	print "import pytoulbar2 as tb2"

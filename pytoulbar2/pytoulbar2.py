@@ -821,6 +821,18 @@ class CFN:
         """
         return self.CFN.wcsp.toIndex(self.VariableIndices[var] if isinstance(var, str) else var, value)
 
+    def GetDegree(self, var):
+        """GetDegree returns the number of non-unary cost functions with a given variable in their scope.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+
+        Returns:
+            Number of non-unary cost functions involving var (int).
+
+        """
+        return self.CFN.wcsp.getDegree(self.VariableIndices[var] if isinstance(var, str) else var)
+
     def GetNbConstrs(self):
         """GetNbConstrs returns the number of non-unary cost functions.
 

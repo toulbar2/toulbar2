@@ -1117,7 +1117,7 @@ bool EnumeratedVariable::elimVar(ConstraintLink xylink, ConstraintLink xzlink)
                     flag = true;
                 }
                 negcost = mincost;
-            } else if (mincost > negcost) {
+            } else if (mincost > negcost || mincost == MAX_COST) {
                 flag = true;
             }
             yznew->setcost(*itery, *iterz, mincost); // Warning! it can set a negative cost temporally
