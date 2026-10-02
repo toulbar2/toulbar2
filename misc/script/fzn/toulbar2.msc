@@ -1,0 +1,16 @@
+{
+    "name": "toulbar2",
+    "version": "1.4.0",
+    "id": "toulbar2",
+    "executable": "fzn_pytoulbar2",
+    "mznlib": "./mznlib",
+    "tags": ["cp"],
+    "stdFlags": [],
+    "extraFlags": [["-timer","CPU time limit","int","3600"]],
+    "inputType": "FZN",
+    "needsSolns2Out": false,
+    "needsMznExecutable": false,
+    "needsPathsFile": false,
+    "needsStdlibDir": false,
+    "isGUIApplication": false
+}
