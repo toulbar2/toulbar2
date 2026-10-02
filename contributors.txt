@@ -1,0 +1,134 @@
+Individuals who have contributed directly or indirectly to the toulbar2 solver
+(please report any error or missing names at simon.de-givry@inrae.fr)
+
+1995
+Thomas Schiex
+Hélène Fargier
+Gérard Verfaillie
+
+1996
+Michel Lemaitre
+
+1997
+Simon de Givry
+
+2002
+Martin Cooper
+
+2003 (toolbar, C version)
+Javier Larrosa
+Pedro Meseguer
+
+2004
+Sylvain Bouveret
+Cyril Terrioux
+Philippe Jégou
+Fédérico Heras
+Bertrand Neveu
+Gilles Trombettoni
+Fred Glover
+Patricia Thébault
+
+2005
+Emma Rollon
+
+2006 (toulbar2, C++ version)
+Marti Sanchez
+Matthias Zytnicki
+Christine Gaspin
+Charles Siu
+Jimmy H.M. Lee
+Cédric Pralet
+
+2008
+David Allouche
+Aurélie Favier
+Andres Legarra
+Samba Ndiaye
+Tomas Werner
+Olivier Roussel
+Christophe Lecoutre
+
+2009
+Rony Rozas
+Ka Lun Leung
+
+2010
+Bogdan Savchynskyy
+Paul Maier
+Mahuna Akplogan
+Mathieu Fontaine
+Jean-Philippe Métivier
+Philippe Boizumault
+Samir Loudni
+
+2011
+George Katsirelos
+Patricia Gutierrez
+Seydou Traoré
+Sophie Barbe
+Isabelle André
+
+2012
+Hiep Nguyen
+Christian Bessiere
+Shum Yu Wai
+Mickaël Gomes
+Marie-Josée Cros
+
+2013
+Barry Hurley
+Steve Prestwich
+Barry O’Sullivan
+
+2014
+Clément Viricel
+
+2015
+David Simoncini
+
+2016
+Gauthier Quesnel
+Miezan Thomas Miezan
+Yi Wu
+
+2017
+Abdelkader Ouali
+Yahia Lebbah
+Francisco Eckhardt
+Lakhdar Loukil
+
+2018
+Fulya Trösser
+
+2019
+Abdelkader Beldjilali
+
+2020
+Nathalie Rousse
+Manon Ruffini
+Jelena Vucinic
+Olivier Lamothe
+Pierre Montalbano
+Valentin Durante
+Marianne Defresne
+Tomáš Dlask
+François Beuvin
+Sébastien Verel
+
+2021
+Tuan-Ahn Vu
+
+2022
+Samuel Buchet
+
+2025
+Guidio Sewa
+Coralie Marchau
+Romaissa Ghlib
+
+2026
+Cyrille Akakpodezolou
+Boubacar Pelage
+
+...
