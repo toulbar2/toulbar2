@@ -124,13 +124,21 @@ def array_int_element(x, y, z):
         if type(e) is int:
             e = Constant(e)
         sizee = model.GetDomainInitSize(e.ind)
-        costs = [model.Top]*sizex*sizee*sizez
-        for zval in model.Domain(z.ind):
+        if z == x:
+            costs = [model.Top]*sizex*sizee
             for xval in model.Domain(x.ind):
                 for eval_ in model.Domain(e.ind):
-                    if (xval != i+1) or (zval == eval_):
-                       costs[model.GetValueIndex(z.ind, zval)*sizex*sizee + model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
-        model.AddFunction(scope([z, x, e]), costs)
+                    if (xval != i+1) or (xval == eval_):
+                       costs[model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
+            model.AddFunction(scope([x, e]), costs)
+        else:
+            costs = [model.Top]*sizex*sizee*sizez
+            for zval in model.Domain(z.ind):
+                for xval in model.Domain(x.ind):
+                    for eval_ in model.Domain(e.ind):
+                        if (xval != i+1) or (zval == eval_):
+                           costs[model.GetValueIndex(z.ind, zval)*sizex*sizee + model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
+            model.AddFunction(scope([z, x, e]), costs)
     # [(x >= 1), (x <= len(y)), set_in(z, u)] + [((z == (Variable(e,e,str(e)) if type(e) is int else e)) | (x != i+1)) for i, e in enumerate(y)]
 
 def array_var_int_element(x,y,z):
@@ -185,7 +193,10 @@ def int_eq_reif(x,y,z):
         int_eq(z,1)
         return
     if x == z or y == z:
-        return int_eq(x,y)
+        set_in(x, [0,1])
+        set_in(y, [0,1])
+        int_eq(x,y)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -213,6 +224,9 @@ def int_le(x,y):
     model.AddLinearConstraint([1,-1], scope([x,y]), '<=', 0) # (x <= y)
 
 def int_le_reif(x,y,z):
+    if x == y:
+        int_eq(z,1)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -234,6 +248,9 @@ def int_lt(x,y):
     model.AddLinearConstraint([1,-1], scope([x,y]), '<', 0) # (x < y)
 
 def int_lt_reif(x,y,z):
+    if x == y:
+        int_eq(z,0)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -269,6 +286,15 @@ def int_ne(x,y):
     model.AddFunction(scope([x, y]), costs) #  [(x != y)]
 
 def int_ne_reif(x,y,z):
+    if x == y:
+        int_eq(z,0)
+        return
+    if x == z:
+        int_eq(y,0)
+        return
+    if y == z:
+        int_eq(x,0)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -445,6 +471,10 @@ def int_abs(x,y):
         int_eq(y, abs(x)) # (y == Abs(x))
 
 def int_div(x,y,z):
+    if x == y:
+        int_ne(y,0)
+        int_eq(z,1)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -454,13 +484,28 @@ def int_div(x,y,z):
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
-    costs = [model.Top]*sizex*sizey*sizez
-    for zval in model.Domain(z.ind):
+    if x == z:
+        costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if yval != 0 and zval == xval // yval:
-                    costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
-    model.AddFunction(scope([z, x, y]), costs) # (z == (x / y))
+                if yval != 0 and xval == xval // yval:
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x / y))
+    elif y == z:
+        costs = [model.Top]*sizex*sizey
+        for xval in model.Domain(x.ind):
+            for yval in model.Domain(y.ind):
+                if yval != 0 and yval == xval // yval:
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x / y))
+    else:
+        costs = [model.Top]*sizex*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                for yval in model.Domain(y.ind):
+                    if yval != 0 and zval == xval // yval:
+                        costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z, x, y]), costs) # (z == (x / y))
 
 def int_min(x,y,z):
     if x == y:
@@ -511,6 +556,10 @@ def int_max(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) # (z == Max([x, y]))
 
 def int_mod(x,y,z):
+    if x == y:
+        int_ne(y,0)
+        int_eq(z,0)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -520,13 +569,28 @@ def int_mod(x,y,z):
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
-    costs = [model.Top]*sizex*sizey*sizez
-    for zval in model.Domain(z.ind):
+    if x == z:
+        costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if zval == xval % yval:
-                    costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
-    model.AddFunction(scope([z, x, y]), costs) # (z == (x % y))
+                if yval != 0 and xval == xval % yval:
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x % y))
+    elif y == z:
+        costs = [model.Top]*sizex*sizey
+        for xval in model.Domain(x.ind):
+            for yval in model.Domain(y.ind):
+                if yval != 0 and yval == xval % yval:
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x % y))
+    else:
+        costs = [model.Top]*sizex*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                for yval in model.Domain(y.ind):
+                    if yval != 0 and zval == xval % yval:
+                        costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z, x, y]), costs) # (z == (x % y))
 
 def int_plus(x,y,z):
     model.AddLinearConstraint([1,-1,-1], scope([z,x,y]), '==', 0) # (z == (x + y))
