@@ -717,6 +717,27 @@ def Minimize(x, sign=1):
  
 def Maximize(x):
     Minimize(x, sign=-1)
+
+# generate linear equality constraints except if it defines a variable involved in no other basic constraint nor in the list of output variables
+def finalize_int_lin_eq(*output_vars):
+    global DelayedLinEq
+    global DelayedLinEqVars
+    ok = True
+    while ok:
+        ok = False
+        for v in DelayedLinEqVars:
+            if len(DelayedLinEqVars[v]) == 1 and type(v) is Var and model.GetDegree(v.ind) == 0 and model.CFN.wcsp.getMaxUnaryCost(v.ind) == 0 and v not in output_vars:
+                ok = True
+                idx = list(DelayedLinEqVars[v])[0]
+                vcoef,vvars,vrhs = DelayedLinEq[idx]
+                #print('Warning, eliminate unused variable ' + model.VariableNames[v.ind])
+                #print(model.VariableNames[v.ind] if type(v) is Var else v,vcoef,[model.VariableNames[myvar.ind]if type(myvar) is Var else myvar for myvar in vvars],vrhs)
+                assert(type(vrhs) is int)
+                del DelayedLinEq[idx]
+                for var in vvars:
+                    DelayedLinEqVars[var].remove(idx)        
+    for coef,vars,rhs in DelayedLinEq.values():
+        model.AddLinearConstraint(coef, scope(vars), '==', rhs)  # Sum(coef,vars) == rhs
     
 #-----------------------------------------
 # Specific global constraints for toulbar2

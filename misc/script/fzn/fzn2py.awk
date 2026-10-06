@@ -259,9 +259,6 @@ parameter {
 
 END {
 	if (!error) {
-	print "    for coef,vars,rhs in DelayedLinEq.values():";
-	print "        model.AddLinearConstraint(coef, scope(vars), '==', rhs)";
-	
 	output_vars = "";
 
 	n = asorti(output,varnames);
@@ -276,6 +273,7 @@ END {
 		 if(length(output_vars) > 0) output_vars = output_vars ", ";
 		 output_vars = output_vars objective;
 	}
+	print "    finalize_int_lin_eq(" output_vars ")"; 
 	print "    output_vars = (" output_vars ")";
 	print "    return model, output_vars";
 

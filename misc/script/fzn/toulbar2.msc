@@ -10,7 +10,6 @@
     "inputType": "FZN",
     "needsSolns2Out": false,
     "needsMznExecutable": false,
-    "needsPathsFile": false,
     "needsStdlibDir": false,
     "isGUIApplication": false
 }

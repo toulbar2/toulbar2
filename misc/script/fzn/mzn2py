@@ -24,4 +24,4 @@ fi
 param1=${*##*.dzn}
 param=${param1##*.mzn}
 problem=`echo "$*" | $SED 's/ -.*//'`
-minizinc -c -O3 --solver ${SCRIPT_PATH}/toulbar2.msc -I ${MZNNJ_DIR}/mznlib --output-to-stdout $problem | ${MZNNJ_DIR}/fzn2py - | tee problem.py | python - $param
+minizinc -c -O3 --solver ${SCRIPT_PATH}/toulbar2.msc -I ${MZNNJ_DIR}/mznlib --no-output-ozn --output-to-stdout $problem | ${MZNNJ_DIR}/fzn2py - | tee problem.py | python - $param
