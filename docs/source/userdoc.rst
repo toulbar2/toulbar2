@@ -427,6 +427,9 @@ Initial upper bounding
 -L=[integer]
         randomized (quasi-random variable ordering) search with restart (maximum number of nodes/VNS restarts = 10000 by default)
 
+-ai=[integer]
+        initial upper bound found by AI-generated heuristics (only for Max-2SAT)
+
 -i=["string"]
         initial upper bound found by INCOP local search
         solver [idwalk:cp04]_. The string parameter is optional,

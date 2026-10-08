@@ -3514,6 +3514,15 @@ Cost Solver::preprocessing(Cost initialUpperBound)
 
     int lds = ToulBar2::lds;
     ToulBar2::lds = 0; // avoid TimeOut exception when new solutions found
+    if (ToulBar2::heurllm && getWCSP()->numberOfUnassignedVariables() > 0) {
+        double heurllmStartTime = cpuTime();
+        vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);
+        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
+            bestsol[i] = (wcsp->canbe(i, wcsp->getBestValue(i)) ? wcsp->getBestValue(i) : wcsp->getSupport(i));
+        max2sat_heurllm(ToulBar2::heurllm, bestsol);
+        if (ToulBar2::verbose >= 0)
+            cout << "Max-2SAT AI-generated heuristic solving time: " << cpuTime() - heurllmStartTime << " seconds." << endl;
+    }
     if (ToulBar2::incop_cmd.size() > 0 && getWCSP()->numberOfUnassignedVariables() > 0) {
         double incopStartTime = cpuTime();
         vector<Value> bestsol(getWCSP()->numberOfVariables(), 0);

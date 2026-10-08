@@ -286,6 +286,7 @@ TB2_THREAD_LOCAL bool ToulBar2::learning;
 TB2_THREAD_LOCAL int ToulBar2::seed;
 TB2_THREAD_LOCAL Double ToulBar2::sigma;
 
+TB2_THREAD_LOCAL int ToulBar2::heurllm;
 TB2_THREAD_LOCAL string ToulBar2::incop_cmd;
 TB2_THREAD_LOCAL string ToulBar2::pils_cmd;
 TB2_THREAD_LOCAL string ToulBar2::lrBCD_cmd;
@@ -545,6 +546,7 @@ void tb2init()
     ToulBar2::sigma = 0.;
 
     // local search methods in preprocessing
+    ToulBar2::heurllm = 0;
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
     ToulBar2::lrBCD_cmd = "";

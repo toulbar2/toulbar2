@@ -545,6 +545,9 @@ public:
     void endSolve(bool isSolution, Cost cost, bool isComplete);
     // end of internal solve methods
 
+    // Max-2SAT AI-generated heuristic
+    Cost max2sat_heurllm(int param, vector<Value>& bestsolution);
+
     // INCOP local search
     Cost narycsp(string cmd, vector<Value>& solution);
 

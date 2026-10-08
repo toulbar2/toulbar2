@@ -860,6 +860,7 @@ PYBIND11_MODULE(pytb2, m)
         // .def_property_static("interrupted", [](py::object) { return ToulBar2::interrupted; }, [](py::object, std::atomic<bool> interrupted) { ToulBar2::interrupted = interrupted; }) // pybind11 not compatible with type atomic<bool>?
         .def_property_static("seed", [](py::object) { return ToulBar2::seed; }, [](py::object, int seed) { ToulBar2::seed = seed; })
         .def_property_static("sigma", [](py::object) { return ToulBar2::sigma; }, [](py::object, Double sigma) { ToulBar2::sigma = sigma; })
+        .def_property_static("heurllm", [](py::object) { return ToulBar2::heurllm; }, [](py::object, int heurllm) { ToulBar2::heurllm = heurllm; })
         .def_property_static("incop_cmd", [](py::object) { return ToulBar2::incop_cmd; }, [](py::object, string incop_cmd) { ToulBar2::incop_cmd = incop_cmd; })
         .def_property_static("pils_cmd", [](py::object) { return ToulBar2::pils_cmd; }, [](py::object, string pils_cmd) { ToulBar2::pils_cmd = pils_cmd; })
         .def_property_static("lrBCD_cmd", [](py::object) { return ToulBar2::lrBCD_cmd; }, [](py::object, string lrBCD_cmd) { ToulBar2::lrBCD_cmd = lrBCD_cmd; })

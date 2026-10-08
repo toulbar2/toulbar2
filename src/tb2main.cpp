@@ -322,6 +322,8 @@ enum {
     OPT_burst,
     NO_OPT_burst,
 #endif
+    OPT_heurllm,
+    NO_OPT_heurllm,
     OPT_localsearch,
     NO_OPT_localsearch,
     OPT_pils,
@@ -617,6 +619,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_burst, (char*)"-burst", SO_NONE },
     { NO_OPT_burst, (char*)"-burst:", SO_NONE },
 #endif
+    { OPT_heurllm, (char*)"-ai", SO_OPT }, // AI-generated Max-2SAT heuristic
+    { NO_OPT_heurllm, (char*)"-ai:", SO_NONE },
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { NO_OPT_localsearch, (char*)"-i:", SO_NONE },
     { OPT_pils, (char*)"-pils", SO_OPT }, // PILS option default or string for pils argument
@@ -992,6 +996,10 @@ void help_msg(char* toulbar2filename)
     cout << endl;
     cout << "   -L=[integer] : randomized (quasi-random variable ordering) search with restart (maximum number of nodes/VNS restarts = " << maxrestarts << " by default)";
     if (ToulBar2::restart >= 0)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -ai=[integer] : AI-generated heuristics (only for Max-2SAT)";
+    if (ToulBar2::heurllm != 0)
         cout << " (default option)";
     cout << endl;
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
@@ -2320,6 +2328,17 @@ int _tmain(int argc, TCHAR* argv[])
                 }
                 if (ToulBar2::debug)
                     cout << "Embarrassingly Parallel Search mode activated, collecting " << ToulBar2::eps << " open nodes in file " << ToulBar2::epsFilename << endl;
+            }
+
+            // AI-generated Max-2AT heuristic
+            if (args.OptionId() == OPT_heurllm) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::heurllm = atoi(args.OptionArg());
+                } else {
+                    ToulBar2::heurllm = 1;
+                }
+            } else if (args.OptionId() == NO_OPT_heurllm) {
+                ToulBar2::heurllm = 0;
             }
 
             // local search INCOP
