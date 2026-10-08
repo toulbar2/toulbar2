@@ -3040,6 +3040,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
             VarAMO.clear();
             ScopeIdx.clear();
             TempScopeIdx.clear();
+        } else {
+            Original_weights = weights;
         }
         for (unsigned int i = 0; i < weights.size(); ++i) {
             MaxWeight += *max_element(weights[i].begin(), weights[i].end());
