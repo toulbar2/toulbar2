@@ -1478,7 +1478,7 @@ public:
             os << "]";
             printed = true;
         }
-        os << "],\"deltaCosts\":[";
+        os << "],\"deltacosts\":[";
         if (isSquare) {
             os << "]}},\n";
         } else {
