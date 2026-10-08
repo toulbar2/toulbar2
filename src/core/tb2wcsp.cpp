@@ -2774,6 +2774,10 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
     vector<vector<pair<int, Value>>> AMO;
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
+    vector<vector<StoreCost>> initDeltaCosts;
+    Cost initLb = MIN_COST;
+    Cost initAssignedDelta = MIN_COST;
+
     if (wcnf.empty()) {
         if (!isclique) {
             file >> capacity;
@@ -3038,6 +3042,46 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
         for (unsigned int i = 0; i < weights.size(); ++i) {
             MaxWeight += *max_element(weights[i].begin(), weights[i].end());
         }
+
+        /* read deltaCosts, lb, and assignedDelta if any (should be on the same text line as the previous knapsack information) */
+        string line;
+        getline(file, line);
+        stringstream file(line);
+        int nbDelta = 0;
+        file >> nbDelta;
+        if (nbDelta) {
+            initDeltaCosts.resize(ar);
+            assert(ar == (int)weights.size());
+            vector<map<Value, int>> VarValInv;
+            for (int i= 0; i < ar; i++) {
+                VarValInv.push_back(map<Value, int>());
+                for (int j = 0; j < (int)VarVal[i].size() - 1; j++) {
+                    VarValInv[i][VarVal[i][j]] = j;
+                    initDeltaCosts[i].emplace_back(MIN_COST);
+                }
+                initDeltaCosts[i].emplace_back(MIN_COST);
+                assert(initDeltaCosts[i].size() == VarVal[i].size());
+            }
+            for (int i= 0; i < nbDelta; i++) {
+                int indexVar;
+                file >> indexVar;
+                assert(indexVar < ar);
+                Value value;
+                file >> value;
+                Cost delta;
+                file >> delta;
+                if (indexVar < ar) {
+                    auto iter = VarValInv[indexVar].find(value);
+                    if (iter != VarValInv[indexVar].end()) {
+                        initDeltaCosts[indexVar][iter->second] = delta;
+                    } else {
+                        initDeltaCosts[indexVar].back() = delta;
+                    }
+                }
+            }
+        }
+        file >> initLb;
+        file >> initAssignedDelta;
     } else {
         assert((int)scopeVars.size() == ar);
         for (int i = 0; i < ar; i++) {
@@ -3069,7 +3113,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
         assert((int)VarVal.size() == ar);
         assert((int)CorrAMO.size() == ar);
         assert((int)NotVarVal.size() == ar);
-        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
+        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar, initDeltaCosts, initLb, initAssignedDelta);
 #ifdef UNITKNAPSACK2CLAUSE
     }
 #endif
