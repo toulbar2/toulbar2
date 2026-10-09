@@ -998,10 +998,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::restart >= 0)
         cout << " (default option)";
     cout << endl;
-    cout << "   -ai=[integer] : AI-generated heuristics (only for Max-2SAT)";
-    if (ToulBar2::heurllm != 0)
-        cout << " (default option)";
-    cout << endl;
+    cout << "   -ai=[integer] : AI-generated heuristics (only for Max-2SAT) with initial solution found (1) at random, (2) min domain values, (3) max domain values, (4) EAC/VAC support values, (0) AI-generated heuristics disable (default value is " << ToulBar2::heurllm << endl;
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
     cout << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
     cout << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode" << endl;
@@ -2335,7 +2332,7 @@ int _tmain(int argc, TCHAR* argv[])
                 if (args.OptionArg() != NULL) {
                     ToulBar2::heurllm = atoi(args.OptionArg());
                 } else {
-                    ToulBar2::heurllm = 1;
+                    ToulBar2::heurllm = AI_INIT_SUPPORT;
                 }
             } else if (args.OptionId() == NO_OPT_heurllm) {
                 ToulBar2::heurllm = 0;

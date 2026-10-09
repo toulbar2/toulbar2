@@ -685,6 +685,14 @@ typedef enum {
 } BTDMethod;
 
 typedef enum {
+    AI_INIT_NO = 0,
+    AI_INIT_RANDOM = 1,
+    AI_INIT_INF = 2,
+    AI_INIT_SUP = 3,
+    AI_INIT_SUPPORT = 4
+} AISolutionInitMethod;
+
+typedef enum {
     LS_INIT_RANDOM = -1,
     LS_INIT_INF = -2,
     LS_INIT_SUP = -3,

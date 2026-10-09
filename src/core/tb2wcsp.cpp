@@ -546,7 +546,7 @@ void tb2init()
     ToulBar2::sigma = 0.;
 
     // local search methods in preprocessing
-    ToulBar2::heurllm = 0;
+    ToulBar2::heurllm = AI_INIT_NO;
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
     ToulBar2::lrBCD_cmd = "";

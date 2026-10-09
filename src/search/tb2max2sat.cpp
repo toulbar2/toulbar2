@@ -33,10 +33,11 @@ struct Edge {
     Cost weight;
 };
 
-pair<vector<bool>, Cost> solve_heuristic_cpp(int N, const vector<OrClause>& or_clauses, const vector<Cost>& neg_weights)
+pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind, int init, int N, const vector<OrClause>& or_clauses, const vector<Cost>& neg_weights)
 {
     // 1. Use uint8_t instead of vector<bool> for much faster memory access
     vector<uint8_t> assignment(N, 0);
+    assert((int)neg_weights.size() == N);
 
     // 2. Build an Adjacency List to avoid O(M) loop lookups
     vector<vector<Edge>> adj(N);
@@ -74,7 +75,40 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(int N, const vector<OrClause>& or_c
 
     // Initialize base score
     Cost current_score = 0;
-    for(Cost w : neg_weights) current_score += w;
+    switch (init) {
+    case AI_INIT_RANDOM: // init at random value
+        for (int i = 0; i < N; i++) {
+            assignment[i] = myrand() % 2;
+            if (assignment[i] == 0) current_score += neg_weights[i];
+        }
+        for(auto e : or_clauses) {
+            if (assignment[e.u] || assignment[e.v]) {
+                current_score += e.w;
+            }
+        }
+        break;
+    case AI_INIT_INF: // init at minimum domain value (false)
+        for(Cost w : neg_weights) current_score += w;
+        break;
+    case AI_INIT_SUP: // init at maximum domain value (true)
+        assignment.assign(N, 1);
+        for(auto e : or_clauses) current_score += e.w;
+        break;
+    case AI_INIT_SUPPORT: // init using support values
+        for (int i = 0; i < N; i++) {
+            assignment[i] = wcsp->getSupport(invvarind[i % (N / 2)]) == ((i >= N /2)?wcsp->getInf(invvarind[i % (N / 2)]):wcsp->getSup(invvarind[i % (N / 2)]));
+            if (assignment[i] == 0) current_score += neg_weights[i];
+            for(auto e : or_clauses) {
+                if (assignment[e.u] || assignment[e.v]) {
+                    current_score += e.w;
+                }
+            }
+        }
+        break;
+    default:
+        std::cerr << "Sorry, AI-generated heuristics initialization value unknown! " << init << std::endl;
+        throw BadConfiguration();
+    }
 
     // Pre-allocate vectors outside the tight loops to prevent millions of allocations
     vector<int> group;         group.reserve(100);
@@ -315,6 +349,9 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
     vector<int> var2index;
     vector<int> invvar2index;
 
+    Cost initialLowerBound = wcsp->getLb();
+    Cost initialUpperBound = wcsp->getUb();
+
     // Read problem
     // variables
     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
@@ -408,14 +445,13 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
     vector<Cost> neg_weights;
     reduce_to_weighted_restricted(num_vars, orig_clauses, orig_weights, N_red, or_clauses, neg_weights);
 
-    auto heur_res = solve_heuristic_cpp(N_red, or_clauses, neg_weights);
+    auto heur_res = solve_heuristic_cpp((WCSP *)wcsp, invvar2index, param, N_red, or_clauses, neg_weights);
     vector<Value> bestsol(num_vars);
     for (int i = 0; i < num_vars; i++) {
         int idx = invvar2index[i];
         bestsol[i] = (heur_res.first[i])?wcsp->getSup(idx):wcsp->getInf(idx);
     }
 
-    Cost bestsolcost = MAX_COST;
     int depth = Store::getDepth();
     try {
         Store::store();
@@ -425,10 +461,15 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
             bestsolution[i] = wcsp->getValue(i);
             ((WCSP *)wcsp)->setBestValue(i, bestsolution[i]);
         }
-        bestsolcost = wcsp->getLb();
     } catch (const Contradiction&) {
         wcsp->whenContradiction();
     }
     Store::restore(depth);
-    return bestsolcost;
+
+    if (wcsp->getUb() < initialUpperBound) {
+        wcsp->enforceUb();
+        wcsp->propagate();
+    }
+
+    return (wcsp->getUb() < initialUpperBound)?wcsp->getSolutionCost():MAX_COST;
 }
