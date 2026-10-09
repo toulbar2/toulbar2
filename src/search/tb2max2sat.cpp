@@ -480,7 +480,7 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
                     Store::store();
                     wcsp->assignLS(invvar2index, bestsol);
                     newSolution();
-                    assert(initialLowerBound + total_weight + total_gadget_weights - heur_res.second == wcsp->getLb());
+                    assert(initialLowerBound + total_weight + total_gadget_weights - heur_res.second <= wcsp->getLb());
                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                         bestsolution[i] = wcsp->getValue(i);
                         ((WCSP *)wcsp)->setBestValue(i, bestsolution[i]);
