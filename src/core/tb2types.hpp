@@ -689,7 +689,8 @@ typedef enum {
     AI_INIT_RANDOM = 1,
     AI_INIT_INF = 2,
     AI_INIT_SUP = 3,
-    AI_INIT_SUPPORT = 4
+    AI_INIT_SUPPORT = 4,
+    AI_INIT_THEMAX
 } AISolutionInitMethod;
 
 typedef enum {

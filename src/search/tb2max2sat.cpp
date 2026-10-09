@@ -48,7 +48,7 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
 
     // 3a. Single-flip Delta Function (no heap allocations)
     auto apply_flip_single = [&](int v) -> Cost {
-        Cost delta = 0;
+        Cost delta = MIN_COST;
         if (assignment[v]) { // True -> False
             delta += neg_weights[v];
             for (const auto& edge : adj[v]) {
@@ -66,7 +66,7 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
 
     // 3b. Multi-flip Delta Function
     auto apply_flips = [&](const vector<int>& vars) -> Cost {
-        Cost delta = 0;
+        Cost delta = MIN_COST;
         for (int v : vars) {
             delta += apply_flip_single(v);
         }
@@ -74,12 +74,14 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
     };
 
     // Initialize base score
-    Cost current_score = 0;
+    Cost current_score = MIN_COST;
     switch (init) {
     case AI_INIT_RANDOM: // init at random value
         for (int i = 0; i < N; i++) {
             assignment[i] = myrand() % 2;
-            if (assignment[i] == 0) current_score += neg_weights[i];
+            if (assignment[i] == 0) {
+                current_score += neg_weights[i];
+            }
         }
         for(auto e : or_clauses) {
             if (assignment[e.u] || assignment[e.v]) {
@@ -97,11 +99,13 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
     case AI_INIT_SUPPORT: // init using support values
         for (int i = 0; i < N; i++) {
             assignment[i] = wcsp->getSupport(invvarind[i % (N / 2)]) == ((i >= N /2)?wcsp->getInf(invvarind[i % (N / 2)]):wcsp->getSup(invvarind[i % (N / 2)]));
-            if (assignment[i] == 0) current_score += neg_weights[i];
-            for(auto e : or_clauses) {
-                if (assignment[e.u] || assignment[e.v]) {
-                    current_score += e.w;
-                }
+            if (assignment[i] == 0) {
+                current_score += neg_weights[i];
+            }
+        }
+        for(auto e : or_clauses) {
+            if (assignment[e.u] || assignment[e.v]) {
+                current_score += e.w;
             }
         }
         break;
@@ -181,6 +185,9 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
     bool changed = true;
     while (changed) {
         changed = false;
+        if (ToulBar2::interrupted) {
+            throw TimeOut();
+        }
 
         // 1. Standard 1-opt Pruning
         for (int v = 0; v < N; ++v) {
@@ -225,7 +232,7 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
         for (int v = 0; v < N; ++v) {
             if (!assignment[v]) {
                 Cost initial_gain = apply_flip_single(v);
-                Cost accumulated_sub_gain = 0;
+                Cost accumulated_sub_gain = MIN_COST;
 
                 // Track all committed flips in this cascade for fast rollback
                 vector<int> committed_sub_flips;
@@ -288,12 +295,13 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
     return {final_assign, current_score};
 }
 
-void reduce_to_weighted_restricted(int num_vars, const vector<Clause>& original_clauses, const vector<Cost>& weights,
+Cost reduce_to_weighted_restricted(int num_vars, const vector<Clause>& original_clauses, const vector<Cost>& weights,
                                    int& N_new, vector<OrClause>& or_clauses_arr, vector<Cost>& neg_weights) {
     int V = num_vars;
     N_new = 2 * V;
     neg_weights.assign(N_new, MIN_COST);
     map<pair<int, int>, Cost> or_clauses_dict;
+    Cost total_gadget_weights = MIN_COST;
 
     auto get_var_idx = [V](int literal) {
         int var_idx = abs(literal) - 1;
@@ -327,18 +335,21 @@ void reduce_to_weighted_restricted(int num_vars, const vector<Clause>& original_
     for (int i = 0; i < V; ++i) {
         Cost d_i = degrees[i];
         if (d_i == MIN_COST) continue;
-        d_i++; // should be more important than any finite costs related to this variable
+        d_i += UNIT_COST; // should be more important than any finite costs related to this variable
         int u = i;
         int v = i + V;
         or_clauses_dict[{u, v}] += 2 * d_i;
         neg_weights[u] += d_i;
         neg_weights[v] += d_i;
+        total_gadget_weights += 3 * d_i;
     }
 
     or_clauses_arr.clear();
     for (const auto& pair_kv : or_clauses_dict) {
         or_clauses_arr.push_back({pair_kv.first.first, pair_kv.first.second, pair_kv.second});
     }
+
+    return total_gadget_weights;
 }
 
 Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
@@ -439,37 +450,56 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
     }
 
     if (orig_clauses.empty()) return MIN_COST;
+    Cost total_weight = accumulate(orig_weights.begin(), orig_weights.end(), MIN_COST);
 
     int N_red;
     vector<OrClause> or_clauses;
     vector<Cost> neg_weights;
-    reduce_to_weighted_restricted(num_vars, orig_clauses, orig_weights, N_red, or_clauses, neg_weights);
+    Cost total_gadget_weights = reduce_to_weighted_restricted(num_vars, orig_clauses, orig_weights, N_red, or_clauses, neg_weights);
+    Cost previous_best_score = -UNIT_COST; // warning! score in maximization
 
-    auto heur_res = solve_heuristic_cpp((WCSP *)wcsp, invvar2index, param, N_red, or_clauses, neg_weights);
-    vector<Value> bestsol(num_vars);
-    for (int i = 0; i < num_vars; i++) {
-        int idx = invvar2index[i];
-        bestsol[i] = (heur_res.first[i])?wcsp->getSup(idx):wcsp->getInf(idx);
-    }
+    int init = (param >= AI_INIT_THEMAX)?AI_INIT_SUPPORT:param;
+    for (int nbheur = (param >= AI_INIT_THEMAX)?(param-1):1; nbheur > 0; nbheur--) {
+        auto heur_res = solve_heuristic_cpp((WCSP *)wcsp, invvar2index, init, N_red, or_clauses, neg_weights);
 
-    int depth = Store::getDepth();
-    try {
-        Store::store();
-        wcsp->assignLS(invvar2index, bestsol);
-        newSolution();
-        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
-            bestsolution[i] = wcsp->getValue(i);
-            ((WCSP *)wcsp)->setBestValue(i, bestsolution[i]);
+        if (heur_res.second > previous_best_score) {
+            previous_best_score = heur_res.second;
+            Cost heurcost = initialLowerBound + total_weight + total_gadget_weights - heur_res.second;
+            if (ToulBar2::verbose >= 1) {
+                cout << "AI-generated heuristics found a better complete assignment of cost " << heurcost << endl;
+            }
+            if (heurcost < initialUpperBound) {
+                vector<Value> bestsol(num_vars);
+                for (int i = 0; i < num_vars; i++) {
+                    int idx = invvar2index[i];
+                    bestsol[i] = (heur_res.first[i])?wcsp->getSup(idx):wcsp->getInf(idx);
+                }
+
+                int depth = Store::getDepth();
+                try {
+                    Store::store();
+                    wcsp->assignLS(invvar2index, bestsol);
+                    newSolution();
+                    assert(initialLowerBound + total_weight + total_gadget_weights - heur_res.second == wcsp->getLb());
+                    for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
+                        bestsolution[i] = wcsp->getValue(i);
+                        ((WCSP *)wcsp)->setBestValue(i, bestsolution[i]);
+                    }
+                } catch (const Contradiction&) {
+                    wcsp->whenContradiction();
+                }
+                Store::restore(depth);
+
+                if (wcsp->getUb() < initialUpperBound) {
+                    wcsp->enforceUb();
+                    wcsp->propagate();
+                }
+            }
         }
-    } catch (const Contradiction&) {
-        wcsp->whenContradiction();
-    }
-    Store::restore(depth);
 
-    if (wcsp->getUb() < initialUpperBound) {
-        wcsp->enforceUb();
-        wcsp->propagate();
+        if (init > AI_INIT_RANDOM) {
+            init--;
+        }
     }
-
     return (wcsp->getUb() < initialUpperBound)?wcsp->getSolutionCost():MAX_COST;
 }
