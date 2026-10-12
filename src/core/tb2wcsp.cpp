@@ -3308,7 +3308,16 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
             }
             for (unsigned int i = 0; i < values.size(); i++) {
                 Value value = values[i].val;
-                string params = to_string(-values[i].upper);
+                int newupper = min((arity - (sumlow - values[i].lower)), values[i].upper);
+                if(newupper <= 0 ){
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)){
+                            ((EnumeratedVariable*)getVar(scopeIndex[variable]))->remove(value);
+                        }
+                     }
+                    continue;
+                }
+                string params = to_string(-newupper);
                 for (int variable = 0; variable < arity; ++variable) {
                     if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
                         params += to_string(" 1 ") + to_string(value) + to_string(" -1");
@@ -3318,16 +3327,19 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
                 }
                 istringstream file(params);
                 postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
-                params = to_string(values[i].lower);
-                for (int variable = 0; variable < arity; ++variable) {
-                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
-                        params += to_string(" 1 ") + to_string(value) + to_string(" 1");
-                    } else {
-                        params += to_string(" 0");
+                if(newupper < values[i].lower) THROWCONTRADICTION;
+                if(values[i].lower > 0){
+                    params = to_string(values[i].lower);
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
+                            params += to_string(" 1 ") + to_string(value) + to_string(" 1");
+                        } else {
+                            params += to_string(" 0");
+                        }
                     }
+                    istringstream file2(params);
+                    postKnapsackConstraint(scopeIndex, arity, file2, false, true, false, {});
                 }
-                istringstream file2(params);
-                postKnapsackConstraint(scopeIndex, arity, file2, false, true, false, {});
             }
             return INT_MIN;
         } else {
