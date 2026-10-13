@@ -3986,7 +3986,12 @@ public:
                         }
                     }
                 }
-                os << "]}},\n";
+                os << "],\"deltacosts\":[]";
+                os << ",\"lb\":" << MIN_COST;
+                assert(lb == MIN_COST);
+                os << ",\"assigneddeltas\":" << MIN_COST;
+                assert(assigneddeltas = MIN_COST);
+                os << "}},\n";
             } else {
                 os << "],\n\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(wcsp->getUb())) << ",\n\"costs\":[";
                 Tuple t;
@@ -4056,7 +4061,12 @@ public:
                         }
                     }
                 }
-                os << "]}},\n";
+                os << "],\"deltacosts\":[]";
+                os << ",\"lb\":" << MIN_COST;
+                assert(lb == MIN_COST);
+                os << ",\"assigneddeltas\":" << MIN_COST;
+                assert(assigneddeltas = MIN_COST);
+                os << "}},\n";
             } else {
                 os << "],\n\"defaultcost\":inf,\n\"costs\":[";
                 Tuple t;
