@@ -7,6 +7,7 @@
 #define TB2LAPJV_HPP_
 
 #include <vector>
+#include <utility>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -26,12 +27,17 @@ using PQ = boost::heap::pairing_heap<pair<Cost, int>, boost::heap::compare<great
  * through a well-defined series of steps.
  * Original source code from https://github.com/scipy/scipy/tree/main/scipy/optimize/rectangular_lsap
  *
- * Paper :
+ * References :
+ *  - R. Jonker and A. Volgenant, "A shortest augmenting path algorithm for dense and
+ *    sparse linear assignment problems", Computing 38, 1987, pp. 325-340.
+ *  - D. F. Crouse, "On implementing 2D rectangular assignment algorithms", IEEE Transactions
+ *    on Aerospace and Electronic Systems 52(4), 2016, pp. 1679-1696.
  *
- *
+ * In all the functions below, the parameter MAX_COST is the cost used as "infinity" (typically the current
+ * upper bound of the subproblem), it hides the global MAX_COST on purpose.
  */
 
-static intptr_t
+static inline intptr_t
 augmenting_path(intptr_t dim_val, const vector<Cost>& cost, vector<Cost>& u,
     vector<Cost>& v, vector<intptr_t>& path,
     vector<intptr_t>& row4col,
@@ -81,7 +87,7 @@ augmenting_path(intptr_t dim_val, const vector<Cost>& cost, vector<Cost>& u,
         }
 
         minVal = lowest;
-        if (minVal == MAX_COST) { // MAX_COSTeasible cost matrix
+        if (minVal == MAX_COST) { // infeasible cost matrix
             return -1;
         }
 
@@ -100,7 +106,7 @@ augmenting_path(intptr_t dim_val, const vector<Cost>& cost, vector<Cost>& u,
     return sink;
 }
 
-static Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, int* b, Cost* usol, Cost* vsol, Cost MAX_COST, int& findConflict)
+static inline Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, int* b, Cost* usol, Cost* vsol, Cost MAX_COST, int& findConflict)
 {
 
     // initialize variables
@@ -126,9 +132,10 @@ static Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, 
         if (sink < 0) {
             findConflict = 1;
             b[0] = curRow;
-            for (int col = 0; col < dim_val; col++) {
-                if (cost[curRow * dim_val + col] < MAX_COST) {
-                    b[findConflict] = row4col[col];
+            // each assigned row appears at most once in row4col, so at most curRow + 1 <= dim_var entries are written
+            for (intptr_t col = 0; col < dim_val; col++) {
+                if (cost[curRow * dim_val + col] < MAX_COST && row4col[col] >= 0) {
+                    b[findConflict] = (int)row4col[col];
                     findConflict++;
                 }
             }
@@ -176,7 +183,7 @@ static Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, 
     return Total_cost;
 }
 
-static intptr_t
+static inline intptr_t
 augmenting_path_gcc(intptr_t dim_val,
     const vector<Cost>& cost,
     vector<Cost>& u,
@@ -186,7 +193,6 @@ augmenting_path_gcc(intptr_t dim_val,
     vector<Cost>& shortestPathCost,
     vector<bool>& SC,
     vector<bool>& SR,
-    const vector<int>& col4row,
     const vector<vector<int>>& row4col,
     Cost MAX_COST,
     const vector<int>& capacity)
@@ -205,12 +211,12 @@ augmenting_path_gcc(intptr_t dim_val,
     // every column:  rc(i,j) = cost(i,j) - u[i] - v[j].
     for (intptr_t j = 0; j < dim_val; ++j) {
         if(capacity[j] > 0){
-        path[j] = -1;
-        Cost r = cost[i * dim_val + j] - u[i] - v[j];
-        if (r < shortestPathCost[j]) {
-            shortestPathCost[j] = r;
-            path[j] = i;
-        }
+            path[j] = -1;
+            Cost r = cost[i * dim_val + j] - u[i] - v[j];
+            if (r < shortestPathCost[j]) {
+                shortestPathCost[j] = r;
+                path[j] = i;
+            }
         }
     }
 
@@ -253,8 +259,8 @@ augmenting_path_gcc(intptr_t dim_val,
             Cost backward = cost[r * dim_val + index] - u[r] - v[index];
 
             for (intptr_t k = 0; k < dim_val; ++k) {
-                if (SC[k])
-                    continue; // column k already settled, skip
+                if (SC[k] || capacity[k] <= 0)
+                    continue; // column k already settled or unusable, skip
 
                 // Reduced cost of the forward arc r→k.
                 Cost forward = cost[r * dim_val + k] - u[r] - v[k];
@@ -273,14 +279,18 @@ augmenting_path_gcc(intptr_t dim_val,
     return sink;
 }
 
-static Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
+static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
     const vector<Cost>& cost,
     int* b,
     Cost* usol, Cost* vsol,
     Cost MAX_COST,
-    vector<int>& capacity,
+    const vector<int>& capacity,
     int& findConflict)
 {
+    if (dim_val <= 0 || dim_var <= 0) {
+        findConflict = 0;
+        return (dim_var <= 0) ? 0 : MAX_COST;
+    }
     // Fast path: all capacities are 1 → standard (unit-capacity) LAP.
     int maxcap = *max_element(capacity.begin(), capacity.end());
     int mincap = *min_element(capacity.begin(), capacity.end());
@@ -321,7 +331,7 @@ static Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
 
         intptr_t sink = augmenting_path_gcc(dim_val, cost, u, v, curRow,
             path, shortestPathCost, SC, SR,
-            col4row, row4col, MAX_COST, capacity);
+            row4col, MAX_COST, capacity);
 
         // No augmenting path found → problem is infeasible.
         // Report curRow and every row that competes with it for the same
@@ -416,7 +426,7 @@ static Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
 
 // Linear assignment problem with excepted values
 
-static Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, int* b, Cost* usol, Cost* vsol, Cost MAX_COST, vector<int>& exceptedValIndex, int& findConflict)
+static inline Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, int* b, Cost* usol, Cost* vsol, Cost MAX_COST, const vector<int>& exceptedValIndex, int& findConflict)
 {
 
     vector<int> capacity(dim_val, 1);
@@ -429,7 +439,7 @@ static Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, 
 /* -----------------------------------------------------------------------------
  * shortestPaths
  *
- * Bellman-based search that finds, from a "source" column `source` (which
+ * Bellman-Ford search (BellmanShortestPaths) that finds, from a "source" column `source` (which
  * has an unsatisfied lower-bound demand), the cheapest row `dest` that can be
  * re-routed to `source` without breaking any upper-bound constraint.
  *
@@ -453,13 +463,13 @@ static Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, 
  * deficit at `source`, or -1 if no such row exists (infeasible).
  * -----------------------------------------------------------------------------
  */
-static intptr_t BellmanShortestPaths(intptr_t dim_var, intptr_t dim_val,
+static inline intptr_t BellmanShortestPaths(intptr_t dim_var, intptr_t dim_val,
     const vector<Cost>& cost,
     const vector<vector<int>>& VarList,
     int* col4row,
     vector<int>& path,
-    vector<int>& demand,
-    vector<int>& count_col,
+    const vector<int>& demand,
+    const vector<int>& count_col,
     Cost MAX_COST,
     int source)
 {
@@ -557,6 +567,18 @@ static intptr_t BellmanShortestPaths(intptr_t dim_var, intptr_t dim_val,
             dest = var;
         }
     }
+    if (dest == -1)
+        return -1;
+
+    // The predecessor chain of dest must end on the virtual source (-2) after at most dim_var steps.
+    // If it loops, the exchange graph contains a negative cycle (the assignment was not optimal for the
+    // costs, typically because the input is inconsistent): fail instead of letting sendVarFlow loop forever.
+    int vtx = dest;
+    for (int steps = 0; path[vtx] != -2; ++steps) {
+        if (steps >= dim_var || path[vtx] < 0)
+            return -1;
+        vtx = path[vtx];
+    }
     return dest;
 }
 
@@ -588,7 +610,7 @@ static intptr_t BellmanShortestPaths(intptr_t dim_var, intptr_t dim_val,
  *              to be in scope as an outer variable in the original code.
  * -----------------------------------------------------------------------------
  */
-static void sendVarFlow(vector<int>& path, int* col4row, vector<vector<int>>& row4col,
+static inline void sendVarFlow(vector<int>& path, int* col4row, vector<vector<int>>& row4col,
     vector<int>& count_col, int notFeasVal, int dest)
 {
     // Remove `dest` from its current column (it will be re-assigned below).
@@ -601,7 +623,9 @@ static void sendVarFlow(vector<int>& path, int* col4row, vector<vector<int>>& ro
 
     // Walk the path: each row along the path inherits the column of its
     // predecessor, effectively shifting assignments one step toward `source`.
-    while (path[vtx] != -2) {
+    for (size_t steps = 0; path[vtx] != -2; ++steps) {
+        if (steps > path.size())
+            break; // cannot happen after BellmanShortestPaths validated the chain
         int prev = path[vtx];
         int col = col4row[prev];
         col4row[vtx] = col;
@@ -638,9 +662,9 @@ static void sendVarFlow(vector<int>& path, int* col4row, vector<vector<int>>& ro
  * all demands are satisfied.
  * -----------------------------------------------------------------------------
  */
-static intptr_t checkFlow(intptr_t dim_val,
-    vector<int>& demand,
-    vector<int>& count_col)
+static inline intptr_t checkFlow(intptr_t dim_val,
+    const vector<int>& demand,
+    const vector<int>& count_col)
 {
     for (intptr_t j = 0; j < dim_val; ++j) {
         if (count_col[j] < demand[j]) {
@@ -665,7 +689,7 @@ static intptr_t checkFlow(intptr_t dim_val,
  *
  * Pipeline
  * -------------------
- *  1. lapjv_gcc()
+ *  lapjv_gcc()
  *       |
  *       +-- lapjv_ub()          find a min-cost assignment respecting
  *       |                       upper-bound capacities only
@@ -673,9 +697,9 @@ static intptr_t checkFlow(intptr_t dim_val,
  *       +-- checkFlow()         verify every lower-bound demand is met
  *       |
  *       +-- (repair loop)
- *       |     shortestPaths()   Dijkstra from an infeasible column to find
+ *       |     BellmanShortestPaths()  Bellman-Ford from an infeasible column to find
  *       |                       the cheapest rerouting path
- *       |     sendFlow()        apply the rerouting along that path
+ *       |     sendVarFlow()     apply the rerouting along that path
  *       |__   checkFlow()       repeat until all demands are satisfied
 
  *
@@ -693,10 +717,10 @@ static intptr_t checkFlow(intptr_t dim_val,
  *          demand is not met.
  *
  *  Step 4. While there exists an infeasible column (notFeasVal ≥ 0):
- *            a. Run shortestPaths() (Dijkstra on the exchange graph) from
+ *            a. Run BellmanShortestPaths() (Bellman-Ford on the exchange graph) from
  *               notFeasVal to find the cheapest row that can be rerouted to it
  *               without creating a new infeasibility elsewhere.
- *            b. Apply sendFlow() to reroute that flow.
+ *            b. Apply sendVarFlow() to reroute that flow.
  *            c. Re-check feasibility with checkFlow().
  * Step 5.  Compute optimal dual solution (usol, vsol) via Bellman-Ford on the 
  *          residual graph.
@@ -720,15 +744,16 @@ static intptr_t checkFlow(intptr_t dim_val,
  * Total assignment cost, or MAX_COST if no feasible solution exists.
  * =============================================================================
  */
-static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
+static inline Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
     const vector<Cost>& cost,
     int* b,
     Cost* usol, Cost* vsol,
     Cost MAX_COST,
-    vector<int>& capacity,
-    vector<int>& demand,
+    const vector<int>& capacity,
+    const vector<int>& demand,
     int& findConflict)
 {
+    findConflict = 0;
     vector<vector<int>> row4col(dim_val); // column → list of assigned rows
     vector<int> count_col(dim_val, 0); // current load per column
     Cost total_cost = 0;
@@ -743,7 +768,7 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
 
     /* Step 2: Reconstruct row4col and count_col from output b[] */
     for (int var = 0; var < dim_var; var++) {
-        val = b[var],
+        val = b[var];
         row4col[val].push_back(var);
         count_col[val] += 1;
     }
@@ -767,8 +792,11 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
         }
     }
 
-    /* Step 4: Repair loop — restore feasibility one column at a time */
+    /* Step 4: Repair loop — restore feasibility one column at a time.*/
+    int repairs = 0;
     while (notFeasVal > -1) {
+        if (++repairs > dim_var )
+            return -1; 
 
         // (a) Find the cheapest rerouting from the infeasible column.
         int dest = BellmanShortestPaths(dim_var, dim_val, cost, VarList,
@@ -801,14 +829,14 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
     for (int val = 0; val < dim_val; val++) {
         for (int var : VarList[val]) {
             Cost c = cost[dim_val * var + val];
-            adj[var].push_back({ dim_var + val, c });      // arc always present
+            adj[var].push_back({ dim_var + val, c }); // arc always present
             if (b[var] == val)
-                adj[dim_var + val].push_back({var, -c }); // arc iff used in b[]
+                adj[dim_var + val].push_back({ var, -c }); // arc iff used in b[]
         }
         if (count_col[val] < capacity[val])
-            adj[dim_var + val].push_back({ T, 0 });         // capacity not saturated
+            adj[dim_var + val].push_back({ T, 0 }); // capacity not saturated
         if (count_col[val] > demand[val])
-            adj[T].push_back({ dim_var + val, 0 });         // above the floor
+            adj[T].push_back({ dim_var + val, 0 }); // above the floor
     }
 
     vector<Cost> dist(NB_NODES, MAX_COST);
@@ -839,7 +867,7 @@ static Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
 
 
 
-#endif // LAPJV_HPP_
+#endif // TB2LAPJV_HPP_
 
 /* Local Variables: */
 /* c-basic-offset: 4 */
