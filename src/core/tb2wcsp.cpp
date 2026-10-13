@@ -3069,7 +3069,8 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
             for (int i= 0; i < nbDelta; i++) {
                 int indexVar;
                 file >> indexVar;
-                assert(indexVar < ar);
+                assert(InvVarIdx.find(indexVar) != InvVarIdx.end());
+                indexVar = InvVarIdx[indexVar];
                 Value value;
                 file >> value;
                 Cost delta;
