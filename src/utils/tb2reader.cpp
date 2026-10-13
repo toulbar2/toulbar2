@@ -1508,7 +1508,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "gcc", ":bounds:[vNN]+:deltacosts:[vc]+" },
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
-        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+:deltacosts:[Vvc]+:lb:c:assigneddeltas:c" },
+        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+:deltacosts:[VvC]+:lb:c:assigneddeltas:C" },
         { "cfnconstraint", ":cfn:W:lb:c:ub:c:duplicatehard:N:strongduality:N" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
@@ -1944,7 +1944,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     // FIND MIN COST
     bool minUpdated = false;
     for (pair<char, string> streamContentPair : streamContentVec) {
-        if (streamContentPair.first == 'C') {
+        if (streamContentPair.first == 'C' && funcType != "knapsackv") {
             Cost currentCost = (Cost)std::stoll(streamContentPair.second);
             minCost = MIN(currentCost, minCost);
             minUpdated = true;
@@ -1955,7 +1955,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
     // WRITE ALL TO STREAM AND SUBSTRACT MIN COST TO ALL COSTS
     for (unsigned int i = 0; i < streamContentVec.size(); i++) {
-        if (streamContentVec[i].first == 'C') {
+        if (streamContentVec[i].first == 'C' && funcType != "knapsackv") {
             Cost currentCost = (Cost)std::stoll(streamContentVec[i].second);
             currentCost -= minCost;
             streamContentVec[i].second = to_string(currentCost);
