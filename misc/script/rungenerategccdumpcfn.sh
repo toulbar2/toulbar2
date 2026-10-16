@@ -52,7 +52,7 @@ while (( $n < $nend )) ; do
     rm -f toulbar2_verif
     rm -f sol
     randomfile="gcc-$n-$d-$tight-$bctr-$tctr-$nary-$seed"
-    ./Debug/bin/Linux/toulbar2 -random=$randomfile -z=2 -v=-4 > /dev/null
+    ./Debug/bin/Linux/toulbar2 -random=$randomfile -z=4 -v=-1 > /dev/null
     cp problem.cfn problemKP.cfn
     ./Debug/bin/Linux/toulbar2 problem.cfn "${@:1}" -w | awk 'BEGIN{opt=-1;} /^Optimum: /{opt=$2;} END{printf("%d",opt);}' > toulbar2_opt
     ub2=`awk 'BEGIN{opt=-1;} {opt=$1} END{printf("%d", opt)}' toulbar2_opt`
