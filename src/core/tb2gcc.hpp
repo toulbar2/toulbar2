@@ -44,6 +44,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     Cost Original_ub; // Initial upper bound when creating the constraint
     StoreCost lb; // Projected cost to problem lower bound (if zero, all deltaCosts must be zero)
     StoreCost assigneddeltas; // Accumulated deltas from assigned values (used in cost propagation)
+    StoreCost sumcostsprojectonvar; // Accumulated  costs project on variables ( case : non square and sumlb > 0)
     vector<Long> conflictWeights; // Used by weighted degree heuristics to prioritize variables
     vector<StoreCost> deltaCosts; // Extended unary costs to all values
     vector<StoreValue> storeLastAssignment; // Stores the last optimal assignment of variables
@@ -64,6 +65,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     vector<bool> varAlreadyProcessed; // varAlreadyProcessed[i] = true if variable i has already been processed during domain filtering
     bool SameDomain = true; // True if all variables have the same domain
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
+    map<Value, pair<int, int>> boundsTemp; // lower and upper bound capacities for every value
     vector<int> capacity; // upper bound capacities for every value
     vector<int> CurrentCapacity; // remaining upper bound capacities for every value (updated during propagation)
     vector<int> demand; // lower bound capacities for every value
@@ -156,9 +158,55 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             }
             VarDomainSize[varIndex] = count;
             if (count == 0)
+                {
                 THROWCONTRADICTION;
+            }
         }
     }
+
+
+    // Greedy feasible assignment for a zero cost matrix: demands (lower bounds) first, then capacities (upper bounds).
+    // varIdx / valIdx map local indices to scope / UnionVarDomain indices (nullptr = identity).
+    // Feasibility (sum of demands <= nbVars <= sum of capacities) must already be checked.
+    void fillFeasibleSupport(int nbVars, const int* varIdx, int nbVals, const int* valIdx,
+                            const vector<int>& cap, const vector<int>& dem)
+    {
+        int x = 0; // next variable to place
+        auto place = [&](int j) {
+            int v = varIdx ? varIdx[x] : x;
+            storeLastAssignment[v] = toVarValue(v, valIdx ? valIdx[j] : j);
+            ++x;
+        };
+        // Phase 1: satisfy demands
+        if(sumlb > 0){
+            for (int j = 0; j < nbVals; ++j)
+                for (int c = 0; c < dem[j] && x < nbVars; ++c)
+                    place(j);
+        }
+        // Phase 2: fill remaining capacities
+        for (int j = 0; j < nbVals && x < nbVars; ++j)
+            for (int c = dem[j]; c < cap[j] && x < nbVars; ++c)
+                place(j);
+        assert(x == nbVars);
+        storeAssignment = true;
+    }
+
+    // Make the stored value the EAC support of the variable
+    void updateSupport(int varIndex)
+    {
+        auto* variable = scope[varIndex];
+        Value optimalValue = storeLastAssignment[varIndex];
+        if (variable->getSupport() != optimalValue) {
+            if (ToulBar2::verbose > 0)
+                cout << "CHANGE GCC SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
+    #ifndef NDEBUG
+            variable->queueEAC1(); // EAC support may have been lost
+    #endif
+            variable->setSupport(optimalValue);
+            assert(variable->getCost(variable->getSupport()) == MIN_COST);
+        }
+    }
+
 
 public:
     GlobalCardinalityConstraint(const GlobalCardinalityConstraint&) = delete; // owns raw arrays
@@ -169,6 +217,7 @@ public:
         , Original_ub(wcsp->getUb())
         , lb(0)
         , assigneddeltas(0)
+        , sumcostsprojectonvar(0)
         , storeAssignment(false)
         , NbValues(0)
         , NbAssigned(0)
@@ -197,7 +246,7 @@ public:
             // Get the domain size of the first variable
             auto* variable = scope[varIndex];
             DomainSize = (int)variable->getDomainInitSize();
-            VarDomainSize.push_back(DomainSize);
+            VarDomainSize.push_back(DomainSize);                     
 
             // Collect values from the first variable's domain
             for (int valIndex = 0; valIndex < DomainSize; valIndex++) {
@@ -304,20 +353,57 @@ public:
         int lower = 0;
         int upper = 0;
         file >> Gcc_NbValues;
-        bool findval;
         Cost Max_cost = wcsp->getUb();
+        unordered_map<Value, Value> mapValuetempValue;
+    
+        vector<Value> ListValTemp;
+        ListValTemp.reserve(Gcc_NbValues);
         for (int v = 0; v < Gcc_NbValues; v++) {
-
-            Value value;
-            file >> value;
+            Value valueTemp;
+            file >> valueTemp;
             file >> lower;
             sumlb += lower;
             file >> upper;
             if (lower > upper)
                 THROWCONTRADICTION;
             sumub += upper;
-            findval = false;
-            bounds[value] = { lower, upper };
+            boundsTemp[valueTemp] = { lower, upper };
+            ListValTemp.push_back(valueTemp);
+        }
+
+        // Values removed from the domains
+        int Nb_removeValues = 0;
+        file >> Nb_removeValues;
+        vector<Value> ListremoveVal;
+        ListremoveVal.reserve(Nb_removeValues);
+        for (int val = 0; val < Nb_removeValues; val++) {
+            Value rmval;
+            file >> rmval;
+            ListremoveVal.push_back(rmval);
+        }
+
+        // Shift each value by the number of removed values smaller than it
+        vector<Value> ListVal;
+        ListVal.reserve(Gcc_NbValues);
+        for (int v = 0; v < Gcc_NbValues; v++) {
+            int distance = 0;
+            for (int r = 0; r < Nb_removeValues; r++) {
+                if (ListremoveVal[r] < ListValTemp[v])
+                    distance++;
+            }
+            ListVal.push_back(ListValTemp[v] - distance);
+        }
+
+        // Set capacity and demand of each listed value
+        for (int v = 0; v < Gcc_NbValues; v++) {
+            Value valueTemp = ListValTemp[v];
+            Value value = ListVal[v];
+            bounds[value] = boundsTemp[valueTemp];
+            mapValuetempValue[valueTemp] = value;
+            lower = bounds[value].first;
+            upper = bounds[value].second;
+
+            bool findval = false;
             for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                 auto* variable = scope[varIndex];
                 if (variable->canbe(value) && (variable->getCost(value) < Max_cost)) {
@@ -330,13 +416,25 @@ public:
                     break;
                 }
             }
-            if (!findval && lower > 0)
-                THROWCONTRADICTION;
+
+            if (!findval){
+                if(lower > 0){
+                    THROWCONTRADICTION;
+                }else{
+                    sumub -= upper;
+                }
+            }
+
+                
         }
         if (sumlb > arity_)
-            THROWCONTRADICTION;
+            {
+                THROWCONTRADICTION;
+            }
         if (sumub < arity_ && Gcc_NbValues == NbValues)
-            THROWCONTRADICTION;
+            {
+                THROWCONTRADICTION;
+            }
 
         // Values upper bound capacity update.
         int zeroCapacity = 0;
@@ -365,7 +463,7 @@ public:
         } else {
             sumub = 0;
             for (int valIndex = 0; valIndex < NbValues; valIndex++) {
-                sumub += capacity[valIndex]; // also counts values not listed in the gcc (capacity = arity)
+                sumub += capacity[valIndex]; 
                 if (capacity[valIndex] <= 0) {
                     zeroCapacity++;
                     Value value;
@@ -381,7 +479,7 @@ public:
         }
 
         if (zeroCapacity > 0) {
-            // Move the values of null capacity at the end of the union (indexes >= NbRestValues): they are then ignored
+            // Move the values of null capacity at the end of the union: they are then ignored
             int NbRestValues = NbValues - zeroCapacity;
             int restCapacity = 0;
             int zeroIndex = NbRestValues;
@@ -411,7 +509,7 @@ public:
         if (!isSquare) {
             int nbDelta = 0;
             file >> nbDelta;
-            if (nbDelta) {
+            if (nbDelta > 0 ) {
                 for (int v = 0; v < nbDelta; v++) {
                     Value value;
                     Cost delta;
@@ -419,8 +517,8 @@ public:
                     file >> delta;
                     for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                         auto* variable = scope[varIndex];
-                        if (variable->canbe(value)) {
-                            int idx = unionIndex(variable->getValueName(variable->toIndex(value)));
+                        if (variable->canbe(mapValuetempValue[value])) {
+                            int idx = unionIndex(variable->getValueName(variable->toIndex(mapValuetempValue[value])));
                             if (idx < 0)
                                 continue;
                             deltaCosts[idx] = delta;
@@ -428,6 +526,11 @@ public:
                         }
                     }
                 }
+                Cost SumCostsProjectVar = 0, Lb = 0;
+                file >> Lb; 
+                file >> SumCostsProjectVar;
+                lb += Lb;
+                sumcostsprojectonvar += SumCostsProjectVar;
             }
         }
     }
@@ -599,7 +702,7 @@ public:
                 }
             }
             if (sumlb > 0) {
-                res = -lb + assigneddeltas;
+                res = -lb + sumcostsprojectonvar;
                 for (int valIndex = 0; valIndex < NbValues; valIndex++) {
                     res += countUsed[valIndex] * (deltaCosts[valIndex]);
                 }
@@ -621,7 +724,7 @@ public:
     {
         if (isSquare)
             return MIN_COST;
-        Cost sumdelta = abs(-lb + assigneddeltas);
+        Cost sumdelta = abs(-lb + sumcostsprojectonvar);
         Cost m = *max_element(deltaCosts.begin(), deltaCosts.end());
         if (m > MIN_COST)
             sumdelta += m;
@@ -1003,13 +1106,17 @@ public:
                             vector<int> NoAsscapacity;
                             vector<int> NoAssdemand;
                             int lbcap;
+                            int sumlbtemp = 0;
+                            int sumubtemp = 0;
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 if (CurrentCapacity[valIndex] > 0) {
                                     NoAssignedVal.push_back(valIndex);
                                     NoAsscapacity.push_back(CurrentCapacity[valIndex]);
+                                    sumubtemp += CurrentCapacity[valIndex];
                                     if (sumlb > 0) {
                                         lbcap = demand[valIndex] - (capacity[valIndex] - CurrentCapacity[valIndex]);
                                         NoAssdemand.push_back(lbcap > 0 ? lbcap : 0);
+                                        sumlbtemp += lbcap;
                                     } else {
                                         NoAssdemand.push_back(0);
                                     }
@@ -1017,7 +1124,7 @@ public:
                             }
 
                             NbNoAssignedVal = NoAssignedVal.size();
-                            if (NbNoAssignedVal == 0)
+                            if (NbNoAssignedVal == 0 || sumlbtemp > NbNoAssigned || sumubtemp < NbNoAssigned)
                                 THROWCONTRADICTION;
 
                             // Initialize cost matrix for the Jonker algorithm
@@ -1039,15 +1146,14 @@ public:
                                     }
                                 }
                             }
-                            if(any_of(costMatrix.begin(),costMatrix.begin() + arity_ * NbNoAssignedVal,  [](auto x) { return x > MIN_COST; })){
+                            if(any_of(costMatrix.begin(),costMatrix.begin() +NbNoAssigned  * NbNoAssignedVal,  [](auto x) { return x > MIN_COST; })){
                                 // Solve assignment problem using Jonker algorithm
                                 Cost TotalCost;
                                 if (!isSquare) {
 
                                     if (sumlb == 0) {
-                                        for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                        for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd)
                                             costMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = deltaCosts[NoAssignedVal[valInd]];
-                                        }
                                         TotalCost = lapjv_ub(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, NoAsscapacity, findConflict);
 
                                     } else {
@@ -1114,7 +1220,7 @@ public:
                                                         assignedPart += ReduceCostCol[valInd] * (capacity[valIndex] - CurrentCapacity[valIndex]);
                                                     }
                                                 }
-                                                assigneddeltas -= assignedPart;
+                                                sumcostsprojectonvar -= assignedPart;
                                             }
                                         }
                                         // Update the lower bound with the Jonker algorithm's total cost
@@ -1131,7 +1237,7 @@ public:
                                         vector<char> usedFlag;
                                         for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                             int varIndex = NoAssignedVar[varInd];
-                                            assigneddeltas += ReduceCostRow[varInd];
+                                            sumcostsprojectonvar += ReduceCostRow[varInd];
                                             VarMaxReducedCost = 0;
                                             if (doFilter)
                                                 ValList[varInd].assign(NbNoAssignedVal, 0);
@@ -1251,30 +1357,39 @@ public:
                                         }
                                     }
                                 }
-                            } else if(!isSquare){
-                               // cout << "GCC SASTISFY\n";
-                                bool sastisfy = true;
-                                for(int valIndex = 0; valIndex < NbNoAssignedVal; valIndex ++){
-                                    if(NoAsscapacity[valIndex] < NbNoAssigned){
-                                        sastisfy = false;
-                                        break;
+                            } 
+                            else {
+                                // Zero cost matrix: build a feasible assignment quickly
+                                fillFeasibleSupport(NbNoAssigned, NoAssignedVar.data(), NbNoAssignedVal, NoAssignedVal.data(),
+                                                    NoAsscapacity, NoAssdemand);
+                                // Assigned variables keep their value
+                                for (int k = 0; k < NbAssigned; ++k)
+                                    storeLastAssignment[AssignedVar[k]] = toVarValue(AssignedVar[k], AssignedVal[k]);
+                                for (int varInd = 0; varInd < NbNoAssigned; ++varInd)
+                                    updateSupport(NoAssignedVar[varInd]);
+
+                                if (!isSquare) {
+                                    bool sastisfy = true;
+                                    for (int valIndex = 0; valIndex < NbNoAssignedVal; valIndex++) {
+                                        if (NoAsscapacity[valIndex] < NbNoAssigned) {
+                                            sastisfy = false;
+                                            break;
+                                        }
+                                    }
+                                    if (sastisfy) {
+                                        if (ToulBar2::verbose > 0)
+                                            cout << "GCC SASTISFY\n";
+                                        deconnect();
                                     }
                                 }
-                                if(sastisfy){
-                                    if (ToulBar2::verbose > 0)
-                                        cout << "GCC SASTISFY\n";
-                                    deconnected();
-                                }
                             }
-                            
+
                         }
                     }
 
                     if (connected() && (NbNoAssigned == arity_ || (!SameDomain))) {
 
                         Cost current_ub = wcsp->getUb() - wcsp->getLb();
-                        // Values of the union that do not belong to a variable domain are forbidden
-                        fill(costMatrix.begin(), costMatrix.begin() + (size_t)arity_ * NbValues, current_ub);
                         // Initialize the cost matrix for all variables and their domain values
                         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                             auto* variable = scope[varIndex];
@@ -1282,7 +1397,7 @@ public:
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 Value value = toVarValue(varIndex, valIndex);
                                 if (value == WRONG_VAL)
-                                    continue; // the variable cannot take this value: stays at current_ub (see fill above)
+                                    continue; 
                                 Cost valCost = variable->canbe(value) ? variable->getCost(value) : current_ub;
                                 costMatrix[varIndex * NbValues + valIndex] = valCost < current_ub ? valCost : current_ub;
                             }
@@ -1294,9 +1409,9 @@ public:
                             if (!isSquare) {
 
                                 if (sumlb == 0) {
-                                    for (int valInd = 0; valInd < NbValues; ++valInd) {
-                                        costMatrix[arity_ * NbValues + valInd] = deltaCosts[valInd];
-                                    }
+                                    for (int valInd = 0; valInd < NbValues; ++valInd)
+                                    costMatrix[arity_ * NbValues + valInd] = deltaCosts[valInd];
+
                                     TotalCost = lapjv_ub(arity_ + 1, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, capacity, findConflict);
 
                                 } else {
@@ -1319,7 +1434,7 @@ public:
                                 wcsp->revise(this);
                                 THROWCONTRADICTION;
 
-                            } else if (TotalCost > 0 || (any_of(ReduceCostRow, ReduceCostRow + arity_,  [](auto x) { return x > MIN_COST; }))) {
+                            } else if (TotalCost >= 0) {
                                 // Store results from Jonker algorithm
                                 for (int varIndex = 0; varIndex < arity_; varIndex++) {
                                     storeLastAssignment[varIndex] = toVarValue(varIndex, rowSol[varIndex]);
@@ -1357,7 +1472,7 @@ public:
 
                                     // Adjust unary costs using reduced row and column costs
                                     for (int varIndex = 0; varIndex < arity_; ++varIndex) {
-                                        assigneddeltas += ReduceCostRow[varIndex];
+                                        sumcostsprojectonvar += ReduceCostRow[varIndex];
                                         for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                             Value value = toVarValue(varIndex, valIndex);
                                             if (value == WRONG_VAL)
@@ -1368,37 +1483,33 @@ public:
                                         }
                                     }
 
-                                    // Update support if needed for all variables
-                                    for (int varIndex = 0; varIndex < arity_; ++varIndex) {
-                                        auto* variable = scope[varIndex];
-                                        Value optimalValue = storeLastAssignment[varIndex];
-                                        if (variable->getSupport() != optimalValue) {
-                                            if (ToulBar2::verbose > 0)
-                                                cout << "CHANGE GCC SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
-        #ifndef NDEBUG
-                                            variable->queueEAC1(); // EAC support may have been lost
-        #endif
-                                            variable->setSupport(optimalValue);
-                                            assert(variable->getCost(variable->getSupport()) == MIN_COST);
-                                        }
-                                    }
                                 }
+                                // Update support for all variables (also when the optimal LAP cost is zero)
+                                for (int varIndex = 0; varIndex < arity_; ++varIndex)
+                                    updateSupport(varIndex);
                             }
-                        }  else if(!isSquare){
-                                //cout << "GCC SASTISFY\n";
+                        }
+                        else {
+                            // Zero cost matrix: build a feasible assignment quickly
+                            fillFeasibleSupport(arity_, nullptr, NbValues, nullptr, capacity, demand);
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex)
+                                updateSupport(varIndex);
+
+                            if (!isSquare) {
                                 bool sastisfy = true;
-                                for(int valIndex = 0; valIndex < NbValues; valIndex ++){
-                                    if(capacity[valIndex] < arity_){
+                                for (int valIndex = 0; valIndex < NbValues; valIndex++) {
+                                    if (capacity[valIndex] < arity_) {
                                         sastisfy = false;
                                         break;
                                     }
                                 }
-                                if(sastisfy){
+                                if (sastisfy) {
                                     if (ToulBar2::verbose > 0)
                                         cout << "GCC SASTISFY\n";
-                                    deconnected();
+                                    deconnect();
                                 }
                             }
+                        }
                     }
                 }
             }
@@ -1408,16 +1519,20 @@ public:
     // checks that the constraint is still satisfiable (called by WCSP::verify in Debug mode at each search node)
     bool verify() override
     {
+        
         if (!storeAssignment) {
             return false;
         }
+
         map<Value, int> count;
+     
         for (int i = 0; i < arity_; i++) {
             if (count.find(storeLastAssignment[i]) != count.end()) {
                 count[storeLastAssignment[i]]++;
             } else {
                 count[storeLastAssignment[i]] = 1;
             }
+           
             if (scope[i]->cannotbe(storeLastAssignment[i]) || scope[i]->getCost(storeLastAssignment[i]) > MIN_COST) {
                 if (scope[i]->cannotbe(storeLastAssignment[i])) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " has been removed!" << endl;
@@ -1427,6 +1542,7 @@ public:
                 return false;
             }
         }
+
         for (auto e : bounds) {
             int mycount = 0;
             if (count.find(e.first) != count.end()) {
@@ -1508,7 +1624,7 @@ public:
         }
         if (!isSquare) {
             os << ") "
-               << " cost: " << -lb << " + " << assigneddeltas << " + (";
+               << " cost: " << -lb << " + " << sumcostsprojectonvar << " + (";
             for (unsigned int j = 0; j < deltaCosts.size(); j++) {
                 os << deltaCosts[j];
                 if (j < deltaCosts.size() - 1)
@@ -1523,8 +1639,8 @@ public:
                 os << "," << conflictWeights[i];
             }
         }
-        os << " " << bounds.size() << ":[";
-        for (const auto& [key, bound] : bounds) {
+        os << " " << boundsTemp.size() << ":[";
+        for (const auto& [key, bound] : boundsTemp) {
             os << " (" << key;
             os << "," << bound.first;
             os << "," << bound.second;
@@ -1535,7 +1651,7 @@ public:
     }
 
     // returns the non-zero extended unary costs indexed by value (a value is reported through the first variable that can still take it)
-    map<Value, Cost> nonZeroDeltaCosts() const
+    map<Value, Cost> nonZeroDeltaCosts() 
     {
         map<Value, Cost> result;
         if (isSquare)
@@ -1555,16 +1671,46 @@ public:
         return result;
     }
 
+    // List of the values removed from the domains of ALL the variables of the scope
+    vector<Value> removedValues()
+    {
+        map<Value, bool> stillThere; // value -> true if at least one variable can still take it
+        for (int i = 0; i < arity_; i++) {
+            auto* var = scope[i];
+            int initSize = (int)var->getDomainInitSize();
+            for (int k = 0; k < initSize; k++) {
+                Value v = var->toValue(k);
+                bool can = var->canbe(v);
+                auto res = stillThere.emplace(v, can);
+                if (!res.second && can)
+                    res.first->second = true;
+            }
+        }
+        vector<Value> removed;
+        for (const auto& [v, ok] : stillThere) {
+            if (!ok)
+                removed.push_back(v);
+        }
+        return removed;
+    }
     void dump(ostream& os, bool original = true) override
     {
+        // a bound is kept in the current problem only if its value still has a capacity
+        auto keepBound = [&](Value key) {
+            string name = scope[0]->getValueName(scope[0]->toIndex(key));
+            int idx = unionIndex(name);
+            return idx >= 0 && capacity[idx] > 0;
+        };
+
         if (original) {
+            // original problem: bounds (+ delta costs if any); removed values are omitted
             os << arity_;
             for (int i = 0; i < arity_; i++)
                 os << " " << scope[i]->wcspIndex;
             os << " -1 gcc ";
 
-            os << bounds.size();
-            for (const auto& [key, bound] : bounds) {
+            os << boundsTemp.size();
+            for (const auto& [key, bound] : boundsTemp) {
                 os << " " << key;
                 os << " " << bound.first;
                 os << " " << bound.second;
@@ -1577,22 +1723,13 @@ public:
             os << " -1 gcc ";
 
             int compt = 0;
-            for (const auto& [key, bound] : bounds) {
-                string name = scope[0]->getValueName(scope[0]->toIndex(key));
-                int idx = unionIndex(name);
-                if (idx < 0)
-                    continue;
-                if (capacity[idx] > 0)
+            for (const auto& [key, bound] : bounds)
+                if (keepBound(key))
                     compt++;
-            }
 
             os << compt;
             for (const auto& [key, bound] : bounds) {
-                string name = scope[0]->getValueName(scope[0]->toIndex(key));
-                int idx = unionIndex(name);
-                if (idx < 0)
-                    continue;
-                if (capacity[idx] == 0)
+                if (!keepBound(key))
                     continue;
                 os << " " << key;
                 os << " " << bound.first;
@@ -1600,21 +1737,32 @@ public:
             }
         }
 
-        if (!isSquare) {
-            map<Value, Cost> mapValuesdeltaCosts = nonZeroDeltaCosts();
-            if (!mapValuesdeltaCosts.empty()) {
-                int current_val = (int)mapValuesdeltaCosts.size();
-                os << " " << current_val;
-                for (auto& [key, delta] : mapValuesdeltaCosts) {
-                    os << " " << key;
-                    os << " " << delta;
-                }
-            } else {
-                os << " " << 0;
+        map<Value, Cost> mapValuesdeltaCosts;
+        if (!isSquare)
+            mapValuesdeltaCosts = nonZeroDeltaCosts();
+
+        // removed values: written only if non-empty, or if delta costs follow
+        // (the count is then needed, even 0, so that the reader stays in sync)
+        if (!original) {
+            vector<Value> removedVals = removedValues();
+            if (!removedVals.empty() || !mapValuesdeltaCosts.empty()) {
+                os << " " << removedVals.size();
+                for (Value v : removedVals)
+                    os << " " << v;
             }
-        } else {
-            os << " " << 0;
         }
+
+        // delta costs, lb and sumcostsprojectonvar: only if there are non-zero delta costs
+        if (!mapValuesdeltaCosts.empty()) {
+            os << " " << mapValuesdeltaCosts.size();
+            for (auto& [key, delta] : mapValuesdeltaCosts) {
+                os << " " << key;
+                os << " " << delta;
+            }
+            os << " " << lb;
+            os << " " << sumcostsprojectonvar;
+        }
+
         os << endl;
     }
 
@@ -1624,31 +1772,18 @@ public:
         os << "\"F_";
 
         if (original) {
-            printed = false;
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << "_";
                 os << scope[i]->wcspIndex;
                 printed = true;
             }
-
             os << "\":{\"scope\":[";
             printed = false;
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << ",";
                 os << "\"" << name2cfn(scope[i]->getName()) << "\"";
-                printed = true;
-            }
-            os << "],\"type\":\"gcc\",\"params\":{\"bounds\":[";
-            printed = false;
-            for (const auto& [key, bound] : bounds) {
-                if (printed)
-                    os << ",";
-                os << "[" << key;
-                os << "," << bound.first;
-                os << "," << bound.second;
-                os << "]";
                 printed = true;
             }
         } else {
@@ -1668,44 +1803,84 @@ public:
                     os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
-            os << "],\"type\":\"gcc\",\"params\":{\"bounds\":[";
-            printed = false;
+        }
+        os << "],\"type\":\"gcc\",\"params\":{";
+
+        // Separator shared by all optional parameters: commas are always valid JSON.
+        bool firstParam = true;
+        auto sep = [&]() {
+            if (!firstParam)
+                os << ",";
+            firstParam = false;
+        };
+
+        // bounds (always written, even if empty)
+        ostringstream bs;
+        bool anyBound = false;
+        auto addBound = [&](Value key, const auto& bound) {
+            if (anyBound)
+                bs << ",";
+            bs << "[" << key << "," << bound.first << "," << bound.second << "]";
+            anyBound = true;
+        };
+        if (original) {
+            for (const auto& [key, bound] : boundsTemp)
+                addBound(key, bound);
+        } else {
             for (const auto& [key, bound] : bounds) {
                 string name = scope[0]->getValueName(scope[0]->toIndex(key));
                 int idx = unionIndex(name);
-                if (idx < 0)
+                if (idx < 0 || capacity[idx] <= 0)
                     continue;
-                if (capacity[idx] == 0)
-                    continue;
-                if (printed)
-                    os << ",";
-                os << "[" << key;
-                os << "," << bound.first;
-                os << "," << bound.second;
+                addBound(key, bound);
+            }
+        }
+        sep();
+        os << "\"bounds\":[" << bs.str() << "]";
+
+        // removed values (current problem only, written only if non-empty)
+        if (!original) {
+            vector<Value> removedVals = removedValues();
+            if (!removedVals.empty()) {
+                sep();
+                os << "\"removedvalues\":[";
+                for (size_t i = 0; i < removedVals.size(); i++) {
+                    if (i > 0)
+                        os << ",";
+                    os << removedVals[i];
+                }
                 os << "]";
-                printed = true;
             }
         }
 
-        os << "],\"deltacosts\":[";
-        if (isSquare) {
-            os << "]}},\n";
-        } else {
-            map<Value, Cost> mapValuesdeltaCosts = nonZeroDeltaCosts();
-            if (!mapValuesdeltaCosts.empty()) {
-                printed = false;
-                for (auto& [key, delta] : mapValuesdeltaCosts) {
-                    if (printed)
-                        os << ",";
-                    os << "[" << key;
-                    os << "," << delta;
-                    os << "]";
-                    printed = true;
-                }
+        // delta costs (non-square problems), then lb / sumcostsprojectonvar if non-zero
+        map<Value, Cost> mapValuesdeltaCosts;
+        if (!isSquare)
+            mapValuesdeltaCosts = nonZeroDeltaCosts();
+        if (!mapValuesdeltaCosts.empty()) {
+            sep();
+            os << "\"deltacosts\":[";
+            printed = false;
+            for (auto& [key, delta] : mapValuesdeltaCosts) {
+                if (printed)
+                    os << ",";
+                os << "[" << key << "," << delta << "]";
+                printed = true;
             }
-            os << "]}},\n";
+            os << "]";
+            if (lb != 0) {
+                sep();
+                os << "\"lb\":" << lb;
+            }
+            if (sumcostsprojectonvar != 0) {
+                sep();
+                os << "\"sumcostsprojectonvar\":" << sumcostsprojectonvar;
+            }
         }
+
+        os << "}},\n";
     }
+
 };
 
 #endif /*TB2GCC_HPP_*/

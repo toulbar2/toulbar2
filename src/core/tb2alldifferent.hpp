@@ -149,6 +149,22 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
         }
     }
 
+    // Make the stored value the EAC support of the variable
+    void updateSupport(int varIndex)
+    {
+        auto* variable = scope[varIndex];
+        Value optimalValue = storeLastAssignment[varIndex];
+        if (variable->getSupport() != optimalValue) {
+            if (ToulBar2::verbose > 0)
+                cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
+#ifndef NDEBUG
+            variable->queueEAC1(); // EAC support may have been lost
+#endif
+            variable->setSupport(optimalValue);
+            assert(variable->getCost(variable->getSupport()) == MIN_COST);
+        }
+    }
+
 public:
     // Constructor for the AllDifferentConstraint class
     AllDifferentConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in)
@@ -305,16 +321,41 @@ public:
     {
         string line;
         getline(files, line);
+        vector<Value>TempexceptedValues;
         stringstream file(line);
         Cost Max_cost = wcsp->getUb();
         int nbExcepted = 0;
         file >> nbExcepted;
         int tempNbExcepted = nbExcepted;
         for (int v = 0; v < nbExcepted; v++) {
-            bool findval = false;
             Value except;
             file >> except;
-            exceptedValues.push_back(except);
+            TempexceptedValues.push_back(except);
+        }
+
+        // Values removed from the domains
+        int Nb_removeValues = 0;
+        file >> Nb_removeValues;
+        vector<Value> ListremoveVal;
+        ListremoveVal.reserve(Nb_removeValues);
+        for (int val = 0; val < Nb_removeValues; val++) {
+            Value rmval;
+            file >> rmval;
+            ListremoveVal.push_back(rmval);
+        }
+
+        for (int v = 0; v < (int)TempexceptedValues.size(); v++) {
+            bool findval = false;
+            Value except = TempexceptedValues[v];
+            if(Nb_removeValues > 0){
+            int distance = 0;
+                for (int r = 0; r < Nb_removeValues; r++) {
+                    if (ListremoveVal[r] < except)
+                        distance++;
+                }
+                except = except - distance;
+            }
+            
             for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                 auto* variable = scope[varIndex];
                 if (variable->canbe(except) && (variable->getCost(except) < Max_cost)) {
@@ -322,6 +363,7 @@ public:
                     if (idx < 0)
                         continue;
                     exceptedValIndex.push_back(idx);
+                    exceptedValues.push_back(except);
                     isExceptedVal[idx] = 1;
                     ValuesCapacity[idx] = arity_;
                     findval = true;
@@ -346,14 +388,23 @@ public:
         }
 
         if (!isSquare) {
-            int nbDelta;
+            int nbDelta = 0;
             file >> nbDelta;
+            //cout<<nbDelta<<endl;
             if (nbDelta) {
                 for (int v = 0; v < nbDelta; v++) {
                     Value value;
                     Cost delta;
                     file >> value;
                     file >> delta;
+                   if(Nb_removeValues > 0){
+                    int distance = 0;
+                        for (int r = 0; r < Nb_removeValues; r++) {
+                            if (ListremoveVal[r] < value)
+                                distance++;
+                        }
+                        value = value - distance;
+                    }
                     for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                         auto* variable = scope[varIndex];
                         if (variable->canbe(value)) {
@@ -1129,13 +1180,13 @@ public:
                                 }
                             }
 
-                            if(any_of(costMatrix.begin(),costMatrix.begin() + arity_ * NbNoAssignedVal,  [](auto x) { return x > MIN_COST; })){
+                            if (any_of(costMatrix.begin(), costMatrix.begin() + NbNoAssigned * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
                                 // Solve assignment problem using Jonker algorithm
                                 Cost TotalCost;
                                 if (!isSquare) {
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                         costMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = deltaCosts[NoAssignedVal[valInd]];
-                                    }
+                                }
                                     TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
 
                                 } else {
@@ -1334,6 +1385,19 @@ public:
                                         }
                                     }
                                 }
+                            } else {
+                                // Zero cost matrix: every unassigned variable can take every free value at no cost,
+                                // so any injective assignment is optimal (no cost to project)
+                                if (NbNoAssignedVal < NbNoAssigned)
+                                    THROWCONTRADICTION;
+                                for (int k = 0; k < NbNoAssigned; ++k)
+                                    storeLastAssignment[NoAssignedVar[k]] = toVarValue(NoAssignedVar[k], NoAssignedVal[k]);
+                                // Assigned variables keep their value
+                                for (int k = 0; k < NbAssigned; ++k)
+                                    storeLastAssignment[AssignedVar[k]] = toVarValue(AssignedVar[k], AssignedVal[k]);
+                                storeAssignment = true;
+                                for (int k = 0; k < NbNoAssigned; ++k)
+                                    updateSupport(NoAssignedVar[k]);
                             }
                         }
                     }
@@ -1341,7 +1405,6 @@ public:
                     // Case when all variables are unassigned or filtering exception or domains differ
                     if (connected() && (NbNoAssigned == arity_ || filtreExcepted || !SameDomain) ){
                         Cost current_ub = wcsp->getUb() - wcsp->getLb();
-
                         // Initialize the cost matrix for all variables and their domain values
                         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                             auto* variable = scope[varIndex];
@@ -1355,15 +1418,14 @@ public:
                             }
                         }
 
-                        if(any_of(costMatrix.begin(),costMatrix.begin() + arity_ * NbValues,  [](auto x) { return x > MIN_COST; })){
-                       
+                        if (any_of(costMatrix.begin(), costMatrix.begin() + arity_  * NbValues, [](auto x) { return x != MIN_COST; })) {
                             // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                             Cost TotalCost;
 
                             if (!isSquare) {
                                 for (int valInd = 0; valInd < NbValues; ++valInd) {
                                     costMatrix[arity_ * NbValues + valInd] = deltaCosts[valInd];
-                                }
+                            }
                                 if (excepted) {
                                     TotalCost = lapjv(arity_ + 1, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, exceptedValIndex, findConflict);
                                 } else {
@@ -1448,6 +1510,18 @@ public:
                                     }
                                 }
                             }
+                        } else {
+                            // Zero cost matrix: every variable can take every value at no cost.
+                            // Give distinct values; when there are more variables than values, reuse an excepted value.
+                            if (!excepted && NbValues < arity_)
+                                THROWCONTRADICTION;
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                                int valIndex = (varIndex < NbValues) ? varIndex : exceptedValIndex[0];
+                                storeLastAssignment[varIndex] = toVarValue(varIndex, valIndex);
+                            }
+                            storeAssignment = true;
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex)
+                                updateSupport(varIndex);
                         }
                     }
                 }
@@ -1550,6 +1624,31 @@ public:
         return result;
     }
 
+
+    // List of the values removed from the domains of ALL the variables of the scope
+    vector<Value> removedValues()
+    {
+        map<Value, bool> stillThere; // value -> true if at least one variable can still take it
+        for (int i = 0; i < arity_; i++) {
+            auto* var = scope[i];
+            int initSize = (int)var->getDomainInitSize();
+            for (int k = 0; k < initSize; k++) {
+                Value v = var->toValue(k);
+                bool can = var->canbe(v);
+                auto res = stillThere.emplace(v, can);
+                if (!res.second && can)
+                    res.first->second = true;
+            }
+        }
+        vector<Value> removed;
+        for (const auto& [v, ok] : stillThere) {
+            if (!ok)
+                removed.push_back(v);
+        }
+        return removed;
+    }
+
+
     void print(ostream& os) override
     {
         os << this << " alldifferent(";
@@ -1591,8 +1690,12 @@ public:
         os << " unassigned: " << getNonAssigned() << "/" << unassigned_ << endl;
     }
 
+
+
     void dump(ostream& os, bool original = true) override
     {
+        map<Value, Cost> mapValuesDeltaCosts ;
+        if(!isSquare) mapValuesDeltaCosts = nonZeroDeltaCosts();
         if (original) {
             os << arity_;
             for (int i = 0; i < arity_; i++)
@@ -1605,25 +1708,32 @@ public:
                     os << " " << scope[i]->getCurrentVarId();
             os << " -1 alldiff ";
         }
-        os << exceptedValues.size();
-        for (Value v : exceptedValues) {
-            os << " " << v;
-        }
 
+        // excepted values: number followed by the list
+        if (!exceptedValues.empty()) {
+            os << exceptedValues.size();
+            for (Value v : exceptedValues)
+                os << " " << v;
+        }else if(!mapValuesDeltaCosts.empty())  os << " " << 0;
+
+        // removed values: number followed by the list
+        vector<Value> removedVals = removedValues();
+        if (!removedVals.empty()) {
+            os << " " << removedVals.size();
+            for (Value v : removedVals)
+                os << " " << v;
+        }else if(!mapValuesDeltaCosts.empty())  os << " " << 0;
+
+        // delta costs (non-square case only)
         if (!isSquare) {
-            map<Value, Cost> mapValuesDeltaCosts = nonZeroDeltaCosts();
             if (!mapValuesDeltaCosts.empty()) {
-                int current_val = (int)mapValuesDeltaCosts.size();
-                os << " " << current_val;
+
+                os << " " << mapValuesDeltaCosts.size();
                 for (auto& [key, delta] : mapValuesDeltaCosts) {
                     os << " " << key;
                     os << " " << delta;
                 }
-            } else {
-                os << " " << 0;
             }
-        } else {
-            os << " " << 0;
         }
         os << endl;
     }
@@ -1633,7 +1743,6 @@ public:
         bool printed = false;
         os << "\"F_";
         if (original) {
-            printed = false;
             for (int i = 0; i < arity_; i++) {
                 if (printed)
                     os << "_";
@@ -1649,7 +1758,7 @@ public:
                 os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                 printed = true;
             }
-            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedvalues\":[";
+            os << "],\"type\":\"alldiff\",\"params\":{";
         } else {
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned()) {
@@ -1667,33 +1776,62 @@ public:
                     os << "\"" << name2cfn(scope[i]->getName()) << "\"";
                     printed = true;
                 }
-            os << "],\"type\":\"alldiff\",\"params\":{\"exceptedvalues\":[";
+            os << "],\"type\":\"alldiff\",\"params\":{";
         }
-        printed = false;
-        for (Value v : exceptedValues) {
-            if (printed)
+
+        // Separator shared by the three optional parameters,
+        // so that commas are always valid JSON.
+        bool firstParam = true;
+        auto sep = [&]() {
+            if (!firstParam)
                 os << ",";
-            os << v;
-            printed = true;
+            firstParam = false;
+        };
+
+        // excepted values
+        if (!exceptedValues.empty()) {
+            sep();
+            os << "\"exceptedvalues\":[";
+            printed = false;
+            for (Value v : exceptedValues) {
+                if (printed)
+                    os << ",";
+                os << v;
+                printed = true;
+            }
+            os << "]";
         }
-        os << "],\"deltacosts\":[";
-        if (isSquare) {
-            os << "]}},\n";
-        } else {
+
+        // removed values
+        vector<Value> removedVals = removedValues();
+        if (!removedVals.empty()) {
+            sep();
+            os << "\"removedvalues\":[";
+            for (size_t i = 0; i < removedVals.size(); i++) {
+                if (i > 0)
+                    os << ",";
+                os << removedVals[i];
+            }
+            os << "]";
+        }
+
+        // delta costs (non-square case only)
+        if (!isSquare) {
             map<Value, Cost> mapValuesDeltaCosts = nonZeroDeltaCosts();
             if (!mapValuesDeltaCosts.empty()) {
+                sep();
+                os << "\"deltacosts\":[";
                 printed = false;
                 for (auto& [key, delta] : mapValuesDeltaCosts) {
                     if (printed)
                         os << ",";
-                    os << "[" << key;
-                    os << "," << delta;
-                    os << "]";
+                    os << "[" << key << "," << delta << "]";
                     printed = true;
                 }
+                os << "]";
             }
-            os << "]}},\n";
         }
+        os << "}},\n";
     }
 };
 
