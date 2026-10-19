@@ -125,20 +125,30 @@ def array_int_element(x, y, z):
             e = Constant(e)
         sizee = model.GetDomainInitSize(e.ind)
         if z == x:
-            costs = [model.Top]*sizex*sizee
-            for xval in model.Domain(x.ind):
-                for eval_ in model.Domain(e.ind):
-                    if (xval != i+1) or (xval == eval_):
-                       costs[model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
-            model.AddFunction(scope([x, e]), costs)
-        else:
-            costs = [model.Top]*sizex*sizee*sizez
-            for zval in model.Domain(z.ind):
+            if x != e:
+                costs = [model.Top]*sizex*sizee
                 for xval in model.Domain(x.ind):
                     for eval_ in model.Domain(e.ind):
-                        if (xval != i+1) or (zval == eval_):
-                           costs[model.GetValueIndex(z.ind, zval)*sizex*sizee + model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
-            model.AddFunction(scope([z, x, e]), costs)
+                        if (xval != i+1) or (xval == eval_):
+                           costs[model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
+                model.AddFunction(scope([x, e]), costs)
+        else:
+            if x != e:
+                if z != e:
+                    costs = [model.Top]*sizex*sizee*sizez
+                    for zval in model.Domain(z.ind):
+                        for xval in model.Domain(x.ind):
+                            for eval_ in model.Domain(e.ind):
+                                if (xval != i+1) or (zval == eval_):
+                                   costs[model.GetValueIndex(z.ind, zval)*sizex*sizee + model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
+                    model.AddFunction(scope([z, x, e]), costs)
+            else:
+                costs = [model.Top]*sizex*sizez
+                for zval in model.Domain(z.ind):
+                    for xval in model.Domain(x.ind):
+                        if (xval != i+1) or (zval == xval):
+                           costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+                model.AddFunction(scope([z, x]), costs)
     # [(x >= 1), (x <= len(y)), set_in(z, u)] + [((z == (Variable(e,e,str(e)) if type(e) is int else e)) | (x != i+1)) for i, e in enumerate(y)]
 
 def array_var_int_element(x,y,z):

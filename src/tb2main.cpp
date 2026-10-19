@@ -1911,6 +1911,9 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_VACLIN) {
                 ToulBar2::VAClin = true;
+                if (!ToulBar2::vac) {
+                    ToulBar2::vac = 1;
+                }
             } else if (args.OptionId() == NO_OPT_VACLIN) {
                 ToulBar2::VAClin = false;
             }

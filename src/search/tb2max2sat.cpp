@@ -459,7 +459,8 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
     Cost previous_best_score = -UNIT_COST; // warning! score in maximization
 
     int init = (param >= AI_INIT_THEMAX)?AI_INIT_SUPPORT:param;
-    for (int nbheur = (param >= AI_INIT_THEMAX)?(param-1):1; nbheur > 0; nbheur--) {
+    int nbiter = (param >= AI_INIT_THEMAX)?(param-1):1;
+    for (int nbheur = nbiter; nbheur > 0; nbheur--) {
         auto heur_res = solve_heuristic_cpp((WCSP *)wcsp, invvar2index, init, N_red, or_clauses, neg_weights);
 
         if (heur_res.second > previous_best_score) {
@@ -480,6 +481,9 @@ Cost Solver::max2sat_heurllm(int param, vector<Value>& bestsolution)
                     Store::store();
                     wcsp->assignLS(invvar2index, bestsol);
                     newSolution();
+                    if (ToulBar2::debug) {
+                        cout << "(solution found at iteration " << nbiter - nbheur + 1 << ")" << endl;
+                    }
                     assert(initialLowerBound + total_weight + total_gadget_weights - heur_res.second <= wcsp->getLb());
                     for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++) {
                         bestsolution[i] = wcsp->getValue(i);
