@@ -377,6 +377,10 @@ private:
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
     Cost upperBound;
+    
+    //GS
+    vector<std::pair<int, string>> pushedBackTokens; // tokens given back by ungetToken (LIFO)
+    void ungetToken(const std::pair<int, string>& token) { pushedBackTokens.push_back(token); }
 };
 
 CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
@@ -520,7 +524,14 @@ bool CFNStreamReader::getNextLine()
 
 // Reads a token using lazily updated line by line reads
 std::pair<int, string> CFNStreamReader::getNextToken()
-{
+{   
+    //GS 
+    if (!pushedBackTokens.empty()) { // token previously given back by ungetToken
+        std::pair<int, string> token = pushedBackTokens.back();
+        pushedBackTokens.pop_back();
+        return token;
+    }
+
     if (tok_init) {
         if (tok_iter != tok.end()) {
             string token = *tok_iter;
@@ -1502,10 +1513,10 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& funcName, int line)
 {
     unsigned int arity = scope.size();
-
+    // a tag starting with '?' is optional: if absent, its section takes a default value (empty list or zero cost)
     map<string, string> GCFTemplates = {
-        { "alldiff", ":exceptedvalues:[v]+:deltacosts:[vc]+" },
-        { "gcc", ":bounds:[vNN]+:deltacosts:[vc]+" },
+        { "alldiff", ":?exceptedvalues:[v]+:?removedvalues:[v]+:?deltacosts:[vc]+" },
+        { "gcc", ":bounds:[vNN]+:?removedvalues:[v]+:?deltacosts:[vC]+:?lb:c:?sumcostsprojectonvar:C" },
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
         { "knapsackv", ":capacity:N:weightedvalues:[VvN]+:deltacosts:[VvC]+:lb:c:assigneddeltas:C" },
@@ -1804,11 +1815,41 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             streamContentVec.push_back(std::make_pair('W', to_string(wcsp_->getIndex())));
         }
         // ---------- Read JSON tag
-        else if (GCFTemplate[i] == ':') {
+        /*else if (GCFTemplate[i] == ':') {
             auto idx = GCFTemplate.find_first_of(':', i + 1);
             string jsonTag = GCFTemplate.substr(i + 1, idx - i - 1); // extract 'jsonTag'
             i += jsonTag.size() + 1; // Increase i according to length of token read
             skipJSONTag(jsonTag);
+        }*/
+
+        else if (GCFTemplate[i] == ':') {
+            auto idx = GCFTemplate.find_first_of(':', i + 1);
+            string jsonTag = GCFTemplate.substr(i + 1, idx - i - 1); // extract 'jsonTag'
+            i += jsonTag.size() + 1; // Increase i according to length of token read
+            if (!jsonTag.empty() && jsonTag[0] == '?') { // optional section
+                jsonTag.erase(0, 1);
+                std::pair<int, string> next = this->getNextToken();
+                // absent if we reach the end of the parameters or, in JSON mode, another tag
+                bool absent = isCBrace(next.second) || next.second.empty() || (JSONMode && next.second != jsonTag);
+                if (absent || !JSONMode) {
+                    this->ungetToken(next); // the token belongs to what follows (or to the section itself without JSON tags)
+                }
+                if (absent) {
+                    // skip the section description in the template and generate its default value
+                    size_t end = GCFTemplate.find_first_of(':', i + 1);
+                    if (end == string::npos)
+                        end = GCFTemplate.size();
+                    bool isList = GCFTemplate.substr(i + 1, end - i - 1).find('[') != string::npos;
+                    if (isList)
+                        streamContentVec.push_back(std::make_pair('N', string("0"))); // empty list
+                    else
+                        streamContentVec.push_back(std::make_pair('c', string("0"))); // zero cost
+                    i = end - 1; // the for loop moves to the next tag
+                    continue;
+                }
+            } else {
+                skipJSONTag(jsonTag);
+            }
         }
         // ---------- Entering a repeated section
         else if (GCFTemplate[i] == '[') {
@@ -1944,7 +1985,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     // FIND MIN COST
     bool minUpdated = false;
     for (pair<char, string> streamContentPair : streamContentVec) {
-        if (streamContentPair.first == 'C' && funcType != "knapsackv") {
+        if (streamContentPair.first == 'C' && (funcType != "knapsackv" && funcType != "gcc")) {
             Cost currentCost = (Cost)std::stoll(streamContentPair.second);
             minCost = MIN(currentCost, minCost);
             minUpdated = true;
@@ -1955,7 +1996,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
     // WRITE ALL TO STREAM AND SUBSTRACT MIN COST TO ALL COSTS
     for (unsigned int i = 0; i < streamContentVec.size(); i++) {
-        if (streamContentVec[i].first == 'C' && funcType != "knapsackv") {
+        if (streamContentVec[i].first == 'C' && (funcType != "knapsackv" && funcType != "gcc")) {
             Cost currentCost = (Cost)std::stoll(streamContentVec[i].second);
             currentCost -= minCost;
             streamContentVec[i].second = to_string(currentCost);
