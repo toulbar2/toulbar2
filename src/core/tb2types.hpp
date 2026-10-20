@@ -865,6 +865,7 @@ public:
     TB2_THREAD_LOCAL static Double singletonAccuracy; ///< \brief in preprocessing, stopping accuracy condition for singleton node consistency (command line option -S)
     TB2_THREAD_LOCAL static int ReducedCostsFiltering; ///< \brief in alldifferent and gcc, reduced costs filtering level condition (command line option -camb)
     TB2_THREAD_LOCAL static int GilmoreLawler; ///< \brief in preprocessing, singleton node consistency using Gilmore-Lawler lower bound before/instead of EAC-like greedy lower bound (command line option -S -glb)
+    TB2_THREAD_LOCAL static int GilmoreLawler_; ///< \internal do not use
     TB2_THREAD_LOCAL static int vacValueHeuristic; ///< \brief VAC-based and Knapsack value (and variable) ordering heuristics (command line options -V and -A)
     TB2_THREAD_LOCAL static BEP* bep; ///< \internal do not use
     TB2_THREAD_LOCAL static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)

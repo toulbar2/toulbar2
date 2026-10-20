@@ -1047,7 +1047,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::singletonConsistency)
         cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables and stopping accuracy of " << ToulBar2::singletonAccuracy << ")";
     cout << endl;
-    cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
+    cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2 or -2) or instead of (-glb=1 or -1) EAC-like greedy heuristic (-glb=0 or -3) (a negative value means only singleton node consistency is performed, classical singleton arc consistency is not applied outside squared alldiff or gcc) (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
     if (ToulBar2::FullEAC)

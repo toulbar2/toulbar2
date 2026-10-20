@@ -170,6 +170,7 @@ TB2_THREAD_LOCAL int ToulBar2::nbDecisionVars;
 TB2_THREAD_LOCAL int ToulBar2::singletonConsistency;
 TB2_THREAD_LOCAL Double ToulBar2::singletonAccuracy;
 TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler;
+TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler_;
 TB2_THREAD_LOCAL int ToulBar2::ReducedCostsFiltering;
 TB2_THREAD_LOCAL int ToulBar2::vacValueHeuristic;
 
@@ -468,6 +469,7 @@ void tb2init()
     ToulBar2::ReducedCostsFiltering = 0;
     ToulBar2::singletonAccuracy = 0.0001;
     ToulBar2::GilmoreLawler = 0;
+    ToulBar2::GilmoreLawler_ = 0;
     ToulBar2::minsumDiffusion = 0;
 
     ToulBar2::trwsAccuracy = -1; // 0.001;
@@ -636,6 +638,7 @@ void tb2reinit()
 
     ToulBar2::DEE_ = 0;
     ToulBar2::elimDegree_ = -1;
+    ToulBar2::GilmoreLawler_ = 0;
 
     ToulBar2::interrupted = false;
 

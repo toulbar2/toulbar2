@@ -1969,7 +1969,7 @@ int Solver::singletonConsistency(int restricted, int startiter)
         dacorder[wcsp->numberOfVariables() - wcsp->getDACOrder(i) - 1] = i;
     }
     //    vector<int> copydacorder(dacorder);
-    for (Cost inthemiddle = ((ToulBar2::GilmoreLawler) ? 2 : 1); inthemiddle <= ((ToulBar2::GilmoreLawler) ? 2 : 1); inthemiddle++) {
+    for (Cost inthemiddle = ((ToulBar2::GilmoreLawler_) ? 2 : 1); inthemiddle <= ((ToulBar2::GilmoreLawler_) ? 2 : 1); inthemiddle++) {
         bool done = false;
         while (!done && restricted) {
             done = true;
@@ -2037,6 +2037,8 @@ int Solver::singletonConsistency(int restricted, int startiter)
                         ((WCSP*)wcsp)->vac = NULL;
                         ToulBar2::elimDegree_ = -1;
                         ToulBar2::DEE_ = 0;
+                    } else if (ToulBar2::GilmoreLawler < 0) {
+                        continue;
                     }
                     // test all domain values in decreasing order of unary costs
                     for (int a = size - 1; a >= 0; --a) {
@@ -2067,12 +2069,12 @@ int Solver::singletonConsistency(int restricted, int startiter)
                                             int yIndex = bctr->getIndex(y);
                                             for (EnumeratedVariable::iterator itery = y->begin(); itery != y->end(); ++itery) {
                                                 Cost cost = y->getCost(*itery);
-                                                if (!ToulBar2::GilmoreLawler && cost / inthemiddle > MIN_COST) {
+                                                if (!ToulBar2::GilmoreLawler_ && cost / inthemiddle > MIN_COST) {
                                                     bctr->extend(yIndex, *itery, cost / inthemiddle); // unary cost is (partially) extended to the binary level
                                                     propagateBinaryDelayed.insert(bctr);
                                                     cost = y->getCost(*itery);
                                                 }
-                                                assert(cost == MIN_COST || inthemiddle > 1 || ToulBar2::GilmoreLawler);
+                                                assert(cost == MIN_COST || inthemiddle > 1 || ToulBar2::GilmoreLawler_);
                                                 if (cost > MIN_COST) {
                                                     y->extend(*itery, cost); // remaining cost is temporally hidden
                                                     unarycostsHidden.push_back(make_tuple(y->wcspIndex, *itery, cost));
@@ -2089,7 +2091,7 @@ int Solver::singletonConsistency(int restricted, int startiter)
                                         EnumeratedVariable* y = (EnumeratedVariable*)((bctr->getVar(0) == x) ? bctr->getVar(1) : bctr->getVar(0));
                                         for (Value v : wcsp->getEnumDomain(y->wcspIndex)) {
                                             Cost cost = bctr->getCost(x, y, sorted[a].value, v);
-                                            if (ToulBar2::GilmoreLawler && binarycostsHiddenFirst.find(bctr) == binarycostsHiddenFirst.end() && cost / inthemiddle > MIN_COST && !CUT(cost, wcsp->getUb())) {
+                                            if (ToulBar2::GilmoreLawler_ && binarycostsHiddenFirst.find(bctr) == binarycostsHiddenFirst.end() && cost / inthemiddle > MIN_COST && !CUT(cost, wcsp->getUb())) {
                                                 bctr->addcost(x, y, sorted[a].value, v, -cost / inthemiddle); // binary cost is partially hidden for doing later singleton consistency on variable y
                                                 binarycostsHidden.push_back(make_tuple(bctr, y->wcspIndex, sorted[a].value, v, cost / inthemiddle));
                                                 cost = bctr->getCost(x, y, sorted[a].value, v);
@@ -2098,7 +2100,7 @@ int Solver::singletonConsistency(int restricted, int startiter)
                                                 binarycostsBefore.push_back(make_tuple(y->wcspIndex, v, cost));
                                             }
                                         }
-                                        if (ToulBar2::GilmoreLawler && a == 0 && binarycostsHiddenFirst.find(bctr) == binarycostsHiddenFirst.end()) {
+                                        if (ToulBar2::GilmoreLawler_ && a == 0 && binarycostsHiddenFirst.find(bctr) == binarycostsHiddenFirst.end()) {
                                             binarycostsHiddenFirst.insert(bctr);
                                         }
                                     } else if (((*iter).constr->isAllDiff() && (!((*iter).constr->isAllDiffSquare()) || ((AbstractNaryConstraint*)((*iter).constr))->getTrueNonAssigned() <= 4))
@@ -2213,7 +2215,7 @@ int Solver::singletonConsistency(int restricted, int startiter)
                             }
                         }
                     }
-                    if (!ToulBar2::GilmoreLawler) {
+                    if (!ToulBar2::GilmoreLawler_) {
                         // reactivate propagation features
                         ToulBar2::LcLevel = lclevel;
                         ToulBar2::vac = vaclevel_;
@@ -2320,7 +2322,7 @@ int Solver::singletonConsistency(int restricted, int startiter)
                     // delete [] sorted;
                 }
             }
-            if (ToulBar2::GilmoreLawler) {
+            if (ToulBar2::GilmoreLawler_) {
                 if (alldiff && alldiff->connected()) {
                     alldiff->propagate();
                 }
@@ -3555,7 +3557,9 @@ Cost Solver::preprocessing(Cost initialUpperBound)
     if (ToulBar2::singletonConsistency) {
         if (ToulBar2::GilmoreLawler) {
             Cost previouslb = wcsp->getLb();
+            ToulBar2::GilmoreLawler_ = abs(ToulBar2::GilmoreLawler) % 3;
             int startiter = singletonConsistency(ToulBar2::singletonConsistency);
+            ToulBar2::GilmoreLawler_ = 0;
             ToulBar2::singletonConsistency -= startiter;
             initGap(wcsp->getLb(), wcsp->getUb());
             if (ToulBar2::verbose >= 0) {
@@ -3564,11 +3568,8 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 else
                     cout << "Gilmore-Lawler dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
             }
-            if (ToulBar2::GilmoreLawler == 2) {
-                int prevGLB = ToulBar2::GilmoreLawler;
-                ToulBar2::GilmoreLawler = 0;
+            if (abs(ToulBar2::GilmoreLawler) == 2) {
                 singletonConsistency(ToulBar2::singletonConsistency, startiter);
-                ToulBar2::GilmoreLawler = prevGLB;
             }
         } else {
             singletonConsistency(ToulBar2::singletonConsistency);
