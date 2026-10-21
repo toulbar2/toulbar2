@@ -191,9 +191,11 @@ augmenting_path_gcc(intptr_t dim_val,
     intptr_t i,
     vector<intptr_t>& path,
     vector<Cost>& shortestPathCost,
+    vector<intptr_t> remaining,
     vector<bool>& SC,
     vector<bool>& SR,
     const vector<vector<int>>& row4col,
+    const vector<int>& count_col,
     Cost MAX_COST,
     const vector<int>& capacity)
 {
@@ -204,6 +206,7 @@ augmenting_path_gcc(intptr_t dim_val,
     fill(SC.begin(), SC.end(), false);
     fill(shortestPathCost.begin(), shortestPathCost.end(), MAX_COST);
 
+    intptr_t num_remaining = dim_val;
     // Mark the source row as visited so it is never relaxed through again.
     SR[i] = true;
 
@@ -227,10 +230,22 @@ augmenting_path_gcc(intptr_t dim_val,
         // Extract-min: pick the unsettled column with the smallest
         Cost lowest = MAX_COST;
         intptr_t index = -1;
-        for (intptr_t j = 0; j < dim_val; ++j) {
-            if (!SC[j] && shortestPathCost[j] < lowest) {
-                lowest = shortestPathCost[j];
+        intptr_t pos   = -1; 
+        for (intptr_t it = 0; it < num_remaining; it++) {
+            intptr_t j = remaining[it];
+            Cost d = shortestPathCost[j];
+            if (d < lowest) {
+                lowest = d;
                 index = j;
+                pos = it;
+            } else if (d == lowest && index >= 0) {
+                int rj  = count_col[j]  < capacity[j]  ? 1 : 0;
+                int rjb = count_col[index] < capacity[index] ? 1 : 0;
+                if (rj > rjb){
+                    index = j;
+                    pos = it;
+
+                } 
             }
         }
 
@@ -240,12 +255,12 @@ augmenting_path_gcc(intptr_t dim_val,
             return -1;
         }
 
-        // Settle column `index`.
+        remaining[pos] = remaining[--num_remaining];
         SC[index] = true;
 
         // If column `index` still has free capacity it can absorb one more
         // assignment, so it is a valid augmenting-path sink.
-        if ((int)row4col[index].size() < capacity[index]) {
+        if (count_col[index] < capacity[index]) {
             sink = index;
             break;
         }
@@ -258,9 +273,8 @@ augmenting_path_gcc(intptr_t dim_val,
             // Reduced cost of the backward arc (undoing assignment r→index).
             Cost backward = cost[r * dim_val + index] - u[r] - v[index];
 
-            for (intptr_t k = 0; k < dim_val; ++k) {
-                if (SC[k] || capacity[k] <= 0)
-                    continue; // column k already settled or unusable, skip
+            for (intptr_t it = 0; it < num_remaining; it++) {
+                intptr_t k = remaining[it];
 
                 // Reduced cost of the forward arc r→k.
                 Cost forward = cost[r * dim_val + k] - u[r] - v[k];
@@ -316,8 +330,14 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
 
     vector<intptr_t> path(dim_val, -1);
     vector<Cost> shortestPathCost(dim_val);
+    vector<intptr_t> remaining(dim_val);
     vector<bool> SC(dim_val, false);
     vector<bool> SR(dim_var, false);
+
+    for (intptr_t it = 0; it < dim_val; it++) {
+
+        remaining[it] = it;
+    }
 
     /* --- Main loop: assign each row --------------------------------------- */
     for (intptr_t curRow = 0; curRow < dim_var; ++curRow) {
@@ -330,8 +350,8 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         // that still has remaining capacity.
 
         intptr_t sink = augmenting_path_gcc(dim_val, cost, u, v, curRow,
-            path, shortestPathCost, SC, SR,
-            row4col, MAX_COST, capacity);
+            path, shortestPathCost,remaining, SC, SR,
+            row4col, count_col, MAX_COST, capacity);
 
         // No augmenting path found → problem is infeasible.
         // Report curRow and every row that competes with it for the same
@@ -372,7 +392,7 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         // For every settled column j, shift v[j] so that the reduced cost
         // of its incoming arc (from the path) remains 0 after the update.
         for (intptr_t j = 0; j < dim_val; ++j) {
-            if (!SC[j] || capacity[j] == 0 )
+            if (!SC[j] )
                 continue;
             v[j] -= (minVal - shortestPathCost[j]);
         }
@@ -423,6 +443,279 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
 
     return total_cost;
 }
+
+
+
+
+
+
+
+static inline intptr_t
+augmenting_path_gcc_lb(intptr_t dim_val,
+    const vector<Cost>& cost,
+    vector<Cost>& u,
+    vector<Cost>& v,
+    intptr_t i,
+    vector<intptr_t>& path,
+    vector<Cost>& shortestPathCost,
+    vector<intptr_t> remaining,
+    vector<bool>& SC,
+    vector<bool>& SR,
+    const vector<vector<int>>& row4col,
+    const vector<int>& count_col,
+    Cost MAX_COST,
+    const vector<int>& capacity,
+    const vector<int>& demand)
+{
+    /* --- Initialisation --------------------------------------------------- */
+
+    // Clear visited sets and reset path costs for this augmentation round.
+    fill(SR.begin(), SR.end(), false);
+    fill(SC.begin(), SC.end(), false);
+    fill(shortestPathCost.begin(), shortestPathCost.end(), MAX_COST);
+
+    intptr_t num_remaining = dim_val;
+
+    // Mark the source row as visited so it is never relaxed through again.
+    SR[i] = true;
+
+    // Seed shortest-path costs with the reduced cost from source row i to
+    // every column:  rc(i,j) = cost(i,j) - u[i] - v[j].
+    for (intptr_t j = 0; j < dim_val; ++j) {
+        if(capacity[j] > 0){
+            path[j] = -1;
+            Cost r = cost[i * dim_val + j] - u[i] - v[j];
+            if (r < shortestPathCost[j]) {
+                shortestPathCost[j] = r;
+                path[j] = i;
+            }
+        }
+    }
+
+    /* --- Main label-setting (Dijkstra) loop ------------------------------- */
+    intptr_t sink = -1;
+    while (true) {
+
+        // Extract-min: pick the unsettled column with the smallest
+        Cost lowest = MAX_COST;
+        intptr_t index = -1;
+        intptr_t pos   = -1; 
+        for (intptr_t it = 0; it < num_remaining; it++) {
+            intptr_t j = remaining[it];
+            Cost d = shortestPathCost[j];
+            if (d < lowest) {
+                lowest = d;
+                index = j;
+                pos = it;
+            } else if (d == lowest && index >= 0) {
+                int rj  = count_col[j]  < demand[j]  ? 2 : (count_col[j]  < capacity[j]  ? 1 : 0);
+                int rjb = count_col[index] < demand[index] ? 2 : (count_col[index] < capacity[index] ? 1 : 0);
+                if (rj > rjb) {
+                    index = j;
+                    pos = it;
+                }
+            }
+        }
+
+        // No reachable unsettled column remains → problem is infeasible
+        // from this source row.
+        if (index == -1) {
+            return -1;
+        }
+
+        remaining[pos] = remaining[--num_remaining];
+        SC[index] = true;
+
+        // If column `index` still has free capacity it can absorb one more
+        // assignment, so it is a valid augmenting-path sink.
+        if (count_col[index] < capacity[index]) {
+            sink = index;
+            break;
+        }
+
+        for (int r : row4col[index]) {
+            if (SR[r])
+                continue; // row r already settled, skip
+            SR[r] = true;
+
+            // Reduced cost of the backward arc (undoing assignment r→index).
+            Cost backward = cost[r * dim_val + index] - u[r] - v[index];
+
+            for (intptr_t it = 0; it < num_remaining; it++) {
+                intptr_t k = remaining[it];
+
+                // Reduced cost of the forward arc r→k.
+                Cost forward = cost[r * dim_val + k] - u[r] - v[k];
+
+                // Candidate shortest-path cost to reach column k by
+                // re-routing row r from column `index` to column k.
+                Cost cand = shortestPathCost[index] - backward + forward;
+
+                if (cand < shortestPathCost[k]) {
+                    shortestPathCost[k] = cand;
+                    path[k] = r; // row r is the predecessor of column k
+                }
+            }
+        }
+    }
+    return sink;
+}
+
+static inline Cost lapjv_ub_lb(intptr_t dim_var, intptr_t dim_val,
+    const vector<Cost>& cost,
+    int* b,
+    Cost* usol, Cost* vsol,
+    Cost MAX_COST,
+    const vector<int>& capacity,
+    const vector<int>& demand,
+    int& findConflict)
+{
+    if (dim_val <= 0 || dim_var <= 0) {
+        findConflict = 0;
+        return (dim_var <= 0) ? 0 : MAX_COST;
+    }
+    // Fast path: all capacities are 1 → standard (unit-capacity) LAP.
+    int maxcap = *max_element(capacity.begin(), capacity.end());
+    int mincap = *min_element(capacity.begin(), capacity.end());
+    if (maxcap == 1 && mincap > 0) {
+        return lapjv(dim_var, dim_val, cost, b, usol, vsol, MAX_COST, findConflict);
+    }
+
+    findConflict = 0;
+
+    // col4row[i]   : column currently assigned to row i  (-1 = unassigned).
+    // row4col[j]   : list of rows currently assigned to column j.
+    // count_col[j] : current load of column j  (== row4col[j].size()).
+    // u[i], v[j]   : dual potentials used to compute reduced costs.
+    // shortestPathCost[j] : tentative shortest-path cost to column j.
+    // path[j]             : predecessor row of column j on the shortest path.
+    // SC[j]               : true if column j has been settled.
+    // SR[i]               : true if row    i has been settled.
+
+    vector<int> col4row(dim_var, -1);
+    vector<vector<int>> row4col(dim_val);
+    vector<int> count_col(dim_val, 0);
+    vector<Cost> u(dim_var, 0), v(dim_val, 0);
+
+    vector<intptr_t> path(dim_val, -1);
+    vector<Cost> shortestPathCost(dim_val);
+    vector<intptr_t> remaining(dim_val);
+    vector<bool> SC(dim_val, false);
+    vector<bool> SR(dim_var, false);
+
+    for (intptr_t it = 0; it < dim_val; it++) {
+
+        remaining[it] = it;
+    }
+    /* --- Main loop: assign each row --------------------------------------- */
+    for (intptr_t curRow = 0; curRow < dim_var; ++curRow) {
+
+        // Row already assigned (can happen if a previous augmentation
+        if (col4row[curRow] != -1)
+            continue;
+
+        // Find the shortest augmenting path from curRow to some column
+        // that still has remaining capacity.
+
+        intptr_t sink = augmenting_path_gcc_lb(dim_val, cost, u, v, curRow,
+            path, shortestPathCost,remaining, SC, SR,
+            row4col, count_col, MAX_COST, capacity, demand);
+
+        // No augmenting path found → problem is infeasible.
+        // Report curRow and every row that competes with it for the same
+        // columns so the caller can diagnose the conflict.
+        if (sink < 0) {
+            findConflict = 1;
+            b[0] = curRow;
+            for (int col = 0; col < dim_val; col++) {
+                if (cost[curRow * dim_val + col] < MAX_COST) {
+                    for (int var : row4col[col]) {
+                        b[findConflict] = var;
+                        findConflict++;
+                    }
+                }
+            }
+            return MAX_COST;
+        }
+
+        /* --- Dual variable update (complementary slackness) --------------- */
+
+        // shortestPathCost[sink] is the length of the augmenting path; all
+        // dual corrections below use this as the reference distance.
+        Cost minVal = shortestPathCost[sink];
+
+        // Shift the dual of the source row: u[curRow] increases by minVal
+        // so that the reduced cost of the newly added arc becomes 0.
+        u[curRow] += minVal;
+
+        for (intptr_t r = 0; r < dim_var; ++r) {
+            if (!SR[r] || r == curRow)
+                continue;
+            int colAssigned = col4row[r]; // pre-augmentation assignment
+            if (colAssigned >= 0) {
+                u[r] += (minVal - shortestPathCost[colAssigned]);
+            }
+        }
+
+        // For every settled column j, shift v[j] so that the reduced cost
+        // of its incoming arc (from the path) remains 0 after the update.
+        for (intptr_t j = 0; j < dim_val; ++j) {
+            if (!SC[j] )
+                continue;
+            v[j] -= (minVal - shortestPathCost[j]);
+        }
+
+        /* --- Path augmentation -------------------------------------------- */
+
+        // Walk the predecessor chain from `sink` back to `curRow`,
+        // re-assigning each row along the path to the next column.
+        intptr_t j = sink;
+        while (true) {
+            int r = path[j]; // predecessor row of column j
+            int old_col = col4row[r]; // column that row r was assigned to
+
+            // Assign row r to column j.
+            col4row[r] = j;
+            row4col[j].push_back(r);
+            count_col[j] = (int)row4col[j].size();
+
+            // Remove row r from its previous column (if any).
+            if (old_col != -1) {
+                auto& vec = row4col[old_col];
+                auto it = find(vec.begin(), vec.end(), r);
+                if (it != vec.end())
+                    vec.erase(it);
+                count_col[old_col] = (int)vec.size();
+            }
+
+            // Stop once we reach the free row (no previous column).
+            if (old_col == -1)
+                break;
+            j = old_col;
+        }
+    }
+
+    /* --- Build output arrays ---------------------------------------------- */
+
+    Cost total_cost = 0;
+    for (intptr_t i = 0; i < dim_var; ++i) {
+        int col = col4row[i];
+        b[i] = col;
+        total_cost += cost[i * dim_val + col];
+        usol[i] = u[i];
+    }
+
+    for (intptr_t j = 0; j < dim_val; ++j) {
+        vsol[j] = v[j];
+    }
+
+    return total_cost;
+}
+
+
+
+
+
 
 // Linear assignment problem with excepted values
 
@@ -759,10 +1052,22 @@ static inline Cost lapjv_gcc(intptr_t dim_var, intptr_t dim_val,
     Cost total_cost = 0;
     int notFeasVal = -1;
     int val;
+    bool lb = false;
 
     /* Step 1: Find a min-cost assignment under upper-bound constraints only */
-    total_cost = lapjv_ub(dim_var, dim_val, cost, b, usol, vsol,
-        MAX_COST, capacity, findConflict);
+    for(int val = 0; val < dim_val; val++){
+        if(demand[val] > 0){
+            lb = true;
+            break;
+        }
+    }
+    if(lb){
+        total_cost = lapjv_ub_lb(dim_var, dim_val, cost, b, usol, vsol,
+            MAX_COST, capacity, demand, findConflict);
+    } else {
+        return lapjv_ub(dim_var, dim_val, cost, b, usol, vsol,
+            MAX_COST, capacity, findConflict);
+    }
     if (total_cost >= MAX_COST)
         return total_cost; // already infeasible
 
