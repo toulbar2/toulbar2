@@ -2664,7 +2664,7 @@ public:
             // Compute the cost of the last optimal solution
             verifopt += Ceil(storec);
             verifweight += Ceil(storew);
-            assert(*max_element(Profit[i].begin(), Profit[i].end()) < MAX_COST);
+            assert(*max_element(Profit[currentvar].begin(), Profit[currentvar].end()) < MAX_COST);
             if (totalval < 1. - ToulBar2::epsilon) {
                 optsolIsValid = false;
             }

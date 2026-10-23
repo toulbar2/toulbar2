@@ -3874,6 +3874,7 @@ void WCSP::sortConstraints()
     }
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         getCtr(*idctr)->propagate();
+        propagateNC();
     }
     delayedNaryCtr.clear();
     isDelayedNaryCtr = false;

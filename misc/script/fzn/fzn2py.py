@@ -85,6 +85,9 @@ def scopeWithDuplicateConstantVariables(s):
     else:
         return [ConstantNewVariable(x).ind if type(x) is int else x.ind for x in s]
 
+def get_value(assignment, e):
+    return assignment[e.ind] if type(e) is Var else e
+
 def get_values(assignment, vars):
     return [assignment[e.ind] if type(e) is Var else e for e in vars]
     

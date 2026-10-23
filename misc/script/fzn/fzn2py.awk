@@ -3,8 +3,9 @@
 
 BEGIN {
 	MAXINT = 10000;
-	VERBOSITY = 0;
-	SHOWSOLUTIONS = 3;
+	VERBOSITY = -1;
+	SHOWSOLUTIONS = 0;
+	ALLSOLUTIONS = 1000;
 	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
@@ -281,19 +282,21 @@ END {
 	print "model, output_vars = get_model()";
 	if(output_vars) print output_vars " = output_vars";
 	print "#model.Dump('fzn.cfn')";
-	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= "SHOWSOLUTIONS ")";
+	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
 	print "if result is not None:";
-	print "    print('')";
+	print "    sols = model.GetSolutions()";
+	print "    for sol in sols:";
+	#print "        print('')";
 	for (i=1; i<=n; i++) {
 		e = varnames[i];
 		if (output[e]==1) {
-			if (e != objective && e != "objective" && e != "obj") print "    print('" e " = ', result[0][" i "])";
-			else print "    print('" e " = ', result[1])";
+			if (e != objective && e != "objective" && e != "obj") print "        print('" e " = ',get_value(sol[1]," e "),';')";
+			else print "        print('" e " = ', sol[0],';')";
 		} else {
-			print "    print('" e " = " outputstring[e] ",',get_values(result[0]," e "),')')";
+			print "        print('" e " = " outputstring[e] ",',get_values(sol[1]," e "),');')";
 		}
 	}
-	print "    print('----------')";
+	print "        print('----------')";
 	if (objective){
 		print "    if model.GetDDualBound() == result[1]:"
 		print "        print('==========')"
@@ -302,9 +305,10 @@ END {
 	}
 	#print "elif solver.is_unsat():"
 	#print "    print('=====UNSATISFIABLE=====')"
-        print "else:"
+	print "else:"
 	print "    print('=====UNKNOWN=====')"
 	# print "print '% SolveTime', model.getTime()";
+	print "print('% Solutions', result[2])";
 	print "print('% Nodes', model.GetNbNodes())";
 	print "print('% Failures', model.GetNbBacktracks())";
 	if (objective) print "if result is not None: print('% Objective', int(result[1]))";
