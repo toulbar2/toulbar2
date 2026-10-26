@@ -91,7 +91,7 @@ The pytoulbar2 package can be compiled from toulbar2 sources with the pybind11 m
     pip install pybind11[global]
 ```
 
-/!\ On Ubuntu, it might be necessary to install python development and virtual environment packages `python3-dev` and `python3.12-venv`. 
+On Ubuntu, it might be necessary to install python development and virtual environment packages `python3-dev` and `python3.12-venv`. 
 
 Then, pytoulbar2 binaries can be compiled with cmake: `cmake .. -DPYTB2=ON && cmake --build .`.
 
