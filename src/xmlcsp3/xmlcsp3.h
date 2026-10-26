@@ -39,7 +39,7 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         XCSP3CoreCallbacks::recognizeSpecialIntensionCases = true;
         XCSP3CoreCallbacks::recognizeSpecialCountCases = false;
         XCSP3CoreCallbacks::recognizeNValuesCases = true;
-        problem->updateUb(MAX_COST_XML3);
+        problem->updateUb(((MAX_COST_XML3 / 2) / MEDIUM_COST / MEDIUM_COST));
     }
 
     void endInstance() override {
