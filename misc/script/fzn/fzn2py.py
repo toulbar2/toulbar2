@@ -3,6 +3,7 @@
 
 MAXCOEF = 2147483647
 
+IsASatisfactionProblem = True
 DelayedLinEq = dict() # warning: fzn2py automatically replaces {} by []
 DelayedLinEqVars = dict() # warning: fzn2py automatically replaces {} by []
 DelayedObjectiveName = None
@@ -100,10 +101,11 @@ def array_bool_and(x,y):
         int_lin_eq_reif([1]*len(x), x, len(x), y) # (y == (Sum(x) == len(x)))
 
 def array_bool_or(x,y):
-    if ((type(y) is int) and y != 0):
-        model.AddSumConstraint(scope(x),'>=',1)
-    else:
-        model.AddLinearConstraint([-MAXCOEF] + [1]*len(x), scope(y) + scope(x),'>=',-MAXCOEF+1)
+    # if ((type(y) is int) and y != 0):
+    #     model.AddSumConstraint(scope(x),'>=',1)
+    # else:
+    #     model.AddLinearConstraint([-MAXCOEF] + [1]*len(x), scope(y) + scope(x),'>=',-MAXCOEF+1)
+    int_lin_le_reif([-1]*len(x),x,-1,y)
 
 def array_bool_xor(x):
     y = Variable(0, len(x)-1, 'XOR__' + str(model.GetNbVars()) + '__')
@@ -673,6 +675,8 @@ def set_in_reif(x,dom,z):
 def Minimize(x, sign=1):
     global DelayedLinEq
     global DelayedLinEqVars
+    global IsASatisfactionProblem
+    IsASatisfactionProblem = False
     if x is None or type(x) is Var:
         if x in DelayedLinEqVars and len(DelayedLinEqVars[x]) == 1 and (type(x) is not Var or model.GetDegree(x.ind) == 0):
             idx = list(DelayedLinEqVars[x])[0]
@@ -735,7 +739,7 @@ def Maximize(x):
 def finalize_int_lin_eq(*output_vars):
     global DelayedLinEq
     global DelayedLinEqVars
-    ok = True
+    ok = not(IsASatisfactionProblem)
     while ok:
         ok = False
         for v in DelayedLinEqVars:

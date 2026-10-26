@@ -2,10 +2,11 @@
 # translate flatzinc format to python/Numberjack 
 
 BEGIN {
+	MAX_COST_FZN = 2147483647 * 1024;
 	MAXINT = 10000;
 	VERBOSITY = -1;
 	SHOWSOLUTIONS = 0;
-	ALLSOLUTIONS = 1000;
+	ALLSOLUTIONS = 0; # 10000; # needed for running unit tests (test/runtest.sh)
 	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
@@ -15,7 +16,7 @@ BEGIN {
 	print "def get_model():"
 	print "    global model";
 	print "    global DelayedLinEq";
-	print "    model = tb2.CFN(verbose=" VERBOSITY ")";
+	print "    model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
 	parameter = 1;
 	error = 0;
 }
