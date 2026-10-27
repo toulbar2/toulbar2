@@ -612,6 +612,48 @@ def int_mod(x,y,z):
 def int_plus(x,y,z):
     model.AddLinearConstraint([1,-1,-1], scope([z,x,y]), '==', 0) # (z == (x + y))
 
+def int_pow(x,y,z):
+    if type(x) is int:
+        x = Constant(x)
+    sizex = model.GetDomainInitSize(x.ind)
+    if type(y) is int:
+        y = Constant(y)
+    sizey = model.GetDomainInitSize(y.ind)
+    if type(z) is int:
+        z = Constant(z)
+    sizez = model.GetDomainInitSize(z.ind)
+    if x == y:
+        costs = [model.Top]*sizex*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                if xval != 0 and zval == ((xval ** abs(xval)) if xval >= 0 else ((1 // (xval ** abs(xval))) if xval ** abs(xval) >= 0 else -(1 // (abs(xval) ** abs(xval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([z, x]), costs) # (z == (x ** abs(x))) if x>=0 else (z == (1 if x ** abs(x) >= 0 else -1) / (abs(x) ** abs(x)))
+        return
+    if x == z:
+        costs = [model.Top]*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for yval in model.Domain(y.ind):
+                if zval != 0 and zval == ((zval ** abs(yval)) if yval >= 0 else ((1 // (zval ** abs(yval))) if zval ** abs(yval) >= 0 else -(1 // (abs(zval) ** abs(yval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z, y]), costs) # (z == (x ** abs(x))) if x>=0 else (z == (1 if x ** abs(x) >= 0 else -1) / (abs(x) ** abs(x)))
+        return
+    if y == z:
+        costs = [model.Top]*sizex*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                if xval != 0 and zval == ((xval ** abs(zval)) if zval >= 0 else ((1 // (xval ** abs(zval))) if xval ** abs(zval) >= 0 else -(1 // (abs(xval) ** abs(zval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([z, x]), costs) # (z == (x ** abs(y))) if y>=0 else (z == (1 if x ** abs(y) >= 0 else -1) / (abs(x) ** abs(y)))
+        return
+    costs = [model.Top]*sizex*sizey*sizez
+    for zval in model.Domain(z.ind):
+        for xval in model.Domain(x.ind):
+            for yval in model.Domain(y.ind):
+                if xval != 0 and zval == ((xval ** abs(yval)) if yval >= 0 else ((1 // (xval ** abs(yval))) if xval ** abs(yval) >= 0 else -(1 // (abs(xval) ** abs(yval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+    model.AddFunction(scope([z, x, y]), costs) # (z == (x ** abs(y))) if y>=0 else (z == (1 if x ** abs(y) >= 0 else -1) / (abs(x) ** abs(y)))
+    
 def int_times(x,y,z):
     if x == y and x == z:
         set_in(x, [0,1])
