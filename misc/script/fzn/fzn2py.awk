@@ -6,7 +6,8 @@ BEGIN {
 	MAXINT = 10000;
 	VERBOSITY = -1;
 	SHOWSOLUTIONS = 0;
-	ALLSOLUTIONS = 0; # 10000; # needed for running unit tests (test/runtest.sh)
+	DUMPMODEL = 0;	
+	# ALLSOLUTIONS = 10000; # needed for running unit tests (automatically assigned by ./fzn2py with extra option -a)
 	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
@@ -282,7 +283,7 @@ END {
 	print "";
 	print "model, output_vars = get_model()";
 	if(output_vars) print output_vars " = output_vars";
-	print "#model.Dump('fzn.cfn')";
+	if(DUMPMODEL) print "model.Dump('fzn.cfn')";
 	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
 	print "if result is not None:";
 	print "    sols = model.GetSolutions()";

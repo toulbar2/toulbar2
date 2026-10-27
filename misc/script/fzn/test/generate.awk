@@ -1,7 +1,6 @@
 NF==1&&/[(]coef,vars,res,z[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of int: coef = [1,-1,2,-2];" >> file;
@@ -20,7 +19,6 @@ close(file);
 NF==1&&/[(]coef,vars,res[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of int: coef = [1,-1,2,-2];" >> file;
@@ -38,7 +36,6 @@ close(file);
 NF==1&&/array_/&&/_element/&&/[(]x,y,z[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 if(match(name,"_bool_")) {
@@ -66,7 +63,6 @@ next;
 NF==1&&/[(]x,y,z[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 if(match(name,"bool_")) {
@@ -89,7 +85,6 @@ close(file);
 NF==1&&/array_bool_and/&&/[(]x,y[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of var bool: x:: output_array([1..4]);" >> file;
@@ -103,7 +98,6 @@ next;
 NF==1&&/bool_clause/&&/[(]x,y[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of var bool: x:: output_array([1..4]);" >> file;
@@ -117,7 +111,6 @@ next;
 NF==1&&/array_bool_or/&&/[(]x,y[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of var bool: x:: output_array([1..4]);" >> file;
@@ -131,7 +124,6 @@ next;
 NF==1&&/[(]x,y[)]/{
 name=$1;
 sub("[(].*","",name);
-print $0;
 file = "test_" name ".fzn";
 print "" > file;
 if(match(name,"bool_") || match(name,"bool2int")) {
@@ -145,6 +137,31 @@ if(match(name,"bool_") || match(name,"bool2int")) {
     print "var -10..10: x :: output_var;" >> file;
     print "var -10..10: y :: output_var;" >> file;
 }
+print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+}
+
+NF==1&&/[(]x,dom,z[)]/{
+name=$1;
+sub("[(].*","",name);
+file = "test_" name ".fzn";
+print "" > file;
+print "set of int: dom = {-1,1,3,5,7};" >> file;
+print "var -10..10: x :: output_var;" >> file;
+print "var bool: z :: output_var;" >> file;
+print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+}
+
+NF==1&&/[(]x,dom[)]/{
+name=$1;
+sub("[(].*","",name);
+file = "test_" name ".fzn";
+print "" > file;
+print "set of int: dom = {-1,1,3,5,7};" >> file;
+print "var -10..10: x :: output_var;" >> file;
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);

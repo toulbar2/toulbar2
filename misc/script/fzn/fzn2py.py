@@ -1,7 +1,7 @@
 
 # library of flatzinc predicates translated into numberjack constraints
 
-MAXCOEF = 2147483647
+MAXCOEF = 2147483647 * 1024
 
 IsASatisfactionProblem = True
 DelayedLinEq = dict() # warning: fzn2py automatically replaces {} by []
@@ -373,6 +373,7 @@ def int_lin_eq_reif(coef,vars,res,z):
             model.AddLinearConstraint([MAXCOEF, MAXCOEF, -1] + coef, scope([z, neq, res] + vars), '>', 0)
             model.AddLinearConstraint([-MAXCOEF, -1] + coef, scope([z, res] + vars), '>=', -MAXCOEF)
             model.AddLinearConstraint([MAXCOEF, -1] + coef, scope([z, res] + vars), '<=', MAXCOEF)
+        model.AddLinearConstraint([1,-1], scope([z,neq]), '<=')
     # (z == (res == Sum(vars, coef)))
 
 def int_lin_le(coef,vars,res):
@@ -466,6 +467,7 @@ def int_lin_ne_reif(coef,vars,res,z):
             model.AddLinearConstraint([-MAXCOEF, MAXCOEF, -1] + coef, scope([z, neq, res] + vars), '>', -MAXCOEF)
             model.AddLinearConstraint([MAXCOEF, -1] + coef, scope([z, res] + vars), '>=', 0)
             model.AddLinearConstraint([-MAXCOEF, -1] + coef, scope([z, res] + vars), '<=', 0)
+        model.AddLinearConstraint([1,-1], scope([z,neq]), '>=')
     # (z == (res != Sum(vars,coef)))
 
 def int_abs(x,y):
@@ -503,14 +505,14 @@ def int_div(x,y,z):
         costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if yval != 0 and xval == xval // yval:
+                if yval != 0 and xval == (xval // yval if xval * yval >= 0 else -(abs(xval) // abs(yval))):
                     costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
         model.AddFunction(scope([x, y]), costs) # (z == (x / y))
     elif y == z:
         costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if yval != 0 and yval == xval // yval:
+                if yval != 0 and yval == (xval // yval if xval * yval >= 0 else -(abs(xval) // abs(yval))):
                     costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
         model.AddFunction(scope([x, y]), costs) # (z == (x / y))
     else:
@@ -518,7 +520,7 @@ def int_div(x,y,z):
         for zval in model.Domain(z.ind):
             for xval in model.Domain(x.ind):
                 for yval in model.Domain(y.ind):
-                    if yval != 0 and zval == xval // yval:
+                    if yval != 0 and zval == (xval // yval if xval * yval >= 0 else -(abs(xval) // abs(yval))):
                         costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
         model.AddFunction(scope([z, x, y]), costs) # (z == (x / y))
 
@@ -588,14 +590,14 @@ def int_mod(x,y,z):
         costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if yval != 0 and xval == xval % yval:
+                if yval != 0 and xval == (abs(xval) % abs(yval) if xval >= 0 else -(abs(xval) % abs(yval))):
                     costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
         model.AddFunction(scope([x, y]), costs) # (z == (x % y))
     elif y == z:
         costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if yval != 0 and yval == xval % yval:
+                if yval != 0 and yval == (abs(xval) % abs(yval) if xval >= 0 else -(abs(xval) % abs(yval))):
                     costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
         model.AddFunction(scope([x, y]), costs) # (z == (x % y))
     else:
@@ -603,7 +605,7 @@ def int_mod(x,y,z):
         for zval in model.Domain(z.ind):
             for xval in model.Domain(x.ind):
                 for yval in model.Domain(y.ind):
-                    if yval != 0 and zval == xval % yval:
+                    if yval != 0 and zval == (abs(xval) % abs(yval) if xval >= 0 else -(abs(xval) % abs(yval))):
                         costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
         model.AddFunction(scope([z, x, y]), costs) # (z == (x % y))
 
