@@ -822,7 +822,7 @@ def finalize_int_lin_eq(*output_vars):
     while ok:
         ok = False
         for v in DelayedLinEqVars:
-            if len(DelayedLinEqVars[v]) == 1 and type(v) is Var and model.GetDegree(v.ind) == 0 and model.CFN.wcsp.getMaxUnaryCost(v.ind) == 0 and v not in output_vars:
+            if len(DelayedLinEqVars[v]) == 1 and type(v) is Var and model.GetDegree(v.ind) == 0 and model.CFN.wcsp.getMaxUnaryCost(v.ind) == 0 and model.CFN.wcsp.getDomainSize(v.ind) == model.CFN.wcsp.getSup(v.ind) - model.CFN.wcsp.getInf(v.ind) + 1 and v not in output_vars:
                 ok = True
                 idx = list(DelayedLinEqVars[v])[0]
                 vcoef,vvars,vrhs = DelayedLinEq[idx]
@@ -831,7 +831,18 @@ def finalize_int_lin_eq(*output_vars):
                 assert(type(vrhs) is int)
                 del DelayedLinEq[idx]
                 for var in vvars:
-                    DelayedLinEqVars[var].remove(idx)        
+                    DelayedLinEqVars[var].remove(idx)
+                vpos = vvars.index(v)
+                vmult = -vcoef[vpos]
+                del vcoef[vpos]
+                del vvars[vpos]
+                vinf = model.CFN.wcsp.getInf(v.ind)
+                vsup = model.CFN.wcsp.getSup(v.ind)
+                vmin = vmult * vinf
+                vmax = vmult * vsup
+                model.AddLinearConstraint(vcoef, scope(vvars), '<=', vrhs + max(vmax,vmin))
+                model.AddLinearConstraint(vcoef, scope(vvars), '>=', vrhs + min(vmin,vmax))
+                
     for coef,vars,rhs in DelayedLinEq.values():
         model.AddLinearConstraint(coef, scope(vars), '==', rhs)  # Sum(coef,vars) == rhs
     
