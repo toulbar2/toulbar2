@@ -277,8 +277,11 @@ enum {
 
     OPT_ReducedCostsFiltering,
     NO_OPT_ReducedCostsFiltering,
-
     OPT_singletonConsistency,
+
+    OPT_AlldiffSlackVar,
+    NO_OPT_AlldiffSlackVar,
+
     OPT_GILMORELAWLER,
     OPT_GenAMOforPB,
     OPT_DynPB,
@@ -573,6 +576,9 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // Reduced costs filtering for alldifferent and gcc
     { OPT_ReducedCostsFiltering, (char*)"-camb", SO_OPT },
     { NO_OPT_ReducedCostsFiltering, (char*)"-camb:", SO_NONE },
+
+    { OPT_AlldiffSlackVar, (char*)"-slack", SO_OPT },
+    { NO_OPT_AlldiffSlackVar, (char*)"-slack:", SO_NONE },
 
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -1072,6 +1078,11 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::ReducedCostsFiltering)
         cout << " (default option " << ToulBar2::ReducedCostsFiltering << ")";
     cout << endl;
+
+    if (ToulBar2::AlldiffSlackVar)
+        cout << " (default option " << ToulBar2::AlldiffSlackVar << ")";
+    cout << endl;
+    
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
     cout << "   --trws-order : replaces DAC order by Kolmogorov's TRW-S order";
     if (ToulBar2::trwsOrder)
@@ -1991,6 +2002,19 @@ int _tmain(int argc, TCHAR* argv[])
                 }
             } else if (args.OptionId() == NO_OPT_ReducedCostsFiltering) {
                 ToulBar2::ReducedCostsFiltering = 0;
+            }
+
+            if (args.OptionId() == OPT_AlldiffSlackVar) {
+                if (args.OptionArg() != NULL) {
+                    int slack = atoi(args.OptionArg());
+                    if (slack < 0 || slack >  1)
+                        slack = 1;
+                    ToulBar2::AlldiffSlackVar = slack;
+                } else {
+                    ToulBar2::AlldiffSlackVar = 1;
+                }
+            } else if (args.OptionId() == NO_OPT_AlldiffSlackVar) {
+                ToulBar2::AlldiffSlackVar = 0;
             }
 
 #ifdef BOOST

@@ -42,6 +42,7 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<StoreValue> storeLastAssignment; // Stores the last optimal assignment of variables
     StoreInt storeAssignment; // True if an optimal assignment is currently stored
     int* rowSol = nullptr; // Row solution array: rowSol[var] = value index assigned to variable var by the LAP solver
+    int* colSol =  nullptr;
     Cost* ReduceCostRow = nullptr; // Reduced costs per row (per variable) after solving the LAP
     Cost* ReduceCostCol = nullptr; // Reduced costs per column (per value) after solving the LAP
     vector<Cost> costMatrix; // Flattened row-major cost matrix passed to the Jonker LAP solver
@@ -80,6 +81,9 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     int findConflict; // Flag returned by the LAP solver: non-zero if a conflict (infeasible sub-problem) was detected, value encodes the number of conflicting variables
     int lower, upper; // Lower and upper thresholds on NbNoAssigned controlling when reduced-cost filtering is activated (lower) and when Dijkstra-based filtering is applied (upper)
     vector<int> varValIdx; // varValIdx[var * NbValues + val] = index of value val (in UnionVarDomain) inside the initial domain of variable var, or -1 if var cannot take it
+    vector<int> capacity;
+    bool slack = false;
+   
     void projectLB(Cost c)
     {
         if (c > MIN_COST) {
@@ -300,10 +304,12 @@ public:
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
             costMatrix = vector<Cost>((arity_ + 1) * NbValues, MAX_COST);
-            ReduceCostMatrix = vector<Cost>(arity_ * NbValues, MAX_COST);
+            ReduceCostMatrix = vector<Cost>((arity_+1) * NbValues, MAX_COST);
+            capacity = vector<int>(arity_ + 1, 1);
 
             // Allocate memory
             rowSol = new int[arity_ + 1];
+            colSol = new int[NbValues];
             ReduceCostRow = new Cost[arity_ + 1];
             ReduceCostCol = new Cost[NbValues];
         } else {
@@ -314,6 +320,7 @@ public:
     virtual ~AllDifferentConstraint()
     {
         delete[] rowSol;
+        delete[] colSol;
         delete[] ReduceCostRow;
         delete[] ReduceCostCol;
     }
@@ -386,6 +393,9 @@ public:
             if (NbValues < arity_)
                 THROWCONTRADICTION;
         }
+        int slackVar = ToulBar2::AlldiffSlackVar;
+        if(slackVar > 0 && !isSquare &&  !excepted)
+            slack = true;
 
         if (!isSquare) {
             int nbDelta = 0;
@@ -657,9 +667,21 @@ public:
             return MIN_COST;
         Cost sumdelta = -lb + assigneddeltas;
 
-        Cost m = *max_element(deltaCosts.begin(), deltaCosts.end());
-        if (m > MIN_COST)
-            sumdelta += m;
+        // worst case: the nbSlots most expensive unused slots (each value j has ValuesCapacity[j] slots)
+        long totalCap = 0;
+        for (int j = 0; j < NbValues; j++)
+            totalCap += ValuesCapacity[j];
+        long nbUnused = totalCap - arity_;
+        vector<pair<Cost, int>> byCost;
+        for (int j = 0; j < NbValues; j++)
+            byCost.push_back({ deltaCosts[j], ValuesCapacity[j] });
+        sort(byCost.begin(), byCost.end(), greater<>());
+        for (size_t k = 0; k < byCost.size() && nbUnused > 0; k++) {
+            long take = min<long>(nbUnused, byCost[k].second);
+            if (byCost[k].first > MIN_COST)
+                sumdelta += byCost[k].first * take;
+            nbUnused -= take;
+        }
 
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
@@ -670,7 +692,10 @@ public:
     Cost getCost(int index, Value val)
     {
         assert(index >= 0 && index < arity_);
-        return deltaCosts[scope[index]->toIndex(val)];
+        if (isSquare)
+            return MIN_COST;
+        int valIndex = unionIndex(scope[index]->getValueName(scope[index]->toIndex(val)));
+        return (valIndex < 0) ? MIN_COST : (Cost)deltaCosts[valIndex];
     }
 
     double computeTightness() override { return 0; } // TODO: compute factorial(n)/(n**n)?
@@ -911,7 +936,7 @@ public:
                             handles[nextVar] = pq.push({ alt, nextVar });
                             inHeap[nextVar] = 1;
                         } else {
-                            pq.decrease(handles[nextVar], { alt, nextVar });
+                            pq.update(handles[nextVar], { alt, nextVar });
                         }
                         if (alt == d) { // Zero-cost arc: settle immediately
                             trackErase(nextVar);
@@ -956,21 +981,21 @@ public:
      */
     void BimodalDijkstraReverseGraph(int source, vector<vector<uint8_t>>& ValList)
     {
-        if (dijkstraHandles.size() < (size_t)NbNoAssigned)
-            dijkstraHandles.resize(NbNoAssigned);
+        if (dijkstraHandles.size() < (size_t)max(NbNoAssigned, NbNoAssignedVal))
+            dijkstraHandles.resize(max(NbNoAssigned, NbNoAssignedVal));
         auto& handles = dijkstraHandles;
         PQ pq;
 
-        distanceToVal.assign(NbNoAssignedVal, 0); // Initialize all value distances to infinity
+        distanceToVal.assign(NbNoAssignedVal, MAX_COST); // Initialize all value distances to infinity
         visited.assign(NbNoAssignedVal, 0);
-        vector<int> colSol(NbNoAssignedVal); // Inverse of rowSol: colSol[val] = var matched to val
+        vector<int> invMatching(NbNoAssignedVal, -1); // Inverse of rowSol: invMatching[val] = var matched to val
 
         // Build inverse matching and initialize unsettled value set
         trackingList.clear();
         trackingList.reserve(NbNoAssigned);
         for (int var = 0; var < NbNoAssigned; ++var) {
             int val = rowSol[var];
-            colSol[val] = var;
+            invMatching[val] = var;
             trackingList.insert(val); // Only matched values are nodes in the reverse graph
             distanceToVal[val] = MAX_COST;
         }
@@ -987,7 +1012,7 @@ public:
             visited[val] = 1;
             trackingList.erase(val);
 
-            int var = colSol[val]; // Variable matched to current value node
+            int var = invMatching[val]; // Variable matched to current value node
 
             // Dense traversal over unsettled value nodes
             auto it = trackingList.begin();
@@ -1001,7 +1026,7 @@ public:
                             handles[nextVal] = pq.push({ alt, nextVal });
                             inHeap[nextVal] = 1;
                         } else {
-                            pq.decrease(handles[nextVal], { alt, nextVal });
+                            pq.update(handles[nextVal], { alt, nextVal });
                         }
                         if (alt == d) { // Zero-cost arc: settle immediately
                             it = trackingList.erase(it);
@@ -1052,7 +1077,7 @@ public:
                         handles[nextVar] = pq.push({ alt, nextVar });
                         inHeap[nextVar] = 1;
                     } else {
-                        pq.decrease(handles[nextVar], { alt, nextVar });
+                        pq.update(handles[nextVar], { alt, nextVar });
                     }
                     if (alt == d) // Zero-cost arc: settle immediately without re-queuing
                         visited[nextVar] = 1;
@@ -1080,8 +1105,19 @@ public:
         // Backward pass: distances from source's matched value to all value nodes
         BimodalDijkstraReverseGraph(source, ValList);
 
-        Cost maxDistanceFromVar = *max_element(distanceToVar.begin(), distanceToVar.end());
-        Cost maxDistanceToVar = *max_element(distanceToVal.begin(), distanceToVal.end());
+        // An unreachable node (infinite distance) means we cannot conclude: avoid MAX_COST + MAX_COST overflow
+        Cost maxDistanceFromVar = 0;
+        for (Cost d : distanceToVar) {
+            if (d >= MAX_COST)
+                return false;
+            maxDistanceFromVar = max(maxDistanceFromVar, d);
+        }
+        Cost maxDistanceToVar = 0;
+        for (Cost d : distanceToVal) {
+            if (d >= MAX_COST)
+                return false;
+            maxDistanceToVar = max(maxDistanceToVar, d);
+        }
 
         // If max_forward + max_backward <= H - MaxReducedCost, no arc exceeds the budget
         bool AllValConsistent = maxDistanceFromVar + maxDistanceToVar <= H - MaxReducedCost;
@@ -1117,6 +1153,10 @@ public:
                 cout << "propagate " << *this << endl;
             }
 
+            // not enough distinct values for the variables (without excepted values)
+            if (!excepted && NbValues < arity_)
+                THROWCONTRADICTION;
+
             bool b = false;
 
             // Attempt to assign variables already connected and assigned
@@ -1140,7 +1180,7 @@ public:
                     }
                 }
 
-                if (!skipPropagation) {
+                if (!skipPropagation && !slack) {
                     // Initialize number of unassigned variables
                     NbNoAssigned = getNonAssigned();
                     bool filtreExcepted = false;
@@ -1525,6 +1565,229 @@ public:
                         }
                     }
                 }
+
+                if (!skipPropagation && slack) {
+                    // Initialize number of unassigned variables
+                    NbNoAssigned = getNonAssigned();
+
+                    // If there are assigned variables, handle accordingly
+                    if (NbNoAssigned < arity_) {
+                       if (SameDomain && RemoveAssignVar()) {
+                            // Collect unassigned values
+                            //    cout<<"done\n";
+                            vector<int> NoAssignedVal;
+                            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                if (!isAssignedValue[valIndex]) {
+                                    NoAssignedVal.push_back(valIndex);
+                                }
+                            }
+
+                            NbNoAssignedVal = NoAssignedVal.size();
+
+                            // Initialize cost matrix for the Jonker algorithm
+                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
+                            
+                            for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                int varIndex = NoAssignedVar[varInd];
+                                auto* variable = scope[varIndex];
+
+                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                    int valIndex = NoAssignedVal[valInd];
+                                    Value val = toVarValue(varIndex, valIndex);
+                                    if (val != WRONG_VAL && variable->canbe(val)) {
+                                        auto valCost = variable->getCost(val);
+                                        costMatrix[valInd * (NbNoAssigned + 1)  + varInd] = valCost < current_ub ? valCost : current_ub;
+                                    } else {
+                                        costMatrix[valInd * (NbNoAssigned + 1) + varInd] = current_ub;
+                                    }
+                                }
+                            }
+                            // dummy column (index NbNoAssigned): cost = extended unary cost of the unused value
+                            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                costMatrix[valInd * (NbNoAssigned + 1) + NbNoAssigned] = deltaCosts[NoAssignedVal[valInd]];
+                            }
+                            capacity.assign(NbNoAssigned + 1, 1);
+                            capacity[NbNoAssigned] = NbNoAssignedVal - NbNoAssigned;
+
+                            if (any_of(costMatrix.begin(), costMatrix.begin() + (NbNoAssigned + int(!isSquare)) * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
+                                // Solve assignment problem using Jonker algorithm
+                                Cost TotalCost;
+                                    //TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
+                                TotalCost = lapjv_ub(NbNoAssignedVal, NbNoAssigned + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict);
+
+                                if (TotalCost >= current_ub) {
+
+                                    wcsp->revise(this);
+                                    THROWCONTRADICTION;
+
+                                } else if (TotalCost >= 0 ) {
+                                    Cost jonker = TotalCost;
+
+                                    for (int valIndex = 0; valIndex < NbNoAssignedVal; ++valIndex) {
+                                        int var = colSol[valIndex];
+                                        if( var < NbNoAssigned){
+                                            rowSol[var] = valIndex;
+                                        }
+                                        deltaCosts[NoAssignedVal[valIndex]] = costMatrix[valIndex * (NbNoAssigned + 1) + NbNoAssigned] - (ReduceCostRow[NbNoAssigned] + ReduceCostCol[valIndex]);
+                                    }
+                                                                        
+                                    // Store results from Jonker algorithm
+                                    for (int varIndex = 0; varIndex < NbNoAssigned; ++varIndex) {
+                                        storeLastAssignment[NoAssignedVar[varIndex]] = toVarValue(NoAssignedVar[varIndex], NoAssignedVal[rowSol[varIndex]]);
+                                    }
+
+                                    for (int varIndex = 0; varIndex < NbAssigned; ++varIndex) {
+                                        storeLastAssignment[AssignedVar[varIndex]] = toVarValue(AssignedVar[varIndex], AssignedVal[varIndex]);
+                                    }
+
+                                    storeAssignment = true;
+
+
+                                    // (in the non-square case the duals have the opposite sign convention: do not test their sign)
+                                    if (TotalCost > 0 || (any_of(ReduceCostCol, ReduceCostCol +  NbNoAssignedVal,  [](auto x) { return x > MIN_COST; }))) {
+
+                                        // Update the lower bound with the Jonker algorithm's total cost
+                                        projectLB(jonker);
+                                        // Adjust unary costs for unassigned variables based on reduced costs
+                                    
+                                        for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                            int varIndex = NoAssignedVar[varInd];
+                                            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                                if (costMatrix[valInd * (NbNoAssigned+1) + varInd] < current_ub) {
+                                                    int valIndex = NoAssignedVal[valInd];
+                                                    Value value = toVarValue(varIndex, valIndex);
+                                                    ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                     // Update support values if needed for unassigned variables
+                                    for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                        int varIndex = NoAssignedVar[varInd];
+                                        auto* variable = scope[varIndex];
+                                        Value optimalValue = storeLastAssignment[varIndex];
+                                        if (variable->getSupport() != optimalValue) {
+                                            if (ToulBar2::verbose > 0)
+                                                cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
+    #ifndef NDEBUG
+                                            variable->queueEAC1(); // EAC support may have been lost
+    #endif
+                                            variable->setSupport(optimalValue);
+                                            assert(variable->getCost(variable->getSupport()) == MIN_COST);
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Zero cost matrix: every unassigned variable can take every free value at no cost,
+                                // so any injective assignment is optimal (no cost to project)
+                                if (NbNoAssignedVal < NbNoAssigned)
+                                    THROWCONTRADICTION;
+                                for (int k = 0; k < NbNoAssigned; ++k)
+                                    storeLastAssignment[NoAssignedVar[k]] = toVarValue(NoAssignedVar[k], NoAssignedVal[k]);
+                                // Assigned variables keep their value
+                                for (int k = 0; k < NbAssigned; ++k)
+                                    storeLastAssignment[AssignedVar[k]] = toVarValue(AssignedVar[k], AssignedVal[k]);
+                                storeAssignment = true;
+                                for (int k = 0; k < NbNoAssigned; ++k)
+                                    updateSupport(NoAssignedVar[k]);
+                            }
+                        }
+
+                    // Case when all variables are unassigned or filtering exception or domains differ
+                    } else if (connected() && (NbNoAssigned == arity_ || !SameDomain) ){
+                        Cost current_ub = wcsp->getUb() - wcsp->getLb();
+                        // Initialize the cost matrix for all variables and their domain values
+
+                        // transposed layout: row = value, column = variable (+ 1 dummy column), index val*(arity_+1)+var
+                        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                            auto* variable = scope[varIndex];
+
+                            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                Value value = toVarValue(varIndex, valIndex);
+                                Cost valCost = (value != WRONG_VAL && variable->canbe(value)) ? variable->getCost(value) : current_ub;
+                                costMatrix[valIndex * (arity_+1) + varIndex] = valCost < current_ub ? valCost : current_ub;
+                            }
+                        }
+                        for (int valInd = 0; valInd < NbValues; ++valInd) {
+                            costMatrix[valInd * (arity_ + 1) + arity_] = deltaCosts[valInd];
+                        }
+                        capacity.assign(arity_ + 1, 1);
+                        capacity[arity_] = NbValues - arity_;
+
+                        if (any_of(costMatrix.begin(), costMatrix.begin() + (arity_ + int(!isSquare)) * NbValues, [](auto x) { return x != MIN_COST; })) {
+                            // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
+                            Cost TotalCost;
+
+                            TotalCost = lapjv_ub(NbValues, arity_ + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict);
+
+
+                            if (TotalCost >= current_ub) {
+                                wcsp->revise(this);
+                                THROWCONTRADICTION;
+
+                            } else if (TotalCost >= 0 ) {
+                                // Store results from Jonker algorithm
+                                if(!isSquare){
+                                    for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                        int var = colSol[valIndex];
+                                        if( var < arity_){
+                                            rowSol[var] = valIndex;
+                                        }
+                                        deltaCosts[valIndex] = costMatrix[valIndex * (arity_ + 1) + arity_] - (ReduceCostRow[arity_] + ReduceCostCol[valIndex]);
+                                    }
+                                }
+                                for (int varIndex = 0; varIndex < arity_; varIndex++) {
+                                    storeLastAssignment[varIndex] = toVarValue(varIndex, rowSol[varIndex]);
+                                }
+                                storeAssignment = true;
+                                
+                                // (in the non-square case the duals have the opposite sign convention: do not test their sign)
+                                if(TotalCost > 0 ||  (any_of(ReduceCostCol, ReduceCostCol + NbValues,  [](auto x) { return x > MIN_COST; }))){
+
+                                    // Update lower bound with the total cost found
+                                    projectLB(TotalCost);
+
+                                    // Adjust unary costs using reduced row and column costs
+                                    for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                                        for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                            Value value = toVarValue(varIndex, valIndex);
+                                            if (value == WRONG_VAL)
+                                                continue;
+                                            if (costMatrix[valIndex * (arity_ +1)+ varIndex] < current_ub) {
+                                                ExtOrProJ(varIndex, value, (ReduceCostRow[varIndex] + ReduceCostCol[valIndex]));
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Update support if needed for all variables
+                                for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                                    auto* variable = scope[varIndex];
+                                    Value optimalValue = storeLastAssignment[varIndex];
+                                    if (variable->getSupport() != optimalValue) {
+                                        if (ToulBar2::verbose > 0)
+                                            cout << "CHANGE ALLDIFF SUPPORT " << variable->getName() << " from " << variable->getSupport() << " to " << optimalValue << endl;
+    #ifndef NDEBUG
+                                        variable->queueEAC1(); // EAC support may have been lost
+    #endif
+                                        variable->setSupport(optimalValue);
+                                        assert(variable->getCost(variable->getSupport()) == MIN_COST);
+                                    }
+                                }
+                            }
+                        } else {
+                            // Zero cost matrix: every variable can take every value at no cost.
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                                int valIndex = (varIndex < NbValues) ? varIndex : exceptedValIndex[0];
+                                storeLastAssignment[varIndex] = toVarValue(varIndex, valIndex);
+                            }
+                            storeAssignment = true;
+                            for (int varIndex = 0; varIndex < arity_; ++varIndex)
+                                updateSupport(varIndex);
+                        }
+                    }
+                }
             }
         }
     }
@@ -1537,6 +1800,10 @@ public:
         vector<bool> alreadyUsed(NbValues, false);
         for (int i = 0; i < arity_; i++) {
             int valIndex = unionIndex(scope[i]->getValueName(scope[i]->toIndex(storeLastAssignment[i])));
+            if (valIndex < 0) {
+                cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " is forbidden!" << endl;
+                return false;
+            }
             if ((alreadyUsed[valIndex] && (!excepted || find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end())) || scope[i]->cannotbe(storeLastAssignment[i]) || (ToulBar2::LcLevel >= LC_DAC && scope[i]->getCost(storeLastAssignment[i]) > MIN_COST)) {
                 if (alreadyUsed[valIndex]) {
                     cout << "variable " << scope[i]->getName() << " value " << storeLastAssignment[i] << " used twice!" << endl;
@@ -1709,20 +1976,23 @@ public:
             os << " -1 alldiff ";
         }
 
+        vector<Value> removedVals = removedValues();
+        // the counters are positional in read(): write the excepted counter as soon as a later section exists
         // excepted values: number followed by the list
         if (!exceptedValues.empty()) {
             os << exceptedValues.size();
             for (Value v : exceptedValues)
                 os << " " << v;
-        }else if(!mapValuesDeltaCosts.empty())  os << " " << 0;
+        } else if (!removedVals.empty() || !mapValuesDeltaCosts.empty())
+            os << 0;
 
         // removed values: number followed by the list
-        vector<Value> removedVals = removedValues();
         if (!removedVals.empty()) {
             os << " " << removedVals.size();
             for (Value v : removedVals)
                 os << " " << v;
-        }else if(!mapValuesDeltaCosts.empty())  os << " " << 0;
+        } else if (!mapValuesDeltaCosts.empty())
+            os << " " << 0;
 
         // delta costs (non-square case only)
         if (!isSquare) {
