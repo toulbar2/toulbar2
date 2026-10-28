@@ -667,21 +667,9 @@ public:
             return MIN_COST;
         Cost sumdelta = -lb + assigneddeltas;
 
-        // worst case: the nbSlots most expensive unused slots (each value j has ValuesCapacity[j] slots)
-        long totalCap = 0;
-        for (int j = 0; j < NbValues; j++)
-            totalCap += ValuesCapacity[j];
-        long nbUnused = totalCap - arity_;
-        vector<pair<Cost, int>> byCost;
-        for (int j = 0; j < NbValues; j++)
-            byCost.push_back({ deltaCosts[j], ValuesCapacity[j] });
-        sort(byCost.begin(), byCost.end(), greater<>());
-        for (size_t k = 0; k < byCost.size() && nbUnused > 0; k++) {
-            long take = min<long>(nbUnused, byCost[k].second);
-            if (byCost[k].first > MIN_COST)
-                sumdelta += byCost[k].first * take;
-            nbUnused -= take;
-        }
+        Cost m = *max_element(deltaCosts.begin(), deltaCosts.end());
+        if (m > MIN_COST)
+            sumdelta += m;
 
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
