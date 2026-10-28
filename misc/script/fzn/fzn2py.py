@@ -736,6 +736,14 @@ def set_in_reif(x,dom,z):
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
+    if x == z:
+        set_in(x,[0,1])
+        costs = [model.Top]*sizex
+        for xval in model.Domain(x.ind):
+            if bool(xval) == (xval in dom):
+                costs[model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([x]), costs) # (z == Disjunction([(x == v) for v in dom]))
+        return        
     costs = [model.Top]*sizex*sizez
     for zval in model.Domain(z.ind):
         for xval in model.Domain(x.ind):
