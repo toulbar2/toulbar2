@@ -3,11 +3,12 @@
 
 BEGIN {
 	MAX_COST_FZN = 2147483647 * 1024;
-	MAXINT = 10000;
-	VERBOSITY = -1;
-	SHOWSOLUTIONS = 0;
-	DUMPMODEL = 0;	
+	MAXINT = 10000; # maximum integer domain value
+	#VERBOSITY = -1;
+	#SHOWSOLUTIONS = 0;
+	#DUMPMODEL = 0;	
 	# ALLSOLUTIONS = 10000; # needed for running unit tests (automatically assigned by ./fzn2py with extra option -a)
+	#FREESEARCH = 1;
 	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
@@ -290,6 +291,10 @@ END {
 	print "    exit(0)";
 	if(output_vars) print output_vars " = output_vars";
 	if(DUMPMODEL) print "model.Dump('fzn.cfn')";
+	if(!FREESEARCH) {
+	    print "model.Option.Static_variable_ordering = True";
+	    print "model.Option.QueueComplexity = True";
+	}
 	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
 	print "if result is not None:";
 	print "    sols = model.GetSolutions()";
