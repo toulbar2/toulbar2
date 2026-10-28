@@ -15,9 +15,10 @@ BEGIN {
 	system("cat " MZNNJ_DIR "/fzn2py.py");
 	print "";
 	print "def get_model():"
-	print "    global model";
-	print "    global DelayedLinEq";
-	print "    model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
+	print "  global model";
+	print "  global DelayedLinEq";
+	print "  model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
+	print "  try:";
 	parameter = 1;
 	error = 0;
 }
@@ -276,12 +277,17 @@ END {
 		 if(length(output_vars) > 0) output_vars = output_vars ", ";
 		 output_vars = output_vars objective;
 	}
-	print "    finalize_int_lin_eq(" output_vars ")"; 
-	print "    output_vars = (" output_vars ")";
-	print "    return model, output_vars";
+	print "    finalize_int_lin_eq(" output_vars ")";
+	print "  except model.Contradiction:";
+	print "    return None, None";
+	print "  output_vars = (" output_vars ")";
+	print "  return model, output_vars";
 
 	print "";
 	print "model, output_vars = get_model()";
+	print "if model is None:";
+	print "    print('=====UNSATISFIABLE=====')";
+	print "    exit(0)";
 	if(output_vars) print output_vars " = output_vars";
 	if(DUMPMODEL) print "model.Dump('fzn.cfn')";
 	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
@@ -300,17 +306,18 @@ END {
 	}
 	print "        print('----------')";
 	if (objective){
-		print "    if model.GetDDualBound() == result[1]:"
-		print "        print('==========')"
+		print "    if model.GetDDualBound() == result[1]:";
+		print "        print('==========')";
 	} else {
-		print "    print('==========')"
+		print "    print('==========')";
 	}
+	print "    print('% Solutions', result[2])";
 	#print "elif solver.is_unsat():"
 	#print "    print('=====UNSATISFIABLE=====')"
-	print "else:"
-	print "    print('=====UNKNOWN=====')"
-	# print "print '% SolveTime', model.getTime()";
-	print "print('% Solutions', result[2])";
+	print "else:";
+	print "    print('=====UNKNOWN=====')";
+	print "    print('% Solutions', 0)";
+		# print "print '% SolveTime', model.getTime()";
 	print "print('% Nodes', model.GetNbNodes())";
 	print "print('% Failures', model.GetNbBacktracks())";
 	if (objective) print "if result is not None: print('% Objective', int(result[1]))";

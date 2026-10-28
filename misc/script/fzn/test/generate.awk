@@ -80,6 +80,65 @@ if(match(name,"_reif") || match(name,"bool_")) {
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+}
+if(match(name,"_reif") || match(name,"bool_")) {
+    print "var bool: z :: output_var;" >> file;
+} else {
+    print "var -10..10: z :: output_var;" >> file;
+}
+scope=$1;
+sub("y","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+if(match(name,"_reif") && !match(name,"bool_")) next;
+file = "test_" name "3.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+    print "var bool: y :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+    print "var -10..10: y :: output_var;" >> file;
+}
+scope=$1;
+sub("z","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "4.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+    print "var bool: y :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+    print "var -10..10: y :: output_var;" >> file;
+}
+scope=$1;
+sub("z","y",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "5.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+}
+scope=$1;
+sub("y","x",scope);
+sub("z","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
 }
 
 NF==1&&/array_bool_and/&&/[(]x,y[)]/{
@@ -138,6 +197,19 @@ if(match(name,"bool_") || match(name,"bool2int")) {
     print "var -10..10: y :: output_var;" >> file;
 }
 print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+if(match(name,"bool2int")) next;
+file = "test_" name "2.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+}
+scope=$1;
+sub("y","x",scope);
+print "constraint",scope,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
 }
