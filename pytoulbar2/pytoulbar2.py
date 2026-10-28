@@ -62,7 +62,7 @@ class CFN:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             self.rank = self.comm.Get_rank()
-            if (self.comm.Get_size() > 1):
+            if self.comm.Get_size() > 1:
                 tb2.option.parallel = True
                 if self.rank != 0 or verbose == -1:
                     verbose = -2                
@@ -83,7 +83,7 @@ class CFN:
         self.configuration = configuration   # if True then special settings for learning
         if configuration:
             tb2.option.elimDegree_preprocessing = 1   # maximum degree level of variable elimination in preprocessing (-1: none, 0: null degree, 1: degree one, etc.)
-            tb2.option.solutionBasedPhaseSaving = False   #  if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
+            tb2.option.solutionBasedPhaseSaving = False   # if False do not reuse previous complete solutions as hints during incremental solving used by structure learning evaluation procedure!
 
         if vns is not None:
             tb2.option.vnsInitSol = vns   # if vns different than None then perform Decomposition-Guided Variable Neighborhood Search (-1: initial solution at random, -2: minimum domain values, -3: maximum domain values, -4: first solution found by DFS, >=0: or by LDS with at most vns discrepancies)
@@ -162,7 +162,7 @@ class CFN:
 
         Args:
             n_var (int): number of variables to create.
-            base_name (str): base name. variables will be named "base_name"_idx where idx is an integer index between 0 and n_var-1.
+            base_name (str): base name. variables will be named {base_name}{idx} where idx is an integer index between 0 and n_var-1.
             min_dom (int): minimum value of the domain.
             max_dom (int): maximum value of the domain.
 
@@ -170,7 +170,14 @@ class CFN:
             Index of the first variable of the list (int).
 
         """
-        return self.CFN.wcsp.makeEnumeratedVariableVec(n_var, base_name, min_dom, max_dom)
+        if min_dom > max_dom:
+            raise RuntimeError("Error, the domain min value must be smaller than the domain max value")        
+        first_var_ind = self.CFN.wcsp.makeEnumeratedVariableVec(n_var, base_name, min_dom, max_dom)
+        values = list(range(min_dom, max_dom+1))
+        self.Variables.update({(base_name+str(v_ind)):values for v_ind in range(n_var)})
+        self.VariableNames.update({(first_var_ind+v_ind):base_name+str(v_ind) for v_ind in range(n_var)})
+        self.VariableIndices.update({name:var_ind for (var_ind, name) in self.VariableNames.items()})
+        return first_var_ind
 
     def AddFunction(self, scope, costs, incremental = False):
         """AddFunction creates a cost function in extension. The scope corresponds to the input variables of the function. 
@@ -193,26 +200,26 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
-        if (len(iscope) == 0 and isinstance(costs, (int, float))):
+        if len(iscope) == 0 and isinstance(costs, (int, float)):
             self.CFN.wcsp.postNullaryConstraint(costs)
             return
         mincost = min(costs)
         maxcost = max(costs)
-        if (mincost == maxcost):
+        if mincost == maxcost:
             self.CFN.wcsp.postNullaryConstraint(mincost)
             return
         assert(len(iscope) >= 1)
-        if (len(iscope) == 1):
+        if len(iscope) == 1:
             assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) == len(costs))
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
-        elif (len(iscope) == 2):
+        elif len(iscope) == 2:
             assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) == len(costs))
             self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, incremental)
-        elif (len(iscope) == 3):
+        elif len(iscope) == 3:
             assert(self.CFN.wcsp.getDomainInitSize(iscope[0]) * self.CFN.wcsp.getDomainInitSize(iscope[1]) * self.CFN.wcsp.getDomainInitSize(iscope[2]) == len(costs))
             self.CFN.wcsp.postTernaryConstraint(iscope[0], iscope[1], iscope[2], costs, incremental)
         else:
@@ -222,7 +229,7 @@ class CFN:
             idx = self.CFN.wcsp.postNaryConstraintBegin(iscope, 0, len(costs) - costs.count(0))
             tuple = [self.CFN.wcsp.toValue(v, 0) for v in iscope]
             for cost in costs:
-                if (isinf(cost)):
+                if isinf(cost):
                     self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, tb2.MAX_COST)
                 elif cost > mincost:
                     self.CFN.wcsp.postNaryConstraintTuple(idx, tuple, int((cost-mincost) * 10 ** tb2.option.decimalPoint))
@@ -231,12 +238,12 @@ class CFN:
                     v = iscope[i]
                     if tuple[i] < self.CFN.wcsp.toValue(v, self.CFN.wcsp.getDomainInitSize(v) - 1):
                         tuple[i] += 1
-                        for j in range(i+1,len(iscope)):
+                        for j in range(i+1, len(iscope)):
                             tuple[j] = self.CFN.wcsp.toValue(iscope[j], 0)
                         break
             self.CFN.wcsp.postNaryConstraintEnd(idx)
 
-    def AddFunctions(self, scopes, costs, incremental = False):
+    def AddFunctions(self, scopes, costs, incremental: bool = False):
         """AddFunctions creates multiple unary, binary or ternary cost functions in extension. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 1 dimensional (unary functions) or 2 dimensional objects (binary and ternary functions) with variable indices. 
         Unary costs are given as a 2 dimensional array (n_functions x domain_size).
         Binary costs are given as a 3 dimensional array of size n_functions x domain_size x domain_size.
@@ -257,7 +264,10 @@ class CFN:
             memoryview(costs)
         except TypeError:
             raise RuntimeError("Scopes and costs must be compatible with the array interface (i.e. numpy tensors-like)")
-        # check arity
+        # number of scopes verification
+        if scopes.shape[0] != costs.shape[0]:            
+            raise RuntimeError("Error, must provide same number of scopes and costs tables")
+        #  check arity
         if scopes.ndim == 1: # unary cost functions
             if costs.ndim == 2:            
                 self.CFN.wcsp.postUnaryVecConstraints(scopes, costs, incremental)
@@ -276,7 +286,7 @@ class CFN:
         else:
             raise RuntimeError("Error, invalid scopes dimensionality" + str(scopes.ndim) + " and or shape " + str(scopes.shape))
 
-    def AddAkinFunctions(self, scopes, costs, incremental = False):
+    def AddAkinFunctions(self, scopes, costs, incremental: bool = False):
         """AddAkinFunctions creates multiple binary or ternary cost functions in extension with a single cost table. Scopes and costs are given as python buffer protocol compatible-types (e.g. numpy array). Scopes are given as 2 dimensional objects with variable indices. 
         Binary costs are given as a 2 dimensional array of size domain_size x domain_size.
         Ternary costs are given as a 3 dimensional array of size domain_size x domain_size x domain_size.
@@ -332,21 +342,21 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
             
-        if (len(iscope) == 0):
+        if len(iscope) == 0:
             assert(len(tuples) == 0)
             self.CFN.wcsp.postNullaryConstraint(defcost)
             return
         mincost = min(defcost, min(tcosts))
         maxcost = max(defcost, max(tcosts))
-        if (mincost == maxcost):
+        if mincost == maxcost:
             self.CFN.wcsp.postNullaryConstraint(mincost)
             return
         assert(len(iscope) >= 1)
-        if (len(iscope) == 1):
+        if len(iscope) == 1:
             sizex = self.CFN.wcsp.getDomainInitSize(iscope[0])
             costs = [defcost] * sizex
             for i, tuple in enumerate(tuples):
@@ -355,7 +365,7 @@ class CFN:
                     continue
                 costs[idx] = tcosts[i]
             self.CFN.wcsp.postUnaryConstraint(iscope[0], costs, incremental)
-        elif (len(iscope) == 2):
+        elif len(iscope) == 2:
             sizex = self.CFN.wcsp.getDomainInitSize(iscope[0])
             sizey = self.CFN.wcsp.getDomainInitSize(iscope[1])
             costs = [defcost] * (sizex * sizey)
@@ -368,7 +378,7 @@ class CFN:
                     continue
                 costs[idx * sizey + idy] = tcosts[i]
             self.CFN.wcsp.postBinaryConstraint(iscope[0], iscope[1], costs, incremental)
-        elif (len(iscope) == 3):
+        elif len(iscope) == 3:
             sizex = self.CFN.wcsp.getDomainInitSize(iscope[0])
             sizey = self.CFN.wcsp.getDomainInitSize(iscope[1])
             sizez = self.CFN.wcsp.getDomainInitSize(iscope[2])
@@ -393,7 +403,7 @@ class CFN:
             idnary = self.CFN.wcsp.postNaryConstraintBegin(iscope, tb2.MAX_COST if isinf(defcost) else int((defcost - mincost) * 10 ** tb2.option.decimalPoint), len(tcosts))
             for i, tuple in enumerate(tuples):
                 _tuple_ = []
-                for x,v in enumerate(tuple):
+                for x, v in enumerate(tuple):
                     idx = self.CFN.wcsp.toIndex(iscope[x], v)
                     if idx < 0 or idx >= self.CFN.wcsp.getDomainInitSize(iscope[x]):
                         break
@@ -419,8 +429,8 @@ class CFN:
             AddLinearConstraint([1,1,-2], [x,y,z], '==', -1) encodes x + y -2z = -1. 
 
         """
-        if (isinstance(coefs, int)):
-            coefs = [coefs for v in scope]
+        if isinstance(coefs, int):
+            coefs = [coefs]*len(scope)
         assert(len(coefs) == len(scope))
         if operand != '>=' and operand != '>' and operand != '<=' and operand != '<' and operand != '==':
             raise RuntimeError("Unknown operand in AddLinearConstraint: "+str(operand))
@@ -428,7 +438,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
         sscope = set(iscope)
@@ -450,14 +460,14 @@ class CFN:
             iscope = iscope_
         if operand == '>=' or operand == '>' or operand == '==':
             params = str((rightcoef + 1) if (operand == '>') else rightcoef)
-            for i,v in enumerate(iscope):
+            for i, v in enumerate(iscope):
                 params += ' ' + str(self.CFN.wcsp.getDomainInitSize(v))
                 for valindex in range(self.CFN.wcsp.getDomainInitSize(v)):
                     params += ' ' + str(self.CFN.wcsp.toValue(v, valindex)) + ' ' + str(coefs[i] * self.CFN.wcsp.toValue(v, valindex))
             self.CFN.wcsp.postKnapsackConstraint(iscope, params, kp = True)
         if operand == '<=' or operand == '<' or operand == '==':
             params = str((-rightcoef + 1) if (operand == '<') else -rightcoef)
-            for i,v in enumerate(iscope):
+            for i, v in enumerate(iscope):
                 params += ' ' + str(self.CFN.wcsp.getDomainInitSize(v))
                 for valindex in range(self.CFN.wcsp.getDomainInitSize(v)):
                     params += ' ' + str(self.CFN.wcsp.toValue(v, valindex)) + ' ' + str(-coefs[i] * self.CFN.wcsp.toValue(v, valindex))
@@ -504,7 +514,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v) 
 
@@ -546,16 +556,16 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
-        if (len(iscope) >= 2):
-            if (encoding=='binary'):
+        if len(iscope) >= 2:
+            if encoding=='binary':
                 for i in range(len(iscope)):
                     for j in range(i+1, len(iscope)):
                         costs = [(0 if (self.CFN.wcsp.toValue(iscope[i], a) != self.CFN.wcsp.toValue(iscope[j], b) or (excepted and ((self.CFN.wcsp.toValue(iscope[i], a) in excepted) or (self.CFN.wcsp.toValue(iscope[j], b) in excepted)))) else self.Top) for a in range(self.CFN.wcsp.getDomainInitSize(iscope[i])) for b in range(self.CFN.wcsp.getDomainInitSize(iscope[j]))]
                         self.CFN.wcsp.postBinaryConstraint(iscope[i], iscope[j], costs, incremental)
-            elif (encoding=='hungarian'):
+            elif encoding=='hungarian':
                 params = '0'
                 if excepted is not None:
                     params = str(len(excepted))
@@ -563,17 +573,17 @@ class CFN:
                         params += ' ' + str(v)
                 params += ' 0'
                 self.CFN.wcsp.postAllDifferentConstraint(iscope, params)
-            elif (encoding=='salldiff'):
+            elif encoding=='salldiff':
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "flow", tb2.MAX_COST)
-            elif (encoding=='salldiffdp'):
+            elif encoding=='salldiffdp':
                 self.CFN.wcsp.postWAllDiff(iscope, "var", "DAG", tb2.MAX_COST)
-            elif (encoding=='salldiffkp'):
+            elif encoding=='salldiffkp':
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "knapsack", tb2.MAX_COST)
-            elif (encoding=='salldiffeq'):
+            elif encoding=='salldiffeq':
                 self.CFN.wcsp.postWAllDiff(iscope, "hardeq", "knapsack", tb2.MAX_COST)
-            elif (encoding=='salldiffge'):
+            elif encoding=='salldiffge':
                 self.CFN.wcsp.postWAllDiff(iscope, "hardge", "knapsack", tb2.MAX_COST)
-            elif (encoding=='walldiff'):
+            elif encoding=='walldiff':
                 self.CFN.wcsp.postWAllDiff(iscope, "hard", "network", tb2.MAX_COST)
             else:
                 raise RuntimeError("Unknown encoding for AllDifferent: "+encoding)
@@ -597,28 +607,28 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         bbounds = []
-        for v,lb,ub in bounds:
+        for v, lb, ub in bounds:
             bb = tb2.BoundedObjValue(v, ub, lb)
             bbounds.append(bb)            
-        if (encoding=='hungarian'):
+        if encoding=='hungarian':
             params = str(len(bounds))
-            for v,lb,ub in bounds:
+            for v, lb, ub in bounds:
                 params += ' ' + str(v)
                 params += ' ' + str(lb)
                 params += ' ' + str(ub)
             params += ' 0'
             self.CFN.wcsp.postGlobalCardinalityConstraint(iscope, params)
-        elif (encoding=='sgcc'):
+        elif encoding=='sgcc':
             self.CFN.wcsp.postWGcc(iscope, "var", "flow", tb2.MAX_COST, bbounds)
-        elif (encoding=='sgccdp'):
+        elif encoding=='sgccdp':
             self.CFN.wcsp.postWGcc(iscope, "var", "DAG", tb2.MAX_COST, bbounds)
-        elif (encoding=='sgcckp'):
+        elif encoding=='sgcckp':
             self.CFN.wcsp.postWGcc(iscope, "hard", "knapsack", tb2.MAX_COST, bbounds)
-        elif (encoding=='wgcc'):
+        elif encoding=='wgcc':
             self.CFN.wcsp.postWGcc(iscope, "hard", "network", tb2.MAX_COST, bbounds)
         else:
             raise RuntimeError("Unknown encoding for Global Cardinality Constraint: "+encoding)
@@ -641,7 +651,7 @@ class CFN:
         for i, v in enumerate(scope):
             if isinstance(v, str):
                 v = self.VariableIndices.get(v, -1)
-            if (v < 0 or v >= self.GetNbVars()):
+            if v < 0 or v >= self.GetNbVars():
                 raise RuntimeError("Out of range variable index:"+str(v)+" for variable "+scope[i])
             iscope.append(v)
         params = str(CFN.flatten(list(parameters)))[1:-1].replace(',','').replace('\'','')
@@ -811,6 +821,18 @@ class CFN:
         """
         return self.CFN.wcsp.toIndex(self.VariableIndices[var] if isinstance(var, str) else var, value)
 
+    def GetDegree(self, var):
+        """GetDegree returns the number of non-unary cost functions with a given variable in their scope.
+
+        Args:
+            var (int|str): variable name or its index as returned by AddVariable.
+
+        Returns:
+            Number of non-unary cost functions involving var (int).
+
+        """
+        return self.CFN.wcsp.getDegree(self.VariableIndices[var] if isinstance(var, str) else var)
+
     def GetNbConstrs(self):
         """GetNbConstrs returns the number of non-unary cost functions.
 
@@ -963,7 +985,7 @@ class CFN:
             self.CFN.wcsp.initDivVariables()
         tb2.check()    # checks compatibility between selected options
         self.Limit = None
-        if (timeLimit > 0):
+        if timeLimit > 0:
             self.CFN.timer(timeLimit)
         if self.UbInit is not None:
             self.CFN.wcsp.updateDUb(self.UbInit)
@@ -977,10 +999,10 @@ class CFN:
             tb2.option.setVnsOptimum(self.CFN.wcsp.DoubletoCost(float(tb2.option.vnsOptimumS)))
         if bestSol is not None:
             tb2.option.setVnsOptimum(self.CFN.wcsp.DoubletoCost(bestSol))
-        solved = self.CFN.solve()
+        self.CFN.solve()
         if len(writeSolution) > 0:
             tb2.option.closeSolution()
-        if (len(self.CFN.solutions()) > 0):
+        if len(self.CFN.solutions()) > 0:
             if allSolutions > 0:
                 return self.CFN.solutions()[-1][1], self.CFN.solutions()[-1][0], len(self.CFN.solutions()) # returns the last solution found
             else:
@@ -1058,12 +1080,12 @@ class CFN:
         tb2.option.showSolutions = showSolutions   # show solutions found (0: none, 1: value indexes, 2: value names, 3: variable and value names if available)
         tb2.check()    # checks compatibility between selected options
         self.Limit = None
-        if (timeLimit > 0):
+        if timeLimit > 0:
             self.CFN.timer(timeLimit)
         if initHeuristics:
             self.CFN.wcsp.resetWeightedDegree()
             for i in range(self.CFN.wcsp.numberOfVariables()):
-                 self.CFN.wcsp.setBestValue(i, self.CFN.wcsp.getSup(i) + 1) # reset value heuristic
+                self.CFN.wcsp.setBestValue(i, self.CFN.wcsp.getSup(i) + 1) # reset value heuristic
         initub = self.CFN.wcsp.getUb()
         initdepth = tb2.store.getDepth()
         self.CFN.beginSolve(initub)
@@ -1071,7 +1093,7 @@ class CFN:
             try:
                 tb2.store.store()
                 self.CFN.wcsp.propagate()
-                lb, ub = self.CFN.hybridSolve()
+                self.CFN.hybridSolve()
             except tb2.Contradiction:
                 self.CFN.wcsp.whenContradiction()
         except tb2.SolverOut as e:
@@ -1219,7 +1241,7 @@ class CFN:
         """
         self.CFN.wcsp.whenContradiction()
 
-    def InitFromMultiCFN(self, multicfn, vars=[], scopes=[], constrs=[]):
+    def InitFromMultiCFN(self, multicfn, vars=None, scopes=None, constrs=None):
         """InitFromMultiCFN initializes the cfn from a multiCFN instance (linear combination of multiple CFNs).
 
         Args:
@@ -1234,6 +1256,12 @@ class CFN:
 
         """
 
+        if vars is None:
+            vars = []
+        if scopes is None:
+            scopes = []
+        if constrs is None:
+            constrs = []
         multicfn.MultiCFN.makeWeightedCSP(self.CFN.wcsp, set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in vars]), [set([multicfn.GetVariableIndex(v) if isinstance(v, str) else v for v in scope]) for scope in scopes], list(constrs))
         
         self.VariableIndices = {}
@@ -1358,7 +1386,7 @@ class MultiCFN:
 
         """
 
-        optim_dir_first = (tb2.Bicriteria.OptimDir.Min if first_direction == 'min'  else tb2.Bicriteria.OptimDir.Max)
+        optim_dir_first = (tb2.Bicriteria.OptimDir.Min if first_direction == 'min' else tb2.Bicriteria.OptimDir.Max)
         optim_dir_second = (tb2.Bicriteria.OptimDir.Min if second_direction == 'min' else tb2.Bicriteria.OptimDir.Max)
 
         # parameters
@@ -1370,10 +1398,10 @@ class MultiCFN:
         tb2.Bicriteria.setSeed(tb2.option.seed)
         tb2.Bicriteria.setVerbose(tb2.option.verbose)
 
-        tb2.Bicriteria.computeSupportedPoints(self.MultiCFN, first_criterion, second_criterion, (optim_dir_first,optim_dir_second))
+        tb2.Bicriteria.computeSupportedPoints(self.MultiCFN, first_criterion, second_criterion, (optim_dir_first, optim_dir_second))
         # tb2.Bicriteria.computeNonSupported(self.MultiCFN, (optim_dir_first,optim_dir_second), 500)
 
-        return (tb2.Bicriteria.getSolutions(), tb2.Bicriteria.getPoints()) 
+        return tb2.Bicriteria.getSolutions(), tb2.Bicriteria.getPoints()
 
 
     def Print(self):

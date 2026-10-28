@@ -140,7 +140,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         unsigned int domsize = wcsp.getDomainSize(scopeIndexs[0]);
         arguments.append(to_string(domsize));
         int left = arity;
-        int sumlb = arity;
+        int sumlb = arity-1;
         unsigned int pos = 0;
         for (Value v : wcsp.getEnumDomain(scopeIndexs[0])) {
             arguments.append(" ");
@@ -149,7 +149,7 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
             pos++;
             int rand = myrand() % (arity + 1); // random upper bound capacity
             int capa = (pos == domsize && left > 0) ? left : rand;
-            int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
+            int demand = myrand() % (int(min(min(capa, sumlb),int(arity/domsize+1))) + 1); // random lower bound capacity
             left -= capa;
             sumlb -= demand;
             arguments.append(to_string(demand));
@@ -166,13 +166,13 @@ void naryRandom::generateGlobalCtr(vector<int>& indexs, string globalname, Cost 
         vector<BoundedObjValue> values;
         unsigned int domsize = wcsp.getDomainSize(scopeIndexs[0]);
         int left = arity;
-        int sumlb = arity;
+        int sumlb = arity - 1;
         unsigned int pos = 0;
         for (Value v : wcsp.getEnumDomain(scopeIndexs[0])) {
             pos++;
             int rand = myrand() % (arity + 1); // random upper bound capacity
             int capa = (pos == domsize && left > 0) ? left : rand;
-            int demand = myrand() % (min(capa, sumlb) + 1); // random lower bound capacity
+            int demand = myrand() % (int(min(min(capa, sumlb), int(arity/domsize +1))) + 1); // random lower bound capacity
             left -= capa;
             sumlb -= demand;
             values.push_back(BoundedObjValue(v, capa, demand));

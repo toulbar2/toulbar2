@@ -144,13 +144,13 @@ typedef struct {
  * - disj \e cstx \e csty \e penalty to express soft binary disjunctive constraint \f$x \geq y + csty \vee y \geq x + cstx\f$ with associated cost function \f$(x \geq y + csty \vee y \geq x + cstx)?0:penalty\f$
  * - sdisj \e cstx \e csty \e xinfty \e yinfty \e costx \e costy to express a special disjunctive constraint with three implicit hard constraints \f$x \leq xinfty\f$ and \f$y \leq yinfty\f$ and \f$x < xinfty \wedge y < yinfty \Rightarrow (x \geq y + csty \vee y \geq x + cstx)\f$ and an additional cost function \f$((x = xinfty)?costx:0) + ((y= yinfty)?costy:0)\f$
  * - Global cost functions using a dedicated propagator:
- *     - alldiff \e nb_excepted_values (\e excepted_value)* nb_delta_costs (\e value cost)* to express a hard alldifferent constraint with a possible list of excepted values that can be assigned several times (or 0 if no excepted values) (and a possible list of delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after excepted values will be interpreted as no delta costs))
+ *     - alldiff \e nb_excepted_values (\e excepted_value)* \e nb_delta_costs (\e value \e cost)* to express a hard alldifferent constraint with a possible list of excepted values that can be assigned several times (or 0 if no excepted values) (and a possible list of delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after excepted values will be interpreted as no delta costs))
  *     - clique \e 1 (\e nb_values (\e value)*)* to express a hard clique cut to restrict the number of variables taking their value into a given set of values (per variable) to at most \e 1 occurrence for all the variables (warning! it assumes also a clique of binary constraints already exists to forbid any two variables using both the restricted values)
- *     - gcc \e nb_values (\e value \e lower_bound \e upper_bound)* nb_delta_costs (\e value cost)* to express a hard global cardinality constraint with for each value its lower and upper bound capacity (and a possible list of delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after excepted values will be interpreted as no delta costs))
- *     - knapsack \e capacity (\e weight)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator)
- *     - knapsackc \e capacity (\e weight)* \e nb_AMO (\e nb_variables (\e variable \e value)*)* to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) combined with a list of non-overlapping at-most-one constraints
- *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight
- *     - knapsackv \e capacity \e nb_triplets (\e variable \e value \e weight)* to express a reverse knapsack constraint with a list of triplets variable, value, and its corresponding weight
+ *     - gcc \e nb_values (\e value \e lower_bound \e upper_bound)* \e nb_delta_costs (\e value \e cost)* to express a hard global cardinality constraint with for each value its lower and upper bound capacity (and a possible list of delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after excepted values will be interpreted as no delta costs))
+ *     - knapsack \e capacity (\e weight)* \e nb_delta_costs (\e variable \e value \e cost)* \e lb \e assigneddeltas to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) with capacity and weights are positive or negative integer coefficients (use negative numbers to express a linear constraint with <= operator) (and a possible list of delta costs, i.e. a list of triplets (variable, value, cost) to express internal delta costs followed by projected lower bound and assigned delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after last weight triplet will be interpreted as no delta costs and zero lb/assigneddeltas))
+ *     - knapsackc \e capacity (\e weight)* \e nb_AMO (\e nb_variables (\e variable \e value)*)* \e nb_delta_costs (\e variable \e value \e cost)* \e lb \e assigneddeltas to express a reverse knapsack constraint (i.e., a linear constraint on 0/1 variables with >= operator) combined with a list of non-overlapping at-most-one constraints (and a possible list of delta costs, i.e. a list of triplets (variable, value, cost) to express internal delta costs followed by projected lower bound and assigned delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after last weight triplet will be interpreted as no delta costs and zero lb/assigneddeltas))
+ *     - knapsackp \e capacity (\e nb_values (\e value \e weight)*)* \e nb_delta_costs (\e variable \e value \e cost)* \e lb \e assigneddeltas to express a reverse knapsack constraint with for each variable the list of values to select the item in the knapsack with their corresponding weight (and a possible list of delta costs, i.e. a list of triplets (variable, value, cost) to express internal delta costs followed by projected lower bound and assigned delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after last weight triplet will be interpreted as no delta costs and zero lb/assigneddeltas))
+ *     - knapsackv \e capacity \e nb_triplets (\e variable \e value \e weight)* \e nb_delta_costs (\e variable \e value \e cost)* \e lb \e assigneddeltas to express a reverse knapsack constraint with a list of triplets variable, value, and its corresponding weight (and a possible list of delta costs, i.e. a list of triplets (variable, value, cost) to express internal delta costs followed by projected lower bound and assigned delta costs if propagation already done, or 0 if no delta costs (warning! an end-of-line character after last weight triplet will be interpreted as no delta costs and zero lb/assigneddeltas))
  *     - salldiffkp hard \e UB to express a hard alldifferent constraint decomposed into knapsack cost functions
  *     - sgcckp hard \e UB \e nb_values (\e value \e lower_bound \e upper_bound)* to express a hard global cardinality constraint  decomposed into knapsack cost functions with for each value its lower and upper bound capacity
  *     - wcsp \e lb \e ub \e duplicatehard \e strongduality \e wcsp to express a hard global constraint on the cost of an input weighted constraint satisfaction problem in wcsp format such that its valid solutions must have a cost value in [lb,ub[.
@@ -211,10 +211,10 @@ typedef struct {
  * - hard alldifferent({x0,x1,x2,x3}) with no excepted values: \code 4 0 1 2 3 -1 alldiff 0 0\endcode
  * - clique cut ({x0,x1,x2,x3}) on Boolean variables such that value 1 is used at most once: \code 4 0 1 2 3 -1 clique 1 1 1 1 1 1 1 1 1 \endcode
  * - hard gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 gcc 4 1 0 2 2 1 3 3 2 4 4 3 5 0\endcode
- * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 \endcode
- * - knapsackc constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$, \f$x1 + x2 <= 1\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsackc 10 2 3 4 5 1 2 1 1 2 1\endcode
- * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5\endcode
- * - knapsackv constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackv 10 5 0 0 2 1 1 3 2 2 4 3 0 5 3 1 5\endcode
+ * - knapsack constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsack 10 2 3 4 5 0 0 0\endcode
+ * - knapsackc constraint (\f$2 * x0 + 3 * x1 + 4 * x2 + 5 * x3 >= 10\f$, \f$x1 + x2 <= 1\f$) on four Boolean 0/1 variables: \code 4 0 1 2 3 -1 knapsackc 10 2 3 4 5 1 2 1 1 2 1 0 0 0\endcode
+ * - knapsackp constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackp 10 1 0 2 1 1 3 1 2 4 2 0 5 1 5 0 0 0\endcode
+ * - knapsackv constraint (\f$2 * (x0=0) + 3 * (x1=1) + 4 * (x2=2) + 5 * (x3=0 \vee x3=1) >= 10\f$) on four {0,1,2}-domain variables: \code 4 0 1 2 3 -1 knapsackv 10 5 0 0 2 1 1 3 2 2 4 3 0 5 3 1 5 0 0 0\endcode
  * - wcsp constraint (\f$3 <= 2 * x1 * x2 + 3 * x1 * x4 + 4 * x2 * x4 < 5\f$) on three Boolean 0/1 variables: \code 3 1 2 4 -1 wcsp 3 5 0 0 name 3 2 3 1000 2 2 2 2 0 1 0 1 1 1 2 2 0 2 0 1 1 1 3 2 1 2 0 1 1 1 4\endcode
  * - soft_alldifferent({x0,x1,x2,x3}): \code 4 0 1 2 3 -1 salldiff var 1 \endcode
  * - soft_gcc({x1,x2,x3,x4}) with each value \e v from 1 to 4 only appearing at least v-1 and at most v+1 times: \code 4 1 2 3 4 -1 sgcc var 1 4 1 0 2 2 1 3 3 2 4 4 3 5 \endcode
@@ -377,6 +377,10 @@ private:
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
     Cost upperBound;
+    
+    //GS
+    vector<std::pair<int, string>> pushedBackTokens; // tokens given back by ungetToken (LIFO)
+    void ungetToken(const std::pair<int, string>& token) { pushedBackTokens.push_back(token); }
 };
 
 CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
@@ -520,7 +524,14 @@ bool CFNStreamReader::getNextLine()
 
 // Reads a token using lazily updated line by line reads
 std::pair<int, string> CFNStreamReader::getNextToken()
-{
+{   
+    //GS 
+    if (!pushedBackTokens.empty()) { // token previously given back by ungetToken
+        std::pair<int, string> token = pushedBackTokens.back();
+        pushedBackTokens.pop_back();
+        return token;
+    }
+
     if (tok_init) {
         if (tok_iter != tok.end()) {
             string token = *tok_iter;
@@ -1502,13 +1513,13 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
 void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& funcName, int line)
 {
     unsigned int arity = scope.size();
-
+    // a tag starting with '?' is optional: if absent, its section takes a default value (empty list or zero cost)
     map<string, string> GCFTemplates = {
-        { "alldiff", ":exceptedvalues:[v]+:deltacosts:[vc]+" },
-        { "gcc", ":bounds:[vNN]+:deltacosts:[vc]+" },
+        { "alldiff", ":?exceptedvalues:[v]+:?removedvalues:[v]+:?deltacosts:[vc]+" },
+        { "gcc", ":bounds:[vNN]+:?removedvalues:[v]+:?deltacosts:[vC]+:?lb:c:?sumcostsprojectonvar:C" },
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
-        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+" },
+        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+:deltacosts:[VvC]+:lb:c:assigneddeltas:C" },
         { "cfnconstraint", ":cfn:W:lb:c:ub:c:duplicatehard:N:strongduality:N" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
@@ -1804,11 +1815,41 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
             streamContentVec.push_back(std::make_pair('W', to_string(wcsp_->getIndex())));
         }
         // ---------- Read JSON tag
-        else if (GCFTemplate[i] == ':') {
+        /*else if (GCFTemplate[i] == ':') {
             auto idx = GCFTemplate.find_first_of(':', i + 1);
             string jsonTag = GCFTemplate.substr(i + 1, idx - i - 1); // extract 'jsonTag'
             i += jsonTag.size() + 1; // Increase i according to length of token read
             skipJSONTag(jsonTag);
+        }*/
+
+        else if (GCFTemplate[i] == ':') {
+            auto idx = GCFTemplate.find_first_of(':', i + 1);
+            string jsonTag = GCFTemplate.substr(i + 1, idx - i - 1); // extract 'jsonTag'
+            i += jsonTag.size() + 1; // Increase i according to length of token read
+            if (!jsonTag.empty() && jsonTag[0] == '?') { // optional section
+                jsonTag.erase(0, 1);
+                std::pair<int, string> next = this->getNextToken();
+                // absent if we reach the end of the parameters or, in JSON mode, another tag
+                bool absent = isCBrace(next.second) || next.second.empty() || (JSONMode && next.second != jsonTag);
+                if (absent || !JSONMode) {
+                    this->ungetToken(next); // the token belongs to what follows (or to the section itself without JSON tags)
+                }
+                if (absent) {
+                    // skip the section description in the template and generate its default value
+                    size_t end = GCFTemplate.find_first_of(':', i + 1);
+                    if (end == string::npos)
+                        end = GCFTemplate.size();
+                    bool isList = GCFTemplate.substr(i + 1, end - i - 1).find('[') != string::npos;
+                    if (isList)
+                        streamContentVec.push_back(std::make_pair('N', string("0"))); // empty list
+                    else
+                        streamContentVec.push_back(std::make_pair('c', string("0"))); // zero cost
+                    i = end - 1; // the for loop moves to the next tag
+                    continue;
+                }
+            } else {
+                skipJSONTag(jsonTag);
+            }
         }
         // ---------- Entering a repeated section
         else if (GCFTemplate[i] == '[') {
@@ -1944,7 +1985,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     // FIND MIN COST
     bool minUpdated = false;
     for (pair<char, string> streamContentPair : streamContentVec) {
-        if (streamContentPair.first == 'C') {
+        if (streamContentPair.first == 'C' && (funcType != "knapsackv" && funcType != "gcc")) {
             Cost currentCost = (Cost)std::stoll(streamContentPair.second);
             minCost = MIN(currentCost, minCost);
             minUpdated = true;
@@ -1955,7 +1996,7 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
 
     // WRITE ALL TO STREAM AND SUBSTRACT MIN COST TO ALL COSTS
     for (unsigned int i = 0; i < streamContentVec.size(); i++) {
-        if (streamContentVec[i].first == 'C') {
+        if (streamContentVec[i].first == 'C' && (funcType != "knapsackv" && funcType != "gcc")) {
             Cost currentCost = (Cost)std::stoll(streamContentVec[i].second);
             currentCost -= minCost;
             streamContentVec[i].second = to_string(currentCost);

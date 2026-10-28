@@ -170,6 +170,7 @@ TB2_THREAD_LOCAL int ToulBar2::nbDecisionVars;
 TB2_THREAD_LOCAL int ToulBar2::singletonConsistency;
 TB2_THREAD_LOCAL Double ToulBar2::singletonAccuracy;
 TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler;
+TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler_;
 TB2_THREAD_LOCAL int ToulBar2::ReducedCostsFiltering;
 TB2_THREAD_LOCAL int ToulBar2::vacValueHeuristic;
 
@@ -286,6 +287,7 @@ TB2_THREAD_LOCAL bool ToulBar2::learning;
 TB2_THREAD_LOCAL int ToulBar2::seed;
 TB2_THREAD_LOCAL Double ToulBar2::sigma;
 
+TB2_THREAD_LOCAL int ToulBar2::heurllm;
 TB2_THREAD_LOCAL string ToulBar2::incop_cmd;
 TB2_THREAD_LOCAL string ToulBar2::pils_cmd;
 TB2_THREAD_LOCAL string ToulBar2::lrBCD_cmd;
@@ -467,6 +469,7 @@ void tb2init()
     ToulBar2::ReducedCostsFiltering = 0;
     ToulBar2::singletonAccuracy = 0.0001;
     ToulBar2::GilmoreLawler = 0;
+    ToulBar2::GilmoreLawler_ = 0;
     ToulBar2::minsumDiffusion = 0;
 
     ToulBar2::trwsAccuracy = -1; // 0.001;
@@ -545,6 +548,7 @@ void tb2init()
     ToulBar2::sigma = 0.;
 
     // local search methods in preprocessing
+    ToulBar2::heurllm = AI_INIT_NO;
     ToulBar2::incop_cmd = "";
     ToulBar2::pils_cmd = "";
     ToulBar2::lrBCD_cmd = "";
@@ -634,6 +638,7 @@ void tb2reinit()
 
     ToulBar2::DEE_ = 0;
     ToulBar2::elimDegree_ = -1;
+    ToulBar2::GilmoreLawler_ = 0;
 
     ToulBar2::interrupted = false;
 
@@ -2774,6 +2779,10 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
     vector<vector<pair<int, Value>>> AMO;
     vector<vector<Long>> weights(ar), Original_weights;
     vector<vector<Value>> VarVal(ar), NotVarVal(ar);
+    vector<vector<StoreCost>> initDeltaCosts;
+    Cost initLb = MIN_COST;
+    Cost initAssignedDelta = MIN_COST;
+
     if (wcnf.empty()) {
         if (!isclique) {
             file >> capacity;
@@ -3034,10 +3043,53 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
             VarAMO.clear();
             ScopeIdx.clear();
             TempScopeIdx.clear();
+        } else {
+            Original_weights = weights;
         }
         for (unsigned int i = 0; i < weights.size(); ++i) {
             MaxWeight += *max_element(weights[i].begin(), weights[i].end());
         }
+
+        /* read deltaCosts, lb, and assignedDelta if any (should be on the same text line as the previous knapsack information) */
+        string line;
+        getline(file, line);
+        stringstream file(line);
+        int nbDelta = 0;
+        file >> nbDelta;
+        if (nbDelta) {
+            initDeltaCosts.resize(ar);
+            assert(ar == (int)weights.size());
+            vector<map<Value, int>> VarValInv;
+            for (int i= 0; i < ar; i++) {
+                VarValInv.push_back(map<Value, int>());
+                for (int j = 0; j < (int)VarVal[i].size() - 1; j++) {
+                    VarValInv[i][VarVal[i][j]] = j;
+                    initDeltaCosts[i].emplace_back(MIN_COST);
+                }
+                initDeltaCosts[i].emplace_back(MIN_COST);
+                assert(initDeltaCosts[i].size() == VarVal[i].size());
+            }
+            for (int i= 0; i < nbDelta; i++) {
+                int indexVar;
+                file >> indexVar;
+                assert(InvVarIdx.find(indexVar) != InvVarIdx.end());
+                indexVar = InvVarIdx[indexVar];
+                Value value;
+                file >> value;
+                Cost delta;
+                file >> delta;
+                if (indexVar < ar) {
+                    auto iter = VarValInv[indexVar].find(value);
+                    if (iter != VarValInv[indexVar].end()) {
+                        initDeltaCosts[indexVar][iter->second] = delta;
+                    } else {
+                        initDeltaCosts[indexVar].back() = delta;
+                    }
+                }
+            }
+        }
+        file >> initLb;
+        file >> initAssignedDelta;
     } else {
         assert((int)scopeVars.size() == ar);
         for (int i = 0; i < ar; i++) {
@@ -3069,7 +3121,7 @@ int WCSP::postKnapsackConstraint(int* scopeIndex_, int arity, istream& file, boo
         assert((int)VarVal.size() == ar);
         assert((int)CorrAMO.size() == ar);
         assert((int)NotVarVal.size() == ar);
-        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar);
+        cc = new KnapsackConstraint(this, scopeVars.data(), ar, capacity, weights, MaxWeight, VarVal, NotVarVal, AMO, Original_weights, CorrAMO, VirtualVar, ar, initDeltaCosts, initLb, initAssignedDelta);
 #ifdef UNITKNAPSACK2CLAUSE
     }
 #endif
@@ -3260,7 +3312,16 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
             }
             for (unsigned int i = 0; i < values.size(); i++) {
                 Value value = values[i].val;
-                string params = to_string(-values[i].upper);
+                int newupper = min((arity - (sumlow - values[i].lower)), values[i].upper);
+                if(newupper <= 0 ){
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)){
+                            ((EnumeratedVariable*)getVar(scopeIndex[variable]))->remove(value);
+                        }
+                     }
+                    continue;
+                }
+                string params = to_string(-newupper);
                 for (int variable = 0; variable < arity; ++variable) {
                     if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
                         params += to_string(" 1 ") + to_string(value) + to_string(" -1");
@@ -3270,16 +3331,19 @@ int WCSP::postWGcc(int* scopeIndex, int arity, const string& semantics, const st
                 }
                 istringstream file(params);
                 postKnapsackConstraint(scopeIndex, arity, file, false, true, false, {});
-                params = to_string(values[i].lower);
-                for (int variable = 0; variable < arity; ++variable) {
-                    if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
-                        params += to_string(" 1 ") + to_string(value) + to_string(" 1");
-                    } else {
-                        params += to_string(" 0");
+                if(newupper < values[i].lower) THROWCONTRADICTION;
+                if(values[i].lower > 0){
+                    params = to_string(values[i].lower);
+                    for (int variable = 0; variable < arity; ++variable) {
+                        if (((EnumeratedVariable*)getVar(scopeIndex[variable]))->canbe(value)) {
+                            params += to_string(" 1 ") + to_string(value) + to_string(" 1");
+                        } else {
+                            params += to_string(" 0");
+                        }
                     }
+                    istringstream file2(params);
+                    postKnapsackConstraint(scopeIndex, arity, file2, false, true, false, {});
                 }
-                istringstream file2(params);
-                postKnapsackConstraint(scopeIndex, arity, file2, false, true, false, {});
             }
             return INT_MIN;
         } else {
@@ -3810,6 +3874,7 @@ void WCSP::sortConstraints()
     }
     for (vector<int>::iterator idctr = delayedNaryCtr.begin(); idctr != delayedNaryCtr.end(); ++idctr) {
         getCtr(*idctr)->propagate();
+        propagateNC();
     }
     delayedNaryCtr.clear();
     isDelayedNaryCtr = false;

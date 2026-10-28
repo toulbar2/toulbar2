@@ -685,6 +685,15 @@ typedef enum {
 } BTDMethod;
 
 typedef enum {
+    AI_INIT_NO = 0,
+    AI_INIT_RANDOM = 1,
+    AI_INIT_INF = 2,
+    AI_INIT_SUP = 3,
+    AI_INIT_SUPPORT = 4,
+    AI_INIT_THEMAX
+} AISolutionInitMethod;
+
+typedef enum {
     LS_INIT_RANDOM = -1,
     LS_INIT_INF = -2,
     LS_INIT_SUP = -3,
@@ -856,6 +865,7 @@ public:
     TB2_THREAD_LOCAL static Double singletonAccuracy; ///< \brief in preprocessing, stopping accuracy condition for singleton node consistency (command line option -S)
     TB2_THREAD_LOCAL static int ReducedCostsFiltering; ///< \brief in alldifferent and gcc, reduced costs filtering level condition (command line option -camb)
     TB2_THREAD_LOCAL static int GilmoreLawler; ///< \brief in preprocessing, singleton node consistency using Gilmore-Lawler lower bound before/instead of EAC-like greedy lower bound (command line option -S -glb)
+    TB2_THREAD_LOCAL static int GilmoreLawler_; ///< \internal do not use
     TB2_THREAD_LOCAL static int vacValueHeuristic; ///< \brief VAC-based and Knapsack value (and variable) ordering heuristics (command line options -V and -A)
     TB2_THREAD_LOCAL static BEP* bep; ///< \internal do not use
     TB2_THREAD_LOCAL static LcLevelType LcLevel; ///< \brief soft local consistency level (0: NC, 1: AC, 2: DAC, 3: FDAC, 4: EDAC) (command line option -k)
@@ -921,6 +931,7 @@ public:
     TB2_THREAD_LOCAL static int seed; ///< \brief initial random seed value, or use current time if a negative value is given (command line option -seed)
     TB2_THREAD_LOCAL static Double sigma; ///< \brief initial random noise standard deviation to be added to energy values when reading UAI format files (command line option -sigma)
 
+    TB2_THREAD_LOCAL static int heurllm; ///< \brief in preprocessing, executes Max-2SAT AI-generated heuristic method to produce a better initial upper bound (command line option -heur)
     TB2_THREAD_LOCAL static string incop_cmd; ///< \brief in preprocessing, executes INCOP local search method to produce a better initial upper bound (default parameter string value "0 1 3 idwa 100000 cv v 0 200 1 0 0", see INCOP user manual http://imagine.enpc.fr/~neveub/incop/incop1.1/usermanual.ps)  (command line option -i)
     TB2_THREAD_LOCAL static string pils_cmd; ///< \brief in preprocessing, executes PILS local search method to produce a better initial upper bound (default parameter string value "3 0 0.333 150 150 1500 0.1 0.5 0.1 0.1", see PILS article https://doi.org/10.1002/prot.26174)  (command line option -pils)
     TB2_THREAD_LOCAL static string lrBCD_cmd; ///< \brief in preprocessing, executes LR-BCD to produce a better initial upper bound (default parameter string value "5 -2 3") (command line option -lrBCD)

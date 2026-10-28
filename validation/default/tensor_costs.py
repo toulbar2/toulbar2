@@ -17,8 +17,6 @@ scopes = [[i,j] for j in range(n_var) for i in range(n_var) if i < j]
 # test with several cost tables
 binary_costs = np.random.rand(len(scopes), dom_size, dom_size)
 
-print(binary_costs.dtype)
-
 # classical way to create the problem
 print("\n\n****** Problem 1: Complete graph with random binary tables")
 starttime = time.process_time()

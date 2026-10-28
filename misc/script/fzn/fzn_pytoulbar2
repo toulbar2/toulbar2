@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 
 from utils import Command, print_commented_fzn, total_seconds
@@ -19,7 +19,7 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 fzn2py = os.path.join(this_dir, "fzn2py")
 njportfolio = os.path.join(this_dir, "njportfolio.py")
 MEMLIMIT = 16000000  # kbytes. 16 GB
-TIMEOUT = 900  # 15 minutes
+TIMEOUT = 3600  # 1 hour
 
 
 def translate_fzn_to_nj(fznfilename, timelimit,
@@ -38,7 +38,7 @@ def translate_fzn_to_nj(fznfilename, timelimit,
     # Check for errors during translation
     if c.timed_out:
         print >> sys.stderr, "Fatal error: could not translate the", \
-            "fzn-python/Numberjack within the timelimit."
+            "fzn to pytoulbar2 within the timelimit."
         sys.exit(1)
     if c.exitcode != 0:
         if "No such file or directory" in c.stderr:
@@ -46,7 +46,7 @@ def translate_fzn_to_nj(fznfilename, timelimit,
                 "Error: fzn file '%s' does not exist." % fznfilename
         else:
             print >> sys.stderr, \
-                "Error during fzn-python/Numberjack translation.", \
+                "Error during fzn to pytoulbar2 translation.", \
                 c.stdout, "\n", c.stderr
         sys.exit(1)
 
@@ -87,17 +87,17 @@ if __name__ == '__main__':
         sys.exit(1)
     fznfilename = args[-1]
 
-    print ("%% Running Numberjack on %s with up to %d threads, timelimit:%.1f,"
+    print ("%% Running pytoulbar2 on %s with up to %d threads, timelimit:%.1f,"
            " memlimit:%d." % (fznfilename, numthreads, timelimit, memlimit))
     translatetime = datetime.datetime.now()
     njfilename = translate_fzn_to_nj(fznfilename, timelimit)
     translatetime = total_seconds(datetime.datetime.now() - translatetime)
 
-    print "%% Translated Numberjack file at %s" % njfilename
+    print "%% Translated pytoulbar2 file at %s" % njfilename
     timelimit -= translatetime
 
     runtime = datetime.datetime.now()
-    cmd = "python %s %s %d %.1f %d" % (njportfolio, njfilename, numthreads, timelimit, memlimit)
+    cmd = "python2 %s %s %d %.1f %d" % (njportfolio, njfilename, numthreads, timelimit, memlimit)
     print "%", cmd
     c = Command(cmd, memlimit=memlimit)
     c.run(timelimit)

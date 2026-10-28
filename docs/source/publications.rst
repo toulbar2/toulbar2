@@ -133,6 +133,12 @@ What are the algorithms inside toulbar2 ?
   F Trösser, S de Givry and G Katsirelos,
   In Proc. of CPAIOR-20, Vienna, Austria, 2020.
 
+- **Intensification Diversification Walk (incop)**
+
+  `ID Walk: A Candidate List Strategy with a Simple Diversification Device <https://doi.org/10.1007/978-3-540-30201-8_32>`_,
+  Bertrand Neveu, Gilles Trombettoni, and Fred Glover,
+  In Proc. of CP-04, Toronto, Canada, 2004.
+
 - **Partition crossover iterative local search (pils)**
 
   `Iterated local search with partition crossover for computational protein design <https://miat.inrae.fr/degivry/Beuvin21a.pdf>`_,

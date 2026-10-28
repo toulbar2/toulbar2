@@ -376,13 +376,13 @@ class KnapsackConstraint : public AbstractNaryConstraint {
             }
         }
         sort(it_sortedVariables.begin(), it_sortedVariables.end(),
-            [&](int& x, int& y) {
-                if (InitLargestWeight[x] == InitLargestWeight[y]) {
-                    return scope[x]->getDACOrder() < scope[y]->getDACOrder();
-                } else {
-                    return InitLargestWeight[x] > InitLargestWeight[y];
-                }
-            });
+                [&](int& x, int& y) {
+            if (InitLargestWeight[x] == InitLargestWeight[y]) {
+                return scope[x]->getDACOrder() < scope[y]->getDACOrder();
+            } else {
+                return InitLargestWeight[x] > InitLargestWeight[y];
+            }
+        });
         assert((int)it_sortedVariables.size() >= getNonAssigned());
         assert(it_sortedVariables.size() < 2 || InitLargestWeight[it_sortedVariables[0]] >= InitLargestWeight[it_sortedVariables[1]]);
         it_iterators.clear();
@@ -405,13 +405,13 @@ class KnapsackConstraint : public AbstractNaryConstraint {
                 }
             }
             sort(it_sortedValuesIdx[j].begin(), it_sortedValuesIdx[j].end(),
-                [&](pair<Long, tValue>& x, pair<Long, tValue>& y) {
-                    if (x.first == y.first) {
-                        return x.second < y.second;
-                    } else {
-                        return x.first > y.first;
-                    }
-                });
+                    [&](pair<Long, tValue>& x, pair<Long, tValue>& y) {
+                if (x.first == y.first) {
+                    return x.second < y.second;
+                } else {
+                    return x.first > y.first;
+                }
+            });
             assert(it_sortedValuesIdx[j].size() == var->getDomainSize());
             assert(it_sortedValuesIdx[j][0].first >= it_sortedValuesIdx[j][1].first);
             it_iterators.push_back(0);
@@ -462,33 +462,31 @@ class KnapsackConstraint : public AbstractNaryConstraint {
 
 public:
     KnapsackConstraint(WCSP* wcsp, EnumeratedVariable** scope_in, int arity_in, Long capacity_in,
-        vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in,
-        vector<vector<pair<int, Value>>> AMO_in, vector<vector<Long>> Original_weights_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
-        int nonassinged_in, const vector<vector<StoreCost>> InitDel = vector<vector<StoreCost>>(), const StoreCost lb_in = MIN_COST,
-        const StoreCost assigneddelta_in = MIN_COST, const Long Original_capacity_in = 0, Constraint* fromElim1_in = NULL)
-        : AbstractNaryConstraint(wcsp, scope_in, arity_in)
-        , carity(arity_in)
-        , Original_capacity(capacity_in)
-        , Original_ub(wcsp->getUb())
-        , capacity(capacity_in)
-        , MaxWeight(MaxWeight_in)
-        , lb(lb_in)
-        , assigneddeltas(assigneddelta_in)
-        , weights(std::move(weights_in))
-        , VarVal(std::move(VarVal_in))
-        , NotVarVal(std::move(NotVarVal_in))
-        , AMO(std::move(AMO_in))
-        , Original_weights(std::move(Original_weights_in))
-        , VirtualVar(std::move(VirtualVar_in))
-        , CorrAMO(std::move(CorrAMO_in))
-        , AlwaysSatisfied(0)
-        , kpSupportOK(false)
+            vector<vector<Long>> weights_in, Long MaxWeight_in, vector<vector<Value>> VarVal_in, vector<vector<Value>> NotVarVal_in,
+            vector<vector<pair<int, Value>>> AMO_in, vector<vector<Long>> Original_weights_in, vector<int> CorrAMO_in, vector<int> VirtualVar_in,
+            int nonassinged_in, const vector<vector<StoreCost>> InitDel = vector<vector<StoreCost>>(), const Cost lb_in = MIN_COST,
+            const Cost assigneddelta_in = MIN_COST, const Long Original_capacity_in = 0, Constraint* fromElim1_in = NULL)
+    : AbstractNaryConstraint(wcsp, scope_in, arity_in)
+    , carity(arity_in)
+    , Original_capacity(capacity_in)
+    , Original_ub(wcsp->getUb())
+    , capacity(capacity_in)
+    , MaxWeight(MaxWeight_in)
+    , lb(lb_in)
+    , assigneddeltas(assigneddelta_in)
+    , weights(std::move(weights_in))
+    , VarVal(std::move(VarVal_in))
+    , NotVarVal(std::move(NotVarVal_in))
+    , AMO(std::move(AMO_in))
+    , Original_weights(std::move(Original_weights_in))
+    , VirtualVar(std::move(VirtualVar_in))
+    , CorrAMO(std::move(CorrAMO_in))
+    , AlwaysSatisfied(0)
+    , kpSupportOK(false)
     {
         linkKnapsack.content = this;
         elimFrom(fromElim1_in);
         if (!weights.empty()) {
-            if (!InitDel.empty())
-                deltaCosts = InitDel;
             if (Original_capacity_in != 0)
                 Original_capacity = Original_capacity_in;
             unsigned int maxdom = VarVal[0].size();
@@ -503,8 +501,12 @@ public:
                 }
                 OptSol.emplace_back(weights[i].size(), 0.);
                 Profit.emplace_back(weights[i].size(), MIN_COST);
-                if (InitDel.empty())
-                    deltaCosts.emplace_back(weights[i].size(), MIN_COST);
+                deltaCosts.emplace_back(weights[i].size(), MIN_COST);
+                if (!InitDel.empty()) {
+                    for (int j = 0; j < (int)weights[i].size(); j++) {
+                        deltaCosts[i][j] = (Cost)InitDel[i][j];
+                    }
+                }
                 conflictWeights.push_back(0);
                 assigned.emplace_back(0);
                 UnaryCost0.push_back(MIN_COST);
@@ -513,7 +515,7 @@ public:
                 LowestWeightIdx.emplace_back(min_element(weights[i].begin(), weights[i].end()) - weights[i].begin());
                 InitLargestWeight.emplace_back(weights[i][GreatestWeightIdx[i]]);
                 // if (NotVarVal[i].empty()) {
-                //     lastval0.push_back(scope[i]->getInf() - 1);
+                    //     lastval0.push_back(scope[i]->getInf() - 1);
                 //     lastval0ok.emplace_back(true);
                 // } else {
                 lastval0.push_back(NotVarVal[i][0]);
@@ -695,7 +697,7 @@ public:
         If a conflict occurs, Killers contain the responsible values.
         The function returns -1 if the constraint is infeasible.
         It returns the optimal cost if it is greater than the threshold and 0 otherwise.
-    */
+     */
     Cost VACPass1(vector<pair<int, Value>>& Killer, vector<pair<int, Value>>& Killed, Cost lambda, Cost itThreshold)
     {
         assert(kConstraintVAC == 0);
@@ -987,7 +989,7 @@ public:
     /* This function trace back the removal of the value TestedVal.
         It returns the cost of the optimal tuple using TestedVal.
         Killer captures an explanation
-    */
+     */
     Cost VACPass2(int CurrIte, pair<int, Value> TestedVal, vector<pair<int, Value>>& Killer, Cost lambda, int kia)
     {
         Killer.clear();
@@ -1136,7 +1138,7 @@ public:
 
     /* This function aims to derive a sequence of EPTs increasing the lower bound by at least lambda.
         Either by propagating the constraint or by following the cost moves indicated in PBKiller.
-    */
+     */
     void VACPass3(vector<pair<pair<int, Value>, Cost>>& EPT, Cost minlambda, vector<pair<int, Value>>& PBKiller)
     {
         EPT.clear();
@@ -1410,13 +1412,13 @@ public:
                     varorder.push_back(i);
                 }
                 sort(varorder.begin(), varorder.end(),
-                    [&](int& x, int& y) {
-                        if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
-                            return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
-                        } else {
-                            return InitLargestWeight[x] < InitLargestWeight[y];
-                        }
-                    });
+                        [&](int& x, int& y) {
+                    if ((ToulBar2::vacValueHeuristic & KNAPSACK_EXPLANATION_DAC) || InitLargestWeight[x] == InitLargestWeight[y]) {
+                        return scope[x]->getDACOrder() > scope[y]->getDACOrder(); // SdG: favor increasing conflict weight of first variables in DAC order
+                    } else {
+                        return InitLargestWeight[x] < InitLargestWeight[y];
+                    }
+                });
                 Long SumW = 0;
                 for (unsigned int i = 0; i < weights.size(); ++i) {
                     if (scope[i]->cannotbe(VarVal[i][GreatestWeightIdx[i]])) {
@@ -1521,16 +1523,16 @@ public:
             }
         }
         sort(OutScope.begin(), OutScope.end(),
-            [&](int& x, int& y) {
-                if (WeightedProfit[x] == WeightedProfit[y]) {
-                    if (weights[x][1] == weights[y][1]) {
-                        return scope[x]->getDACOrder() > scope[y]->getDACOrder();
-                    } else {
-                        return weights[x][1] > weights[y][1];
-                    }
-                } else
-                    return WeightedProfit[x] < WeightedProfit[y];
-            });
+                [&](int& x, int& y) {
+            if (WeightedProfit[x] == WeightedProfit[y]) {
+                if (weights[x][1] == weights[y][1]) {
+                    return scope[x]->getDACOrder() > scope[y]->getDACOrder();
+                } else {
+                    return weights[x][1] > weights[y][1];
+                }
+            } else
+                return WeightedProfit[x] < WeightedProfit[y];
+        });
         for (int i = 0; i < (int)OutScope.size(); ++i) {
             ROutScope.push_back(scope[OutScope[i]]->wcspIndex);
         }
@@ -1785,9 +1787,9 @@ public:
         }
 
         sort(SortedVec.begin(), SortedVec.end(),
-            [&](int x, int y) {auto it = find(ScopeWcspIdx.begin(), ScopeWcspIdx.end(), scope[x]->wcspIndex);
-                 auto it2 = find(ScopeWcspIdx.begin(), ScopeWcspIdx.end(), scope[y]->wcspIndex);
-                 return(it> it2); });
+                [&](int x, int y) {auto it = find(ScopeWcspIdx.begin(), ScopeWcspIdx.end(), scope[x]->wcspIndex);
+                auto it2 = find(ScopeWcspIdx.begin(), ScopeWcspIdx.end(), scope[y]->wcspIndex);
+                return(it> it2); });
 
         vector<EnumeratedVariable*> scopeVars(arity_);
         for (int i = 0; i < arity_; i++) {
@@ -1965,7 +1967,7 @@ public:
             weightsclq.resize(arityclq, { 1, 0 });
             CorrAMOclq.resize(arityclq, 0);
             return new KnapsackConstraint(wcsp, scopeVars.data(), arityclq, arityclq - 1, weightsclq, arityclq, VarValclq, NotVarValclq,
-                {}, weightsclq, CorrAMOclq, CorrAMOclq, arityclq, deltaclq, minAMOCost, MIN_COST, 0, this);
+                    {}, weightsclq, CorrAMOclq, CorrAMOclq, arityclq, deltaclq, minAMOCost, MIN_COST, 0, this);
         } else {
             vector<int> VirtualVarclq;
             vector<vector<Long>> Originalweightsclq;
@@ -1995,7 +1997,7 @@ public:
             CorrAMOclq.resize(arityclq, 1);
             VirtualVarclq.push_back(1);
             return new KnapsackConstraint(wcsp, scopeVars.data(), arityclq, 1, weightsclq, 1, VarValclq, NotVarValclq,
-                AMOclq, Originalweightsclq, CorrAMOclq, VirtualVarclq, arityclq, deltaclq, minAMOCost, MIN_COST, 0, this);
+                    AMOclq, Originalweightsclq, CorrAMOclq, VirtualVarclq, arityclq, deltaclq, minAMOCost, MIN_COST, 0, this);
         }
     }
     // void setInfiniteCost(Cost ub)
@@ -2662,7 +2664,7 @@ public:
             // Compute the cost of the last optimal solution
             verifopt += Ceil(storec);
             verifweight += Ceil(storew);
-            assert(*max_element(Profit[i].begin(), Profit[i].end()) < MAX_COST);
+            assert(*max_element(Profit[currentvar].begin(), Profit[currentvar].end()) < MAX_COST);
             if (totalval < 1. - ToulBar2::epsilon) {
                 optsolIsValid = false;
             }
@@ -2687,22 +2689,22 @@ public:
             arrvar = current_val_idx[i];
             arrvar.resize(nbValue[i]);
             sort(arrvar.begin(), arrvar.end(),
-                [&](int x, int y) {
-                    if (MIN(weights[currentvar][x], capacity) == MIN(weights[currentvar][y], capacity)) {
-                        if (Profit[currentvar][x] == Profit[currentvar][y]) {
-                            if (VirtualVar[currentvar] == 0) {
-                                if (scope[currentvar]->getSupport() == VarVal[currentvar][y]) {
-                                    return true;
-                                } else
-                                    return false;
-                            } else {
+                    [&](int x, int y) {
+                if (MIN(weights[currentvar][x], capacity) == MIN(weights[currentvar][y], capacity)) {
+                    if (Profit[currentvar][x] == Profit[currentvar][y]) {
+                        if (VirtualVar[currentvar] == 0) {
+                            if (scope[currentvar]->getSupport() == VarVal[currentvar][y]) {
+                                return true;
+                            } else
                                 return false;
-                            }
-                        } else
-                            return Profit[currentvar][x] > Profit[currentvar][y];
+                        } else {
+                            return false;
+                        }
                     } else
-                        return weights[currentvar][x] < weights[currentvar][y];
-                });
+                        return Profit[currentvar][x] > Profit[currentvar][y];
+                } else
+                    return weights[currentvar][x] < weights[currentvar][y];
+            });
             // Find the value with the heaviest weight
             k = (int)arrvar.size() - 1;
             item1 = arrvar[k];
@@ -2773,20 +2775,20 @@ public:
     {
         // Sort the Slopes in increasing order
         sort(Slopes.begin(), Slopes.end(),
-            [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
-                if (x[3] == y[3]) { // same slope value
-                    if (x[0] == y[0]) { // same variable
-                        Long mx1 = weights[int(x[0])][int(x[1])];
-                        Long my1 = weights[int(y[0])][int(y[1])];
-                        assert(mx1 != my1);
-                        return mx1 < my1; // keep slopes ordered by weights inside a variable
-                    } else {
-                        return scope[int(x[0])]->getDACOrder() > scope[int(y[0])]->getDACOrder(); // it favors absorbing more unary costs for the last variables in the DAC order
-                    }
-                } else { // increasing slope order
-                    return x[3] < y[3];
+                [&](std::array<Double, 4>& x, std::array<Double, 4>& y) {
+            if (x[3] == y[3]) { // same slope value
+                if (x[0] == y[0]) { // same variable
+                    Long mx1 = weights[int(x[0])][int(x[1])];
+                    Long my1 = weights[int(y[0])][int(y[1])];
+                    assert(mx1 != my1);
+                    return mx1 < my1; // keep slopes ordered by weights inside a variable
+                } else {
+                    return scope[int(x[0])]->getDACOrder() > scope[int(y[0])]->getDACOrder(); // it favors absorbing more unary costs for the last variables in the DAC order
                 }
-            });
+            } else { // increasing slope order
+                return x[3] < y[3];
+            }
+        });
 
         int currentVar;
         Long capacityLeft;
@@ -2948,8 +2950,8 @@ public:
     }
 
     Cost max_value(const vector<vector<Long>>& W,
-        const vector<vector<Cost>>& P,
-        Long Cap, Long MW, int removed)
+            const vector<vector<Cost>>& P,
+            Long Cap, Long MW, int removed)
     {
         if (Cap > 0) {
             vector<int> currOPT;
@@ -3055,11 +3057,11 @@ public:
                         for (int j = 0; j < nbValue[i]; ++j) {
                             if (VirtualVar[current_scope_idx[i]] == 0) {
                                 assert(scope[current_scope_idx[i]]->canbe(
-                                    VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                                        VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
                                 assert(scope[current_scope_idx[i]]->canbe(
-                                    VarVal[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]));
+                                        VarVal[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]));
                                 assert(scope[current_scope_idx[i]]->canbe(
-                                    VarVal[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]));
+                                        VarVal[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]));
                             }
                             assert(weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]] >= weights[current_scope_idx[i]][current_val_idx[i][j]]);
                             assert(weights[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]] <= weights[current_scope_idx[i]][current_val_idx[i][j]]);
@@ -3117,11 +3119,11 @@ public:
                                 assert(MaxWeight - weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]] + weights[current_scope_idx[i]][current_val_idx[i][j]] >= capacity);
                                 if (VirtualVar[current_scope_idx[i]] == 0) {
                                     assert(scope[current_scope_idx[i]]->canbe(
-                                        VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
+                                            VarVal[current_scope_idx[i]][current_val_idx[i][j]]));
                                     assert(scope[current_scope_idx[i]]->canbe(
-                                        VarVal[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]));
+                                            VarVal[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]]));
                                     assert(scope[current_scope_idx[i]]->canbe(
-                                        VarVal[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]));
+                                            VarVal[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]]));
                                 }
                                 assert(weights[current_scope_idx[i]][GreatestWeightIdx[current_scope_idx[i]]] >= weights[current_scope_idx[i]][current_val_idx[i][j]]);
                                 assert(weights[current_scope_idx[i]][LowestWeightIdx[current_scope_idx[i]]] <= weights[current_scope_idx[i]][current_val_idx[i][j]]);
@@ -3148,7 +3150,7 @@ public:
                                     cout << scope[current_scope_idx[i]]->getName();
                                     for (unsigned int j = 0; j < VarVal[current_scope_idx[i]].size(); ++j) {
                                         cout << " " << VarVal[current_scope_idx[i]][current_val_idx[i][j]] << " (" << current_val_idx[i][j] << ") : " << Profit[current_scope_idx[i]][current_val_idx[i][j]] << "/"
-                                             << weights[current_scope_idx[i]][current_val_idx[i][j]];
+                                                << weights[current_scope_idx[i]][current_val_idx[i][j]];
                                         if (j < VarVal[current_scope_idx[i]].size() - 1) {
                                             cout << ",";
                                         }
@@ -3199,11 +3201,11 @@ public:
                                         EDACORDER.push_back(i);
                                     }
                                     sort(EDACORDER.begin(), EDACORDER.end(),
-                                        [&](int& x, int& y) {
-                                            assert(current_scope_idx[x] < arity_);
-                                            assert(current_scope_idx[y] < arity_);
-                                            return scope[current_scope_idx[x]]->getDACOrder() < scope[current_scope_idx[y]]->getDACOrder(); // SdG: favor projections to first variables in DAC order
-                                        });
+                                            [&](int& x, int& y) {
+                                        assert(current_scope_idx[x] < arity_);
+                                        assert(current_scope_idx[y] < arity_);
+                                        return scope[current_scope_idx[x]]->getDACOrder() < scope[current_scope_idx[y]]->getDACOrder(); // SdG: favor projections to first variables in DAC order
+                                    });
 
                                     for (int i = 0; i < carity; ++i) {
                                         if (ToulBar2::interrupted && !ToulBar2::isZ) {
@@ -3668,7 +3670,7 @@ public:
     }
 
     bool checkEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
-    {
+            {
         Long W = 0;
         Cost res = -lb + assigneddeltas;
         for (int i = 0; i < arity_; i++) {
@@ -3687,10 +3689,10 @@ public:
         if (W < Original_capacity)
             res = wcsp->getUb();
         return (res == MIN_COST);
-    }
+            }
 
     bool reviseEACGreedySolution(int index = -1, Value supportValue = 0) FINAL
-    {
+            {
         bool result = checkEACGreedySolution(index, supportValue);
         if (!result) {
             if (index >= 0) {
@@ -3703,7 +3705,7 @@ public:
             }
         }
         return result;
-    }
+            }
 
     void print(ostream& os) override
     {
@@ -3722,8 +3724,8 @@ public:
                 os << ",";
         }
         os << ") "
-           << " >= " << capacity << " <= " << MaxWeight << " (ratio: " << (Double)capacity / MaxWeight << ")"
-           << " cost: " << -lb << " + " << assigneddeltas << " + (";
+                << " >= " << capacity << " <= " << MaxWeight << " (ratio: " << (Double)capacity / MaxWeight << ")"
+                << " cost: " << -lb << " + " << assigneddeltas << " + (";
         for (int i = 0; i < arity_; i++) {
             if (AMO.empty()) {
                 for (unsigned int j = 0; j < deltaCosts[i].size(); j++) {
@@ -3779,121 +3781,146 @@ public:
             os << arity_;
             for (int i = 0; i < arity_; i++)
                 os << " " << scope[i]->wcspIndex;
-            if (iszerodeltas) {
-                if (!AMO.empty()) {
-                    os << " " << -1 << " knapsackc " << Original_capacity;
-                    for (int i = 0; i < arity_; i++) {
-                        os << " 2 "
-                           << "0 " << Original_weights[i][0] << " 1 " << Original_weights[i][1];
+
+            if (!AMO.empty()) {
+                os << " " << -1 << " knapsackc " << Original_capacity;
+                for (int i = 0; i < arity_; i++) {
+                    os << " 2 "
+                            << "0 " << Original_weights[i][0] << " 1 " << Original_weights[i][1];
+                }
+                os << " " << AMO.size();
+                for (unsigned int i = 0; i < AMO.size(); ++i) {
+                    os << " " << AMO[i].size();
+                    for (unsigned int j = 0; j < AMO[i].size(); ++j) {
+                        os << " " << scope[AMO[i][j].first]->getCurrentVarId() << " " << AMO[i][j].second;
                     }
-                    os << " " << AMO.size();
-                    for (unsigned int i = 0; i < AMO.size(); ++i) {
-                        os << " " << AMO[i].size();
-                        for (unsigned int j = 0; j < AMO[i].size(); ++j) {
-                            os << " " << scope[AMO[i][j].first]->getCurrentVarId() << " " << AMO[i][j].second;
-                        }
-                    }
-                    os << endl;
-                } else {
-                    Long wnot = 0;
-                    for (int i = 0; i < arity_; i++) {
-                        if (!NotVarVal[i].empty())
-                            wnot += weights[i].back();
-                    }
-                    os << " " << -1 << " knapsackp " << Original_capacity - wnot;
-                    for (int i = 0; i < arity_; i++) {
-                        if (NotVarVal[i].empty()) {
-                            os << " " << VarVal[i].size();
-                            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                                os << " " << VarVal[i][j];
-                                os << " " << weights[i][j];
-                            }
-                        } else {
-                            os << " " << VarVal[i].size() - 1;
-                            for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
-                                os << " " << VarVal[i][j];
-                                os << " " << weights[i][j] - weights[i].back();
-                            }
-                        }
-                    }
-                    os << endl;
                 }
             } else {
-                os << " " << wcsp->getUb() << " " << getDomainSizeProduct() << endl;
-                Tuple t;
-                Cost c;
-                firstlex();
-                while (nextlex(t, c)) {
-                    for (int i = 0; i < arity_; i++) {
-                        os << scope[i]->toValue(t[i]) << " ";
+                Long wnot = 0;
+                for (int i = 0; i < arity_; i++) {
+                    if (!NotVarVal[i].empty())
+                        wnot += weights[i].back();
+                }
+                os << " " << -1 << " knapsackp " << Original_capacity - wnot;
+                for (int i = 0; i < arity_; i++) {
+                    if (NotVarVal[i].empty()) {
+                        os << " " << VarVal[i].size();
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            os << " " << VarVal[i][j];
+                            os << " " << weights[i][j];
+                        }
+                    } else {
+                        os << " " << VarVal[i].size() - 1;
+                        for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                            os << " " << VarVal[i][j];
+                            os << " " << weights[i][j] - weights[i].back();
+                        }
                     }
-                    os << c << endl;
                 }
             }
+            if (!iszerodeltas) {
+                int nbDeltas = 0;
+                for (int i = 0; i < arity_; ++i) {
+                    for (unsigned int j = 0; j < deltaCosts[i].size(); ++j) {
+                        if (deltaCosts[i][j] != MIN_COST) {
+                            nbDeltas++;
+                        }
+                    }
+                }
+                os << " " << nbDeltas;
+                if (nbDeltas > 0) {
+                    for (int i = 0; i < arity_; ++i) {
+                        assert(VarVal[i].size() == deltaCosts[i].size());
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            if (deltaCosts[i][j] != MIN_COST) {
+                                os << " " << scope[i]->wcspIndex << " " << VarVal[i][j] << " " << deltaCosts[i][j];
+                            }
+                        }
+                    }
+                }
+            } else {
+                os << " 0";
+            }
+            os << " " << lb;
+            os << " " << assigneddeltas;
+            os << endl;
         } else {
             os << getNonAssigned();
             for (int i = 0; i < arity_; i++) {
                 if (scope[i]->unassigned())
                     os << " " << scope[i]->getCurrentVarId();
             }
-            if (iszerodeltas) {
-                if (!AMO.empty()) {
-                    os << " " << -1 << " knapsackc " << Original_capacity;
-                    for (int i = 0; i < arity_; i++) {
-                        if (scope[i]->unassigned())
-                            os << " 2 "
-                               << "0 " << Original_weights[i][0] << " 1 " << Original_weights[i][1];
+            if (!AMO.empty()) {
+                os << " " << -1 << " knapsackc " << Original_capacity;
+                for (int i = 0; i < arity_; i++) {
+                    if (scope[i]->unassigned())
+                        os << " 2 "
+                        << "0 " << Original_weights[i][0] << " 1 " << Original_weights[i][1];
+                }
+                os << " " << AMO.size();
+                for (unsigned int i = 0; i < AMO.size(); ++i) {
+                    os << " " << AMO[i].size();
+                    for (unsigned int j = 0; j < AMO[i].size(); ++j) {
+                        assert(scope[AMO[i][j].first]->unassigned());
+                        os << " " << scope[AMO[i][j].first]->getCurrentVarId() << " " << AMO[i][j].second;
                     }
-                    os << " " << AMO.size();
-                    for (unsigned int i = 0; i < AMO.size(); ++i) {
-                        os << " " << AMO[i].size();
-                        for (unsigned int j = 0; j < AMO[i].size(); ++j) {
-                            assert(scope[AMO[i][j].first]->unassigned());
-                            os << " " << scope[AMO[i][j].first]->getCurrentVarId() << " " << AMO[i][j].second;
+                }
+            } else {
+                Long wnot = 0;
+                for (int i = 0; i < arity_; i++) {
+                    if (!NotVarVal[i].empty())
+                        wnot += weights[i].back();
+                }
+                os << " " << -1 << " knapsackp " << Original_capacity - wnot;
+                for (int i = 0; i < arity_; i++) {
+                    if (scope[i]->unassigned()) {
+                        if (NotVarVal[i].empty()) {
+                            os << " " << VarVal[i].size();
+                            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                                assert(scope[i]->canbe(VarVal[i][j]));
+                                os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
+                                os << " " << weights[i][j];
+                            }
+                        } else {
+                            os << " " << VarVal[i].size() - 1;
+                            for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                                assert(scope[i]->canbe(VarVal[i][j]));
+                                os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
+                                os << " " << weights[i][j] - weights[i].back();
+                            }
                         }
                     }
-                    os << endl;
-                } else {
-                    Long wnot = 0;
-                    for (int i = 0; i < arity_; i++) {
-                        if (!NotVarVal[i].empty())
-                            wnot += weights[i].back();
+                }
+            }
+            if (!iszerodeltas) {
+                int nbDeltas = 0;
+                for (int i = 0; i < arity_; ++i) {
+                    if (scope[i]->unassigned()) {
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            if (deltaCosts[i][j] != MIN_COST && scope[i]->canbe(VarVal[i][j])) {
+                                nbDeltas++;
+                            }
+                        }
                     }
-                    os << " " << -1 << " knapsackp " << Original_capacity - wnot;
-                    for (int i = 0; i < arity_; i++) {
+                }
+                os << " " << nbDeltas;
+                if (nbDeltas > 0) {
+                    for (int i = 0; i < arity_; ++i) {
                         if (scope[i]->unassigned()) {
-                            if (NotVarVal[i].empty()) {
-                                os << " " << VarVal[i].size();
-                                for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                                    assert(scope[i]->canbe(VarVal[i][j]));
-                                    os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
-                                    os << " " << weights[i][j];
-                                }
-                            } else {
-                                os << " " << VarVal[i].size() - 1;
-                                for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
-                                    assert(scope[i]->canbe(VarVal[i][j]));
-                                    os << " " << scope[i]->toCurrentIndex(VarVal[i][j]);
-                                    os << " " << weights[i][j] - weights[i].back();
+                            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                                if (deltaCosts[i][j] != MIN_COST && scope[i]->canbe(VarVal[i][j])) {
+                                    os << " " << scope[i]->getCurrentVarId() << " " << scope[i]->toCurrentIndex(VarVal[i][j]) << " " << deltaCosts[i][j];
                                 }
                             }
                         }
                     }
-                    os << endl;
                 }
             } else {
-                os << " " << wcsp->getUb() << " " << getDomainSizeProduct() << endl;
-                Tuple t;
-                Cost c;
-                firstlex();
-                while (nextlex(t, c)) {
-                    for (int i = 0; i < arity_; i++) {
-                        if (scope[i]->unassigned())
-                            os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i])) << " ";
-                    }
-                    os << min(wcsp->getUb(), c) << endl;
-                }
+                os << " 0";
             }
+            os << " " << lb;
+            os << " " << assigneddeltas;
+            os << endl;
         }
     }
 
@@ -3934,52 +3961,48 @@ public:
                 printed = true;
             }
 
-            if (iszerodeltas) {
-                Long wnot = 0;
-                for (int i = 0; i < arity_; i++) {
-                    if (!NotVarVal[i].empty())
-                        wnot += weights[i].back();
-                }
-                os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
-                printed = false;
-                for (int i = 0; i < arity_; i++) {
-                    if (NotVarVal[i].empty()) {
-                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                            if (printed)
-                                os << ",";
-                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
-                            printed = true;
-                        }
-                    } else {
-                        for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
-                            if (printed)
-                                os << ",";
-                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
-                            printed = true;
-                        }
-                    }
-                }
-                os << "]}},\n";
-            } else {
-                os << "],\n\"defaultcost\":" << wcsp->DCost2Decimal(wcsp->Cost2RDCost(wcsp->getUb())) << ",\n\"costs\":[";
-                Tuple t;
-                Cost c;
-                printed = false;
-                firstlex();
-                while (nextlex(t, c)) {
-                    if (c < wcsp->getUb()) {
-                        os << endl;
-                        for (int i = 0; i < arity_; i++) {
-                            if (printed)
-                                os << ",";
-                            os << t[i];
-                            printed = true;
-                        }
-                        os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
-                    }
-                }
-                os << "]},\n";
+            Long wnot = 0;
+            for (int i = 0; i < arity_; i++) {
+                if (!NotVarVal[i].empty())
+                    wnot += weights[i].back();
             }
+            os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (NotVarVal[i].empty()) {
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        if (printed)
+                            os << ",";
+                        os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
+                        printed = true;
+                    }
+                } else {
+                    for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                        if (printed)
+                            os << ",";
+                        os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                        printed = true;
+                    }
+                }
+            }
+            os << "],\"deltacosts\":[";
+            if (!iszerodeltas) {
+                printed = false;
+                for (int i = 0; i < arity_; ++i) {
+                    assert(VarVal[i].size() == deltaCosts[i].size());
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        if (deltaCosts[i][j] != MIN_COST) {
+                            if (printed)
+                                os << ",";
+                            os << "[" << scope[i]->wcspIndex << "," << scope[i]->toIndex(VarVal[i][j]) << "," << deltaCosts[i][j] << "]";
+                            printed = true;
+                        }
+                    }
+                }
+            }
+            os << "],\"lb\":" << lb;
+            os << ",\"assigneddeltas\":" << assigneddeltas;
+            os << "}},\n";
         } else {
             for (int i = 0; i < arity_; i++)
                 if (scope[i]->unassigned()) {
@@ -3998,60 +4021,55 @@ public:
                     printed = true;
                 }
 
-            if (iszerodeltas) {
-                Long wnot = 0;
-                for (int i = 0; i < arity_; i++) {
-                    if (!NotVarVal[i].empty())
-                        wnot += weights[i].back();
-                }
-                os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
-                printed = false;
-                for (int i = 0; i < arity_; i++) {
-                    if (scope[i]->unassigned()) {
-                        if (NotVarVal[i].empty()) {
-                            for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
-                                if (scope[i]->canbe(VarVal[i][j])) {
-                                    if (printed)
-                                        os << ",";
-                                    os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
-                                    printed = true;
-                                }
-                            }
-                        } else {
-                            for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
-                                if (scope[i]->canbe(VarVal[i][j])) {
-                                    if (printed)
-                                        os << ",";
-                                    os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
-                                    printed = true;
-                                }
-                            }
-                        }
-                    }
-                }
-                os << "]}},\n";
-            } else {
-                os << "],\n\"defaultcost\":inf,\n\"costs\":[";
-                Tuple t;
-                Cost c;
-                printed = false;
-                firstlex();
-                while (nextlex(t, c)) {
-                    if (c < wcsp->getUb()) {
-                        os << endl;
-                        for (int i = 0; i < arity_; i++) {
-                            if (scope[i]->unassigned()) {
+            Long wnot = 0;
+            for (int i = 0; i < arity_; i++) {
+                if (!NotVarVal[i].empty())
+                    wnot += weights[i].back();
+            }
+            os << "],\n\"type\":\"knapsackv\",\n\"params\":{\"capacity\":" << Original_capacity - wnot << ",\n\t\"weightedvalues\":[";
+            printed = false;
+            for (int i = 0; i < arity_; i++) {
+                if (scope[i]->unassigned()) {
+                    if (NotVarVal[i].empty()) {
+                        for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                            if (scope[i]->canbe(VarVal[i][j])) {
                                 if (printed)
                                     os << ",";
-                                os << scope[i]->toCurrentIndex(scope[i]->toValue(t[i]));
+                                os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] << "]";
                                 printed = true;
                             }
                         }
-                        os << "," << wcsp->DCost2Decimal(wcsp->Cost2RDCost(c));
+                    } else {
+                        for (unsigned int j = 0; j < VarVal[i].size() - 1; ++j) {
+                            if (scope[i]->canbe(VarVal[i][j])) {
+                                if (printed)
+                                    os << ",";
+                                os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << weights[i][j] - weights[i].back() << "]";
+                                printed = true;
+                            }
+                        }
                     }
                 }
-                os << "]},\n";
             }
+
+            os << "],\"deltacosts\":[";
+            if (!iszerodeltas) {
+                printed = false;
+                for (int i = 0; i < arity_; ++i) {
+                    assert(VarVal[i].size() == deltaCosts[i].size());
+                    for (unsigned int j = 0; j < VarVal[i].size(); ++j) {
+                        if (deltaCosts[i][j] != MIN_COST) {
+                            if (printed)
+                                os << ",";
+                            os << "[" << name2cfn(scope[i]->getName()) << "," << scope[i]->toCurrentIndex(VarVal[i][j]) << "," << deltaCosts[i][j] << "]";
+                            printed = true;
+                        }
+                    }
+                }
+            }
+            os << "],\"lb\":" << lb;
+            os << ",\"assigneddeltas\":" << assigneddeltas;
+            os << "}},\n";
         }
     }
 };

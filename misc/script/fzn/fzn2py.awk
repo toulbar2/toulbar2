@@ -2,10 +2,13 @@
 # translate flatzinc format to python/Numberjack 
 
 BEGIN {
+	MAX_COST_FZN = 2147483647 * 1024;
 	MAXINT = 10000;
-	VERBOSITY = 0;
-	SHOWSOLUTIONS = 3;
-	TIMELIMIT = 1200;
+	VERBOSITY = -1;
+	SHOWSOLUTIONS = 0;
+	DUMPMODEL = 0;	
+	# ALLSOLUTIONS = 10000; # needed for running unit tests (automatically assigned by ./fzn2py with extra option -a)
+	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
 	print "import pytoulbar2 as tb2"
@@ -13,10 +16,8 @@ BEGIN {
 	print "";
 	print "def get_model():"
 	print "    global model";
-	print "    global DelayedObjective";
-    print "    global objective";
-    print "    global obj";
-	print "    model = tb2.CFN(verbose=" VERBOSITY ")";
+	print "    global DelayedLinEq";
+	print "    model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
 	parameter = 1;
 	error = 0;
 }
@@ -275,26 +276,29 @@ END {
 		 if(length(output_vars) > 0) output_vars = output_vars ", ";
 		 output_vars = output_vars objective;
 	}
+	print "    finalize_int_lin_eq(" output_vars ")"; 
 	print "    output_vars = (" output_vars ")";
 	print "    return model, output_vars";
 
 	print "";
 	print "model, output_vars = get_model()";
 	if(output_vars) print output_vars " = output_vars";
-	print "#model.Dump('fzn.cfn')";
-	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= "SHOWSOLUTIONS ")";
+	if(DUMPMODEL) print "model.Dump('fzn.cfn')";
+	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
 	print "if result is not None:";
-	print "    print('')";
+	print "    sols = model.GetSolutions()";
+	print "    for sol in sols:";
+	#print "        print('')";
 	for (i=1; i<=n; i++) {
 		e = varnames[i];
 		if (output[e]==1) {
-			if (e != objective && e != "objective" && e != "obj") print "    print('" e " = ', result[0][" i "])";
-			else print "    print('" e " = ', result[1])";
+			if (e != objective && e != "objective" && e != "obj") print "        print('" e " = ',get_value(sol[1]," e "),';')";
+			else print "        print('" e " = ', sol[0],';')";
 		} else {
-			print "    print('" e " = " outputstring[e] ",',get_values(result[0]," e "),')')";
+			print "        print('" e " = " outputstring[e] ",',get_values(sol[1]," e "),');')";
 		}
 	}
-	print "    print('----------')";
+	print "        print('----------')";
 	if (objective){
 		print "    if model.GetDDualBound() == result[1]:"
 		print "        print('==========')"
@@ -303,9 +307,10 @@ END {
 	}
 	#print "elif solver.is_unsat():"
 	#print "    print('=====UNSATISFIABLE=====')"
-        print "else:"
+	print "else:"
 	print "    print('=====UNKNOWN=====')"
 	# print "print '% SolveTime', model.getTime()";
+	print "print('% Solutions', result[2])";
 	print "print('% Nodes', model.GetNbNodes())";
 	print "print('% Failures', model.GetNbBacktracks())";
 	if (objective) print "if result is not None: print('% Objective', int(result[1]))";

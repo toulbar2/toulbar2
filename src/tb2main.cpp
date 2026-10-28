@@ -322,6 +322,8 @@ enum {
     OPT_burst,
     NO_OPT_burst,
 #endif
+    OPT_heurllm,
+    NO_OPT_heurllm,
     OPT_localsearch,
     NO_OPT_localsearch,
     OPT_pils,
@@ -617,6 +619,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { OPT_burst, (char*)"-burst", SO_NONE },
     { NO_OPT_burst, (char*)"-burst:", SO_NONE },
 #endif
+    { OPT_heurllm, (char*)"-ai", SO_OPT }, // AI-generated Max-2SAT heuristic
+    { NO_OPT_heurllm, (char*)"-ai:", SO_NONE },
     { OPT_localsearch, (char*)"-i", SO_OPT }, // incop option default or string for narycsp argument
     { NO_OPT_localsearch, (char*)"-i:", SO_NONE },
     { OPT_pils, (char*)"-pils", SO_OPT }, // PILS option default or string for pils argument
@@ -994,6 +998,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::restart >= 0)
         cout << " (default option)";
     cout << endl;
+    cout << "   -ai=[integer] : AI-generated heuristics (only for Max-2SAT) with initial solution found (1) at random, (2) min domain values, (3) max domain values, (4) EAC/VAC support values, (k >= 5) iterated heuristics with k-1 iterations using the following initial solution sequence 4,3,2,1,1,..,1 (0) AI-generated heuristics disable (default value is " << ToulBar2::heurllm << ")" << endl;
     cout << "   -i=[\"string\"] : initial upperbound found by INCOP local search solver." << endl;
     cout << "       string parameter is optional, using \"" << Incop_cmd << "\" by default with the following meaning:" << endl;
     cout << "       stoppinglowerbound randomseed nbiterations method nbmoves neighborhoodchoice neighborhoodchoice2 minnbneighbors maxnbneighbors neighborhoodchoice3 autotuning tracemode" << endl;
@@ -1042,7 +1047,7 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::singletonConsistency)
         cout << " (default option with at-most " << ToulBar2::singletonConsistency << " variables and stopping accuracy of " << ToulBar2::singletonAccuracy << ")";
     cout << endl;
-    cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2) or instead of (-glb=1) EAC-like greedy heuristic (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
+    cout << "   -glb=[integer] : preprocessing only: in conjunction with option -S, performs singleton node consistency using Gilmore-Lawler lower bound before (-glb=2 or -2) or instead of (-glb=1 or -1) EAC-like greedy heuristic (-glb=0 or -3) (a negative value means only singleton node consistency is performed, classical singleton arc consistency is not applied outside squared alldiff or gcc) (default value is " << ToulBar2::ToulBar2::GilmoreLawler << ")" << endl;
     cout << "   -V=[integer] : VAC-based and Knapsack value (and variable) ordering heuristics (1:VAC value heuristic, 2:Knapsack value heuristic, 4: Knapsack fractional variable heuristic, or any combination of these options) (default value is " << ToulBar2::ToulBar2::vacValueHeuristic << ")" << endl;
     cout << "   -vacint : VAC-integrality/Full-EAC variable ordering heuristic";
     if (ToulBar2::FullEAC)
@@ -1906,6 +1911,9 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_VACLIN) {
                 ToulBar2::VAClin = true;
+                if (!ToulBar2::vac) {
+                    ToulBar2::vac = 1;
+                }
             } else if (args.OptionId() == NO_OPT_VACLIN) {
                 ToulBar2::VAClin = false;
             }
@@ -2320,6 +2328,17 @@ int _tmain(int argc, TCHAR* argv[])
                 }
                 if (ToulBar2::debug)
                     cout << "Embarrassingly Parallel Search mode activated, collecting " << ToulBar2::eps << " open nodes in file " << ToulBar2::epsFilename << endl;
+            }
+
+            // AI-generated Max-2AT heuristic
+            if (args.OptionId() == OPT_heurllm) {
+                if (args.OptionArg() != NULL) {
+                    ToulBar2::heurllm = atoi(args.OptionArg());
+                } else {
+                    ToulBar2::heurllm = AI_INIT_THEMAX;
+                }
+            } else if (args.OptionId() == NO_OPT_heurllm) {
+                ToulBar2::heurllm = 0;
             }
 
             // local search INCOP

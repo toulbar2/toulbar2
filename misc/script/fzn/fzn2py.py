@@ -1,14 +1,14 @@
 
 # library of flatzinc predicates translated into numberjack constraints
 
-MAXCOEF = 2147483647
+MAXCOEF = 2147483647 * 1024
 
-DelayedObjective = None
+IsASatisfactionProblem = True
+DelayedLinEq = dict() # warning: fzn2py automatically replaces {} by []
+DelayedLinEqVars = dict() # warning: fzn2py automatically replaces {} by []
 DelayedObjectiveName = None
 DelayedObjectiveRange = None
 DelayedObjectiveDomain = None
-objective = None
-obj = None
 
 class Var:
     def __init__(self, index):
@@ -86,6 +86,9 @@ def scopeWithDuplicateConstantVariables(s):
     else:
         return [ConstantNewVariable(x).ind if type(x) is int else x.ind for x in s]
 
+def get_value(assignment, e):
+    return assignment[e.ind] if type(e) is Var else e
+
 def get_values(assignment, vars):
     return [assignment[e.ind] if type(e) is Var else e for e in vars]
     
@@ -98,10 +101,11 @@ def array_bool_and(x,y):
         int_lin_eq_reif([1]*len(x), x, len(x), y) # (y == (Sum(x) == len(x)))
 
 def array_bool_or(x,y):
-    if ((type(y) is int) and y != 0):
-        model.AddSumConstraint(scope(x),'>=',1)
-    else:
-        model.AddLinearConstraint([-MAXCOEF] + [1]*len(x), scope(y) + scope(x),'>=',-MAXCOEF+1)
+    # if ((type(y) is int) and y != 0):
+    #     model.AddSumConstraint(scope(x),'>=',1)
+    # else:
+    #     model.AddLinearConstraint([-MAXCOEF] + [1]*len(x), scope(y) + scope(x),'>=',-MAXCOEF+1)
+    int_lin_le_reif([-1]*len(x),x,-1,y)
 
 def array_bool_xor(x):
     y = Variable(0, len(x)-1, 'XOR__' + str(model.GetNbVars()) + '__')
@@ -125,13 +129,31 @@ def array_int_element(x, y, z):
         if type(e) is int:
             e = Constant(e)
         sizee = model.GetDomainInitSize(e.ind)
-        costs = [model.Top]*sizex*sizee*sizez
-        for zval in model.Domain(z.ind):
-            for xval in model.Domain(x.ind):
-                for eval_ in model.Domain(e.ind):
-                    if (xval != i+1) or (zval == eval_):
-                       costs[model.GetValueIndex(z.ind, zval)*sizex*sizee + model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
-        model.AddFunction(scope([z, x, e]), costs)
+        if z == x:
+            if x != e:
+                costs = [model.Top]*sizex*sizee
+                for xval in model.Domain(x.ind):
+                    for eval_ in model.Domain(e.ind):
+                        if (xval != i+1) or (xval == eval_):
+                           costs[model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
+                model.AddFunction(scope([x, e]), costs)
+        else:
+            if x != e:
+                if z != e:
+                    costs = [model.Top]*sizex*sizee*sizez
+                    for zval in model.Domain(z.ind):
+                        for xval in model.Domain(x.ind):
+                            for eval_ in model.Domain(e.ind):
+                                if (xval != i+1) or (zval == eval_):
+                                   costs[model.GetValueIndex(z.ind, zval)*sizex*sizee + model.GetValueIndex(x.ind, xval)*sizee + model.GetValueIndex(e.ind, eval_)] = 0
+                    model.AddFunction(scope([z, x, e]), costs)
+            else:
+                costs = [model.Top]*sizex*sizez
+                for zval in model.Domain(z.ind):
+                    for xval in model.Domain(x.ind):
+                        if (xval != i+1) or (zval == xval):
+                           costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+                model.AddFunction(scope([z, x]), costs)
     # [(x >= 1), (x <= len(y)), set_in(z, u)] + [((z == (Variable(e,e,str(e)) if type(e) is int else e)) | (x != i+1)) for i, e in enumerate(y)]
 
 def array_var_int_element(x,y,z):
@@ -186,7 +208,10 @@ def int_eq_reif(x,y,z):
         int_eq(z,1)
         return
     if x == z or y == z:
-        return int_eq(x,y)
+        set_in(x, [0,1])
+        set_in(y, [0,1])
+        int_eq(x,y)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -214,6 +239,9 @@ def int_le(x,y):
     model.AddLinearConstraint([1,-1], scope([x,y]), '<=', 0) # (x <= y)
 
 def int_le_reif(x,y,z):
+    if x == y:
+        int_eq(z,1)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -235,6 +263,9 @@ def int_lt(x,y):
     model.AddLinearConstraint([1,-1], scope([x,y]), '<', 0) # (x < y)
 
 def int_lt_reif(x,y,z):
+    if x == y:
+        int_eq(z,0)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -270,6 +301,15 @@ def int_ne(x,y):
     model.AddFunction(scope([x, y]), costs) #  [(x != y)]
 
 def int_ne_reif(x,y,z):
+    if x == y:
+        int_eq(z,0)
+        return
+    if x == z:
+        int_eq(y,0)
+        return
+    if y == z:
+        int_eq(x,0)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -288,42 +328,18 @@ def int_ne_reif(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) #  [(z == (x != y))]
 
 def int_lin_eq(coef,vars,res):
-    global DelayedObjective
-    global objective
-    global obj
-    if (objective is res) or (objective in vars):
-        if DelayedObjective is not None:
-            raise Exception('Variable objective cannot be in two or more linear equality constraints!')
-        if objective is res:
-            DelayedObjective = (coef,vars,1)
-        else:
-            pos = vars.index(objective)
-            divide = -coef[pos]
-            del coef[pos]
-            del vars[pos]
-            if (type(res) is not int) or res !=0:
-                coef.append(-1)
-                vars.append(res)
-            DelayedObjective = (coef,vars,divide)
-    elif (obj is res) or (obj in vars):
-        if DelayedObjective is not None:
-            raise Exception('Variable obj cannot be in two or more linear equality constraints!')
-        if obj is res:
-            DelayedObjective = (coef,vars,1)
-        else:
-            pos = vars.index(obj)
-            divide = -coef[pos]
-            del coef[pos]
-            del vars[pos]
-            if (type(res) is not int) or res !=0:
-                coef.append(-1)
-                vars.append(res)
-            DelayedObjective = (coef,vars,divide)
+    global DelayedLinEq
+    global DelayedLinEqVars
+    for v in vars:
+        if v not in DelayedLinEqVars:
+            DelayedLinEqVars[v] = set()
+        DelayedLinEqVars[v].add(len(DelayedLinEq))
+    if type(res) is int:
+        #model.AddLinearConstraint(coef, scope(vars), '==', res)
+        DelayedLinEq[len(DelayedLinEq)] = (coef, vars, res)
     else:
-        if type(res) is int:
-            model.AddLinearConstraint(coef, scope(vars), '==', res)
-        else:
-            model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
+        #model.AddLinearConstraint([-1] + coef, scope(res) + scope(vars), '==', 0) # (res == Sum(vars,coef))
+        DelayedLinEq[len(DelayedLinEq)] = ([-1] + coef, [res] + vars, 0)
 
 def bool_lin_eq(coef,vars,res):
     int_lin_eq(coef,vars,res)
@@ -357,6 +373,7 @@ def int_lin_eq_reif(coef,vars,res,z):
             model.AddLinearConstraint([MAXCOEF, MAXCOEF, -1] + coef, scope([z, neq, res] + vars), '>', 0)
             model.AddLinearConstraint([-MAXCOEF, -1] + coef, scope([z, res] + vars), '>=', -MAXCOEF)
             model.AddLinearConstraint([MAXCOEF, -1] + coef, scope([z, res] + vars), '<=', MAXCOEF)
+        model.AddLinearConstraint([1,-1], scope([z,neq]), '<=')
     # (z == (res == Sum(vars, coef)))
 
 def int_lin_le(coef,vars,res):
@@ -450,6 +467,7 @@ def int_lin_ne_reif(coef,vars,res,z):
             model.AddLinearConstraint([-MAXCOEF, MAXCOEF, -1] + coef, scope([z, neq, res] + vars), '>', -MAXCOEF)
             model.AddLinearConstraint([MAXCOEF, -1] + coef, scope([z, res] + vars), '>=', 0)
             model.AddLinearConstraint([-MAXCOEF, -1] + coef, scope([z, res] + vars), '<=', 0)
+        model.AddLinearConstraint([1,-1], scope([z,neq]), '>=')
     # (z == (res != Sum(vars,coef)))
 
 def int_abs(x,y):
@@ -470,6 +488,10 @@ def int_abs(x,y):
         int_eq(y, abs(x)) # (y == Abs(x))
 
 def int_div(x,y,z):
+    if x == y:
+        int_ne(y,0)
+        int_eq(z,1)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -479,13 +501,28 @@ def int_div(x,y,z):
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
-    costs = [model.Top]*sizex*sizey*sizez
-    for zval in model.Domain(z.ind):
+    if x == z:
+        costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if yval != 0 and zval == xval // yval:
-                    costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
-    model.AddFunction(scope([z, x, y]), costs) # (z == (x / y))
+                if yval != 0 and xval == (xval // yval if xval * yval >= 0 else -(abs(xval) // abs(yval))):
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x / y))
+    elif y == z:
+        costs = [model.Top]*sizex*sizey
+        for xval in model.Domain(x.ind):
+            for yval in model.Domain(y.ind):
+                if yval != 0 and yval == (xval // yval if xval * yval >= 0 else -(abs(xval) // abs(yval))):
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x / y))
+    else:
+        costs = [model.Top]*sizex*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                for yval in model.Domain(y.ind):
+                    if yval != 0 and zval == (xval // yval if xval * yval >= 0 else -(abs(xval) // abs(yval))):
+                        costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z, x, y]), costs) # (z == (x / y))
 
 def int_min(x,y,z):
     if x == y:
@@ -536,6 +573,10 @@ def int_max(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) # (z == Max([x, y]))
 
 def int_mod(x,y,z):
+    if x == y:
+        int_ne(y,0)
+        int_eq(z,0)
+        return
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -545,18 +586,33 @@ def int_mod(x,y,z):
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
-    costs = [model.Top]*sizex*sizey*sizez
-    for zval in model.Domain(z.ind):
+    if x == z:
+        costs = [model.Top]*sizex*sizey
         for xval in model.Domain(x.ind):
             for yval in model.Domain(y.ind):
-                if zval == xval % yval:
-                    costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
-    model.AddFunction(scope([z, x, y]), costs) # (z == (x % y))
+                if yval != 0 and xval == (abs(xval) % abs(yval) if xval >= 0 else -(abs(xval) % abs(yval))):
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x % y))
+    elif y == z:
+        costs = [model.Top]*sizex*sizey
+        for xval in model.Domain(x.ind):
+            for yval in model.Domain(y.ind):
+                if yval != 0 and yval == (abs(xval) % abs(yval) if xval >= 0 else -(abs(xval) % abs(yval))):
+                    costs[model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([x, y]), costs) # (z == (x % y))
+    else:
+        costs = [model.Top]*sizex*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                for yval in model.Domain(y.ind):
+                    if yval != 0 and zval == (abs(xval) % abs(yval) if xval >= 0 else -(abs(xval) % abs(yval))):
+                        costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z, x, y]), costs) # (z == (x % y))
 
 def int_plus(x,y,z):
     model.AddLinearConstraint([1,-1,-1], scope([z,x,y]), '==', 0) # (z == (x + y))
 
-def int_times(x,y,z):
+def int_pow(x,y,z):
     if type(x) is int:
         x = Constant(x)
     sizex = model.GetDomainInitSize(x.ind)
@@ -566,6 +622,75 @@ def int_times(x,y,z):
     if type(z) is int:
         z = Constant(z)
     sizez = model.GetDomainInitSize(z.ind)
+    if x == y:
+        costs = [model.Top]*sizex*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                if xval != 0 and zval == ((xval ** abs(xval)) if xval >= 0 else ((1 // (xval ** abs(xval))) if xval ** abs(xval) >= 0 else -(1 // (abs(xval) ** abs(xval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([z, x]), costs) # (z == (x ** abs(x))) if x>=0 else (z == (1 if x ** abs(x) >= 0 else -1) / (abs(x) ** abs(x)))
+        return
+    if x == z:
+        costs = [model.Top]*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for yval in model.Domain(y.ind):
+                if zval != 0 and zval == ((zval ** abs(yval)) if yval >= 0 else ((1 // (zval ** abs(yval))) if zval ** abs(yval) >= 0 else -(1 // (abs(zval) ** abs(yval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z, y]), costs) # (z == (x ** abs(x))) if x>=0 else (z == (1 if x ** abs(x) >= 0 else -1) / (abs(x) ** abs(x)))
+        return
+    if y == z:
+        costs = [model.Top]*sizex*sizey*sizez
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                if xval != 0 and zval == ((xval ** abs(zval)) if zval >= 0 else ((1 // (xval ** abs(zval))) if xval ** abs(zval) >= 0 else -(1 // (abs(xval) ** abs(zval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([z, x]), costs) # (z == (x ** abs(y))) if y>=0 else (z == (1 if x ** abs(y) >= 0 else -1) / (abs(x) ** abs(y)))
+        return
+    costs = [model.Top]*sizex*sizey*sizez
+    for zval in model.Domain(z.ind):
+        for xval in model.Domain(x.ind):
+            for yval in model.Domain(y.ind):
+                if xval != 0 and zval == ((xval ** abs(yval)) if yval >= 0 else ((1 // (xval ** abs(yval))) if xval ** abs(yval) >= 0 else -(1 // (abs(xval) ** abs(yval))))):
+                    costs[model.GetValueIndex(z.ind, zval)*sizex*sizey + model.GetValueIndex(x.ind, xval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+    model.AddFunction(scope([z, x, y]), costs) # (z == (x ** abs(y))) if y>=0 else (z == (1 if x ** abs(y) >= 0 else -1) / (abs(x) ** abs(y)))
+    
+def int_times(x,y,z):
+    if x == y and x == z:
+        set_in(x, [0,1])
+        return
+    if type(x) is int:
+        x = Constant(x)
+    sizex = model.GetDomainInitSize(x.ind)
+    if type(y) is int:
+        y = Constant(y)
+    sizey = model.GetDomainInitSize(y.ind)
+    if type(z) is int:
+        z = Constant(z)
+    sizez = model.GetDomainInitSize(z.ind)
+    if x == y:
+        costs = [model.Top]*sizez*sizex
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                if zval == xval * xval:
+                    costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([z,x]), costs)
+        return
+    if x == z:
+        costs = [model.Top]*sizez*sizey
+        for zval in model.Domain(z.ind):
+            for yval in model.Domain(y.ind):
+                if zval == 0 or yval == 1:
+                    costs[model.GetValueIndex(z.ind, zval)*sizey + model.GetValueIndex(y.ind, yval)] = 0
+        model.AddFunction(scope([z,y]), costs)
+        return
+    if y == z:
+        costs = [model.Top]*sizez*sizex
+        for zval in model.Domain(z.ind):
+            for xval in model.Domain(x.ind):
+                if zval == 0 or xval == 1:
+                    costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
+        model.AddFunction(scope([z,x]), costs)
+        return
     costs = [model.Top]*sizex*sizey*sizez
     for zval in model.Domain(z.ind):
         for xval in model.Domain(x.ind):
@@ -590,45 +715,91 @@ def set_in_reif(x,dom,z):
             if bool(zval) == (xval in dom):
                 costs[model.GetValueIndex(z.ind, zval)*sizex + model.GetValueIndex(x.ind, xval)] = 0
     model.AddFunction(scope([z, x]), costs) # (z == Disjunction([(x == v) for v in dom]))
-    
-def Minimize(x):
-    global DelayedObjective
-    global objective
-    global obj
-    assert((DelayedObjective is None) or (x is objective) or (x is obj))
-    if x is None or type(x) is Var:
-        if DelayedObjective:
-            coef,vars,divide = DelayedObjective
-            for i,mult in enumerate(coef):
-                xind = scope(vars[i])[0]
-                model.AddFunction([xind], [(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
-        else:
-            if DelayedObjectiveName:
-                assert(DelayedObjectiveRange)
-                x = Var(model.AddVariable(DelayedObjectiveName, DelayedObjectiveRange))
-                if DelayedObjectiveDomain:
-                    set_in(x, DelayedObjectiveDomain)
-            model.AddFunction(scope(x), [model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
-    
-def Maximize(x):
-    global DelayedObjective
-    global objective
-    global obj
-    assert((DelayedObjective is None) or (x is objective) or (x is obj))
-    if x is None or type(x) is Var:
-        if DelayedObjective:
-            coef,vars,divide = DelayedObjective
-            for i,mult in enumerate(coef):
-                xind = scope(vars[i])[0]
-                model.AddFunction([xind], [-(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
-        else:
-            if DelayedObjectiveName:
-                assert(DelayedObjectiveRange)
-                x = Var(model.AddVariable(DelayedObjectiveName, DelayedObjectiveRange))
-                if DelayedObjectiveDomain:
-                    set_in(x, DelayedObjectiveDomain)
-            model.AddFunction(scope(x), [-model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
 
+def Minimize(x, sign=1):
+    global DelayedLinEq
+    global DelayedLinEqVars
+    global IsASatisfactionProblem
+    IsASatisfactionProblem = False
+    if x is None or type(x) is Var:
+        if x in DelayedLinEqVars and len(DelayedLinEqVars[x]) == 1 and (type(x) is not Var or model.GetDegree(x.ind) == 0):
+            idx = list(DelayedLinEqVars[x])[0]
+            coef,vars,rhs = DelayedLinEq[idx]
+            #print(model.VariableNames[x.ind] if type(x) is Var else x,coef,[model.VariableNames[myvar.ind] if type(myvar) is Var else myvar for myvar in vars],rhs)
+            assert(type(rhs) is int)
+            del DelayedLinEq[idx]
+            for var in vars:
+                DelayedLinEqVars[var].remove(idx)
+            pos = vars.index(x)
+            divide = -coef[pos]
+            del coef[pos]
+            del vars[pos]
+            ok = True
+            while ok:
+                ok = False
+                for i,v in enumerate(vars):
+                    if v in DelayedLinEqVars and len(DelayedLinEqVars[v]) == 1 and type(v) is Var and model.GetDegree(v.ind) == 0:
+                        ok = True
+                        idx = list(DelayedLinEqVars[v])[0]
+                        vcoef,vvars,vrhs = DelayedLinEq[idx]
+                        #print(model.VariableNames[v.ind] if type(v) is Var else v,vcoef,[model.VariableNames[myvar.ind]if type(myvar) is Var else myvar for myvar in vvars],vrhs)
+                        assert(type(vrhs) is int)
+                        del DelayedLinEq[idx]
+                        for var in vvars:
+                            DelayedLinEqVars[var].remove(idx)
+                        vpos = vvars.index(v)
+                        vdivide = -vcoef[vpos]
+                        del vcoef[vpos]
+                        del vvars[vpos]
+                        for j in range(len(vcoef)):
+                            vcoef[j] *= coef[i]
+                            vcoef[j] //= vdivide
+                        vrhs *= coef[i]
+                        vrhs //= vdivide
+                        del coef[i]
+                        del vars[i]
+                        coef.extend(vcoef)
+                        vars.extend(vvars)
+                        rhs += vrhs
+                        #print(model.VariableNames[v.ind] if type(v) is Var else v,coef,[model.VariableNames[myvar.ind]if type(myvar) is Var else myvar for myvar in vars],rhs)
+                        break
+            for i,mult in enumerate(coef):
+                xind = scope(vars[i])[0]
+                model.AddFunction([xind], [sign*(mult * model.GetValue(xind, index) // divide) for index in range(model.GetDomainInitSize(xind))])
+            if rhs != 0:
+                model.AddFunction([],[-sign*rhs // divide])
+        else:
+            if DelayedObjectiveName:
+                assert(DelayedObjectiveRange)
+                x = Var(model.AddVariable(DelayedObjectiveName, DelayedObjectiveRange))
+                if DelayedObjectiveDomain:
+                    set_in(x, DelayedObjectiveDomain)
+            model.AddFunction(scope(x), [sign*model.GetValue(x.ind, index) for index in range(model.GetDomainInitSize(x.ind))])
+ 
+def Maximize(x):
+    Minimize(x, sign=-1)
+
+# generate linear equality constraints except if it defines a variable involved in no other basic constraint nor in the list of output variables
+def finalize_int_lin_eq(*output_vars):
+    global DelayedLinEq
+    global DelayedLinEqVars
+    ok = not(IsASatisfactionProblem)
+    while ok:
+        ok = False
+        for v in DelayedLinEqVars:
+            if len(DelayedLinEqVars[v]) == 1 and type(v) is Var and model.GetDegree(v.ind) == 0 and model.CFN.wcsp.getMaxUnaryCost(v.ind) == 0 and v not in output_vars:
+                ok = True
+                idx = list(DelayedLinEqVars[v])[0]
+                vcoef,vvars,vrhs = DelayedLinEq[idx]
+                #print('Warning, eliminate unused variable ' + model.VariableNames[v.ind])
+                #print(model.VariableNames[v.ind] if type(v) is Var else v,vcoef,[model.VariableNames[myvar.ind]if type(myvar) is Var else myvar for myvar in vvars],vrhs)
+                assert(type(vrhs) is int)
+                del DelayedLinEq[idx]
+                for var in vvars:
+                    DelayedLinEqVars[var].remove(idx)        
+    for coef,vars,rhs in DelayedLinEq.values():
+        model.AddLinearConstraint(coef, scope(vars), '==', rhs)  # Sum(coef,vars) == rhs
+    
 #-----------------------------------------
 # Specific global constraints for toulbar2
 #-----------------------------------------
@@ -694,10 +865,11 @@ def fzn_global_cardinality_low_up_closed(x, values, lb, ub):
     fzn_global_cardinality_low_up(x, values, lb, ub)
 
 def fzn_table_int(x,t):
+    m = len(t)
     n = len(x)
-    assert(len(t) % n == 0)
-    nbtuples = len(t) // n
-    model.AddCompactFunction(scope(x), model.Top, [[t[i+j] for j in range(n)] for i in range(0,nbtuples,n)], [0]*nbtuples) # x in t
+    assert(m % n == 0)
+    nbtuples = m // n
+    model.AddCompactFunction(scope(x), model.Top, [[t[i+j] for j in range(n)] for i in range(0,m,n)], [0]*nbtuples) # x in t
     
 def fzn_table_bool(x,t):
     fzn_table_int(x, t)

@@ -70,6 +70,13 @@ TREEDEC
 
 Compute a tree decomposition and quit.
 
+AI
+--
+
+AI-generated heuristics for Max-2SAT.
+
+Command line option: :code:`-ai`
+
 INCOP
 -----
 
