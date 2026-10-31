@@ -3,11 +3,12 @@
 
 BEGIN {
 	MAX_COST_FZN = 2147483647 * 1024;
-	MAXINT = 10000;
-	VERBOSITY = -1;
-	SHOWSOLUTIONS = 0;
-	DUMPMODEL = 0;	
+	MAXINT = 10000; # maximum integer domain value
+	#VERBOSITY = -1;
+	#SHOWSOLUTIONS = 0;
+	#DUMPMODEL = 0;	
 	# ALLSOLUTIONS = 10000; # needed for running unit tests (automatically assigned by ./fzn2py with extra option -a)
+	#FREESEARCH = 1;
 	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
@@ -15,9 +16,10 @@ BEGIN {
 	system("cat " MZNNJ_DIR "/fzn2py.py");
 	print "";
 	print "def get_model():"
-	print "    global model";
-	print "    global DelayedLinEq";
-	print "    model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
+	print "  global model";
+	print "  global DelayedLinEq";
+	print "  model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
+	print "  try:";
 	parameter = 1;
 	error = 0;
 }
@@ -276,14 +278,23 @@ END {
 		 if(length(output_vars) > 0) output_vars = output_vars ", ";
 		 output_vars = output_vars objective;
 	}
-	print "    finalize_int_lin_eq(" output_vars ")"; 
-	print "    output_vars = (" output_vars ")";
-	print "    return model, output_vars";
+	print "    finalize_int_lin_eq(" output_vars ")";
+	print "  except model.Contradiction:";
+	print "    return None, None";
+	print "  output_vars = (" output_vars ")";
+	print "  return model, output_vars";
 
 	print "";
 	print "model, output_vars = get_model()";
+	print "if model is None:";
+	print "    print('=====UNSATISFIABLE=====')";
+	print "    exit(0)";
 	if(output_vars) print output_vars " = output_vars";
 	if(DUMPMODEL) print "model.Dump('fzn.cfn')";
+	if(!FREESEARCH) {
+	    print "model.Option.Static_variable_ordering = True";
+	    print "model.Option.QueueComplexity = True";
+	}
 	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
 	print "if result is not None:";
 	print "    sols = model.GetSolutions()";
@@ -300,17 +311,18 @@ END {
 	}
 	print "        print('----------')";
 	if (objective){
-		print "    if model.GetDDualBound() == result[1]:"
-		print "        print('==========')"
+		print "    if model.GetDDualBound() == result[1]:";
+		print "        print('==========')";
 	} else {
-		print "    print('==========')"
+		print "    print('==========')";
 	}
+	print "    print('% Solutions', result[2])";
 	#print "elif solver.is_unsat():"
 	#print "    print('=====UNSATISFIABLE=====')"
-	print "else:"
-	print "    print('=====UNKNOWN=====')"
-	# print "print '% SolveTime', model.getTime()";
-	print "print('% Solutions', result[2])";
+	print "else:";
+	print "    print('=====UNKNOWN=====')";
+	print "    print('% Solutions', 0)";
+		# print "print '% SolveTime', model.getTime()";
 	print "print('% Nodes', model.GetNbNodes())";
 	print "print('% Failures', model.GetNbBacktracks())";
 	if (objective) print "if result is not None: print('% Objective', int(result[1]))";

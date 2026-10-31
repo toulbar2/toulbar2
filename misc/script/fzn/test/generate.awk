@@ -31,6 +31,22 @@ sub(",res",",3",$1);
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+print "array [1..4] of int: coef = [1,-1,2,-2];" >> file;
+if(match(name,"bool_")) {
+    print "var bool: var1 :: output_var;" >> file;
+    print "var bool: var3 :: output_var;" >> file;
+    print "array [1..4] of var bool: vars:: output_array([1..4]) = [var1,var1,var3,var3];" >> file;
+} else {
+    print "var -2..2: var1 :: output_var;" >> file;
+    print "var -2..2: var3 :: output_var;" >> file;
+    print "array [1..4] of var int: vars:: output_array([1..4]) = [var1,var3,var1,var3];" >> file;
+}
+sub(",res",",3",$1);
+print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
 }
 
 NF==1&&/array_/&&/_element/&&/[(]x,y,z[)]/{
@@ -57,6 +73,55 @@ print "var 1..4: x :: output_var;" >> file;
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
+if(match(name,"_var_")&&!match(name,"_bool_")) {
+file = "test_" name "2.fzn";
+print "" > file;
+print "var -2..2: y1 :: output_var;" >> file;
+print "var -2..2: y3 :: output_var;" >> file;
+print "var 1..4: x :: output_var;" >> file;
+print "array [1..4] of var int: y:: output_array([1..4]) = [y1,x,y3,x];" >> file;
+print "var -10..10: z :: output_var;" >> file;
+scope=$1;
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+}
+if(match(name,"_var_")) {
+file = "test_" name "3.fzn";
+print "" > file;
+if(match(name,"_bool_")) {
+print "var bool: y1 :: output_var;" >> file;
+print "var bool: y3 :: output_var;" >> file;
+print "var bool: z :: output_var;" >> file;
+print "array [1..4] of var bool: y:: output_array([1..4]) = [y1,z,y3,z];" >> file;
+print "var 1..4: x :: output_var;" >> file;
+} else {
+print "var -2..2: y1 :: output_var;" >> file;
+print "var -2..2: y3 :: output_var;" >> file;
+print "var -10..10: z :: output_var;" >> file;
+print "array [1..4] of var int: y:: output_array([1..4]) = [y1,z,y3,z];" >> file;
+print "var 1..4: x :: output_var;" >> file;
+}
+scope=$1;
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+}
+if(!match(name,"_bool_")) {
+file = "test_" name "4.fzn";
+print "" > file;
+if(match(name,"_var_")) {
+  print "array [1..4] of var -2..2: y:: output_array([1..4]);" >> file;
+} else {
+  print "array [1..4] of int: y = [1,-1,2,-2];" >> file;
+}
+print "var 1..4: x :: output_var;" >> file;
+scope=$1;
+sub("z","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+}
 next;
 }
 
@@ -80,6 +145,65 @@ if(match(name,"_reif") || match(name,"bool_")) {
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+}
+if(match(name,"_reif") || match(name,"bool_")) {
+    print "var bool: z :: output_var;" >> file;
+} else {
+    print "var -10..10: z :: output_var;" >> file;
+}
+scope=$1;
+sub("y","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+if(match(name,"_reif") && !match(name,"bool_")) next;
+file = "test_" name "3.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+    print "var bool: y :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+    print "var -10..10: y :: output_var;" >> file;
+}
+scope=$1;
+sub("z","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "4.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+    print "var bool: y :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+    print "var -10..10: y :: output_var;" >> file;
+}
+scope=$1;
+sub("z","y",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "5.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+}
+scope=$1;
+sub("y","x",scope);
+sub("z","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
 }
 
 NF==1&&/array_bool_and/&&/[(]x,y[)]/{
@@ -89,6 +213,15 @@ file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of var bool: x:: output_array([1..4]);" >> file;
 print "var bool: y :: output_var;" >> file;
+print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+print "var bool: x1 :: output_var;" >> file;
+print "var bool: x3 :: output_var;" >> file;
+print "var bool: y :: output_var;" >> file;
+print "array [1..4] of var bool: x:: output_array([1..4]) = [x1,y,x3,y];" >> file;
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
@@ -105,6 +238,28 @@ print "array [1..4] of var bool: y:: output_array([1..4]);" >> file;
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+print "array [1..4] of var bool: x:: output_array([1..4]);" >> file;
+print "array [1..4] of var bool: y:: output_array([1..4]);" >> file;
+scope=$1;
+sub("y","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "3.fzn";
+print "" > file;
+print "var bool: x1 :: output_var;" >> file;
+print "var bool: x3 :: output_var;" >> file;
+print "var bool: y2 :: output_var;" >> file;
+print "var bool: y4 :: output_var;" >> file;
+print "array [1..4] of var bool: x:: output_array([1..4]) = [x1,x3,x3,x1];" >> file;
+print "array [1..4] of var bool: y:: output_array([1..4]) = [x1,y2,x3,y4];" >> file;
+scope=$1;
+sub("y","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
 next;
 }
 
@@ -115,6 +270,15 @@ file = "test_" name ".fzn";
 print "" > file;
 print "array [1..4] of var bool: x:: output_array([1..4]);" >> file;
 print "var bool: y :: output_var;" >> file;
+print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+print "var bool: x2 :: output_var;" >> file;
+print "var bool: x4 :: output_var;" >> file;
+print "var bool: y :: output_var;" >> file;
+print "array [1..4] of var bool: x:: output_array([1..4]) = [y, x2, y, x4];" >> file;
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
@@ -140,6 +304,19 @@ if(match(name,"bool_") || match(name,"bool2int")) {
 print "constraint",$1,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
+if(match(name,"bool2int")) next;
+file = "test_" name "2.fzn";
+print "" > file;
+if(match(name,"bool_")) {
+    print "var bool: x :: output_var;" >> file;
+} else {
+    print "var -10..10: x :: output_var;" >> file;
+}
+scope=$1;
+sub("y","x",scope);
+print "constraint",scope,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
 }
 
 NF==1&&/[(]x,dom,z[)]/{
@@ -151,6 +328,15 @@ print "set of int: dom = {-1,1,3,5,7};" >> file;
 print "var -10..10: x :: output_var;" >> file;
 print "var bool: z :: output_var;" >> file;
 print "constraint",$1,";" >> file;
+print "solve satisfy;" >> file;
+close(file);
+file = "test_" name "2.fzn";
+print "" > file;
+print "set of int: dom = {-1,1,3,5,7};" >> file;
+print "var bool: x :: output_var;" >> file;
+scope=$1;
+sub("z","x",scope);
+print "constraint",scope,";" >> file;
 print "solve satisfy;" >> file;
 close(file);
 }

@@ -1519,7 +1519,7 @@ void CFNStreamReader::readGlobalCostFunction(vector<int>& scope, const string& f
         { "gcc", ":bounds:[vNN]+:?removedvalues:[v]+:?deltacosts:[vC]+:?lb:c:?sumcostsprojectonvar:C" },
         { "clique", ":rhs:N:values:[v+]S" },
         { "knapsack", ":capacity:N:weights:[N]S" },
-        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+:deltacosts:[VvC]+:lb:c:assigneddeltas:C" },
+        { "knapsackv", ":capacity:N:weightedvalues:[VvN]+:?deltacosts:[VvC]+:?lb:c:?assigneddeltas:C" },
         { "cfnconstraint", ":cfn:W:lb:c:ub:c:duplicatehard:N:strongduality:N" },
         { "salldiff", ":metric:K:cost:c" },
         { "sgcc", ":metric:K:cost:c:bounds:[vNN]+" }, // Read first keyword then special case processing
