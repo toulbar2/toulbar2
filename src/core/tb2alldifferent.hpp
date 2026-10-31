@@ -669,7 +669,7 @@ public:
 
         Cost m = *max_element(deltaCosts.begin(), deltaCosts.end());
         if (m > MIN_COST)
-            sumdelta += m;
+            sumdelta += m*(NbValues - arity_);
 
         if (CUT(sumdelta, wcsp->getUb()))
             return MAX_COST;
@@ -1540,9 +1540,6 @@ public:
                             }
                         } else {
                             // Zero cost matrix: every variable can take every value at no cost.
-                            // Give distinct values; when there are more variables than values, reuse an excepted value.
-                            if (!excepted && NbValues < arity_)
-                                THROWCONTRADICTION;
                             for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                                 int valIndex = (varIndex < NbValues) ? varIndex : exceptedValIndex[0];
                                 storeLastAssignment[varIndex] = toVarValue(varIndex, valIndex);
@@ -1562,7 +1559,6 @@ public:
                     if (NbNoAssigned < arity_) {
                        if (SameDomain && RemoveAssignVar()) {
                             // Collect unassigned values
-                            //    cout<<"done\n";
                             vector<int> NoAssignedVal;
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 if (!isAssignedValue[valIndex]) {
@@ -1571,6 +1567,8 @@ public:
                             }
 
                             NbNoAssignedVal = NoAssignedVal.size();
+                            if (NbNoAssignedVal < NbNoAssigned)
+                                THROWCONTRADICTION;
 
                             // Initialize cost matrix for the Jonker algorithm
                             Cost current_ub = wcsp->getUb() - wcsp->getLb();
@@ -1597,7 +1595,7 @@ public:
                             capacity.assign(NbNoAssigned + 1, 1);
                             capacity[NbNoAssigned] = NbNoAssignedVal - NbNoAssigned;
 
-                            if (any_of(costMatrix.begin(), costMatrix.begin() + (NbNoAssigned + int(!isSquare)) * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
+                            if (any_of(costMatrix.begin(), costMatrix.begin() + (NbNoAssigned + 1) * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
                                 // Solve assignment problem using Jonker algorithm
                                 Cost TotalCost;
                                     //TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
@@ -1616,7 +1614,6 @@ public:
                                         if( var < NbNoAssigned){
                                             rowSol[var] = valIndex;
                                         }
-                                        deltaCosts[NoAssignedVal[valIndex]] = costMatrix[valIndex * (NbNoAssigned + 1) + NbNoAssigned] - (ReduceCostRow[NbNoAssigned] + ReduceCostCol[valIndex]);
                                     }
                                                                         
                                     // Store results from Jonker algorithm
@@ -1630,9 +1627,12 @@ public:
 
                                     storeAssignment = true;
 
-
-                                    // (in the non-square case the duals have the opposite sign convention: do not test their sign)
                                     if (TotalCost > 0 || (any_of(ReduceCostCol, ReduceCostCol +  NbNoAssignedVal,  [](auto x) { return x > MIN_COST; }))) {
+
+                                        for (int valIndex = 0; valIndex < NbNoAssignedVal; ++valIndex) {
+        
+                                            deltaCosts[NoAssignedVal[valIndex]] = costMatrix[valIndex * (NbNoAssigned + 1) + NbNoAssigned] - (ReduceCostRow[NbNoAssigned] + ReduceCostCol[valIndex]);
+                                        }
 
                                         // Update the lower bound with the Jonker algorithm's total cost
                                         projectLB(jonker);
@@ -1668,9 +1668,6 @@ public:
                                 }
                             } else {
                                 // Zero cost matrix: every unassigned variable can take every free value at no cost,
-                                // so any injective assignment is optimal (no cost to project)
-                                if (NbNoAssignedVal < NbNoAssigned)
-                                    THROWCONTRADICTION;
                                 for (int k = 0; k < NbNoAssigned; ++k)
                                     storeLastAssignment[NoAssignedVar[k]] = toVarValue(NoAssignedVar[k], NoAssignedVal[k]);
                                 // Assigned variables keep their value
@@ -1682,7 +1679,7 @@ public:
                             }
                         }
 
-                    // Case when all variables are unassigned or filtering exception or domains differ
+                    // Case when all variables are unassigned or domains differ
                     } else if (connected() && (NbNoAssigned == arity_ || !SameDomain) ){
                         Cost current_ub = wcsp->getUb() - wcsp->getLb();
                         // Initialize the cost matrix for all variables and their domain values
@@ -1703,7 +1700,7 @@ public:
                         capacity.assign(arity_ + 1, 1);
                         capacity[arity_] = NbValues - arity_;
 
-                        if (any_of(costMatrix.begin(), costMatrix.begin() + (arity_ + int(!isSquare)) * NbValues, [](auto x) { return x != MIN_COST; })) {
+                        if (any_of(costMatrix.begin(), costMatrix.begin() + (arity_ + 1) * NbValues, [](auto x) { return x != MIN_COST; })) {
                             // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                             Cost TotalCost;
 
@@ -1716,13 +1713,10 @@ public:
 
                             } else if (TotalCost >= 0 ) {
                                 // Store results from Jonker algorithm
-                                if(!isSquare){
-                                    for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-                                        int var = colSol[valIndex];
-                                        if( var < arity_){
-                                            rowSol[var] = valIndex;
-                                        }
-                                        deltaCosts[valIndex] = costMatrix[valIndex * (arity_ + 1) + arity_] - (ReduceCostRow[arity_] + ReduceCostCol[valIndex]);
+                                for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                    int var = colSol[valIndex];
+                                    if( var < arity_){
+                                        rowSol[var] = valIndex;
                                     }
                                 }
                                 for (int varIndex = 0; varIndex < arity_; varIndex++) {
@@ -1732,6 +1726,9 @@ public:
                                 
                                 // (in the non-square case the duals have the opposite sign convention: do not test their sign)
                                 if(TotalCost > 0 ||  (any_of(ReduceCostCol, ReduceCostCol + NbValues,  [](auto x) { return x > MIN_COST; }))){
+                                    for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+                                            deltaCosts[valIndex] = costMatrix[valIndex * (arity_ + 1) + arity_] - (ReduceCostRow[arity_] + ReduceCostCol[valIndex]);
+                                        }
 
                                     // Update lower bound with the total cost found
                                     projectLB(TotalCost);
