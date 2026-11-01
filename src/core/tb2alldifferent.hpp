@@ -1179,7 +1179,7 @@ public:
                             filtreExcepted = RemoveAssignVar();
                         } else if (SameDomain && RemoveAssignVar()) {
                             // Collect unassigned values
-                            //    cout<<"done\n";
+
                             vector<int> NoAssignedVal;
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 if (!isAssignedValue[valIndex]) {
@@ -1188,24 +1188,46 @@ public:
                             }
 
                             NbNoAssignedVal = NoAssignedVal.size();
-
+                            if (NbNoAssignedVal < NbNoAssigned) {
+                                THROWCONTRADICTION;
+                            }
                             // Initialize cost matrix for the Jonker algorithm
+                            int removevals = 0;
                             Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
-                            for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
-                                int varIndex = NoAssignedVar[varInd];
-                                auto* variable = scope[varIndex];
-
-                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                    int valIndex = NoAssignedVal[valInd];
+                            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                int valIndex = NoAssignedVal[valInd];
+                                int comptremoveval = 0;
+                                for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                    int varIndex = NoAssignedVar[varInd];
+                                    auto* variable = scope[varIndex];
                                     Value val = toVarValue(varIndex, valIndex);
                                     if (val != WRONG_VAL && variable->canbe(val)) {
                                         auto valCost = variable->getCost(val);
                                         costMatrix[varInd * NbNoAssignedVal + valInd] = valCost < current_ub ? valCost : current_ub;
+                                        if (valCost >= current_ub) {
+                                            comptremoveval++;
+                                        }
+
                                     } else {
+                                        comptremoveval++;
                                         costMatrix[varInd * NbNoAssignedVal + valInd] = current_ub;
                                     }
                                 }
+
+                                if (comptremoveval == NbNoAssigned) {
+                                    if (isSquare) {
+                                            THROWCONTRADICTION;
+                                    }
+                                    Cost Delta = deltaCosts[valIndex];
+                                    deltaCosts[valIndex] = 0;
+                                    projectLB(Delta);
+                                    removevals++;
+                                } 
+                            }
+
+                            if (NbNoAssignedVal - removevals < NbNoAssigned) {
+                                THROWCONTRADICTION;
                             }
 
                             if (any_of(costMatrix.begin(), costMatrix.begin() + NbNoAssigned * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
@@ -1439,9 +1461,7 @@ public:
 
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 Value value = toVarValue(varIndex, valIndex);
-                                if (value == WRONG_VAL)
-                                    continue; // the variable cannot take this value:
-                                Cost valCost = variable->canbe(value) ? variable->getCost(value) : current_ub;
+                                Cost valCost = (value != WRONG_VAL && variable->canbe(value)) ? variable->getCost(value) : current_ub;
                                 costMatrix[varIndex * NbValues + valIndex] = valCost < current_ub ? valCost : current_ub;
                             }
                         }
@@ -1554,44 +1574,56 @@ public:
                 if (!skipPropagation && slack) {
                     // Initialize number of unassigned variables
                     NbNoAssigned = getNonAssigned();
-
                     // If there are assigned variables, handle accordingly
                     if (NbNoAssigned < arity_) {
                        if (SameDomain && RemoveAssignVar()) {
                             // Collect unassigned values
                             vector<int> NoAssignedVal;
+                            // Initialize cost matrix for the Jonker algorithm
+                            int valInd = 0;
+                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
+
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 if (!isAssignedValue[valIndex]) {
-                                    NoAssignedVal.push_back(valIndex);
+                                    int comptremoveval = 0;
+                                    for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                        int varIndex = NoAssignedVar[varInd];
+                                        auto* variable = scope[varIndex];
+                                        Value val = toVarValue(varIndex, valIndex);
+                                        if (val != WRONG_VAL && variable->canbe(val)) {
+                                            auto valCost = variable->getCost(val);
+                                            costMatrix[valInd * (NbNoAssigned + 1) + varInd] = valCost < current_ub ? valCost : current_ub;
+                                            if (valCost >= current_ub) {
+                                                comptremoveval++;
+                                            }
+
+                                        } else {
+                                            comptremoveval++;
+                                            costMatrix[valInd * (NbNoAssigned + 1) + varInd] = current_ub;
+                                        }
+                                    }
+
+                                    if (comptremoveval == NbNoAssigned) {
+                                        Cost Delta = deltaCosts[valIndex];
+                                        deltaCosts[valIndex] = 0;
+                                        projectLB(Delta);
+                                    } else {
+                                        NoAssignedVal.push_back(valIndex);
+                                        valInd++;
+                                    }
                                 }
                             }
 
                             NbNoAssignedVal = NoAssignedVal.size();
-                            if (NbNoAssignedVal < NbNoAssigned)
+                            if (NbNoAssignedVal < NbNoAssigned) {
                                 THROWCONTRADICTION;
-
-                            // Initialize cost matrix for the Jonker algorithm
-                            Cost current_ub = wcsp->getUb() - wcsp->getLb();
-                            
-                            for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
-                                int varIndex = NoAssignedVar[varInd];
-                                auto* variable = scope[varIndex];
-
-                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                    int valIndex = NoAssignedVal[valInd];
-                                    Value val = toVarValue(varIndex, valIndex);
-                                    if (val != WRONG_VAL && variable->canbe(val)) {
-                                        auto valCost = variable->getCost(val);
-                                        costMatrix[valInd * (NbNoAssigned + 1)  + varInd] = valCost < current_ub ? valCost : current_ub;
-                                    } else {
-                                        costMatrix[valInd * (NbNoAssigned + 1) + varInd] = current_ub;
-                                    }
-                                }
                             }
-                            // dummy column (index NbNoAssigned): cost = extended unary cost of the unused value
+
+                            // Dummy column
                             for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                 costMatrix[valInd * (NbNoAssigned + 1) + NbNoAssigned] = deltaCosts[NoAssignedVal[valInd]];
                             }
+
                             capacity.assign(NbNoAssigned + 1, 1);
                             capacity[NbNoAssigned] = NbNoAssignedVal - NbNoAssigned;
 
@@ -1599,10 +1631,17 @@ public:
                                 // Solve assignment problem using Jonker algorithm
                                 Cost TotalCost;
                                     //TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
-                                TotalCost = lapjv_ub(NbNoAssignedVal, NbNoAssigned + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict);
+                                TotalCost = lapjv_ub(NbNoAssignedVal, NbNoAssigned + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict, true);
 
                                 if (TotalCost >= current_ub) {
 
+                                    if (findConflict) {
+                                        int varIndex;
+                                        for (int var = 0; var < findConflict; var++) {
+                                            varIndex = NoAssignedVar[colSol[var]];
+                                            conflictWeights[varIndex]++;
+                                        }
+                                    }
                                     wcsp->revise(this);
                                     THROWCONTRADICTION;
 
@@ -1704,10 +1743,17 @@ public:
                             // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
                             Cost TotalCost;
 
-                            TotalCost = lapjv_ub(NbValues, arity_ + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict);
+                            TotalCost = lapjv_ub(NbValues, arity_ + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict, true);
 
 
                             if (TotalCost >= current_ub) {
+                                if (findConflict) {
+                                    int varIndex;
+                                    for (int var = 0; var < findConflict; var++) {
+                                        varIndex = colSol[var];
+                                        conflictWeights[varIndex]++;
+                                    }
+                                }
                                 wcsp->revise(this);
                                 THROWCONTRADICTION;
 

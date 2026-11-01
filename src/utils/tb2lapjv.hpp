@@ -299,7 +299,8 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
     Cost* usol, Cost* vsol,
     Cost MAX_COST,
     const vector<int>& capacity,
-    int& findConflict)
+    int& findConflict,
+    bool reverse=false)
 {
     if (dim_val <= 0 || dim_var <= 0) {
         findConflict = 0;
@@ -357,13 +358,38 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         // Report curRow and every row that competes with it for the same
         // columns so the caller can diagnose the conflict.
         if (sink < 0) {
-            findConflict = 1;
-            b[0] = curRow;
-            for (int col = 0; col < dim_val; col++) {
-                if (cost[curRow * dim_val + col] < MAX_COST) {
-                    for (int var : row4col[col]) {
-                        b[findConflict] = var;
+            findConflict = 0;
+            if(reverse){
+                int firstvar = -1;
+                for (int var = 0; var < dim_val-1; var++) {
+                    if(count_col[var] == 0){
+                        firstvar = var;
+                        b[0] = var;
                         findConflict++;
+                        break;
+                    }
+
+                }
+                if(firstvar > -1 ){
+                    for(int valInd = 0; valInd < dim_var; valInd++){
+                        if(cost[valInd * (dim_val) + firstvar]  < MAX_COST && col4row[valInd] > -1 &&  col4row[valInd] < dim_val - 1){
+                            b[findConflict] = col4row[valInd];
+                            findConflict++;
+
+                        }
+                    }
+                }
+
+                
+                
+            } else{
+                b[0] = curRow;
+                for (int col = 0; col < dim_val; col++) {
+                    if (cost[curRow * dim_val + col] < MAX_COST) {
+                        for (int var : row4col[col]) {
+                            b[findConflict] = var;
+                            findConflict++;
+                        }
                     }
                 }
             }
