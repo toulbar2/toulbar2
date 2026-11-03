@@ -656,7 +656,10 @@ Branching, variable and value ordering
 --------------------------------------
 
 -svo    searches using a static variable ordering heuristic.
-        The variable order value used will be the same order as the DAC order.
+        The variable order used will be the same order as the DAC order.
+
+-mvo    searches using a static value ordering heuristic.
+        The value order used will be choosing the minimum domain value first.
 
 -b      searches using binary branching (by default) instead of n-ary branching.
         Uses binary branching for interval domains and small domains

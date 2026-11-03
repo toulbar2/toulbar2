@@ -217,6 +217,8 @@ enum {
     OPT_approximateCountingBTD,
     OPT_Static_variable_ordering,
     NO_OPT_Static_variable_ordering,
+    OPT_Static_value_ordering,
+    NO_OPT_Static_value_ordering,
     OPT_lastConflict,
     NO_OPT_lastConflict,
     OPT_dichotomicBranching,
@@ -496,6 +498,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_binaryBranching, (char*)"-no--binaryBranching", SO_NONE },
     { OPT_Static_variable_ordering, (char*)"-svo", SO_NONE },
     { NO_OPT_Static_variable_ordering, (char*)"-svo:", SO_NONE },
+    { OPT_Static_value_ordering, (char*)"-mvo", SO_NONE },
+    { NO_OPT_Static_value_ordering, (char*)"-mvo:", SO_NONE },
     { OPT_lastConflict, (char*)"-c", SO_NONE },
     { NO_OPT_lastConflict, (char*)"-c:", SO_NONE },
     { NO_OPT_lastConflict, (char*)"-no--c", SO_NONE },
@@ -929,6 +933,10 @@ void help_msg(char* toulbar2filename)
     cout << endl;
     cout << "   -svo : searches using a static variable ordering heuristic (same order as DAC)";
     if (ToulBar2::Static_variable_ordering)
+        cout << " (default option)";
+    cout << endl;
+    cout << "   -mvo : searches using a static value ordering heuristic (minimum domain value first)";
+    if (ToulBar2::Static_value_ordering)
         cout << " (default option)";
     cout << endl;
     cout << "   -c : searches using binary branching with last conflict backjumping variable ordering heuristic";
@@ -1750,6 +1758,14 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::Static_variable_ordering = true;
             } else if (args.OptionId() == NO_OPT_Static_variable_ordering) {
                 ToulBar2::Static_variable_ordering = false;
+            }
+
+            // static value ordering
+
+            if (args.OptionId() == OPT_Static_value_ordering) {
+                ToulBar2::Static_value_ordering = true;
+            } else if (args.OptionId() == NO_OPT_Static_value_ordering) {
+                ToulBar2::Static_value_ordering = false;
             }
 
             // last conflict

@@ -2532,7 +2532,7 @@ void Solver::recursiveSolve(Cost lb)
         *((StoreInt*)searchSize) += ((int)(10e3 * Log(wcsp->getDomainSize(varIndex))));
         if (ToulBar2::bep)
             scheduleOrPostpone(varIndex);
-        else if (wcsp->enumerated(varIndex)) {
+        else if (wcsp->enumerated(varIndex) && !ToulBar2::Static_value_ordering) {
             if (ToulBar2::binaryBranching) {
                 assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
                 // Reuse last solution found if available and if not valid look at a (bi-objective) bounding constraint support if any
@@ -2594,7 +2594,7 @@ void Solver::recursiveSolveLDS(int discrepancy)
     if (varIndex >= 0) {
         if (ToulBar2::bep)
             scheduleOrPostpone(varIndex);
-        else if (wcsp->enumerated(varIndex)) {
+        else if (wcsp->enumerated(varIndex) && !ToulBar2::Static_value_ordering) {
             if (ToulBar2::binaryBranching) {
                 assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
                 // Reuse last solution found if available
