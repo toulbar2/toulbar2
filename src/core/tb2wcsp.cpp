@@ -5256,7 +5256,7 @@ void WCSP::dump(ostream& os, bool original)
     unsigned int nbunvar = numberOfUnassignedVariables();
     os << "wcsp " << ((original) ? numberOfVariables() : nbunvar) << " "
        << ((original) ? maxdomsize : maxdomsizeUI) << " " << numberOfConnectedConstraints() + xcosts << " "
-       << getUb() << endl;
+       << getUb() + max(MIN_COST, getLb() - getNegativeLb()) - getLb() << endl;
     unsigned int nbvar = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (original) {
