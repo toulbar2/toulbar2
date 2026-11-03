@@ -1236,7 +1236,7 @@ public:
                                 if (!isSquare) {
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                         costMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = deltaCosts[NoAssignedVal[valInd]];
-                                }
+                                    }
                                     TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
 
                                 } else {

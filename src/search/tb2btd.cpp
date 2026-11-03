@@ -884,7 +884,7 @@ pair<Cost, Cost> Solver::recursiveSolve(Cluster* cluster, Cost lbgood, Cost cub)
         // Enumerates cluster proper variables (if no freedom), variables in cluster descendants (if freedom)
         *((StoreInt*)searchSize) += ((int)(10e3 * Log(wcsp->getDomainSize(varIndex))));
         pair<Cost, Cost> res = make_pair(MIN_COST, MAX_COST);
-        if (wcsp->enumerated(varIndex)) {
+        if (wcsp->enumerated(varIndex) && !ToulBar2::Static_value_ordering) {
             assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
             // Reuse last solution found if available
             Value bestval = ((ToulBar2::verifyOpt) ? (wcsp->getSup(varIndex) + 1) : wcsp->getBestValue(varIndex));
@@ -1064,7 +1064,7 @@ BigInteger Solver::sharpBTD(Cluster* cluster)
         return NbSol;
     } else {
         // Enumerates cluster proper variables
-        if (wcsp->enumerated(varIndex)) {
+        if (wcsp->enumerated(varIndex) && !ToulBar2::Static_value_ordering) {
             assert(wcsp->canbe(varIndex, wcsp->getSupport(varIndex)));
             // Reuse last solution found if available
             Value bestval = wcsp->getBestValue(varIndex);

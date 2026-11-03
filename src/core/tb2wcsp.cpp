@@ -161,6 +161,7 @@ TB2_THREAD_LOCAL Long ToulBar2::backtrackLimit;
 TB2_THREAD_LOCAL bool ToulBar2::generation;
 TB2_THREAD_LOCAL int ToulBar2::minsumDiffusion;
 TB2_THREAD_LOCAL bool ToulBar2::Static_variable_ordering;
+TB2_THREAD_LOCAL bool ToulBar2::Static_value_ordering;
 TB2_THREAD_LOCAL int ToulBar2::weightedDegree;
 TB2_THREAD_LOCAL int ToulBar2::weightedTightness;
 TB2_THREAD_LOCAL bool ToulBar2::MSTDAC;
@@ -527,6 +528,7 @@ void tb2init()
 
     // variable ordering heuristics
     ToulBar2::Static_variable_ordering = false;
+    ToulBar2::Static_value_ordering = false;
     ToulBar2::weightedDegree = 1000000;
     ToulBar2::weightedTightness = 0;
     ToulBar2::lastConflict = true;
@@ -5258,7 +5260,7 @@ void WCSP::dump(ostream& os, bool original)
     unsigned int nbunvar = numberOfUnassignedVariables();
     os << "wcsp " << ((original) ? numberOfVariables() : nbunvar) << " "
        << ((original) ? maxdomsize : maxdomsizeUI) << " " << numberOfConnectedConstraints() + xcosts << " "
-       << getUb() << endl;
+       << getUb() + max(MIN_COST, getLb() - getNegativeLb()) - getLb() << endl;
     unsigned int nbvar = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
         if (original) {

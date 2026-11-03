@@ -293,6 +293,69 @@ augmenting_path_gcc(intptr_t dim_val,
     return sink;
 }
 
+
+
+// Goal: among all optimal dual solutions, pick the one that minimizes
+//   sum_i rc(i, L),  rc(i, L) = cost[i][L] - u[i] - v[L].
+// v[L] stays fixed; every other column c is shifted by the largest feasible
+// amount d[c] = shortest distance from c to L in the reduced-cost graph.
+static inline void minimize_rc_deltacost_var(intptr_t dim_var, intptr_t dim_val,
+    const vector<Cost>& cost,
+    const vector<int>& col4row,
+    const vector<vector<int>>& row4col,
+    vector<Cost>& u, vector<Cost>& v,
+    Cost MAX_COST)
+{
+    const intptr_t L = dim_val - 1;
+
+    // dist[c]: shortest distance from column c to L, where an arc c -> k
+    // (through the row r assigned to c) has weight rc(r, k) >= 0.
+    vector<Cost> dist(dim_val, MAX_COST);
+    vector<bool> settled(dim_val, false);
+    dist[L] = 0;
+
+    // Backward Dijkstra from L
+    for (intptr_t it = 0; it < dim_val; ++it) {
+        // Extract the unsettled column with the smallest distance
+        intptr_t k = -1;
+        Cost best = MAX_COST;
+        for (intptr_t c = 0; c < dim_val; ++c) {
+            if (!settled[c] && dist[c] < best) {
+                best = dist[c];
+                k = c;
+            }
+        }
+        if (k < 0) break;  // remaining columns cannot reach L
+        settled[k] = true;
+
+        // Relax every arc c -> k, where r is the row currently assigned to c
+        for (intptr_t c = 0; c < L; ++c) {
+            if (settled[c] ) continue;
+            int r = row4col[c][0];
+            Cost arcCost = cost[r * dim_val + k];
+            if (arcCost >= MAX_COST) continue;  // forbidden arc
+
+            Cost rc = arcCost - u[r] - v[k];
+
+            if (dist[k] + rc < dist[c])
+                dist[c] = dist[k] + rc;
+        }
+    }
+
+    // Dual update (dist was computed entirely with the OLD u and v).
+    // Rows assigned to L keep their u; v[L] is unchanged.
+    for (intptr_t r = 0; r < dim_var; ++r) {
+        int c = col4row[r];
+        if (c != L && dist[c] < MAX_COST)
+            u[r] += dist[c];
+    }
+    for (intptr_t c = 0; c < L; ++c) {
+        if (dist[c] < MAX_COST)
+            v[c] -= dist[c];
+    }
+}
+
+
 static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
     const vector<Cost>& cost,
     int* b,
@@ -453,13 +516,20 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         }
     }
 
-    /* --- Build output arrays ---------------------------------------------- */
-
     Cost total_cost = 0;
     for (intptr_t i = 0; i < dim_var; ++i) {
         int col = col4row[i];
         b[i] = col;
         total_cost += cost[i * dim_val + col];
+    }
+
+    if(total_cost >= MAX_COST) return total_cost;
+    if(reverse){
+        minimize_rc_deltacost_var(dim_var, dim_val, cost, col4row, row4col, u, v, MAX_COST);
+    }
+    /* --- Build output arrays ---------------------------------------------- */
+
+    for (intptr_t i = 0; i < dim_var; ++i) {
         usol[i] = u[i];
     }
 

@@ -806,6 +806,7 @@ public:
     TB2_THREAD_LOCAL static int preprocessNary; ///< \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)
     TB2_THREAD_LOCAL static bool QueueComplexity; ///< \brief ensures optimal worst-case time complexity of DAC and EAC (command line option -o)
     TB2_THREAD_LOCAL static bool Static_variable_ordering; ///< \brief tree search using a static variable ordering heuristic (same order as DAC) (command line option -svo)
+    TB2_THREAD_LOCAL static bool Static_value_ordering; ///< \brief tree search using a static value ordering heuristic (minimum domain value first) (command line option -mvo)
     TB2_THREAD_LOCAL static bool lastConflict; ///< \brief tree search using binary branching with last conflict backjumping variable ordering heuristic (command line options -c and -b)
     TB2_THREAD_LOCAL static int weightedDegree; ///< \brief weighted degree variable ordering heuristic if the number of cost functions is less than a given value (command line option -q)
     TB2_THREAD_LOCAL static int weightedTightness; ///< \brief in preprocessing, initializes weighted degrees associated to cost functions by their 1: average or 2: median costs (command line options -m and -q)
