@@ -1457,7 +1457,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             minCost = min(minCost, defaultCost);
         }
 
-        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, (defaultCost >= MAX_COST) ? MAX_COST : (defaultCost - minCost), nbTuples);
+        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, (defaultCost >= MAX_COST) ? MAX_COST : max(MIN_COST, (defaultCost - minCost)), nbTuples);
         for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
             this->wcsp->postNaryConstraintTupleInternal(naryIndex, it->first, (it->second >= MAX_COST) ? MAX_COST : (it->second - minCost)); // For each tuple
         }
