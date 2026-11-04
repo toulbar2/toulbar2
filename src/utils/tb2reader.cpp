@@ -399,6 +399,9 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
         ToulBar2::costThresholdPre = wcsp->decimalToCost(ToulBar2::costThresholdPreS, 0);
     unsigned nvar, nval;
     tie(nvar, nval) = readVariables();
+    if (ToulBar2::nbDecisionVars < 0) {
+        ToulBar2::nbDecisionVars = nvar;
+    }
     unsigned ncf, maxarity;
     tie(ncf, maxarity) = readCostFunctions();
 
@@ -2571,6 +2574,9 @@ void WCSP::read_legacy(istream& file)
     vector<Cost> costs;
 
     // read variable domain sizes
+    if (ToulBar2::nbDecisionVars < 0) {
+        ToulBar2::nbDecisionVars = nbvar;
+    }
     for (unsigned int i = 0; i < nbvar; i++) {
         string varname = to_string("x") + to_string(i);
         file >> domsize;

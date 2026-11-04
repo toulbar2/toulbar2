@@ -7458,7 +7458,7 @@ vector<int> WCSP::getBergeDecElimOrder()
     // Mark native variable
     for (int j = numberOfVariables() - 1; j >= 0; j--) {
         int i = dacorder[j];
-        if (ToulBar2::nbDecisionVars == 0 || i < ToulBar2::nbDecisionVars) {
+        if (ToulBar2::nbDecisionVars <= 0 || i < ToulBar2::nbDecisionVars) {
             if (!marked[i] && getName(i).rfind(IMPLICIT_VAR_TAG, 0) != 0 && getName(i).rfind(HIDDEN_VAR_TAG, 0) != 0) {
                 visit(i, revdac, marked, listofsuccessors);
             }

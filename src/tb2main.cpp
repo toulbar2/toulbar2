@@ -517,7 +517,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_weightedDegree, (char*)"-q:", SO_NONE },
     { OPT_weightedTightness, (char*)"-m", SO_OPT },
     { NO_OPT_weightedTightness, (char*)"-m:", SO_NONE },
-    { OPT_nbDecisionVars, (char*)"-var", SO_REQ_SEP },
+    { OPT_nbDecisionVars, (char*)"-var", SO_OPT },
 
     { OPT_elimDegree, (char*)"-e", SO_OPT },
     { NO_OPT_elimDegree, (char*)"-e:", SO_NONE },
@@ -926,7 +926,7 @@ void help_msg(char* toulbar2filename)
     cout << "   -seed=[integer] : random seed non-negative value or use current time if a negative value is given (default value is " << ToulBar2::seed << ")" << endl;
     cout << "   -sigma=[real] : standard deviation of zero-centered gaussian noise added to energy values in UAI format file (default value is " << ToulBar2::sigma << ")" << endl;
     cout << "   --stdin=[format] : read file from pipe ; e.g., cat example.wcsp | toulbar2 --stdin=wcsp" << endl;
-    cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
+    cout << "   -var=[integer] : searches by branching only on the first -the given value- decision variables, assuming the remaining variables are intermediate variables completely assigned by the decision variables (use a zero if all variables are decision variables, use a negative value if intermediate variables are automatically detected) (default value is " << ToulBar2::nbDecisionVars << ")" << endl;
     cout << "   -b : searches using binary branching always instead of binary branching for interval domains and n-ary branching for enumerated domains";
     if (ToulBar2::binaryBranching)
         cout << " (default option)";
@@ -1847,7 +1847,11 @@ int _tmain(int argc, TCHAR* argv[])
 
             // LIMIT BRANCHING ON FIRST nbDecisionVars VARIABLES OPTION
             if (args.OptionId() == OPT_nbDecisionVars) {
-                ToulBar2::nbDecisionVars = atoi(args.OptionArg());
+                if (args.OptionArg() != NULL){
+                    ToulBar2::nbDecisionVars = atoi(args.OptionArg());
+                } else {
+                    ToulBar2::nbDecisionVars = -1;
+                }
             }
 
             //////////////////////////////////////////////////////

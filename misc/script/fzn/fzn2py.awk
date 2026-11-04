@@ -9,6 +9,7 @@ BEGIN {
 	#DUMPMODEL = 0;	
 	# ALLSOLUTIONS = 10000; # needed for running unit tests (automatically assigned by ./fzn2py with extra option -a)
 	#FREESEARCH = 1;
+	#AUTOVAR = 1;
 	TIMELIMIT = 3600;
 	print "#! /usr/bin/env python"
 	print "import time"
@@ -18,6 +19,7 @@ BEGIN {
 	print "def get_model():"
 	print "  global model";
 	print "  global DelayedLinEq";
+	print "  global NbDecisionVars";
 	print "  model = tb2.CFN(ubinit=" int((MAX_COST_FZN / 2) / 3 / 3) ",verbose=" VERBOSITY ")";
 	print "  try:";
 	parameter = 1;
@@ -68,13 +70,13 @@ parameter {
 }
 
 /^var bool:/{
-	print "    " $3 " = Variable(0, 1, '" $3 "')";
+	print "    " $3 " = Variable(0, 1, '" $3 "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	if (match($0,"::_output_")) output[$3] = 1;
 	if ($4 == "=") print "    int_eq(" $3 " , " $5 ")";
 }
 
 /^var int:/{
-	print "    " $3 " = Variable(-" MAXINT "," MAXINT ",'" $3 "')";
+	print "    " $3 " = Variable(-" MAXINT "," MAXINT ",'" $3 "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	if (match($0,"::_output_")) output[$3] = 1;
 	if ($4 == "=") print "    int_eq(" $3 " , " $5 ")";
 }
@@ -83,7 +85,7 @@ parameter {
 	sub("range[(]","",$2);
 	sub("[)]:","",$2);
 	sub(",1[+]",",",$2);
-	print "    " $3 " = Variable(" $2 ",'" $3 "')";
+	print "    " $3 " = Variable(" $2 ",'" $3 "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	if (match($0,"::_output_")) output[$3] = 1;
 	if ($4 == "=") print "    int_eq(" $3 " , " $5 ")";
 }
@@ -91,7 +93,7 @@ parameter {
 /^var {[-]*[0-9]+(,[-]*[0-9]+)*}:/{
 	sub("{","[",$2);
 	sub("}:","]",$2);
-	print "    " $3 " = VariableInDomain(" $2 ",'" $3 "')";
+	print "    " $3 " = VariableInDomain(" $2 ",'" $3 "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	if (match($0,"::_output_")) output[$3] = 1;
 	if ($4 == "=") print "    int_eq(" $3 " , " $5 ")";
 }
@@ -128,7 +130,7 @@ parameter {
 		gsub(" ","");
 		print $0;
 	} else {
-		print "    " name " = VarArrayBoolean(" isup ",'" name "')";
+		print "    " name " = VarArrayBoolean(" isup ",'" name "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	}
 }
 
@@ -165,7 +167,7 @@ parameter {
 		gsub(" ","");
 		print $0;
 	} else {
-		print "    " name " = VarArray(" isup ",-" MAXINT "," MAXINT ",'" name "')";
+		print "    " name " = VarArray(" isup ",-" MAXINT "," MAXINT ",'" name "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	}
 }
 
@@ -204,7 +206,7 @@ parameter {
 		gsub(" ","");
 		print $0;
 	} else {
-		print "    " name " = VarArray(" isup "," $5 ",'" name "')";
+		print "    " name " = VarArray(" isup "," $5 ",'" name "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ")";
 	}
 }
 
@@ -242,7 +244,7 @@ parameter {
 		gsub(" ","");
 		print $0;
 	} else {
-		print "    " name " = [VariableInDomain(" $5 ",'" name "_" i "') for i in range(" isup ")]";
+		print "    " name " = [VariableInDomain(" $5 ",'" name "_" i "'," (!match($0,"var_is_introduced") && !match($0,"is_defined_var")) ") for i in range(" isup ")]";
 	}
 }
 
@@ -295,6 +297,7 @@ END {
 	    print "model.Option.Static_variable_ordering = True";
 	    print "model.Option.QueueComplexity = True";
 	}
+	if(AUTOVAR) print "model.Option.nbDecisionVars = NbDecisionVars";
 	print "result = model.Solve(timeLimit = " TIMELIMIT ", showSolutions= " SHOWSOLUTIONS ", allSolutions= " ALLSOLUTIONS ")";
 	print "if result is not None:";
 	print "    sols = model.GetSolutions()";
@@ -325,6 +328,7 @@ END {
 		# print "print '% SolveTime', model.getTime()";
 	print "print('% Nodes', model.GetNbNodes())";
 	print "print('% Failures', model.GetNbBacktracks())";
+	if(AUTOVAR) print "print('% NbDecisionVars', NbDecisionVars)";
 	if (objective) print "if result is not None: print('% Objective', int(result[1]))";
 	}
 }

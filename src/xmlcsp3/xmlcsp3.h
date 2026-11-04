@@ -50,6 +50,12 @@ class MySolverCallbacks : public XCSP3CoreCallbacks {
         }
     }
 
+    void endVariables() {
+        if (ToulBar2::nbDecisionVars < 0) {
+            ToulBar2::nbDecisionVars = problem->numberOfVariables();
+        }
+    }
+
     void buildVariableInteger(string id, int minValue, int maxValue) override {
         int v = problem->makeEnumeratedVariable(id, minValue, maxValue);
         mapping[id] = v;
