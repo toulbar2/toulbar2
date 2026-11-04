@@ -1661,9 +1661,9 @@ public:
             if (i < arity_ - 1)
                 os << ",";
         }
+        os << ") ";
         if (!isSquare) {
-            os << ") "
-               << " cost: " << -lb << " + " << assigneddeltas << " + (";
+            os << " cost: " << -lb << " + " << assigneddeltas << " + (";
             // for (int i = 0; i < arity_; i++) {
             for (unsigned int j = 0; j < deltaCosts.size(); j++) {
                 os << deltaCosts[j];
