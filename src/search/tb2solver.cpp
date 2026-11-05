@@ -3419,6 +3419,13 @@ void Solver::beginSolve(Cost ub)
         ToulBar2::useRASPS = 0;
     }
 
+    if (ToulBar2::nbDecisionVars > 0 && ToulBar2::nbDecisionVars >= (int)wcsp->numberOfVariables()) { // do not restrict variable branching nor variable elimination
+        if (ToulBar2::verbose >= 1) {
+            cout << "Note: option -var is useless and has been removed (threshold value " << ToulBar2::nbDecisionVars << " greater than total number of variables " << wcsp->numberOfVariables() << ")" << endl;
+        }
+        ToulBar2::nbDecisionVars = 0;
+    }
+
     // reactivate on-the-fly variable elimination and dead-end elimination if needed
     for (int i = wcsp->numberOfVariables() - 1; i >= 0; i--) {
         if (wcsp->unassigned(i)) {
