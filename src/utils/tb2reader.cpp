@@ -377,8 +377,8 @@ private:
     boost::tokenizer<boost::char_separator<char>>::iterator tok_iter;
     bool JSONMode;
     Cost upperBound;
-    
-    //GS
+
+    // GS
     vector<std::pair<int, string>> pushedBackTokens; // tokens given back by ungetToken (LIFO)
     void ungetToken(const std::pair<int, string>& token) { pushedBackTokens.push_back(token); }
 };
@@ -399,6 +399,9 @@ CFNStreamReader::CFNStreamReader(istream& stream, WCSP* wcsp)
         ToulBar2::costThresholdPre = wcsp->decimalToCost(ToulBar2::costThresholdPreS, 0);
     unsigned nvar, nval;
     tie(nvar, nval) = readVariables();
+    if (ToulBar2::nbDecisionVars < 0) {
+        ToulBar2::nbDecisionVars = nvar;
+    }
     unsigned ncf, maxarity;
     tie(ncf, maxarity) = readCostFunctions();
 
@@ -524,8 +527,8 @@ bool CFNStreamReader::getNextLine()
 
 // Reads a token using lazily updated line by line reads
 std::pair<int, string> CFNStreamReader::getNextToken()
-{   
-    //GS 
+{
+    // GS
     if (!pushedBackTokens.empty()) { // token previously given back by ungetToken
         std::pair<int, string> token = pushedBackTokens.back();
         pushedBackTokens.pop_back();
@@ -635,11 +638,11 @@ void CFNStreamReader::testAndSkipFirstOBrace()
     }
 }
 
-// Tests if the token starts with a digit, '+, '-' or "." (is a Cost)
+// Tests if the token starts with a digit, '+, '-' or "." or is "inf" (is a Cost)
 bool CFNStreamReader::isCost(const string& str)
 {
-    // Test if the first char of a string is a decimal digit, point or +/- sign.
-    return (string("0123456789-+.").find(str[0]) != string::npos);
+    // Test if the first char of a string is a decimal digit, point or +/- sign, or the string is "inf".
+    return (string("0123456789-+.").find(str[0]) != string::npos) || (str == "inf");
 }
 
 // Reads the problem header (problem name and global Bound) and returns the bound
@@ -969,7 +972,11 @@ std::vector<Cost> CFNStreamReader::readFunctionCostTable(vector<int> scope, bool
 
     // make all costs non negative and remember the shift
     for (Cost& c : costVector) {
-        c -= minCost;
+        if (c >= MAX_COST) {
+            c = MAX_COST;
+        } else {
+            c -= minCost;
+        }
     }
 
     wcsp->negCost -= minCost;
@@ -1453,13 +1460,13 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
             minCost = min(minCost, defaultCost);
         }
 
-        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, defaultCost - minCost, nbTuples);
+        int naryIndex = this->wcsp->postNaryConstraintBegin(scopeArray, arity, (defaultCost >= MAX_COST) ? MAX_COST : max(MIN_COST, (defaultCost - minCost)), nbTuples);
         for (auto it = costFunction.begin(); it != costFunction.end(); ++it) {
-            this->wcsp->postNaryConstraintTupleInternal(naryIndex, it->first, it->second - minCost); // For each tuple
+            this->wcsp->postNaryConstraintTupleInternal(naryIndex, it->first, (it->second >= MAX_COST) ? MAX_COST : (it->second - minCost)); // For each tuple
         }
         this->wcsp->postNaryConstraintEnd(naryIndex);
     }
-    // all tuples in lexico order
+    // all tuples in lexicographic order
     else {
         if (ToulBar2::verbose >= 3) {
             cout << "read nary cost function on ";
@@ -1496,7 +1503,7 @@ void CFNStreamReader::readNaryCostFunction(vector<int>& scope, bool all, Cost de
         int j = 0;
         nctr->firstlex();
         while (nctr->nextlex(tup, cost)) {
-            this->wcsp->postNaryConstraintTupleInternal(cfIndex, tup, costs[j]);
+            this->wcsp->postNaryConstraintTupleInternal(cfIndex, tup, (costs[j] >= MAX_COST) ? MAX_COST : (costs[j] - minCost));
             j++;
         }
         if (ToulBar2::verbose >= 3)
@@ -1998,7 +2005,11 @@ void CFNStreamReader::generateGCFStreamFromTemplate(vector<int>& scope, const st
     for (unsigned int i = 0; i < streamContentVec.size(); i++) {
         if (streamContentVec[i].first == 'C' && (funcType != "knapsackv" && funcType != "gcc")) {
             Cost currentCost = (Cost)std::stoll(streamContentVec[i].second);
-            currentCost -= minCost;
+            if (currentCost >= MAX_COST) {
+                currentCost = MAX_COST;
+            } else {
+                currentCost -= minCost;
+            }
             streamContentVec[i].second = to_string(currentCost);
         }
         stream << streamContentVec[i].second << " ";
@@ -2563,6 +2574,9 @@ void WCSP::read_legacy(istream& file)
     vector<Cost> costs;
 
     // read variable domain sizes
+    if (ToulBar2::nbDecisionVars < 0) {
+        ToulBar2::nbDecisionVars = nbvar;
+    }
     for (unsigned int i = 0; i < nbvar; i++) {
         string varname = to_string("x") + to_string(i);
         file >> domsize;

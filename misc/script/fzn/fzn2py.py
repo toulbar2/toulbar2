@@ -9,24 +9,29 @@ DelayedLinEqVars = dict() # warning: fzn2py automatically replaces {} by []
 DelayedObjectiveName = None
 DelayedObjectiveRange = None
 DelayedObjectiveDomain = None
+NbDecisionVars = 0
 
 class Var:
     def __init__(self, index):
         self.ind = index
     
-def Variable(lb, ub, name):
+def Variable(lb, ub, name, decision=True):
     global DelayedObjectiveName
     global DelayedObjectiveRange
+    global NbDecisionVars
     if name == 'objective' or name == 'obj':
         DelayedObjectiveName = name
         DelayedObjectiveRange = range(lb, ub+1)
         return None
+    if decision:
+        NbDecisionVars = model.GetNbVars() + 1
     return Var(model.AddVariable(name, range(lb, ub+1)))
 
-def VariableInDomain(dom, name):
+def VariableInDomain(dom, name, decision=True):
     global DelayedObjectiveName
     global DelayedObjectiveRange
     global DelayedObjectiveDomain
+    global NbDecisionVars
     lb = min(dom)
     ub = max(dom)
     if name == 'objective' or name == 'obj':
@@ -34,23 +39,25 @@ def VariableInDomain(dom, name):
         DelayedObjectiveRange = range(lb, ub+1)
         DelayedObjectiveDomain = dom
         return None
+    if decision:
+        NbDecisionVars = model.GetNbVars() + 1
     x = Var(model.AddVariable(name, range(lb, ub+1)))
     set_in(x, dom)
     return x
 
-def Boolean():
-    return Variable(0, 1, 'BOOL__' + str(model.GetNbVars()) + '__')
+def Boolean(decision=True):
+    return Variable(0, 1, 'BOOL__' + str(model.GetNbVars()) + '__', decision)
 
-def VarArrayBoolean(nb, name):
+def VarArrayBoolean(nb, name, decision=True):
     l = []
     for i in range(nb):
-        l.append(Variable(0, 1, name + '_' + str(i) + '_'))
+        l.append(Variable(0, 1, name + '_' + str(i) + '_', decision))
     return l
 
-def VarArray(nb, lb, ub, name):
+def VarArray(nb, lb, ub, name, decision=True):
     l = []
     for i in range(nb):
-        l.append(Variable(lb, ub, name + '_' + str(i) + '_'))
+        l.append(Variable(lb, ub, name + '_' + str(i) + '_', decision))
     return l
 
 Constants = dict() # warning: fzn2py automatically replaces {} by []
@@ -61,14 +68,14 @@ def Constant(v):
     if v in Constants:
         return Constants[v]
     else:
-        Constants[v] = Variable(v, v, 'CONST__' + str(v) + '__')
+        Constants[v] = Variable(v, v, 'CONST__' + str(v) + '__', False)
         return Constants[v]
 
 def ConstantNewVariable(v):
     if type(v) is Var:
         return v
     else:
-        return Variable(v, v, 'CONST__' + str(v) + '__' + str(model.GetNbVars()) + '__')
+        return Variable(v, v, 'CONST__' + str(v) + '__' + str(model.GetNbVars()) + '__', False)
 
 def scope(s):
     if type(s) is int:
@@ -108,7 +115,7 @@ def array_bool_or(x,y):
     int_lin_le_reif([-1]*len(x),x,-1,y)
 
 def array_bool_xor(x):
-    y = Variable(0, len(x)-1, 'XOR__' + str(model.GetNbVars()) + '__')
+    y = Variable(0, len(x)-1, 'XOR__' + str(model.GetNbVars()) + '__', False)
     int_lin_eq([1]*len(x), x, y) # y == Sum(x)
     int_mod(y,2,1) # ((Sum(x) % 2) == 1)
 
@@ -305,7 +312,7 @@ def int_lt_reif(x,y,z):
     model.AddFunction(scope([z, x, y]), costs) #  [(z == (x < y))]
 
 def int_ne(x,y):
-    #neq = Boolean()
+    #neq = Boolean(False)
     #model.AddLinearConstraint([MAXCOEF,1,-1], scope([neq,x,y]), '<', MAXCOEF)
     #model.AddLinearConstraint([MAXCOEF,1,-1], scope([neq,x,y]), '>', 0) # (x != y)
     if x == y:
@@ -371,7 +378,7 @@ def bool_lin_eq(coef,vars,res):
 def int_lin_eq_reif(coef,vars,res,z):
     if type(z) is int:
         if z == 0:
-            neq = Boolean()
+            neq = Boolean(False)
             if type(res) is int:
                 model.AddLinearConstraint([MAXCOEF] + coef, scope([neq] + vars), '<', res + MAXCOEF)
                 model.AddLinearConstraint([MAXCOEF] + coef, scope([neq] + vars), '>', res)
@@ -386,7 +393,7 @@ def int_lin_eq_reif(coef,vars,res,z):
                 model.AddLinearConstraint([-1] + coef, scope([res] + vars), '>=', 0)
                 model.AddLinearConstraint([-1] + coef, scope([res] + vars), '<=', 0)        
     else:
-        neq = Boolean()
+        neq = Boolean(False)
         if type(res) is int:
             model.AddLinearConstraint([-MAXCOEF, MAXCOEF] + coef, scope([z, neq] + vars), '<', res + MAXCOEF)
             model.AddLinearConstraint([MAXCOEF, MAXCOEF] + coef, scope([z, neq] + vars), '>', res)
@@ -458,14 +465,14 @@ def int_lin_lt_reif(coef,vars,res,z):
     # (z == (res > Sum(vars,coef)))
 
 def int_lin_ne(coef,vars,res):
-    neq = Boolean()
+    neq = Boolean(False)
     model.AddLinearConstraint([MAXCOEF] + coef, scope([neq] + vars), '<', res + MAXCOEF)
     model.AddLinearConstraint([MAXCOEF] + coef, scope([neq] + vars), '>', res) # (res != Sum(vars,coef))
 
 def int_lin_ne_reif(coef,vars,res,z):
     if type(z) is int:
         if z != 0:
-            neq = Boolean()
+            neq = Boolean(False)
             if type(res) is int:
                 model.AddLinearConstraint([MAXCOEF] + coef, scope([neq] + vars), '<', res + MAXCOEF)
                 model.AddLinearConstraint([MAXCOEF] + coef, scope([neq] + vars), '>', res)
@@ -480,7 +487,7 @@ def int_lin_ne_reif(coef,vars,res,z):
                 model.AddLinearConstraint([-1] + coef, scope([res] + vars), '>=', 0)
                 model.AddLinearConstraint([-1] + coef, scope([res] + vars), '<=', 0)        
     else:
-        neq = Boolean()
+        neq = Boolean(False)
         if type(res) is int:
             model.AddLinearConstraint([MAXCOEF, MAXCOEF] + coef, scope([z, neq] + vars), '<', res + 2*MAXCOEF)
             model.AddLinearConstraint([-MAXCOEF, MAXCOEF] + coef, scope([z, neq] + vars), '>', res - MAXCOEF)

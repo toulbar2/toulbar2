@@ -516,6 +516,8 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
         }
     }
 
+    /* --- Build output arrays ---------------------------------------------- */
+
     Cost total_cost = 0;
     for (intptr_t i = 0; i < dim_var; ++i) {
         int col = col4row[i];
