@@ -372,7 +372,7 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
     // Fast path: all capacities are 1 → standard (unit-capacity) LAP.
     int maxcap = *max_element(capacity.begin(), capacity.end());
     int mincap = *min_element(capacity.begin(), capacity.end());
-    if (maxcap == 1 && mincap > 0) {
+    if (maxcap == 1 && mincap > 0 && !reverse) {
         return lapjv(dim_var, dim_val, cost, b, usol, vsol, MAX_COST, findConflict);
     }
 
@@ -447,6 +447,7 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
                 
             } else{
                 b[0] = curRow;
+                findConflict++;
                 for (int col = 0; col < dim_val; col++) {
                     if (cost[curRow * dim_val + col] < MAX_COST) {
                         for (int var : row4col[col]) {
