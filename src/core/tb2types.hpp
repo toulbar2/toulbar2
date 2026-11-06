@@ -804,6 +804,7 @@ public:
     TB2_THREAD_LOCAL static int preprocessFunctional; ///< \brief in preprocessing, applies variable elimination of 0: no variable, 1: functional, or 2: bijective variables, or 3:functional before and after PWC (command line option -f)
     TB2_THREAD_LOCAL static bool costfuncSeparate; ///< \brief in preprocessing, applies pairwise decomposition of non-binary cost functions (command line option -dec)
     TB2_THREAD_LOCAL static int preprocessNary; ///< \brief in preprocessing, projects n-ary cost functions on all their scope-included binary cost functions if n is lower than a given value  (0: no projection) (command line option -n)
+    TB2_THREAD_LOCAL static Double reverseDAC; ///< \brief in preprocessing, alternate between reverse DAC ordering and original DAC ordering until a stopping criterion (command line option -rdac)
     TB2_THREAD_LOCAL static bool QueueComplexity; ///< \brief ensures optimal worst-case time complexity of DAC and EAC (command line option -o)
     TB2_THREAD_LOCAL static bool Static_variable_ordering; ///< \brief tree search using a static variable ordering heuristic (same order as DAC) (command line option -svo)
     TB2_THREAD_LOCAL static bool Static_value_ordering; ///< \brief tree search using a static value ordering heuristic (minimum domain value first) (command line option -mvo)

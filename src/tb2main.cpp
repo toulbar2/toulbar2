@@ -303,6 +303,8 @@ enum {
     NO_OPT_preprocessFunctional,
     OPT_preprocessNary,
     NO_OPT_preprocessNary,
+    OPT_reverseDAC,
+    NO_OPT_reverseDAC,
     OPT_QueueComplexity,
     NO_OPT_QueueComplexity,
     OPT_MSTDAC,
@@ -598,6 +600,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_preprocessFunctional, (char*)"-f:", SO_NONE },
     { OPT_preprocessNary, (char*)"-n", SO_OPT },
     { NO_OPT_preprocessNary, (char*)"-n:", SO_NONE },
+    { OPT_reverseDAC, (char*)"-rdac", SO_OPT },
+    { NO_OPT_reverseDAC, (char*)"-rdac:", SO_NONE },
     { OPT_preprocessHVE, (char*)"-hve", SO_OPT },
     { NO_OPT_preprocessHVE, (char*)"-hve:", SO_NONE },
     { OPT_preprocessPWC, (char*)"-pwc", SO_OPT },
@@ -986,6 +990,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
     cout << "   -n=[integer] : preprocessing only: projects n-ary cost functions defined in extension to the global lower bound if n is nonzero (only when reading wcsp/cfn/uai format) and to all scope-included binary cost functions if n is lower than the given value (default value is " << ToulBar2::preprocessNary << ") (see also option -hve and -pwc)" << endl;
+    cout << "   -rdac=[float] : preprocessing only: alternate between reverse DAC ordering and original DAC ordering until a stopping criterion (relative dual bound increase threshold in percentage) (use a negative value to disable this preprocessing) (default value is " << ToulBar2::reverseDAC << ")" << endl;
 #ifdef BOOST
     cout << "   -mst : maximum spanning tree DAC ordering";
     if (ToulBar2::MSTDAC)
@@ -996,7 +1001,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
 #endif
-    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -mst: -dee: -trws: -hve: -pwc:)" << endl;
+    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -rdac: -mst: -dee: -trws: -hve: -pwc:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
     if (ToulBar2::QueueComplexity)
         cout << " (default option)";
@@ -2215,6 +2220,28 @@ int _tmain(int argc, TCHAR* argv[])
                 ToulBar2::preprocessNary = 0;
             }
 
+            if (args.OptionId() == OPT_reverseDAC) {
+                if (args.OptionArg() == NULL) {
+                    ToulBar2::reverseDAC = 0.5;
+                } else {
+                    double co = atof(args.OptionArg());
+                    if (co >= 0.)
+                        ToulBar2::reverseDAC = co;
+                    else
+                        ToulBar2::reverseDAC = -1.;
+                }
+                if (ToulBar2::debug) {
+                    if (ToulBar2::reverseDAC >= 0.)
+                        cout << "Reverse DAC ordering ON" << endl;
+                    else
+                        cout << "Reverse DAC ordering OFF" << endl;
+                }
+            } else if (args.OptionId() == NO_OPT_reverseDAC) {
+                ToulBar2::reverseDAC = -1.;
+                if (ToulBar2::debug)
+                    cout << "Reverse DAC ordering OFF" << endl;
+            }
+
             if (args.OptionId() == OPT_QueueComplexity)
                 ToulBar2::QueueComplexity = true;
             if (args.OptionId() == OPT_MSTDAC)
@@ -2686,6 +2713,9 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "preproject of n-ary cost functions OFF" << endl;
                 ToulBar2::preprocessNary = 0;
+                if (ToulBar2::debug)
+                    cout << "reverse DAC ordering OFF" << endl;
+                ToulBar2::reverseDAC = -1.;
                 if (ToulBar2::debug)
                     cout << "decomposition of cost functions OFF" << endl;
                 ToulBar2::costfuncSeparate = false;

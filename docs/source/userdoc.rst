@@ -336,7 +336,7 @@ Preprocessing
         filename with ".sol" extension)
 
 -nopre  deactivates all preprocessing options (equivalent to -e:
-        -p: -t: -f: -dec: -n: -mst: -dee: -trws: -pwc: -hve:)
+        -p: -t: -f: -dec: -n: -rdac: -mst: -dee: -trws: -pwc: -hve:)
 
 -p=[integer]
         preprocessing only: general variable elimination
@@ -361,6 +361,13 @@ Preprocessing
         preprocessing only: projects n-ary cost functions
         on all binary cost functions if n is lower than the given value
         (default value is 10). See [Favier2011a]_.
+
+-rdac=[float]
+        preprocessing only: alternate between reverse DAC ordering
+        and original DAC ordering until a stopping criterion is met
+        (relative dual bound increase threshold value in percentage)
+        note: use a negative value to disable this preprocessing.
+        (default value is 0.5).
 
 -amo
         automatically detects at-most-one constraints and adds them to existing
