@@ -141,6 +141,7 @@ TB2_THREAD_LOCAL bool ToulBar2::pwcMinimalDualGraph;
 TB2_THREAD_LOCAL int ToulBar2::preprocessFunctional;
 TB2_THREAD_LOCAL bool ToulBar2::costfuncSeparate;
 TB2_THREAD_LOCAL int ToulBar2::preprocessNary;
+TB2_THREAD_LOCAL Double ToulBar2::reverseDAC;
 TB2_THREAD_LOCAL LcLevelType ToulBar2::LcLevel;
 TB2_THREAD_LOCAL LcLevelType ToulBar2::LcLevel_prev;
 TB2_THREAD_LOCAL int ToulBar2::maxEACIter;
@@ -466,6 +467,7 @@ void tb2init()
     ToulBar2::preprocessFunctional = 1;
     ToulBar2::costfuncSeparate = true;
     ToulBar2::preprocessNary = 10;
+    ToulBar2::reverseDAC = 0.5;
     ToulBar2::singletonConsistency = 0;
     ToulBar2::ReducedCostsFiltering = 0;
     ToulBar2::singletonAccuracy = 0.0001;
@@ -4523,7 +4525,7 @@ void WCSP::preprocessing()
     //		cout << " " << elimorder[i];
     //	}
     //	cout << endl;
-    do {
+    if (ToulBar2::reverseDAC >= 0.0) do {
         previouslb = getLb();
         setDACOrder(revelimorder);
         setDACOrder(elimorder);
@@ -4533,7 +4535,7 @@ void WCSP::preprocessing()
             else
                 cout << "Reverse DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (getLb() - previouslb) / getLb() << "%)" << endl;
         }
-    } while (getLb() > previouslb && (Double)100. * (getLb() - previouslb) / getLb() > (Double)0.5);
+    } while (getLb() > previouslb && (Double)100. * (getLb() - previouslb) / getLb() > ToulBar2::reverseDAC);
 
     if (ToulBar2::trwsAccuracy >= 0)
         propagateTRWS();

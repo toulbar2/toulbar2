@@ -3476,7 +3476,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
             elimorder[wcsp->numberOfVariables() - i - 1] = i;
         }
         Cost previouslb = wcsp->getLb();
-        do {
+        if (ToulBar2::reverseDAC >= 0.0) do {
             previouslb = wcsp->getLb();
             wcsp->setDACOrder(revelimorder);
             wcsp->setDACOrder(elimorder);
@@ -3487,7 +3487,7 @@ Cost Solver::preprocessing(Cost initialUpperBound)
                 else
                     cout << "Reverse original DAC dual bound: " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << " (+" << 100. * (wcsp->getLb() - previouslb) / wcsp->getLb() << "%)" << endl;
             }
-        } while (wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > (Double)0.5);
+        } while (wcsp->getLb() > previouslb && (Double)100. * (wcsp->getLb() - previouslb) / wcsp->getLb() > ToulBar2::reverseDAC);
     }
     wcsp->preprocessing(); // first preprocessing after initial propagation
     initGap(wcsp->getLb(), wcsp->getUb());
