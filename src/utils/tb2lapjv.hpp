@@ -106,7 +106,7 @@ augmenting_path(intptr_t dim_val, const vector<Cost>& cost, vector<Cost>& u,
     return sink;
 }
 
-static inline Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, int* b, Cost* usol, Cost* vsol, Cost MAX_COST, int& findConflict)
+static inline Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>& cost, int* b, Cost* usol, Cost* vsol, Cost MAX_COST, int& findConflict, bool reverse=false)
 {
 
     // initialize variables
@@ -130,15 +130,40 @@ static inline Cost lapjv(intptr_t dim_var, intptr_t dim_val, const vector<Cost>&
             remaining, &minVal, MAX_COST);
 
         if (sink < 0) {
-            findConflict = 1;
-            b[0] = curRow;
-            // each assigned row appears at most once in row4col, so at most curRow + 1 <= dim_var entries are written
-            for (intptr_t col = 0; col < dim_val; col++) {
-                if (cost[curRow * dim_val + col] < MAX_COST && row4col[col] >= 0) {
-                    b[findConflict] = (int)row4col[col];
-                    findConflict++;
+            findConflict = 0;
+            if(reverse){
+                int firstvar = -1;
+                for (int var = 0; var < dim_var; var++) {
+                    if(row4col[var] == -1){
+                        firstvar = var;
+                        b[0] = var;
+                        findConflict++;
+                        break;
+                    }
+
+                }
+                if(firstvar > -1 ){
+                    for(int valInd = 0; valInd < dim_val; valInd++){
+                        if(cost[valInd * dim_val + firstvar]  < MAX_COST && col4row[valInd] > -1 ){
+                            b[findConflict] = col4row[valInd];
+                            findConflict++;
+
+                        }
+                    }
+                }  
+                
+            } else{
+                b[0] = curRow;
+                findConflict++;
+                // each assigned row appears at most once in row4col, so at most curRow + 1 <= dim_var entries are written
+                for (intptr_t col = 0; col < dim_val; col++) {
+                    if (cost[curRow * dim_val + col] < MAX_COST && row4col[col] >= 0) {
+                        b[findConflict] = (int)row4col[col];
+                        findConflict++;
+                    }
                 }
             }
+                
             return MAX_COST;
         }
 
@@ -441,9 +466,7 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
 
                         }
                     }
-                }
-
-                
+                }  
                 
             } else{
                 b[0] = curRow;
@@ -528,7 +551,8 @@ static inline Cost lapjv_ub(intptr_t dim_var, intptr_t dim_val,
 
     if(total_cost >= MAX_COST) return total_cost;
     if(reverse){
-        minimize_rc_deltacost_var(dim_var, dim_val, cost, col4row, row4col, u, v, MAX_COST);
+        long long BIG_COST = numeric_limits<long long>::max() - 10;
+        minimize_rc_deltacost_var(dim_var, dim_val, cost, col4row, row4col, u, v, BIG_COST);
     }
     /* --- Build output arrays ---------------------------------------------- */
 

@@ -82,6 +82,7 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     int lower, upper; // Lower and upper thresholds on NbNoAssigned controlling when reduced-cost filtering is activated (lower) and when Dijkstra-based filtering is applied (upper)
     vector<int> varValIdx; // varValIdx[var * NbValues + val] = index of value val (in UnionVarDomain) inside the initial domain of variable var, or -1 if var cannot take it
     vector<int> capacity;
+    StoreInt isSlack = 0;
     bool slack = false;
    
     void projectLB(Cost c)
@@ -297,6 +298,7 @@ public:
 
             // lower = static_cast<int>(arity_in * 0.5);
             upper = static_cast<int>(arity_in * 0.8);
+            if(FiltLevel >= 1 ) {upper = arity_in;}
             storeLastAssignment = vector<StoreValue>(arity_in, StoreValue(WRONG_VAL));
             NoAssignedVar = vector<int>(arity_in, -1);
             isExceptedVal = vector<uint8_t>(NbValues, 0);
@@ -394,13 +396,22 @@ public:
                 THROWCONTRADICTION;
         }
         int slackVar = ToulBar2::AlldiffSlackVar;
-        if(slackVar > 0 && !isSquare &&  !excepted)
+        if(excepted) FiltLevel = 0;
+        if((slackVar > 0 && !isSquare &&  !excepted) || (!isSquare && FiltLevel > 0)){
+            isSlack = 1;
             slack = true;
-
+        }
+        
+        /*if (ToulBar2::verbose > 1){
+            if(isSquare)
+                cout <<this << " is square" << endl;
+            else
+                cout <<this << " is no square" << endl;
+        }*/
+            
         if (!isSquare) {
             int nbDelta = 0;
             file >> nbDelta;
-            //cout<<nbDelta<<endl;
             if (nbDelta) {
                 for (int v = 0; v < nbDelta; v++) {
                     Value value;
@@ -871,25 +882,28 @@ public:
      *      International Joint Conference on Artificial Intelligence, IJCAI 2025,
      *      Montreal, Canada, August 16-22, 2025.
      */
-    void BimodalDijkstra(int source, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList)
+    void BimodalDijkstra(int source, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, const vector<int>& SlackAssignedVals={})
     {
-        if (dijkstraHandles.size() < (size_t)NbNoAssigned)
-            dijkstraHandles.resize(NbNoAssigned);
+        const int SlackVarInd = NbNoAssigned;
+        const int Nbvars = NbNoAssigned + (isSlack ? 1 : 0);
+
+        if (dijkstraHandles.size() < (size_t)Nbvars)
+            dijkstraHandles.resize(Nbvars);
+
         auto& handles = dijkstraHandles;
         PQ pq;
 
-        distanceToVar.assign(NbNoAssigned, MAX_COST); // Initialize all distances to infinity
-        visited.assign(NbNoAssigned, 0);
+        distanceToVar.assign(Nbvars, MAX_COST);
+        visited.assign(Nbvars, 0);
 
-        // Variables not yet finalized: dense array with O(1) insertion/removal (swap with the last element)
-        trackList.resize(NbNoAssigned);
-        trackPos.resize(NbNoAssigned);
+        trackList.resize(Nbvars);
+        trackPos.resize(Nbvars);
         iota(trackList.begin(), trackList.end(), 0);
         iota(trackPos.begin(), trackPos.end(), 0);
+
         auto trackErase = [&](int var) {
             int p = trackPos[var];
-            if (p < 0)
-                return;
+            if (p < 0) return;
             int last = trackList.back();
             trackList[p] = last;
             trackPos[last] = p;
@@ -897,67 +911,120 @@ public:
             trackPos[var] = -1;
         };
 
-        inHeap.assign(NbNoAssigned, 0);
+        inHeap.assign(Nbvars, 0);
         distanceToVar[source] = 0;
-        handles[source] = pq.push({ 0, source });
+        handles[source] = pq.push({0, source});
         inHeap[source] = 1;
 
         while (!pq.empty()) {
             auto [d, var] = pq.top();
             pq.pop();
+
             visited[var] = 1;
-            trackErase(var); // Remove from unsettled set
+            trackErase(var);
 
-            int val = rowSol[var]; // Matching arc: var -> its assigned value
-            auto& varlist = VarList[val]; // Variables reachable via value val (non-matching arcs)
+            if (isSlack && var == SlackVarInd) {
+                for (int val : SlackAssignedVals) {
+                    auto& adj = VarList[val];
 
-            // Bimodal choice: sparse side (adjacency list) vs dense side (unsettled set)
-            if (varlist.size() < trackList.size()) {
-                // Sparse: iterate over adjacency list
-                for (int nextVar : varlist) {
-                    if (visited[nextVar])
-                        continue;
-                    Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
-                    if (alt < distanceToVar[nextVar]) {
-                        distanceToVar[nextVar] = alt;
-                        if (!inHeap[nextVar]) {
-                            handles[nextVar] = pq.push({ alt, nextVar });
-                            inHeap[nextVar] = 1;
-                        } else {
-                            pq.update(handles[nextVar], { alt, nextVar });
+                    if (adj.size() < trackList.size()) {
+                        for (int nextVar : adj) {
+                            if (visited[nextVar]) continue;
+
+                            Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+
+                            if (alt < distanceToVar[nextVar]) {
+                                distanceToVar[nextVar] = alt;
+
+                                if (!inHeap[nextVar]) {
+                                    handles[nextVar] = pq.push({alt, nextVar});
+                                    inHeap[nextVar] = 1;
+                                } else {
+                                    pq.update(handles[nextVar], {alt, nextVar});
+                                }
+                            }
                         }
-                        if (alt == d) { // Zero-cost arc: settle immediately
-                            trackErase(nextVar);
-                            visited[nextVar] = 1;
+                    } else {
+                        size_t k = 0;
+                        while (k < trackList.size()) {
+                            int nextVar = trackList[k];
+
+                            if (ValList[nextVar][val]) {
+                                Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+
+                                if (alt < distanceToVar[nextVar]) {
+                                    distanceToVar[nextVar] = alt;
+
+                                    if (!inHeap[nextVar]) {
+                                        handles[nextVar] = pq.push({alt, nextVar});
+                                        inHeap[nextVar] = 1;
+                                    } else {
+                                        pq.update(handles[nextVar], {alt, nextVar});
+                                    }
+                                }
+                            }
+                            ++k;
                         }
                     }
                 }
-            }  else {
-                size_t k = 0;
-                while (k < trackList.size()) {
-                    int nextVar = trackList[k];
-                    if (ValList[nextVar][val]) {
+            } else {
+                int val = rowSol[var];
+                auto& adj = VarList[val];
+
+                if (adj.size() < trackList.size()) {
+                    for (int nextVar : adj) {
+                        if (visited[nextVar]) continue;
+
                         Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+
                         if (alt < distanceToVar[nextVar]) {
                             distanceToVar[nextVar] = alt;
+
                             if (!inHeap[nextVar]) {
-                                handles[nextVar] = pq.push({ alt, nextVar });
+                                handles[nextVar] = pq.push({alt, nextVar});
                                 inHeap[nextVar] = 1;
                             } else {
-                                pq.update(handles[nextVar], { alt, nextVar });
+                                pq.update(handles[nextVar], {alt, nextVar});
                             }
+
                             if (alt == d) {
-                                trackErase(nextVar); // the last element now sits at position k
+                                trackErase(nextVar);
                                 visited[nextVar] = 1;
-                                continue;
                             }
                         }
                     }
-                    ++k;
+                } else {
+                    size_t k = 0;
+                    while (k < trackList.size()) {
+                        int nextVar = trackList[k];
+
+                        if (ValList[nextVar][val]) {
+                            Cost alt = d + ReduceCostMatrix[nextVar * NbNoAssignedVal + val];
+
+                            if (alt < distanceToVar[nextVar]) {
+                                distanceToVar[nextVar] = alt;
+
+                                if (!inHeap[nextVar]) {
+                                    handles[nextVar] = pq.push({alt, nextVar});
+                                    inHeap[nextVar] = 1;
+                                } else {
+                                    pq.update(handles[nextVar], {alt, nextVar});
+                                }
+
+                                if (alt == d) {
+                                    trackErase(nextVar);
+                                    visited[nextVar] = 1;
+                                    continue;
+                                }
+                            }
+                        }
+                        ++k;
+                    }
                 }
             }
         }
     }
+
 
     /**
      * @brief Bimodal Dijkstra on the reverse residual graph.
@@ -967,66 +1034,109 @@ public:
      * @param source  Index of the source variable (its matched value is the start node).
      * @param ValList ValList[var][val] = 1 if arc (var,val) exists in the residual graph.
      */
-    void BimodalDijkstraReverseGraph(int source, vector<vector<uint8_t>>& ValList)
+    void BimodalDijkstraReverseGraph(int source, vector<vector<uint8_t>>& ValList, const vector<int>& SlackAssignedVals={})
     {
-        if (dijkstraHandles.size() < (size_t)max(NbNoAssigned, NbNoAssignedVal))
-            dijkstraHandles.resize(max(NbNoAssigned, NbNoAssignedVal));
+        const int SlackVarInd = NbNoAssigned;
+        const int Nbvars = NbNoAssigned + (isSlack ? 1 : 0);
+
+        if (dijkstraHandles.size() < (size_t)max(Nbvars, NbNoAssignedVal))
+            dijkstraHandles.resize(max(Nbvars, NbNoAssignedVal));
+
         auto& handles = dijkstraHandles;
         PQ pq;
 
-        distanceToVal.assign(NbNoAssignedVal, MAX_COST); // Initialize all value distances to infinity
+        distanceToVal.assign(NbNoAssignedVal, MAX_COST);
         visited.assign(NbNoAssignedVal, 0);
-        vector<int> invMatching(NbNoAssignedVal, -1); // Inverse of rowSol: invMatching[val] = var matched to val
-
-        // Build inverse matching and initialize unsettled value set
-        trackingList.clear();
-        trackingList.reserve(NbNoAssigned);
-        for (int var = 0; var < NbNoAssigned; ++var) {
-            int val = rowSol[var];
-            invMatching[val] = var;
-            trackingList.insert(val); // Only matched values are nodes in the reverse graph
-            distanceToVal[val] = MAX_COST;
-        }
-
-        int val = rowSol[source]; // Start from the value matched to source
         inHeap.assign(NbNoAssignedVal, 0);
-        distanceToVal[val] = 0;
-        handles[val] = pq.push({ 0, val });
-        inHeap[val] = 1;
+        int visitSlack = -1;
+
+        // Build inverse matching
+        if (!isSlack)
+        for (int var = 0; var < NbNoAssigned; ++var)
+            colSol[rowSol[var]] = var;
+
+
+        // Initialize tracking structures
+        trackList.resize(NbNoAssignedVal);
+        trackPos.resize(NbNoAssignedVal);
+        iota(trackList.begin(), trackList.end(), 0);
+        iota(trackPos.begin(), trackPos.end(), 0);
+
+        auto trackErase = [&](int val) {
+            int p = trackPos[val];
+            if (p < 0) return;
+            int last = trackList.back();
+            trackList[p] = last;
+            trackPos[last] = p;
+            trackList.pop_back();
+            trackPos[val] = -1;
+        };
+
+        // Initialize source
+        if (isSlack && source == SlackVarInd) {
+            for (int val : SlackAssignedVals) {
+                distanceToVal[val] = 0;
+                handles[val] = pq.push({0, val});
+                inHeap[val] = 1;
+            }
+        }
+        else {
+            int val = rowSol[source];
+            distanceToVal[val] = 0;
+            handles[val] = pq.push({0, val});
+            inHeap[val] = 1;
+        }
 
         while (!pq.empty()) {
             auto [d, val] = pq.top();
             pq.pop();
+                        
+            if(colSol[val] == SlackVarInd){
+                if(visitSlack > -1) {
+                    distanceToVal[val] = distanceToVal[visitSlack];
+                    continue;
+                }
+                else{
+                    visitSlack = val;
+                }
+            }
+
             visited[val] = 1;
-            trackingList.erase(val);
+            trackErase(val);
 
-            int var = invMatching[val]; // Variable matched to current value node
+            int var = colSol[val];
 
-            // Dense traversal over unsettled value nodes
-            auto it = trackingList.begin();
-            while (it != trackingList.end()) {
-                auto nextVal = *it;
-                if (ValList[var][nextVal]) { // Reverse arc exists
+            // Dense traversal over unsettled values
+            size_t k = 0;
+            while (k < trackList.size()) {
+                int nextVal = trackList[k];
+
+                if (ValList[var][nextVal]) {
                     Cost alt = d + ReduceCostMatrix[var * NbNoAssignedVal + nextVal];
+
                     if (alt < distanceToVal[nextVal]) {
                         distanceToVal[nextVal] = alt;
+
                         if (!inHeap[nextVal]) {
-                            handles[nextVal] = pq.push({ alt, nextVal });
+                            handles[nextVal] = pq.push({alt, nextVal});
                             inHeap[nextVal] = 1;
-                        } else {
-                            pq.update(handles[nextVal], { alt, nextVal });
                         }
-                        if (alt == d) { // Zero-cost arc: settle immediately
-                            it = trackingList.erase(it);
+                        else {
+                            pq.update(handles[nextVal], {alt, nextVal});
+                        }
+
+                        if (alt == d) {
+                            trackErase(nextVal);
                             visited[nextVal] = 1;
                             continue;
                         }
                     }
                 }
-                ++it;
+                ++k;
             }
         }
     }
+
 
     /**
      * @brief Standard Dijkstra on the forward residual graph (sparse variant).
@@ -1086,12 +1196,12 @@ public:
      * @param H       Remaining cost budget (wcsp upper bound minus current lower bound).
      * @return true if all values are consistent (no pruning possible), false otherwise.
      */
-    bool ReginLandmarkUpperBound(int source, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, Cost H)
+    bool ReginLandmarkUpperBound(int source, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, Cost H, const vector<int>& SlackAssignedVals={})
     {
         // Forward pass: distances from source to all variable nodes
-        BimodalDijkstra(source, VarList, ValList);
+        BimodalDijkstra(source, VarList, ValList, SlackAssignedVals);
         // Backward pass: distances from source's matched value to all value nodes
-        BimodalDijkstraReverseGraph(source, ValList);
+        BimodalDijkstraReverseGraph(source, ValList, SlackAssignedVals);
 
         // An unreachable node (infinite distance) means we cannot conclude: avoid MAX_COST + MAX_COST overflow
         Cost maxDistanceFromVar = 0;
@@ -1111,6 +1221,7 @@ public:
         bool AllValConsistent = maxDistanceFromVar + maxDistanceToVar <= H - MaxReducedCost;
         return AllValConsistent;
     }
+
 
     /**
      * @brief Propagate the AllDifferent constraint to enforce consistency and improve problem lower bound.
@@ -1168,7 +1279,7 @@ public:
                     }
                 }
 
-                if (!skipPropagation && !slack) {
+                if (!skipPropagation && isSlack == 0 ) {
                     // Initialize number of unassigned variables
                     NbNoAssigned = getNonAssigned();
                     bool filtreExcepted = false;
@@ -1220,20 +1331,24 @@ public:
                                             THROWCONTRADICTION;
                                     }
                                     Cost Delta = deltaCosts[valIndex];
+                                    if(Delta >= current_ub ){
+                                        THROWCONTRADICTION;
+                                    }
                                     deltaCosts[valIndex] = 0;
                                     projectLB(Delta);
                                     removevals++;
                                 } 
                             }
-
-                            if (NbNoAssignedVal - removevals < NbNoAssigned) {
+                            
+                            int  NbRestVal = NbNoAssignedVal - removevals;
+                            if (NbRestVal < NbNoAssigned) {
                                 THROWCONTRADICTION;
                             }
 
                             if (any_of(costMatrix.begin(), costMatrix.begin() + NbNoAssigned * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
                                 // Solve assignment problem using Jonker algorithm
                                 Cost TotalCost;
-                                if (!isSquare) {
+                                if (!isSquare && NbRestVal > NbNoAssigned) {
                                     for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
                                         costMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = deltaCosts[NoAssignedVal[valInd]];
                                     }
@@ -1272,7 +1387,7 @@ public:
 
 
                                     if (TotalCost > 0 || (any_of(ReduceCostRow, ReduceCostRow +  NbNoAssigned,  [](auto x) { return x > MIN_COST; }))) {
-                                        if (!isSquare) {
+                                        if (!isSquare && NbRestVal > NbNoAssigned) {
 
                                             Cost mindelta = ReduceCostRow[NbNoAssigned];
                                             int valIndex;
@@ -1354,7 +1469,7 @@ public:
                                             int numzeroremoved = 0;
                                             uint8_t valremoved;
 
-                                            int stop = Q / 2;
+                                            int stop = FiltLevel >= 1 ? Q : (Q / 2) + 1;
                                             bool AllValConsistent = false;
 
                                             for (int ind = 0; ind < Q; ++ind) {
@@ -1571,7 +1686,7 @@ public:
                     }
                 }
 
-                if (!skipPropagation && slack) {
+                if (!skipPropagation && isSlack == 1) {
                     // Initialize number of unassigned variables
                     NbNoAssigned = getNonAssigned();
                     // If there are assigned variables, handle accordingly
@@ -1583,6 +1698,7 @@ public:
                             int valInd = 0;
                             Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
+                            int compremovedelta = 0;
                             for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
                                 if (!isAssignedValue[valIndex]) {
                                     int comptremoveval = 0;
@@ -1605,6 +1721,9 @@ public:
 
                                     if (comptremoveval == NbNoAssigned) {
                                         Cost Delta = deltaCosts[valIndex];
+                                        if (Delta >= current_ub){
+                                            THROWCONTRADICTION;
+                                        }
                                         deltaCosts[valIndex] = 0;
                                         projectLB(Delta);
                                     } else {
@@ -1618,20 +1737,40 @@ public:
                             if (NbNoAssignedVal < NbNoAssigned) {
                                 THROWCONTRADICTION;
                             }
-
-                            // Dummy column
-                            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                costMatrix[valInd * (NbNoAssigned + 1) + NbNoAssigned] = deltaCosts[NoAssignedVal[valInd]];
+                            if(NbNoAssignedVal == NbNoAssigned){
+                                isSlack = 0;
+                                for (int valInd = 1; valInd < NbNoAssignedVal ; ++valInd) {
+                                    for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                                        costMatrix[valInd * NbNoAssigned + varInd] = costMatrix[valInd * (NbNoAssigned + 1) + varInd];
+                                    }
+                                }
                             }
+                            else{
+                                // Dummy column
+                                for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                    if(deltaCosts[NoAssignedVal[valInd]] >= current_ub){
+                                        deltaCosts[NoAssignedVal[valInd]] = current_ub;
+                                        compremovedelta++;
+                                    } 
+                                    costMatrix[valInd * (NbNoAssigned + 1) + NbNoAssigned] = deltaCosts[NoAssignedVal[valInd]];
+                                }
 
-                            capacity.assign(NbNoAssigned + 1, 1);
-                            capacity[NbNoAssigned] = NbNoAssignedVal - NbNoAssigned;
-
-                            if (any_of(costMatrix.begin(), costMatrix.begin() + (NbNoAssigned + 1) * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
+                                capacity.assign(NbNoAssigned + 1, 1);
+                                capacity[NbNoAssigned] = NbNoAssignedVal - NbNoAssigned;
+                            }
+                           if (compremovedelta >= NbNoAssigned) {
+                                THROWCONTRADICTION;
+                            }
+  
+                            if (any_of(costMatrix.begin(), costMatrix.begin() + (NbNoAssigned + (isSlack ? 1 : 0)) * NbNoAssignedVal, [](auto x) { return x != MIN_COST; })) {
                                 // Solve assignment problem using Jonker algorithm
                                 Cost TotalCost;
-                                    //TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
-                                TotalCost = lapjv_ub(NbNoAssignedVal, NbNoAssigned + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict, true);
+                                if(isSlack == 0){
+                                    TotalCost = lapjv(NbNoAssignedVal, NbNoAssigned, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, findConflict, true);
+                                }
+                                else{
+                                    TotalCost = lapjv_ub(NbNoAssignedVal, NbNoAssigned + 1, costMatrix, colSol, ReduceCostCol, ReduceCostRow,  current_ub, capacity, findConflict, true);
+                                }
 
                                 if (TotalCost >= current_ub) {
 
@@ -1667,26 +1806,215 @@ public:
                                     storeAssignment = true;
 
                                     if (TotalCost > 0 || (any_of(ReduceCostCol, ReduceCostCol +  NbNoAssignedVal,  [](auto x) { return x > MIN_COST; }))) {
-
-                                        for (int valIndex = 0; valIndex < NbNoAssignedVal; ++valIndex) {
-        
-                                            deltaCosts[NoAssignedVal[valIndex]] = costMatrix[valIndex * (NbNoAssigned + 1) + NbNoAssigned] - (ReduceCostRow[NbNoAssigned] + ReduceCostCol[valIndex]);
+                                        if(isSlack == 1){
+                                            for (int valIndex = 0; valIndex < NbNoAssignedVal; ++valIndex) {
+            
+                                                deltaCosts[NoAssignedVal[valIndex]] = costMatrix[valIndex * (NbNoAssigned + 1) + NbNoAssigned] - (ReduceCostRow[NbNoAssigned] + ReduceCostCol[valIndex]);
+                                            }
                                         }
 
                                         // Update the lower bound with the Jonker algorithm's total cost
                                         projectLB(jonker);
+
+                                        Cost newCurrentUb = current_ub - jonker;
                                         // Adjust unary costs for unassigned variables based on reduced costs
-                                    
+
+                                        vector<vector<int>> VarList(NbNoAssignedVal);
+                                        vector<vector<uint8_t>> ValList(NbNoAssigned + (isSlack ? 1 : 0));
+                                        vector<int> SlackAssignedVals;
+                                        if (isSlack) {
+                                            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd)
+                                                if (colSol[valInd] == NbNoAssigned)
+                                                    SlackAssignedVals.push_back(valInd);
+                                        }
+                                        MaxReducedCost = 0;
+                                        // Adjust unary costs for unassigned variables based on reduced costs
                                         for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                                             int varIndex = NoAssignedVar[varInd];
+                                            ValList[varInd] = vector<uint8_t>(NbNoAssignedVal, 0);
                                             for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
-                                                if (costMatrix[valInd * (NbNoAssigned+1) + varInd] < current_ub) {
+                                                if (costMatrix[valInd * (NbNoAssigned + (isSlack ? 1 : 0)) + varInd] < current_ub) {
                                                     int valIndex = NoAssignedVal[valInd];
                                                     Value value = toVarValue(varIndex, valIndex);
                                                     ExtOrProJ(varIndex, value, (ReduceCostRow[varInd] + ReduceCostCol[valInd]));
+
+                                                    if (FiltLevel > 0 && (NbNoAssigned <= upper)) {
+                                                        ReducedCost = costMatrix[valInd * (NbNoAssigned + isSlack) + varInd] - (ReduceCostRow[varInd] + ReduceCostCol[valInd]);
+                                                        if (ReducedCost < newCurrentUb) {
+                                                            ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] = ReducedCost;
+                                                            if (ReducedCost > MaxReducedCost)
+                                                                MaxReducedCost = ReducedCost;
+                                                            if (rowSol[varInd] != valInd) {
+                                                                VarList[valInd].push_back(varInd);
+                                                                ValList[varInd][valInd] = 1;
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
+
+                                        if (isSlack && FiltLevel > 0 && (NbNoAssigned <= upper)) {
+                                            ValList[NbNoAssigned] = vector<uint8_t>(NbNoAssignedVal, 0);
+                                            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                                                if (colSol[valInd] == NbNoAssigned){
+                                                    SlackAssignedVals.push_back(valInd);
+                                                } else{
+                                                    ReducedCost = costMatrix[valInd * (NbNoAssigned + isSlack) + NbNoAssigned] - (ReduceCostRow[NbNoAssigned] + ReduceCostCol[valInd]);
+                                                    if (ReducedCost < newCurrentUb) {
+                                                        ReduceCostMatrix[NbNoAssigned * NbNoAssignedVal + valInd] = ReducedCost;
+                                                        MaxReducedCost = max(ReducedCost, MaxReducedCost);
+                                                        VarList[valInd].push_back(NbNoAssigned);
+                                                        ValList[NbNoAssigned][valInd] = 1;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        /* (BEGIN) : Filtering of variables domains with Sellmann or Cambazard method
+
+                                        Source : Claus, G.; Cambazard, H.; and Jost, V. 2020. Analysis of Re-
+                                                duced Costs Filtering for Alldifferent and Minimum Weight
+                                                Alldifferent Global Constraints. In Giacomo, G. D.; Catal´a,
+                                                A.; Dilkina, B.; Milano, M.; Barro, S.; Bugar´ın, A.; and
+                                                Lang, J., eds., ECAI 2020 - 24th European Conference on
+                                                Artificial Intelligence, volume 325, 323–330. Santiago de
+                                                Compostela, Spain: IOS Press.  */
+
+                                        if (FiltLevel > 0 && (NbNoAssigned <= upper) && (MaxReducedCost >= newCurrentUb / NbNoAssigned)) {
+                                            int position;
+                                            int varInde;
+                                            vector<int> VariableList(NbNoAssigned);
+                                            iota(VariableList.begin(), VariableList.end(), 0);
+
+                                            if (FiltLevel >= 1. - (double)ToulBar2::epsilon) {
+                                                Q = NbNoAssigned;
+                                            } else {
+                                                Q = min(NbNoAssigned, 1 + static_cast<int>(NbNoAssigned * FiltLevel));
+                                                myrearrange(VariableList);
+                                            }
+
+                                            int comp = 0;
+                                            int numzeroremoved = 0;
+                                            uint8_t valremoved;
+
+                                            int stop = FiltLevel >= 1 ? Q : (Q / 2) + 1;
+                                            bool AllValConsistent = false;
+
+                                            for (int ind = 0; ind < Q; ++ind) {
+                                                if (numzeroremoved >= stop) {
+                                                    break;
+                                                }
+                                                varInde = VariableList[ind];
+                                                numzeroremoved++;
+
+                                                if (isSlack) {
+                                                    if(comp == 0){
+                                                        AllValConsistent = ReginLandmarkUpperBound(varInde, VarList, ValList, newCurrentUb, SlackAssignedVals);
+                                                    }
+                                                    else{
+                                                         BimodalDijkstra(varInde, VarList, ValList, SlackAssignedVals);
+                                                    }    
+                                                   
+                                                } else if (comp == 0) {
+                                                    AllValConsistent = ReginLandmarkUpperBound(varInde, VarList, ValList, newCurrentUb);
+                                                } else {
+                                                    BimodalDijkstra(varInde, VarList, ValList);
+                                                }
+                                                if (AllValConsistent) {
+
+                                                    break;
+                                                }
+                                                comp++;
+                                                int valInd;
+                                                for (int var = 0; var < NbNoAssigned + (isSlack ? 1 : 0); ++var) {
+                                                    if (distanceToVar[var] >= MAX_COST)
+                                                        continue;
+
+                                                    if (isSlack && var == NbNoAssigned) {
+                                                        for (int matchedVal : SlackAssignedVals) {
+                                                            valremoved = 0;
+                                                            valInd = matchedVal;
+                                                            position = -1;
+                                                            auto& varlist = VarList[valInd];
+
+                                                            for (int varInd : varlist) {
+                                                                position++;
+                                                                if (distanceToVar[varInd] >= MAX_COST)
+                                                                    continue;
+
+                                                                Cost reducedCost = ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] - distanceToVar[varInd] + distanceToVar[var];
+
+                                                                if (reducedCost >= newCurrentUb) {
+                                                                    int varIndex = NoAssignedVar[varInd];
+                                                                    int valIndex = NoAssignedVal[valInd];
+                                                                    auto* variable = scope[varIndex];
+                                                                    varlist[position] = -1;
+                                                                    ValList[varInd][valInd] = 0;
+                                                                    valremoved = 1;
+
+                                                                    Value value = toVarValue(varIndex, valIndex);
+
+                                                                    if (value != WRONG_VAL && variable->canbe(value)) {
+                                                                        if (ToulBar2::verbose > 0)
+                                                                            cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
+                                                                        ExtOrProJ(varIndex, value, -newCurrentUb);
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            if (valremoved) {
+                                                                varlist.erase(std::remove(varlist.begin(), varlist.end(), -1), varlist.end());
+                                                                numzeroremoved = 0;
+                                                            }
+                                                        }
+                                                    }
+                                                    else {
+                                                        valremoved = 0;
+                                                        valInd = rowSol[var];
+                                                        position = -1;
+                                                        auto& varlist = VarList[valInd];
+                                                        for (int varInd : varlist) {
+                                                            position++;
+                                                            if (distanceToVar[varInd] >= MAX_COST)
+                                                                continue;
+
+                                                            Cost reducedCost = ReduceCostMatrix[varInd * NbNoAssignedVal + valInd] - distanceToVar[varInd] + distanceToVar[var];
+
+                                                            if (reducedCost >= newCurrentUb) {
+                                                                if (varInd >= NbNoAssigned) {
+                                                                    int valIndex = NoAssignedVal[valInd];
+                                                                    varlist[position] = -1;
+                                                                    ValList[varInd][valInd] = 0;
+                                                                    valremoved = 1;
+                                                                    deltaCosts[valIndex] += newCurrentUb;
+                                                                    
+                                                                } else {
+                                                                    int varIndex = NoAssignedVar[varInd];
+                                                                    int valIndex = NoAssignedVal[valInd];
+                                                                    auto* variable = scope[varIndex];
+                                                                    varlist[position] = -1;
+                                                                    ValList[varInd][valInd] = 0;
+                                                                    valremoved = 1;
+                                                                    Value value = toVarValue(varIndex, valIndex);
+                                                                    if (value != WRONG_VAL && variable->canbe(value)) {
+                                                                        if (ToulBar2::verbose > 0)
+                                                                            cout << "REMOVE VALUE " << value << " from " << variable->getName() << endl;
+                                                                        ExtOrProJ(varIndex, value, -newCurrentUb);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if (valremoved) {
+                                                            varlist.erase(std::remove(varlist.begin(), varlist.end(), -1), varlist.end());
+                                                            numzeroremoved = 0;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        /* (END) : Filtering of variables domains with Sellmann or Cambazard method */
                                     }
 
                                      // Update support values if needed for unassigned variables
@@ -1724,6 +2052,7 @@ public:
                         // Initialize the cost matrix for all variables and their domain values
 
                         // transposed layout: row = value, column = variable (+ 1 dummy column), index val*(arity_+1)+var
+                        int compremovedelta = 0;
                         for (int varIndex = 0; varIndex < arity_; ++varIndex) {
                             auto* variable = scope[varIndex];
 
@@ -1734,10 +2063,18 @@ public:
                             }
                         }
                         for (int valInd = 0; valInd < NbValues; ++valInd) {
+                            if(deltaCosts[valInd] >= current_ub) {
+                                deltaCosts[valInd] = current_ub;
+                                compremovedelta++;
+                            }
                             costMatrix[valInd * (arity_ + 1) + arity_] = deltaCosts[valInd];
                         }
                         capacity.assign(arity_ + 1, 1);
                         capacity[arity_] = NbValues - arity_;
+
+                        if(compremovedelta > arity_){
+                            THROWCONTRADICTION;
+                        }
 
                         if (any_of(costMatrix.begin(), costMatrix.begin() + (arity_ + 1) * NbValues, [](auto x) { return x != MIN_COST; })) {
                             // Solve the Linear Assignment Problem (LAP) using the Jonker algorithm
