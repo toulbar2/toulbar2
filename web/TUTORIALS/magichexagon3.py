@@ -24,7 +24,7 @@ s = pb.AddVariable('s' , range(1,20))
 
 LD = [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s]
 
-pb.AddAllDifferent( LD , encoding = 'hungarian' )
+pb.AddAllDifferent( LD )
 
 pb.AddSumConstraint([  a , b , c ], '==',   38 )
 pb.AddSumConstraint([ d , e , f , g ], '==',   38 )

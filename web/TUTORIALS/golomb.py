@@ -38,7 +38,7 @@ Problem.AddFunction(['X0'], [0] + [top] * (N**2 - 1))
 Problem.AddFunction(['X' + str(N-1)], range(N**2))
 
 # Add a global alldifferent on all differences
-Problem.AddAllDifferent(['X' + str(j) + '-X' + str(i) for i in range(N) for j in range(i+1,N)], encoding='hungarian')
+Problem.AddAllDifferent(['X' + str(j) + '-X' + str(i) for i in range(N) for j in range(i+1,N)])
 
 #Problem.Dump(f'golomb_{N}.cfn')
 Problem.CFN.timer(300)

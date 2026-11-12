@@ -697,6 +697,13 @@ public:
                 projectNary();
             } else {
                 // TODO: incremental bound propagation
+                // remove the assigned value in other domains
+                Value value = scope[varIndex]->getValue();
+                for (int i = 0; i < arity_; i++) {
+                    if (i != varIndex && scope[i]->unassigned() && scope[i]->canbe(value)) {
+                        scope[i]->remove(value);
+                    }
+                }
                 propagate();
                 if (ToulBar2::FullEAC)
                     reviseEACGreedySolution();

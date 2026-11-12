@@ -53,7 +53,7 @@ for i,k in edges1:
     Problem.AddFunction(['X' + str(i), 'X' + str(k)], costs)
 
 #redundant constraint: alldifferent (except for value 0)
-Problem.AddAllDifferent(scope=list(range(nodes1 - 1)), encoding='hungarian', excepted=[0])
+Problem.AddAllDifferent(scope=list(range(nodes1 - 1)), excepted=[0])
 
 #Problem.Dump('cmo.cfn')
 Problem.CFN.timer(300)

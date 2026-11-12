@@ -908,7 +908,7 @@ def fzn_global_cardinality_low_up(x, values, lb, ub):
         elif lb[j] > 0 or ub[j] < len(x):
             l.append((values[j], lb[j], ub[j]))
     if len(l) > 0:
-        model.AddGlobalCardinalityConstraint(scope(x), l, 'hungarian' if len(set(x)) == len(x) else 'sgcckp')
+        model.AddGlobalCardinalityConstraint(scope(x), l, encoding = 'hungarian' if len(set(x)) == len(x) else 'sgcckp')
         
 def fzn_global_cardinality_low_up_closed(x, values, lb, ub):
     assert(len(values) == len(lb))

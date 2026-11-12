@@ -9,7 +9,7 @@ lb, ub = (N * (N + 1)) // 2, ((N * N) * (N * N + 1)) // 2
 
 top = 1
 
-Problem = pytoulbar2.CFN(top, vns=-1, seed=123456789, verbose=0)
+Problem = pytoulbar2.CFN(top, vns=-1, seed=123456789, verbose=-1)
 
 # x[i][j] is the value put in the cell of the matrix at coordinates (i,j)
 for i in range(N):
@@ -23,7 +23,7 @@ for i in range(2 * N + 2):
 Problem.AddVariable('miny', range(lb, ub + 1))
 Problem.AddVariable('maxy', range(lb, ub + 1))
 
-Problem.AddAllDifferent(['x' + str(i) + '_' + str(j) for i in range(N) for j in range(N)], 'hungarian')
+Problem.AddAllDifferent(['x' + str(i) + '_' + str(j) for i in range(N) for j in range(N)])
 
 # computing sums
 for i in range(N):

@@ -545,6 +545,8 @@ class CFN:
             incremental (bool): if True then the constraint is backtrackable (i.e., it disappears when restoring at a lower depth, see Store/Restore).
             
         """
+        if excepted is not None and type(excepted) is not list:
+            raise RuntimeError("AddAllDifferent with a wrong excepted parameter value: should be None or a list of domain values!")
         if incremental and encoding != 'binary':
             raise RuntimeError("Implementation of AllDifferent constraint requires 'binary' encoding in incremental mode!")
         if excepted is not None and encoding != 'binary' and encoding != 'hungarian':
