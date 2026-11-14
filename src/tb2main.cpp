@@ -280,9 +280,10 @@ enum {
     OPT_ReducedCostsFiltering,
     NO_OPT_ReducedCostsFiltering,
     OPT_singletonConsistency,
-
     OPT_AlldiffSlackVar,
     NO_OPT_AlldiffSlackVar,
+    OPT_RelativeInteriorSolution,
+    NO_OPT_RelativeInteriorSolution,
 
     OPT_GILMORELAWLER,
     OPT_GenAMOforPB,
@@ -582,9 +583,10 @@ CSimpleOpt::SOption g_rgOptions[] = {
     // Reduced costs filtering for alldifferent and gcc
     { OPT_ReducedCostsFiltering, (char*)"-camb", SO_OPT },
     { NO_OPT_ReducedCostsFiltering, (char*)"-camb:", SO_NONE },
-
     { OPT_AlldiffSlackVar, (char*)"-slack", SO_OPT },
     { NO_OPT_AlldiffSlackVar, (char*)"-slack:", SO_NONE },
+    { OPT_RelativeInteriorSolution, (char*)"-ri", SO_OPT },
+    { NO_OPT_RelativeInteriorSolution, (char*)"-ri:", SO_NONE },
 
     // preprocessing
     { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
@@ -1091,9 +1093,14 @@ void help_msg(char* toulbar2filename)
     if (ToulBar2::ReducedCostsFiltering)
         cout << " (default option " << ToulBar2::ReducedCostsFiltering << ")";
     cout << endl;
-
+    cout << "   -slack=[integer] : if true, add slack variable to the non square alldifferent constraint";
     if (ToulBar2::AlldiffSlackVar)
         cout << " (default option " << ToulBar2::AlldiffSlackVar << ")";
+    cout << endl;
+
+    cout << "   -ri=[integer] : if true, the dual solution of the  LAP is moved to the relative interior of the dual";
+    if (ToulBar2::RelativeInteriorSolution)
+        cout << " (default option " << ToulBar2::RelativeInteriorSolution << ")";
     cout << endl;
     
     cout << "   -trws=[float] : enforces TRW-S in preprocessing until a given precision is reached (default value is " << ToulBar2::trwsAccuracy << ")" << endl;
@@ -2040,6 +2047,19 @@ int _tmain(int argc, TCHAR* argv[])
                 }
             } else if (args.OptionId() == NO_OPT_AlldiffSlackVar) {
                 ToulBar2::AlldiffSlackVar = 0;
+            }
+
+            if (args.OptionId() == OPT_RelativeInteriorSolution) {
+                if (args.OptionArg() != NULL) {
+                    int ri = atoi(args.OptionArg());
+                    if (ri < 0 || ri >  1)
+                        ri = 1;
+                    ToulBar2::RelativeInteriorSolution = ri;
+                } else {
+                    ToulBar2::RelativeInteriorSolution = 1;
+                }
+            } else if (args.OptionId() == NO_OPT_RelativeInteriorSolution) {
+                ToulBar2::RelativeInteriorSolution = 0;
             }
 
 #ifdef BOOST

@@ -175,6 +175,7 @@ TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler;
 TB2_THREAD_LOCAL int ToulBar2::GilmoreLawler_;
 TB2_THREAD_LOCAL int ToulBar2::ReducedCostsFiltering;
 TB2_THREAD_LOCAL int ToulBar2::AlldiffSlackVar;
+TB2_THREAD_LOCAL int ToulBar2::RelativeInteriorSolution;
 TB2_THREAD_LOCAL int ToulBar2::vacValueHeuristic;
 
 TB2_THREAD_LOCAL externalevent ToulBar2::setvalue;
@@ -472,6 +473,7 @@ void tb2init()
     ToulBar2::singletonConsistency = 0;
     ToulBar2::ReducedCostsFiltering = 0;
     ToulBar2::AlldiffSlackVar = 0;
+    ToulBar2::RelativeInteriorSolution = 0;
     ToulBar2::singletonAccuracy = 0.0001;
     ToulBar2::GilmoreLawler = 0;
     ToulBar2::GilmoreLawler_ = 0;
