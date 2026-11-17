@@ -120,169 +120,283 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
     vector<int> to_flip;       to_flip.reserve(100);
     vector<int> drop_flips;    drop_flips.reserve(100);
 
-    // =========================================================
-    // PHASE 1: Constructive Group Lookahead (Active Queue)
-    // =========================================================
-    vector<int> queue_vars;
-    queue_vars.reserve(N * 2); // Avoid reallocation during pushes
-    vector<bool> in_queue(N, true);
-    for(int i = 0; i < N; ++i) queue_vars.push_back(i);
+    if (true) {
+        // =========================================================
+        // PHASE 1: Constructive Group Lookahead (Active Queue)
+        // =========================================================
+        vector<int> queue_vars;
+        queue_vars.reserve(N * 2); // Avoid reallocation during pushes
+        vector<bool> in_queue(N, true);
+        for(int i = 0; i < N; ++i) queue_vars.push_back(i);
 
-    int head = 0;
-    while(head < (int)queue_vars.size()) {
-        int v = queue_vars[head++];
-        in_queue[v] = false;
+        int head = 0;
+        while(head < (int)queue_vars.size()) {
+            int v = queue_vars[head++];
+            in_queue[v] = false;
 
-        if (assignment[v]) continue; // Only check False variables initially
+            if (assignment[v]) continue; // Only check False variables initially
 
-        // Try 1-opt
-        Cost gain1 = apply_flip_single(v);
-        if (gain1 > 0) {
-            current_score += gain1;
-            for (const auto& edge : adj[v]) {
-                if (!in_queue[edge.to]) {
-                    in_queue[edge.to] = true;
-                    queue_vars.push_back(edge.to);
-                }
-            }
-            continue;
-        }
-        apply_flip_single(v); // Revert
-
-        // Try group flip
-        group.clear();
-        group.push_back(v);
-        for (const auto& edge : adj[v]) {
-            if (!assignment[edge.to]) {
-                group.push_back(edge.to);
-            }
-        }
-
-        if (group.size() > 1) {
-            Cost gain2 = apply_flips(group);
-            if (gain2 > 0) {
-                current_score += gain2;
-                for (int u : group) {
-                    for (const auto& edge : adj[u]) {
-                        if (!in_queue[edge.to]) {
-                            in_queue[edge.to] = true;
-                            queue_vars.push_back(edge.to);
-                        }
-                    }
-                }
-            } else {
-                // Revert
-                rev_group = group;
-                reverse(rev_group.begin(), rev_group.end());
-                apply_flips(rev_group);
-            }
-        }
-    }
-
-    // =========================================================
-    // PHASES 2, 3, & 4: Refinement, Reversals, and Proactive Insertions
-    // =========================================================
-    bool changed = true;
-    while (changed) {
-        changed = false;
-        if (ToulBar2::interrupted) {
-            throw TimeOut();
-        }
-
-        // 1. Standard 1-opt Pruning
-        for (int v = 0; v < N; ++v) {
-            if (assignment[v]) {
-                Cost gain = apply_flip_single(v);
-                if (gain > 0) {
-                    current_score += gain;
-                    changed = true;
-                } else {
-                    apply_flip_single(v); // Revert
-                }
-            }
-        }
-
-        // 2. Cascading Swap (Reversal with smart repair)
-        for (int v = 0; v < N; ++v) {
-            if (assignment[v]) {
-                to_flip.clear();
-                to_flip.push_back(v);
-
+            // Try 1-opt
+            Cost gain1 = apply_flip_single(v);
+            if (gain1 > 0) {
+                current_score += gain1;
                 for (const auto& edge : adj[v]) {
-                    int other = edge.to;
-                    if (!assignment[other] && edge.weight > neg_weights[other]) {
-                        to_flip.push_back(other);
+                    if (!in_queue[edge.to]) {
+                        in_queue[edge.to] = true;
+                        queue_vars.push_back(edge.to);
                     }
                 }
+                continue;
+            }
+            apply_flip_single(v); // Revert
 
-                Cost gain = apply_flips(to_flip);
-                if (gain > 0) {
-                    current_score += gain;
-                    changed = true;
-                } else {
-                    // Fast revert without std::reverse
-                    for (int i = to_flip.size() - 1; i >= 0; --i) {
-                        apply_flip_single(to_flip[i]);
+            // Try group flip
+            group.clear();
+            group.push_back(v); //SdG Why this flip??? It seems counter-productive for the next flip?
+            for (const auto& edge : adj[v]) {
+                if (!assignment[edge.to]) {
+                    group.push_back(edge.to);
+                }
+            }
+
+            if (group.size() > 1) {
+                Cost gain2 = apply_flips(group);
+                if (gain2 > 0) {
+                    current_score += gain2;
+                    for (int u : group) {
+                        for (const auto& edge : adj[u]) { //SdG It will reinsert v which is useless because now v is true ?!?
+                            if (!in_queue[edge.to]) {
+                                in_queue[edge.to] = true;
+                                queue_vars.push_back(edge.to);
+                            }
+                        }
                     }
+                } else {
+                    // Revert
+                    rev_group = group;
+                    reverse(rev_group.begin(), rev_group.end());
+                    apply_flips(rev_group);
                 }
             }
         }
 
-        // 3. Proactive Insertion (Neighborhood-Restricted Cascade)
-        for (int v = 0; v < N; ++v) {
-            if (!assignment[v]) {
-                Cost initial_gain = apply_flip_single(v);
-                Cost accumulated_sub_gain = MIN_COST;
+        // =========================================================
+        // PHASES 2, 3, & 4: Refinement, Reversals, and Proactive Insertions
+        // =========================================================
+        //SdG: Is it interesting to combine Phase 1 and the other phases until a fix point ???
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            if (ToulBar2::interrupted) {
+                throw TimeOut();
+            }
 
-                // Track all committed flips in this cascade for fast rollback
-                vector<int> committed_sub_flips;
-                committed_sub_flips.reserve(20);
+            // 1. Standard 1-opt Pruning
+            for (int v = 0; v < N; ++v) {
+                if (assignment[v]) { //SdG Why only if true???
+                    Cost gain = apply_flip_single(v);
+                    if (gain > 0) {
+                        current_score += gain;
+                        changed = true;
+                    } else {
+                        apply_flip_single(v); // Revert
+                    }
+                }
+            }
 
-                bool sub_changed = true;
-                while (sub_changed) {
-                    sub_changed = false;
+            // 2. Cascading Swap (Reversal with smart repair)
+            for (int v = 0; v < N; ++v) {
+                if (assignment[v]) {
+                    to_flip.clear();
+                    to_flip.push_back(v);
 
-                    // FAST SCAN: Only check neighbors of v, not the whole graph (O(Degree) instead of O(N))
-                    for (const auto& neighbor_edge : adj[v]) {
-                        int u = neighbor_edge.to;
-                        if (assignment[u]) {
-                            drop_flips.clear();
-                            drop_flips.push_back(u);
+                    for (const auto& edge : adj[v]) {
+                        int other = edge.to;
+                        if (!assignment[other] && edge.weight > neg_weights[other]) {
+                            to_flip.push_back(other);
+                        }
+                    }
 
-                            // Check for necessary repairs
-                            for (const auto& edge_u : adj[u]) {
-                                int other = edge_u.to;
-                                if (!assignment[other] && edge_u.weight > neg_weights[other]) {
-                                    drop_flips.push_back(other);
+                    Cost gain = apply_flips(to_flip);
+                    if (gain > 0) {
+                        current_score += gain;
+                        changed = true;
+                    } else {
+                        // Fast revert without std::reverse
+                        for (int i = to_flip.size() - 1; i >= 0; --i) {
+                            apply_flip_single(to_flip[i]);
+                        }
+                    }
+                }
+            }
+
+            // 3. Proactive Insertion (Neighborhood-Restricted Cascade)
+            for (int v = 0; v < N; ++v) {
+                if (!assignment[v]) {
+                    Cost initial_gain = apply_flip_single(v);
+                    Cost accumulated_sub_gain = MIN_COST;
+
+                    // Track all committed flips in this cascade for fast rollback
+                    vector<int> committed_sub_flips;
+                    committed_sub_flips.reserve(20); //SdG: Why this value ???
+
+                    bool sub_changed = true;
+                    while (sub_changed) {
+                        sub_changed = false;
+
+                        // FAST SCAN: Only check neighbors of v, not the whole graph (O(Degree) instead of O(N))
+                        for (const auto& neighbor_edge : adj[v]) {
+                            int u = neighbor_edge.to;
+                            if (assignment[u]) {
+                                drop_flips.clear();
+                                drop_flips.push_back(u);
+
+                                // Check for necessary repairs
+                                for (const auto& edge_u : adj[u]) {
+                                    int other = edge_u.to;
+                                    if (!assignment[other] && edge_u.weight > neg_weights[other]) {
+                                        drop_flips.push_back(other);
+                                    }
                                 }
-                            }
 
-                            Cost sub_gain = apply_flips(drop_flips);
+                                Cost sub_gain = apply_flips(drop_flips);
 
-                            if (sub_gain > 0) {
-                                accumulated_sub_gain += sub_gain;
-                                for(int flip_var : drop_flips) committed_sub_flips.push_back(flip_var);
-                                sub_changed = true;
-                            } else {
-                                // Fast revert
-                                for (int i = drop_flips.size() - 1; i >= 0; --i) {
-                                    apply_flip_single(drop_flips[i]);
+                                if (sub_gain > 0) {
+                                    accumulated_sub_gain += sub_gain;
+                                    for(int flip_var : drop_flips) committed_sub_flips.push_back(flip_var);
+                                    sub_changed = true;
+                                } else {
+                                    // Fast revert
+                                    for (int i = drop_flips.size() - 1; i >= 0; --i) {
+                                        apply_flip_single(drop_flips[i]);
+                                    }
                                 }
                             }
                         }
                     }
+
+                    // Final Evaluation
+                    if (initial_gain + accumulated_sub_gain > 0) {
+                        current_score += (initial_gain + accumulated_sub_gain);
+                        changed = true;
+                    } else {
+                        // Rollback the entire cascade in reverse order
+                        for (int i = committed_sub_flips.size() - 1; i >= 0; --i) {
+                            apply_flip_single(committed_sub_flips[i]);
+                        }
+                        apply_flip_single(v); // Undo the initial insertion
+                    }
+                }
+            }
+        }
+    } else {
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            if (ToulBar2::interrupted) {
+                throw TimeOut();
+            }
+
+            // 1. Standard 1-opt local search
+            bool changed1 = true;
+            while (changed1) {
+                changed1 = false;
+                if (ToulBar2::interrupted) {
+                    throw TimeOut();
                 }
 
-                // Final Evaluation
-                if (initial_gain + accumulated_sub_gain > 0) {
-                    current_score += (initial_gain + accumulated_sub_gain);
-                    changed = true;
-                } else {
-                    // Rollback the entire cascade in reverse order
-                    for (int i = committed_sub_flips.size() - 1; i >= 0; --i) {
-                        apply_flip_single(committed_sub_flips[i]);
+                for (int v = 0; v < N; ++v) {
+                    Cost gain = apply_flip_single(v);
+                    if (gain > 0) {
+                        current_score += gain;
+                        changed = true;
+                        changed1 = true;
+                    } else {
+                        apply_flip_single(v); // Revert
                     }
-                    apply_flip_single(v); // Undo the initial insertion
+                }
+            }
+
+            // 1. Restricted k-opt local search
+            for (int v = 0; v < N; ++v) {
+                if (assignment[v]) {
+                    // 2. Cascading Swap (Reversal with smart repair)
+                    to_flip.clear();
+                    to_flip.push_back(v);
+
+                    for (const auto& edge : adj[v]) {
+                        int other = edge.to;
+                        if (!assignment[other] && edge.weight > neg_weights[other]) {
+                            to_flip.push_back(other);
+                        }
+                    }
+
+                    Cost gain = apply_flips(to_flip);
+                    if (gain > 0) {
+                        current_score += gain;
+                        changed = true;
+                    } else {
+                        // Fast revert without std::reverse
+                        for (int i = to_flip.size() - 1; i >= 0; --i) {
+                            apply_flip_single(to_flip[i]);
+                        }
+                    }
+
+                } else {
+                    // 3. Proactive Insertion (Neighborhood-Restricted Cascade)
+                    Cost initial_gain = apply_flip_single(v);
+                    Cost accumulated_sub_gain = MIN_COST;
+
+                    // Track all committed flips in this cascade for fast rollback
+                    vector<int> committed_sub_flips;
+                    committed_sub_flips.reserve(20);
+
+                    bool sub_changed = true;
+                    while (sub_changed) {
+                        sub_changed = false;
+
+                        // FAST SCAN: Only check neighbors of v, not the whole graph (O(Degree) instead of O(N))
+                        for (const auto& neighbor_edge : adj[v]) {
+                            int u = neighbor_edge.to;
+                            if (assignment[u]) {
+                                drop_flips.clear();
+                                drop_flips.push_back(u);
+
+                                // Check for necessary repairs
+                                for (const auto& edge_u : adj[u]) {
+                                    int other = edge_u.to;
+                                    if (!assignment[other] && edge_u.weight > neg_weights[other]) {
+                                        drop_flips.push_back(other);
+                                    }
+                                }
+
+                                Cost sub_gain = apply_flips(drop_flips);
+
+                                if (sub_gain > 0) {
+                                    accumulated_sub_gain += sub_gain;
+                                    for(int flip_var : drop_flips) committed_sub_flips.push_back(flip_var);
+                                    sub_changed = true;
+                                } else {
+                                    // Fast revert
+                                    for (int i = drop_flips.size() - 1; i >= 0; --i) {
+                                        apply_flip_single(drop_flips[i]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Final Evaluation
+                    if (initial_gain + accumulated_sub_gain > 0) {
+                        current_score += (initial_gain + accumulated_sub_gain);
+                        changed = true;
+                    } else {
+                        // Rollback the entire cascade in reverse order
+                        for (int i = committed_sub_flips.size() - 1; i >= 0; --i) {
+                            apply_flip_single(committed_sub_flips[i]);
+                        }
+                        apply_flip_single(v); // Undo the initial insertion
+                    }
                 }
             }
         }
