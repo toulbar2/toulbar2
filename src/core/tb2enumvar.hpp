@@ -286,6 +286,7 @@ public:
             return iterator(this, domain.upper_bound(min(getSup(), v)));
     }
 
+    bool averaging(); /**< internal function for Min-Sum diffusion */
     void permuteDomain(int numberOfPermutations);
     void permuteDomain(Value a, Value b);
     ValueCost* sortDomain(vector<Cost>& costs);

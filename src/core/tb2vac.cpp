@@ -1220,56 +1220,6 @@ void VACExtension::printTightMatrix()
     }
 }
 
-/* Min-Sum diffusion algorithm */
-void VACExtension::minsumDiffusion()
-{
-    for (int times = 0; times < 2; times++) {
-        bool change = true;
-        int maxit = ToulBar2::minsumDiffusion;
-        if (ToulBar2::verbose >= 0) {
-            cout << "MinSumDiffusion: " << endl;
-            cout << "   max iterations " << maxit << endl;
-            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
-        }
-        int ntimes = 0;
-        while (change && (ntimes < maxit)) {
-            change = false;
-            for (unsigned int i = 0; i < wcsp->numberOfVariables();
-                 i++)
-                if (wcsp->unassigned(i)) {
-                    VACVariable* evar = (VACVariable*)wcsp->getVar(i);
-                    if (evar->averaging()) {
-                        change = true;
-                        evar->findSupport();
-                    }
-                }
-            ntimes++;
-        }
-        if (ToulBar2::verbose >= 0)
-            cout << "   done iterations: " << ntimes << endl;
-        for (unsigned int i = 0; i < wcsp->numberOfVariables(); i++)
-            if (wcsp->unassigned(i)) {
-                EnumeratedVariable* evar = (EnumeratedVariable*)wcsp->getVar(i);
-                evar->findSupport();
-            }
-        for (unsigned int i = 0; i < wcsp->numberOfConstraints(); i++)
-            if (wcsp->getCtr(i)->connected())
-                wcsp->getCtr(i)->propagate();
-        for (int i = 0; i < wcsp->getElimBinOrder(); i++)
-            if (wcsp->getElimBinCtr(i)->connected()
-                && !wcsp->getElimBinCtr(i)->isSep())
-                wcsp->getElimBinCtr(i)->propagate();
-        for (int i = 0; i < wcsp->getElimTernOrder(); i++)
-            if (wcsp->getElimTernCtr(i)->connected()
-                && !wcsp->getElimTernCtr(i)->isSep())
-                wcsp->getElimTernCtr(i)->propagate();
-        wcsp->propagate();
-        if (ToulBar2::verbose >= 0)
-            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << wcsp->getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
-        //    printTightMatrix();
-    }
-}
-
 Cost VACExtension::RASPSFindItThreshold()
 {
     Cost result = ToulBar2::costThreshold;

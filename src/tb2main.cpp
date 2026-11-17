@@ -248,6 +248,7 @@ enum {
 
     // VAC OPTION
     OPT_minsumDiffusion,
+    NO_OPT_minsumDiffusion,
     OPT_vac,
     NO_OPT_vac,
     OPT_costThreshold,
@@ -581,7 +582,8 @@ CSimpleOpt::SOption g_rgOptions[] = {
     { NO_OPT_ReducedCostsFiltering, (char*)"-camb:", SO_NONE },
 
     // preprocessing
-    { OPT_minsumDiffusion, (char*)"-M", SO_REQ_SEP },
+    { OPT_minsumDiffusion, (char*)"-M", SO_OPT },
+    { NO_OPT_minsumDiffusion, (char*)"-M:", SO_NONE },
     { OPT_singletonConsistency, (char*)"-S", SO_OPT },
     { NO_OPT_singletonConsistency, (char*)"-S:", SO_NONE },
     { OPT_GILMORELAWLER, (char*)"-glb", SO_OPT },
@@ -995,7 +997,7 @@ void help_msg(char* toulbar2filename)
         cout << " (default option)";
     cout << endl;
 #endif
-    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -rdac: -mst: -dee: -trws: -hve: -pwc:)" << endl;
+    cout << "   -nopre : removes all preprocessing options (equivalent to -e: -p: -t: -f: -dec: -n: -rdac: -mst: -dee: -M: -trws: -hve: -pwc:)" << endl;
     cout << "   -o : ensures optimal worst-case time complexity of DAC and EAC (can be slower in practice)";
     if (ToulBar2::QueueComplexity)
         cout << " (default option)";
@@ -1903,18 +1905,22 @@ int _tmain(int argc, TCHAR* argv[])
                     cout << "elimDegree_preprocessing OFF: " << ToulBar2::elimDegree_preprocessing << endl;
             }
 
-            // VAC PARAMETER
-            if (args.OptionId() == OPT_minsumDiffusion)
-
-            {
-                if (!ToulBar2::vac)
-                    ToulBar2::vac = 1;
+            if (args.OptionId() == OPT_minsumDiffusion) {
                 ToulBar2::minsumDiffusion = 1000;
-                int nit = atoi(args.OptionArg());
-                if (nit > 0)
-                    ToulBar2::minsumDiffusion = nit;
+                if (args.OptionArg() != NULL) {
+                    int nit = atoi(args.OptionArg());
+                    if (nit > 0)
+                        ToulBar2::minsumDiffusion = nit;
+                }
+                if (ToulBar2::debug)
+                    cout << "MinSumDiffusion algorithm ON " << ToulBar2::minsumDiffusion << endl;
+            } else if (args.OptionId() == NO_OPT_minsumDiffusion) {
+                ToulBar2::minsumDiffusion = 0;
+                if (ToulBar2::debug)
+                    cout << "MinSumDiffusion algorithm OFF" << endl;
             }
 
+            // VAC PARAMETER
             if (args.OptionId() == OPT_vac) {
                 ToulBar2::vac = 1;
                 if (args.OptionArg() == NULL) {
@@ -2701,6 +2707,9 @@ int _tmain(int argc, TCHAR* argv[])
                 if (ToulBar2::debug)
                     cout << "dead-end elimination OFF" << endl;
                 ToulBar2::DEE = 0;
+                if (ToulBar2::debug)
+                    cout << "MinSumdiffusion OFF" << endl;
+                ToulBar2::minsumDiffusion = 0;
                 if (ToulBar2::debug)
                     cout << "TRW-S OFF" << endl;
                 ToulBar2::trwsAccuracy = -1.;

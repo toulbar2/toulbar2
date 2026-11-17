@@ -4039,6 +4039,56 @@ void WCSP::processTernary()
     }
 }
 
+/* Min-Sum diffusion algorithm */
+void WCSP::minsumDiffusion()
+{
+    for (int times = 0; times < 2; times++) {
+        bool change = true;
+        int maxit = ToulBar2::minsumDiffusion;
+        if (ToulBar2::verbose >= 0) {
+            cout << "MinSumDiffusion: " << endl;
+            cout << "   max iterations " << maxit << endl;
+            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        }
+        int ntimes = 0;
+        while (change && (ntimes < maxit)) {
+            change = false;
+            for (unsigned int i = 0; i < numberOfVariables(); i++) {
+                if (unassigned(i)) {
+                    EnumeratedVariable* evar = (EnumeratedVariable*)getVar(i);
+                    if (evar->averaging()) {
+                        change = true;
+                        evar->findSupport();
+                    }
+                }
+            }
+            ntimes++;
+        }
+        if (ToulBar2::verbose >= 0)
+            cout << "   done iterations: " << ntimes << endl;
+        for (unsigned int i = 0; i < numberOfVariables(); i++)
+            if (unassigned(i)) {
+                EnumeratedVariable* evar = (EnumeratedVariable*)getVar(i);
+                evar->findSupport();
+            }
+        for (unsigned int i = 0; i < numberOfConstraints(); i++)
+            if (getCtr(i)->connected())
+                getCtr(i)->propagate();
+        for (int i = 0; i < getElimBinOrder(); i++)
+            if (getElimBinCtr(i)->connected()
+                && !getElimBinCtr(i)->isSep())
+                getElimBinCtr(i)->propagate();
+        for (int i = 0; i < getElimTernOrder(); i++)
+            if (getElimTernCtr(i)->connected()
+                && !getElimTernCtr(i)->isSep())
+                getElimTernCtr(i)->propagate();
+        propagate();
+        if (ToulBar2::verbose >= 0)
+            cout << "   dual bound = " << std::fixed << std::setprecision(ToulBar2::decimalPoint) << getDDualBound() << std::setprecision(DECIMAL_POINT) << endl;
+        //    printTightMatrix();
+    }
+}
+
 pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> WCSP::hiddenEncoding()
 {
     vector<Constraint*> listOfCtrs;
@@ -4671,8 +4721,9 @@ void WCSP::preprocessing()
         propagate();
     }
 
-    if (ToulBar2::minsumDiffusion && ToulBar2::vac)
-        vac->minsumDiffusion();
+    if (ToulBar2::minsumDiffusion)
+        minsumDiffusion();
+
     if (ToulBar2::vac) {
         if (ToulBar2::verbose >= 1)
             cout << "Preprocessing ";

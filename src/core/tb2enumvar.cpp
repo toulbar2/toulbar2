@@ -1433,6 +1433,121 @@ void EnumeratedVariable::eliminate()
     assign(support); // warning! dummy assigned value
 }
 
+
+/******************************
+ * min-sum diffusion algorithm
+ */
+
+bool EnumeratedVariable::averaging()
+{
+    Tuple tuple;
+    Cost Top = wcsp->getUb();
+    bool change = false;
+    EnumeratedVariable* x;
+    EnumeratedVariable* y;
+    Constraint* ctr = NULL;
+    ConstraintList::iterator itc = getConstrs()->begin();
+    if (itc != getConstrs()->end())
+        ctr = (*itc).constr;
+    while (ctr) {
+        if (ctr->isBinary()) {
+            BinaryConstraint* bctr = (BinaryConstraint*)ctr;
+            x = (EnumeratedVariable*)bctr->getVarDiffFrom((Variable*)this);
+            for (iterator it = begin(); it != end(); ++it) {
+                Cost cu = getCost(*it);
+                Cost cmin = Top;
+                for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+                    Cost cbin = bctr->getCost(this, x, *it, *itx);
+                    if (cbin < cmin)
+                        cmin = cbin;
+                }
+                assert(cmin < Top);
+                Double mean = to_double(cmin + cu) / 2.;
+                Double extc = to_double(cu) - mean;
+                if (std::abs(extc) >= 1) {
+                    Cost costi = (Long)extc;
+                    for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+                        bctr->addcost(this, x, *it, *itx, costi);
+                    }
+                    if (mean > to_double(cu))
+                        project(*it, -costi);
+                    else
+                        extend(*it, costi);
+                    change = true;
+                }
+            }
+        } else if (ctr->isTernary() && !ctr->isSep()) {
+            TernaryConstraint* tctr = (TernaryConstraint*)ctr;
+            x = (EnumeratedVariable*)tctr->getVar(0);
+            if (x == this)
+                x = (EnumeratedVariable*)tctr->getVar(1);
+            y = (EnumeratedVariable*)tctr->getVarDiffFrom((Variable*)this, (Variable*)x);
+            for (iterator it = begin(); it != end(); ++it) {
+                Cost cu = getCost(*it);
+                Cost cmin = Top;
+                for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+                    for (iterator ity = y->begin(); ity != y->end(); ++ity) {
+                        Cost ctern = tctr->getCost(this, x, y, *it, *itx, *ity);
+                        if (ctern < cmin)
+                            cmin = ctern;
+                    }
+                }
+                assert(cmin < Top);
+                Double mean = to_double(cmin + cu) / 2.;
+                Double extc = to_double(cu) - mean;
+                if (std::abs(extc) >= 1) {
+                    Cost costi = (Long)extc;
+                    for (iterator itx = x->begin(); itx != x->end(); ++itx) {
+                        for (iterator ity = y->begin(); ity != y->end(); ++ity) {
+                            tctr->addCost(this, x, y, *it, *itx, *ity, costi);
+                        }
+                    }
+                    if (mean > to_double(cu))
+                        project(*it, -costi);
+                    else
+                        extend(*it, costi);
+                    change = true;
+                }
+            }
+        } else if (ctr->isNary() && !ctr->isSep()) {
+            NaryConstraint* nctr = (NaryConstraint*)ctr;
+            for (iterator it = begin(); it != end(); ++it) {
+                Cost cu = getCost(*it);
+                Cost cmin = Top;
+                int tindex = nctr->getIndex(this);
+                Cost cost;
+                Long nbtuples = 0;
+                nctr->first();
+                while (nctr->next(tuple, cost)) {
+                    nbtuples++;
+                    if (toValue(tuple[tindex]) == (*it) && cost < cmin)
+                        cmin = cost;
+                }
+                if (nctr->getDefCost() < cmin && nbtuples < nctr->getDomainSizeProduct() / getDomainSize())
+                    cmin = nctr->getDefCost();
+                //              assert(cmin < Top);
+                Double mean = to_double(cmin + cu) / 2.;
+                Double extc = to_double(cu) - mean;
+                if (std::abs(extc) >= 1) {
+                    Cost costi = (Cost)extc;
+                    nctr->addtoTuples(this, *it, costi);
+                    if (mean > to_double(cu))
+                        project(*it, -costi);
+                    else
+                        extend(*it, costi);
+                    change = true;
+                }
+            }
+        }
+        ++itc;
+        if (itc != getConstrs()->end())
+            ctr = (*itc).constr;
+        else
+            ctr = NULL;
+    }
+    return change;
+}
+
 void EnumeratedVariable::permuteDomain(int nperm)
 {
     while (nperm) {
