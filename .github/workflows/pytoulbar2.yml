@@ -44,7 +44,6 @@ jobs:
           name: pytoulbar2-linux-x86_64
           path: ./wheelhouse/*.whl
 
-
   pytb2-linux-arm:
     name: pytoulbar2-linux-arm
     runs-on: ubuntu-24.04-arm
