@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2.1
+        uses: pypa/cibuildwheel@v4.3.5
         env:
 
           CIBW_BEFORE_ALL: "yum -y install bc gmp-devel boost169-devel zlib-devel bzip2-devel xz-devel"
@@ -24,7 +24,7 @@ jobs:
 
           CIBW_ENVIRONMENT: BOOST_INCLUDEDIR=/usr/include/boost169 BOOST_LIBRARYDIR=/usr/lib64/boost169
           
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-* cp315-*"
 
           CIBW_SKIP: "*-manylinux_i686* *-musllinux*"
 
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2.1
+        uses: pypa/cibuildwheel@v4.3.5
         env:
 
           CIBW_BEFORE_ALL: "yum -y install bc gmp-devel boost169-devel zlib-devel bzip2-devel xz-devel"
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2.1
+        uses: pypa/cibuildwheel@v4.3.5
         env:
           
           CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=15
@@ -107,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2.1
+        uses: pypa/cibuildwheel@v4.3.5
         env:
 
           CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14 CMAKE_APPLE_SILICON_PROCESSOR=arm64
