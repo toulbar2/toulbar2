@@ -1931,8 +1931,6 @@ public:
                             }
                         }
                     }   
-                } else {
-                    THROWCONTRADICTION;
                 }
                 propagate();
                 if (ToulBar2::FullEAC)
