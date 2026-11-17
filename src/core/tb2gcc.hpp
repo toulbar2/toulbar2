@@ -70,6 +70,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     map<Value, pair<int, int>> boundsTemp; // lower and upper bound capacities for every value (as read in the file)
     vector<int> capacity; // upper bound capacities for every value
     vector<int> CurrentCapacity; // remaining upper bound capacities for every value (updated during propagation)
+    vector<StoreInt> StoreCurrentCapacity; // remaining upper bound capacities for every value (updated during propagation)
     vector<int> demand; // lower bound capacities for every value
     int sumub = 0, sumlb = 0, Gcc_NbValues = 0; // sum of upper bound capacities, sum of lower bound capacities and number of values given in the gcc.
     bool isSquare = true; // True if the cost matrix is square (sum of upper capacities == number of variables)
@@ -1444,6 +1445,7 @@ public:
             NoAssignedVar = vector<int>(arity_in, -1);
             capacity = vector<int>(NbValues, arity_in);
             CurrentCapacity = vector<int>(NbValues, 0);
+            StoreCurrentCapacity = vector<StoreInt>(NbValues, 0);
             demand = vector<int>(NbValues, 0);
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
@@ -1625,7 +1627,7 @@ public:
         }
 
         for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-            CurrentCapacity[valIndex] = capacity[valIndex];
+            StoreCurrentCapacity[valIndex] = capacity[valIndex];
         }
 
         // If more values than variables, cost matrix is not square
@@ -1920,9 +1922,9 @@ public:
                 Value value = scope[varIndex]->getValue();
                 auto* variable = scope[varIndex];
                 int valIndex = unionIndex(variable->getValueName(variable->toIndex(value)));
-                if(CurrentCapacity[valIndex] > 0){
-                    CurrentCapacity[valIndex] = CurrentCapacity[valIndex] - 1;
-                    if(CurrentCapacity[valIndex] == 0){
+                if(StoreCurrentCapacity[valIndex] > 0){
+                    StoreCurrentCapacity[valIndex] = StoreCurrentCapacity[valIndex] - 1;
+                    if(StoreCurrentCapacity[valIndex] == 0){
                         for (int i = 0; i < arity_; i++) {
                             if (i != varIndex && scope[i]->unassigned() && scope[i]->canbe(value)) {
                                 scope[i]->remove(value);
@@ -2148,9 +2150,6 @@ public:
         // Case when all variables are unassigned or domains differ
         if (connected() && (NbNoAssigned == arity_ || !SameDomain)) {
             propagateFullAssignment();
-        }
-        for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-            CurrentCapacity[valIndex] = capacity[valIndex];
         }
     }
 

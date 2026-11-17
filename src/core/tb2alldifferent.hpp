@@ -1744,6 +1744,7 @@ public:
         }
 
         // 3. Build the list of nodes belonging to each SCC and the condensation graph.
+        // source https://www.geeksforgeeks.org/dsa/topological-sorting-indegree-based-solution  
         vector<vector<int>> components(nbComp);
         for (int i = 0; i < N; ++i) {
             components[comp[i]].push_back(i);
