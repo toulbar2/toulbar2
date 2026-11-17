@@ -699,9 +699,20 @@ public:
                 // TODO: incremental bound propagation
                 // remove the assigned value in other domains
                 Value value = scope[varIndex]->getValue();
-                for (int i = 0; i < arity_; i++) {
-                    if (i != varIndex && scope[i]->unassigned() && scope[i]->canbe(value)) {
-                        scope[i]->remove(value);
+                int removeval = true;
+                if(excepted) {
+                    auto* variable = scope[varIndex];
+                    int valIndex = unionIndex(variable->getValueName(variable->toIndex(value)));
+                    if(isExceptedVal[valIndex]){
+                        // don't remove an excepted value
+                        removeval = false;
+                    }
+                }
+                if(removeval){
+                    for (int i = 0; i < arity_; i++) {
+                        if (i != varIndex && scope[i]->unassigned() && scope[i]->canbe(value)) {
+                            scope[i]->remove(value);
+                        }
                     }
                 }
                 propagate();
