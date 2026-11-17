@@ -165,8 +165,6 @@ public:
         }
     }
 
-    bool averaging(); /**< For Min-Sum diffusion */
-
     void print(ostream& os)
     {
         EnumeratedVariable::print(os);

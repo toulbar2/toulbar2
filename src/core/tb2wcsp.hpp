@@ -908,6 +908,8 @@ public:
     void ternaryCompletion();
     bool kconsistency(int xIndex, int yIndex, int zIndex, BinaryConstraint* xy, BinaryConstraint* yz, BinaryConstraint* xz);
 
+    void minsumDiffusion(); /**< MinSumDiffusion algorithm */
+
     pair<vector<EnumeratedVariable*>, vector<BinaryConstraint*>> hiddenEncoding(); ///< \brief returns dual variables and channeling constraints for pairwise consistency
 
     // -----------------------------------------------------------
