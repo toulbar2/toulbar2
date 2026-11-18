@@ -7288,7 +7288,7 @@ void WCSP::ternaryCompletion()
     Double maxsize = 1024. * 1024. * ToulBar2::preprocessTernaryRPC;
     int ntern = 0;
 
-    sort(triplelist.begin(), triplelist.end());
+    stable_sort(triplelist.begin(), triplelist.end());
     for (vector<TripleVarCostSize>::iterator it = triplelist.begin(); it != triplelist.end(); ++it) {
         if (totalsize + (Double)sizeof(StoreCost) * it->size <= maxsize) {
             totalsize += (Double)sizeof(StoreCost) * it->size;
@@ -7459,7 +7459,7 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
             order.reserve(vars.size());
             for (int i = numberOfVariables() - 1; i >= 0; i--)
                 order.push_back(i);
-            sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
+            stable_sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
             break;
         case ELIM_DAG_ORDER:
             DAGOrdering(order);

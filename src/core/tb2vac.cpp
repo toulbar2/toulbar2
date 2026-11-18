@@ -1036,7 +1036,7 @@ bool VACExtension::enforcePass3()
         k2->RestVACGroupExt();
         k2->VACPass3(EPT, minlambda, PBkillersctr);
 #ifndef NDEBUG
-        sort(EPT.begin(), EPT.end(), [&](auto& x, auto& y) { return x.second < y.second; }); // SdG: performs all projections before extensions in order to keep positive unary costs inside the sequence of EPTs
+        stable_sort(EPT.begin(), EPT.end(), [&](auto& x, auto& y) { return x.second < y.second; }); // SdG: performs all projections before extensions in order to keep positive unary costs inside the sequence of EPTs
 #endif
         for (int l = 0; l < (int)EPT.size(); ++l) {
             VACVariable* xi = (VACVariable*)wcsp->getVar(EPT[l].first.first);
