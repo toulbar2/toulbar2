@@ -1016,7 +1016,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegree()
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         Long wdeg = wcsp->getWeightedDegree(*iter);
         heuristics[*iter] = max(wdeg, heuristics[*iter]); // cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
@@ -1056,7 +1056,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeRandomized()
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         Long wdeg = wcsp->getWeightedDegree(*iter);
         heuristics[*iter] = max(wdeg, heuristics[*iter]); // cout << "write var " << *iter << " " << wdeg << " " << heuristic[*iter] << endl;
@@ -1104,7 +1104,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflict()
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
@@ -1153,7 +1153,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictLDS(int discrepancy)
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
@@ -1199,7 +1199,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomized()
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);
@@ -1258,7 +1258,7 @@ int Solver::getVarMinDomainDivMaxWeightedDegreeLastConflictRandomizedLDS(int dis
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         // remove following "+1" when isolated variables are automatically assigned
         Long wdeg = wcsp->getWeightedDegree(*iter);

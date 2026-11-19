@@ -1471,7 +1471,7 @@ int TreeDecomposition::getVarMinDomainDivMaxWeightedDegree(TVars* vars)
         if (ToulBar2::weightedTightness) {
             ValueCost array[domsize];
             wcsp->getEnumDomainAndCost(*iter, array);
-            unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+            unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         }
         double heuristic = (double)domsize / (double)(wcsp->getWeightedDegree(*iter) + 1 + unarymediancost);
         if (varIndex < 0 || heuristic < best - (double)ToulBar2::epsilon * best
