@@ -1343,7 +1343,7 @@ double NaryConstraint::computeTightness()
         tight = to_double(min(wcsp->getUb(), default_cost));
     } else {
         if (ToulBar2::weightedTightness == 2) {
-            tight = to_double(stochastic_selection<Cost>(costs_, 0, count - 1, count / 2)); // TO BE IMPPROVED!!!
+            tight = to_double(deterministic_selection<Cost>(costs_, 0, count - 1, count / 2)); // TO BE IMPPROVED!!!
         } else {
             if (psize > count) {
                 tight = ((double)default_cost * (psize - count) + sum) / (double)psize;

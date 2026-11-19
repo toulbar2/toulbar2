@@ -5126,7 +5126,7 @@ unsigned int WCSP::medianArity() const
             pos++;
         }
     assert(pos == numberOfConnectedConstraints() && pos == nb);
-    return stochastic_selection<int>(arity, 0, nb - 1, nb / 2);
+    return deterministic_selection<int>(arity, 0, nb - 1, nb / 2);
 }
 
 unsigned int WCSP::numberOfConnectedBinaryConstraints() const
@@ -5163,7 +5163,7 @@ unsigned int WCSP::medianDomainSize() const
             pos++;
         }
     assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-    return stochastic_selection<unsigned int>(domain, 0, nbunvars - 1, nbunvars / 2);
+    return deterministic_selection<unsigned int>(domain, 0, nbunvars - 1, nbunvars / 2);
 }
 
 unsigned int WCSP::medianDegree() const
@@ -5179,7 +5179,7 @@ unsigned int WCSP::medianDegree() const
             pos++;
         }
     assert(pos == numberOfUnassignedVariables() && pos == nbunvars);
-    return stochastic_selection<int>(degree, 0, nbunvars - 1, nbunvars / 2);
+    return deterministic_selection<int>(degree, 0, nbunvars - 1, nbunvars / 2);
 }
 
 void WCSP::printNCBuckets()

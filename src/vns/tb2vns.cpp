@@ -165,7 +165,7 @@ uint ClustersNeighborhoodStructure::getMedianClusterSize() const
     int csize[nbc];
     for (uint i = 0; i < nbc; i++)
         csize[i] = m_graph[i].vars.size();
-    return stochastic_selection<int>(csize, 0, nbc - 1, nbc / 2);
+    return deterministic_selection<int>(csize, 0, nbc - 1, nbc / 2);
 }
 
 void RandomNeighborhoodChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)

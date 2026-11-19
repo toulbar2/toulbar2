@@ -1720,7 +1720,7 @@ public:
         //             ValueCost array[domsize];
         //             wcsp->getEnumDomainAndCost(var->wcspIndex, array);
         //             if (ToulBar2::weightedTightness == 2) {
-        //                 Cost unarymediancost = stochastic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
+        //                 Cost unarymediancost = deterministic_selection<ValueCost>(array, 0, domsize - 1, domsize / 2).cost;
         //                 ucost += (double)unarymediancost;
         //             } else {
         //                 Cost unarytotalcost = MIN_COST;

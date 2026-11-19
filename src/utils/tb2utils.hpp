@@ -251,7 +251,7 @@ int stochastic_partition(T A[], int p, int r)
 }
 
 template <class T>
-T stochastic_selection(T A[], int p, int r, int i)
+T stochastic_selection(T A[], int p, int r, int i) // Warning! This function calls our random generator and may modify the search procedure.
 {
     if (p == r)
         return A[p];
@@ -262,6 +262,16 @@ T stochastic_selection(T A[], int p, int r, int i)
     else
         return stochastic_selection(A, q + 1, r, i - k);
 }
+
+template <class T>
+T deterministic_selection(T A[], int p, int r, int i) {
+    assert(r >= p);
+    if (p == r)
+        return A[p];
+    std::nth_element(&A[p], &A[i], &A[r+1]);
+    return A[i];
+}
+
 
 #endif /* TB2UTILS_HPP_ */
 

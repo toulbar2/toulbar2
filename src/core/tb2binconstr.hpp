@@ -741,7 +741,7 @@ public:
             }
         }
         if (ToulBar2::weightedTightness == 2) {
-            tight = to_double(stochastic_selection<Cost>(costs, 0, count - 1, count / 2));
+            tight = to_double(deterministic_selection<Cost>(costs, 0, count - 1, count / 2));
         } else {
             tight = sum / (double)count;
         }
