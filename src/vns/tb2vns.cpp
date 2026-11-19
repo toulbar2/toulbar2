@@ -183,7 +183,7 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size)
         ++j;
     }
     assert((int)j == l->unassignedVars->getSize());
-    shuffle(z.begin(), z.end(), myrandom_generator);
+    myrearrange(z);
     assert(neighborhood_size <= z.size());
     neighborhood.insert(z.begin(), z.begin() + neighborhood_size);
     return neighborhood;
@@ -193,7 +193,7 @@ const zone RandomNeighborhoodChoice::getNeighborhood(size_t neighborhood_size, z
     zone neighborhood;
     vector<int> zv(z.begin(), z.end());
 
-    shuffle(zv.begin(), zv.end(), myrandom_generator);
+    myrearrange(zv);
     assert(neighborhood_size <= zv.size());
     neighborhood.insert(zv.begin(), zv.begin() + neighborhood_size);
     return neighborhood;
@@ -237,7 +237,7 @@ void RandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         clusters.pop_back();
     }
     file = clusters;
-    shuffle(file.begin(), file.end(), myrandom_generator);
+    myrearrange(file);
     insideHeuristic = new RandomNeighborhoodChoice();
     insideHeuristic->init(wcsp, l);
 }
@@ -248,7 +248,7 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
     set<int> selclusters;
     if (file.size() == 0) {
         file = clusters;
-        shuffle(file.begin(), file.end(), myrandom_generator);
+        myrearrange(file);
     }
     assert(file.size() > 0);
     int c = file.back();
@@ -268,7 +268,7 @@ const zone RandomClusterChoice::getNeighborhood(size_t neighborhood_size)
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 // merge neighbors of current cluster
-                shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
+                myrearrange(neighbors);
                 // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
@@ -305,7 +305,7 @@ bool RandomClusterChoice::incrementK()
 {
     if (file.size() == 0) {
         file = clusters;
-        shuffle(file.begin(), file.end(), myrandom_generator);
+        myrearrange(file);
         return true;
     }
 
@@ -350,7 +350,7 @@ void ParallelRandomClusterChoice::init(WeightedCSP* wcsp_, LocalSearch* l_)
         clusters.pop_back();
     }
     file = clusters;
-    shuffle(file.begin(), file.end(), myrandom_generator);
+    myrearrange(file);
     insideHeuristic = new RandomNeighborhoodChoice();
     insideHeuristic->init(wcsp, l);
 }
@@ -373,7 +373,7 @@ const zone ParallelRandomClusterChoice::getNeighborhood(size_t neighborhood_size
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 // merge neighbors of current cluster
-                shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
+                myrearrange(neighbors);
                 // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
@@ -422,7 +422,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 // merge neighbors of current cluster
-                shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
+                myrearrange(neighbors);
                 // add them to list
                 for (vector<int>::iterator it = neighbors.begin(); it != neighbors.end(); ++it) {
                     if (selclusters.count(*it) == 0) {
@@ -464,7 +464,7 @@ const zone ParallelRandomClusterChoice::SlaveGetNeighborhood(unsigned int Curren
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 // merge neighbors of current cluster
-                shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
+                myrearrange(neighbors);
                 // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {
@@ -500,7 +500,7 @@ bool ParallelRandomClusterChoice::incrementK()
 {
     if (file.size() == 0) {
         file = clusters;
-        shuffle(file.begin(), file.end(), myrandom_generator);
+        myrearrange(file);
         return true;
     }
 
@@ -527,7 +527,7 @@ uint ParallelRandomClusterChoice::getClustersSize(uint c, uint number)
             if (v != vend) {
                 vector<int> neighbors(v, vend);
                 // merge neighbors of current cluster
-                shuffle(neighbors.begin(), neighbors.end(), myrandom_generator);
+                myrearrange(neighbors);
                 // add them to list
                 for (vector<int>::iterator it = neighbors.begin();
                      it != neighbors.end(); ++it) {

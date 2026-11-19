@@ -3872,7 +3872,7 @@ void WCSP::sortConstraints()
     }
 
     if (abs(ToulBar2::constrOrdering) == CONSTR_ORDER_RANDOM) {
-        shuffle(delayedNaryCtr.begin(), delayedNaryCtr.end(), myrandom_generator);
+        myrearrange(delayedNaryCtr);
     } else {
         stable_sort(delayedNaryCtr.begin(), delayedNaryCtr.end(), [&](int idx1, int idx2) { return Constraint::cmpConstraint(getCtr(idx1), getCtr(idx2)); });
     }
