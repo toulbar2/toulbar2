@@ -395,11 +395,11 @@ public:
         // Choose the slack (dummy variable) formulation of the LAP if requested
         int slackVar = ToulBar2::AlldiffSlackVar;
         int ri = ToulBar2::RelativeInteriorSolution;
-        if (excepted)
+        if (excepted){
             FiltLevel = 0;
-
-
-        if ((slackVar > 0 && !isSquare && !excepted) || (!isSquare && FiltLevel > 0) || (!isSquare && ri > 0) ) {
+            isSlack = 0;
+            slack = false;
+        } else if ( !isSquare && (slackVar > 0 || FiltLevel > 0 || ri > 0) ) {
             isSlack = 1;
             slack = true;
         }
