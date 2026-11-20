@@ -72,6 +72,7 @@ OPTION(BENCH "benchmarcking [default:off]" OFF)
 OPTION(WITH_MEM_JEMALLOC "Enable malloc replacement (http://www.canonware.com/jemalloc) [default on]" ON)
 OPTION(LR_BCD "embed the LR-BCD solver to produce initial solutions and lower bound estimates (requires Eigen3 library) [default:off]" OFF)
 OPTION(MULTI_THREAD "allow the solver to be executed in multiple threads simultaneously [default:off]" OFF)
+OPTION(RELEASE "release mode [default:off]" OFF)
 
 MARK_AS_ADVANCED(FORCE BUILD_API_DOC_LATEX)
 MARK_AS_ADVANCED(FORCE CPLEX CPLEX_LOCATION ILOG XML XCSP3 verbose Boost FOPT CMAKE_INSTALL_PREFIX LONG_PROBABILITY LONG_COSTS SHORT_COSTS SHORT_VALUES NO_STORE_BINARY_COSTS NO_STORE_TERNARY_COSTS BINARYWCSP TERNARYWCSP)
@@ -100,8 +101,9 @@ MESSAGE(STATUS "compile flags: ${CMAKE_CXX_FLAGS}")
 
 # -fsanitize=address -fsanitize=undefined -Wconversion -Wsign-conversion
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ftrapping-math -fsanitize-undefined-trap-on-error -fsanitize=signed-integer-overflow -fsanitize=float-cast-overflow -g3" )
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native" ) #  -flto
-
+IF(NOT RELEASE)
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native" ) #  -flto
+ENDIF()
 
 SET(ILOGCPLEX OFF)
 IF(CPLEX)

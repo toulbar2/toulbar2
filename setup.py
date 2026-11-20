@@ -42,6 +42,7 @@ class CMakeBuild(build_ext):
             "-DPython3_EXECUTABLE=" + python_Path,
             "-DPython3_ROOT_DIR=" + python_Root,
             "-DPYTB2=ON",
+            "-DRELEASE=ON"
         ]
 
         build_type = os.environ.get("BUILD_TYPE", "Release")
