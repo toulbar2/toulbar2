@@ -7423,9 +7423,9 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
 {
     if (numberOfVariables() == 0)
         return;
-#ifdef BOOST
     if (reinterpret_cast<uintptr_t>(elimVarOrder) > ELIM_NONE && reinterpret_cast<uintptr_t>(elimVarOrder) < ELIM_MAX) {
         switch (reinterpret_cast<uintptr_t>(elimVarOrder)) {
+#ifdef BOOST
         case MAX_CARD:
             maximumCardinalitySearch(order);
             break;
@@ -7444,6 +7444,10 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
         case APPROX_MIN_DEGREE:
             minimumDegreeOrderingBGL(order);
             break;
+        case ELIM_DAG_ORDER:
+            DAGOrdering(order);
+            break;
+#endif
         case ELIM_FILE_ORDER:
             order.clear();
             order.reserve(vars.size());
@@ -7457,16 +7461,16 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
                 order.push_back(i);
             stable_sort(order.begin(), order.end(), [&](int i, int j) { return getName(i) > getName(j); });
             break;
-        case ELIM_DAG_ORDER:
-            DAGOrdering(order);
-            break;
         default: {
+#ifdef BOOST
             cerr << "Variable elimination order " << reinterpret_cast<uintptr_t>(elimVarOrder) << " not implemented yet!" << endl;
+#else
+            cerr << "Error: compiling with Boost library is needed to use variable elimination order -" << reinterpret_cast<uintptr_t>(elimVarOrder) << " (use -O=-7, -O=-8, or a file)." << endl;
+#endif
             throw BadConfiguration();
         }
         }
     } else {
-#endif
         ifstream file;
         if (elimVarOrder)
             file.open(elimVarOrder);
@@ -7487,9 +7491,8 @@ void WCSP::elimOrderFile2Vector(char* elimVarOrder, vector<int>& order)
                 }
             }
         }
-#ifdef BOOST
+
     }
-#endif
     if (order.size() != numberOfVariables()) {
         cerr << "Variable elimination order file has incorrect number of variables (or repeated variables)." << endl;
         throw WrongFileFormat();
