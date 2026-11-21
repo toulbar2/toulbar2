@@ -719,7 +719,7 @@ PYBIND11_MODULE(pytb2, m)
         })
         .def("getVarOrder", []() -> string {
             if (reinterpret_cast<uintptr_t>(ToulBar2::varOrder) < ELIM_MAX) {
-                return to_string(-reinterpret_cast<uintptr_t>(ToulBar2::varOrder));
+                return to_string(-static_cast<int>(reinterpret_cast<uintptr_t>(ToulBar2::varOrder)));
             } else {
                 return to_string(ToulBar2::varOrder);
             }
