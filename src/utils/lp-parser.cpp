@@ -549,7 +549,7 @@ std::optional<Double> read_real(const std::string_view buf) noexcept
         return std::numeric_limits<Double>::infinity();
 
     constexpr std::size_t max_digits = 320;
-    if (buf.size() > max_digits)
+    if (buf.size() >= max_digits)
         return std::nullopt;
 
     char buffer[max_digits] = { '\0' };
