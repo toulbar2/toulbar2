@@ -93,7 +93,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     vector<int> varValIdx; // varValIdx[var * NbValues + val] = index of value val (in UnionVarDomain) inside the initial domain of variable var, or -1 if var cannot take it
     bool relativeInterior = false; // If true, in the square case the dual solution of the LAP is moved to the relative interior of the dual optimizers before projecting costs
     int findConflict = 0; // Flag returned by the LAP solver: non-zero if a conflict (infeasible sub-problem) was detected, value encodes the number of conflicting variables
-
+    vector<StoreInt> current_vars;  
     // Projects cost c to the problem lower bound (only if it is strictly positive)
     void projectLB(Cost c)
     {
@@ -254,7 +254,8 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             storeLastAssignment[NoAssignedVar[varIndex]] = toVarValue(NoAssignedVar[varIndex], NoAssignedVal[rowSol[varIndex]]);
         }
         for (int varIndex = 0; varIndex < NbAssigned; ++varIndex) {
-            storeLastAssignment[AssignedVar[varIndex]] = toVarValue(AssignedVar[varIndex], AssignedVal[varIndex]);
+            //Value value = scope[AssignedVar[varIndex]]->getValue();
+            storeLastAssignment[AssignedVar[varIndex]] =  scope[AssignedVar[varIndex]]->getValue();
         }
         storeAssignment = true;
     }
@@ -1165,9 +1166,12 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
         vector<int> NoAssignedVal;
         vector<int> NoAsscapacity;
         vector<int> NoAssdemand;
+        NoAssignedVar.resize(NbNoAssigned);
+        AssignedVar.resize(arity_ - NbNoAssigned);
         int sumlbtemp = 0;
         int sumubtemp = 0;
         for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+            CurrentCapacity[valIndex] = StoreCurrentCapacity[valIndex];
             if (CurrentCapacity[valIndex] > 0) {
                 NoAssignedVal.push_back(valIndex);
                 NoAsscapacity.push_back(CurrentCapacity[valIndex]);
@@ -1184,6 +1188,18 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
         NbNoAssignedVal = NoAssignedVal.size();
         if (NbNoAssignedVal == 0 || sumlbtemp > NbNoAssigned || sumubtemp < NbNoAssigned)
             THROWCONTRADICTION;
+
+        int varInd = 0;
+        int varInd2 = 0;
+        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+            if(current_vars[varIndex] == 1){
+                NoAssignedVar[varInd] = varIndex;
+                varInd++;
+            } else {
+                AssignedVar[varInd2] = varIndex;
+                varInd2++;
+            }
+        }
 
         // Initialize cost matrix (rows = unassigned variables, columns = values with remaining capacity) for the Jonker algorithm
         Cost current_ub = wcsp->getUb() - wcsp->getLb();
@@ -1446,6 +1462,7 @@ public:
             capacity = vector<int>(NbValues, arity_in);
             CurrentCapacity = vector<int>(NbValues, 0);
             StoreCurrentCapacity = vector<StoreInt>(NbValues, 0);
+            current_vars = vector<StoreInt>(arity_in, 1);
             demand = vector<int>(NbValues, 0);
             AssignedVar = vector<int>(arity_in, -1);
             AssignedVal = vector<int>(arity_in, -1);
@@ -1921,6 +1938,7 @@ public:
                 // remove the assigned value in other domains
                 Value value = scope[varIndex]->getValue();
                 auto* variable = scope[varIndex];
+                current_vars[varIndex] = 0;
                 int valIndex = unionIndex(variable->getValueName(variable->toIndex(value)));
                 if(StoreCurrentCapacity[valIndex] > 0){
                     StoreCurrentCapacity[valIndex] = StoreCurrentCapacity[valIndex] - 1;
@@ -2139,10 +2157,7 @@ public:
 
         // If there are assigned variables (and same domains), handle accordingly
         if (NbNoAssigned < arity_) {
-            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-                CurrentCapacity[valIndex] = capacity[valIndex];
-            }
-            if (SameDomain && RemoveAssignVar()) {
+            if (SameDomain) {
                 propagatePartialAssignment();
             }
         }
