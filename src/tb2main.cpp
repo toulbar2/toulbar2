@@ -70,7 +70,7 @@ extern void newsolution(int wcspId, void* solver);
 
 inline void clean_ToulBar2_varOrder()
 {
-    if (ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) > 8) {
+    if (ToulBar2::varOrder != NULL && reinterpret_cast<uintptr_t>(ToulBar2::varOrder) >= ELIM_MAX) {
         delete[] ToulBar2::varOrder;
         ToulBar2::varOrder = NULL;
     }
@@ -1805,8 +1805,11 @@ int _tmain(int argc, TCHAR* argv[])
 
             if (args.OptionId() == OPT_constrOrdering) {
                 int c = atoi(args.OptionArg());
-                if (abs(c) >= CONSTR_ORDER_ID || abs(c) < CONSTR_ORDER_THEMAX) {
+                if (abs(c) >= CONSTR_ORDER_ID && abs(c) < CONSTR_ORDER_THEMAX) {
                     ToulBar2::constrOrdering = c;
+                } else {
+                    cerr << "Error: unknown constraint ordering value " << c << " for -sortc option (see --help)." << endl;
+                    throw BadConfiguration();
                 }
             }
 

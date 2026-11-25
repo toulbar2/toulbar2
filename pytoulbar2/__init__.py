@@ -1,5 +1,5 @@
 from .pytoulbar2 import *
 
-__version__ = "1.4.0.0" # hash 4d13826c2c519fb618cdf6828721fac130897df0 
+__version__ = "1.4.0.3" # hash deffffae16f8ddba6af233a36af3a1ea14a6f2fe 
 __toulbar2_version__ = "1.4.0"
-__wrapper_version__ = ""
+__wrapper_version__ = "0"

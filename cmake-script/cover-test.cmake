@@ -77,6 +77,9 @@ FOREACH (UTEST ${cover_file})
   endif($verbose)
     
 
+  # each instance runs in its own directory, so that files written in the current directory (sol, problem.wcsp,...) are not shared between instances
+  SET(COVER_WD "${PROJECT_BINARY_DIR}/cover_wd/${TNAME}")
+  file(MAKE_DIRECTORY ${COVER_WD})
   SET (INDEX 0)
   FOREACH (COVERTEST ${${tfile}})
     #OPTION multiple space cleaning
@@ -86,12 +89,19 @@ FOREACH (UTEST ${cover_file})
     
     STRING_SPLIT(ARGS " " ${COVERTEST})
 
-		add_test(Phase2_${TNAME}_${INDEX} ${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${ARGS})
+		add_test(Phase2_${TNAME}_${INDEX} ${PROJECT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/toulbar2${EXE}  ${UTEST} ${ARGS})
 		set_tests_properties (
 			Phase2_${TNAME}_${INDEX}
       PROPERTIES PASS_REGULAR_EXPRESSION "${test_regexp}"
       TIMEOUT "${test_timeout}"
-      )	
+      WORKING_DIRECTORY "${COVER_WD}"
+      )
+    # tests sharing the default solution file ./sol of this instance: writers (-w) run before readers (-x, -x=sol), and never concurrently (ctest -j)
+    IF ("-w" IN_LIST ARGS)
+      set_tests_properties(Phase2_${TNAME}_${INDEX} PROPERTIES FIXTURES_SETUP cover_sol_${TNAME} RESOURCE_LOCK cover_sol_${TNAME})
+    ELSEIF ("-x" IN_LIST ARGS OR "-x=sol" IN_LIST ARGS)
+      set_tests_properties(Phase2_${TNAME}_${INDEX} PROPERTIES FIXTURES_REQUIRED cover_sol_${TNAME} RESOURCE_LOCK cover_sol_${TNAME})
+    ENDIF()
     MATH(EXPR INDEX "1+${INDEX}")
     UNSET (ARGS)
   ENDFOREACH()

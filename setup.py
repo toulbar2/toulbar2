@@ -42,6 +42,7 @@ class CMakeBuild(build_ext):
             "-DPython3_EXECUTABLE=" + python_Path,
             "-DPython3_ROOT_DIR=" + python_Root,
             "-DPYTB2=ON",
+            "-DRELEASE=ON"
         ]
 
         build_type = os.environ.get("BUILD_TYPE", "Release")
@@ -77,7 +78,7 @@ def read_version():
 
 setup(
     name="pytoulbar2",
-    version="1.4.0.2", # hash bc6b5b339c545ffe8e6c28b4bc6e9660212a4df1 
+    version="1.4.0.3", # hash deffffae16f8ddba6af233a36af3a1ea14a6f2fe 
     author="ToulBar2 team",
     author_email="thomas.schiex@inrae.fr",
     description="ToulBar2 Python package",

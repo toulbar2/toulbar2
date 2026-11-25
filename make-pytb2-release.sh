@@ -21,6 +21,7 @@ if output=$(git status --porcelain) && [ -z "$output" ]; then
 
     git add setup.py
     git add pytb2-changelog.md
+    git add ./pytoulbar2/__init__.py
     git commit -m "[pytoulbar2 release] Update pytoulbar2 release $ver"
     git tag -a pytb2-v$ver -m"pytoulbar2 release v$ver"
     git push --no-verify
