@@ -1,5 +1,5 @@
 /*
- * **************** Heuristic AI-generated Max-2SAT solver *******************
+ * **************** AI-generated Max-2SAT heuristic *******************
  *
  * Copyright (C) 2026 INRAE @ Boubacar Pelage
  *
@@ -9,7 +9,7 @@
 #include "core/tb2binconstr.hpp"
 #include "tb2solver.hpp"
 
-#define AIGENERATED
+//#define AIGENERATED
 #define AIPHASE1GROUPFLIPCORRECTION
 #define AIPHASE1GROUPFLIP
 #define AIPHASE2GROUPFLIP
@@ -197,7 +197,6 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
     // =========================================================
     // PHASES 2, 3, & 4: Refinement, Reversals, and Proactive Insertions
     // =========================================================
-    //SdG: Is it interesting to combine Phase 1 and the other phases until a fix point ???
     bool changed = true;
     while (changed) {
         changed = false;
@@ -305,6 +304,7 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
         }
     }
 #else
+    // 1. Standard 1-flip
     bool changed = true;
     while (changed) {
         changed = false;
@@ -312,30 +312,27 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
             throw TimeOut();
         }
 
-        // 1. Standard 1-opt local search
-        bool changed1 = true;
-        while (changed1) {
-            changed1 = false;
-            if (ToulBar2::interrupted) {
-                throw TimeOut();
-            }
-
-            for (int v = 0; v < N; ++v) {
-                Cost gain = apply_flip_single(v);
-                if (gain > 0) {
-                    current_score += gain;
-                    changed = true;
-                    changed1 = true;
-                } else {
-                    apply_flip_single(v); // Revert
-                }
+        for (int v = 0; v < N; ++v) {
+            Cost gain = apply_flip_single(v);
+            if (gain > 0) {
+                current_score += gain;
+                changed = true;
+            } else {
+                apply_flip_single(v); // Revert
             }
         }
+    }
 
-        // 1. Restricted k-opt local search
+    // 2. Restricted neighborhood group flip
+    changed = true;
+    while (changed) {
+        changed = false;
+        if (ToulBar2::interrupted) {
+            throw TimeOut();
+        }
+
         for (int v = 0; v < N; ++v) {
             if (assignment[v]) {
-                // 2. Cascading Swap (Reversal with smart repair)
                 to_flip.clear();
                 to_flip.push_back(v);
 
@@ -358,7 +355,6 @@ pair<vector<bool>, Cost> solve_heuristic_cpp(WCSP *wcsp, vector<int>& invvarind,
                 }
 
             } else {
-                // 3. Proactive Insertion (Neighborhood-Restricted Cascade)
                 Cost initial_gain = apply_flip_single(v);
                 Cost accumulated_sub_gain = MIN_COST;
 
