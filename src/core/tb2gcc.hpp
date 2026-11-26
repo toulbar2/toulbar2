@@ -59,12 +59,11 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     vector<Cost> costMatrix; // Flattened row-major cost matrix passed to the Jonker LAP solver
     int NbValues = 0; // Total number of distinct values across all variable domains (size of UnionVarDomain)
     vector<int> AssignedVar; // Indices (in scope) of currently assigned variables
-    vector<int> AssignedVal; // Value indices (in UnionVarDomain) assigned to each variable in AssignedVar
     vector<int> NoAssignedVar; // Indices (in scope) of currently unassigned variables
+    vector<int> NoAssignedVal; // Indices of currently unassigned values
     int NbAssigned; // Number of currently assigned variables
     int NbNoAssigned; // Number of currently unassigned variables
     int NbNoAssignedVal = 0; // Number of values with remaining capacity (columns in the reduced cost matrix)
-    vector<bool> varAlreadyProcessed; // varAlreadyProcessed[i] = true if variable i has already been processed during domain filtering
     bool SameDomain = true; // True if all variables have the same domain
     map<Value, pair<int, int>> bounds; // lower and upper bound capacities for every value
     map<Value, pair<int, int>> boundsTemp; // lower and upper bound capacities for every value (as read in the file)
@@ -248,7 +247,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
 
     // Stores the LAP solution (rowSol) of the unassigned variables, plus the values of the assigned variables
     // NoAssignedVal[c] = value index (in UnionVarDomain) of the column c of the reduced matrix
-    void storePartialAssignment(const vector<int>& NoAssignedVal)
+    void storePartialAssignment()
     {
         for (int varIndex = 0; varIndex < NbNoAssigned; ++varIndex) {
             storeLastAssignment[NoAssignedVar[varIndex]] = toVarValue(NoAssignedVar[varIndex], NoAssignedVal[rowSol[varIndex]]);
@@ -331,11 +330,10 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     /**
      * @brief Partial case: projects the reduced costs onto the unary costs of the unassigned variables
      *        (used when the residual graph is not built).
-     * @param NoAssignedVal Value index of each column of the reduced matrix.
      * @param ub            wcsp->getUb() - wcsp->getLb() before the LAP cost projection.
      * @param idx           idx(var, col) = position in costMatrix.
      */
-    void projectReducedCostsPartial(const vector<int>& NoAssignedVal, Cost ub, const function<size_t(int, int)>& idx)
+    void projectReducedCostsPartial(Cost ub, const function<size_t(int, int)>& idx)
     {
         for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
             int varIndex = NoAssignedVar[varInd];
@@ -360,12 +358,11 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     /**
      * @brief Projects the reduced costs onto the unary costs of the unassigned variables
      *        and, if reduced-cost filtering is enabled, builds the residual graph (VarList, ValList, ReduceCostMatrix, MaxReducedCost).
-     * @param NoAssignedVal Value index of each column of the reduced matrix.
      * @param current_ub    wcsp->getUb() - wcsp->getLb() before the LAP cost projection.
      * @param newCurrentUb  current_ub minus the LAP optimal cost (remaining budget).
      * @param idx           idx(var, col) = position in costMatrix.
      */
-    void projectAndBuildResidualGraph(const vector<int>& NoAssignedVal, Cost current_ub, Cost newCurrentUb, const function<size_t(int, int)>& idx, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList)
+    void projectAndBuildResidualGraph(Cost current_ub, Cost newCurrentUb, const function<size_t(int, int)>& idx, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList)
     {
         MaxReducedCost = 0;
         const bool buildGraph = residualGraphEnabled();
@@ -636,13 +633,12 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
      *        Other arcs are pruned. Pruning is sound: only arcs of reduced cost < newCurrentUb are in the graph,
      *        and any solution within the budget uses only such arcs.
      *
-     * @param NoAssignedVal Value index (in UnionVarDomain) of each column.
      * @param VarList       VarList[val] = variables having a non-matching arc to val (pruned arcs are erased).
      * @param ValList       ValList[var][val] = 1 if the arc is in the residual graph (pruned arcs are reset to 0).
      * @param newCurrentUb  Remaining cost budget (infinite cost projected on removed values).
      * @return true if at least one arc has been pruned.
      */
-    bool gacFilteringSCC(const vector<int>& NoAssignedVal, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, Cost newCurrentUb)
+    bool gacFilteringSCC(vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, Cost newCurrentUb)
     {
         if (!residualGraphEnabled())
             return false;
@@ -977,13 +973,13 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
      * @param ValList       ValList[var][val] = 1 if arc (var,val) is in the residual graph (updated when arcs are pruned).
      * @param newCurrentUb  Remaining cost budget.
      */
-    void reducedCostFiltering(const vector<int>& NoAssignedVal, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, Cost newCurrentUb)
+    void reducedCostFiltering(vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, Cost newCurrentUb)
     {
         if (!residualGraphEnabled())
             return;
 
         // Step 1: GAC by strongly connected components
-        gacFilteringSCC(NoAssignedVal, VarList, ValList, newCurrentUb);
+        gacFilteringSCC(VarList, ValList, newCurrentUb);
 
         // Step 2: reduced-cost filtering, only if the largest reduced cost can exceed the budget
         if (!(MaxReducedCost >= newCurrentUb / NbNoAssigned))
@@ -1088,18 +1084,17 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
         NbNoAssignedVal = NbValues;
         NoAssignedVar.resize(arity_);
         iota(NoAssignedVar.begin(), NoAssignedVar.end(), 0);
-        vector<int> NoAssignedVal(NbValues);
         iota(NoAssignedVal.begin(), NoAssignedVal.end(), 0);
 
         vector<vector<int>> VarList(NbNoAssignedVal);
         vector<vector<uint8_t>> ValList(NbNoAssigned);
-        projectAndBuildResidualGraph(NoAssignedVal, current_ub, newCurrentUb, idx, VarList, ValList);
-        reducedCostFiltering(NoAssignedVal, VarList, ValList, newCurrentUb);
+        projectAndBuildResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList);
+        reducedCostFiltering(VarList, ValList, newCurrentUb);
     }
 
     // Non-square case, partial assignment: updates the extended unary costs (deltaCosts) from the LAP duals
     // and adjusts TotalCost (the lower bound that can be projected). Throws a contradiction if it exceeds current_ub.
-    void updateDeltaCostsPartial(const vector<int>& NoAssignedVal, Cost& TotalCost, Cost current_ub)
+    void updateDeltaCostsPartial(Cost& TotalCost, Cost current_ub, int sumubtemp )
     {
         if (sumlb == 0) {
             Cost mindelta = ReduceCostRow[NbNoAssigned];
@@ -1109,7 +1104,7 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
                     deltaCosts[valIndex] -= (ReduceCostCol[valInd] + mindelta);
             }
             if (mindelta > 0) {
-                TotalCost += mindelta * (sumub - arity_ - 1);
+                TotalCost += mindelta * (sumubtemp - NbNoAssigned  - 1);
                 if (TotalCost >= current_ub) {
                     wcsp->revise(this);
                     THROWCONTRADICTION;
@@ -1163,17 +1158,25 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
     void propagatePartialAssignment()
     {
         // Collect the values with a remaining capacity, with their remaining capacity and demand
-        vector<int> NoAssignedVal;
         vector<int> NoAsscapacity;
         vector<int> NoAssdemand;
-        NoAssignedVar.resize(NbNoAssigned);
-        AssignedVar.resize(arity_ - NbNoAssigned);
+        NbNoAssignedVal = 0;
+        NbNoAssigned = 0;
+        NbAssigned = 0;
+        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+            if (current_vars[varIndex]) {
+                NoAssignedVar[NbNoAssigned++] =  varIndex;
+            }
+            else {
+                AssignedVar[NbAssigned++] =  varIndex;         
+            }
+        }
         int sumlbtemp = 0;
         int sumubtemp = 0;
         for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
             CurrentCapacity[valIndex] = StoreCurrentCapacity[valIndex];
             if (CurrentCapacity[valIndex] > 0) {
-                NoAssignedVal.push_back(valIndex);
+                NoAssignedVal[NbNoAssignedVal++] = valIndex;
                 NoAsscapacity.push_back(CurrentCapacity[valIndex]);
                 sumubtemp += CurrentCapacity[valIndex];
                 int lbcap = 0;
@@ -1185,21 +1188,8 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             }
         }
 
-        NbNoAssignedVal = NoAssignedVal.size();
         if (NbNoAssignedVal == 0 || sumlbtemp > NbNoAssigned || sumubtemp < NbNoAssigned)
             THROWCONTRADICTION;
-
-        int varInd = 0;
-        int varInd2 = 0;
-        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
-            if(current_vars[varIndex] == 1){
-                NoAssignedVar[varInd] = varIndex;
-                varInd++;
-            } else {
-                AssignedVar[varInd2] = varIndex;
-                varInd2++;
-            }
-        }
 
         // Initialize cost matrix (rows = unassigned variables, columns = values with remaining capacity) for the Jonker algorithm
         Cost current_ub = wcsp->getUb() - wcsp->getLb();
@@ -1238,11 +1228,11 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             if (TotalCost >= current_ub) {
                 onLAPFailure(rowSol, findConflict, NbNoAssigned, &NoAssignedVar);
             } else if (TotalCost >= 0) {
-                storePartialAssignment(NoAssignedVal);
+                storePartialAssignment();
 
                 if (TotalCost > 0 || (any_of(ReduceCostRow, ReduceCostRow + NbNoAssigned, [](auto x) { return x > MIN_COST; }))) {
                     if (!isSquare)
-                        updateDeltaCostsPartial(NoAssignedVal, TotalCost, current_ub);
+                        updateDeltaCostsPartial(TotalCost, current_ub, sumubtemp);
 
                     // Square case: move the duals to the relative interior of the dual optimizers
                     if (relativeInterior && isSquare)
@@ -1256,12 +1246,12 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
                         // Adjust unary costs for unassigned variables based on reduced costs and build the residual graph
                         vector<vector<int>> VarList(NbNoAssignedVal);
                         vector<vector<uint8_t>> ValList(NbNoAssigned);
-                        projectAndBuildResidualGraph(NoAssignedVal, current_ub, newCurrentUb, idx, VarList, ValList);
+                        projectAndBuildResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList);
 
                         // GAC and filtering of variables domains with Sellmann or Cambazard method
-                        reducedCostFiltering(NoAssignedVal, VarList, ValList, newCurrentUb);
+                        reducedCostFiltering(VarList, ValList, newCurrentUb);
                     } else {
-                        projectReducedCostsPartial(NoAssignedVal, current_ub, idx);
+                        projectReducedCostsPartial(current_ub, idx);
                     }
                 }
 
@@ -1273,9 +1263,10 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             fillFeasibleSupport(NbNoAssigned, NoAssignedVar.data(), NbNoAssignedVal, NoAssignedVal.data(), NoAsscapacity, NoAssdemand);
             // Assigned variables keep their value
             for (int k = 0; k < NbAssigned; ++k)
-                storeLastAssignment[AssignedVar[k]] = toVarValue(AssignedVar[k], AssignedVal[k]);
+                storeLastAssignment[AssignedVar[k]] = scope[AssignedVar[k]]->getValue();
             updateSupportsOfUnassigned();
-            deconnectIfAlwaysSatisfied(NoAsscapacity, NbNoAssignedVal, NbNoAssigned);
+            if(sumlbtemp == 0)
+                deconnectIfAlwaysSatisfied(NoAsscapacity, NbNoAssignedVal, NbNoAssigned);
         }
     }
 
@@ -1342,7 +1333,8 @@ class GlobalCardinalityConstraint : public AbstractNaryConstraint {
             // Zero cost matrix: build a feasible assignment quickly
             fillFeasibleSupport(arity_, nullptr, NbValues, nullptr, capacity, demand);
             updateAllSupports();
-            deconnectIfAlwaysSatisfied(capacity, NbValues, arity_);
+            if(sumlb == 0)
+                deconnectIfAlwaysSatisfied(capacity, NbValues, arity_);
         }
     }
 
@@ -1464,8 +1456,8 @@ public:
             StoreCurrentCapacity = vector<StoreInt>(NbValues, 0);
             current_vars = vector<StoreInt>(arity_in, 1);
             demand = vector<int>(NbValues, 0);
+            NoAssignedVal = vector<int>(NbValues, -1);
             AssignedVar = vector<int>(arity_in, -1);
-            AssignedVal = vector<int>(arity_in, -1);
             costMatrix = vector<Cost>((arity_in + 1) * NbValues, MAX_COST);
             ReduceCostMatrix = vector<Cost>(arity_in * NbValues, MAX_COST);
 
@@ -1957,160 +1949,6 @@ public:
                     reviseEACGreedySolution();
             }
         }
-    }
-
-    /**
-     * @brief Filters and removes saturated values from unassigned variables in the GCC constraint.
-     *
-     * This function enforces the GCC constraint by:
-     * - Verifying that no value is used more often than its upper capacity.
-     * - Removing values from unassigned variable domains once their capacity is saturated.
-     * - Propagating newly assigned variables and updating internal state.
-     * - Triggering full n-ary projection if thresholds on domain sizes or variable count are met.
-     *
-     * @return true if constraint propagation was successful without needing full projection.
-     * @return false if the constraint switched to full n-ary projection.
-     *
-     * @throws Throws a contradiction exception (THROWCONTRADICTION) if a value capacity is exceeded.
-     */
-    bool RemoveAssignVar()
-    {
-        varAlreadyProcessed.assign(arity_, false);
-
-        // Clear and reserve space for assigned and unassigned variables containers
-        AssignedVar.clear();
-        AssignedVar.reserve(arity_);
-        NoAssignedVar.clear();
-        NoAssignedVar.reserve(arity_);
-        AssignedVal.clear();
-        AssignedVal.reserve(arity_);
-
-        // Capacity of a value exceeded: increase the weight of the variable and of all the variables already using this value
-        auto conflictOn = [&](int varIndex, int valIndex) {
-            conflictWeights[varIndex]++;
-            for (size_t k = 0; k < AssignedVar.size(); ++k) {
-                if (AssignedVal[k] == valIndex)
-                    conflictWeights[AssignedVar[k]]++;
-            }
-        };
-
-        // Values without remaining capacity that still have to be removed from the unassigned variables
-        vector<int> saturated;
-        // Identify assigned and unassigned variables
-        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
-            auto* variable = scope[varIndex];
-
-            if (variable->unassigned()) {
-                // Variable not assigned yet: add to unassigned list
-                NoAssignedVar.push_back(varIndex);
-            } else {
-                // Variable assigned: find the index of its assigned value
-                int valIndex = unionIndex(variable->getValueName(variable->toIndex(variable->getValue())));
-                if (valIndex < 0) { // assigned to a forbidden value
-                    conflictWeights[varIndex]++;
-                    THROWCONTRADICTION;
-                }
-                CurrentCapacity[valIndex] -= 1;
-                if (CurrentCapacity[valIndex] > -1) {
-                    AssignedVar.push_back(varIndex);
-                    AssignedVal.push_back(valIndex);
-                    if (CurrentCapacity[valIndex] == 0)
-                        saturated.push_back(valIndex); // this value is now saturated
-                } else {
-                    conflictOn(varIndex, valIndex);
-                    THROWCONTRADICTION;
-                }
-            }
-        }
-
-        NbAssigned = AssignedVar.size();
-        bool VarAssigned;
-        bool NaryPro = false;
-
-        // Propagation loop: remove saturated values from unassigned variables' domains
-        // (a value only needs to be processed once: it is processed again only if it becomes saturated later)
-        do {
-            VarAssigned = false;
-            vector<int> newlyAssignedVars;
-
-            for (int valIndex : saturated) {
-                for (int varIndex : NoAssignedVar) {
-                    if (varAlreadyProcessed[varIndex])
-                        continue; // Skip already processed vars
-
-                    auto* variable = scope[varIndex];
-                    Value value = toVarValue(varIndex, valIndex);
-
-                    if (value != WRONG_VAL && variable->canbe(value)) {
-                        // Remove the saturated value from the domain of the unassigned variable
-                        variable->remove(value);
-                        if (variable->assigned()) {
-                            // If variable becomes assigned after removal, mark for propagation
-                            newlyAssignedVars.push_back(varIndex);
-                            varAlreadyProcessed[varIndex] = true;
-                        }
-                    }
-                }
-            }
-            saturated.clear();
-
-            // Process newly assigned variables after domain filtering
-            for (int varIndex : newlyAssignedVars) {
-                if (connected(varIndex)) {
-                    // Disconnect variable from constraint and update counts
-                    deconnect(varIndex);
-                    NbNoAssigned--;
-                    NbAssigned++;
-
-                    // Check whether to switch to full n-ary projection based on thresholds
-                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-                        deconnect();
-                        projectNary();
-                        NaryPro = true;
-                        break;
-                    } else {
-                        // Update assigned values and variables tracking
-                        VarAssigned = true;
-                        auto* variable = scope[varIndex];
-                        int valIndex = unionIndex(variable->getValueName(variable->toIndex(variable->getValue())));
-                        if (valIndex < 0) { // assigned to a forbidden value
-                            conflictWeights[varIndex]++;
-                            THROWCONTRADICTION;
-                        }
-                        CurrentCapacity[valIndex] -= 1;
-                        if (CurrentCapacity[valIndex] > -1) {
-                            AssignedVar.push_back(varIndex);
-                            AssignedVal.push_back(valIndex);
-                            if (CurrentCapacity[valIndex] == 0)
-                                saturated.push_back(valIndex); // this value is now saturated
-                        } else {
-                            conflictOn(varIndex, valIndex);
-                            THROWCONTRADICTION;
-                        }
-                    }
-                } else {
-                    return false; // Variable disconnected externally: abort
-                }
-            }
-
-            // The constraint has been fully projected: stop here
-            if (NaryPro)
-                return false;
-
-            // Update list of unassigned variables after propagation
-            if (VarAssigned) {
-                vector<int> updatedNoAssigned;
-                for (int varIndex : NoAssignedVar) {
-                    if (!scope[varIndex]->assigned()) {
-                        updatedNoAssigned.push_back(varIndex);
-                    }
-                }
-                NoAssignedVar.swap(updatedNoAssigned);
-            }
-
-        } while (VarAssigned);
-
-        return true;
     }
 
     /**

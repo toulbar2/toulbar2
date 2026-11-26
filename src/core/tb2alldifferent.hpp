@@ -50,13 +50,11 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     vector<Cost> costMatrix; // Flattened cost matrix passed to the Jonker LAP solver (layout depends on the case, see the index lambdas)
     int NbValues; // Total number of distinct values across all variable domains (size of UnionVarDomain)
     vector<int> AssignedVar; // Indices (in scope) of currently assigned variables
-    vector<int> AssignedVal; // Value indices (in UnionVarDomain) assigned to each variable in AssignedVar
     vector<int> NoAssignedVar; // Indices (in scope) of currently unassigned variables
+    vector<int> NoAssignedVal; // Indices of currently unassigned values
     int NbAssigned; // Number of currently assigned variables
     int NbNoAssigned; // Number of currently unassigned variables
     int NbNoAssignedVal; // Number of values not yet taken by any assigned variable (columns in the reduced cost matrix)
-    vector<bool> isAssignedValue; // isAssignedValue[v] = true if value v (index in UnionVarDomain) is already taken by an assigned variable
-    vector<bool> varAlreadyProcessed; // varAlreadyProcessed[i] = true if variable i has already been processed during domain filtering
     vector<Value> exceptedValues; // Values exempt from the AllDifferent constraint (may be shared by multiple variables)
     vector<int> exceptedValIndex; // Indices in UnionVarDomain of each excepted value
     vector<uint8_t> isExceptedVal; // isExceptedVal[v] = 1 if value v (index in UnionVarDomain) is an excepted value
@@ -87,7 +85,8 @@ class AllDifferentConstraint : public AbstractNaryConstraint {
     StoreInt isSlack = 0; // 1 while the slack (dummy variable) formulation is in use, backtrackable
     bool slack = false; // True if the slack formulation was selected when reading the constraint
     bool relativeInterior = false; // If true, the dual solution of the (square or slack) LAP is moved to the relative interior of the dual optimizers before projecting costs
-
+    vector<StoreInt>current_vars;
+    vector<StoreInt>current_vals;
     // Projects cost c to the problem lower bound (only if it is strictly positive)
     void projectLB(Cost c)
     {
@@ -293,7 +292,9 @@ public:
             isExceptedVal = vector<uint8_t>(NbValues, 0);
             ValuesCapacity = vector<int>(NbValues, 1);
             AssignedVar = vector<int>(arity_in, -1);
-            AssignedVal = vector<int>(arity_in, -1);
+            current_vars = vector<StoreInt>(arity_in, 1);
+            current_vals = vector<StoreInt>(NbValues, 1);
+            NoAssignedVal = vector<int>(NbValues, -1);
             costMatrix = vector<Cost>((arity_ + 1) * NbValues, MAX_COST);
             ReduceCostMatrix = vector<Cost>((arity_ + 1) * NbValues, MAX_COST);
             capacity = vector<int>(arity_ + 1, 1);
@@ -749,17 +750,22 @@ public:
             } else {
                 // TODO: incremental bound propagation
                 // remove the assigned value in other domains
-                Value value = scope[varIndex]->getValue();
+                auto* variable = scope[varIndex];
+                Value value = variable->getValue();
+                int valIndex = unionIndex(variable->getValueName(variable->toIndex(value)));
+                current_vars[varIndex] = 0;
                 int removeval = true;
                 if(excepted) {
-                    auto* variable = scope[varIndex];
-                    int valIndex = unionIndex(variable->getValueName(variable->toIndex(value)));
                     if(isExceptedVal[valIndex]){
                         // don't remove an excepted value
                         removeval = false;
                     }
                 }
                 if(removeval){
+                    if(current_vals[valIndex] == 0){
+                        THROWCONTRADICTION;
+                    }
+                    current_vals[valIndex] = 0;
                     for (int i = 0; i < arity_; i++) {
                         if (i != varIndex && scope[i]->unassigned() && scope[i]->canbe(value)) {
                             scope[i]->remove(value);
@@ -771,144 +777,6 @@ public:
                     reviseEACGreedySolution();
             }
         }
-    }
-
-    /**
-     * @brief Remove assigned values from unassigned
-     *        variable domains, detecting contradictions, and triggering n-ary
-     *        projection when thresholds are met.
-     * @return true if propagation succeeded without n-ary projection, false otherwise.
-     * @throws THROWCONTRADICTION if two variables share the same assigned value.
-     */
-    bool RemoveAssignVar()
-    {
-        // Reset tracking vectors for this propagation pass
-        isAssignedValue = vector<bool>(NbValues, false);
-        varAlreadyProcessed = vector<bool>(arity_, false);
-
-        AssignedVar.clear();
-        AssignedVar.reserve(arity_);
-        AssignedVal.clear();
-        AssignedVal.reserve(arity_);
-        NoAssignedVar.clear();
-        NoAssignedVar.reserve(arity_);
-        unordered_map<int, int> conflictvar; // Maps value index -> variable index for contradiction detection
-
-        // Partition variables into assigned / unassigned
-        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
-            auto* variable = scope[varIndex];
-
-            if (variable->unassigned()) {
-                NoAssignedVar.push_back(varIndex);
-            } else {
-                // Variable assigned: find the index of its assigned value
-                int valIndex = unionIndex(variable->getValueName(variable->toIndex(variable->getValue())));
-                if (valIndex < 0) { // assigned to a forbidden value
-                    conflictWeights[varIndex]++;
-                    THROWCONTRADICTION;
-                }
-                int it = excepted == 0 ? 0 : isExceptedVal[valIndex];
-                if (!isAssignedValue[valIndex]) {
-                    AssignedVar.push_back(varIndex);
-                    if (it == 0) {
-                        isAssignedValue[valIndex] = true; // Mark value as taken
-                        AssignedVal.push_back(valIndex);
-                        conflictvar[valIndex] = varIndex; // Record owner for conflict detection
-                    }
-                } else {
-                    // Two variables share the same non-excepted value: contradiction
-                    if (it == 0) {
-                        int varIndex2 = conflictvar[valIndex];
-                        conflictWeights[varIndex2]++;
-                        conflictWeights[varIndex]++;
-
-                        THROWCONTRADICTION;
-                    }
-                }
-            }
-        }
-
-        NbAssigned = AssignedVar.size();
-        bool VarAssigned;
-        bool NaryPro = false;
-
-        // Iteratively remove assigned values from unassigned variable domains
-        do {
-            VarAssigned = false;
-            vector<int> newlyAssignedVars; // Variables that become assigned during this iteration
-
-            for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-                if (!isAssignedValue[valIndex])
-                    continue; // Only process taken values
-
-                for (int varIndex : NoAssignedVar) {
-                    if (varAlreadyProcessed[varIndex])
-                        continue;
-
-                    auto* variable = scope[varIndex];
-                    Value value = toVarValue(varIndex, valIndex);
-
-                    // Remove value if present in domain and not excepted
-                    if (value != WRONG_VAL && variable->canbe(value) && (find(exceptedValIndex.begin(), exceptedValIndex.end(), valIndex) == exceptedValIndex.end())) {
-                        variable->remove(value);
-
-                        if (variable->assigned()) {
-                            // Variable became singleton: schedule for propagation
-                            newlyAssignedVars.push_back(varIndex);
-                            varAlreadyProcessed[varIndex] = true;
-                        }
-                    }
-                }
-            }
-
-            // Integrate newly assigned variables into the constraint state
-            for (int varIndex : newlyAssignedVars) {
-                if (connected(varIndex)) {
-                    deconnect(varIndex);
-                    NbNoAssigned--;
-                    NbAssigned++;
-
-                    // Switch to full n-ary projection if size thresholds are reached
-                    if (getNonAssigned() <= NARYPROJECTIONSIZE && (getNonAssigned() <= 1 || prodInitDomSize <= NARYPROJECTIONPRODDOMSIZE || maxInitDomSize <= NARYPROJECTION3MAXDOMSIZE || (getNonAssigned() == 2 && maxInitDomSize <= NARYPROJECTION2MAXDOMSIZE))) {
-                        deconnect();
-                        projectNary();
-                        NaryPro = true;
-                        break;
-                    } else {
-                        VarAssigned = true; // Signal another propagation iteration
-                        auto* variable = scope[varIndex];
-                        // Variable assigned: find the index of its assigned value
-                        int valIndex = unionIndex(variable->getValueName(variable->toIndex(variable->getValue())));
-                        if (valIndex < 0) { // assigned to a forbidden value
-                            conflictWeights[varIndex]++;
-                            THROWCONTRADICTION;
-                        }
-                        int it = excepted == 0 ? 0 : isExceptedVal[valIndex];
-                        if (it == 0) {
-                            isAssignedValue[valIndex] = true;
-                            AssignedVal.push_back(valIndex);
-                        }
-                        AssignedVar.push_back(varIndex);
-                    }
-                } else {
-                    return false; // Variable disconnected externally: abort
-                }
-            }
-
-            // Rebuild unassigned variable list after each iteration
-            if (VarAssigned && !NaryPro) {
-                vector<int> updatedNoAssigned;
-                for (int varIndex : NoAssignedVar) {
-                    if (!scope[varIndex]->assigned()) {
-                        updatedNoAssigned.push_back(varIndex);
-                    }
-                }
-                NoAssignedVar.swap(updatedNoAssigned);
-            }
-
-        } while (VarAssigned);
-
-        return (!NaryPro);
     }
 
     /**
@@ -1288,25 +1156,26 @@ public:
 
     // Stores the LAP solution (rowSol) of the unassigned variables, plus the values of the assigned variables
     // NoAssignedVal[c] = value index (in UnionVarDomain) of the column c of the reduced matrix
-    void storePartialAssignment(const vector<int>& NoAssignedVal)
-    {
+    void storePartialAssignment()
+    {   
         for (int varIndex = 0; varIndex < NbNoAssigned; ++varIndex) {
             storeLastAssignment[NoAssignedVar[varIndex]] = toVarValue(NoAssignedVar[varIndex], NoAssignedVal[rowSol[varIndex]]);
         }
+
         for (int varIndex = 0; varIndex < NbAssigned; ++varIndex) {
-            storeLastAssignment[AssignedVar[varIndex]] = toVarValue(AssignedVar[varIndex], AssignedVal[varIndex]);
+            storeLastAssignment[AssignedVar[varIndex]] = scope[AssignedVar[varIndex]]->getValue();
         }
         storeAssignment = true;
     }
 
     // Zero cost matrix with some assigned variables: any injective assignment of the unassigned variables is optimal
-    void storePartialZeroCost(const vector<int>& NoAssignedVal)
+    void storePartialZeroCost()
     {
         for (int k = 0; k < NbNoAssigned; ++k)
             storeLastAssignment[NoAssignedVar[k]] = toVarValue(NoAssignedVar[k], NoAssignedVal[k]);
         // Assigned variables keep their value
         for (int k = 0; k < NbAssigned; ++k)
-            storeLastAssignment[AssignedVar[k]] = toVarValue(AssignedVar[k], AssignedVal[k]);
+            storeLastAssignment[AssignedVar[k]] = scope[AssignedVar[k]]->getValue();
         storeAssignment = true;
         updateSupportsOfUnassigned();
     }
@@ -1351,29 +1220,75 @@ public:
      * @brief Writes the dummy ("slack") row/column of the cost matrix from deltaCosts.
      *        deltaCosts are saturated at ub. If all the values that can be used are saturated
      *        (nb == nbVars) every other value is forbidden; if there are more, a contradiction is raised.
-     * @param valIndexes Value index (in UnionVarDomain) of each matrix column.
-     * @param nbVars     Number of real variables (the dummy variable has position nbVars).
      * @param ub         Current upper bound (wcsp->getUb() - wcsp->getLb()).
      * @param idx        idx(var, col) = position in costMatrix (encodes the layout of the matrix).
      */
-    void setDeltaCostsInMatrix(const vector<int>& valIndexes, int nbVars, Cost ub, const function<size_t(int, int)>& idx)
+    void setPartialDeltaCostsInMatrix(Cost ub, const function<size_t(int, int)>& idx)
     {
         int nbSaturated = 0;
-        for (int col = 0; col < (int)valIndexes.size(); ++col) {
-            int valIndex = valIndexes[col];
+        int valIndex;
+        for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+            valIndex = NoAssignedVal[valInd];
             if (deltaCosts[valIndex] >= ub) {
                 deltaCosts[valIndex] = ub;
                 nbSaturated++;
             }
-            costMatrix[idx(nbVars, col)] = deltaCosts[valIndex];
+            costMatrix[idx(NbNoAssigned, valInd)] = deltaCosts[valIndex];
         }
-        if (nbSaturated > nbVars) {
+        if (nbSaturated > NbNoAssigned) {
             THROWCONTRADICTION;
-        } else if (nbSaturated == nbVars) {
-            for (int col = 0; col < (int)valIndexes.size(); ++col) {
-                if (deltaCosts[valIndexes[col]] < ub) {
-                    for (int varInd = 0; varInd < nbVars; ++varInd)
-                        costMatrix[idx(varInd, col)] = ub;
+        } else if (nbSaturated == NbNoAssigned) {
+            int varIndex;
+            for (int valInd = 0; valInd < NbNoAssignedVal; ++valInd) {
+                valIndex = NoAssignedVal[valInd];
+                if (deltaCosts[valIndex] < ub) {
+                    cout<<"ok\n";
+                    current_vals[valIndex] = 0;
+                    for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
+                        varIndex = NoAssignedVar[varInd];
+                        costMatrix[idx(varInd, valInd)] = ub;
+                        if(connected(varIndex)){
+                            auto* variable = scope[varIndex];
+                            Value value = toVarValue(varIndex, valIndex);
+                            if (value != WRONG_VAL  && variable->canbe(value)) {
+                                if (ToulBar2::verbose > 0)
+                                    cout << "DELTACOSTS REMOVE VALUE " << value << " from " << variable->getName() << endl;
+                                ExtOrProJ(varIndex, value, -ub); // project an infinite cost on this value
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    void setFullDeltaCostsInMatrix(Cost ub, const function<size_t(int, int)>& idx)
+    {
+        int nbSaturated = 0;
+        for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
+            if (deltaCosts[valIndex] >= ub) {
+                deltaCosts[valIndex] = ub;
+                nbSaturated++;
+            }
+            costMatrix[idx(arity_, valIndex)] = deltaCosts[valIndex];
+        }
+        if (nbSaturated > arity_) {
+            THROWCONTRADICTION;
+        } else if (nbSaturated == arity_) {
+            for (int  valIndex = 0; valIndex < NbValues; ++valIndex) {
+                if (deltaCosts[valIndex] < ub) {
+                    for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+                        costMatrix[idx(varIndex, valIndex)] = ub;
+                        current_vals[valIndex] = 0;
+                        auto* variable = scope[varIndex];
+                        Value value = toVarValue(varIndex, valIndex);
+                        if (value != WRONG_VAL && variable->canbe(value)) {
+                            if (ToulBar2::verbose > 0)
+                                cout << "DELTACOSTS REMOVE VALUE " << value << " from " << variable->getName() << endl;
+                            ExtOrProJ(varIndex, value, -ub); // project an infinite cost on this value
+                        }
+                    }
                 }
             }
         }
@@ -1414,7 +1329,7 @@ public:
      * @param newCurrentUb  current_ub minus the LAP optimal cost (remaining budget).
      * @param idx           idx(var, col) = position in costMatrix.
      */
-    void projectReducedCostsPartial(const vector<int>& NoAssignedVal, Cost current_ub,  const function<size_t(int, int)>& idx)
+    void projectReducedCostsPartial(Cost current_ub,  const function<size_t(int, int)>& idx)
     {
 
         for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
@@ -1440,7 +1355,7 @@ public:
      * @param newCurrentUb  current_ub minus the LAP optimal cost (remaining budget).
      * @param idx           idx(var, col) = position in costMatrix.
      */
-    void projectAndBuildResidualGraph(const vector<int>& NoAssignedVal, Cost current_ub, Cost newCurrentUb, const function<size_t(int, int)>& idx, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList)
+    void projectAndBuildResidualGraph(Cost current_ub, Cost newCurrentUb, const function<size_t(int, int)>& idx, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList)
     {
         MaxReducedCost = 0;
         const bool buildGraph = residualGraphEnabled();
@@ -1567,14 +1482,13 @@ public:
      *        Pruning is sound: only arcs of reduced cost < newCurrentUb are in the graph, and any solution within the
      *        budget uses only such arcs.
      *
-     * @param NoAssignedVal     Value index (in UnionVarDomain) of each column.
      * @param VarList           VarList[val] = variables having a non-matching arc to val (pruned arcs are erased).
      * @param ValList           ValList[var][val] = 1 if the arc is in the residual graph (pruned arcs are reset to 0).
      * @param SlackAssignedVals Columns matched to the slack variable (empty when isSlack == 0).
      * @param newCurrentUb      Remaining cost budget (infinite cost projected on removed values).
      * @return true if at least one arc has been pruned.
      */
-    bool gacFilteringSCC(const vector<int>& NoAssignedVal, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, const vector<int>& SlackAssignedVals, Cost newCurrentUb)
+    bool gacFilteringSCC(vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, const vector<int>& SlackAssignedVals, Cost newCurrentUb)
     {
         if (!residualGraphEnabled())
             return false;
@@ -1832,19 +1746,18 @@ public:
      *        Source : Claus, G.; Cambazard, H.; and Jost, V. 2020. Analysis of Reduced Costs Filtering
      *        for Alldifferent and Minimum Weight Alldifferent Global Constraints. ECAI 2020, vol. 325, 323-330.
      *
-     * @param NoAssignedVal     Value index of each column of the reduced matrix.
      * @param VarList           VarList[val] = variables having a non-matching arc to val (updated when arcs are pruned).
      * @param ValList           ValList[var][val] = 1 if arc (var,val) is in the residual graph (updated when arcs are pruned).
      * @param SlackAssignedVals Columns matched to the slack variable.
      * @param newCurrentUb      Remaining cost budget.
      */
-    void reducedCostFiltering(const vector<int>& NoAssignedVal, vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, const vector<int>& SlackAssignedVals, Cost newCurrentUb)
+    void reducedCostFiltering(vector<vector<int>>& VarList, vector<vector<uint8_t>>& ValList, const vector<int>& SlackAssignedVals, Cost newCurrentUb)
     {
         if (!residualGraphEnabled())
             return;
 
         // Step 1: GAC by strongly connected components
-        gacFilteringSCC(NoAssignedVal, VarList, ValList, SlackAssignedVals, newCurrentUb);
+        gacFilteringSCC(VarList, ValList, SlackAssignedVals, newCurrentUb);
 
         // Step 2: reduced-cost filtering, only if the largest reduced cost can exceed the budget
         if (!(MaxReducedCost >= newCurrentUb / NbNoAssigned))
@@ -1959,18 +1872,16 @@ public:
 
         NbNoAssigned = arity_;
         NbNoAssignedVal = NbValues;
-        NoAssignedVar.resize(arity_);
         iota(NoAssignedVar.begin(), NoAssignedVar.end(), 0);
-        vector<int> NoAssignedVal(NbValues);
         iota(NoAssignedVal.begin(), NoAssignedVal.end(), 0);
 
         vector<vector<int>> VarList(NbNoAssignedVal);
         vector<vector<uint8_t>> ValList(NbNoAssigned + (isSlack ? 1 : 0));
         vector<int> SlackAssignedVals;
-        projectAndBuildResidualGraph(NoAssignedVal, current_ub, newCurrentUb, idx, VarList, ValList);
+        projectAndBuildResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList);
         if (isSlack && residualGraphEnabled())
             addSlackArcsToResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList, SlackAssignedVals);
-        reducedCostFiltering(NoAssignedVal, VarList, ValList, SlackAssignedVals, newCurrentUb);
+        reducedCostFiltering(VarList, ValList, SlackAssignedVals, newCurrentUb);
 
     }
 
@@ -1982,14 +1893,25 @@ public:
     void propagatePartialAssignment()
     {
         // Collect unassigned values
-        vector<int> NoAssignedVal;
+        NbNoAssignedVal = 0;
         for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-            if (!isAssignedValue[valIndex]) {
-                NoAssignedVal.push_back(valIndex);
+            if (current_vals[valIndex]) {
+                NoAssignedVal[NbNoAssignedVal] = valIndex;
+                NbNoAssignedVal++;
             }
         }
-
-        NbNoAssignedVal = NoAssignedVal.size();
+        
+        NbNoAssigned = 0;
+        NbAssigned = 0;
+        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+            if (current_vars[varIndex]) {
+                NoAssignedVar[NbNoAssigned++] =  varIndex;
+            }
+            else {
+                AssignedVar[NbAssigned++] =  varIndex;         
+            }
+        }
+    
         if (NbNoAssignedVal < NbNoAssigned) {
             THROWCONTRADICTION;
         }
@@ -2027,6 +1949,7 @@ public:
                     THROWCONTRADICTION;
                 }
                 deltaCosts[valIndex] = 0;
+                current_vals[valIndex] = 0;
                 projectLB(Delta);
                 removevals++;
             }
@@ -2044,7 +1967,7 @@ public:
             Cost TotalCost;
             if (!isSquare && NbRestVal > NbNoAssigned) {
                 // more values than variables: add the dummy row with the extended unary costs
-                setDeltaCostsInMatrix(NoAssignedVal, NbNoAssigned, current_ub, idx);
+                setPartialDeltaCostsInMatrix(current_ub, idx);
                 TotalCost = lapjv(NbNoAssigned + 1, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
             } else {
                 TotalCost = lapjv(NbNoAssigned, NbNoAssignedVal, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, findConflict);
@@ -2053,7 +1976,7 @@ public:
             if (TotalCost >= current_ub) {
                 onLAPFailure(rowSol, findConflict, NbNoAssigned, &NoAssignedVar);
             } else if (TotalCost >= 0) {
-                storePartialAssignment(NoAssignedVal);
+                storePartialAssignment();
 
                 if (TotalCost > 0 || (any_of(ReduceCostRow, ReduceCostRow + NbNoAssigned, [](auto x) { return x > MIN_COST; }))) {
                     if (!isSquare && NbRestVal > NbNoAssigned) {
@@ -2062,7 +1985,7 @@ public:
                             deltaCosts[NoAssignedVal[valInd]] -= (ReduceCostCol[valInd] + mindelta);
                         }
                         if (mindelta > 0) {
-                            TotalCost += mindelta * (NbValues - arity_ - 1);
+                            TotalCost += mindelta * (NbRestVal - NbNoAssigned - 1);
                             if (TotalCost >= current_ub) {
                                 wcsp->revise(this);
                                 THROWCONTRADICTION;
@@ -2080,12 +2003,12 @@ public:
                         // Adjust unary costs for unassigned variables based on reduced costs and build the residual graph
                         vector<vector<int>> VarList(NbNoAssignedVal);
                         vector<vector<uint8_t>> ValList(NbNoAssigned);
-                        projectAndBuildResidualGraph(NoAssignedVal, current_ub, newCurrentUb, idx, VarList, ValList);
+                        projectAndBuildResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList);
 
                         // Filtering of variables domains with Sellmann or Cambazard method
-                        reducedCostFiltering(NoAssignedVal, VarList, ValList, vector<int>(), newCurrentUb);
+                        reducedCostFiltering(VarList, ValList, vector<int>(), newCurrentUb);
                       } else {
-                        projectReducedCostsPartial(NoAssignedVal, current_ub, idx);
+                        projectReducedCostsPartial(current_ub, idx);
                       }
                 }
 
@@ -2095,7 +2018,7 @@ public:
         } else {
             // Zero cost matrix: every unassigned variable can take every free value at no cost,
             // so any injective assignment is optimal (no cost to project)
-            storePartialZeroCost(NoAssignedVal);
+            storePartialZeroCost();
         }
     }
 
@@ -2117,9 +2040,7 @@ public:
 
             if (!isSquare && !slack) {
                 // more values than variables: add the dummy row with the extended unary costs
-                vector<int> allValues(NbValues);
-                iota(allValues.begin(), allValues.end(), 0);
-                setDeltaCostsInMatrix(allValues, arity_, current_ub, idx);
+                setFullDeltaCostsInMatrix(current_ub, idx);
 
                 if (excepted) {
                     TotalCost = lapjv(arity_ + 1, NbValues, costMatrix, rowSol, ReduceCostRow, ReduceCostCol, current_ub, exceptedValIndex, findConflict);
@@ -2190,13 +2111,27 @@ public:
     void propagatePartialAssignmentSlack()
     {
         // Collect unassigned values and initialize the cost matrix for the Jonker algorithm
-        vector<int> NoAssignedVal;
         int valInd = 0;
         Cost current_ub = wcsp->getUb() - wcsp->getLb();
 
+        NbNoAssigned = 0;
+        NbAssigned = 0;
+        for (int varIndex = 0; varIndex < arity_; ++varIndex) {
+            if (current_vars[varIndex]) {
+                NoAssignedVar[NbNoAssigned++] =  varIndex;
+            }
+            else {
+                AssignedVar[NbAssigned++] =  varIndex;          
+            }
+        }
+
         for (int valIndex = 0; valIndex < NbValues; ++valIndex) {
-            if (isAssignedValue[valIndex])
-                continue;
+            if (!current_vals[valIndex]){
+                //cout<<valIndex<<endl;
+                 continue;
+
+            }
+               
             int comptremoveval = 0; // number of variables which cannot take this value
             for (int varInd = 0; varInd < NbNoAssigned; ++varInd) {
                 int varIndex = NoAssignedVar[varInd];
@@ -2220,15 +2155,15 @@ public:
                 if (Delta >= current_ub) {
                     THROWCONTRADICTION;
                 }
+                current_vals[valIndex] = 0;
                 deltaCosts[valIndex] = 0;
                 projectLB(Delta);
             } else {
-                NoAssignedVal.push_back(valIndex);
-                valInd++;
+                NoAssignedVal[valInd++] = valIndex;
             }
         }
 
-        NbNoAssignedVal = NoAssignedVal.size();
+        NbNoAssignedVal = valInd;
         if (NbNoAssignedVal < NbNoAssigned) {
             THROWCONTRADICTION;
         }
@@ -2247,7 +2182,7 @@ public:
             }
         } else {
             // Dummy column with the extended unary costs
-            setDeltaCostsInMatrix(NoAssignedVal, NbNoAssigned, current_ub, idx);
+            setPartialDeltaCostsInMatrix(current_ub, idx);
             capacity.assign(NbNoAssigned + 1, 1);
             capacity[NbNoAssigned] = NbNoAssignedVal - NbNoAssigned;
         }
@@ -2273,7 +2208,7 @@ public:
                     }
                 }
 
-                storePartialAssignment(NoAssignedVal);
+                storePartialAssignment();
 
                 if (TotalCost > 0 || (any_of(ReduceCostCol, ReduceCostCol + NbNoAssignedVal, [](auto x) { return x > MIN_COST; }))) {
                     // Slack (or locally square) formulation: move the duals to the relative interior of the dual
@@ -2296,18 +2231,18 @@ public:
                         vector<vector<int>> VarList(NbNoAssignedVal);
                         vector<vector<uint8_t>> ValList(NbNoAssigned + (isSlack ? 1 : 0));
                         // Adjust unary costs for unassigned variables based on reduced costs and build the residual graph
-                        projectAndBuildResidualGraph(NoAssignedVal, current_ub, newCurrentUb, idx, VarList, ValList);
+                        projectAndBuildResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList);
                         if(isSlack){
                             // Values matched to the slack variable
                             vector<int> SlackAssignedVals;
                             addSlackArcsToResidualGraph(current_ub, newCurrentUb, idx, VarList, ValList, SlackAssignedVals);
-                            reducedCostFiltering(NoAssignedVal, VarList, ValList, SlackAssignedVals, newCurrentUb);
+                            reducedCostFiltering(VarList, ValList, SlackAssignedVals, newCurrentUb);
                         } else {
                         // Filtering of variables domains with Sellmann or Cambazard method
-                        reducedCostFiltering(NoAssignedVal, VarList, ValList, {}, newCurrentUb);
+                        reducedCostFiltering(VarList, ValList, {}, newCurrentUb);
                         }
                     } else{
-                        projectReducedCostsPartial(NoAssignedVal, current_ub, idx);
+                        projectReducedCostsPartial(current_ub, idx);
                     }     
                 }
 
@@ -2316,7 +2251,7 @@ public:
             }
         } else {
             // Zero cost matrix: every unassigned variable can take every free value at no cost
-            storePartialZeroCost(NoAssignedVal);
+            storePartialZeroCost();
         }
     }
 
@@ -2332,9 +2267,7 @@ public:
 
         // Initialize the cost matrix for all variables and their domain values + dummy column
         fillFullCostMatrix(current_ub, idx);
-        vector<int> allValues(NbValues);
-        iota(allValues.begin(), allValues.end(), 0);
-        setDeltaCostsInMatrix(allValues, arity_, current_ub, idx);
+        setFullDeltaCostsInMatrix(current_ub, idx);
         capacity.assign(arity_ + 1, 1);
         capacity[arity_] = NbValues - arity_;
 
@@ -2392,19 +2325,15 @@ public:
     {
         // Initialize number of unassigned variables
         NbNoAssigned = getNonAssigned();
-        bool filtreExcepted = false;
-
         // If there are assigned variables, handle accordingly
         if (NbNoAssigned < arity_) {
-            if (excepted) {
-                filtreExcepted = RemoveAssignVar();
-            } else if (SameDomain && RemoveAssignVar()) {
+            if (connected() && !excepted && SameDomain) {
                 propagatePartialAssignment();
             }
         }
-
+        NbNoAssigned = getNonAssigned();
         // Case when all variables are unassigned or filtering exception or domains differ
-        if (connected() && (NbNoAssigned == arity_ || filtreExcepted || !SameDomain)) {
+        if (connected() && (NbNoAssigned == arity_ || excepted || !SameDomain)) {
             propagateFullAssignment();
         }
     }
@@ -2420,10 +2349,12 @@ public:
 
         if (NbNoAssigned < arity_) {
             // If there are assigned variables, handle accordingly
-            if (SameDomain && RemoveAssignVar()) {
+            if (connected() && SameDomain) {
                 propagatePartialAssignmentSlack();
             }
-        } else if (connected() && (NbNoAssigned == arity_ || !SameDomain)) {
+        } 
+        NbNoAssigned = getNonAssigned();
+        if (connected() && (NbNoAssigned == arity_ || !SameDomain)) {
             // Case when all variables are unassigned or domains differ
             propagateFullAssignmentSlack();
         }
@@ -2460,10 +2391,6 @@ public:
         if (ToulBar2::verbose >= 3) {
             cout << "propagate " << *this << endl;
         }
-
-        // not enough distinct values for the variables (without excepted values)
-        if (!excepted && NbValues < arity_)
-            THROWCONTRADICTION;
 
         // Attempt to assign variables already connected and assigned (assign() propagates by itself)
         if (assignFirstAssignedVariable() || !connected())
